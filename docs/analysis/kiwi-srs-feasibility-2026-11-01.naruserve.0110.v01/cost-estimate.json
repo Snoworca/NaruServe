@@ -1,0 +1,10 @@
+{
+  "N": 165,
+  "phase1_sonnet": 3,
+  "phase2_prescreen_and_senior": "6 scope-group analysts (CORE, AUTH, TOKEN, FLOW, IAM, APIKEY), each prescreens and judges its own scope; chunk = scope instead of 5 to keep 165 REQs at 6 calls instead of 33 prescreens + seniors",
+  "phase2_5_research": 0,
+  "phase5_verifier": "1 per iteration, sequential (user rule: one verifier at a time), Normal max 5",
+  "phase8_applier": 1,
+  "estimated_total_subagents": "about 11-15",
+  "cost_cap": null
+}

@@ -94,8 +94,13 @@ public interface RestApp extends HttpRoutes<RestApp> {
     /** Sets the router policy, built with {@link RouterPolicy#builder()}. */
     RestApp routerPolicy(RouterPolicy policy);
 
-    /** Global middleware: runs for every request, in registration order. */
+    /**
+     * Global middleware: runs for every request, in registration order. A middleware that is also an
+     * {@link Installable} (such as auth) is not added as such: {@code mw.install(this)} runs instead and registers
+     * what it needs.
+     */
     // @req IR-APP-002
+    // @req FR-AUTH-010
     RestApp use(Middleware mw);
 
     /** Prefix middleware: runs for paths under {@code prefix}, which must start with {@code /}. */
@@ -221,10 +226,68 @@ public interface RestApp extends HttpRoutes<RestApp> {
     /**
      * Trusts X-Forwarded-For and X-Forwarded-Proto for {@code req.remoteAddress()} and {@code req.isSecure()}, as
      * Express {@code app.set('trust proxy', true)}; default false. Forwarded is never read.
+     * <p>Security: {@code true} takes the left-most X-Forwarded-For entry, which the client controls: any client can
+     * claim any address. It stays for compatibility; behind a proxy use {@link #trustProxyHops(int)} or
+     * {@link #trustProxyCidrs(String...)}, which count from the right. The last of {@code trustProxy},
+     * {@code trustProxyHops} and {@code trustProxyCidrs} replaces the earlier setting.
      */
     // @req IR-ENGINE-001
     // @req FR-ENGINE-008
+    // @req CON-ENGINE-001
     RestApp trustProxy(boolean trust);
+
+    /**
+     * Hop mode, as Express {@code app.set('trust proxy', hops)}: the socket peer is trusted when {@code hops >= 1}, and
+     * {@code req.remoteAddress()} is the {@code hops}-th X-Forwarded-For entry counted from the right (all header lines
+     * combined in arrival order; the left-most when there are fewer). {@code 0} trusts nothing;
+     * {@link IllegalArgumentException} below 0. Use it only when the node is reachable only through the load balancer.
+     * X-Forwarded-Proto is read by the same position (one value is used as is). Call before {@link #listen(int)}.
+     */
+    // @req IR-ENGINE-003
+    // @req SEC-ENGINE-001
+    RestApp trustProxyHops(int hops);
+
+    /**
+     * CIDR mode, as Express {@code app.set('trust proxy', '10.0.0.0/8')}: the socket peer is trusted only inside one of
+     * {@code cidrs} (IPv4 or IPv6 literals with an optional {@code /prefix}; an address alone is one host), and
+     * {@code req.remoteAddress()} is the first X-Forwarded-For entry from the right outside every trusted CIDR (the
+     * left-most when all are inside). {@link NullPointerException} for a null array or element,
+     * {@link IllegalArgumentException} naming any other value; no name is resolved. An empty array trusts nothing.
+     * Call before {@link #listen(int)}.
+     */
+    // @req IR-ENGINE-003
+    // @req SEC-ENGINE-002
+    RestApp trustProxyCidrs(String... cidrs);
+
+    /** True after {@code trustProxy(true)} was the last trust call; readable in every state. */
+    // @req IR-ENGINE-003
+    boolean trustProxy();
+
+    /** The hop count of hop mode; {@code 0} when hop mode is not the setting. Readable in every state. */
+    // @req IR-ENGINE-003
+    int trustProxyHops();
+
+    /** The CIDRs of CIDR mode as given, unmodifiable; empty when CIDR mode is not the setting. Readable in every state. */
+    // @req IR-ENGINE-003
+    java.util.List<String> trustProxyCidrs();
+
+    /**
+     * Every registration so far in registration order, as Express {@code app._router.stack} but classified: a
+     * call-time snapshot, unmodifiable, safe to iterate while other threads register. Readable in every state.
+     */
+    // @req IR-APP-008
+    // @req FR-APP-025
+    java.util.List<Registration> registrations();
+
+    /**
+     * Adds a watcher that each later registration (also those made after {@code listen} and through a mounted
+     * {@link Router}) passes on the registering thread in the order validate, watcher, apply, record: an invalid call
+     * never reaches it, and an exception it throws stops the registration and reaches the caller unchanged. Call before
+     * {@link #listen(int)}.
+     */
+    // @req IR-APP-008
+    // @req SEC-APP-002
+    RestApp onRegistration(RegistrationListener listener);
 
     /**
      * Registers a WebSocket route, as express-ws {@code app.ws(path, (ws, req) => ...)} with the arguments reversed.

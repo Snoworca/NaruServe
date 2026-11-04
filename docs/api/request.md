@@ -15,8 +15,18 @@
 | `rawPath()` | `String` | `req.path` (디코딩 전) | 원래 raw 경로. 쿼리 제외, 마운트해도 변하지 않음 |
 | `remoteAddress()` | `String` | `req.ip` | 접속한 상대 주소 |
 | `isSecure()` | `boolean` | `req.secure` | TLS 연결이면 `true` |
+| `socketAddress()` | `String` | `req.socket.remoteAddress` | 실제 연결 상대 주소. 프록시 설정과 무관 |
+| `requestId()` | `String` | 없음(Express에는 기본 요청 ID가 없습니다) | 이 요청의 ID. 오류 본문·접근 로그와 같은 값 |
 
 `remoteAddress()`와 `isSecure()`는 기본으로 `X-Forwarded-For` 같은 프록시 헤더를 보지 않습니다. 리버스 프록시 뒤에서 `app.trustProxy(true)`를 켜면 첫 `X-Forwarded-For` 헤더의 맨 왼쪽 값과 첫 `X-Forwarded-Proto` 값(`https`이면 `true`)을 씁니다. Express의 `app.set('trust proxy', true)`에 해당하며, 값은 검증하지 않으므로 그 헤더를 덮어쓰는 프록시 뒤에서만 켜세요. `Forwarded` 헤더는 읽지 않습니다. [서버 설정](app.md#서버-설정)
+
+`trustProxy(true)`의 맨 왼쪽 값은 검증되지 않은, 클라이언트가 고를 수 있는 값입니다. 0.10.0 앱과의 호환을 위해 남겨 두었고, auth 모듈의 doctor는 `PROD`에서 이 설정을 FAIL로 보고합니다(R32). 프록시 뒤에서는 [`trustProxyHops`·`trustProxyCidrs`](app.md#프록시-신뢰)를 쓰세요.
+
+홉 모드 `app.trustProxyHops(1)`(Express `app.set('trust proxy', 1)`)은 소켓 상대를 믿고 `X-Forwarded-For`의 오른쪽에서 n번째 항목을 `remoteAddress()`로 씁니다. 이 노드에 로드 밸런서를 거쳐서만 접속할 수 있을 때만 쓰세요. CIDR 모드 `app.trustProxyCidrs("10.0.0.0/8")`(Express의 CIDR 목록)는 소켓 상대가 신뢰 CIDR 안일 때만 믿고 오른쪽부터 그 밖의 첫 항목을 씁니다. 두 모드에서 `isSecure()`는 믿는 프록시의 `X-Forwarded-Proto`를 같은 위치로 읽고, 애매하면 `false`입니다. nginx는 `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`와 `proxy_set_header X-Forwarded-Proto $scheme;`를 쓰세요. 프록시가 `X-Forwarded-Proto`를 덮어쓰지 않고 그대로 넘기는 구성은 지원하지 않습니다. 자세한 규칙은 [프록시 신뢰](app.md#프록시-신뢰)에 있습니다.
+
+`socketAddress()`는 `trustProxy`·`trustProxyHops`·`trustProxyCidrs`와 `X-Forwarded-*`·`Forwarded` 헤더의 프록시 설정과 헤더를 모두 무시하고 어댑터가 알려 준 연결 상대 주소를 그대로 돌려줍니다(`::1`도 바꾸지 않습니다). `remoteAddress()`는 프록시 신뢰 설정을 따릅니다. 로컬 요청인지 판단하려면 `socketAddress()`를 보세요.
+
+`requestId()`는 디스패처가 요청마다 붙인 ID로, 미들웨어·마운트된 Router·라우트·오류 미들웨어 어디서 읽어도 같고, 자동 오류 응답의 표준 오류 본문의 `requestId`와 접근 로그의 `rid`와 같은 값입니다. WebSocket 업그레이드 요청도 `101` 전 미들웨어에서 그 핸드셰이크 줄의 `rid`를 읽습니다. 직접 JSON 오류를 쓸 때 이 값을 넣으면 로그와 맞출 수 있습니다.
 
 ## 경로 변수·쿼리·헤더
 
@@ -282,4 +292,26 @@ app.get("/files{/*parts}", (request, response) -> {
     String optional = request.paramOrNull("parts");
     response.json(parts);
 });
+```
+
+## 연결 주소와 요청 ID
+
+```java
+app.get("/whoami", (req, res) -> {
+    String peer = req.socketAddress();
+    String client = req.remoteAddress();
+    String id = req.requestId();
+    res.send(peer + " " + client + " " + id);
+});
+```
+
+Kotlin:
+
+```kotlin
+app.get("/whoami") { req, res ->
+    val peer: String = req.socketAddress()
+    val client: String = req.remoteAddress()
+    val id: String = req.requestId()
+    res.send("$peer $client $id")
+}
 ```

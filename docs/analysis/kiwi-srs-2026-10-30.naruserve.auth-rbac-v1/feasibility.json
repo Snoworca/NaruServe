@@ -1,0 +1,8 @@
+{
+  "implementability": "high",
+  "product_fit": "core",
+  "conditions": ["JDK APIs used by utils.auth must pass the animal-sniffer API 21 check (javax.crypto.Mac, java.security, java.sql, java.text.Normalizer)", "No java.time, java.util.Base64, java.nio.file in utils.auth", "C4 requires splitting validation from apply in DefaultRestApp/HttpRouter"],
+  "medium_items": ["JdbcApiKeyStore locking procedure (InnoDB/PostgreSQL behaviour unmeasured, 00 §12)", "WebView Origin behaviour (00 §12)"],
+  "blockers": [],
+  "external_module_required": false
+}

@@ -2,7 +2,7 @@
 
 [한국어](../middleware.md) | [API index](README.md)
 
-This is the common HTTP stack in the 0.10.0 checkout. Callbacks, responses and errors work on Java 8/API 21 without a mandatory Promise or coroutine library.
+This is the common HTTP stack in the 0.11.0 checkout. Callbacks, responses and errors work on Java 8/API 21 without a mandatory Promise or coroutine library.
 
 ## Middleware
 
@@ -36,21 +36,21 @@ public interface Next {
 Middleware adminOnly = (req, res, next) -> next.run();   // placeholder adminOnly middleware for this example
 
 app.route("/api/admin")
-   .use(auth)
+   .use(checkAuth)
    .use(adminOnly)
    .get((req, res) -> res.send("admin"));
 ```
 
 ```kotlin
 app.route("/api/admin")
-    .use(auth)
+    .use(checkAuth)
     .use(adminOnly)
     .get { req, res -> res.send("admin") }
 ```
 
 ### Request ID and authentication
 
-The application supplies `auth`, `admin` and `User`. After responding, return without `next.run()` unless continuation is intentional.
+The application supplies `tokenService`, `checkAuth` (a middleware that checks it), `admin` and `User`. For built-in login, tokens and roles use the [auth module](auth.md), whose `Auth` object is attached only with `app.use(auth)`, without a path. After responding, return without `next.run()` unless continuation is intentional.
 
 ```java
 app.use((req, res, next) -> {
@@ -59,7 +59,7 @@ app.use((req, res, next) -> {
 });
 
 app.use("/api", (req, res, next) -> {
-    if (!auth.isAuthorized(req)) {
+    if (!tokenService.isAuthorized(req)) {
         res.status(401).json("Unauthorized");
         return;                  // return without next.run() to stop the chain
     }
@@ -79,7 +79,7 @@ app.get("/api/admin", adminOnly, (req, res) -> res.json(admin.status()));
 
 ```kotlin
 app.use("/api") { req, res, next ->
-    if (!auth.isAuthorized(req)) {
+    if (!tokenService.isAuthorized(req)) {
         res.status(401).json("Unauthorized")
         return@use
     }
@@ -98,7 +98,7 @@ app.cors(cors -> cors
     .allowedHeaders("Content-Type", "Authorization")
     .credentials(true)
     .maxAge(600));
-app.use(auth);
+app.use(checkAuth);
 ```
 
 - `allowedOrigins` contains exact HTTP(S) origins without paths/trailing slashes. Default: none. `*` allows every origin; the string `null` allows opaque origins.
@@ -127,7 +127,7 @@ Middleware audit = (req, res, next) -> {
     next.run();
 };
 app.group("/api", api -> {
-    api.use(auth);
+    api.use(checkAuth);
     api.get("/users", (req, res) -> res.send("users"));
     api.group("/admin", admin -> {
         admin.use(adminOnly);
@@ -136,7 +136,7 @@ app.group("/api", api -> {
 });
 ```
 
-The example `/api/admin/reports` runs group auth, adminOnly, audit, then handler. Group `use` applies before routes in the group and descendants regardless of where it appears in the configuration callback. Parent middleware precedes child middleware. Separate routes outside the group do not inherit it merely by sharing a prefix.
+The example `/api/admin/reports` runs group checkAuth, adminOnly, audit, then handler. Group `use` applies before routes in the group and descendants regardless of where it appears in the configuration callback. Parent middleware precedes child middleware. Separate routes outside the group do not inherit it merely by sharing a prefix.
 
 A group's `route(path)` also has one persistent Route builder; its `.use`/method callbacks retain order. Paths start with `/`; boundary slashes join (`/api/` + `/users` → `/api/users`, `/api` + `/` → `/api`). Dot/dot-dot, query, fragment, backslash and encoded separators are rejected. Call `group` before listen and use groups/group builders only inside their configuration callbacks. A throwing callback does not partially publish that group's routes.
 
@@ -147,7 +147,7 @@ Common HTTP global/prefix `use`, Routes, mounted Routers, static files and error
 ```java
 Middleware requestId = (req, res, next) -> next.run();   // placeholder global request-ID middleware
 app.use(requestId);          // runs first
-app.use("/api", auth);       // runs second for /api paths
+app.use("/api", checkAuth);       // runs second for /api paths
 ```
 
 ### next.run rules
@@ -178,7 +178,7 @@ Returning without response or next **leaves the request pending**, rather than l
 
 ### WebSocket
 
-Existing `app.use("/ws", auth)` authenticates the HTTP Upgrade, not every message afterward. Existing valid global/string-prefix middleware and strict WS path/Origin rules remain. Do not generalize advanced HTTP paths or HTTP layers appended after listen to WS behavior. See [WebSocket](websocket.md).
+Existing `app.use("/ws", checkAuth)` authenticates the HTTP Upgrade, not every message afterward. Existing valid global/string-prefix middleware and strict WS path/Origin rules remain. Do not generalize advanced HTTP paths or HTTP layers appended after listen to WS behavior. See [WebSocket](websocket.md).
 
 ## Error handling
 

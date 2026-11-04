@@ -1,0 +1,394 @@
+{
+ "findings": [
+  {
+   "id": "M1-F01",
+   "axis": "P6",
+   "severity": "MEDIUM",
+   "title": "M2-F01 partially resolved: login/logout churn still grows the refresh file until the 8 MB limit, then every login and refresh answers 503",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java",
+    "line_range": "167-176, 248-261"
+   },
+   "description": "pruneUsed() caps only the USED records of the family being saved. Each password login starts a new family (one unused record, expiresAt = now + refreshTtl), and logout/revokeFamily only flips revoked=true, so those records stay in the file until purgeExpired() reaches their own expiresAt (14 days under BASELINE). Scenario: a kiosk, test rig or mobile app that logs in on every launch and logs out (or simply drops its refresh token) every 30 s produces ~40k records in 14 days; at ~225 B each the document passes MiniJson.DEFAULT_FILE_BYTES (8 MB), MiniJson.write throws in commit(), TokenService maps it to AuthUnavailableException and every login and refresh of every user answers 503 until records expire. Successful logins are not throttled, so one authenticated client can drive it on purpose. Each save also still rewrites and fsyncs the whole file on the request path (quadratic I/O), which the round-1 finding also named.",
+   "suggested_fix": "Drop a revoked record on revokeFamily (or at the next cleanup) once nothing needs it for reuse detection, and cap live families per user (e.g. drop the oldest family of a user beyond N, as other session stores do), or document the bound and fail with a clear doctor WARN before the limit.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "performance",
+    "regression"
+   ]
+  },
+  {
+   "id": "M1-F02",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "onStop: an interrupt during the new awaits skips stopCleanup, so the final throttle/device snapshot is lost and the cleanup executor is never shut down",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "588-603"
+   },
+   "description": "The M2-F07 fix moved stopCleanup() after hashSlots.awaitTermination(5 s) and background.awaitTermination(5 s). Both throw InterruptedException; the lambda propagates it, runShutdownSequence logs 'onStop callback failed' and moves on, so stopCleanup() never runs: the cleanup ScheduledThreadPoolExecutor keeps its thread (daemon, but alive until JVM exit in a host that restarts apps, e.g. Android service restart) and the final snapshotRun() is skipped, so failures since the last 60 s tick are lost at restart, which is what the fix was meant to prevent. Before the fix stopCleanup ran first and only its own await could be interrupted.",
+   "suggested_fix": "Wrap the two awaits in try/finally (or catch InterruptedException, restore the interrupt flag) so stopCleanup() always runs.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "regression"
+   ]
+  },
+  {
+   "id": "M1-F03",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "AtomicFiles.lockFor keys on the absolute, not canonical, path: two FileUserStores over one file spelled differently bypass the per-path lock",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "72-83"
+   },
+   "description": "The M5-F01 fix relies on synchronized(AtomicFiles.lockFor(file)) around refuseForeignChange()+write. lockFor uses file.getAbsoluteFile().getPath(), so new File(\"data/users.json\") and new File(new File(\"./data\"), \"users.json\") (or a symlinked data dir) get two different monitors. Two such instances writing at the same time both pass the CRC check before either renames, both open and truncate the one shared <name>.tmp sibling, and the renamed file can interleave both contents (next start FAIL) or the later write silently rolls back the other instance's ver bump / password hash, which is exactly the M5-F01 failure.",
+   "suggested_fix": "Key the lock on getCanonicalPath() (fall back to the absolute path on IOException).",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "M1-F04",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "M3-F08 partially resolved: FileGroupStore still loads its file through the unbounded overload",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "153-155"
+   },
+   "description": "load(File, Parser, Logger) still passes Long.MAX_VALUE, and FileGroupStore (group/FileGroupStore.java:39) uses it, so the 'huge naru-groups file' case named in the round-1 finding still reads the whole file into a ByteArrayOutputStream (initial buffer up to 64 MB, toByteArray doubling the peak) and the String copy in parse; on Android a corrupt or grown groups file is an OOM at start instead of the FAIL message. The user, refresh, throttle and device-trust stores were moved to the bounded overload.",
+   "suggested_fix": "Give FileGroupStore a size limit (e.g. MiniJson.DEFAULT_FILE_BYTES) through the bounded load overload, and drop or bound the unbounded overload.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "M1-F05",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "AtomicFiles restricts the temp file only after FileOutputStream created it with umask permissions",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "102-113, 140-146"
+   },
+   "description": "writeLocked() creates <name>.tmp with new FileOutputStream (umask, typically 0644) and only then calls ownerOnly(tmp). A local user watching the data directory (inotify IN_CREATE) can open the temp file in that window and keep the descriptor; the content written next (users file with plain password hashes in DEV/without a key, throttle and refresh snapshots) is then readable through it, and the later chmod does not revoke an open descriptor. KeySources.publish avoids exactly this with an owner-only staging directory, so the two file paths of auth differ in protection.",
+   "suggested_fix": "Write the temp file inside an owner-only staging directory (as KeySources.publish does), or create it restricted before opening it for content.",
+   "is_behavioral": true,
+   "tags": [
+    "security"
+   ]
+  },
+  {
+   "id": "M1-F06",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Key-file migration on Windows: a failed delete of the raw .bak fails the build after a successful migration and leaves the raw key, which createOnce later restores",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeySources.java",
+    "line_range": "254-263, 334-353"
+   },
+   "description": "replaceWith() moves the raw key to .<name>.bak, renames the enc(...) file in, then throws IOException if old.delete() fails. The migration succeeded, but signingKey() fails, so build() reports a key-source failure; the raw signing key stays on disk next to its encrypted form (defeating SEC-IAM-008 for that file). Later, if the operator deletes the key file to make a new key (read() itself advises 'delete it to make a new key'), createOnce() sees the stale .bak and restores the old raw key instead of generating one. POSIX rename replaces in one step, so this is Windows (or any FS where rename does not replace) only.",
+   "suggested_fix": "After a successful second rename, log a WARN and retry/ignore the backup delete instead of throwing; in createOnce only restore a .bak when no replacement completed (e.g. compare with a marker or accept only when the main file is absent because of a crash, and log what was restored).",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "security"
+   ]
+  },
+  {
+   "id": "M1-F07",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "GrantRule.scopesOf(String) is now dead in main code and still answers 'empty' for a missing or disabled actor",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/GrantRule.java",
+    "line_range": "67-75"
+   },
+   "description": "Every actor read moved to actorScopes(), which refuses a missing or disabled actor (the M3-F02 fix). The public scopesOf(String) stays, unused by main code, with the exact semantics that caused M3-F02 (empty set for a disabled actor, so writes on scope-less targets pass coverage). The next caller that picks it for an actor check reintroduces the bypass silently.",
+   "suggested_fix": "Remove scopesOf(String) or make it package-private for tests, so the only public actor read is actorScopes().",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "M1-F08",
+   "axis": "P5",
+   "severity": "LOW",
+   "title": "Shared file default stores keep the first Auth's ComponentLogger, so after that app stops they log to its closed logger",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "3770, 3927-3948"
+   },
+   "description": "FILE_THROTTLES / FILE_DEVICE_TRUSTS / FILE_REFRESH_STORES share one store per FileUserStore across every Auth built over it, and the store is built with the first build's ComponentLogger, which install() points at the first app's logger. A second Auth over the same FileUserStore (an app restarted in the same process, an Android service re-created with a singleton store) reuses the stores, so their WARNs (throttle and device-trust cap warnings, recovery warnings) still go to the first app's logger, which SafeLogger.flushAndClose closed at that app's shutdown, and are lost; the second app's logger never sees them. Before the M2-F04 fix they went to a ConsoleLogger.",
+   "suggested_fix": "Retarget the shared store's logger on each install (keep the ComponentLogger with the cached store and point it at the newest app), or pass the logger per call.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "M1-F09",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "PROD file-key policy and doctor count only see a bare FileUserStore; a decorated one writes plain hashes in PROD with no refusal and no WARN",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "3836-3850, 894-912"
+   },
+   "description": "unkeyedFileStores() and plainSecretItems() test users instanceof FileUserStore. An app that wraps the shipped store, e.g. .users(new CachingUserStore(new FileUserStore(file))) or a logging/metrics decorator, gets no PROD AuthConfigException, no DEV WARN and no doctor item, and the inner store writes every passwordHash plain (format version 1) in PROD, which FR-IAM-015 says PROD refuses. The file defaults (refresh/throttle/device trust) are skipped too, so the gap is silent.",
+   "suggested_fix": "Record unkeyed FileUserStore instances in FileStoreKeys and let the PROD check fail when any unkeyed FileUserStore was created in this process for the build (or expose a doctor WARN for an unknown store wrapping one), or document that the PROD check covers only the store passed directly.",
+   "is_behavioral": true,
+   "tags": [
+    "security"
+   ]
+  },
+  {
+   "id": "T1-F01",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "REL-APIKEY-002 AC-1 rewrite no longer exercises the 'largest ver wins' guard (a lower ver arriving after a higher one)",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+    "line_range": "763-795"
+   },
+   "description": "The test was rewritten (T2-F02 fix) into two sequential batches: 50 requests whose cached principal holds ver 5, then userRevoked(u1) and 50 requests that read ver 6. ApiKeyOwners.scheduleStale (ApiKeyOwners.java 355-368) keeps the pending ver as the maximum (pending >= ver, else replace(pending, ver)); the only scenario that guard exists for is a ver-5 observation landing after a ver-6 one, and the new test produces observations in strictly increasing order only. The old version interleaved scheduleStale(u1, 5) calls with ver-6 requests concurrently, so a last-writer-wins implementation (staleVers.put(ownerId, ver)) was likely caught. Now such a regression passes every assertion (pending is 5 after batch 1, 6 after batch 2, the run deletes with 6), and no other test calls scheduleStale or pendingStale with a decreasing ver (grep over src/test). The AC's 'called with ver 6' when vers 5 and 6 are observed concurrently is therefore no longer verified for the out-of-order case.",
+   "suggested_fix": "After the ver-6 batch (pending is 6) send one more request (or several concurrently) that observes ver 5, e.g. by re-priming the principal cache with f.auth.accessToken(u1, 5, ...) on a fresh cache entry, or call f.auth.apiKeyOwners().scheduleStale(u1, 5) directly once as an explicit out-of-order step, and assert pendingStale(u1) stays 6 and held.queued.size() stays 1 before held.runAll().",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "regression"
+   ]
+  },
+  {
+   "id": "T1-F02",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "assertReleased's Javadoc was left above the new assertAll401 helper (two stacked Javadoc comments)",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+    "line_range": "1209-1211, 1267"
+   },
+   "description": "The new helpers were inserted between the Javadoc '/** The holds are released once the answer settled ... */' and its method assertReleased(). Line 1209 now holds that orphaned comment directly above '/** Sends n concurrent GET /api/x ... */' and assertAll401 (1211), while assertReleased at 1267 has no Javadoc. A reader (or javadoc tooling) attributes the wrong description; the first comment is dead text.",
+   "suggested_fix": "Move the 'The holds are released once the answer settled' Javadoc back directly above assertReleased() and keep only the assertAll401 Javadoc above assertAll401.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "doc"
+   ]
+  },
+  {
+   "id": "T1-F03",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "hugeRefreshFileFailsBeforeItIsRead depends on a 3 GB sparse file the test file system may not support",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+    "line_range": "437-454"
+   },
+   "description": "The M3-F08 regression test calls RandomAccessFile.setLength(3 GB) in the JUnit temp folder and relies on it being sparse. On a file system without sparse-on-extend semantics (NTFS without the sparse flag, FAT/exFAT, some container overlay or quota-limited CI volumes) the call reserves or allocates 3 GB, so on a runner with less free space it fails with IOException('not enough space') before the store is constructed, and on others it is slow and fills the disk temporarily. The behaviour under test (the size check runs before any read) does not need 3 GB: FileRefreshTokenStore has a public (File, long maxFileBytes, Logger) constructor.",
+   "suggested_fix": "Use new FileRefreshTokenStore(f, smallLimit, logger) with a file a little above that limit (or a few MB sparse file with a 1 KB limit) and keep the FAIL / 'above the limit' / app-provided-store message assertions; if the 'never read' property must be shown, wrap the file in a size that exceeds the heap only on platforms that report sparse support, or assert on a read counter seam.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F01",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "RolePolicyTest still asserts the message of the exception the test itself created (T3-F09 not resolved)",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/rbac/RolePolicyTest.java",
+    "line_range": "129-146"
+   },
+   "description": "throwingRoleStorePropagates now stores the caught exception in 'propagated' after assertEquals(down, e). Throwable does not override equals, so that assertion already proves propagated == down, the IllegalStateException(\"db down\") the test built. The two new checks, assertFalse(propagated.getMessage().isEmpty()) and assertEquals(\"db down\", propagated.getMessage()), read the test's own literal and cannot fail. If EffectiveGrants wrapped or replaced the store error, assertEquals(down, e) would already fail first, so the comment 'keeps the store's message (not wrapped or replaced)' adds nothing.",
+   "suggested_fix": "Use assertSame(down, e) as the only proof and delete the two message assertions and the 'propagated' variable.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F02",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Duplicate transient-hash docs tests remain (T4-F10 only partially resolved)",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/AuthDocsTest.java",
+    "line_range": "41-43,81-83"
+   },
+   "description": "The fix replaced the CON_AUTH_005_AC2 negative control with a real check: unnamedTypes runs on a synthetic 'NoSuchAuthType' entry and must report it in ko and en. That half is resolved. The other half of T4-F10 is still present: transientHashLimitIsDocumented (41-43) and DR_IAM_001_AC7_transientHashLimitInJavadocAndDocs (81-83) both assert contains(KO_HASH) and contains(EN_HASH) on the same pages. A wording change still has to be made in two tests.",
+   "suggested_fix": "Delete transientHashLimitIsDocumented, or merge its assertions into DR_IAM_001_AC7, which also covers the Javadoc.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "style"
+   ]
+  },
+  {
+   "id": "T2-F03",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "AC-5 check compares a loaded-server latency with one idle-server probe (T4-F03 partially resolved)",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AuthFailureFloorSocketTest.java",
+    "line_range": "262-287"
+   },
+   "description": "The fixed sleep is gone. The test now waits until two logins reach the user-key throttle check before the hash, which sound reasoning ties to the worker count. The deciding assertion is still health.millis < floorMillis (286-287). floorMillis is one probe on an idle server. health.millis is measured while up to 50 logins compete for the hash slots and the CPU, each running a 200,000-iteration PBKDF2. A false failure is possible: on a 2-vCPU or Android-speed CI the hash threads saturate the CPU, and /health can run past an idle floor. A false pass is also possible: under the blocking-floor regression the failures run slower under load, so the margin by which /health beats an idle floor depends on scheduling, not on the property tested.",
+   "suggested_fix": "Decide by state instead of a latency comparison: assert that /health returned while at least slots+1 failures are still pending (already counted in 'pending'), and that the 2 TinyHttpd workers are not parked (for example a worker-thread state or count seam). Alternatively take the floor from the configured HashCost or FailureFloor value rather than from an idle probe.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F04",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Kotlin tests reworked for T4-F05/T4-F06 now start apps and auth instances and never shut them down",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave6KotlinTest.kt",
+    "line_range": "33-81"
+   },
+   "description": "To make the tests check behaviour, AuthWave6KotlinTest 'token service, lockout and websocket wrapper' now calls t.start() (line 56) and opens a WebSocket session. AuthWave7KotlinTest 'docs auth csrf guarded route' (108-131) and 'docs auth cors before install' (149-165) call t.send(...), and TestApp.send runs listen(0) on first use. None of the three ever calls app().shutdown(...). Each one therefore leaves a started RestApp, its in-memory adapter pool and the started Auth's cleanup scheduler running for the rest of the test JVM. This is the T1-F02 leak pattern that the same fix round removed from WebSocketWrapperTest and ServletProxyTrustTest. Before this round these Kotlin tests never started anything, so the leak is new. AuthFileKeyKotlinTest in the same round does it right: it shuts down in finally.",
+   "suggested_fix": "Wrap each started TestApp in try/finally { t.app().shutdown(5, TimeUnit.SECONDS) } (or an @After that stops a list of started apps).",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "regression"
+   ]
+  },
+  {
+   "id": "T2-F05",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "MiniJsonTest: the new AC-3 test was inserted under the AC-4 test's comment, so both requirement labels are wrong",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/MiniJsonTest.java",
+    "line_range": "127-143"
+   },
+   "description": "The new SEC_TOKEN_002_AC3_unicodeEscapeTakesAsciiHexOnly test, with its two-line comment, was placed between the existing '// SEC-TOKEN-002 AC-4: a 100-level array ...' comment (127) and the AC-4 test it described. The AC-3 test now sits under an AC-4 comment, and SEC_TOKEN_002_AC4_deepArrayStopsAtTheLimitWithoutParsingFurther (143) has no requirement comment. Requirement traceability greps that use the comment lines (the project's '// <REQ> AC-n:' convention) now map the deep-array check to the wrong test.",
+   "suggested_fix": "Move the '// SEC-TOKEN-002 AC-4: ...' line down to directly above SEC_TOKEN_002_AC4_deepArrayStopsAtTheLimitWithoutParsingFurther.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F06",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "hugeFileFailsBeforeItIsRead needs 3 GB of free disk wherever the file system does not support sparse files",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java",
+    "line_range": "211-225"
+   },
+   "description": "The test runs RandomAccessFile.setLength(3 GB) on the TemporaryFolder file. This is cheap on APFS, ext4 and tmpfs only because those create a sparse file. On NTFS (no sparse flag is set), on some overlay or quota CI file systems, or on FAT, the 3 GB is allocated for real. setLength then throws ENOSPC as a test error on a small runner, or it holds 3 GB of disk until the rule deletes the folder. The property under test, that the size check runs before the read, does not need 3 GB. Any file just over the limit whose read would be detectable would do. The other AC-6 test already proves the size limit itself.",
+   "suggested_fix": "Use a file a little above a lowered limit, for example new FileUserStore(f, 1024, logger) with a sparse 64 MB file. Or assume the free space first (Assume.assumeTrue(tmp.getRoot().getUsableSpace() > 4L<<30)).",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F07",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "FR-APIKEY-002 AC-5: the old assertion that cannot fail is kept under a new comment that claims it checks something",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java",
+    "line_range": "900-909"
+   },
+   "description": "The fix adds a real check: a 20 ms ticking scheduler is seen calling deleteExpired and then makes no call in the 500 ms after onStop. That resolves T3-F06. The earlier assertEquals(calls, keys.expiredCalls.get()) is still there, now under the comment 'the stopped node made no call while the other one started and ran its cleanup'. 'none' holds no reference to 'keys', and f's stopped scheduler has a 10-minute default interval, so the count cannot change in that window. The comment presents a check that cannot fail as evidence.",
+   "suggested_fix": "Delete the 'none' block (start, cleanupRun and the assertEquals) or reword the comment as a no-key-store smoke check. The ticking block is the AC-5 proof.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "style"
+   ]
+  }
+ ],
+ "resolved": [
+  "M1-F01",
+  "M1-F02",
+  "M1-F03",
+  "M2-F01",
+  "M2-F02",
+  "M2-F03",
+  "M2-F04",
+  "M2-F06",
+  "M2-F07",
+  "M3-F01",
+  "M3-F02",
+  "M3-F03",
+  "M3-F04",
+  "M3-F08",
+  "M3-F09",
+  "M4-F06",
+  "M4-F12",
+  "M5-F01",
+  "M5-F02",
+  "M5-F03",
+  "M5-F11",
+  "T1-F01",
+  "T1-F02",
+  "T1-F03",
+  "T1-F04",
+  "T1-F07",
+  "T2-F01",
+  "T2-F02",
+  "T2-F03",
+  "T2-F04",
+  "T2-F05",
+  "T2-F06",
+  "T2-F08",
+  "T2-F09",
+  "T2-F14",
+  "T3-F01",
+  "T3-F02",
+  "T3-F04",
+  "T3-F05",
+  "T3-F06",
+  "T3-F07",
+  "T3-F08",
+  "T3-F10",
+  "T3-F11",
+  "T3-F16",
+  "T4-F01",
+  "T4-F02",
+  "T4-F04",
+  "T4-F05",
+  "T4-F06",
+  "T4-F07",
+  "T4-F14"
+ ],
+ "not_resolved": [
+  {
+   "id": "M2-F01",
+   "why": "partially resolved: only used records of the saved family are capped; new families from logins and revoked records still live until expiresAt, so login/logout churn still fills the 8 MB file (new finding M1-F01)"
+  },
+  {
+   "id": "M3-F08",
+   "why": "partially resolved: FileGroupStore still uses the unbounded AtomicFiles.load overload (new finding M1-F04)"
+  },
+  {
+   "id": "T3-F09",
+   "why": "The new message assertions still read the test's own exception (identity already proven by assertEquals(down, e)); see T2-F01."
+  },
+  {
+   "id": "T4-F10",
+   "why": "Partially: the negative control now exercises unnamedTypes, but the duplicate transient-hash tests remain; see T2-F02."
+  },
+  {
+   "id": "T4-F03",
+   "why": "Partially: the fixed sleep is replaced by a reach latch, but health.millis < floorMillis (loaded vs idle probe) still decides; see T2-F03."
+  }
+ ]
+}

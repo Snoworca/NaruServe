@@ -1,0 +1,767 @@
+{
+ "judgements": [
+  {
+   "req_id": "SEC-AUTH-003",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "SecureRandom token and MessageDigest.isEqual constant-time compare are in the API 21 signature; locality uses req.socketAddress() (IR-HTTP-010, evolving) plus header inspection and trustProxyHops (IR-ENGINE-003, evolving); the AC-8 fixture InMemoryHttpAdapter(String remoteAddress, boolean secure) already exists. No new dependency, Core public API only.",
+     "evidence": [
+      "API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64",
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:77",
+      "docs/spec/04.http-core.srs.md:4540 IR-HTTP-010 (socketAddress, evolving)",
+      "docs/spec/06.engine-adapter.srs.md:1545 IR-ENGINE-003 (trustProxyHops, evolving)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition site Auth.java only (parent package path validated); behaviour concrete in 00 §4.4 and R31 (6); the decided codes are now in the IR-AUTH-003 AC-3 catalog, so producer and catalog cross-reference.",
+     "evidence": [
+      "code_context.json trace_validation SEC-AUTH-003: addition_site_parents_ok",
+      "docs/spec/17.auth.srs.md:1398 IR-AUTH-003 AC-3 lists invalid_setup_token 401 and setup_not_local 403"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "All 8 depends_on targets are evolving (FR-AUTH-004, FR-AUTH-008, SEC-FLOW-001, SEC-FLOW-003, SEC-FLOW-007, FR-FLOW-002, FR-TOKEN-004, IR-AUTH-003); no draft dependency; graph acyclic. -1 for breadth across three scopes.",
+     "evidence": [
+      "existing_srs_context.json SEC-AUTH-003 draft_deps: []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Q15/Q23 are decided and asserted (401 invalid_setup_token, 403 setup_not_local, 400 BAD_REQUEST for a missing/non-string token); AC-8 gives two concrete fixtures and checks the token stays unused. Token format/length/lifetime remain unfixed by 00 but no AC asserts them. No conflict with 00 §4.4 (silent on status/code) or SEC-FLOW-001 AC-6 (plaintext non-local stays 403 insecure_transport).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:911 SEC-AUTH-003 AC-2, AC-8",
+      "docs/research/auth-rbac/00.overview.md:225 §4.4 gives no status or code"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH In Scope (17.auth.srs.md:28 bootstrap and setup).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:28"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "First-admin bootstrap and .recovery are named in the 00 §9 v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Record invalid_setup_token / setup_not_local in docs/api with their producing answers (IR-AUTH-003 AC-3 catalog test)",
+    "Schedule after SEC-FLOW-001 and IR-HTTP-010 (socketAddress) land"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": []
+  },
+  {
+   "req_id": "SEC-AUTH-007",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Per-user cache on java.util.concurrent with TimeSource TTL (IR-AUTH-001); minimal principal; promotion inside guards. No Core change, no new dependency.",
+     "evidence": [
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64",
+      "docs/spec/17.auth.srs.md:237 IR-AUTH-001 TimeSource (evolving)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Addition site internal/PrincipalCache.java only; behaviour concrete in 00 R36 and §6.4 row R36 × R44.",
+     "evidence": [
+      "code_context.json trace_validation SEC-AUTH-007: addition_site_parents_ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All 5 depends_on targets are evolving (IR-AUTH-001, FR-IAM-006/007/009, SEC-IAM-004); no draft dependency; acyclic.",
+     "evidence": [
+      "existing_srs_context.json SEC-AUTH-007 draft_deps: []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "No open value. AC-1..AC-6 are deterministic with a fixed TimeSource; AC-7 spans logout ?all=true, refresh, device token, API key and auth.webSocket close, so it turns green late (scheduling condition, not a test gap).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:1618 SEC-AUTH-007 AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope.",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:15"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Principal cache (R36) is in the 00 §9 v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Schedule AC-7 in the last wave, after FLOW logout/refresh/device trust, APIKEY ver checks and auth.webSocket exist"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": []
+  },
+  {
+   "req_id": "SEC-AUTH-008",
+   "feasibility": "high",
+   "score": 85,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Log capture works because RestApp.logger(Logger) is replaceable; char[] wipe is Arrays.fill; one internal redaction helper. No dependency. Cost is one large integration test across HEADER/COOKIE/BOTH, API keys, setup, DEV seeding and doctor.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:159 RestApp logger(Logger)",
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 12,
+     "rationale": "Addition site is a directory (utils/auth/internal/); no verifies trace; redaction helper design not concrete.",
+     "evidence": [
+      "code_context.json trace_validation SEC-AUTH-008"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "Only depends_on FR-AUTH-004 (evolving); SEC-AUTH-003 is now related_to. Implicitly needs every flow, which is a scheduling matter. -1 for that implicit breadth.",
+     "evidence": [
+      "existing_srs_context.json SEC-AUTH-008 depends_on [FR-AUTH-004]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "No open value. AC-1 is fully specified (markers, modes, carve-outs) but is the cross-scope gate test, green last; AC-3 is INFERRED advisory yet testable.",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:1805 SEC-AUTH-008 AC-1, AC-3"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope.",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:15"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Hygiene required by 00 R29 (d) and R47 (3).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:296"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Run AC-1 as the final cross-scope gate test in the last wave",
+    "Route every auth log write and exception message through one redaction helper"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": []
+  },
+  {
+   "req_id": "SEC-TOKEN-009",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Login is registered with methodAsync and settles a Deferred without a held thread; the failure floor waits on a ScheduledExecutorService; time from System.nanoTime/TimeSource (no java.time). Both adapters already complete deferred responses from a non-request thread (TinyDeferredSocketTest, ServletRequestRetentionTest), which de-risks AC-8. Dummy PBKDF2 via javax.crypto.Mac.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19 methodAsync",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:128-140",
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyDeferredSocketTest.java",
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestRetentionTest.java",
+      "API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "verifies trace HttpExecution.java:128-140 matches the async settle path; adapter async test precedents exist; equalizer is an addition site.",
+     "evidence": [
+      "code_context.json trace_validation SEC-TOKEN-009: all_verifies_paths_exist"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "All 5 depends_on targets are evolving (REL-TOKEN-001, PERF-TOKEN-001, SEC-TOKEN-007, SEC-FLOW-011, SEC-FLOW-012); acyclic. -1 because the attempt boundary is defined by the FLOW step order.",
+     "evidence": [
+      "existing_srs_context.json SEC-TOKEN-009 draft_deps: []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Q45 decided and asserted (AC-7: T = one start-time measurement under fixed(n), floor 250 ms + 0-50 ms), consistent with PERF-TOKEN-001 AC-3/AC-6. 00 §12 scheduler-thread limit is now AC-8 on both adapters. Q39 settled by the statement. AC-2/3/7 need injected scheduler, jitter and measurement stub; AC-5 is a thread-starvation test.",
+     "evidence": [
+      "docs/spec/18.auth-tokens.srs.md:656 PERF-TOKEN-001 AC-3, AC-6",
+      "docs/spec/18.auth-tokens.srs.md:923 SEC-TOKEN-009 AC-7, AC-8"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "TOKEN scope login timing.",
+     "evidence": [
+      "docs/spec/18.auth-tokens.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "R38 constant-work login belongs to the v1 PBKDF2 calibration (00 §9 v1).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Inject scheduler, jitter and nanoTime/measurement sources",
+    "AC-8 adds tests in NaruServe-tinyhttpd and NaruServe-servlet test source sets (Jetty and Gson already on the servlet test classpath, build.gradle:362-369)",
+    "Note in docs/api that pre-hash rejections (403 transport/CSRF, 415, 400 shape, 429) are not floored: 00 R38 literally excludes only 429 but frames the floor around attempts that took a hash slot, so this reading is consistent"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "Test-only: NaruServe-tinyhttpd and NaruServe-servlet adapter tests (AC-8); no main code outside NaruServe-api",
+   "contradictions_found": []
+  },
+  {
+   "req_id": "IR-TOKEN-001",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Password seam is a @FunctionalInterface taking (String, char[], AuthEventContext); Bearer and API key authenticators stay internal (Q35), so no further public shape to design. Kotlin SAM test runs in NaruServe-kotlin tests. No platform risk.",
+     "evidence": [
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/",
+      "docs/research/auth-rbac/00.overview.md:77 spi [구현] lists Authenticator"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Addition site spi/Authenticator.java only; seam shape from 05 §3.9.",
+     "evidence": [
+      "code_context.json trace_validation IR-TOKEN-001: addition_site_parents_ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "4 of 5 depends_on are evolving (FR-TOKEN-003, FR-TOKEN-001, SEC-FLOW-004, IR-FLOW-001); SEC-TOKEN-009 is a draft sibling judged high here. Former IR-TOKEN-001 ⇄ SEC-FLOW-004 cycle is gone (APIKEY edges now related_to).",
+     "evidence": [
+      "existing_srs_context.json IR-TOKEN-001 draft_deps: [SEC-TOKEN-009]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Q35 decided; AC-7 reflection test over utils.auth.spi is decidable. AC-1 builder option name not final but a test uses the chosen name. AC-6 needs the AUTH 503 renderer (evolving).",
+     "evidence": [
+      "docs/spec/18.auth-tokens.srs.md:1124 IR-TOKEN-001 AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "TOKEN scope SPI.",
+     "evidence": [
+      "docs/spec/18.auth-tokens.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "'Authenticator (password, Bearer, API key)' is in the 00 §9 v1 row; built-ins ship, only the password seam is public.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Implement with or after SEC-TOKEN-009 (password authenticator runs inside the timing equalizer)",
+    "Add utils.auth.spi to ApiJarClasses PUBLIC_PACKAGES (NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:27-28)",
+    "Kotlin SAM test (T11) in NaruServe-kotlin"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "Test-only: Kotlin SAM test in NaruServe-kotlin (T11)",
+   "contradictions_found": []
+  },
+  {
+   "req_id": "FR-FLOW-006",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "GET/PATCH handlers in auth.routes() over the AuthUsers/UserMutator path; the 400 is a Core HttpException with StandardErrors code BAD_REQUEST. No dependency.",
+     "evidence": [
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:138 BAD_REQUEST",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:15-72"
+     ]
+    },
+    "evidence_strength": {
+     "score": 13,
+     "rationale": "Only a directory addition-site trace; no verifies trace.",
+     "evidence": [
+      "code_context.json trace_validation FR-FLOW-006"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All 6 depends_on are evolving (IR-FLOW-002, IR-IAM-003, SEC-IAM-001, FR-AUTH-008, FR-IAM-003, FR-AUTH-006); SEC-APIKEY-008 is now related_to, so the 2-cycle is gone.",
+     "evidence": [
+      "existing_srs_context.json FR-FLOW-006 draft_deps: []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Q49/Q53 decided: AC-3 asserts 400 BAD_REQUEST, matching 00 R30 ('auth가 직접 하는 입력 검사(… 범위 밖 값)의 400은 … BAD_REQUEST'). Q51 body {\"attributes\":{…}} fixed. AC-2 still carries a stale '[INFERRED] name not final' marker. JSON-body tests need a decoding codec.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:297 R30 input-check 400",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:22 decode throws"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW account endpoint.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "GET/PATCH /auth/me are among the 8 v1 account endpoints (00 R45).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:312"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Record the PATCH body shape and 400 BAD_REQUEST in docs/api and drop the stale [INFERRED] marker in AC-2",
+    "Provide a decoding JsonCodec for NaruServe-api HTTP tests (StubJsonCodec.java:22 throws on decode)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": []
+  },
+  {
+   "req_id": "FR-FLOW-009",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Lockout value class plus a lock check after step ③ that still runs the hash in one slot; DELETE route in adminRoutes; lock state in the REL-FLOW-001 storage. Plain Java, no dependency.",
+     "evidence": [
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64"
+     ]
+    },
+    "evidence_strength": {
+     "score": 13,
+     "rationale": "Only an addition-site trace (Lockout.java); 07 gives the builder shape.",
+     "evidence": [
+      "code_context.json trace_validation FR-FLOW-009",
+      "docs/research/auth-rbac/07.enterprise-and-customization.md:57"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All 4 depends_on are evolving (SEC-FLOW-011, IR-IAM-005, SEC-IAM-007, IR-AUTH-003).",
+     "evidence": [
+      "existing_srs_context.json FR-FLOW-009 draft_deps: []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 10,
+     "rationale": "Q54/Q55/Q120 decided: locked login = 401 invalid_credentials after the hash under the SEC-TOKEN-009 floor; DELETE 204. Tests are writable, but AC-5's decided release semantics contradict the 00 §6.4 remedy (see blockers), so its expected outcome may change (-4). AC-2 still marks the builder '(name not final) [INFERRED]' although it was decided.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:1768 FR-FLOW-009 AC-2, AC-5",
+      "docs/research/auth-rbac/00.overview.md:556"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW abuse protection.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Lockout is in the v1 row as opt-in; the decided release narrows a remedy 00 documents.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Resolve the AC-5 / SEC-FLOW-012 AC-6 release semantics against 00 §6.4 'R34 × 새 기기 admin' before implementation",
+    "Drop the stale '(name not final) [INFERRED]' marker on Lockout.after(5).forMinutes(15) in AC-2 and record it in docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": [
+    "Contradiction with 00 §6.4 (decided value of FR-FLOW-009 AC-5, shared by SEC-FLOW-012 AC-6). 00.overview.md:556 row 'R34 × 새 기기 admin': '사용자 단독 키로 429. 기존 기기에서 로그인하거나 다른 관리자가 lockout 해제. 남는 위험으로 문서화' (another admin's lockout release is a stated way out of the user-only-key 429). FR-FLOW-009 AC-5: 'The release clears only the Lockout state and leaves every login throttle key as it was (decided 2026-11-02; SEC-FLOW-012 AC-6)', and SEC-FLOW-012 AC-6: 'the same new-device login right after another admin's DELETE /auth/admin/users/:id/lockout still gets 429 from the user-only key'. 00 R34 (4) ties DELETE …/lockout to the hard lock only, so 00 is internally ambiguous; the decision picks R34 (4) and voids the §6.4 remedy. Needs an owner ruling: either DELETE also resets that user's user-only throttle key, or 00 §6.4 is amended."
+   ],
+   "blockers_resolved": [
+    {
+     "blocker": "Contradiction with 00 §6.4 (decided value of FR-FLOW-009 AC-5, shared by SEC-FLOW-012 AC-6). 00.overview.md:556 row 'R34 × 새 기기 admin': '사용자 단독 키로 429. 기존 기기에서 로그인하거나 다른 관리자가 lockout 해제. 남는 위험으로 문서화' (another admin's lockout release is a stated way out of the user-only-key 429). FR-FLOW-009 AC-5: 'The release clears only the Lockout state and leaves every login throttle key as it was (decided 2026-11-02; SEC-FLOW-012 AC-6)', and SEC-FLOW-012 AC-6: 'the same new-device login right after another admin's DELETE /auth/admin/users/:id/lockout still gets 429 from the user-only key'. 00 R34 (4) ties DELETE …/lockout to the hard lock only, so 00 is internally ambiguous; the decision picks R34 (4) and voids the §6.4 remedy. Needs an owner ruling: either DELETE also resets that user's user-only throttle key, or 00 §6.4 is amended.",
+     "resolution": "SRS corrected 2026-11-02 to follow 00 (see research note \"Correction\")"
+    }
+   ]
+  },
+  {
+   "req_id": "SEC-FLOW-013",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "HMAC via javax.crypto.Mac (in signature), in-house base64url because java.util.Base64 is absent from API 21, TimeSource for expiry; per-kid keys from SEC-TOKEN-005 AC-5 (evolving). New public SPI utils.auth.spi.DeviceTrust plus Kotlin T11 test.",
+     "evidence": [
+      "API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64",
+      "docs/spec/18.auth-tokens.srs.md SEC-TOKEN-005 AC-5 (evolving)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "verifies traces match: Request.header(String) and Request.cookie(String) read Naru-Device / naru_device.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:62-68",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:157-175"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "4 of 5 depends_on evolving; REL-FLOW-001 is a draft sibling judged high here.",
+     "evidence": [
+      "existing_srs_context.json SEC-FLOW-013 draft_deps: [REL-FLOW-001]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Q118 decided and asserted (AC-10: HttpOnly, SameSite=Strict, Path=<mount>/login, Secure iff req.isSecure(), Max-Age 7776000), consistent with SEC-FLOW-009 AC-4 and 00 (owner removed cookie attributes, 00.overview.md:782). AC-6 is a long but deterministic TimeSource scenario. Q60 (SPI method set) stays open but AC-9 is method-set-agnostic; it is fixed at implementation per CLAUDE.md.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:1430 SEC-FLOW-013 AC-6, AC-9, AC-10",
+      "docs/research/auth-rbac/00.overview.md:782"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW device trust.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "DeviceTrust (R34) is in the 00 §9 v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Fix the DeviceTrust method set before release and record it in docs/api (R20: later changes only as default methods); FR-IAM-013 AC-4 waits for it",
+    "Add utils.auth.spi to ApiJarClasses PUBLIC_PACKAGES (ApiJarClasses.java:27-28)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "Test-only: Kotlin DeviceTrust test in NaruServe-kotlin (T11)",
+   "contradictions_found": []
+  },
+  {
+   "req_id": "REL-FLOW-001",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Capped in-memory map with one WARN; file snapshots through internal AtomicFiles with FileDescriptor.sync (in signature); JDBC through java.sql (in signature); Android detection by system property, no android.*; sqlite-jdbc as NaruServe-api testImplementation only.",
+     "evidence": [
+      "API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64",
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "build.gradle:273-280 project(':NaruServe-api') dependencies block"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "build.gradle:274-280 addition site exists and is the right block for a test-only driver; utils/auth addition site.",
+     "evidence": [
+      "code_context.json trace_validation REL-FLOW-001: all_verifies_paths_exist"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "All 4 depends_on evolving (IR-FLOW-003, REL-IAM-004, FR-AUTH-003, OPS-AUTH-001).",
+     "evidence": [
+      "existing_srs_context.json REL-FLOW-001 draft_deps: []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "No open value. AC-2 needs an injectable Android check on the JVM; AC-5 (JdbcUserStore) and AC-6/AC-7 need FR-IAM-013's Jdbc classes and the SQLite test driver, so they turn green with FR-IAM-013.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:1830 REL-FLOW-001 AC-2, AC-6, AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW counter storage.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "R42/R34 (6) storage is v1; shared counting matters only for MULTI_INSTANCE.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as testImplementation in project(':NaruServe-api') (build.gradle:273-280), never a main dependency",
+    "Make Android detection injectable (system property) so AC-2 runs on the JVM",
+    "Schedule AC-5 (JDBC branch), AC-6 and AC-7 with or after FR-IAM-013"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": []
+  },
+  {
+   "req_id": "FR-IAM-013",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "java.sql/javax.sql are in the API 21 signature; one atomic upsert per dialect with a CASE on window_start (SQLite/PostgreSQL ON CONFLICT, MySQL ON DUPLICATE KEY UPDATE); window time is a statement parameter from TimeSource. Test driver is testImplementation only.",
+     "evidence": [
+      "API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64",
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "build.gradle:273-280"
+     ]
+    },
+    "evidence_strength": {
+     "score": 13,
+     "rationale": "Addition-site trace jdbc/ only.",
+     "evidence": [
+      "code_context.json trace_validation FR-IAM-013"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "DR-IAM-003 and IR-FLOW-003 evolving; SEC-FLOW-013 and REL-FLOW-001 are draft siblings judged high here.",
+     "evidence": [
+      "existing_srs_context.json FR-IAM-013 draft_deps: [SEC-FLOW-013, REL-FLOW-001]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Window semantics decided (AC-6 fixed window, deterministic with TimeSource). AC-4 still waits for the DeviceTrust method set (Q60, fixed in SEC-FLOW-013). AC-1 is INFERRED low (test parameter). Two-instance SQLite tests need a busy timeout.",
+     "evidence": [
+      "docs/spec/20.auth-identity-and-grants.srs.md:1830 FR-IAM-013 AC-4, AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned JDBC implementations.",
+     "evidence": [
+      "docs/spec/20.auth-identity-and-grants.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "utils.auth.jdbc LoginThrottle and DeviceTrust are in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Schedule after SEC-FLOW-013 fixes the DeviceTrust method set (AC-4)",
+    "Set a SQLite busy timeout (or WAL) in multi-instance tests",
+    "MySQL/PostgreSQL upsert forms checked by SQL-text tests only"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": []
+  },
+  {
+   "req_id": "FR-IAM-014",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "One R31 check, then rename, changePassword (no retry), security fields, attributes inside the per-user lock; the handler catches each failure and writes the AuthResponses body plus top-level applied. Plain Java, but the most stateful handler.",
+     "evidence": [
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "docs/spec/17.auth.srs.md:1371 IR-AUTH-003 AC-3/AC-6 (evolving)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site Auth.java exists as a parent path; 13 traces cross-reference evolving siblings.",
+     "evidence": [
+      "code_context.json trace_validation FR-IAM-014"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "All 12 depends_on are evolving; acyclic. -1 for coupling.",
+     "evidence": [
+      "existing_srs_context.json FR-IAM-014 draft_deps: []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 10,
+     "rationale": "Q74/Q14/Q75 decided and asserted (top-level applied array, write_conflict 409, user_update_failed). AC-1..AC-10 are writable with fault-injecting stores. AC-11 (Q76) contradicts 00 R37 (see blockers), so its expected status and audit may change (-4). JSON bodies need a decoding codec.",
+     "evidence": [
+      "docs/spec/20.auth-identity-and-grants.srs.md:2160 FR-IAM-014 AC-10, AC-11",
+      "docs/research/auth-rbac/00.overview.md:304"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned admin handler.",
+     "evidence": [
+      "docs/spec/20.auth-identity-and-grants.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "A4 is a v1 admin endpoint (R45, R37 admin PATCH).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:312"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Resolve AC-11 and the statement's audit rule against 00 R37 14판 before implementation",
+    "Schedule last in the IAM wave (needs SEC-IAM-004/007, REL-IAM-001/002, FR-AUTH-008/009)",
+    "Decoding JsonCodec for NaruServe-api HTTP tests"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": [
+    "Contradiction with 00 R37 (decided value Q76 in FR-IAM-014 statement and AC-11). 00.overview.md:304 R37 14판: '비밀번호 뒤의 필드가 중간에 실패하면 503과 함께 이미 적용된 필드 목록(applied)을 응답하고 감사 이벤트를 남긴다.' FR-IAM-014 AC-11: 'setRoles throws new AuthRejection(422, \"role_policy\") after changePassword succeeded answers 422 with code role_policy and applied: [\"password\"]', and the statement audits only 'every 503 after the password and every security_write_conflict answer', so a 422/400 failure after the password leaves no audit event. 00 says 503 plus an audit event for any failure after the password; the AC keeps the exception's own status (00 R30 general rule) and drops the audit. At minimum the audit omission contradicts 00; the status choice needs an owner ruling or a 00 amendment."
+   ],
+   "blockers_resolved": [
+    {
+     "blocker": "Contradiction with 00 R37 (decided value Q76 in FR-IAM-014 statement and AC-11). 00.overview.md:304 R37 14판: '비밀번호 뒤의 필드가 중간에 실패하면 503과 함께 이미 적용된 필드 목록(applied)을 응답하고 감사 이벤트를 남긴다.' FR-IAM-014 AC-11: 'setRoles throws new AuthRejection(422, \"role_policy\") after changePassword succeeded answers 422 with code role_policy and applied: [\"password\"]', and the statement audits only 'every 503 after the password and every security_write_conflict answer', so a 422/400 failure after the password leaves no audit event. 00 says 503 plus an audit event for any failure after the password; the AC keeps the exception's own status (00 R30 general rule) and drops the audit. At minimum the audit omission contradicts 00; the status choice needs an owner ruling or a 00 amendment.",
+     "resolution": "SRS corrected 2026-11-02 to follow 00 (see research note \"Correction\")"
+    }
+   ]
+  },
+  {
+   "req_id": "SEC-APIKEY-008",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Step-10 bans across the eight R33 credential endpoints, own-key endpoints, PATCH /auth/me and A2/A4 bodies read as Map before the R39 guard. 413/415/400 come from Core JsonBodyReader under app.jsonLimit (Q90). Widest cross-scope surface in APIKEY.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:174 jsonLimit(long)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:39 413",
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition site apikey/; implementation notes concrete and cite JsonBodyReader.",
+     "evidence": [
+      "code_context.json trace_validation SEC-APIKEY-008"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "9 of 11 depends_on evolving; FR-FLOW-006 and FR-IAM-014 are draft siblings (FR-FLOW-006 judged high; FR-IAM-014 high but carries a 00 contradiction unrelated to the key bans). The FR-FLOW-006 2-cycle is cut.",
+     "evidence": [
+      "existing_srs_context.json SEC-APIKEY-008 draft_deps: [FR-FLOW-006, FR-IAM-014]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "All 11 ACs have concrete outcomes; Q90 decided (Core's configured JSON limit). AC-10 follows 00 R29 (f) ('R33 전송 검사 → 여러 자격 증명·키 절차 → 본문 형식(415)'), so a failing key gets 403 insufficient_scope before 415. The 2026-11-02 decision note for Q57 recommended '415 first', which AC-10 does not adopt; the spec is consistent with 00, so this is a note, not a contradiction. Implementation note still lags AC-11 (Q89); AC-11 governs.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:296 R29 (f) order",
+      "docs/analysis/kiwi-srs-feasibility-2026-11-01.naruserve.0110.v01/draft-open-questions.md Q57 row"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside APIKEY scope; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "R47 (5) key-actor restrictions are v1 security rules.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:314"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Schedule after FR-FLOW-006 and FR-IAM-014 handlers exist",
+    "Decoding JsonCodec for NaruServe-api tests",
+    "Keep AC-10 as written (00 R29 (f)); do not apply the Q57 '415 first' recommendation"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": []
+  }
+ ]
+}

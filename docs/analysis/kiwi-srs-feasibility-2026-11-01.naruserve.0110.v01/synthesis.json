@@ -1,0 +1,146 @@
+{
+ "target": "0.11.0",
+ "total_reqs_evaluated": 165,
+ "feasibility_distribution": {
+  "high": 153,
+  "medium": 12
+ },
+ "target_verdict": "conditionally-ready",
+ "critical_blockers": [],
+ "not_high": [
+  {
+   "req_id": "SEC-APIKEY-008",
+   "score": 79,
+   "conditions": [
+    "Cut one edge of the FR-FLOW-006 <-> SEC-APIKEY-008 2-cycle before wave scheduling",
+    "Provide a Map-decoding JsonCodec for NaruServe-api tests",
+    "Update the Implementation Notes with the AC-11 failed-read rule (Q89)"
+   ]
+  },
+  {
+   "req_id": "SEC-AUTH-003",
+   "score": 79,
+   "conditions": [
+    "Choose and document the setup rejection status/code (Q15, Q23) under the IR-AUTH-003 AC-3 rule",
+    "Schedule after SEC-FLOW-001 (R33) and FR-AUTH-004; break SCC edges first"
+   ]
+  },
+  {
+   "req_id": "SEC-AUTH-007",
+   "score": 79,
+   "conditions": [
+    "Schedule AC-7 after FLOW logout/webSocket and APIKEY ver checks",
+    "Break SCC edges for scheduling"
+   ]
+  },
+  {
+   "req_id": "SEC-AUTH-008",
+   "score": 75,
+   "conditions": [
+    "Implement after login/refresh/logout/API key/setup/doctor exist; run as the final cross-scope gate",
+    "Route every log write through one redaction helper"
+   ]
+  },
+  {
+   "req_id": "FR-FLOW-006",
+   "score": 78,
+   "conditions": [
+    "Settle the PATCH /auth/me body shape and the non-allowed-attribute status/code (Q49, Q51, Q53) and record them in docs/api"
+   ]
+  },
+  {
+   "req_id": "SEC-FLOW-013",
+   "score": 79,
+   "conditions": [
+    "Fix the DeviceTrust SPI method signatures before release (R20: later changes only by default methods)",
+    "Add utils.auth.spi to ApiJarClasses PUBLIC_PACKAGES",
+    "Choose naru_device cookie attributes (Q118)"
+   ]
+  },
+  {
+   "req_id": "FR-FLOW-009",
+   "score": 77,
+   "conditions": [
+    "Choose lockout refusal status/code under IR-AUTH-003 AC-3 and the builder shape (Q120), then update docs/api"
+   ]
+  },
+  {
+   "req_id": "REL-FLOW-001",
+   "score": 77,
+   "conditions": [
+    "Add test-only sqlite-jdbc as testImplementation in the project(':NaruServe-api') block (build.gradle:273-280), not a main dependency",
+    "Confirm java.sql and FileDescriptor.sync pass the android-api-level-21 signature",
+    "Make Android runtime detection injectable (system property) so AC-2 is testable on the JVM"
+   ]
+  },
+  {
+   "req_id": "FR-IAM-013",
+   "score": 79,
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as NaruServe-api testImplementation only (CON-IAM-002), keeping build.gradle:59-60 mainDependencies unchanged",
+    "Multi-thread / multi-instance SQLite tests must set a busy timeout (or WAL) so contention yields false/serialization, not 'database is locked' SQLExceptions",
+    "Fix the SQL window-reset semantics (fixed vs sliding) before writing AC-1"
+   ]
+  },
+  {
+   "req_id": "FR-IAM-014",
+   "score": 76,
+   "conditions": [
+    "Cut at least one depends_on edge of the 70-member SCC before wave scheduling (ordering only, not implementability)",
+    "HTTP tests that send JSON bodies need a decoding test codec (StubJsonCodec.java:22 throws on decode) or must run where NaruServe-gson is on the test classpath",
+    "Choose the applied element format and the lost-race 409 code and record them in docs/api"
+   ]
+  },
+  {
+   "req_id": "SEC-TOKEN-009",
+   "score": 79,
+   "conditions": [
+    "Confirm with an adapter-level test (TinyHttpd and Servlet) that completing the async login response from the scheduler thread is safe (00 §12)",
+    "Inject the scheduler, jitter and nanoTime sources",
+    "Settle the attempt boundary with SEC-FLOW-012 (Q39)"
+   ]
+  },
+  {
+   "req_id": "IR-TOKEN-001",
+   "score": 76,
+   "conditions": [
+    "Cut the IR-TOKEN-001 ⇄ SEC-FLOW-004 depends_on 2-cycle before wave scheduling",
+    "Fix the Authenticator method set for the Bearer and API key credentials in docs/api (Q35)",
+    "Add a Kotlin SAM test (T11)"
+   ]
+  }
+ ],
+ "cycles": {
+  "strongly_connected_components": [
+   70,
+   2
+  ],
+  "largest_scc_size": 70,
+  "requirements_in_cycles": 72,
+  "shortest_cycle_length_histogram": {
+   "2": 4,
+   "3": 5,
+   "4": 2,
+   "5": 1,
+   "6": 3,
+   "7": 6,
+   "8": 8,
+   "9": 6,
+   "10": 2,
+   "11": 2,
+   "12": 3,
+   "13": 1,
+   "14": 1
+  },
+  "note": "depends_on cycles are an ordering problem for wave scheduling (kiwi-orchestrator schedule-cycle), not an implementability blocker; edges must be cut or relabelled before decomposition. Corrected after eval_iter1 F1."
+ },
+ "recurring_conditions": [
+  "add org.xerial sqlite-jdbc as testImplementation only (needs network on first build)",
+  "no JDBC 4.1 methods (setNetworkTimeout/abort/closeOnCompletion) and no ConcurrentHashMap.newKeySet (API 21)",
+  "hand-written PBKDF2 over Mac(HmacSHA256); no java.util.Base64/java.time",
+  "C6a/C6b/C4 Core changes land before FLOW/IAM consumers",
+  "test JsonCodec that decodes into Map (StubJsonCodec throws on decode)",
+  "confirm with a real animalsnifferMain run"
+ ],
+ "stability_drift_candidates": []
+}

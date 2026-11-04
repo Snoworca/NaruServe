@@ -1,0 +1,12 @@
+{"pass":"prickly review (1 subagent, 8 axes)","run_id":"0.11.0-w05","severity":{"CRITICAL":0,"HIGH":2,"MEDIUM":7,"LOW":8},
+"fixed":["HIGH GrantRule target protection now counts a disabled target's scopes (test: disabled admin stays protected)",
+"HIGH protectOnly/mountPath prefixes are normalized with the same decoding as the request path; an unnormalizable prefix is a build() violation (test escapedPrefixesAreNormalizedOrRefused)",
+"MEDIUM checkPassword serialized per user id (confirmation lock stripe) so parallel calls cannot all pass the limit check; the pwconfirm keys live in their own throttle instance (login keys will use another)",
+"MEDIUM default FileRefreshTokenStore is one per FileUserStore (shared by every Auth over it) and named <users-file>-refresh-tokens.json",
+"MEDIUM false javadoc claims about the JDBC default refresh store corrected (selection lands with JdbcUserStore)",
+"MEDIUM audit log lines escape control characters (forged-line test)",
+"MEDIUM FileUserStore never reuses a stored id when the file counter is low",
+"LOW kid:null is MALFORMED; LOW LoginLimits records IP/user-only keys only for non-trusted requests; LOW cleanup restart stops a previous executor and logs a slow stop; LOW AuditSink javadoc wording"],
+"deferred":["MEDIUM MULTI_INSTANCE always fails until throttle/device-trust stores are configurable (documented)",
+"MEDIUM audit events of GrantRule carry no actor key id / service-account mark (AuthPrincipal has no service-account flag; FR-AUTH-009 AC-2 stays open)",
+"LOW ipKey hex IPv4-mapped/::/96 forms; LOW watchRange registration racing the doctor during start; LOW non-GroupAdminStore delete warning; LOW AtomicFiles reads before size check; LOW doctor restart-logout wording when .refreshTokens is set"]}

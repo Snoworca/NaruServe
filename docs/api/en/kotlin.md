@@ -4,7 +4,7 @@
 
 NaruServe is written in Java. Use it from Kotlin without a separate DSL: all callbacks are Java functional interfaces (`@FunctionalInterface`), so Kotlin lambdas work directly.
 
-This guide describes NaruServe 0.10.0. Use the [installation procedure](README.md). Core remains Java 8/API 21-compatible; Kotlin libraries belong to the optional Kotlin module.
+This guide describes NaruServe 0.11.0. Use the [installation procedure](README.md). Core remains Java 8/API 21-compatible; Kotlin libraries belong to the optional Kotlin module.
 
 ```kotlin
 val app = RestApp.create()
@@ -117,7 +117,7 @@ val user = req.body(User::class.java) ?: throw HttpException(400, "JSON body is 
 The `NaruServe-kotlin` module provides `reified` extensions. It is the only module that uses `kotlin-stdlib`. It includes the `NaruServe` bootstrap (TinyHttpd + Gson), so one dependency also provides `RestApp.create()`:
 
 ```groovy
-implementation 'com.snoworca.naruserve:naruserve-kotlin:0.10.0'
+implementation 'com.snoworca.naruserve:naruserve-kotlin:0.11.0'
 ```
 
 Import the provided extension:
@@ -177,7 +177,7 @@ app.post("/users") { req, res ->
 
 ## Coroutines
 
-There is no native `suspend` handler or required coroutine dependency. The 0.10.0 common HTTP profile supports later Next callbacks and three-argument AsyncRouteHandler returning Deferred. You may bridge an application-owned coroutine/executor explicitly; completion, cancellation and the returned Deferred lease must follow the request lifetime. `runBlocking` occupies its calling thread and is not the framework's asynchronous adapter.
+There is no native `suspend` handler or required coroutine dependency. The 0.11.0 common HTTP profile supports later Next callbacks and three-argument AsyncRouteHandler returning Deferred. You may bridge an application-owned coroutine/executor explicitly; completion, cancellation and the returned Deferred lease must follow the request lifetime. `runBlocking` occupies its calling thread and is not the framework's asynchronous adapter.
 
 ## Start with one call
 

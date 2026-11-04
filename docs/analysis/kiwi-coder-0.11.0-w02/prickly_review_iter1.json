@@ -1,0 +1,8 @@
+{"pass":"prickly-review","iter":1,"run":"0.11.0-w02","verdict":"1 HIGH, 5 MEDIUM, 7 LOW","findings":[
+ "HIGH HashSlots.shutdown left call() waiters blocked and dropped callbacks -> closed flag, queued tasks failed with 503, RejectedExecution mapped, test added",
+ "MEDIUM callbacks on the hash thread / nested call deadlock -> nested call() reuses the slot (per-instance ThreadLocal), callback contract documented, test added",
+ "MEDIUM slot 503 indistinguishable, no Retry-After -> AuthUnavailableException gains @Nullable getRetryAfterSeconds and a 4-arg constructor; slot refusals carry 1 s; test added",
+ "MEDIUM AtomicFiles threw after commit when .bak delete failed -> no throw after commit, load cleans; single-writer documented; test added",
+ "MEDIUM docs claimed 503 SERVICE_UNAVAILABLE is raised as HttpException -> corrected in both languages",
+ "LOW CAS admission (no spurious 503) -> fixed; LOW rollback of a stale .bak -> only when this write made it; LOW toString printed attribute values -> keys only; LOW null store sets -> 503 + unmodifiable copy + decorator caveat in GroupStore Javadoc; LOW mixed-case codes -> upper form [A-Z][A-Z0-9_]*; LOW trusted origins compared raw -> normalized through Origins.of; LOW docs durability tense -> reworded",
+ "LOW kept: no call() backstop timeout (shutdown now fails waiters; a hung hash is a separate concern)"]}

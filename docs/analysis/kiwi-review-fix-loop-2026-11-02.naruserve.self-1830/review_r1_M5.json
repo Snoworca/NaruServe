@@ -1,0 +1,515 @@
+{
+ "chunk": "M5",
+ "round": 1,
+ "findings": [
+  {
+   "id": "M5-F01",
+   "axis": "P3",
+   "severity": "MEDIUM",
+   "title": "Nothing stops two FileUserStore instances, or two processes, from using one file; their writes overwrite each other and can roll back ver and password hashes",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+    "line_range": "17-61,196-205"
+   },
+   "description": "The class description says 'one file has one writer', but nothing enforces it. Each instance loads the file once into its own maps (lines 52-61). commit() then rewrites the whole file from that instance's in-memory copy (196-205), through the one shared '<name>.tmp' sibling. Failure scenario: an app builds two Auth instances, or a test and the app, each with new FileUserStore(new File(\"data/users.json\")). Instance A runs changePassword or bumpTokenVersion (ver 3 -> 4, new hash) and writes the file. Instance B still holds ver 3 and the old hash, and later writes any other change, such as a rehash, a role change or a new user. The file now holds ver 3 and the old password hash again. After a restart, the old password works and tokens revoked by the ver bump are valid again. If both instances write at once, both FileOutputStreams truncate and write the same .tmp, so the renamed file can be interleaved or corrupt and the next start FAILs. Deferred as w12 residual #2; still present.",
+   "suggested_fix": "Refuse a second writer: keep a static map of canonical paths to live instances and throw IllegalStateException from the constructor for a path already open in this class loader. Also take an exclusive FileChannel lock on a '<name>.lock' sibling (FileOutputStream.getChannel().tryLock() is java.nio.channels and exists on API 21) so a second process fails at start with a FAIL message.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "security",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M5-F02",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "verifyUserStore's hash round-trip check misses a write-through-cached store whose disk format drops passwordHash, which is the Gson case it claims to catch",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/UserStoreContract.java",
+    "line_range": "132-149"
+   },
+   "description": "hashRoundTrip() reads the user back through the same store instance with findById/findByUsername right after create/update. A store that keeps rows in memory and persists them with Gson, the shape FileUserStore itself has, returns the cached AuthUser with its hash intact, so it passes. Its file has no hash (AuthUser.passwordHash is transient). Failure scenario: an app writes a GsonUserStore modeled on FileUserStore (a map plus a file rewrite), runs AuthTesting.verifyUserStore and gets PASS. In production every user loses their password at the first restart and nobody can log in. FR-IAM-004 states 'password-hash round trip after save and reload', and the failure message itself names the Gson/transient case, but the check reaches only stores that re-read their backing storage on every find.",
+   "suggested_fix": "Add an optional reload hook, for example verifyUserStore(UserStore store, @Nullable Callable<UserStore> reopen), that opens a fresh instance over the same storage and checks findById(id).getPasswordHash() there. When no hook is passed, say in the javadoc and docs/api (ko/en) that the round trip is in-instance only.",
+   "is_behavioral": true,
+   "tags": [
+    "test",
+    "security"
+   ]
+  },
+  {
+   "id": "M5-F03",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "verifyUserStore never checks the security-critical 'a deleted id is never reused' clause of the UserStore contract",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/UserStoreContract.java",
+    "line_range": "64-98"
+   },
+   "description": "UserStore's first contract bullet (UserStore.java:13-14) says a deleted id is never reused, because an old group membership would grant its rights to the new user. The contract kit checks CRUD, duplicates, hashes, changePassword and field methods, but never creates a user after a delete and compares ids. Failure scenario: a custom SQLite store with 'id INTEGER PRIMARY KEY' and no AUTOINCREMENT, or a MAX(id)+1 store. Creating and then deleting the newest user frees its rowid, and the next create gets the same id and inherits its group memberships and per-id API keys. That store passes AuthTesting.verifyUserStore.",
+   "suggested_fix": "In crud(), after delete(id), create another contract user and assert its id differs from the deleted one (this catches the highest-row reuse case), with a message naming the clause ('ids are never reused'). Add a VerifyUserStoreTest case with a rowid-reusing fake.",
+   "is_behavioral": true,
+   "tags": [
+    "test",
+    "security"
+   ]
+  },
+  {
+   "id": "M5-F04",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "The FileUserStore size limit is applied only after the whole file is read into memory",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+    "line_range": "55,75-80"
+   },
+   "description": "parse() compares content.length with maxTotalBytes, but AtomicFiles.load -> read() has already read the whole file into a ByteArrayOutputStream with no bound. Failure scenario: a users.json path points at a large file, for example a 1 GB log or an Android phone with a small heap. Start ends with OutOfMemoryError instead of the documented 'FAIL ... above the limit' message (SEC-TOKEN-002 AC-6). Deferred from w05 ('AtomicFiles reads the whole file before checking the size'); still present.",
+   "suggested_fix": "Check file.length() (and the backup's length) against the limit before reading, either in FileUserStore before AtomicFiles.load or by passing the limit to AtomicFiles.load, and keep the same FAIL message.",
+   "is_behavioral": true,
+   "tags": [
+    "performance",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M5-F05",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "A stored PBKDF2 hash above MAX_STORED_ITERATIONS is refused silently, with no ERROR like bcrypt's",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/Pbkdf2PasswordHasher.java",
+    "line_range": "103-129"
+   },
+   "description": "parse() returns null for rounds > 2,000,000 (and for a malformed string), and verify() then returns false with no log. BcryptPasswordHasher logs an ERROR for a stored cost above its cap (line 110). Failure scenario: an account imported from a system that used 3,000,000 rounds can never log in, and operators see only failed logins. A planted hash is also refused without a trace. w04 P-15 asked for both the cap and the ERROR; only the cap was done. Deferred.",
+   "suggested_fix": "When the prefix matches but the count exceeds the cap, log one ERROR per hasher (rate-limited like the chain's unknown-prefix log) naming the count and the cap, never the hash. Pbkdf2PasswordHasher needs an optional Logger, as BcryptPasswordHasher has.",
+   "is_behavioral": true,
+   "tags": [
+    "security",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M5-F06",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "The chain's unknown-format log prints up to 4 characters of the stored value, which leaks password characters when a legacy column holds plaintext",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/PasswordHashers.java",
+    "line_range": "152-161"
+   },
+   "description": "unknown() logs stored.substring(0, min(4, len-1)) once per distinct prefix, for up to 64 prefixes. That is harmless for hashes. Failure scenario: an app migrates a legacy table that kept plaintext passwords, or a mix of plaintext and hashes, and no member accepts those rows. The first 4 characters of up to 64 users' passwords go to the console or Logcat at ERROR level, keyed to separate log lines. FR-TOKEN-003 AC-2 allows 'at most 4' characters; 0 to 2 characters, or only the characters up to the first '$', would still identify a hash format.",
+   "suggested_fix": "Log only the leading characters up to and including the first '$' when it appears within the first 4 characters (for example '$2b$' or 'md5$'), and otherwise log a fixed '<no format prefix>' marker plus the length.",
+   "is_behavioral": true,
+   "tags": [
+    "security"
+   ]
+  },
+  {
+   "id": "M5-F07",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "FileUserStore reads wait on the same monitor during a full-file rewrite and fsync, though the maps are already replaced copy-on-write",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+    "line_range": "196-216"
+   },
+   "description": "commit() runs AtomicFiles.write (a write of up to 8 MB, fsync, two renames) while holding the instance monitor. findById and findByUsername are synchronized on that monitor and run on every login and on each request's user reload when the principal cache misses. Failure scenario: on Android flash an fsync can take 50-300 ms, so every rehash, logout-all or admin edit stalls all concurrent authenticated requests for that time. commit() already builds new maps and swaps them in (byId = rows), so reads do not need the lock.",
+   "suggested_fix": "Make byId, idByName and nextId one volatile immutable State snapshot. Read it lock-free in findById, findByUsername and list, and keep synchronized only on the writers.",
+   "is_behavioral": true,
+   "tags": [
+    "performance"
+   ]
+  },
+  {
+   "id": "M5-F08",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "The versioned-JSON file helpers (text/number/flag, format and version check) are copied across the five auth file stores",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+    "line_range": "74-171"
+   },
+   "description": "FileUserStore.parse/text/number/flag repeat the same checks in FileRefreshTokenStore (97-110), FileDeviceTrust (162), FileLoginThrottle and FileGroupStore, so a fix to one (for example the size pre-check of M5-F04, or a version message) has to be made five times. Deferred as w12 residual #5; still present.",
+   "suggested_fix": "Move a small internal VersionedJsonFile helper (format/version check, typed field getters, render with limits) into utils.auth.internal and use it from every file store.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M5-F09",
+   "axis": "P5",
+   "severity": "LOW",
+   "title": "@NullMarked packages contain a nullable equals parameter and a null-returning private method without @Nullable",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/DeviceToken.java",
+    "line_range": "47-50"
+   },
+   "description": "DeviceToken.equals(Object o) has no @Nullable, while AuthUser.equals and RefreshRecord.equals use '@Nullable Object o'. Under @NullMarked, jspecify tooling and the Kotlin JSpecify mode read the parameter as non-null, which contradicts the Object.equals contract (equals(null) is legal and returns false here). The same applies to Pbkdf2PasswordHasher.parse (Pbkdf2PasswordHasher.java:104), which returns null on several paths without @Nullable. A nullness checker flags both, and the CLAUDE.md rule asks for annotations on public API parameters.",
+   "suggested_fix": "Annotate 'public boolean equals(@Nullable Object o)' in DeviceToken and 'private static @Nullable Parsed parse(String stored)' in Pbkdf2PasswordHasher.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "M5-F10",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "verifyApiKeyStore leaves its rows in the store when a rule fails, although its javadoc says it deletes what it created",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/ApiKeyStoreContract.java",
+    "line_range": "173-190,193-248"
+   },
+   "description": "UserStoreContract cleans up in a finally block, but ApiKeyStoreContract calls cleanup() only at the end of each successful phase. Failure scenario: the contract runs against the app's real JDBC test database, for example to verify a custom store. A failing check such as the case-sensitivity or limit rule throws before cleanup, leaving 'contract-*' keys, with 64-hex secret hashes, owner ids and scopes, in a database that other tests read. listByOwner and count-based assertions in the app's own tests can then see foreign rows. verifyConcurrent behaves the same way when the win count is wrong.",
+   "suggested_fix": "Track every owner each phase creates in the Run and delete them all with deleteAllByOwner in a finally block of verify() and verifyConcurrent(), ignoring cleanup failures so the original AssertionError still surfaces.",
+   "is_behavioral": true,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "M5-F11",
+   "axis": "P1",
+   "severity": "LOW",
+   "title": "list(search) lower-cases only the search text, so 'ignoring case' fails for usernames stored with upper case",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+    "line_range": "268-285"
+   },
+   "description": "FileUserStore.list (275-279) and InMemoryUserStore.list (89-93) lower-case the needle but compare it with u.getUsername() as stored. Usernames written through auth are normalized, but UserStore.create is public and the stores accept any username. Failure scenario: a migration script calls store.create(AuthUser.builder().username(\"Alice\")...), and then A1 GET /auth/admin/users?search=ali (or search=Alice) does not list it, although the javadoc says the match ignores case.",
+   "suggested_fix": "Compare u.getUsername().toLowerCase(Locale.ROOT).contains(needle) in both stores.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/PasswordHashers.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class PasswordHashers {"
+   ],
+   "findings": [
+    "M5-F06"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/Pbkdf2PasswordHasher.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class Pbkdf2PasswordHasher implements PasswordHasher {"
+   ],
+   "findings": [
+    "M5-F05",
+    "M5-F09"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/SaltOrder.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public enum SaltOrder {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth.password;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/rbac/RolePolicy.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class RolePolicy implements RoleStore {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/rbac/RoleStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface RoleStore {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/rbac/Scopes.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class Scopes {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/rbac/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth.rbac;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/AuthResponses.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface AuthResponses {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/Authenticator.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface Authenticator {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/BreachedPasswordChecker.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface BreachedPasswordChecker {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/DeviceToken.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class DeviceToken {"
+   ],
+   "findings": [
+    "M5-F09"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/DeviceTrust.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface DeviceTrust {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/ForwardingLoginThrottle.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public abstract class ForwardingLoginThrottle implements LoginThrottle {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/KeySource.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface KeySource {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/LoginThrottle.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface LoginThrottle {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/RefreshRecord.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class RefreshRecord {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/RefreshTokenStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface RefreshTokenStore {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/TokenCodec.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface TokenCodec {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth.spi;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/ApiKeyStoreContract.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class ApiKeyStoreContract {"
+   ],
+   "findings": [
+    "M5-F10"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/AuthTesting.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class AuthTesting {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/UserStoreContract.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class UserStoreContract {"
+   ],
+   "findings": [
+    "M5-F02",
+    "M5-F03"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth.testing;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/AuthIds.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class AuthIds {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/AuthUser.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class AuthUser {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/AuthUsers.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface AuthUsers {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/DuplicateUserException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class DuplicateUserException extends RuntimeException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class FileUserStore implements UserStore {"
+   ],
+   "findings": [
+    "M5-F01",
+    "M5-F04",
+    "M5-F07",
+    "M5-F08",
+    "M5-F11"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/ForwardingUserStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public abstract class ForwardingUserStore implements UserStore {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/InMemoryUserStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class InMemoryUserStore implements UserStore {"
+   ],
+   "findings": [
+    "M5-F11"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/UserMutator.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface UserMutator {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/UserPage.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class UserPage {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/UserStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface UserStore {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth.user;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "build.gradle",
+   "hunks_total": 2,
+   "anchors": [
+    "testImplementation 'org.xerial:sqlite-jdbc:3.46.1.3'",
+    "environment 'NARU_TEST_AUTH_SECRET', 'q7Vb2Nx9Lk4Rt1Wm8Hc3Zp6Jd0Gs5Fa-Ty'"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 11,
+  "by_severity": {
+   "MEDIUM": 3,
+   "LOW": 8
+  }
+ }
+}

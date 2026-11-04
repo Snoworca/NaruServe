@@ -1,0 +1,11 @@
+{"pass":"prickly-review","round":2,"counts":{"CRITICAL":0,"HIGH":0,"MEDIUM":3,"LOW":5},
+"round1_fixes":"all 7 hold",
+"findings":[
+{"sev":"MEDIUM","where":"AccountEndpoints login 503","issue":"Retry-After of AuthUnavailableException dropped","status":"fixed; test unavailableHashKeepsRetryAfter"},
+{"sev":"MEDIUM","where":"DefaultAuthApiKeys.issueFor","issue":"unbounded owner stripe lock","status":"fixed (tryLock 5 s -> 503)"},
+{"sev":"MEDIUM","where":"tests","issue":"no regression tests for login pre-hash 503 and custom authenticator stale row","status":"fixed; throttleFailureBeforeTheHashIs503WithoutTheFloor, customAuthenticatorAnswerIsJudgedOnTheStoredRow"},
+{"sev":"LOW","where":"checkPassword two 5 s budgets","status":"deferred to final review loop"},
+{"sev":"LOW","where":"custom authenticator service account","status":"fixed (!isServiceAccount)"},
+{"sev":"LOW","where":"storeCall plain IllegalArgumentException","status":"fixed (AuthArgumentException only)"},
+{"sev":"LOW","where":"setup Javadoc","status":"fixed"},
+{"sev":"LOW","where":"lastUsedAt on a refused anonymous-entry key","status":"deferred"}]}

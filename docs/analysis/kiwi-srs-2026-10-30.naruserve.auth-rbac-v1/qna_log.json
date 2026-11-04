@@ -1,0 +1,10 @@
+{
+  "mode": "default (no --auto); research doc supplied; ambiguities resolved by reasonable defaults per kiwi-srs §5.1 and the user's auto-pick-recommended feedback",
+  "decisions": [
+    {"ambiguity": "Details that 00 defers to stale files 01-07 (admin endpoint tables A1-A6/G1-G8, bodies, hash formats, group expansion, RefreshTokenStore API, AuthProfile numbers, AuditEvent schema, DDL, AuthConfig format)", "decision": "Use 01-07 as input where 00 is silent; 00 wins on every conflict. Values taken from 01-07 that 00 does not restate are tagged [INFERRED:med:advisory] in AC lines.", "basis": "00 banner: 00 overrides 01-07"},
+    {"ambiguity": "JDBC driver for tests vs no new dependencies", "decision": "Main dependencies stay unchanged (CON-BUILD-006). A test-only org.xerial sqlite-jdbc testImplementation on NaruServe-api is allowed, following the existing test-only precedent (Jetty for NaruServe-servlet tests, build.gradle:362-369). MySQL/PostgreSQL steps are verified by SQL text/fake-JDBC tests and recorded as a verification limit (00 §12).", "basis": "build.gradle test-only dependency precedent"},
+    {"ambiguity": "NaruServe-kotlin req.principal / reified attr<T>() extensions", "decision": "Out of 0.11.0 (not in the v1 roadmap row); keep only the Kotlin compile/run test of the new public API (CLAUDE.md T11, FR-KT-*).", "basis": "00 §9 v1 row"},
+    {"ambiguity": "Scope split", "decision": "Five new scopes: AUTH (core/pipeline/docs/build), TOKEN (tokens, keys, passwords, MiniJson, refresh store), FLOW (transport, CSRF, endpoints, abuse protection), IAM (users, groups, roles, grants, JDBC user/group/refresh/throttle/device stores), APIKEY (API keys, service accounts, JdbcApiKeyStore). Core changes stay in APP (C4), HTTP (C6a, C7), ENGINE (C6b).", "basis": "intent analyst proposal, GUARD merged into FLOW and JDBC split between IAM and APIKEY"},
+    {"ambiguity": "Recommended Core items C5, C1', TinyHttpd TLS", "decision": "Out of 0.11.0; doctor uses the documented WARN fallback when C5 is absent.", "basis": "00 §8, §9"}
+  ]
+}

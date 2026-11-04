@@ -1,0 +1,2081 @@
+{
+ "group": "IAM",
+ "scope_file": "docs/spec/20.auth-identity-and-grants.srs.md",
+ "notes": [
+  "The large depends_on SCC in existing_srs_context.json has 70 members, not 76 as the brief says; 13 IAM blocks are in it, and FR-IAM-006 is in the 2-member cycle with FR-AUTH-004.",
+  "Established facts used: the API 21 signature contains java.sql, javax.sql.DataSource, java.text.Normalizer and FileDescriptor.sync, and lacks java.time, java.util.Base64 and the JDBC 4.1 methods setNetworkTimeout/abort/closeOnCompletion; a test-only sqlite-jdbc is a condition; StubJsonCodec.java:22 throws on decode.",
+  "Re-checked in the signature: ReentrantLock, ConcurrentHashMap, ArrayDeque, UUID, SQLIntegrityConstraintViolationException, AutoCloseable, Throwable.addSuppressed and Collections.newSetFromMap are present; ConcurrentHashMap.newKeySet and java.util.function.Function are absent."
+ ],
+ "label_distribution": {
+  "high": 33,
+  "medium": 2
+ },
+ "prescreen": {
+  "senior_targets": [
+   "IR-IAM-001",
+   "REL-IAM-001",
+   "REL-IAM-002",
+   "REL-IAM-003",
+   "FR-IAM-001",
+   "REL-IAM-004",
+   "FR-IAM-002",
+   "IR-IAM-003",
+   "SEC-IAM-001",
+   "FR-IAM-003",
+   "SEC-IAM-002",
+   "FR-IAM-004",
+   "SEC-IAM-003",
+   "FR-IAM-006",
+   "IR-IAM-004",
+   "FR-IAM-008",
+   "SEC-IAM-004",
+   "FR-IAM-009",
+   "SEC-IAM-005",
+   "SEC-IAM-006",
+   "CON-IAM-001",
+   "FR-IAM-010",
+   "FR-IAM-011",
+   "FR-IAM-012",
+   "FR-IAM-013",
+   "DR-IAM-003",
+   "IR-IAM-005",
+   "SEC-IAM-007",
+   "FR-IAM-014"
+  ],
+  "quick_pass": [
+   "DR-IAM-001",
+   "IR-IAM-002",
+   "FR-IAM-005",
+   "DR-IAM-002",
+   "FR-IAM-007",
+   "CON-IAM-002"
+  ],
+  "quick_block": []
+ },
+ "judgements": [
+  {
+   "req_id": "DR-IAM-001",
+   "feasibility": "high",
+   "score": 96,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "Immutable value class with builder, transient field, equals/hashCode and an AuthIds helper using Long parsing and java.util.UUID; all API 1 classes, no java.time/Base64.",
+     "evidence": [
+      "API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/util/UUID",
+      "API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) lacks java/util/Base64, java/time/* and java/util/function/Function (re-checked)",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "The verifies trace GsonJsonCodec.java:62-64 exists and matches AC-3 (default Gson skips transient). The addition-site parent exists.",
+     "evidence": [
+      "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java:62-64 defaultGson() uses GsonBuilder STRICT + disableJdkUnsafe without excludeFieldsWithModifiers, so transient fields are skipped",
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "No depends_on; graph root; not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json req_summaries DR-IAM-001 depends_on=[]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "All eight ACs are unit tests. AC-3 needs GsonJsonCodec, which NaruServe-api tests lack, so that test sits in NaruServe-gson or root tests. AC-1 ver getter name is not final, which does not block a test.",
+     "evidence": [
+      "build.gradle:274-295 NaruServe-api tests get testFixtures only, no NaruServe-gson (NaruServe-gson is a test dep only of other modules, build.gradle:313,370,605)"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Owned by IAM (utils.auth.user).",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "AuthUser and the service-account flag are named in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Place the AC-3 transient test where NaruServe-gson is on the test classpath (NaruServe-gson tests or root tests)",
+    "Pick the ver getter name and settle AuthIds signatures, then update docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "IR-IAM-001",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Plain Java 8 interface with default methods and a UserPage value class. AC-5 (503 wrapping, once-per-minute log, anonymous fallback in key steps) is behavior of the AUTH/APIKEY error layers, so this block cannot be finished alone.",
+     "evidence": [
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:95-150 Core JSON error shape reused for 503"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "The verifies trace StandardErrors.java:95-150 exists and matches the 503 JSON shape of AC-5; addition-site parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "Depends on DR-IAM-001 (high) and the verified FR-KT-001. AC-5 relies on SEC-APIKEY-004 and AC-6 on IR-IAM-005 (A1) without depends_on edges (only related_to), so two edges are missing.",
+     "evidence": [
+      "existing_srs_context.json IR-IAM-001 depends_on=[DR-IAM-001, FR-KT-001], related_to=[SEC-APIKEY-004]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1..AC-4 are compile, reflection and Javadoc-text tests. AC-5 and AC-6 need the full Auth pipeline, the APIKEY steps and A1. A1's behavior for a store without a list override is open (Q10) and left out, so the test is still writable.",
+     "evidence": [
+      "open_questions.md Q10, Q73"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Core of IAM, but AC-5 restates APIKEY/AUTH error behavior.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "UserStore is named in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add depends_on edges to IR-IAM-005 (AC-6) and SEC-APIKEY-004 (AC-5), or move those ACs to the owning blocks",
+    "Update ForwardingUserStore in the same change whenever a default method is added (R20)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "REL-IAM-001",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "A per-user lock map of ReentrantLock in java.util.concurrent is available on API 21. Hard parts: the UserStore defaults (utils.auth.user) must reach the same lock map that auth's write paths use (a static map keyed by store identity and id), re-entrancy under the APIKEY owner lock, 3-retry confirm and a rehash path that compares four fields.",
+     "evidence": [
+      "API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/util/concurrent/locks/ReentrantLock and java/util/concurrent/ConcurrentHashMap",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (UserStore.java, internal/), parents exist; the algorithm is specified step by step.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "Depends on IR-IAM-001, IR-AUTH-003 (high 88), FR-AUTH-006 (high 83) and FR-AUTH-009 (high 81, in SCC). -4 for SCC membership.",
+     "evidence": [
+      "existing_srs_context.json cycles[1]: member of the 70-member depends_on SCC (the brief's 76 is wrong)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1..AC-3 use counting fake stores. AC-4 is a concurrency test. AC-7 needs a lock-identity probe into internal code. AC-3 needs a hasher hook to inject a disable during login. All writable, but they need test seams.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned reliability rule.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "The v1 row's atomic partial writes (R37).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut at least one depends_on edge of the 70-member SCC before wave scheduling (ordering only, not implementability)",
+    "Expose a package-private lock-identity probe for AC-7",
+    "The default field methods and auth write paths must share one lock registry keyed by store instance and user id"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "REL-IAM-002",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Compare-and-swap of hash plus ver++ is simple in the default (under the REL-IAM-001 lock) and in JDBC (one UPDATE). The self-service retry and 409 logic lives in the FLOW POST /auth/password handler, so this block is split across scopes.",
+     "evidence": [
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site trace UserStore.java; parent exists; JDBC SQL form given explicitly.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "Depends on REL-IAM-001, IR-IAM-001, IR-AUTH-003, IR-IAM-005 (SCC member) and FR-AUTH-006. -4 for SCC membership.",
+     "evidence": [
+      "existing_srs_context.json cycles[1]: member of the 70-member depends_on SCC (the brief's 76 is wrong)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1, AC-5, AC-7 are store-level. AC-2/AC-3/AC-4/AC-6 drive POST /auth/password with injected races and need JSON body decoding.",
+     "evidence": [
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:22 decode throws UnsupportedOperationException (body-decoding tests need a test codec)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Mixes store semantics with FLOW endpoint retry rules.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Password change is v1 (R37, R45).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut at least one depends_on edge of the 70-member SCC before wave scheduling (ordering only, not implementability)",
+    "HTTP tests that send JSON bodies need a decoding test codec (StubJsonCodec.java:22 throws on decode) or must run where NaruServe-gson is on the test classpath",
+    "Race tests need a deterministic store hook (for example a callback between re-read and write)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "REL-IAM-003",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "A boolean predicate (MULTI_INSTANCE && !supportsAtomicFieldWrites()) evaluated by the AUTH doctor, with no reflection.",
+     "evidence": [
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site trace UserStore.java; parent exists. The doctor item itself lives in OPS-AUTH-001 and the cross-link is marked pending.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "Depends on IR-IAM-001, OPS-AUTH-001 (high 80) and FR-AUTH-003 (high 82). Not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json REL-IAM-003 depends_on=[IR-IAM-001, OPS-AUTH-001, FR-AUTH-003]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1/AC-2 need a MULTI_INSTANCE build that passes R35, so they need shared fakes or JDBC stores on SQLite. AC-4 depends on FR-IAM-004 and AC-5 on FR-IAM-010; the edges are not declared.",
+     "evidence": [
+      "code_context.json build_facts.jdbc_test_driver: no JDBC driver declared; local Gradle cache has com.h2database but no org.xerial"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Splits the predicate (IAM) from the doctor (AUTH).",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Atomic partial writes are in the v1 row; MULTI_INSTANCE is the archetype C path.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as NaruServe-api testImplementation only (CON-IAM-002), keeping build.gradle:59-60 mainDependencies unchanged",
+    "Add depends_on edges to FR-IAM-004 and FR-IAM-010 (AC-4, AC-5)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "IR-IAM-002",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "An abstract class implementing UserStore can call UserStore.super.x(...) in Java 8. Forwarding is mechanical.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)",
+      "build.gradle options.release=8 (code_context build_facts.java_target)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Addition-site trace ForwardingUserStore.java; parent exists; reflection-test design concrete.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "Depends on IR-IAM-001 and CON-AUTH-006 (high 90). Not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json IR-IAM-002 depends_on=[IR-IAM-001, CON-AUTH-006]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "All five ACs are unit or reflection tests; AC-5 is the existing animal-sniffer check.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned SPI.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "ForwardingUserStore is named in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-IAM-001",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "An unchecked exception class plus mapping in the AUTH error layers. The JDBC side must recognise unique violations.",
+     "evidence": [
+      "API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/sql/SQLIntegrityConstraintViolationException and SQLException.getSQLState",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Addition-site trace DuplicateUserException.java; parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "Depends on IR-IAM-001, IR-AUTH-002 (high 83), FR-AUTH-004 (high 82, in the 2-member SCC) and FR-AUTH-006. Not itself in a cycle.",
+     "evidence": [
+      "existing_srs_context.json cycles[0]: 2-member SCC FR-AUTH-004 <-> FR-IAM-006"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "AC-1, AC-3, AC-5 are unit tests. AC-2 is a race test over three stores incl. JdbcUserStore on SQLite. AC-4 runs through bootstrap seeding (AUTH).",
+     "evidence": [
+      "code_context.json build_facts.jdbc_test_driver: no JDBC driver declared; local Gradle cache has com.h2database but no org.xerial"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "DuplicateUserException 409 is in 00 §5 user CRUD row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:235"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as NaruServe-api testImplementation only (CON-IAM-002), keeping build.gradle:59-60 mainDependencies unchanged",
+    "Map unique violations by SQLState class 23 or the SQLite result code 19 (SQLITE_CONSTRAINT): sqlite-jdbc reports them as a plain SQLException subclass, not SQLIntegrityConstraintViolationException; confirm against the chosen driver version"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "REL-IAM-004",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Uses java.io.File, FileOutputStream.getFD().sync() and File.renameTo only. FileDescriptor.sync is in the API 21 signature. No directory fsync is available, and AC-6 documents that.",
+     "evidence": [
+      "API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/io/FileDescriptor (sync) (established)",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Single addition-site trace (internal/AtomicFiles.java); parent exists; protocol is fully specified.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "No depends_on; graph root; not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json REL-IAM-004 depends_on=[]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1 needs an injectable stream/sync seam. AC-2..AC-4 are file fixtures with byte equality. AC-7 covers files owned by FR-TOKEN-002 and REL-FLOW-001, so its tests complete only when those land.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "AC-7 reaches into TOKEN and FLOW files.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "AtomicFiles (R42) is named in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Provide a test seam to observe FileDescriptor.sync() before the first rename (AC-1)",
+    "Schedule the AC-7 cases for TOKEN/FLOW files after FR-TOKEN-002 and REL-FLOW-001"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-IAM-002",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Thread-safe in-memory map and a file store with one name-index lock, using AtomicFiles and the TOKEN MiniJson FILE profile; java.io only.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)",
+      "per-req-judgement-TOKEN.json SEC-TOKEN-002 high 88 (MiniJson)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site trace utils/auth/user/; parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "Five draft deps (FR-IAM-001, REL-IAM-004, IR-IAM-001, FR-AUTH-003, SEC-TOKEN-002), all judged high. Not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json FR-IAM-002 depends_on (5)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "AC-1..AC-5 are deterministic. AC-6 needs fault injection after the sync. The file layout is open but does not block the tests.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "In-memory and file implementations are in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Persist the id counter or use random ids so ids are never reused (AC-5)",
+    "FileUserStore must serialize passwordHash explicitly (transient is Gson-only)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "IR-IAM-003",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "A facade over UserStore with hash-stripped copies, char[] wiping, event dispatch and exception narrowing. Hashing goes through the TOKEN hash slot. No platform risk.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java:26-42 an unmapped exception renders an HTML <pre> stack trace",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "The verifies trace FinalHandler.java:26-42 exists and explains why only four mapped types may escape; addition-site parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "Six draft deps (IR-IAM-001, DR-IAM-001, FR-AUTH-007, FR-AUTH-008, IR-AUTH-003, REL-TOKEN-001), all judged high. Not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json IR-IAM-003 direct_0110_dependency_count=6"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "API-surface, stripped-copy and exception-type tests are deterministic. AC-2 needs a getter-reading test JsonCodec. AC-6 also asserts group-membership removal (FR-IAM-008).",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned app facade.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "auth.users() and its four exception types are in 00 §5.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:235"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Write a getter-reading test JsonCodec for AC-2",
+    "Settle the create overload shape for service accounts (Q69) and update docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-IAM-001",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Field-by-field comparison of the mutator result with the locked re-read row; own @FunctionalInterface because java.util.function.Function is absent on API 21. The A2 reserved-key check is a small request-mapping step.",
+     "evidence": [
+      "API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) lacks java/util/Base64, java/time/* and java/util/function/Function (re-checked)",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site trace UserMutator.java; parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "Depends on IR-IAM-003, REL-IAM-001 and IR-IAM-005 (both SCC members) and FR-AUTH-006. -4 for SCC membership.",
+     "evidence": [
+      "existing_srs_context.json cycles[1]: member of the 70-member depends_on SCC (the brief's 76 is wrong)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Eight concrete ACs. AC-1 is a Kotlin lambda test. AC-6 sends A2 JSON bodies, so it needs a decoding codec.",
+     "evidence": [
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:22 decode throws UnsupportedOperationException (body-decoding tests need a test codec)",
+      "NaruServe-kotlin/src/test/kotlin exists (T11 pattern); FR-KT-001 is verified (prior target)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "The A2 reserved-key rule is endpoint mapping placed in a mutator block.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "R37 app writes through the mutator; v1 user CRUD.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:235"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut at least one depends_on edge of the 70-member SCC before wave scheduling (ordering only, not implementability)",
+    "HTTP tests that send JSON bodies need a decoding test codec (StubJsonCodec.java:22 throws on decode) or must run where NaruServe-gson is on the test classpath"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-IAM-003",
+   "feasibility": "high",
+   "score": 85,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "java.text.Normalizer (NFKC) and toLowerCase(Locale.ROOT) are in the API 21 signature. rename reuses the per-user lock and the store uniqueness contract.",
+     "evidence": [
+      "API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/text/Normalizer and the NFKC form (established; re-checked)",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces AuthUsers.java and internal/; parents exist.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "Depends on IR-IAM-003, FR-IAM-001 and SEC-FLOW-013 (medium 79). -4 for SCC membership.",
+     "evidence": [
+      "existing_srs_context.json cycles[1]: member of the 70-member depends_on SCC (the brief's 76 is wrong)",
+      "per-req-judgement-FLOW.json SEC-FLOW-013 medium 79"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "AC-1/AC-2/AC-4/AC-5 are unit tests (the Turkish locale case uses Locale.setDefault). AC-3 is an API scan. AC-7 is a docs test. AC-6 needs the FLOW device-token fingerprint.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "AC-6 restates FLOW device-trust behavior.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "The opaque username is a fixed 00 decision (R37 edition 20). It matches the project rule that app-defined semantics stay out of the framework.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:235"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut at least one depends_on edge of the 70-member SCC before wave scheduling (ordering only, not implementability)",
+    "Schedule AC-6 after SEC-FLOW-013 (DeviceTrust fingerprint)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-IAM-002",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "A thin method over the TOKEN hash slot, dummy hash and FLOW per-user limiter. char[] wiping is plain Java.",
+     "evidence": [
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site trace AuthUsers.java; parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "Depends on IR-IAM-003, SEC-FLOW-015 (high 87), REL-TOKEN-001 (high 84) and SEC-TOKEN-009 (medium 79). -4 for SCC membership.",
+     "evidence": [
+      "existing_srs_context.json cycles[1]: member of the 70-member depends_on SCC (the brief's 76 is wrong)",
+      "per-req-judgement-TOKEN.json SEC-TOKEN-009 medium 79"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "AC-1/AC-2 use a recording hasher. AC-3 needs the slot held for more than 5 s, so the slot wait timeout must be injectable to avoid a 5 s wall-clock test. AC-4 is a Javadoc text test.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned facade method.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "checkPassword (R45 edition 14) is in 00 §5; the v1 row covers it through UserStore and AuthTesting.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:235,312"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut at least one depends_on edge of the 70-member SCC before wave scheduling (ordering only, not implementability)",
+    "Make the 5 s hash-slot wait injectable (TimeSource or timeout parameter) for AC-3"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-IAM-004",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "A framework-free contract checker in the main jar that throws AssertionError. It needs no JUnit (build.gradle:96-97 adds junit only to testImplementation).",
+     "evidence": [
+      "build.gradle:96-97 junit/jspecify are testImplementation only",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site trace testing/AuthTesting.java; parent exists. Location settled to the main source set (IR-AUTH-005).",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "Depends on IR-IAM-001, REL-IAM-002 (SCC member), FR-IAM-001 and IR-AUTH-005 (high 81, SCC member). Not itself in a cycle.",
+     "evidence": [
+      "existing_srs_context.json FR-IAM-004 not in cycles; transitive_0110_dependency_count=128"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "AC-2..AC-6 use broken fake stores. AC-2's Gson-persisting store has no Gson in NaruServe-api tests, so it is either simulated with a transient-skipping serializer or placed in NaruServe-gson tests. AC-1 needs JdbcUserStore on SQLite.",
+     "evidence": [
+      "build.gradle:274-295 NaruServe-api tests get testFixtures only, no NaruServe-gson (NaruServe-gson is a test dep only of other modules, build.gradle:313,370,605)",
+      "code_context.json build_facts.jdbc_test_driver: no JDBC driver declared; local Gradle cache has com.h2database but no org.xerial"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "AuthTesting with verifyUserStore is named in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as NaruServe-api testImplementation only (CON-IAM-002), keeping build.gradle:59-60 mainDependencies unchanged",
+    "Place the AC-2 Gson-persisting store where NaruServe-gson is available, or simulate it",
+    "Decide whether verifyUserStore checks list (Q73)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-IAM-003",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "The bump itself is UserStore.bumpTokenVersion/changePassword. AC-3 checks that one ver++ revokes access, refresh and device tokens and API keys, so it needs the TOKEN, FLOW and APIKEY mechanics.",
+     "evidence": [
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Addition-site trace UserStore.java only; the revocation evidence lives in other scopes.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "Depends on REL-IAM-002, REL-IAM-001 and SEC-AUTH-007 (medium 79). -4 for SCC membership.",
+     "evidence": [
+      "existing_srs_context.json cycles[1]: member of the 70-member depends_on SCC (the brief's 76 is wrong)",
+      "per-req-judgement-AUTH.json SEC-AUTH-007 medium 79"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1/AC-2 are before/after ver checks. AC-3 is an integration test across four scopes with a held executor. AC-4 needs a fixed TimeSource for userCacheTtl. AC-5 is a docs test.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Cross-cutting revocation rule.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Revocation by ver (R44) underlies the v1 token and key rows.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut at least one depends_on edge of the 70-member SCC before wave scheduling (ordering only, not implementability)",
+    "Schedule AC-3 after TOKEN, FLOW device trust and APIKEY stale-key detection land"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-IAM-005",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "Hand-written character validation and at most 3 HashSet lookups. No regex at request time and no platform API.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "Addition-site traces rbac/Scopes.java and internal/ScopeMatcher.java; parents exist; grammar and covering table explicit.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "No depends_on; not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json FR-IAM-005 depends_on=[]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Table-driven ACs. AC-5 needs a lookup-counting seam. AC-3/AC-4 reach auth.require and RolePolicy (siblings).",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "RoleStore and scopes are in the v1 row; the grammar is R46.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Name the public covers(grant, required) method and update docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-IAM-006",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Builder plus merge into the built-in admin(*) policy and a SAM RoleStore. WARN-once needs a concurrent set: ConcurrentHashMap.newKeySet() is not in the API 21 signature, so use Collections.newSetFromMap(new ConcurrentHashMap).",
+     "evidence": [
+      "API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) lacks ConcurrentHashMap.newKeySet and contains Collections.newSetFromMap",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site trace utils/auth/rbac/; parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "Depends on FR-IAM-005 (quick_pass) and FR-AUTH-004 (high 82). In the 2-member cycle with FR-AUTH-004. The FR-IAM-006 -> FR-AUTH-004 edge only covers admin-role counting, which FR-AUTH-004 owns, so it is the edge to cut. -3 for the cycle, -1 for coupling.",
+     "evidence": [
+      "existing_srs_context.json cycles[0]: 2-member SCC FR-AUTH-004 <-> FR-IAM-006"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "AC-2/AC-4/AC-5 are unit tests. AC-1/AC-3/AC-6 go through auth.require (AUTH) and a 503 fail-closed path.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "RoleStore and the built-in admin are in the v1 row and 00 §3.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut the FR-IAM-006 -> FR-AUTH-004 depends_on edge (admin-role counting belongs to FR-AUTH-004)",
+    "Use Collections.newSetFromMap(new ConcurrentHashMap<>()) instead of ConcurrentHashMap.newKeySet() (API 24)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "DR-IAM-002",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "Two-method SPI with default methods and an id validation helper; java.util collections only.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site trace group/GroupStore.java; parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "Only depends on the verified FR-KT-001; not in a cycle.",
+     "evidence": [
+      "NaruServe-kotlin/src/test/kotlin exists (T11 pattern); FR-KT-001 is verified (prior target)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "AC-1..AC-4 are compile and unit tests. AC-5 needs a guarded request. The rolesOfGroups name is not final, which does not block a test.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "GroupStore is in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Settle the effectiveGroupsOfUser and rolesOfGroups names and update docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-IAM-007",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "Level-by-level BFS with ArrayDeque and HashSet, and fail-closed limits.",
+     "evidence": [
+      "API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/util/ArrayDeque",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Addition-site traces internal/GroupExpander.java and group/GroupLimits.java; parents exist.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "Depends only on DR-IAM-002 (quick_pass); not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json FR-IAM-007 depends_on=[DR-IAM-002]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Call-counting fakes make AC-1/AC-2/AC-4/AC-6 exact. AC-3 asks only for a non-allowing JSON error, so the open status (Q63) does not block it. The AC-5 builder option name is not final.",
+     "evidence": [
+      "open_questions.md Q63"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Group expansion is part of GroupStore in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Choose the HTTP status and code for an expansion-limit failure (Q63) and record it in docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "IR-IAM-004",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Write SPI, upward-BFS cycle check, height check, and in-memory/file stores (file through AtomicFiles); java.util and java.io only.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site trace utils/auth/group/; parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "Depends on DR-IAM-002 and FR-IAM-007 (both quick_pass). FileGroupStore uses AtomicFiles, but no depends_on edge to REL-IAM-004 exists (-1). Not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json IR-IAM-004 depends_on=[DR-IAM-002, FR-IAM-007]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "AC-1..AC-3, AC-6 are store tests. AC-4/AC-5 assert 409 at HTTP (G7) with the code string open (Q14); the status alone is testable.",
+     "evidence": [
+      "open_questions.md Q14"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "In-memory and file GroupStore implementations are in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add a depends_on edge to REL-IAM-004 (FileGroupStore uses AtomicFiles)",
+    "Choose the 409 code strings for cycle and too-deep edges (Q14)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-IAM-008",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "One ordered delete path shared by AuthUsers.delete and A5, with idempotent steps.",
+     "evidence": [
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site trace AuthUsers.java; parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "Depends on IR-IAM-004, IR-IAM-003 and IR-APIKEY-004 (high 85). -4 for SCC membership.",
+     "evidence": [
+      "existing_srs_context.json cycles[1]: member of the 70-member depends_on SCC (the brief's 76 is wrong)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Order and failure injection tests are exact. AC-5 needs the refresh endpoint (FLOW/TOKEN).",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "R11 and R47 (3) delete ordering support the v1 user and key rows.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut at least one depends_on edge of the 70-member SCC before wave scheduling (ordering only, not implementability)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-IAM-004",
+   "feasibility": "high",
+   "score": 81,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Grant checker: re-read actor and target from the store, compute the gained and current effective scopes over roles, groups and edges, then check coverage and the self rule. Pure Java, but the logic is involved and every admin write handler calls it.",
+     "evidence": [
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Addition-site trace internal/ only.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "Depends on FR-IAM-009 (sibling), FR-AUTH-009 (high 81, SCC) and IR-AUTH-003. -4 for SCC membership.",
+     "evidence": [
+      "existing_srs_context.json cycles[1]: member of the 70-member depends_on SCC (the brief's 76 is wrong)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Eight concrete scenarios. AC-4/AC-7 need a fixed TimeSource and a direct store write. The self-rule status and code are open (Q55/Q70), but the refusal, unchanged state and audit event are testable, and the status is decided at implementation.",
+     "evidence": [
+      "open_questions.md Q55, Q70"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "The grant rule R31 is named in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut at least one depends_on edge of the 70-member SCC before wave scheduling (ordering only, not implementability)",
+    "Choose the self-rule refusal status and code under IR-AUTH-003 AC-3 and record it in docs/api (Q55/Q70)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-IAM-009",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Union of roles over expanded groups and a per-required-scope both-cover predicate on top of ScopeMatcher.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site trace internal/; parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "Depends on FR-IAM-006 (in the 2-member cycle), FR-IAM-007 and FR-IAM-005. Not itself in a cycle.",
+     "evidence": [
+      "existing_srs_context.json FR-IAM-009 depends_on=[FR-IAM-006, FR-IAM-007, FR-IAM-005]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1/AC-3/AC-4 are table tests. AC-2 needs a token decode. AC-5 says 'code inspection' for the no-intersection clause: the four cases are automated, the inspection part is not.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "R31 and the principal cache are named in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Replace the AC-5 code-inspection clause with an automated check, or accept it as review evidence"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-IAM-005",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Downward enumeration with a visited set, stopping at 1,001; a skip rule when A covers the conferred scopes; the key-actor rule. Pure Java and bounded.",
+     "evidence": [
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Addition-site trace internal/ only.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "Depends on SEC-IAM-004, IR-IAM-004 and SEC-APIKEY-009 (high 82). -4 for SCC membership.",
+     "evidence": [
+      "existing_srs_context.json cycles[1]: member of the 70-member depends_on SCC (the brief's 76 is wrong)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Eight concrete ACs, with large fixtures (1,001 / 5,000 users) built in memory. The 409 code is open (Q14) but the status is asserted. The open skip-with-*-member question is left out of the ACs.",
+     "evidence": [
+      "open_questions.md Q14"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "A delegated-admin edge case of the v1 grant rule.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut at least one depends_on edge of the 70-member SCC before wave scheduling (ordering only, not implementability)",
+    "Choose the 409 code for the 1,000-user limit (Q14)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-IAM-006",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "User-state outcome only: create or enable + changePassword(expectedOldHash null) + setRoles with one ver++, and on* events with origin RECOVERY.",
+     "evidence": [
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Addition-site trace utils/auth/; endpoint mechanics owned by SEC-AUTH-003.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "Depends on REL-IAM-002, SEC-IAM-003 and SEC-AUTH-003 (medium 79). Not itself in the SCC.",
+     "evidence": [
+      "per-req-judgement-AUTH.json SEC-AUTH-003 medium 79",
+      "existing_srs_context.json SEC-IAM-006 not in cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Two concrete ACs, driven through the SEC-AUTH-003 recovery endpoint.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Overlaps the AUTH setup/recovery item (Q66); kept as the user-state outcome.",
+     "evidence": [
+      "open_questions.md Q66"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": ".recovery (R31) is in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Schedule after SEC-AUTH-003 (recovery endpoint)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "CON-IAM-001",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Kotlin tests in NaruServe-kotlin/src/test/kotlin plus adding utils.auth packages to ApiJarClasses.PUBLIC_PACKAGES. The Core stays Kotlin-free.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:27-28 PUBLIC_PACKAGES lists only naruserve, spi, routing",
+      "NaruServe-kotlin/src/test/kotlin exists (T11 pattern); FR-KT-001 is verified (prior target)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "The verifies trace ApiJarClasses.java:27-28 exists and matches AC-4 (the list must grow).",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "Depends on IR-IAM-003, IR-IAM-002 and the verified FR-KT-001. It also covers RoleStore, GroupStore and the JDBC builders without depends_on edges to FR-IAM-006, DR-IAM-002, FR-IAM-010/011.",
+     "evidence": [
+      "existing_srs_context.json CON-IAM-001 depends_on=[IR-IAM-003, IR-IAM-002, FR-KT-001]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Compile-and-run Kotlin tests plus the FR-KT-001/FR-KT-002 reflection checks. 'No platform-type warning' is shown by explicitly typed declarations and the reflection check, since kotlinc does not warn about platform types.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned Kotlin coverage.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Mandated by CLAUDE.md T11, not a v1 product item.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add the utils.auth.* packages to ApiJarClasses.PUBLIC_PACKAGES",
+    "Add depends_on edges to the other covered types (RolePolicy/RoleStore, GroupStore, JDBC builders)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-IAM-010",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "java.sql and javax.sql.DataSource are in the API 21 signature; try-with-resources on Connection works (AutoCloseable and Throwable.addSuppressed are present). Each field method is one conditional UPDATE. Must avoid JDBC 4.1 methods and must map SQLite unique violations.",
+     "evidence": [
+      "API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/sql/*, javax/sql/DataSource, java/lang/AutoCloseable, Throwable.addSuppressed; lacks setNetworkTimeout/abort/closeOnCompletion (established)",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked)",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "The verifies trace build.gradle:59-60 matches AC-7 (main deps stay empty); addition-site parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "Depends on REL-IAM-003, DR-IAM-003, REL-IAM-002 (SCC) and IR-IAM-001. -4 for SCC membership.",
+     "evidence": [
+      "existing_srs_context.json cycles[1]: member of the 70-member depends_on SCC (the brief's 76 is wrong)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "SQL-text tests need a statement-recording fake Connection (a java.lang.reflect.Proxy is enough). SQLite tests need the test-only driver. AC-6's DDL method name is not final.",
+     "evidence": [
+      "code_context.json build_facts.jdbc_test_driver: no JDBC driver declared; local Gradle cache has com.h2database but no org.xerial"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "utils.auth.jdbc User store is named in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as NaruServe-api testImplementation only (CON-IAM-002), keeping build.gradle:59-60 mainDependencies unchanged",
+    "Do not call JDBC 4.1 methods (Connection.setNetworkTimeout/abort, Statement.closeOnCompletion): absent from the API 21 signature",
+    "Map unique violations by SQLState class 23 or the SQLite result code 19 (SQLITE_CONSTRAINT): sqlite-jdbc reports them as a plain SQLException subclass, not SQLIntegrityConstraintViolationException; confirm against the chosen driver version",
+    "Multi-thread / multi-instance SQLite tests must set a busy timeout (or WAL) so contention yields false/serialization, not 'database is locked' SQLExceptions",
+    "Cut at least one depends_on edge of the 70-member SCC before wave scheduling (ordering only, not implementability)",
+    "Fix the ver column name and the roles/attributes column encoding identically across dialects (DR-IAM-003)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-IAM-011",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "JDBC GroupAdminStore with IN-list queries bounded by 256 (under SQLite's 999 bound parameters) and DELETE cascades in code; java.sql only.",
+     "evidence": [
+      "API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/sql/PreparedStatement",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site trace jdbc/JdbcGroupStore.java; parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "Depends on IR-IAM-004 and DR-IAM-003. Not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json FR-IAM-011 depends_on=[IR-IAM-004, DR-IAM-003]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Statement-count tests via a recording Connection; SQLite behavior tests; AC-5 compares with InMemoryGroupStore.",
+     "evidence": [
+      "code_context.json build_facts.jdbc_test_driver: no JDBC driver declared; local Gradle cache has com.h2database but no org.xerial"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "utils.auth.jdbc Group store is named in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as NaruServe-api testImplementation only (CON-IAM-002), keeping build.gradle:59-60 mainDependencies unchanged",
+    "Do not call JDBC 4.1 methods (Connection.setNetworkTimeout/abort, Statement.closeOnCompletion): absent from the API 21 signature"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-IAM-012",
+   "feasibility": "high",
+   "score": 85,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "One conditional UPDATE for markUsed and one for revokeFamily. It must implement the TOKEN RefreshTokenStore SPI exactly, and part of that SPI is not final yet (purgeExpired, Q43).",
+     "evidence": [
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)",
+      "open_questions.md Q43"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site trace jdbc/JdbcRefreshTokenStore.java; parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "Depends on DR-IAM-003 and FR-TOKEN-002 (high 81, transitive 31). Not in a cycle.",
+     "evidence": [
+      "per-req-judgement-TOKEN.json FR-TOKEN-002 high 81"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-2/AC-3 are SQL-text and SQLite tests. AC-1 runs 8 threads over two instances on one SQLite file, so it needs a busy timeout or the losers see 'database is locked' instead of false. AC-4 depends on FR-TOKEN-002 default selection.",
+     "evidence": [
+      "code_context.json build_facts.jdbc_test_driver: no JDBC driver declared; local Gradle cache has com.h2database but no org.xerial"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Default selection overlaps FR-TOKEN-002 (Q67).",
+     "evidence": [
+      "open_questions.md Q67"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "utils.auth.jdbc RefreshToken store is named in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as NaruServe-api testImplementation only (CON-IAM-002), keeping build.gradle:59-60 mainDependencies unchanged",
+    "Multi-thread / multi-instance SQLite tests must set a busy timeout (or WAL) so contention yields false/serialization, not 'database is locked' SQLExceptions",
+    "Do not call JDBC 4.1 methods (Connection.setNetworkTimeout/abort, Statement.closeOnCompletion): absent from the API 21 signature"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-IAM-013",
+   "feasibility": "medium",
+   "score": 79,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Atomic count = count + 1 upserts differ per dialect (SQLite/PostgreSQL ON CONFLICT, MySQL ON DUPLICATE KEY). The window-reset semantics in SQL (fixed vs sliding) are not given by 00, and the DeviceTrust SPI method set it implements is not final (Q60).",
+     "evidence": [
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)",
+      "open_questions.md Q60",
+      "API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/sql/*"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Addition-site trace jdbc/ only.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "Depends on DR-IAM-003, IR-FLOW-003 (high 90), SEC-FLOW-013 (medium 79) and REL-FLOW-001 (medium 77). Not in a cycle (it reaches the SCC transitively, 128).",
+     "evidence": [
+      "per-req-judgement-FLOW.json SEC-FLOW-013 medium 79, REL-FLOW-001 medium 77"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-2/AC-3/AC-5 are SQL-text and unit tests. AC-1 needs a defined window rule. AC-4 depends on the FLOW device-token failure limit and a not-final SPI. Testable once those are fixed.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned JDBC implementations.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "utils.auth.jdbc LoginThrottle and DeviceTrust are in the v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as NaruServe-api testImplementation only (CON-IAM-002), keeping build.gradle:59-60 mainDependencies unchanged",
+    "Multi-thread / multi-instance SQLite tests must set a busy timeout (or WAL) so contention yields false/serialization, not 'database is locked' SQLExceptions",
+    "Fix the SQL window-reset semantics (fixed vs sliding) before writing AC-1",
+    "Wait for the SEC-FLOW-013 DeviceTrust SPI method set (Q60)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "DR-IAM-003",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "DDL text constants or resources for three dialects. Only column naming (ver) and roles/attributes encoding are left open.",
+     "evidence": [
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site trace jdbc/; parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "Depends only on CON-IAM-002 (quick_pass); not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json DR-IAM-003 depends_on=[CON-IAM-002]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "SQLite DDL is executed. MySQL/PostgreSQL are checked as SQL text, which AC-5 records as a verification limit.",
+     "evidence": [
+      "code_context.json build_facts.jdbc_test_driver: no JDBC driver declared; local Gradle cache has com.h2database but no org.xerial"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned; API key tables stay in APIKEY.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Reference DDL for SQLite, MySQL and PostgreSQL is in 00 §2.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as NaruServe-api testImplementation only (CON-IAM-002), keeping build.gradle:59-60 mainDependencies unchanged",
+    "Fix the ver column name and roles/attributes encoding identically in all three dialects"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "CON-IAM-002",
+   "feasibility": "high",
+   "score": 96,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "One testImplementation line on NaruServe-api, following the Jetty precedent. testImplementation does not reach the published POM, and the mainDependencies assertion is untouched.",
+     "evidence": [
+      "build.gradle:362-370 Jetty servletTestDependencies testImplementation precedent (CON-SVL-001)",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)",
+      "code_context.json build_facts.jdbc_test_driver: no JDBC driver declared; local Gradle cache has com.h2database but no org.xerial"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Both traces exist and match: build.gradle:59-60 (verifies) and build.gradle:362-370 (precedent).",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "Depends only on CON-AUTH-001 (high 94); not in a cycle.",
+     "evidence": [
+      "per-req-judgement-AUTH.json CON-AUTH-001 high 94"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "AC-1 is the dependency-rule check plus a POM inspection, AC-2 is the default build, AC-3 is SQL-text tests, AC-4 is a docs test.",
+     "evidence": [
+      "code_context.json build_facts.dependency_rule_checks checkDependencyRules / ConsumerRulesTest"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned test infrastructure (APIKEY reuses it).",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Verification enabler for the v1 JDBC stores.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as NaruServe-api testImplementation only (CON-IAM-002), keeping build.gradle:59-60 mainDependencies unchanged",
+    "Choose a sqlite-jdbc version that runs on the Java 8+ test JVM and is resolvable (org.xerial is not in the local Gradle cache, so the first build needs network)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "IR-IAM-005",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "A Core Router with 15 (+3) routes, mounted by install. A2/A4 use methodAsync. AC-1 'enumerating the registrations of the adminRoutes() router' has no public Router API today, so it must use the 0.11.0 IR-APP-008 registrations() or an auth-internal route table, or probe by HTTP.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Router.java:6-11 Router exposes no registration enumeration; IR-APP-008 registrations() is a 0.11.0 CORE sibling (judged high 91)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19-21 methodAsync wraps the AsyncRouteHandler in internal AsyncMiddleware",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:128-140"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "Three verifies traces (HttpRoutes, HttpExecution, StandardErrors) exist and match the route registration, async and 404 shape; addition-site Auth.java parent exists.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Eight draft deps (FR-AUTH-005/006, IR-AUTH-003, REL-TOKEN-001, FR-IAM-008, IR-IAM-004, SEC-IAM-005, IR-IAM-001). -3 for coupling, -4 for SCC membership.",
+     "evidence": [
+      "existing_srs_context.json cycles[1]: member of the 70-member depends_on SCC (the brief's 76 is wrong)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-2..AC-7 are HTTP tests. AC-5/AC-6 values are INFERRED from 05 but concrete. AC-7 needs every hash slot held. JSON bodies need a decoding codec.",
+     "evidence": [
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:22 decode throws UnsupportedOperationException (body-decoding tests need a test codec)"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned admin table.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "R45 fixes 15 + 3 admin endpoints for v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:312"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut at least one depends_on edge of the 70-member SCC before wave scheduling (ordering only, not implementability)",
+    "HTTP tests that send JSON bodies need a decoding test codec (StubJsonCodec.java:22 throws on decode) or must run where NaruServe-gson is on the test classpath",
+    "Implement AC-1 via IR-APP-008 registrations() (schedule after it) or an auth-internal route table",
+    "Decide the lockout DELETE success status and the G2 invalid-id status (open in Research)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-IAM-007",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "A per-route guard reusing the IR-AUTH-004 guard and the FR-IAM-009 predicate. For key actors the router must read the A2/A4 JSON body for the SEC-APIKEY-008 checks before this guard, which complicates the ordering.",
+     "evidence": [
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:5-16 registration surface"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site Auth.java parent exists; the HttpRoutes trace is related_to.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Six deps incl. SEC-APIKEY-008 (medium 79) and IR-AUTH-004; -4 for SCC membership.",
+     "evidence": [
+      "existing_srs_context.json cycles[1]: member of the 70-member depends_on SCC (the brief's 76 is wrong)",
+      "per-req-judgement-APIKEY.json SEC-APIKEY-008 medium 79"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Eight concrete HTTP ACs. AC-7 is INFERRED but testable. AC-8 needs API keys on.",
+     "evidence": [
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:22 decode throws UnsupportedOperationException (body-decoding tests need a test codec)"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned admin guard.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "R39 admin scope guard backs the v1 admin endpoints and R31.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 §9 v1 row"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut at least one depends_on edge of the 70-member SCC before wave scheduling (ordering only, not implementability)",
+    "HTTP tests that send JSON bodies need a decoding test codec (StubJsonCodec.java:22 throws on decode) or must run where NaruServe-gson is on the test classpath",
+    "Confirm the guard position relative to the FR-APIKEY-004 body 400 (Q68) and the SEC-APIKEY-008 body checks"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-IAM-014",
+   "feasibility": "medium",
+   "score": 76,
+   "axes": {
+    "implementability": {
+     "score": 23,
+     "rationale": "The A4 handler does one R31 check, then ordered steps (rename, changePassword with no retry, security fields, attributes), catches every failure itself, builds the applied list, emits audit events and fires one onUserUpdated. Plain Java, but it is the most stateful handler in the scope.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19-21 methodAsync wraps the AsyncRouteHandler in internal AsyncMiddleware",
+      "build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site Auth.java parent exists; 13 traces cross-reference siblings.",
+     "evidence": [
+      "code_context.json trace_validation: all verifies paths exist and addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 6,
+     "rationale": "Twelve draft deps across IAM/AUTH (REL-IAM-001/002, SEC-IAM-001/003/004/007, FR-IAM-003, IR-IAM-005, FR-AUTH-006/008/009, IR-AUTH-003). The most coupled block. -4 for SCC membership, -5 for coupling.",
+     "evidence": [
+      "existing_srs_context.json cycles[1]: member of the 70-member depends_on SCC (the brief's 76 is wrong)",
+      "existing_srs_context.json FR-IAM-014 direct_0110_dependency_count=12"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Nine detailed ACs with fault-injecting stores. The applied element format and the lost-race 409 code are open (Q14), but the ACs assert only list contents and status. JSON bodies need a decoding codec.",
+     "evidence": [
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:22 decode throws UnsupportedOperationException (body-decoding tests need a test codec)",
+      "open_questions.md Q14"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "IAM-owned admin handler.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "A4 is a v1 admin endpoint (R45, R37 admin PATCH).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:312"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut at least one depends_on edge of the 70-member SCC before wave scheduling (ordering only, not implementability)",
+    "HTTP tests that send JSON bodies need a decoding test codec (StubJsonCodec.java:22 throws on decode) or must run where NaruServe-gson is on the test classpath",
+    "Choose the applied element format and the lost-race 409 code and record them in docs/api",
+    "Schedule last in the IAM wave: needs SEC-IAM-004/007, REL-IAM-001/002 and FR-AUTH-008/009"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  }
+ ]
+}

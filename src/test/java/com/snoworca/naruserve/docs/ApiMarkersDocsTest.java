@@ -97,11 +97,11 @@ public final class ApiMarkersDocsTest {
         assertFalse(readme, readme.contains("구현 목표 계약"));
         assertFalse(readme, readme.contains("으로 표시했습니다"));
         String banner = lineWith(readme, "> **문서 상태:**");
-        contains("README.md", banner, "0.10.0", "공통 HTTP", "Java Pattern", "(express-migration.md)");
+        contains("README.md", banner, "0.11.0", "공통 HTTP", "Java Pattern", "(express-migration.md)");
         assertFalse(banner, banner.contains(MARKER));
         String english = ReadmeDocsTest.read("docs/api/en/README.md");
         String englishBanner = lineWith(english, "> **Documentation status:**");
-        contains("en/README.md", englishBanner, "0.10.0", "common HTTP", "Java Pattern", "(express-migration.md)");
+        contains("en/README.md", englishBanner, "0.11.0", "common HTTP", "Java Pattern", "(express-migration.md)");
         assertFalse(englishBanner, englishBanner.contains(MARKER));
     }
 

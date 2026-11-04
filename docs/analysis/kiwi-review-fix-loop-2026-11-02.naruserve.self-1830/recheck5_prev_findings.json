@@ -1,0 +1,37 @@
+[
+ {
+  "id": "N4-01",
+  "title": "lockKey of a not-yet-existing file folds case but not Unicode normalization: NFC and NFD spellings of one APFS file lock separately, racing first creates are lost and the file is left unreadable",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "line_range": "101-116"
+  },
+  "evidence": {
+   "command": "temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/Tmp501R4Test.java (deleted after the run); ./gradlew :NaruServe-api:test --offline --tests '*Tmp501R4Test*' -i | grep TMP501 (test unicodeNormalization: dir/caf\\u00e9.json in NFC and NFD, AtomicFiles.lockFor on both before and after creating the NFC file; test unicodeRace: same 400-round barrier race as N3-02 with FileUserStore over the NFC and the NFD spelling of a fresh dir, reopen the NFC spelling) on the default APFS volume (case- and normalization-insensitive)",
+   "output": "TMP501 NFC/NFD sameLockBefore=false\nTMP501 NFC/NFD nfdExistsAfterNfcCreate=true sameLockAfter=true\nTMP501 NFC/NFD race lost=249 unreadable=131 zeroSuccess=0",
+   "intent_output": "AtomicFiles Javadoc ('writes to one path ... are serialized within the process ... since two writers would share the temp file') and the new lockKey Javadoc ('a file that does not exist yet has no resolved spelling of its own' -> key must be the same for every spelling naming that one file whether or not it exists yet); docs/api/auth.md:747 (another writer's change is refused, the file stays readable): expected 0 lost / 0 unreadable as for the case spellings. Observed: the new missing-file key (canonical parent + raw name, case-folded) is not normalization-folded, so on APFS two spellings of one not-yet-existing file get two monitors while sharing one .tmp file; once the file exists getCanonicalPath folds them (sameLockAfter=true), so the key also changes across the first create."
+  },
+  "fix_meta": [
+   {
+    "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "24-29, 73, 79-124, 163"
+   },
+   {
+    "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+    "line_range": "308"
+   },
+   {
+    "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+    "line_range": "284-394"
+   },
+   {
+    "path": "docs/api/auth.md",
+    "line_range": "747"
+   },
+   {
+    "path": "docs/api/en/auth.md",
+    "line_range": "747"
+   }
+  ]
+ }
+]

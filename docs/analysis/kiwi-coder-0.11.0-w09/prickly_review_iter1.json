@@ -1,0 +1,11 @@
+{"pass":"prickly-review","iter":1,"severity_summary":{"CRITICAL":0,"HIGH":1,"MEDIUM":7,"LOW":10},
+"findings":[
+"HIGH FR-APIKEY-006: a key actor's password-setting A2/A4 must be 403 api_key_not_allowed first (opt-in key could reset passwords)",
+"MEDIUM ApiKeyOwners.bump: a key-lock timeout stopped the ver++",
+"MEDIUM invariant-key deletion ran without the owner lock and without a store re-check",
+"MEDIUM protected-path key store/throttle failures logged an ERROR on every request",
+"MEDIUM serviceAccount audit mark only on grant-rule events",
+"MEDIUM issuance-dependent REL-APIKEY-003/004 ACs untested; lock-order test uncited",
+"MEDIUM PasswordChanges.selfService bypasses the user/key locks",
+"MEDIUM user delete vs issuance race could leave an orphan key",
+"LOW recovery read before the lock; Javadoc claims (MULTI deletions, bump wording, STALE, adminScopeKeys); one shared ERROR limiter; cleanupRun without try/catch; arrays not wiped when the executor rejects; remoteAddress unguarded; cache invalidation churn; beforeUserUpdate gets the same row twice"]}

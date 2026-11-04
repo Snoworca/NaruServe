@@ -1,0 +1,626 @@
+{
+ "chunk": "M2",
+ "round": 1,
+ "findings": [
+  {
+   "id": "M2-F01",
+   "axis": "P6",
+   "severity": "HIGH",
+   "title": "Default file refresh store keeps every rotated record until its own expiry, so the 8 MB file fills and all logins/refreshes answer 503",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java",
+    "line_range": "113-145"
+   },
+   "description": "TokenService.pair() saves a new RefreshRecord (expiresAt = now + refreshTtl) on every login AND every refresh rotation; markUsed() only sets usedAt, and purgeExpired() removes a record only after its own expiresAt. So one active session keeps one record per refresh made within refreshTtl alive (BASELINE: 14 d refresh / 15 min access -> ~450-1,300 live records per active user). Every save()/markUsed() copies the whole map and rewrites the whole JSON file (commit, line 114-134), and MiniJson.write throws JsonFormatException once the document exceeds DEFAULT_FILE_BYTES (8 MB, ~35k records of ~225 B). Scenario: FileUserStore (the device-server/small-install default) under BASELINE with ~80 active users, or one authenticated client looping POST /auth/refresh (no throttle on successful refresh) ~35k times: the file hits 8 MB, commit() throws, TokenService.call maps it to AuthUnavailableException, and every login and refresh of every user answers 503 until records expire (up to 14 days). Before that, each refresh rewrites up to 8 MB with fsync on the request path (quadratic total I/O).",
+   "suggested_fix": "Keep one record per family in the file store (rotate in place: replace the family's current tokenId/hash and remember the previous used jti for the reuse-grace check) or drop used records once a newer record of the same family exists and reuse detection can be answered from the family's current jti; additionally cap records per user and log a WARN well before the size limit.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "performance"
+   ]
+  },
+  {
+   "id": "M2-F02",
+   "axis": "P2",
+   "severity": "MEDIUM",
+   "title": "Guards on public paths accept a cookie session without the CSRF/Origin check",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "1374-1380, 1556-1567, 2106-2141"
+   },
+   "description": "For a public path (permitPrefix, or any path outside .protectOnly), handle() only calls attachOptional(), which resolves the naru_at cookie and attaches the principal without csrfRequired()/csrfTokens.passes()/Origins.passes(); guard() (require/requireRole/authenticated/check) then trusts that principal and never checks CSRF. Scenario: COOKIE transport, .protectOnly(\"/api\"), and an app route app.post(\"/account/close\", auth.authenticated(), ...) or app.delete(\"/teams/:id\", auth.require(\"teams:write\"), ...) outside the range (the doctor only WARNs that it is 'public with optional authentication'): a same-site attacker page (sibling subdomain, which SameSite=Strict does not stop) posts to it with the user's cookie and the guarded handler runs. The same holds for built-in DELETE /auth/me/apikeys/:id if the app permitPrefix-es its mount. docs/api/auth.md says cookie-authenticated writes need X-CSRF-Token; a guard is where users expect that protection.",
+   "suggested_fix": "Apply the same CSRF/Origin rule in attachOptional for unsafe methods (attach the principal only when the cookie write passes CSRF and Origin, or mark it unverified) or make guard() run csrfRequired()/passes() when the principal came from the naru_at cookie on a public path; add a test with a guarded POST outside protectOnly.",
+   "is_behavioral": true,
+   "tags": [
+    "security",
+    "bug"
+   ]
+  },
+  {
+   "id": "M2-F03",
+   "axis": "P5",
+   "severity": "MEDIUM",
+   "title": "Principal-required auth endpoints check CSRF before the 415 body-format step, against FR-FLOW-001's order",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "1429-1442"
+   },
+   "description": "FR-FLOW-001 fixes the order transport -> multiple credentials/key procedure -> body format (415) -> COOKIE body refreshToken (400) -> CSRF/Origin (403) and says the earliest step decides. In handle(), for POST /auth/password, POST /auth/me/apikeys and every POST under /auth/admin, the CSRF/Origin check (line 1429) runs before jsonBodyOk() (line 1440). Scenario: COOKIE mode, a valid naru_at, no X-CSRF-Token, POST /auth/password with Content-Type text/plain and a body -> 403 csrf_failed, while the spec order answers 415 UNSUPPORTED_MEDIA_TYPE (FR-FLOW-001 AC-1 states the same principle for login). No test covers the principal-required case (only refresh/login/admin-key variants exist).",
+   "suggested_fix": "Move the jsonBodyOk(req, credentialEndpoint || isAdminPath(req), res) call (keeping the keyOnAdmin exception) before the csrfRequired() block, and add a COOKIE test for /auth/password and /auth/admin/users with text/plain and no CSRF token expecting 415.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "regression"
+   ]
+  },
+  {
+   "id": "M2-F04",
+   "axis": "P4",
+   "severity": "MEDIUM",
+   "title": "Builder default logger is not replaced by the app logger in most components, contrary to the documented default",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "332-403, 555-559"
+   },
+   "description": "Builder.logger() says 'the app's logger from install on when not called' (docs/api/auth.md line 91 says the same), but build() passes a new ConsoleLogger into AuditTrail (332), AccessTokens (350), EffectiveGrants (381), ApiKeyUsage (397), DefaultAuthUsers (403, final field), the default InMemoryLoginThrottle/InMemoryDeviceTrust (448/461) and the file throttle/device trust; install() only swaps Auth.logger, RehashQueue and TokenService. Scenario: an app with an SLF4J or Logcat logger and a failing audit sink or user store: 'auth: the user store failed in ... answering 503' (DefaultAuthUsers.call), audit sink failures, group-expansion warnings and the throttle/device-trust cap WARNs go to stdout instead of the app log, so operators miss them. docs/api/auth.md line 594 documents the opposite default (ConsoleLogger), so the two doc rows also disagree.",
+   "suggested_fix": "Give the logger-holding components a volatile logger (or a Logger indirection that reads Auth.log()) and switch them in install(), or construct them lazily; then make docs/api (ko+en) state one default.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "doc"
+   ]
+  },
+  {
+   "id": "M2-F05",
+   "axis": "P5",
+   "severity": "LOW",
+   "title": ".loginFailureLimits and the password-confirmation limit are silently ignored by a custom throttle without usesLimitArguments()",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "883-899"
+   },
+   "description": "LoginLimits and DefaultAuthUsers.checkPassword pass their limits only through the limit-argument methods. A custom LoginThrottle that does not declare usesLimitArguments() applies its own limits, and the doctor reports that only when API keys are on (line 893). Scenario: .loginThrottle(customRedisThrottle).loginFailureLimits(3, 10, 5, 600_000) without .apiKeys: the configured login limits and the SEC-FLOW-015 5-per-15-min confirmation limit are not applied, with no WARN.",
+   "suggested_fix": "Extend the 'login throttle limits' doctor WARN to fire whenever the throttle does not use the limit arguments (mentioning the login and confirmation limits), not only with API keys.",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ]
+  },
+  {
+   "id": "M2-F06",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "InMemoryDeviceTrust can lose an invalidation when makeRoom evicts the entry another thread is counting",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/InMemoryDeviceTrust.java",
+    "line_range": "71-95, 148-185, 188-199"
+   },
+   "description": "recordFailure() reads Entry e from the map and later updates it under synchronized(e); makeRoom() (another thread at the cap) may pick that same not-invalidated entry as the victim and remove it in between. The first thread then sets invalidated=true on an orphaned Entry and returns true, but isInvalidated() later finds no entry and FileDeviceTrust's immediate write snapshots the map without it, so the token is trusted again. Only at the cap (10,000 tokens on Android). Also purge() drops expiresAt < now while purgeExpired() drops expiresAt <= now (inconsistent boundary).",
+   "suggested_fix": "After updating e, re-check entries.get(tokenId) == e (re-insert or retry when evicted), or do the eviction and the update under one lock; use the same expiry comparison in both purges.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "M2-F07",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "The final snapshot at stop runs before the background pool and failure floor stop",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "591-601, 669-679"
+   },
+   "description": "onStop calls stopCleanup() (which writes the last throttle/device-trust snapshot) before background.shutdownNow() and the floor scheduler shutdown. A login completion still running on the background pool after that snapshot records its failure in memory only, so it is lost at restart. Scenario: stop during a password-spraying burst; failures recorded in the last moments are not persisted, letting the attacker get a few more attempts per window after restart.",
+   "suggested_fix": "Shut down (and await) the background pool and floor scheduler first, then stopCleanup() with its final snapshot.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "M2-F08",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "Per-request recomputation of the protected range and canonical paths",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "1084-1093, 1661-1673"
+   },
+   "description": "With .protectOnly, every public-candidate request calls protectedPrefixes() (allocates a new list) and widePath(prefix) for each prefix (ByteArrayOutputStream plus a new CharsetDecoder per prefix), and handle() computes canonical(req.path()) up to four times (isCredentialEndpoint, isAnonymousEntry, isPublic, isAdminPath twice). The prefixes are fixed after build.",
+   "suggested_fix": "Precompute the widened protected prefixes once in the constructor (mount and admin included) and compute canonical(req.path()) once per request.",
+   "is_behavioral": false,
+   "tags": [
+    "performance"
+   ]
+  },
+  {
+   "id": "M2-F09",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "Registration racing onStart can escape the protectOnly FAIL",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "583-590, 629-645"
+   },
+   "description": "watchRange() adds an unjudgeable registration to the list while started is false; the doctor reads that list at the start of onStart, but started.set(true) happens only after seed()/startCleanup(). A Pattern/array route registered from another thread in that window is neither failed nor refused, and is served under protectOnly (deferred from W5).",
+   "suggested_fix": "Set a 'doctor ran' flag before the doctor reads unjudgeable (or make watchRange throw once the doctor started), so late registrations are refused.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F10",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Restart-logout WARN says every user is logged out even when only the throttle or device trust falls back to memory",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "819-824"
+   },
+   "description": "The WARN fires when any of refresh/throttle/device trust is unset with a custom UserStore, but always says 'a restart logs every user out'. With .refreshTokens(jdbc) set and only .loginThrottle unset, nobody is logged out; only throttle counters are lost (deferred from W5).",
+   "suggested_fix": "Name the stores that are actually unset and state the consequence per store (logout only for the refresh store).",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F11",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Pools shut down in onStop are not recreated; the socket ticker runs while idle",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "591-601, 2492-2518"
+   },
+   "description": "onStop shuts down background (shutdownNow), hashSlots and the floor scheduler but onStart never recreates them, so an Auth whose app is stopped and started again answers 503 on every hash/login and the stale failureFloor field points at a terminated scheduler. The WebSocket ticker, once started, keeps ticking every second even when no socket is tracked (deferred from W4/W6).",
+   "suggested_fix": "Recreate the pools in onStart (or refuse a second start with a clear error), reset failureFloor at stop, and stop the ticker when the socket map becomes empty.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F12",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "webSocketWrappers counts webSocket() calls, not WEBSOCKET registrations",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "1001-1012, 2428-2431"
+   },
+   "description": "The doctor compares the number of WEBSOCKET registrations with the number of auth.webSocket(handler) calls; a wrapper created and not registered, or one wrapper reused for two routes, skews the WARN (deferred from W6).",
+   "suggested_fix": "Mark wrapped handlers (a wrapper class) and count WEBSOCKET registrations whose target is not a wrapper.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F13",
+   "axis": "P1",
+   "severity": "LOW",
+   "title": "accessTtl longer than refreshTtl is accepted",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "423-429, 3368-3389"
+   },
+   "description": "build() validates each TTL >= 1 s but not accessTtl <= refreshTtl; .accessTtl(2 days) with STANDARD (1-day refresh) issues access tokens that outlive their refresh token (deferred from W6).",
+   "suggested_fix": "Add a build() violation when the effective access TTL exceeds the effective refresh TTL.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F14",
+   "axis": "P1",
+   "severity": "LOW",
+   "title": "Default JDBC throttle, device trust and refresh store ignore the JdbcUserStore schema/table prefix",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "441-463, 3713-3718"
+   },
+   "description": "defaultThrottle/defaultDeviceTrust/refreshStore build the JDBC stores with only DataSource and dialect, so with JdbcUserStore.table(\"app.naru_users\") they still use naru_login_throttle etc. in the default schema (deferred from W7).",
+   "suggested_fix": "Derive the schema of the default JDBC stores from JdbcUserStore.getTable() or document that they must be set explicitly.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F15",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "Failure floor is created lazily under the Auth monitor",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "2781-2800"
+   },
+   "description": "failureFloor() runs passwords.timing() (which may calibrate) inside synchronized(this), the same monitor as startSocketTicker/stopSocketTicker, so the first failed login can block WebSocket tracking and stop (deferred from W7).",
+   "suggested_fix": "Create the floor in onStart after passwords.prepare(), or use a dedicated lock.",
+   "is_behavioral": false,
+   "tags": [
+    "performance",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F16",
+   "axis": "P1",
+   "severity": "LOW",
+   "title": "API key lastUsedAt is recorded for a key refused at an anonymous-entry or credential endpoint",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "1424-1428, 1475-1490"
+   },
+   "description": "keys.verifyHeader()/credentials.resolve() call ApiKeyUsage.used() on success, and the request is then answered 403 api_key_not_allowed, so a refused use updates lastUsedAt (deferred from W8).",
+   "suggested_fix": "Record usage only after the endpoint accepted the key (e.g. in handle() after the credential-endpoint ban).",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F17",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "WebSocket rechecks do store reads on the single ticker thread",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "2525-2586"
+   },
+   "description": "webSocketTick() runs principals.refresh() and keys.findById() for every due socket sequentially on one thread; with userCacheTtl(0) or many sockets a slow store delays expiry closes of all connections (deferred from W10).",
+   "suggested_fix": "Hand rechecks to the background executor (bounded) and keep the ticker for expiry closes only.",
+   "is_behavioral": false,
+   "tags": [
+    "performance",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F18",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "checkPassword waits up to 10 s (static stripe then per-user hold) and answers 503 without Retry-After",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/DefaultAuthUsers.java",
+    "line_range": "376-401"
+   },
+   "description": "The JVM-wide 64-stripe lock is taken first (tryLock 5 s, unrelated users on the same stripe serialize behind a ~500 ms hash), then ConfirmationHolds.hold polls with Thread.sleep(5) for another 5 s; both timeouts throw AuthUnavailableException without a retry delay (deferred from W8/W10, W12 #7).",
+   "suggested_fix": "Take the per-user hold first (or only, when auth provides holds), keep one 5 s budget, and pass a Retry-After (e.g. 1 s) like ConfirmationHolds.busy().",
+   "is_behavioral": true,
+   "tags": [
+    "performance",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F19",
+   "axis": "P1",
+   "severity": "LOW",
+   "title": "Per-FileUserStore file throttle/device trust keep the first builder's TimeSource and Logger",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "3740-3786"
+   },
+   "description": "FILE_THROTTLES/FILE_DEVICE_TRUSTS cache the store made by the first build() over a FileUserStore; a later Auth with another .timeSource(...) or .logger(...) silently uses the first one's clock and logger (deferred from W12 #1).",
+   "suggested_fix": "Key the cache by (store, time) or fail/WARN when a later build passes a different TimeSource.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F20",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Two FileUserStore instances over one file get two throttle/device/refresh writers",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "3688-3786"
+   },
+   "description": "The static caches are keyed by the FileUserStore instance, so two FileUserStore objects over the same users.json create two FileLoginThrottle/FileDeviceTrust/FileRefreshTokenStore writers over the same side files; the last snapshot wins and refresh records of one are overwritten by the other (deferred from W12 #2).",
+   "suggested_fix": "Key the caches by the canonical file path of the users file.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F21",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Doctor file-state prints one FAIL per store file in the same unwritable directory",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "907-936"
+   },
+   "description": "users.json, the refresh, throttle and device-trust files share one directory, so an unwritable directory yields up to four identical FAILs (deferred from W12 #3).",
+   "suggested_fix": "Group the files by directory and emit one FAIL per directory listing the files.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F22",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "A failed immediate invalidation write answers 503 without a WARN and is retried only at the next snapshot",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileDeviceTrust.java",
+    "line_range": "67-78"
+   },
+   "description": "When write(true) fails, memory already holds the invalidation, recordFailure throws (the login answers 503) and the next failure sees before=true, so no immediate retry happens; until the 60 s snapshot succeeds a crash loses the invalidation and nothing says the invalidation is not on disk (deferred from W12 #4).",
+   "suggested_fix": "Log a WARN naming the unpersisted invalidation and retry the immediate write on the next isInvalidated/recordFailure while a pending flag is set.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F23",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Versioned-JSON load/parse/write code is duplicated across the three file stores",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileLoginThrottle.java",
+    "line_range": "137-206"
+   },
+   "description": "FileLoginThrottle, FileDeviceTrust and FileRefreshTokenStore each repeat the size check, format/version check, list check, integer field reader and the AtomicFiles write with dirty-retry (deferred from W12 #5).",
+   "suggested_fix": "Extract a small VersionedJsonFile helper (header check, typed field readers, write) in utils.auth.internal.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M2-F24",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "The 256 MB file limit is checked only after the whole file is read into memory",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileLoginThrottle.java",
+    "line_range": "35-39, 168-173"
+   },
+   "description": "parse() compares content.length with the limit after AtomicFiles.read() has buffered the whole file (ByteArrayOutputStream doubling), so on Android a large or corrupted throttle/device-trust file can exhaust the heap at build() before the FAIL message; the 256 MB figure also assumes 100k keys, not the Android 10k cap (deferred from W5 and W12 #6).",
+   "suggested_fix": "Check File.length() against the limit before reading (in AtomicFiles.load or the parsers) and use a platform-dependent limit matching the key cap.",
+   "is_behavioral": true,
+   "tags": [
+    "performance",
+    "deferred"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class Auth implements Middleware {"
+   ],
+   "findings": [
+    "M2-F02",
+    "M2-F03",
+    "M2-F04",
+    "M2-F05",
+    "M2-F07",
+    "M2-F08",
+    "M2-F09",
+    "M2-F10",
+    "M2-F11",
+    "M2-F12",
+    "M2-F13",
+    "M2-F14",
+    "M2-F15",
+    "M2-F16",
+    "M2-F17",
+    "M2-F19",
+    "M2-F20",
+    "M2-F21"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthConfig.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class AuthConfig {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthConfigException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class AuthConfigException extends RuntimeException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthErrorCode.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public enum AuthErrorCode {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthEventContext.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class AuthEventContext {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthEvents.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface AuthEvents {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthMode.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public enum AuthMode {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthPrincipal.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class AuthPrincipal {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthProfile.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public enum AuthProfile {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthRejection.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class AuthRejection extends RuntimeException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthStateException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class AuthStateException extends IllegalStateException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthTestingOps.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class AuthTestingOps implements TestingBridge.Ops {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthUnavailableException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class AuthUnavailableException extends RuntimeException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Codes.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class Codes {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/ConfirmationHolds.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class ConfirmationHolds {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/DefaultAuthApiKeys.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class DefaultAuthApiKeys implements AuthApiKeys {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/DefaultAuthUsers.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class DefaultAuthUsers implements AuthUsers {"
+   ],
+   "findings": [
+    "M2-F18"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Deployment.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public enum Deployment {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileDeviceTrust.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class FileDeviceTrust implements DeviceTrust {"
+   ],
+   "findings": [
+    "M2-F22"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileLoginThrottle.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class FileLoginThrottle extends ForwardingLoginThrottle {"
+   ],
+   "findings": [
+    "M2-F23",
+    "M2-F24"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class FileRefreshTokenStore implements RefreshTokenStore {"
+   ],
+   "findings": [
+    "M2-F01"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/InMemoryDeviceTrust.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class InMemoryDeviceTrust implements DeviceTrust {"
+   ],
+   "findings": [
+    "M2-F06"
+   ]
+  }
+ ],
+ "summary": {
+  "total": 24,
+  "by_severity": {
+   "HIGH": 1,
+   "MEDIUM": 3,
+   "LOW": 20
+  }
+ }
+}

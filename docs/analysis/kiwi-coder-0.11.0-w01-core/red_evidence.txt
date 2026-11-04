@@ -1,0 +1,4 @@
+command: ./gradlew :NaruServe-api:compileTestJava --offline
+exit_code: 1
+captured_failure: compileTestKotlin failed — Unresolved reference 'onRegistration', 'RegistrationListener', 'path' (CallbackMatrixKotlinTest.kt:226, CallbackMatrix.kt); Java tests reference absent RestApp.registrations()/onRegistration/trustProxyHops/trustProxyCidrs, Request.socketAddress()/requestId(), Registration, RegistrationKind, RegistrationListener.
+timestamp: 2026-11-02

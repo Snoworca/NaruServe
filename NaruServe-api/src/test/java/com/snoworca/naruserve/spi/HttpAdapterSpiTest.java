@@ -302,9 +302,9 @@ public class HttpAdapterSpiTest {
         for (Class<?> type : SPI_TYPES) {
             assertTrue(type + " is an interface", type.isInterface());
             String location = type.getProtectionDomain().getCodeSource().getLocation().getPath();
-            // OPS-REL-009 AC-1: current0.10.0 jar or classes directory; historical signature snapshots stay untouched.
+            // OPS-REL-010 AC-1: current 0.11.0 jar or classes directory; historical signature snapshots stay untouched.
             assertTrue(type + " from " + location, location.contains("NaruServe-api/build/classes/java/main")
-                    || location.endsWith("NaruServe-api/build/libs/NaruServe-api-0.10.0.jar"));
+                    || location.endsWith("NaruServe-api/build/libs/NaruServe-api-0.11.0.jar"));
             for (java.lang.reflect.Method m : type.getDeclaredMethods()) {
                 List<String> refs = new ArrayList<>();
                 collect(m.getGenericReturnType(), refs);

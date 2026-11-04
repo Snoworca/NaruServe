@@ -217,6 +217,117 @@ class CallbackMatrixKotlinTest {
         assertEquals(listOf("param", "rejected value!", "error"), trace)
     }
 
+    // IR-APP-008 AC-8: the 0.11.0 RegistrationListener is a trailing lambda reached by a registration
+    @Test
+    fun `FR-KT-003 AC-3 i RegistrationListener lambda sees a registration`() {
+        val t = TestApp.create()
+        val app = t.app()
+        val paths = ArrayList<String?>()
+        app.onRegistration { r -> hit(RegistrationListener::class.java); paths += r.path }
+        app.get("/watched") { _, res -> res.send("ok") }
+        assertEquals(listOf<String?>("/watched"), paths)
+        assertEquals("ok", t.send("GET", "/watched").text())
+    }
+
+    // CON-AUTH-004 AC-4: the auth callbacks as Kotlin lambdas, each reached through a request on the in-memory harness
+    @Test
+    fun `FR-KT-003 AC-3 j auth callback lambdas are reached by requests`() {
+        val keys = com.snoworca.naruserve.utils.auth.spi.KeySource {
+            hit(com.snoworca.naruserve.utils.auth.spi.KeySource::class.java)
+            "k9Qv2Lm7Xr4Tz8Wb1Nc6Ys3Hd5Gf0Ja-Pq".toByteArray()
+        }
+        val store = com.snoworca.naruserve.utils.auth.user.InMemoryUserStore()
+        val alice = store.create(com.snoworca.naruserve.utils.auth.user.AuthUser.builder().username("alice")
+            .roles("editor").build())
+        val auth = com.snoworca.naruserve.utils.auth.AuthTestAccess.builder(keys)
+            .users(store)
+            .timeSource { hit(com.snoworca.naruserve.utils.TimeSource::class.java); 1_000L }
+            .roles { role -> hit(com.snoworca.naruserve.utils.auth.rbac.RoleStore::class.java)
+                if (role == "editor") setOf("posts:write") else emptySet() }
+            .responses { _, res, _, code, _ -> hit(com.snoworca.naruserve.utils.auth.spi.AuthResponses::class.java)
+                res.type("application/json").send("{\"err\":\"$code\"}") }
+            .build()
+        val t = TestApp.create()
+        auth.install(t.app())
+        t.app().post("/nick", auth.check { p, req ->
+            hit(com.snoworca.naruserve.utils.auth.AccessRule::class.java); p.hasScope("posts:write") && req.path() == "/nick"
+        }) { req, res ->
+            val updated = auth.users().update(auth.user(req).id) { u ->
+                hit(com.snoworca.naruserve.utils.auth.user.UserMutator::class.java)
+                u.toBuilder().attribute("nickname", "Al").build()
+            }
+            res.send(updated!!.getAttribute("nickname")!!)
+        }
+        val header = com.snoworca.naruserve.utils.auth.AuthTestAccess.HEADER
+        assertEquals("Al", t.send("POST", "/nick", header, "${alice.id}:0").text())
+        assertEquals("{\"err\":\"unauthenticated\"}", t.send("POST", "/nick").text())
+    }
+
+    // IR-TOKEN-001 AC-1; FR-TOKEN-004 AC-7: the two password seams as Kotlin lambdas, each reached by a request
+    @Test
+    fun `FR-KT-003 AC-3 l Authenticator and BreachedPasswordChecker lambdas are reached by requests`() {
+        val store = com.snoworca.naruserve.utils.auth.user.InMemoryUserStore()
+        val alice = store.create(com.snoworca.naruserve.utils.auth.user.AuthUser.builder().username("alice").build())
+        val adapter = com.snoworca.naruserve.testing.InMemoryHttpAdapter("127.0.0.1", true)
+        val app = RestApp.builder().httpAdapter(adapter).jsonCodec(com.snoworca.naruserve.utils.auth.AuthTestAccess.json())
+            .build()
+        val auth = com.snoworca.naruserve.utils.auth.AuthTestAccess.fastBuilder("k9Qv2Lm7Xr4Tz8Wb1Nc6Ys3Hd5Gf0Ja-Pq")
+            .users(store)
+            .authenticator { name, password, _ ->
+                hit(com.snoworca.naruserve.utils.auth.spi.Authenticator::class.java)
+                if (name == "alice" && String(password) == "from-directory") alice else null
+            }
+            .breachedPasswordChecker { pw ->
+                hit(com.snoworca.naruserve.utils.auth.spi.BreachedPasswordChecker::class.java)
+                String(pw) == "Password123!"
+            }
+            .register(true)
+            .build()
+        auth.install(app)
+        app.listen(0)
+        try {
+            assertEquals(200, adapter.send(com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest.json("POST",
+                "/auth/login", "{\"username\":\"alice\",\"password\":\"from-directory\"}")).status())
+            assertEquals(422, adapter.send(com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest.json("POST",
+                "/auth/register", "{\"username\":\"bob\",\"password\":\"Password123!\"}")).status())
+        } finally {
+            app.shutdown(5, TimeUnit.SECONDS)
+        }
+    }
+
+    /** A user store whose update() reports success without applying anything. */
+    private class IgnoringStore : com.snoworca.naruserve.utils.auth.user.UserStore {
+        private val inner = com.snoworca.naruserve.utils.auth.user.InMemoryUserStore()
+        override fun findByUsername(username: String) = inner.findByUsername(username)
+        override fun findById(id: String) = inner.findById(id)
+        override fun create(user: com.snoworca.naruserve.utils.auth.user.AuthUser) = inner.create(user)
+        override fun update(user: com.snoworca.naruserve.utils.auth.user.AuthUser) = user
+        override fun delete(id: String) = inner.delete(id)
+    }
+
+    // FR-AUTH-009: the AuditSink lambda is reached by a request whose auth-router handler hits a security write
+    // conflict
+    @Test
+    fun `FR-KT-003 AC-3 k AuditSink lambda receives the event of a request`() {
+        val store = IgnoringStore()
+        val alice = store.create(com.snoworca.naruserve.utils.auth.user.AuthUser.builder().username("alice").build())
+        val types = ArrayList<String>()
+        val auth = com.snoworca.naruserve.utils.auth.AuthTestAccess.builder(
+            com.snoworca.naruserve.utils.auth.spi.KeySource { "k9Qv2Lm7Xr4Tz8Wb1Nc6Ys3Hd5Gf0Ja-Pq".toByteArray() })
+            .users(store)
+            .audit { e -> hit(com.snoworca.naruserve.utils.auth.audit.AuditSink::class.java); types += e.type }
+            .build()
+        auth.routes().post("/disable") { req, res ->
+            auth.userStore().setEnabled(auth.user(req).id, false)
+            res.send("disabled")
+        }
+        val t = TestApp.create()
+        auth.install(t.app())
+        val r = t.send("POST", "/auth/disable", com.snoworca.naruserve.utils.auth.AuthTestAccess.HEADER, "${alice.id}:0")
+        assertEquals(503, r.status())
+        assertEquals(listOf("security_write_conflict"), types)
+    }
+
     // SDS-AC-3; FR-KT-003 AC-3
     @Test
     fun `FR-KT-003 AC-3 z every CALLBACK_TYPES interface was exercised`() {

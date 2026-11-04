@@ -52,6 +52,15 @@ public class ConsumerRulesTest {
         assertTrue("-keepclassmembers line for Cookie.unvalidated", cookie);
     }
 
+    // SEC-IAM-008 AC-6 (Android): AuthFileKey installs its box access by class identity, and the consumer rules keep
+    // that nested class's name, so a minified app can still make an AuthFileKey
+    @Test
+    public void SEC_IAM_008_AC6_builtJarKeepsTheAuthFileKeyBoxAccess() throws Exception {
+        List<String> lines = Arrays.asList(rulesFromBuiltJar().split("\\r?\\n"));
+        assertTrue(lines.toString(),
+                lines.contains("-keepnames class com.snoworca.naruserve.utils.auth.AuthFileKey$BoxAccess"));
+    }
+
     // FR-BUILD-001 AC-7: jspecify is compileOnly, so R8 in an Android app must not fail on its missing annotations
     @Test
     public void fr_BUILD_001_AC7_builtJarSilencesTheCompileOnlyJspecifyAnnotations() throws Exception {

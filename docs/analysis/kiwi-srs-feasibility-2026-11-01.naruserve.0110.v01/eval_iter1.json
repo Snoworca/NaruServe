@@ -1,0 +1,117 @@
+{
+  "evaluator": "verify-pass-1",
+  "iter": 1,
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "MEDIUM",
+      "axis": "4-dependency-cycles",
+      "req_id": null,
+      "evidence_path": "synthesis.json:cycles.large_scc_size; existing_srs_context.json:cycles[1] (size 70)",
+      "description": "synthesis.json reports large_scc_size=3, but existing_srs_context.json has a 70-member strongly connected component (72 requirements in cycles, counting the FR-AUTH-004/FR-IAM-006 pair). cycles.pair also lists only FR-AUTH-004/FR-IAM-006, although shortest_cycle_length_histogram has four 2-cycles: FR-FLOW-006<->SEC-APIKEY-008, IR-TOKEN-001<->SEC-FLOW-004 and SEC-AUTH-001<->SEC-TOKEN-004 as well. I checked all four edges in the SRS Trace Links. The per-requirement handling is correct: all 72 in_dependency_cycle flags match the SCC membership, the in-cycle dependency_health scores are 6-11 against 10-15 out of the cycles, and the conditions mention edge cutting.",
+      "suggested_action": "Set cycles.large_scc_size to 70 and list all four 2-cycles in synthesis.json, so the scheduling impact reaches the user at the approval gate without being understated."
+    },
+    {
+      "id": "F2",
+      "severity": "MEDIUM",
+      "axis": "3-ac-verifiability",
+      "req_id": "FR-APIKEY-007, FR-APIKEY-009, PERF-APIKEY-001 (+50 others in existing_srs_context)",
+      "evidence_path": "existing_srs_context.json:req_summaries[*].inferred_ac_count; docs/spec/21.auth-api-keys.srs.md (PERF-APIKEY-001 AC-1, AC-4 [INFERRED:low:test-parameter])",
+      "description": "existing_srs_context.json undercounts AC markers in 53 of 165 blocks. inferred_ac_count is 0 where the blocks carry [INFERRED] tags: SEC-TOKEN-001 has 4, SEC-AUTH-001 4, FR-TOKEN-003 4, SEC-TOKEN-008 4, FR-AUTH-002 2. name_not_final_count is also low for some: SEC-TOKEN-004 has 3 against 0, SEC-FLOW-014 2 against 0. The APIKEY ac_verifiability evidence repeats '0 INFERRED' from this file, which is false for FR-APIKEY-007, FR-APIKEY-009 and PERF-APIKEY-001. I read the ACs of 16 sampled requirements and every INFERRED tag there is ':advisory' or ':test-parameter', so the tests can still be written and the scores (10-14) do not contradict the ACs. The cited evidence is factually wrong, though.",
+      "suggested_action": "Recount the INFERRED and 'name not final' markers from the block text (Acceptance Criteria section only), then fix the APIKEY ac_verifiability evidence strings. No re-score is needed unless a recount turns up a non-advisory INFERRED."
+    },
+    {
+      "id": "F3",
+      "severity": "MEDIUM",
+      "axis": "9-internal-coherence",
+      "req_id": "REL-FLOW-001",
+      "evidence_path": "~/.gradle/caches/modules-2/files-2.1/net.sf.androidscents.signature/android-api-level-21/5.0.1_r2/ba89ac3c19447d17e6d89982cb8ad013d93c5126/android-api-level-21-5.0.1_r2.signature",
+      "description": "REL-FLOW-001 is medium (77) with the lowest implementability among the medium set (21). Its implementability evidence and conditions say that java.sql, DataSource and FileDescriptor.sync on API 21 are 'unconfirmed'. The gzip-decoded signature contains java/sql/Connection, java/sql/SQLException, javax/sql/DataSource, and FileDescriptor with sync()V. The APIKEY, TOKEN and IAM analysts already recorded these as present (for example FR-IAM-010 and SEC-APIKEY-003). The medium label may therefore partly rest on an uncertainty that is already resolved; +3 on implementability would make it 80 (high).",
+      "suggested_action": "Re-score REL-FLOW-001 implementability with the confirmed signature facts and keep only the real conditions (test-only sqlite-jdbc, injectable Android detection). Relabel it if the total reaches 80."
+    },
+    {
+      "id": "F4",
+      "severity": "MEDIUM",
+      "axis": "9-internal-coherence",
+      "req_id": "SEC-SVL-001, SEC-FLOW-007, FR-FLOW-002, REL-APIKEY-005/006/007, PERF-APIKEY-002 (tag medium, judged high); SEC-AUTH-003/007/008, SEC-TOKEN-009, IR-TOKEN-001, FR-FLOW-006, SEC-FLOW-013, FR-FLOW-009, REL-FLOW-001, FR-IAM-013, FR-IAM-014, SEC-APIKEY-008 (tag high, judged medium)",
+      "evidence_path": "docs/spec/17-21 and 14 '| Tags |' rows (feasibility:* tag); mutation-plan.json (stability only)",
+      "description": "In 19 requirements the SRS Tags row already holds a feasibility:<label> tag that contradicts this run's label. The mutation plan changes only Stability, so after apply the SRS would still show feasibility:high on 12 requirements kept at medium and draft, and feasibility:medium on 7 promoted to evolving. The tag_feasibility field in verifier-input-judgements.json (APIKEY group only) shows the same 5 APIKEY mismatches.",
+      "suggested_action": "Add a tag refresh for these 19 requirements to the plan (a guarded MCP edit of the Tags field), or state in the report that the feasibility:* tags are stale and that this run's label supersedes them."
+    },
+    {
+      "id": "F5",
+      "severity": "MEDIUM",
+      "axis": "2-evidence-existence",
+      "req_id": "FR-AUTH-001, FR-AUTH-003, FR-AUTH-008, FR-AUTH-009, SEC-TOKEN-006",
+      "evidence_path": "verifier-input-judgements.json:judgements[*].axes.implementability.evidence == []",
+      "description": "Five implementability judgements have no evidence at all, although the brief requires a path:line or build fact for every implementability judgement; they still score 25-28 out of 30. In all, 197 axis entries have empty evidence arrays: scope_fit 63, ac_verifiability 56, dependency_health 34, product_fit 30, evidence_strength 9, implementability 5. Without the rationale, I cannot check these scores.",
+      "suggested_action": "Add at least one code or build citation to each of the five implementability entries, or mark their evidence_strength as weak as the brief prescribes."
+    },
+    {
+      "id": "F6",
+      "severity": "LOW",
+      "axis": "9-internal-coherence",
+      "req_id": "FR-FLOW-004, SEC-FLOW-011",
+      "evidence_path": "android-api-level-21-5.0.1_r2.signature (java/text/Normalizer, normalize(Ljava/lang/CharSequence;Ljava/text/Normalizer$Form;), NFKC present)",
+      "description": "The conditions still say 'Confirm java.text.Normalizer in the API 21 signature'. It is present, including the NFKC form, and other scopes already established this. Both stay high, so no label changes.",
+      "suggested_action": "Change the condition to 'confirmed in signature; verify with animalsnifferMain once used'."
+    },
+    {
+      "id": "F7",
+      "severity": "LOW",
+      "axis": "2-evidence-existence",
+      "req_id": "SEC-FLOW-013",
+      "evidence_path": "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:26-27",
+      "description": "PUBLIC_PACKAGES is declared at lines 27-28; lines 26-27 are the Javadoc and the first declaration line. Other judgements cite 27-28. It is off by one, and the claim itself is correct.",
+      "suggested_action": "Cite :27-28."
+    },
+    {
+      "id": "F8",
+      "severity": "LOW",
+      "axis": "2-evidence-existence",
+      "req_id": "SEC-FLOW-006",
+      "evidence_path": "NaruServe-api/src/main/java/com/snoworca/naruserve/Cookie.java:90-96",
+      "description": "The evidence_strength citation points at Cookie.getName()/getValue(), which bears only loosely on a signed double-submit CSRF token bound to the token family. It exists but is weak.",
+      "suggested_action": "Cite the cookie-read path that actually matters (Request.java:157-175 getCookies/cookie) or the CookieOptions sameSite/httpOnly setters."
+    },
+    {
+      "id": "F9",
+      "severity": "LOW",
+      "axis": "6-mapping-conformance",
+      "req_id": null,
+      "evidence_path": "policy-resolved.json:reason_template; mutation-plan.json:plan[*].reason",
+      "description": "Every planned reason omits the 'Evidence: {evidence}' segment of reason_template. The 12 medium no-ops use a different wording ('keep draft per default mapping'). The mapping itself is right.",
+      "suggested_action": "Render the reasons with the full template, putting one key evidence item in each."
+    },
+    {
+      "id": "F10",
+      "severity": "LOW",
+      "axis": "9-internal-coherence",
+      "req_id": null,
+      "evidence_path": "docs/spec/04,05,06,14,17-21 (0.11.0 block headings)",
+      "description": "All 165 0.11.0 block headings end with '[DRAFT — pending decision]'. After apply, 153 of them would read draft in the title while their Stability is evolving.",
+      "suggested_action": "Leave the headings unchanged in this run (heading edits are out of the stability mutation), but mention the marker in the report or have a follow-up SRS edit remove it."
+    },
+    {
+      "id": "F11",
+      "severity": "LOW",
+      "axis": "4-dependency-cycles",
+      "req_id": null,
+      "evidence_path": "judgement_brief.md ('a 76-member strongly connected component')",
+      "description": "The brief says the SCC has 76 members; existing_srs_context.json says 70. The analysts noticed this (FR-IAM-014 evidence), so it had no effect on the scores.",
+      "suggested_action": "Fix the brief template so it reads the size from existing_srs_context.json."
+    }
+  ],
+  "samples_checked": {
+    "axis1_score_label": "all 165: axis sums == total (0 errors); label bands consistent (0 errors); each axis within its weight; distribution high 153 / medium 12 matches synthesis.json",
+    "axis2_evidence": "automated: every path:line citation in all 165 judgements resolves to an existing file (bare basenames resolved in the main tree), with no line range past EOF; manual content check of 62 items across all scopes, for example build.gradle:58-62,94-99,273-295,313,362-370,431-441,605; Request.java:63-68,96-100,123-130; StandardErrors.java:95-150; StubJsonCodec.java:21-22; HttpException.java:24-35,57; WebSocketSession.java:27,39; WebSocketUpgrade.java:87-95; DefaultRequest.java:390-396,491-498; HttpExchange.java:51; TinyHttpdExchange.java:161-162,176-177; Dispatcher.java:208-215,236-241,247-264; DefaultRestApp.java:76-102,125,264-269,324-326,393-398,822-828,905-948,1083; HttpRouter.java:40-59; AppLifecycle.java:60-68,151-155; ProxyTrust.java:1-38; ServletExchange.java:117-118,166-176,214-222; ApiJarClasses.java:26-28; CookieOptions/SameSite/CorsOptions; HttpRoutes.java:5-24; HttpExecution.java:128-140; JsonBodyReader.java:34,104; FinalHandler.java:26-42; Router.java:6-11; RestApp.java:129-135,221-227; AccessLog.java:7; DefaultWebSocketSession.java:258; AsyncMiddleware.java:9; GsonJsonCodec.java:62-64; Deferred.java:26-27; DefaultRouter.java; DefaultRouteGroup.java:34-38; HttpTransportRetentionContractTest.java:120; HttpDeferredLifetimeContractTest.java:217; CallbackInventoryTest.java:85; docs/research/auth-rbac/00.overview.md:764. Non-existent paths: 0. Content mismatches: 2 LOW (F7, F8)",
+    "axis3_ac_verifiability": "ACs read for 16 requirements: SEC-TOKEN-001, PERF-APIKEY-001, SEC-AUTH-001, FR-TOKEN-003, SEC-TOKEN-008, IR-AUTH-003, OPS-AUTH-001, SEC-AUTH-008, FR-FLOW-006, FR-IAM-013, IR-TOKEN-001, SEC-HTTP-001, CON-AUTH-005, FR-APP-026, IR-IAM-001, SEC-ENGINE-001, plus REL-FLOW-001, FR-FLOW-009 and FR-AUTH-002. Scores 10-14 are consistent with the AC content: the INFERRED tags are advisory or test-parameter only, and the lower scores (10-11) sit on requirements with many open codes or names. No contradiction; evidence-count error in F2. AC counts in existing_srs_context match the blocks for all 165",
+    "axis4_cycles": "2 SCCs (sizes 2 and 70, 72 members); in_dependency_cycle matches for 165/165; in-cycle dependency_health 6-11 (mean ~9.0) against out-of-cycle 10-15 (mean ~13.1), consistent with a cycle penalty of 6 or less; 2-cycle edges FR-AUTH-004<->FR-IAM-006, FR-FLOW-006<->SEC-APIKEY-008, IR-TOKEN-001<->SEC-FLOW-004 and SEC-AUTH-001<->SEC-TOKEN-004 checked in the SRS Trace Links; synthesis misreports the SCC size (F1)",
+    "axis5_blockers": "0 blockers in all 165 judgements. API 21 signature checked (gzip-decoded android-api-level-21-5.0.1_r2.signature): PRESENT java/sql/Connection, java/sql/SQLException, javax/sql/DataSource, java/text/Normalizer (normalize(CharSequence,Form), NFKC), java/io/FileDescriptor with sync()V, javax/crypto/Mac, Collections.newSetFromMap; ABSENT java/time/*, java/util/Base64, java/nio/file/*, ConcurrentHashMap.newKeySet, setNetworkTimeout, getNetworkTimeout, abort(Executor), closeOnCompletion (the one getParentLogger hit belongs to LoggingMXBean, not JDBC). Score-lowering conditions also checked: no JDBC driver declared in build.gradle or settings.gradle, and only com.h2database in the Gradle cache (no org.xerial); StubJsonCodec.decode throws; no utils/ package under NaruServe-api yet; ApiJarClasses PUBLIC_PACKAGES has 3 packages",
+    "axis6_mapping": "165 plan rows, 165 unique, all match judgements; high->evolving (rule 1, no confirmation) 153; medium->keep (rule 2) 12; stable 0, deprecated 0, draft demotion 0; has_verification false and current stability draft on all 165 (target-snapshot by_stability draft=165, by_status planned=165)",
+    "axis7_guard": "the only transition is draft->evolving (153); SRS-MD-Rules-v2.5.0 §15.3 forbids no stability transition of this kind; dryrun_guard_verdict is null on every row (dryRun still to run)",
+    "axis8_status_conflict": "all 165 planned; no blocked label; no conflict",
+    "axis10_golden_rule": "git status --porcelain docs/spec: M 00.index.md, 04.http-core, 05.application, 06.engine-adapter, 14.servlet-adapter; ?? 17-21 auth SRS — the same as the session-start snapshot. mtimes are all 2026-10-30/31 and none is from 2026-11-01, so this run edited no SRS file"
+  },
+  "summary": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 5, "LOW": 6}
+}

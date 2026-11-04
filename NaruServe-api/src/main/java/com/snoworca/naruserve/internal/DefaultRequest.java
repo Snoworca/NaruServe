@@ -54,7 +54,8 @@ public final class DefaultRequest implements Request {
     private final @Nullable ApplicationContext context;
     private final @Nullable JsonCodec codec;
     private final long jsonLimit;
-    private final boolean trustProxy;
+    /** The app's proxy trust setting; the Dispatcher sets it before any middleware runs. */
+    private volatile ProxyTrustSetting proxyTrust;
     private final MultipartSettings multipart;
     private final long formLimit;
     private final SpoolRegistry spool;
@@ -106,7 +107,7 @@ public final class DefaultRequest implements Request {
         this.multipart = Objects.requireNonNull(multipart, "multipart");
         this.formLimit = formLimit;
         this.spool = Objects.requireNonNull(spool, "spool");
-        this.trustProxy = trustProxy;
+        this.proxyTrust = ProxyTrustSetting.legacy(trustProxy);
         this.codec = codec;
         this.jsonLimit = jsonLimit;
         this.context = context;
@@ -386,9 +387,29 @@ public final class DefaultRequest implements Request {
         return ex.rawQuery();
     }
 
-    /** The id the dispatcher gave this request, for automatic error bodies; empty until set. */
-    String requestId() {
+    /**
+     * The id the dispatcher gave this request: the requestId of automatic error bodies and the rid of the access log
+     * line. The Dispatcher sets it before any middleware runs.
+     */
+    // @req FR-HTTP-029
+    // @req IR-HTTP-010
+    @Override
+    public String requestId() {
         return requestId;
+    }
+
+    /** The app's hop, CIDR or legacy proxy trust setting, set by the Dispatcher at request construction. */
+    // @req SEC-ENGINE-003
+    void proxyTrust(ProxyTrustSetting setting) {
+        this.proxyTrust = Objects.requireNonNull(setting, "setting");
+    }
+
+    /** The adapter's peer address, whatever the proxy trust setting and the forwarding headers say. */
+    // @req SEC-HTTP-001
+    // @req IR-HTTP-010
+    @Override
+    public String socketAddress() {
+        return ex.remoteAddress();
     }
 
     void requestId(String id) {
@@ -485,17 +506,27 @@ public final class DefaultRequest implements Request {
         return values == null ? Collections.<String>emptyList() : Collections.unmodifiableList(values);
     }
 
-    /** The adapter's value; X-Forwarded-For only under app.trustProxy(true); Forwarded never. */
+    /**
+     * The adapter's value, or the client address the proxy trust setting resolves from X-Forwarded-For (legacy: the
+     * left-most of the first line; hop and CIDR mode: counted from the right); Forwarded never.
+     */
     // @req FR-ENGINE-008
+    // @req SEC-ENGINE-001
+    // @req SEC-ENGINE-002
     @Override
     public String remoteAddress() {
-        return ProxyTrust.remoteAddress(trustProxy ? header("X-Forwarded-For") : null, ex.remoteAddress());
+        ProxyTrustSetting t = proxyTrust;
+        return t == ProxyTrustSetting.NONE ? ex.remoteAddress()
+                : t.remoteAddress(ex.remoteAddress(), headers("X-Forwarded-For"));
     }
 
     // @req FR-ENGINE-008
+    // @req SEC-ENGINE-003
     @Override
     public boolean isSecure() {
-        return ProxyTrust.isSecure(trustProxy ? header("X-Forwarded-Proto") : null, ex.isSecure());
+        ProxyTrustSetting t = proxyTrust;
+        return t == ProxyTrustSetting.NONE ? ex.isSecure()
+                : t.isSecure(ex.remoteAddress(), ex.isSecure(), headers("X-Forwarded-For"), headers("X-Forwarded-Proto"));
     }
 
     @Override

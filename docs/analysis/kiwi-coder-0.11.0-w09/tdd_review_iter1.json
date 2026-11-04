@@ -1,0 +1,15 @@
+{"pass":"tdd-review","iter":1,"reviewer":"independent subagent (intent-alignment + tech-quality)","req_set":"0.11.0-w09",
+"severity_summary":{"CRITICAL":0,"HIGH":2,"MEDIUM":11,"LOW":11},
+"findings_digest":[
+"HIGH coverage: ACs needing PAT/admin issuance (REL-APIKEY-003 AC-2/4/5/6, REL-APIKEY-004 AC-2/9, IR-APIKEY-003 AC-5, SEC-APIKEY-009 AC-1 HTTP half/AC-6) and SEC-APIKEY-006 AC-4 (MULTI replica lag) uncited -> SEC-APIKEY-006 AC-4 test added; the PAT/admin ones stay open for W10 (FR-APIKEY-003/004)",
+"HIGH IR-APIKEY-003 AC-1: the listing token refreshed node B's cache -> now an old-ver token so B's cache stays at the old ver",
+"MEDIUM SEC-FLOW-008 AC-9 revoked case also expired -> revoked case checked before the clock moves",
+"MEDIUM REL-IAM-002 AC-2 disabled re-read inside the endpoint untested -> added",
+"MEDIUM REL-IAM-002 AC-7 update() call count -> asserted 1",
+"MEDIUM FR-FLOW-005 AC-3 naru_rt not read -> RefreshTokenStore.find counted",
+"MEDIUM REL-APIKEY-003 AC-1/AC-7 deletion order inside the lock -> one ordered log",
+"MEDIUM audit last-event reliance -> events found by type and target",
+"MEDIUM SEC-FLOW-013 AC-3 trust decision -> PasswordLogin attempt with the old device token",
+"MEDIUM FR-APIKEY-002 AC-5 no-store half vacuous -> asserts apiKeyStore() is null on that node",
+"MEDIUM ERROR baselines coupled to separate limiters -> kept (documents the implementation's protected-path ERROR per failure and once-a-minute public log)",
+"LOW items: csrf_failed code, meaningless asserts removed, cookie-delivery body asserts, fixture shutdown in finally, opt-in WARN per start over two starts"]}

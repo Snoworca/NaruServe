@@ -1,0 +1,107 @@
+{
+ "plan": [
+  {
+   "req_id": "SEC-AUTH-003",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 90). Blockers: none. Open values decided 2026-11-02 (draft-open-questions.md). Evidence: API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64. Run: 2026-11-02.naruserve.0110.v01"
+  },
+  {
+   "req_id": "SEC-AUTH-007",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 90). Blockers: none. Open values decided 2026-11-02 (draft-open-questions.md). Evidence: build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency). Run: 2026-11-02.naruserve.0110.v01"
+  },
+  {
+   "req_id": "SEC-AUTH-008",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 85). Blockers: none. Open values decided 2026-11-02 (draft-open-questions.md). Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:159 RestApp logger(Logger). Run: 2026-11-02.naruserve.0110.v01"
+  },
+  {
+   "req_id": "SEC-TOKEN-009",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 91). Blockers: none. Open values decided 2026-11-02 (draft-open-questions.md). Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19 methodAsync. Run: 2026-11-02.naruserve.0110.v01"
+  },
+  {
+   "req_id": "IR-TOKEN-001",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 88). Blockers: none. Open values decided 2026-11-02 (draft-open-questions.md). Evidence: build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency). Run: 2026-11-02.naruserve.0110.v01"
+  },
+  {
+   "req_id": "FR-FLOW-006",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 89). Blockers: none. Open values decided 2026-11-02 (draft-open-questions.md). Evidence: build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency). Run: 2026-11-02.naruserve.0110.v01"
+  },
+  {
+   "req_id": "FR-FLOW-009",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 83). Blockers: none. Open values decided 2026-11-02 (draft-open-questions.md). Evidence: build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency). Run: 2026-11-02.naruserve.0110.v01"
+  },
+  {
+   "req_id": "SEC-FLOW-013",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 89). Blockers: none. Open values decided 2026-11-02 (draft-open-questions.md). Evidence: API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64. Run: 2026-11-02.naruserve.0110.v01"
+  },
+  {
+   "req_id": "REL-FLOW-001",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 88). Blockers: none. Open values decided 2026-11-02 (draft-open-questions.md). Evidence: API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64. Run: 2026-11-02.naruserve.0110.v01"
+  },
+  {
+   "req_id": "FR-IAM-013",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 83). Blockers: none. Open values decided 2026-11-02 (draft-open-questions.md). Evidence: API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64. Run: 2026-11-02.naruserve.0110.v01"
+  },
+  {
+   "req_id": "FR-IAM-014",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 83). Blockers: none. Open values decided 2026-11-02 (draft-open-questions.md). Evidence: build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency). Run: 2026-11-02.naruserve.0110.v01"
+  },
+  {
+   "req_id": "SEC-APIKEY-008",
+   "current_stability": "draft",
+   "proposed_stability": "evolving",
+   "matched_rule_index": 1,
+   "requires_user_confirm": false,
+   "reason": "Feasibility=high (score 86). Blockers: none. Open values decided 2026-11-02 (draft-open-questions.md). Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:174 jsonLimit(long). Run: 2026-11-02.naruserve.0110.v01"
+  }
+ ],
+ "summary": {
+  "total_mutations": 12,
+  "auto_apply": 12,
+  "user_confirm_required": 0,
+  "no_op": 0,
+  "guard_blocked": 0
+ }
+}

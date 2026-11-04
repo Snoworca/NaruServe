@@ -77,7 +77,7 @@ SSE는 스트림이 끝날 때 요청 줄 뒤에 ` sse start=<epochMillis> cause
 
 접근 로그와 요청 정리는 별개입니다. 반환한 미완료 `Deferred`가 응답의 접근 로그 한 줄이 기록된 뒤에도 입력·업로드를 보유할 수 있으며, 결과를 확정해도 로그를 추가하지 않습니다. 기존 접근 로그의 개인정보 제외 규칙은 유지됩니다. 앱 로그·기본 오류 HTML의 Java 스택과 예외 메시지가 앱이 넣은 비밀 값을 자동으로 제거하지는 않습니다.
 
-아래 모듈 좌표와 공통 HTTP 동작은 NaruServe 0.10.0 기준입니다. 가용성과 소스 빌드는 [설치 안내](README.md)를 참고하세요.
+아래 모듈 좌표와 공통 HTTP 동작은 NaruServe 0.11.0 기준입니다. 가용성과 소스 빌드는 [설치 안내](README.md)를 참고하세요.
 
 ## 앱 로거
 
@@ -85,6 +85,8 @@ SSE는 스트림이 끝날 때 요청 줄 뒤에 ` sse start=<epochMillis> cause
 app.logger().info("Server initialized");
 app.logger().error("Upload failed", new IOException("disk full"));
 ```
+
+인터페이스는 `spi`가 아니라 API 패키지의 `com.snoworca.naruserve.Logger`입니다(`import com.snoworca.naruserve.Logger;`).
 
 ```java
 public interface Logger {
@@ -104,10 +106,16 @@ public interface Logger {
 같은 형식으로 쓰는 로거를 직접 만들 때는 `ConsoleLogger.format(level, message)`를 쓰세요. 줄 끝 없이 `<timestamp> <LEVEL> <message>` 한 줄을 돌려주고, 시간대는 부를 때마다 기본 시간대를 읽습니다. 파일 로테이션 로거도 이 메서드로 줄을 만들고 스택 트레이스를 뒤에 붙입니다. Express에는 대응 API가 없습니다(`morgan`의 사용자 형식 함수에 가깝습니다).
 
 ```java
+import com.snoworca.naruserve.ConsoleLogger;
+import com.snoworca.naruserve.LogLevel;
+
 String line = ConsoleLogger.format(LogLevel.WARN, "disk almost full");
 ```
 
 ```kotlin
+import com.snoworca.naruserve.ConsoleLogger
+import com.snoworca.naruserve.LogLevel
+
 val line = ConsoleLogger.format(LogLevel.WARN, "disk almost full")
 ```
 
@@ -124,9 +132,9 @@ val line = ConsoleLogger.format(LogLevel.WARN, "disk almost full")
 
 | 로거 | 모듈 | 좌표 | Android |
 |---|---|---|---|
-| Logcat | `NaruServe-logcat` | `com.snoworca.naruserve:naruserve-logcat:0.10.0` | 지원(API 21+). Android SDK 없이 빌드하고 `android.util.Log`는 리플렉션으로 부릅니다 |
-| 파일 로테이션 | `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog:0.10.0` | 지원(API 21+) |
-| SLF4J 어댑터 | `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j:0.10.0` (`org.slf4j:slf4j-api:1.7.36`) | 미지원(JVM 전용) |
+| Logcat | `NaruServe-logcat` | `com.snoworca.naruserve:naruserve-logcat:0.11.0` | 지원(API 21+). Android SDK 없이 빌드하고 `android.util.Log`는 리플렉션으로 부릅니다 |
+| 파일 로테이션 | `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog:0.11.0` | 지원(API 21+) |
+| SLF4J 어댑터 | `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j:0.11.0` (`org.slf4j:slf4j-api:1.7.36`) | 미지원(JVM 전용) |
 
 `RestApp.create()`용 `NaruServe` 모듈은 일반 JDK에서 쓰도록 `NaruServe-logcat`을 포함하지 않고 콘솔 로거를 씁니다. Android 앱은 `NaruServe-android`를 넣으세요. 이 모듈이 `NaruServe-logcat`을 함께 가져오고, 그때 `RestApp.create()`는 Logcat 로거를 씁니다. 로거 클래스를 코드에서 직접 쓰려면 해당 모듈을 의존성에 넣으세요.
 로그 쓰기가 실패해도 HTTP 서비스는 멈추지 않습니다.

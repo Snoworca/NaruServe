@@ -129,6 +129,28 @@ public interface Request {
         throw new UnsupportedOperationException(getClass().getName() + " has no application context");
     }
 
+    /**
+     * The address of the connection peer as the adapter reports it, unaffected by every proxy trust setting and every
+     * forwarding header, as Express {@code req.socket.remoteAddress}. {@link #remoteAddress()} follows the proxy trust
+     * setting instead. The default throws {@link UnsupportedOperationException} so request fakes still compile.
+     */
+    // @req IR-HTTP-010
+    // @req SEC-HTTP-001
+    default String socketAddress() {
+        throw new UnsupportedOperationException(getClass().getName() + " has no socket address");
+    }
+
+    /**
+     * The id the dispatcher gave this request: the {@code requestId} of the standard error body and the {@code rid} of
+     * the access log line; the same in every layer of the request. Express has no built-in request id. The default
+     * throws {@link UnsupportedOperationException} so request fakes still compile.
+     */
+    // @req IR-HTTP-010
+    // @req FR-HTTP-029
+    default String requestId() {
+        throw new UnsupportedOperationException(getClass().getName() + " has no request id");
+    }
+
     /** The service registered under {@code type}: {@code application().get(type)}. */
     // @req IR-APP-004
     default <T> T service(Class<T> type) {

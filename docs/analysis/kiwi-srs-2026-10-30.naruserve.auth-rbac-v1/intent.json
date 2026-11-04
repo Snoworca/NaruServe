@@ -1,0 +1,1471 @@
+{
+ "summary": "Write 0.11.0 SRS for four required Core changes (C4 registration list/listener, C6a req.socketAddress, C6b trustProxyHops/Cidrs + accessors, C7 req.requestId) and the full auth/RBAC v1 module (utils.auth in NaruServe-api: tokens, passwords, users/groups/RBAC, transport/CSRF/endpoints, abuse protection, API keys, JDBC reference stores), no new dependencies, Java 8 / API 21.",
+ "intent_type_hint": "new-scope",
+ "key_entities": [
+  "RestApp",
+  "Request",
+  "RegistrationListener",
+  "Registration (kind, method, path, target)",
+  "Auth",
+  "Auth.Builder",
+  "AuthPrincipal",
+  "AuthMode",
+  "AuthProfile",
+  "Deployment",
+  "AuthConfig",
+  "AuthRejection",
+  "AuthEvents",
+  "AuthEventContext",
+  "UserOrigin",
+  "UserChange",
+  "Jwt",
+  "TokenService",
+  "TokenPair",
+  "KeySource/KeySources",
+  "MiniJson",
+  "PasswordHasher",
+  "Pbkdf2PasswordHasher",
+  "PasswordHashers",
+  "HashCost",
+  "UserStore",
+  "ForwardingUserStore",
+  "AuthUsers",
+  "UserMutator",
+  "AuthUser",
+  "GroupStore",
+  "GroupAdminStore",
+  "RoleStore",
+  "RolePolicy",
+  "Scopes",
+  "RefreshTokenStore",
+  "LoginThrottle",
+  "ForwardingLoginThrottle",
+  "DeviceTrust",
+  "Lockout",
+  "ApiKeyStore",
+  "StoredApiKey",
+  "ApiKey",
+  "IssuedApiKey",
+  "ApiKeyStatus",
+  "AuthApiKeys",
+  "ApiKeyPrefixCollisionException",
+  "AuditEvent/AuditSink",
+  "AuthTesting",
+  "TimeSource",
+  "Jdbc*Store",
+  "AtomicFiles",
+  "PrincipalCache"
+ ],
+ "requirement_inventory": [
+  {
+   "area": "C4 registration list and listener",
+   "candidate_title": "Read-only registration list app.registrations()",
+   "type": "interface",
+   "source": "00 §8 C4",
+   "core_or_auth": "core",
+   "notes": "Returns registrations in registration order as records {kind, method, path, target}; read-only view; names are proposals. Replaces the current partial bookkeeping (only routes/ws and the separate use(Middleware) list at DefaultRestApp.java:918/:991/:844/:854)."
+  },
+  {
+   "area": "C4 registration list and listener",
+   "candidate_title": "Registration kind classification",
+   "type": "functional",
+   "source": "00 §8 C4 kind table",
+   "core_or_auth": "core",
+   "notes": "Kinds: ROUTE, WEBSOCKET, STATIC, ROUTER_MOUNT, GROUP, CORS, MIDDLEWARE, PATH_MIDDLEWARE, ERROR_MIDDLEWARE, PARAM. MIDDLEWARE = use(Middleware) and path-less (`\"\"` or `\"/\"`) use/useAsync; PATH_MIDDLEWARE = any other path, pattern or array; staticFiles is tagged STATIC and cors is tagged CORS even though they are internally use(\"\")/use(options.middleware())."
+  },
+  {
+   "area": "C4 registration list and listener",
+   "candidate_title": "Registration target is the original registered object",
+   "type": "functional",
+   "source": "00 §8 C4 / R30 doctor",
+   "core_or_auth": "core",
+   "notes": "`target` is the user-registered middleware, Router, or error handler, not a Core-created wrapper; onError wraps the handler in a lambda (DefaultRestApp.java:941-944) so the record must hold the unwrapped handler (13판). Needed so auth can identify its own auth.errors()/errorMiddleware() instance."
+  },
+  {
+   "area": "C4 registration list and listener",
+   "candidate_title": "Mounted Router and group registrations are expanded with the mount path",
+   "type": "functional",
+   "source": "00 §8 C4 / R28",
+   "core_or_auth": "core",
+   "notes": "Routes inside a mounted Router or group are recorded with the mount path prefixed; later additions to an already mounted live Router are also expanded and reported. Registrations that cannot be expanded (regex or array paths) must be identifiable as such for protectOnly checks."
+  },
+  {
+   "area": "C4 registration list and listener",
+   "candidate_title": "onRegistration(RegistrationListener) watcher API",
+   "type": "interface",
+   "source": "00 §8 C4 / R28 감시자 API",
+   "core_or_auth": "core",
+   "notes": "`app.onRegistration(RegistrationListener)` (proposed name) notifies on every later registration, including post-start ones; the listener type must be a @FunctionalInterface so Kotlin lambdas compile. Listener registration is always allowed regardless of auth protectOnly."
+  },
+  {
+   "area": "C4 registration list and listener",
+   "candidate_title": "Registration ordering contract: validate, listener, apply, record",
+   "type": "functional",
+   "source": "00 §8 C4 / R28 (11판, 12판)",
+   "core_or_auth": "core",
+   "notes": "Per registration: Core input validation first, then the listener synchronously BEFORE the registration takes effect, then apply, then record. A listener exception aborts the registration (not applied, not recorded) and propagates to the caller, also through Router. Requires splitting validation out of `http.methods(...)` (DefaultRestApp.java:916-917); fixed by one Core test."
+  },
+  {
+   "area": "C4 registration list and listener",
+   "candidate_title": "Post-start registration scope reporting",
+   "type": "functional",
+   "source": "00 R28 기동 뒤 등록 범위",
+   "core_or_auth": "core",
+   "notes": "After start only ROUTE, use, mount and param can be registered; cors, ws, staticFiles, group, onError, trustProxy stay rejected by existing requireConfigurable/AppLifecycle guards. The listener is notified for the allowed post-start kinds, including use(ErrorMiddleware) which is still accepted after start."
+  },
+  {
+   "area": "C4 registration list and listener",
+   "candidate_title": "Registration API docs and Kotlin SAM coverage",
+   "type": "constraint",
+   "source": "00 §8 C4, CLAUDE.md Kotlin rules",
+   "core_or_auth": "core",
+   "notes": "docs/api entry with Express comparison and Java/Kotlin examples; Kotlin source test compiles `app.onRegistration { r -> }` and reads registrations (T11). Names are proposals; mark as (미확정) then settle during implementation per CLAUDE.md."
+  },
+  {
+   "area": "C6a socket address",
+   "candidate_title": "req.socketAddress() public accessor",
+   "type": "interface",
+   "source": "00 §8 C6a / R33 (b)",
+   "core_or_auth": "core",
+   "notes": "Returns the real connection peer address independent of any trustProxy setting and of X-Forwarded-*/Forwarded headers; used for the loopback test in the local-request rule. Nullability and type (String vs InetSocketAddress) are open; choose the one consistent with remoteAddress()."
+  },
+  {
+   "area": "C6a socket address",
+   "candidate_title": "socketAddress() supplied by every engine adapter",
+   "type": "functional",
+   "source": "00 §8 C6a, §12 Servlet 한계",
+   "core_or_auth": "core",
+   "notes": "TinyHttpd adapter, in-memory test adapter and Servlet adapter (getRemoteAddr) must supply it; 00 §12 says Servlet container values are unverified, so the Servlet mapping is an explicit test item."
+  },
+  {
+   "area": "C6b proxy trust hops and CIDR",
+   "candidate_title": "app.trustProxyHops(int)",
+   "type": "functional",
+   "source": "00 §8 C6b / R32",
+   "core_or_auth": "core",
+   "notes": "Resolves X-Forwarded-For from the right: the nth hop from the right is the client address. n >= 1 also means the direct socket peer is trusted. Hop mode requires the node to be reachable only through the LB (document as a mandatory precondition)."
+  },
+  {
+   "area": "C6b proxy trust hops and CIDR",
+   "candidate_title": "app.trustProxyCidrs(String...)",
+   "type": "functional",
+   "source": "00 §8 C6b / R32",
+   "core_or_auth": "core",
+   "notes": "Resolves X-Forwarded-For from the right to the first address outside the trusted CIDRs; the peer is trusted only if the socket address is inside a trusted CIDR. Needs CIDR parsing/validation for IPv4 and IPv6 with bad input rejected."
+  },
+  {
+   "area": "C6b proxy trust hops and CIDR",
+   "candidate_title": "X-Forwarded-Proto interpretation rule",
+   "type": "security",
+   "source": "00 R32 (6판 P-4, 7판 Q-6)",
+   "core_or_auth": "core",
+   "notes": "XFP is read only when the direct peer is trusted. One XFP value: use it. Several: hop mode takes the nth from the right; CIDR mode takes the value at the same position as the first untrusted XFF entry counted from the right. If XFP has 2+ items and the count differs from XFF or the position is missing, result is false (fail closed). Proxies that pass XFP through without overwriting are unsupported."
+  },
+  {
+   "area": "C6b proxy trust hops and CIDR",
+   "candidate_title": "Accessors for the current proxy trust configuration",
+   "type": "interface",
+   "source": "00 §8 C6b / R32 설정 읽기",
+   "core_or_auth": "core",
+   "notes": "Public read accessors expose hops, CIDRs, and the legacy boolean so auth can detect legacy trustProxy(true) (doctor FAIL in PROD) and MULTI_INSTANCE without trust. Accessor names are not given in 00; decide during implementation."
+  },
+  {
+   "area": "C6b proxy trust hops and CIDR",
+   "candidate_title": "Legacy trustProxy(boolean) retained with documented risk",
+   "type": "constraint",
+   "source": "00 §8 C6b",
+   "core_or_auth": "core",
+   "notes": "Existing leftmost-XFF trustProxy(true) stays for compatibility (FR-ENGINE-008) but docs state the spoofing risk; this is a Core-wide security defect independent of auth. Interaction when legacy and hop/CIDR modes are both set is unspecified: pick last-wins or reject at implementation."
+  },
+  {
+   "area": "C6b proxy trust hops and CIDR",
+   "candidate_title": "remoteAddress() and isSecure() under hop and CIDR modes",
+   "type": "security",
+   "source": "00 R32 / R33 (a)",
+   "core_or_auth": "core",
+   "notes": "remoteAddress() returns the resolved client IP and isSecure() honors the resolved XFP only when the peer is trusted; spoofed XFP/XFF from an untrusted peer is ignored. Existing FR-HTTP-011 and FR-ENGINE-008 behavior without trust must stay unchanged."
+  },
+  {
+   "area": "C6b proxy trust hops and CIDR",
+   "candidate_title": "Proxy trust configuration lifecycle and validation",
+   "type": "constraint",
+   "source": "CLAUDE.md, existing IR-ENGINE-001 pattern",
+   "core_or_auth": "core",
+   "notes": "New configuration methods follow the NEW-state guard (IllegalStateException outside NEW), reject hops < 0 / null / malformed CIDR; Kotlin test and docs/api update included."
+  },
+  {
+   "area": "C7 request id",
+   "candidate_title": "req.requestId() public accessor",
+   "type": "interface",
+   "source": "00 §8 C7 / R30 (5)",
+   "core_or_auth": "core",
+   "notes": "Publishes the existing package-private DefaultRequest request id (DefaultRequest.java:390). The value must equal the `requestId` in the standard error body and the `rid` of the access log line for the same request (FR-APP-006 / FR-APP-015 AC-7)."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Auth module packaging inside NaruServe-api",
+   "type": "constraint",
+   "source": "00 §1(2), §2",
+   "core_or_auth": "auth",
+   "notes": "Package com.snoworca.naruserve.utils.auth (+ jwt, password, user, group, rbac, audit, apikey, spi, jdbc, testing, internal) in NaruServe-api; no new Gradle module and no new library; mainDependencies unchanged. Subpackage layout and which types are public vs internal are listed in 00 §2 tree."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "utils.auth uses only Core public API",
+   "type": "constraint",
+   "source": "00 §1(3), §2",
+   "core_or_auth": "auth",
+   "notes": "No import of com.snoworca.naruserve.internal from utils.auth; enforce with an architecture test. Also no java.nio.file, java.time, CompletableFuture, java.util.function.Function (API 24+), android.*, servlet."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "API 21 and Java 8 conformance of auth classes",
+   "type": "constraint",
+   "source": "00 §2, §12",
+   "core_or_auth": "auth",
+   "notes": "JDK-only APIs: javax.crypto.Mac, java.security, java.sql/javax.sql.DataSource, java.text.Normalizer, FileDescriptor.sync, java.util.concurrent; animal-sniffer android-api-level-21 must pass (00 §12 says availability was never checked). Interface default methods must work under D8 desugaring."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "TimeSource time injection SAM",
+   "type": "interface",
+   "source": "00 §2 tree, R47 (3)",
+   "core_or_auth": "auth",
+   "notes": "com.snoworca.naruserve.utils.TimeSource with nowMillis(); replaces java.time (API 26+); all public timestamps are epoch-millisecond long/Long. Used for key expiry, token exp, throttle windows and tests."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Auth.builder(secret) minimal path and secret validation",
+   "type": "security",
+   "source": "00 §3, §4.4",
+   "core_or_auth": "auth",
+   "notes": "Auth.builder(@Nullable String) = KeySources.of(secret); build() throws AuthConfigException for null, short or example secrets with a message that includes how to generate one (`openssl rand -base64 32`). DEV may generate a temporary key and logs that restart invalidates all tokens."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Builder validation reports all incompatibilities at once",
+   "type": "functional",
+   "source": "00 §4.1",
+   "core_or_auth": "auth",
+   "notes": "build() collects every inconsistent combination into one AuthConfigException; unknown config keys are errors. Includes: MULTI_INSTANCE with in-memory/file stores, invalid scheme names, mountPath '/' in cookie modes, `.permitPrefix(\"/\")`, empty permit path."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "AuthConfig.load(file) with env: and file: secret references",
+   "type": "functional",
+   "source": "00 §4.1",
+   "core_or_auth": "auth",
+   "notes": "Code builder is the single source of truth; AuthConfig.load reads a config file and feeds the builder; secrets referenced as `env:NAME` or `file:/path`; unknown keys rejected. File format is not specified in 00 (04 §1 only)."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "AuthMode DEV and PROD with fromEnv()",
+   "type": "functional",
+   "source": "00 R41",
+   "core_or_auth": "auth",
+   "notes": "fromEnv(): NARU_ENV=dev -> DEV, anything else (incl. unset) -> PROD. DEV relaxes only: missing secret -> temp key, R33 secure-transport check off, hash cost/key strength FAIL -> WARN. DEV never relaxes default-deny, install order, public-path rules, CSRF, throttling, grant rules, JSON errors. DEV with non-local request logs one WARN."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "AuthProfile BASELINE, STANDARD, STRICT",
+   "type": "functional",
+   "source": "00 §4.2, §7, §10 Q1",
+   "core_or_auth": "auth",
+   "notes": "Security-level presets selecting default numbers/policies; default profile and the min-password length are an open question to be decided at implementation (07 recommends STANDARD with length 8 vs NIST 15). The exact per-profile values live in the stale 07, not in 00."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Deployment SINGLE_INSTANCE and MULTI_INSTANCE",
+   "type": "functional",
+   "source": "00 R35",
+   "core_or_auth": "auth",
+   "notes": "Default SINGLE_INSTANCE. MULTI_INSTANCE makes build() fail when any in-memory or file store is present. Heuristic WARNs: shared-less RefreshTokenStore/LoginThrottle with proxy headers seen; refresh with an unknown family on an in-memory store (401 + WARN once). UserStore should give read-after-write `ver` consistency (Javadoc)."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Bootstrap .user(...) seeding on start",
+   "type": "functional",
+   "source": "00 §3, R41",
+   "core_or_auth": "auth",
+   "notes": "Accounts are created in onStart only when absent, never overwritten; hash computed in build(); a concurrent create hitting DuplicateUserException logs INFO 'already exists'. Env var is NARU_ADMIN_PASSWORD. Origin BOOTSTRAP, emits onUserCreated only (no before event). Null-password rule: only one admin-role .user may have null; checked in onStart for missing accounts; violations are doctor FAIL (DEV also FAIL for non-admin null)."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "First-admin setup endpoint and recovery mode",
+   "type": "security",
+   "source": "00 R31 (6), R41, R45",
+   "core_or_auth": "auth",
+   "notes": "POST /auth/setup body {token, username, password}; requires a local request (R33 definition) AND a one-time setup token printed to the log; 404 once an admin exists; reopened only by .recovery(true)/NARU_AUTH_RECOVERY=1; closes after first success in the process; a .user(name,null,...)-opened setup forces username==name else 400 `username_mismatch` and grants that .user's roles. Recovery creates or reactivates+resets password+grants admin with ver++, WARNs on every start, is audited, and rejects service accounts with 400 `service_account_no_password`. No before events; emits on* with Origin SETUP/RECOVERY."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "install(app) ordering check against registrations",
+   "type": "functional",
+   "source": "00 §3 install, R28",
+   "core_or_auth": "auth",
+   "notes": "install throws IllegalStateException('auth.install(app) must come before routes; found GET /x registered before it') when C4 holds ROUTE/WEBSOCKET/STATIC/ROUTER_MOUNT/GROUP before it. Path-less middleware kinds (cors, accessLog, use(Middleware), error middleware, param) are allowed and listed by doctor."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Pre-install middleware and CORS ordering doctor rules",
+   "type": "security",
+   "source": "00 R28",
+   "core_or_auth": "auth",
+   "notes": "doctor FAIL (DEV included) for path-scoped use(path|Object, mw)/useAsync(path) before install unless whitelisted with `.allowPreAuthMiddleware(path...)`, and FAIL if cors is registered after install ('cors must be registered before auth.install'). auth does not pass OPTIONS preflight itself; the 4판 'OPTIONS + Access-Control-Request-Method -> next()' rule is withdrawn because Origin-less requests bypassed auth."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "install wiring: middleware, routers and lifecycle hooks",
+   "type": "functional",
+   "source": "00 §3 install steps 2-4",
+   "core_or_auth": "auth",
+   "notes": "app.use(auth) once, using use(Middleware) or use(\"\", mw) so it joins the WebSocket upgrade pipeline (never use(Object, Middleware)); mounts auth.routes() at /auth and auth.adminRoutes() at /auth/admin, each with an auth-specific ErrorMiddleware; onStart runs doctor (any FAIL stops startup) and seeding; onStop stops the cleanup scheduler and flushes files."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Public path matching (permit, permitPrefix)",
+   "type": "security",
+   "source": "00 R29",
+   "core_or_auth": "auth",
+   "notes": "`.permit(path)` = exact path, GET and HEAD only; `.permit(Method, path)` opens other methods; `.permitPrefix(path)` matches path or path+'/'; `.permitPrefix(\"/\")` and empty path rejected by build(); ASCII only; compared on the raw undecoded req.path() so /HEALTH, /health/, percent-encoded and non-ASCII variants are NOT public (401). Mismatch with Core routing always errs toward closed."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Optional authentication on public paths",
+   "type": "security",
+   "source": "00 R29, R33",
+   "core_or_auth": "auth",
+   "notes": "On a secure transport a valid token attaches a principal; invalid/expired token or multiple credentials yields anonymous (not 401); on plaintext transport the token is not read at all (so LB health checks over HTTP work). Apps read it with auth.userOrNull(req)."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "protectOnly(prefix...) mode and path normalization",
+   "type": "security",
+   "source": "00 R28 SPA/protectOnly",
+   "core_or_auth": "auth",
+   "notes": "Default-deny applies only under the listed ASCII prefixes plus /auth; others are public; shown in describe() and startup log. Range test normalizes more widely than Core: percent-decode, lower-case, merge slashes; any '.' or '..' segment after decoding, or decode failure, counts as protected. doctor FAIL if C4 contains regex/array paths or non-expandable registrations; runtime listener throws IllegalStateException for such later registrations; out-of-scope ROUTE/WEBSOCKET are listed as WARN."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "WebSocket upgrade always protected; permitWebSocket",
+   "type": "security",
+   "source": "00 R28",
+   "core_or_auth": "auth",
+   "notes": "Upgrade detection joins all Connection/Upgrade header lines via req.headers(String) and treats any `upgrade` token in Connection as an upgrade (wider than Core, so h2c upgrades on public paths get 401); independent of permit/protectOnly; only `.permitWebSocket(path)` opens one, compared exactly against the decoded WebSocket req.path()."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "All auth responses are JSON; middleware and router error handling",
+   "type": "functional",
+   "source": "00 R30 (1)-(5)",
+   "core_or_auth": "auth",
+   "notes": "Middleware/guards respond directly and do not call next on failure; store calls inside global middleware and guards are try/caught -> 503 JSON; auth routers carry an ErrorMiddleware mapping HttpException (400/413/415), AuthRejection, other exceptions -> 503 (store) or 500; no stack trace or raw exception messages; body {\"error\":{\"code\",\"message\",\"requestId\"}}; AuthResponses user implementations are wrapped and fall back to the default JSON on exception."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "auth.errors() and auth.errorMiddleware() for app handlers",
+   "type": "interface",
+   "source": "00 R30 (6), §3",
+   "core_or_auth": "auth",
+   "notes": "auth.errors() is a Core error handler for app.onError placed last; maps DuplicateUserException 409, AuthUnavailableException 503, IllegalArgumentException (auth subclass) 400, AuthRejection (status/code, Retry-After) and AuthStateException (500 without message); other exceptions pass to the next layer. auth.errorMiddleware() does the same via app.use after start. Both return the same instance per Auth."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Error layer placement check at request time",
+   "type": "operational",
+   "source": "00 R30 검사 시점 (13판, 14판)",
+   "core_or_auth": "auth",
+   "notes": "On the first request after start (and after listener-flagged post-start registrations) inspect C4: WARN if a ROUTE follows the last auth error layer; WARN at most once per minute; routes added to an already mounted Router count at the mount position. doctor also checks that the very object returned by errors()/errorMiddleware() follows the last ROUTE, not just any error handler."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "AuthRejection value type and Retry-After",
+   "type": "interface",
+   "source": "00 R30 (7), §7",
+   "core_or_auth": "auth",
+   "notes": "Unchecked; ctor (int status, String code, @Nullable String message) and 4-arg with @Nullable Long retryAfterSeconds; status must be 4xx; code matches [a-z][a-z0-9_]{0,63} else IllegalArgumentException; null message -> default text; getRetryAfterSeconds() produces a Retry-After header in all auth error paths."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Auth status and error code catalog",
+   "type": "interface",
+   "source": "00 R30, R47 (10), §7",
+   "core_or_auth": "auth",
+   "notes": "Fixed codes: unauthenticated 401, invalid_token 401, invalid_api_key 401, insufficient_scope 403, api_key_not_allowed 403, insecure_transport 403, csrf_failed 403, api_key_limit 409, too_many_attempts 429, service_account_no_password 400, username_mismatch 400, security_write_conflict 503; Core spellings BAD_REQUEST, NOT_FOUND, SERVICE_UNAVAILABLE, UNSUPPORTED_MEDIA_TYPE for input checks, 404, store errors and 415 (thrown as Core HttpException). invalid_request is reserved for the RFC 6750 multiple-credentials 400."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "AuthEvents: before and on events",
+   "type": "functional",
+   "source": "00 R30 (7), §5",
+   "core_or_auth": "auth",
+   "notes": "All methods default no-op. Before events: beforeLogin, beforeUserCreate, beforeUserUpdate (old and new values), beforeUserDelete; synchronous, may throw AuthRejection; any other exception (incl. HttpException) is logged and becomes AuthUnavailableException/503. on* events run after the write and failures are only logged. setup, recovery and bootstrap emit on* only."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "User-change path and event matrix",
+   "type": "functional",
+   "source": "00 §6.3 사용자 변경 경로와 이벤트 표",
+   "core_or_auth": "auth",
+   "notes": "Table fixes for register, A2, AuthUsers.create/update/rename/delete, bootstrap, setup, recovery, A4 (one before/one on for all changed fields), PATCH /auth/me, POST /auth/password which before/on events fire, with which UserChange values (USERNAME, PASSWORD, ROLES, ENABLED, ATTRIBUTES) and which UserOrigin (REGISTER, ADMIN, APP, SELF, SETUP, RECOVERY, BOOTSTRAP); onPasswordChanged fires whenever a password changes; paths not in the table emit no user events."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "AuthEventContext.getOrigin() semantics",
+   "type": "interface",
+   "source": "00 R30 (7) 14판-15판",
+   "core_or_auth": "auth",
+   "notes": "@Nullable UserOrigin; non-null only for user-change events (before/on create, update, delete, onPasswordChanged); null for beforeLogin/onLogin/onLogout/onTokenRefreshed/onGroupChanged. Policies should test `== UserOrigin.REGISTER` to restrict only self-registration."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Event callbacks never receive passwordHash",
+   "type": "security",
+   "source": "00 R30 (7) 15판, R37",
+   "core_or_auth": "auth",
+   "notes": "Every AuthUser passed to any AuthEvents callback is a copy with passwordHash null; one event-contract test records every callback over every path and asserts null hash, also covering AuthUsers returns and mutator inputs."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Principal API: AuthPrincipal, user(req), userOrNull, loadUser, authenticated()",
+   "type": "interface",
+   "source": "00 R30 (3), R36, §7",
+   "core_or_auth": "auth",
+   "notes": "AuthPrincipal getters never throw (pre-filled by middleware); auth.user(req) throws AuthStateException (IllegalStateException subclass, mapped to message-less 500) when no principal; userOrNull for public paths; loadUser is @Nullable and never throws (store error -> logged, null); authenticated() guard promotes and answers 401/503 JSON on failure."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Guards: require(scope...), requireRole(...), authenticated()",
+   "type": "interface",
+   "source": "00 §3, §7 (requireRole -> 06 C9)",
+   "core_or_auth": "auth",
+   "notes": "Route guards usable as the (String, Middleware, RouteHandler) overload and Kotlin trailing lambda; 403 insufficient_scope on missing scope; route(path).use(guard) for RouteGroup which lacks the overload. Guard semantics for roles and wildcard scopes follow R46."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "statelessAccess(true) minimal principal",
+   "type": "functional",
+   "source": "00 R36 (7판 Q-3, 8판 S-8)",
+   "core_or_auth": "auth",
+   "notes": "Global middleware only verifies the token and attaches a minimal principal {id}: username '', empty roles/scopes/attributes, isLoaded() false, hasScope false; guards promote via principal cache with ver/enabled checks. Routes without guards skip store lookups and revocation until access TTL; doctor WARN says use only getId() there. Refresh, device tokens, API keys and WebSocket rechecks still revoke immediately."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Principal cache with explicit invalidation",
+   "type": "performance",
+   "source": "00 R36",
+   "core_or_auth": "auth",
+   "notes": "Per-user cache of user row, expanded groups, roles and scopes for userCacheTtl (default 5 s); ver/enabled mismatch with the token -> 401; auth-originated user changes invalidate that user's entry on that node, group/role changes clear the whole cache; other nodes lag up to the TTL. Authorization decisions (R31) bypass this cache."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "doctor startup check suite",
+   "type": "operational",
+   "source": "00 §4.4, many rules",
+   "core_or_auth": "auth",
+   "notes": "Each item reports FAIL or WARN; any FAIL stops start. Items: store connectivity, secret strength, public path list, pre-install middleware list, registration enabled, measured hash cost, clock, proxy trust (R32), deployment vs store (R35), supportsAtomicFieldWrites (R37), supportsAtomicLimitInsert and admin-scope key counts and opt-in warning (R47), usesLimitArguments, null-password .user, file state (R42), cookie WebSocket origin wildcard (R40), errors() placement (R30), WebSocket wrapper count vs WEBSOCKET registrations (R40). DEV turns cost/strength FAIL into WARN."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "describe() and startup log summary",
+   "type": "operational",
+   "source": "00 R28, R41",
+   "core_or_auth": "auth",
+   "notes": "describe() lists protection scope ('protected: /api, /auth' in protectOnly mode), permitted paths, mode, profile, transport; startup log states restart invalidation for temp keys, that `.user` never overwrites existing passwords, and the allowInsecureTransport reason. Exact format not specified."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Sensitive value hygiene in logs, messages and audit",
+   "type": "security",
+   "source": "00 R29(d), R47 (3)",
+   "core_or_auth": "auth",
+   "notes": "Never log or embed in exceptions/audit events: naru_at, naru_rt, naru_csrf, naru_device values, Authorization values, plaintext API keys or prefix+secret (prefix alone allowed), password characters; char[] buffers wiped after use."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Audit event stream: AuditEvent, AuditSink, AuditSinks",
+   "type": "functional",
+   "source": "00 §2 tree, §5 기업, R31/R47 audit",
+   "core_or_auth": "auth",
+   "notes": "Fixed AuditEvent schema with PII minimization; sinks (e.g. logging) in audit package; events required by rules: grant denials, recovery use, security_write_conflict, API key issue/revoke with issuedByUserId and apiKeyId, service-account marker. The schema fields live in stale 07 §6."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "AuthTesting test kit",
+   "type": "interface",
+   "source": "00 §5 테스트, R37, R47 (9)",
+   "core_or_auth": "auth",
+   "notes": "tokenFor(auth, name, roles...) works only on InMemoryUserStore (IllegalStateException otherwise; undeclared role -> IllegalArgumentException); tokenForUserId(auth, id) for any store (unknown id -> IllegalArgumentException); apiKeyFor(auth, ownerUserId, scopes...) via the normal issue path; csrfTokenFor(auth, accessToken) (name unconfirmed) builds the CSRF token from the token's sub/fam; verifyUserStore and verifyApiKeyStore contract tests. Tokens issued without a refresh record must still pass CSRF with synthetic fam."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Interface evolution rule for user-implemented SPIs",
+   "type": "constraint",
+   "source": "00 §2 R20",
+   "core_or_auth": "auth",
+   "notes": "After first public release user-implemented interfaces (UserStore, GroupStore, GroupAdminStore, RoleStore, ApiKeyStore, AuditSink, AuthEvents, PasswordHasher, all spi) only gain default methods; the Forwarding* classes are updated in the same change. The ApiKeyStore and LoginThrottle tables must be fixed before first publication."
+  },
+  {
+   "area": "AUTH core and pipeline",
+   "candidate_title": "Unknown-proxy and trust WARNs",
+   "type": "operational",
+   "source": "00 R32",
+   "core_or_auth": "auth",
+   "notes": "If no trust config is set but a request carries X-Forwarded-For, WARN once at runtime ('set trustProxyHops: all users share the LB IP'); MULTI_INSTANCE with no trust config -> doctor WARN; PROD with legacy trustProxy(true) -> doctor FAIL; hop mode under MULTI_INSTANCE or STRICT -> doctor WARN recommending CIDR mode."
+  },
+  {
+   "area": "TOKEN tokens, keys and passwords",
+   "candidate_title": "HS256 Jwt encode and verify",
+   "type": "security",
+   "source": "00 §2, R2, R8",
+   "core_or_auth": "auth",
+   "notes": "Own implementation on javax.crypto.Mac; access claims {sub, ver, fam, iat, exp, jti}, header {alg, typ, kid}; typ `at+jwt` for access and `rt+jwt` for refresh with different derived keys; alg none and unexpected alg rejected; fam = family id of the paired refresh token (new pair -> new fam, rotation keeps fam). v1 tokens carry no scope claim. Public JwtKeys/JwtClaims/JwtException allow standalone use."
+  },
+  {
+   "area": "TOKEN tokens, keys and passwords",
+   "candidate_title": "KeySource, KeySources and kid key sets",
+   "type": "security",
+   "source": "00 §4.4, R8",
+   "core_or_auth": "auth",
+   "notes": "KeySources.of/fromEnv/fromFile/fromBytes/rotating; set = one signing key plus n verification keys addressed by kid; short or example keys refused at build(); purpose-specific derived keys (device `HMAC(secret,'naru-device')`, fingerprint `naru-device-fp`, access/refresh distinct); rotation keeps old tokens valid while the key remains in the verification list."
+  },
+  {
+   "area": "TOKEN tokens, keys and passwords",
+   "candidate_title": "MiniJson strict parser with CLAIMS and FILE profiles",
+   "type": "security",
+   "source": "00 R43",
+   "core_or_auth": "auth",
+   "notes": "Internal parser/writer. CLAIMS: depth 2, total 8 KB, string 1 KB; FILE: depth 8, 8 MB default (builder can raise), string 64 KB; both reject duplicate keys, NaN, invalid escapes, trailing characters. JWT header/claims use CLAIMS, auth files use FILE; EXTERNAL_CLAIMS (depth 4, 16 KB) is v2. Files above the cap -> doctor WARN to use JDBC."
+  },
+  {
+   "area": "TOKEN tokens, keys and passwords",
+   "candidate_title": "Internal primitives: Base64Url, HmacSigner, ConstantTime",
+   "type": "security",
+   "source": "00 §2 internal",
+   "core_or_auth": "auth",
+   "notes": "Base64url without padding, HMAC signing helpers and constant-time comparison used by JWT, CSRF, device tokens and API key hash comparison; internal and not contract-stable."
+  },
+  {
+   "area": "TOKEN tokens, keys and passwords",
+   "candidate_title": "TokenService and TokenPair issue and refresh rotation",
+   "type": "functional",
+   "source": "00 R1, R2, R10",
+   "core_or_auth": "auth",
+   "notes": "Issues access+refresh pairs, refresh rotation within the same family, per-family reuse detection (`revokeFamily`, `onRefreshTokenReused`, RFC 9700 4.14); password change returns a fresh pair on a new family. The reuse grace window is an open question to settle at implementation (default 0 s vs a few s)."
+  },
+  {
+   "area": "TOKEN tokens, keys and passwords",
+   "candidate_title": "RefreshTokenStore SPI with in-memory, file and JDBC defaults",
+   "type": "functional",
+   "source": "00 R1, R42, R45, §7",
+   "core_or_auth": "auth",
+   "notes": "Family and record store: find, markUsed, revokeFamily; default impl follows the user store (InMemory -> memory, File -> same directory file, Jdbc -> JDBC; custom user store without a store -> memory + doctor WARN 'restart logs everyone out'); written only on login/refresh/logout; cleanup by a 10-minute daemon scheduler stopped in onStop. Logout validity check does not trigger reuse detection."
+  },
+  {
+   "area": "TOKEN tokens, keys and passwords",
+   "candidate_title": "Pbkdf2PasswordHasher and PasswordHasher SPI",
+   "type": "security",
+   "source": "00 §5, R5, R27",
+   "core_or_auth": "auth",
+   "notes": "Default hasher is own PBKDF2-HMAC-SHA256 (no external lib); PasswordHasher exposes accepts(hash) prefix routing, verify, hash, needsRehash; hash string format is specified in stale 04 §2.4, not 00."
+  },
+  {
+   "area": "TOKEN tokens, keys and passwords",
+   "candidate_title": "HashCost calibration and fixed cost",
+   "type": "performance",
+   "source": "00 R5, R27, R38",
+   "core_or_auth": "auth",
+   "notes": "HashCost.calibrate(ms) targets 250-500 ms within 50,000-600,000 iterations, rounded down to 10,000 steps; HashCost.fixed(n); doctor reports measured cost on this device; re-hash on login only if stored cost < 80% of target, or > 125% of target (needsRehash true). 06's 9-21 s Android numbers are estimates."
+  },
+  {
+   "area": "TOKEN tokens, keys and passwords",
+   "candidate_title": "Legacy hash verifiers and PasswordHashers.chain",
+   "type": "functional",
+   "source": "00 §5, R37, §4.3",
+   "core_or_auth": "auth",
+   "notes": "chain(new, legacy...) selects by accepts(prefix); legacy: bcrypt ($2a/$2b/$2y accepted, $2x rejected, cost cap 14, concurrency-limited), unsalted MD5/SHA-1/SHA-256, salted SHA-256; successful legacy login re-hashes to PBKDF2 via updatePasswordHash; digest/saltedDigest factory helpers. bcrypt and Blowfish are implemented in-house (04 §2.4.1)."
+  },
+  {
+   "area": "TOKEN tokens, keys and passwords",
+   "candidate_title": "Hash concurrency slots and 503 backpressure",
+   "type": "reliability",
+   "source": "00 R5, R38",
+   "core_or_auth": "auth",
+   "notes": "Every hashing operation (login, /auth/password, register, setup, admin create/reset, AuthUsers.create, checkPassword) takes a slot: slots = max(1, cores/2), wait queue 4x slots, wait cap 5 s, beyond that 503 with Retry-After (AuthUnavailableException for app calls); hash endpoints are registered with methodAsync so waiting does not hold worker threads."
+  },
+  {
+   "area": "TOKEN tokens, keys and passwords",
+   "candidate_title": "Constant-work login and 1.25T failure floor",
+   "type": "security",
+   "source": "00 R38",
+   "core_or_auth": "auth",
+   "notes": "Every login attempt runs target-cost PBKDF2 exactly once inside a slot (real verify for PBKDF2 users, legacy verify + dummy PBKDF2 for legacy users, dummy for unknown users); all failure responses (503 included, 429 excluded) are sent after max(1.25T, elapsed) + 0-50 ms jitter using a scheduler, not a blocked thread. Residual risk documented: dormant high-cost bcrypt or over-125% PBKDF2 accounts are distinguishable."
+  },
+  {
+   "area": "TOKEN tokens, keys and passwords",
+   "candidate_title": "Low-priority rehash queue",
+   "type": "performance",
+   "source": "00 R38 (7판 Q-8, 8판 S-12)",
+   "core_or_auth": "auth",
+   "notes": "After login success the rehash is queued outside the slot: max 100 entries (overflow dropped and retried at next login), one daemon worker that takes a free slot before hashing; queued plaintext kept as char[] and wiped immediately after use."
+  },
+  {
+   "area": "TOKEN tokens, keys and passwords",
+   "candidate_title": "PasswordPolicy and BreachedPasswordChecker",
+   "type": "functional",
+   "source": "00 §2 tree, §10 Q1",
+   "core_or_auth": "auth",
+   "notes": "PasswordPolicy (min length etc.) applied to register, setup, create, password change, reset; BreachedPasswordChecker is an SPI hook. No rule details in 00; the default length is an open question settled at implementation."
+  },
+  {
+   "area": "TOKEN tokens, keys and passwords",
+   "candidate_title": "Authenticator SPI with password, Bearer and API key authenticators",
+   "type": "interface",
+   "source": "00 §9 v1 row, §7",
+   "core_or_auth": "auth",
+   "notes": "SPI for credential verification; built-ins for password, Bearer JWT and API key (apiKey is the 'ApiKey' scheme path in R47). Method shapes are in stale 05 §5."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "Secure-transport rule (per request)",
+   "type": "security",
+   "source": "00 R33",
+   "core_or_auth": "auth",
+   "notes": "In PROD, authenticated requests and credential endpoints are served only if (a) req.isSecure() is true (direct TLS or XFP https from a C6b-trusted proxy) or (b) the request is local: req.socketAddress() is loopback and no X-Forwarded-*/Forwarded header exists; otherwise 403 insecure_transport and the token is not read. This check is first, before reading any credential. Public paths are exempt (anonymous, token unread)."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "allowInsecureTransport(reason) opt-in",
+   "type": "security",
+   "source": "00 R33 옵트인",
+   "core_or_auth": "auth",
+   "notes": "Disables the secure-transport check but forces access TTL 5 min, refresh TTL 24 h, a warning when cookies lack Secure, and a startup WARN with the reason every boot. DEV disables the check without the opt-in."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "Credential endpoint classification",
+   "type": "functional",
+   "source": "00 R33 (29판), R29",
+   "core_or_auth": "auth",
+   "notes": "Eight credential endpoints: five anonymous-entry (login, refresh, logout, register, setup) and three subject-required (POST /auth/password, POST /auth/me/apikeys, POST /auth/admin/apikeys); independent of .permit; the first group ignores invalid/expired JWT and cookie access tokens as anonymous, the second answers 401 invalid_token with WWW-Authenticate Bearer error=\"invalid_token\"."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "Credential extraction per transport mode",
+   "type": "functional",
+   "source": "00 R29 (g), 05 §7",
+   "core_or_auth": "auth",
+   "notes": "HEADER reads only Authorization Bearer; COOKIE reads only naru_at; BOTH reads both and treats co-presence as multiple credentials; unread credentials are treated as absent; API key scheme header is read in every mode; multiple Authorization headers -> 400 invalid_request regardless of mode; multiple naru_at -> 400 on protected and subject-required endpoints, ignored on anonymous-entry and public paths."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "Request decision order for auth endpoints",
+   "type": "functional",
+   "source": "00 R29 (f), R47 (2)",
+   "core_or_auth": "auth",
+   "notes": "Order: R33 transport -> multiple credentials / API-key procedure -> body format (415) -> COOKIE-mode body refreshToken (400 BAD_REQUEST) -> CSRF/Origin (403) -> handler; API key requests use the longer eleven-step chain of R47."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "WWW-Authenticate challenge shapes",
+   "type": "interface",
+   "source": "00 R30, R47 (1)",
+   "core_or_auth": "auth",
+   "notes": "401 carries `WWW-Authenticate: Bearer` (with `error=\"invalid_token\"` only for invalid JWT); with API keys enabled one header lists both challenges joined by a comma (`Bearer, ApiKey`, `Bearer error=\"invalid_token\", ApiKey`); no error attribute on the key challenge; 403 for key-authenticated requests carries no WWW-Authenticate at all; 403 insufficient_scope on JWT requests carries Bearer error attribute."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "JSON-only POST bodies on auth endpoints",
+   "type": "security",
+   "source": "00 R29 (f)",
+   "core_or_auth": "auth",
+   "notes": "A request with a body (Content-Length > 0 or Transfer-Encoding) whose Content-Type fails Core's JSON test gets 415 UNSUPPORTED_MEDIA_TYPE, including logout that ignores its body; bodiless refresh (cookie) and logout skip the check. Blocks form-encodable CSRF without preflight."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "CSRF token construction and verification",
+   "type": "security",
+   "source": "00 R29 (a)(b)(e), R2, 05 §7",
+   "core_or_auth": "auth",
+   "notes": "COOKIE-origin writes need header X-CSRF-Token equal (constant time) to cookie naru_csrf and the HMAC (`sub.fam.random16`) bound to the sub and fam of the presented access/refresh token; duplicate naru_csrf cookies pass if at least one equals the header and has a valid HMAC for this request's sub/fam, else 403 csrf_failed; the token is regenerated for the new family on every token-issuing response."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "Origin and Referer verification",
+   "type": "security",
+   "source": "00 R29 (c)(e), 05 §7",
+   "core_or_auth": "auth",
+   "notes": "Cookie-planting responses (Set-Cookie of naru_at/rt/csrf/device) always require an Origin check regardless of token source (prevents login CSRF with an attacker refresh token); Origin missing with no Referer, or `Origin: null`, -> 403 csrf_failed in COOKIE mode; trustedOrigins list; SameSite=Strict cookies; login/register/setup check Origin only."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "CSRF for anonymous-entry endpoints refresh and logout",
+   "type": "security",
+   "source": "00 R29 (a)(b)",
+   "core_or_auth": "auth",
+   "notes": "refresh with naru_rt cookie: verify the refresh token first, then header==cookie and HMAC vs the refresh token's sub/fam, all before rotation, regardless of access cookie state; body refreshToken (HEADER/BOTH only) skips CSRF and returns body-only without cookies; COOKIE mode body refreshToken -> 400 BAD_REQUEST; logout applies the same checks using the chosen identity token, except body-token and Bearer identities."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "Token delivery per transport mode",
+   "type": "functional",
+   "source": "00 R29 (e) 32판-33판",
+   "core_or_auth": "auth",
+   "notes": "Five token-issuing responses (login, register, setup, refresh, password): HEADER always body (accessToken, refreshToken, deviceToken); COOKIE always cookies (naru_at, naru_rt, naru_csrf, naru_device) plus body csrfToken only. BOTH: refresh and password follow how the credential arrived (body refresh token wins over cookie; Bearer -> body, naru_at -> cookie); login/register/setup use Origin then Referer: same-origin or trustedOrigins -> cookies, otherwise body and no Set-Cookie (no 403). Origin-less clients behave like HEADER."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "Cookie attributes, paths and clearing rules",
+   "type": "security",
+   "source": "00 R29 (d), 33판 속성 변경",
+   "core_or_auth": "auth",
+   "notes": "Cookies naru_at, naru_rt, naru_csrf, naru_device; naru_rt Path = mount (default /auth) so logout receives it; naru_rt not read on other paths; mountPath '/' in cookie modes -> AuthConfigException; multiple naru_rt -> treated as absent; clear with the same Path and Domain as set; HttpOnly/Secure/SameSite=Strict defaults via .cookies(); changing Path/Domain in a deployment needs app-side expiry of old cookies (documented, not detectable)."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "CORS guidance for cross-origin clients",
+   "type": "operational",
+   "source": "00 R29 (h)",
+   "core_or_auth": "auth",
+   "notes": "Docs: allowedHeaders must include Authorization, Content-Type, X-CSRF-Token and Naru-Device when sent; BOTH-mode body clients (Capacitor, other-site SPA) go in allowedOrigins but not trustedOrigins; SameSite=Strict cookies do not travel cross-site."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "POST /auth/login",
+   "type": "functional",
+   "source": "00 R45, R34, R38",
+   "core_or_auth": "auth",
+   "notes": "Credentials from JSON body, normalized username; passes beforeLogin, throttle, device trust, constant-work hash; returns token pair per delivery rules plus device token when issued; async handler; anonymous-entry classification; service account with password -> same 401 and timing as wrong password."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "POST /auth/refresh",
+   "type": "functional",
+   "source": "00 R29, R45, R1",
+   "core_or_auth": "auth",
+   "notes": "Refresh token from body (HEADER/BOTH) or naru_rt (COOKIE/BOTH); rotation with same family; reuse of a used token revokes the family; API key header present -> 403 api_key_not_allowed before reading the refresh cookie."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "POST /auth/logout and identity decision table",
+   "type": "security",
+   "source": "00 R45 (30판-32판)",
+   "core_or_auth": "auth",
+   "notes": "Anonymous-entry but identity is derived: decision table 1) body refreshToken (HEADER/BOTH): valid -> revoke its family F, and in BOTH also a valid same-sub naru_rt family G (no CSRF/Origin for either); invalid body token -> no identity; 2) no body token and one naru_rt: valid -> identity with CSRF+Origin (403 otherwise, nothing revoked); 3) no refresh token: valid Bearer (no CSRF) or naru_at (CSRF+Origin); 4) no identity: plain logout 204 clearing cookies, ?all=true -> 401 invalid_token (tokens present but invalid) or unauthenticated (no tokens). Store errors -> 503. ?all=true = ver++; without RefreshTokenStore plain logout also ver++. Refresh-token validity checks RefreshTokenStore state without triggering reuse detection."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "GET /auth/me and PATCH /auth/me",
+   "type": "functional",
+   "source": "00 R45, R47 (5)",
+   "core_or_auth": "auth",
+   "notes": "GET returns the principal's public profile (no hash); PATCH changes only attributes listed in `allowedAttributes`, raises beforeUserUpdate (origin SELF); both need JWT auth, PATCH is forbidden for API keys (403 api_key_not_allowed), GET allowed. No email-change endpoint in v1."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "POST /auth/password",
+   "type": "security",
+   "source": "00 R37, R10, R34 (7)",
+   "core_or_auth": "auth",
+   "notes": "Verifies current password (per-user-id limit 15 min / 5, 429), then changePassword(id, oldHash, tokenVer, newHash) as atomic hash swap + ver++; mismatched ver or disabled -> 401; on race re-verifies the current password against the newly read hash and retries once, otherwise 409; returns a new token pair on a new family, new device token and CSRF token per delivery rules; emits beforeUserUpdate/onUserUpdated/onPasswordChanged."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "POST /auth/register (default off)",
+   "type": "functional",
+   "source": "00 R45",
+   "core_or_auth": "auth",
+   "notes": "Self-registration, off unless `.register(true)`; beforeUserCreate with Origin REGISTER; hashes through the slot; named `register` not `signup`; DuplicateUserException -> 409."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "Admin user and group endpoints",
+   "type": "functional",
+   "source": "00 R39, R45, R31",
+   "core_or_auth": "auth",
+   "notes": "15 admin endpoints (A1-A6 users, G1-G8 groups, DELETE users/:id/lockout) under /auth/admin; reads need auth-users:read / auth-groups:read, writes the :write scope and then R31; G9 group-role assignment is v2 and absent. The exact route/body table is in stale 05 §4.2 and R45 says the SRS must fix it as a table."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "Admin PATCH A4 application order and applied list",
+   "type": "functional",
+   "source": "00 R37 관리자 PATCH",
+   "core_or_auth": "auth",
+   "notes": "R31 checked once over all changed fields; apply order username -> password -> other security fields -> profile; username conflict -> 409 with applied: []; same-as-current username is a no-op; password race -> 409 with applied only containing an earlier rename; later failure -> 503 with the applied list and audit event; one onUserUpdated for what was applied; admin username change goes through the rename path."
+  },
+  {
+   "area": "FLOW transport and endpoints",
+   "candidate_title": "auth.webSocket(handler) wrapper",
+   "type": "functional",
+   "source": "00 R40",
+   "core_or_auth": "auth",
+   "notes": "Auth and Origin are decided before the 101 (Origin by Core WebSocketUpgrade, default same-origin; cookie mode with wildcard allowed origins -> doctor FAIL, WARN if unreadable); wrapper schedules close(1008, 'token expired') at access exp, rechecks principal every userCacheTtl, closes on auth-triggered revocations immediately on that node; API-key connections close at key expiresAt ('api key expired') and on key deletion/staleness/invariant violation/pending marker; doctor WARN if WEBSOCKET registrations exceed wrapper uses."
+  },
+  {
+   "area": "GUARD abuse protection",
+   "candidate_title": "Login throttling keys, limits and enumeration resistance",
+   "type": "security",
+   "source": "00 R34 (1)(3)(5)",
+   "core_or_auth": "auth",
+   "notes": "Three keys on normalized username (counted even for unknown names so 429 never reveals an account): (user, IP) 5 per 15 min, IP 20 per 15 min (exempt for trusted devices), user-only 10 per 15 min (only for non-trusted-device requests); numbers configurable; exceeding -> 429 too_many_attempts with Retry-After, never sleeping; IP is R32-resolved, IPv6 grouped by /64."
+  },
+  {
+   "area": "GUARD abuse protection",
+   "candidate_title": "Throttle check order with DeviceTrust",
+   "type": "security",
+   "source": "00 R34 (2) 8판 S-13",
+   "core_or_auth": "auth",
+   "notes": "1) device token passing HMAC/expiry and fingerprint -> defer IP key, otherwise check IP key first; 2) (user, IP) key always; 3) findByUsername and user id/ver match confirm trust -> check per-device-token failure limit and exempt user-only and IP keys, else check the deferred IP key and user-only key; 4) hash. Lets a previously used device of an attacked admin still log in."
+  },
+  {
+   "area": "GUARD abuse protection",
+   "candidate_title": "DeviceTrust device token",
+   "type": "security",
+   "source": "00 R34 (2) 9판 T-7",
+   "core_or_auth": "auth",
+   "notes": "Signed token {user id, issuing ver, HMAC(fp-key, normalized login name) fingerprint, random, 90-day expiry} with kid-addressed key set so rotation does not break it; no raw login name inside; valid only if the fingerprint matches this attempt's name and user id/ver equal the token; ver++ and password change invalidate it; per-device-token 5 failures per 15 min then invalidated (stored shared in JDBC mode, immediately in file mode); delivered by cookie naru_device or body deviceToken and header Naru-Device (header preferred over cookie on read)."
+  },
+  {
+   "area": "GUARD abuse protection",
+   "candidate_title": "Optional hard Lockout",
+   "type": "functional",
+   "source": "00 R34 (4)",
+   "core_or_auth": "auth",
+   "notes": "Hard lock only when a Lockout policy is specified; not applied to trusted-device requests; applies to password login only (API key auth unaffected); released by DELETE /auth/admin/users/:id/lockout."
+  },
+  {
+   "area": "GUARD abuse protection",
+   "candidate_title": "LoginThrottle SPI with limit arguments and ForwardingLoginThrottle",
+   "type": "interface",
+   "source": "00 R47 (2), §7",
+   "core_or_auth": "auth",
+   "notes": "retryAfter(key)/recordFailure(key) plus default retryAfter(key,max,windowMillis)/recordFailure(key,max,windowMillis) delegating to the 1-arg versions and `default boolean usesLimitArguments()` (false by default, true for built-ins); ForwardingLoginThrottle abstract class forwards all of them together; API key enabled with usesLimitArguments false -> doctor WARN. Fixed before first release."
+  },
+  {
+   "area": "GUARD abuse protection",
+   "candidate_title": "Throttle storage, memory cap and persistence",
+   "type": "reliability",
+   "source": "00 R34 (6), R42",
+   "core_or_auth": "auth",
+   "notes": "In-memory counters capped (JVM 100,000 keys, Android 10,000) evicting oldest with one WARN; file store snapshots every 60 s, never per failure; JDBC store updates atomically (count = count + 1) so N nodes do not multiply limits; device-token invalidation is persisted immediately in file mode."
+  },
+  {
+   "area": "GUARD abuse protection",
+   "candidate_title": "Per-user password attempt limit shared by password confirmations",
+   "type": "security",
+   "source": "00 R34 (7), R45, R47 (6)",
+   "core_or_auth": "auth",
+   "notes": "User-id keyed 15 min / 5 limit used by POST /auth/password, AuthUsers.checkPassword, POST /auth/me/apikeys and POST /auth/admin/apikeys; exceeding -> 429 (AuthRejection with retryAfterSeconds for app calls); success does not reset the counter; failures are not counted differently for unknown ids."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "AuthUser value class",
+   "type": "data",
+   "source": "00 §5 사용자 정보 매핑, R37, R47 (7)",
+   "core_or_auth": "auth",
+   "notes": "Framework value class (not annotations): id String, username, passwordHash (`transient`, Gson only, only for default-modifier Gson), ver, enabled, roles, attributes Map, isServiceAccount() immutable after creation; toBuilder(); no direct scopes in v1; getX/isX naming for Kotlin properties."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "UserStore SPI and required methods",
+   "type": "interface",
+   "source": "00 §5 사용자 CRUD, R37",
+   "core_or_auth": "auth",
+   "notes": "Five required synchronous `throws Exception` methods: findByUsername, findById, create, update, delete. Five default field methods: updatePasswordHash(id, expectedOldHash, newHash) boolean, boolean changePassword(id, expectedOldHash, expectedVer, newHash), setEnabled, bumpTokenVersion, setRoles. IDs are strings and deleted IDs are never reused; ver only increases."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "Default field-method algorithm for SINGLE_INSTANCE",
+   "type": "reliability",
+   "source": "00 R37",
+   "core_or_auth": "auth",
+   "notes": "Per-user lock -> re-read -> compare expectation -> update(row) -> re-read to confirm; unconfirmed security writes (setEnabled, bumpTokenVersion, setRoles) retry up to 3 times then 503 security_write_conflict + audit; only rehash is silently skipped; rehash compares passwordHash, ver, enabled, roles of the login-time copy with the re-read row; all auth-triggered user writes use fresh rows under this lock."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "MULTI_INSTANCE UserStore contract and supportsAtomicFieldWrites",
+   "type": "reliability",
+   "source": "00 R37",
+   "core_or_auth": "auth",
+   "notes": "Store must implement all five field methods atomically and update() must not write passwordHash/ver/enabled/roles; declares true via `default boolean supportsAtomicFieldWrites()`; false under MULTI_INSTANCE -> doctor FAIL; no reflection in doctor."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "changePassword race and retry rules",
+   "type": "reliability",
+   "source": "00 R37 (9판 T-1, 10판)",
+   "core_or_auth": "auth",
+   "notes": "expectedOldHash null equals null (SSO or legacy users without hash can receive passwords); self-service re-verifies current password against the re-read hash and retries once, otherwise 409; admin reset never retries (409); success response and token pair only after the write truly applied; JDBC form: UPDATE ... SET password_hash=?, ver=ver+1 WHERE id=? AND ver=? AND (password_hash=? OR (password_hash IS NULL AND ? IS NULL))."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "InMemoryUserStore and FileUserStore",
+   "type": "functional",
+   "source": "00 R37 (b), R42",
+   "core_or_auth": "auth",
+   "notes": "Built-ins take one lock over the name index for check+write and throw DuplicateUserException on unique violation; file store persists with versioned format via AtomicFiles and MiniJson FILE profile."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "AtomicFiles write and recovery protocol",
+   "type": "reliability",
+   "source": "00 R42",
+   "core_or_auth": "auth",
+   "notes": "Temp file -> FileDescriptor.sync() -> existing to .bak -> temp to main name -> delete .bak. On start: only .bak -> restore with WARN; main and .bak -> use main if readable and delete .bak; main unreadable -> FAIL and overwrite nothing. Directory fsync impossible on API 21 (documented limitation, ver may regress after power loss)."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "ForwardingUserStore",
+   "type": "interface",
+   "source": "00 R37 (18판, 19판), §7",
+   "core_or_auth": "auth",
+   "notes": "Public abstract class forwarding every UserStore method incl. defaults; the five field methods and the atomic declaration are forwarded to the delegate only when delegate.supportsAtomicFieldWrites() is true, else `UserStore.super.x(...)` so the decorator's own findById/update are used; Javadoc documents it; updated whenever UserStore gains a default method."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "AuthUsers facade for apps (auth.users())",
+   "type": "interface",
+   "source": "00 R37, R45, §7",
+   "core_or_auth": "auth",
+   "notes": "findById, findByUsername, create(name, char[] password, roles...), create(..., @Nullable UserMutator init, roles...), update(id, mutator), delete(id), rename(id, newName), checkPassword(id, char[]); all returned/passed AuthUser are passwordHash-stripped copies; throws only DuplicateUserException, AuthUnavailableException, IllegalArgumentException, AuthRejection; fires the same before/on events; original store via auth.userStore() (Javadoc warns: never feed stripped copies to its update)."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "UserMutator rules and update(id, mutator)",
+   "type": "security",
+   "source": "00 R37 (8판 S-7, 9판 T-4, 18판)",
+   "core_or_auth": "auth",
+   "notes": "Own @FunctionalInterface (java.util.function.Function is API 24+); applied inside the per-user lock to a freshly read row; changing passwordHash (non-null), ver, enabled, roles, id, username or serviceAccount -> IllegalArgumentException; stripped-hash comparison, original hash restored when writing."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "rename and username normalization",
+   "type": "functional",
+   "source": "00 R37 (20판), §4.3",
+   "core_or_auth": "auth",
+   "notes": "Login identifier is an opaque String; auth only applies NFKC normalization and Locale.ROOT lower-casing before store.findByUsername; rename/A4 username change normalizes, duplicates -> DuplicateUserException (409), same-as-current is a no-op; old device tokens invalidated automatically by fingerprint mismatch. No email/phone login API; the store decides lookup and uniqueness."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "AuthUsers.checkPassword behavior",
+   "type": "security",
+   "source": "00 R45 (14판, 15판)",
+   "core_or_auth": "auth",
+   "notes": "Takes the hash slot, uses the user-id 5/15min limit (AuthRejection 429 with retryAfterSeconds), unknown id or null hash -> dummy hash then false (same timing), success does not reset the counter and never re-hashes, slot wait > 5 s -> AuthUnavailableException; caller wipes char[]; body passwords arrive as String and are converted (Gson cannot read char[])."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "DuplicateUserException and uniqueness contract",
+   "type": "functional",
+   "source": "00 R37 (12판), §7",
+   "core_or_auth": "auth",
+   "notes": "Unchecked, HTTP 409; stores throw it on unique-key violations in create/update and that is the final authority (auth's pre-check is just fast feedback); verified by verifyUserStore."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "verifyUserStore contract test",
+   "type": "functional",
+   "source": "00 R37, §5",
+   "core_or_auth": "auth",
+   "notes": "AuthTesting.verifyUserStore(store) checks CRUD, DuplicateUserException on unique violation, hash round trip (survives save and reload, relevant to the transient field), changePassword with null hash and ver mismatch, field-method atomics, and that update() does not overwrite security fields."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "Revocation by ver",
+   "type": "security",
+   "source": "00 R44, R10",
+   "core_or_auth": "auth",
+   "notes": "`ver++` once revokes access, refresh, device tokens, WebSocket and API keys: triggered by logout?all=true, password change, disable, recovery; role/group changes do NOT bump ver (reflected through the 5 s cache and the key decision formula); ver is monotonic (UserStore invariant, Javadoc). Passwords changes require reissuing API keys."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "Scope grammar and covering semantics",
+   "type": "functional",
+   "source": "00 R46",
+   "core_or_auth": "auth",
+   "notes": "`resource:action` with [a-z0-9-]{1,32} each; wildcards only on the grant side: `resource:*` and `*`; `*` covers everything, `r:*` covers r:* and all r:a, `r:a` covers only itself; admin scopes auth-users, auth-groups, auth-apikeys x read/write (plus resource wildcards) only; any other auth-* resource reserved and rejected (RolePolicy.build() throws; RoleStore rows filtered with one WARN)."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "RolePolicy builder, RoleStore and built-in admin role",
+   "type": "functional",
+   "source": "00 §3, R31 (5), R46",
+   "core_or_auth": "auth",
+   "notes": "RolePolicy.builder().role(name, scopes...) merges into built-in policy; built-in `admin` holds `*`; app redefinition of admin is a union and build() WARNs; `.replaceBuiltinRoles()` replaces built-ins; RoleStore SPI for DB roles; `Scopes` helper and internal ScopeMatcher."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "Grant rule: only what you hold (R31 (1)-(3))",
+   "type": "security",
+   "source": "00 R31",
+   "core_or_auth": "auth",
+   "notes": "Actor scopes A are re-read from the store (never the principal cache); (1) any newly gained scope (roles, groups, memberships, edges, API key scopes) must be covered by A; (2) modifying/resetting/disabling/deleting/removing from a target requires the target's current effective scopes covered by A; (3) no self change of roles/groups, no self disable/delete (also when the actor is among users affected by a group delete/edge removal); denials audited, 403 insufficient_scope. Built-in admin passes everything."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "Group delete and edge removal scale limit",
+   "type": "security",
+   "source": "00 R31 (2) 5판 K-7, 6판 P-6",
+   "core_or_auth": "auth",
+   "notes": "Affected users (including indirect members via sub-groups) must all be covered; if more than 1,000 are affected the request is 409 (split the operation); skipped when A covers all scopes the group and its ancestors confer (e.g. `*`); limit applies only to delegated admins."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "Group model: GroupStore, GroupAdminStore, DAG expansion and limits",
+   "type": "data",
+   "source": "00 §5 그룹, R9, R11",
+   "core_or_auth": "auth",
+   "notes": "Group ids lower-case [a-z0-9._-]{1,64}; membership keys are user ids; DAG with only two direct-relation methods (groupsOfUser, parentsOf(Set)); expansion depth 8 and size 256, exceeding is an error rather than truncation; InMemory/File implementations; GroupLimits; delete user removes memberships first, then API keys, then the row."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "Registry-agnostic role/scope resolution into the principal",
+   "type": "functional",
+   "source": "00 R36, R44",
+   "core_or_auth": "auth",
+   "notes": "Principal assembled per request from user row + expanded groups + roles + scopes (cache by user id); API key principal = owner with effective scopes key ∩ owner's current scopes computed via the 'both cover' predicate rather than set intersection; getApiKeyId() null for JWT logins."
+  },
+  {
+   "area": "IAM users, groups and grants",
+   "candidate_title": "Kotlin compile-and-run test for auth public API",
+   "type": "constraint",
+   "source": "CLAUDE.md Kotlin rules (T11)",
+   "core_or_auth": "auth",
+   "notes": "Kotlin source test compiles builder DSL-free usage, guards as trailing lambdas, UserMutator/AuthEvents SAM lambdas, Cookie-style getters; the sample in 00 §3 Kotlin block must compile. NaruServe-kotlin extensions (req.principal, attr<T>() reified) are listed in the 00 tree but not in the v1 roadmap row."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "API keys disabled by default; .apiKeys(store) opt-in",
+   "type": "functional",
+   "source": "00 R47, 8판 S-10",
+   "core_or_auth": "auth",
+   "notes": "Endpoints (/auth/me/apikeys, /auth/admin/apikeys) and the Authenticator exist only when .apiKeys(store) is set; builder options .maxKeysPerUser(20), .maxApiKeyDays(365), .allowAdminScopesOnApiKeys(false), .apiKeyScheme, .apiKeyFailureLimit(int max, long windowMillis) (name unconfirmed, default 100 per 15 min)."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "API key presentation scheme and header parsing",
+   "type": "security",
+   "source": "00 R47 (1)",
+   "core_or_auth": "auth",
+   "notes": "Only `Authorization: <scheme> nk_<prefix8>_<secret32>`; scheme default `ApiKey`, case-insensitive compare, key parsed as a single RFC 9110 token68; query and cookie keys never read; Bearer + nk_ is a JWT -> 401 invalid_token; unknown scheme = no credentials; multiple Authorization headers -> 400 invalid_request (protected and credential endpoints), anonymous on public paths; comma-merged headers = one malformed credential (401)."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "apiKeyScheme validation",
+   "type": "constraint",
+   "source": "00 R47 (1), §7",
+   "core_or_auth": "auth",
+   "notes": "Only RFC 9110 token characters; empty, space/comma-containing, and Bearer, Basic, Digest, DPoP, Negotiate (case-insensitive) -> AuthConfigException at build(); exactly one scheme, no aliases."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "Key format and generation",
+   "type": "security",
+   "source": "00 R47 (1) 23판",
+   "core_or_auth": "auth",
+   "notes": "prefix8 and secret32 are base62 [A-Za-z0-9]; secret32 from SecureRandom (~190 bit); the `nk_` prefix is kept so secret scanners can find leaked keys; key stored as SHA-256 of secret (lower-case hex 64) in StoredApiKey; plaintext returned once."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "API key verification procedure (steps 1-11)",
+   "type": "security",
+   "source": "00 R47 (2) 전체 순서",
+   "core_or_auth": "auth",
+   "notes": "After R33 transport and multiple-credential checks: 1 scheme, 2 key IP failure limit (429 before parsing), 3 parse, 4 findByPrefix (dummy hash if absent; returned prefix byte-compared), 5 constant-time SHA-256 compare, 6 expiry, 7 read owner, 8 enabled + ownerVer vs owner ver, 9 schedule stale-key deletion, 10 endpoint restriction 403 api_key_not_allowed (incl. POST /auth/refresh), 11 scope guard 403. Steps 3-8 failures are all 401 invalid_api_key; owner is read only after the secret matched; no hash slot or 1.25T floor (SHA-256 is fast)."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "API key failure counting and IP limit",
+   "type": "security",
+   "source": "00 R47 (2), R34",
+   "core_or_auth": "auth",
+   "notes": "All key 401s (malformed, unknown prefix, wrong secret, expired, stale, disabled owner) count in a key-only IP counter (default 15 min / 100) via LoginThrottle limit-argument methods; success does not reset; over the limit -> 429 too_many_attempts + Retry-After without lookup (public path: anonymous); throttle error -> 503 on protected paths, anonymous on public with 1/min log limit; login throttling and hard lockout never block key auth and vice versa."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "No key-row caching and immediate delete propagation",
+   "type": "reliability",
+   "source": "00 R47 (2), (8)",
+   "core_or_auth": "auth",
+   "notes": "Key rows are read from the store on every key request so DELETE/revoke/expiry apply to the next request on every node; owner enabled/ver/scopes come from the principal cache (instant on the acting node, up to 5 s elsewhere)."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "Key expiry rule",
+   "type": "functional",
+   "source": "00 R47 (2) 만료 판정",
+   "core_or_auth": "auth",
+   "notes": "Expired when TimeSource.nowMillis() >= expiresAt (equal is expired), no leeway; judged with the evaluating node's clock; expiresAt null = never expires, creatable only via the app API."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "Stale key detection and ownerVer invariant handling",
+   "type": "security",
+   "source": "00 R47 (2) 낡음 판정, R44",
+   "core_or_auth": "auth",
+   "notes": "Stale = ownerVer < owner's current ver (compare with cached ver; cached ver greater-or-equal rules; cached ver < ownerVer triggers a store re-read and cache refresh); ownerVer above the re-read ver is an invariant violation: 401, ERROR log (1/min), counts toward the IP counter, listed as stale; SINGLE_INSTANCE deletes it off the request path via deleteById, MULTI_INSTANCE never deletes (replica lag) but counts it toward the key limit."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "Stale-key deletion scheduling and pending markers",
+   "type": "reliability",
+   "source": "00 R47 (2) 28판-31판",
+   "core_or_auth": "auth",
+   "notes": "Off-request deletions deduplicated per owner id (largest observed ver kept); SINGLE_INSTANCE only: under the per-owner lock call deleteFutureByOwner(owner, ver) before every auth-triggered ver++ and before issuing; delete failure -> ERROR log (1/min) and ver++ proceeds with an in-memory pending marker {owner, oldVer} that blocks keys with ownerVer > oldVer (HTTP and WebSocket), forces issuance to retry the delete first (503 on failure), is retried by the 10-minute cleanup, re-read under the lock, cleared on success or on user deletion; markers are lost on restart (residual risk)."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "API key principal and effective scopes",
+   "type": "security",
+   "source": "00 R47 (4), R31",
+   "core_or_auth": "auth",
+   "notes": "Request authenticates as the owner; effective scopes = key scopes ∩ owner's current scopes decided by the 'both cover' predicate; disabled owner or stale key -> 401 invalid_api_key; AuthPrincipal.getApiKeyId() @Nullable; audit events record key id."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "Endpoints and writes forbidden to API-key actors",
+   "type": "security",
+   "source": "00 R47 (5)",
+   "core_or_auth": "auth",
+   "notes": "403 api_key_not_allowed for the eight credential endpoints, GET/DELETE /auth/me/apikeys, PATCH /auth/me, POST /auth/admin/apikeys, any password-setting write (A2/A4 carrying `password`), A2 that is not a service account, A4 enabling the key's own owner; GET /auth/me allowed; DELETE /auth/admin/apikeys/:id allowed under R31 when the admin-scope opt-in is on; JSON `\"password\": null` equals absent; PAT/admin-issue null password is 400."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "Admin scopes on API keys and the `*` rule",
+   "type": "security",
+   "source": "00 R47 (5) 23판-26판, R31 (4)",
+   "core_or_auth": "auth",
+   "notes": "Key scopes cannot contain auth-* unless .allowAdminScopesOnApiKeys(true) (else 400 on endpoints, IllegalArgumentException in app API); a key's `*` never covers auth-* even with the opt-in, so admin power comes only from explicitly named auth-* scopes; a required scope `*` is covered by no key scope, so key actors cannot grant `*` or act on `*` holders (403 insufficient_scope), except deleting an empty `*` group; when the opt-in is off existing auth-* key scopes are ignored in decisions."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "Opt-in doctor warnings for admin-scoped keys",
+   "type": "operational",
+   "source": "00 R47 (5) 24판-25판",
+   "core_or_auth": "auth",
+   "notes": "Opt-in on: WARN at each start with the persistence-of-effects text; opt-in off: ApiKeyStore.countKeysWithAdminScopes() (default -1 = unknown, names only auth-*-scoped keys) > 0 -> WARN with count; unknown count -> skip and WARN on ignoring an auth-* scope at request time, keyed by key id, limited to 1/min process-wide."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "AuthApiKeys app facade: issue, list, revoke",
+   "type": "interface",
+   "source": "00 R47 (6), §7",
+   "core_or_auth": "auth",
+   "notes": "issue(String ownerUserId, String name, @Nullable Long expiresAt, String... scopes) -> IssuedApiKey (getPlainKey once; toString masks `nk_<prefix8>_***`); list(ownerUserId) -> ApiKey without secretHash; boolean revoke(keyId) false if absent; unknown/disabled owner, past expiresAt, scopes violating R46 -> IllegalArgumentException; limit -> AuthRejection(409, api_key_limit); without .apiKeys(store) -> AuthStateException; no R31 or actor checks (Javadoc warning)."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "Key issuance common rules and ownerVer source",
+   "type": "security",
+   "source": "00 R47 (6) 26판",
+   "core_or_auth": "auth",
+   "notes": "New key ownerVer is the owner `ver` read from the store during issuance (never the principal cache); a concurrent ver++ makes the new key stale immediately (reissue); prefix collision -> up to 3 retries with fresh prefix and secret then 503; SINGLE_INSTANCE: under the owner lock re-read ver and deleteFutureByOwner before insertIfUnderLimit."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "Personal access token endpoints /auth/me/apikeys",
+   "type": "functional",
+   "source": "00 R45, R47 (6)",
+   "core_or_auth": "auth",
+   "notes": "GET lists own keys' metadata (no secret) with status; POST body {name, scopes[], expiresInDays?, password} -> 201 with plaintext once, password re-verified via the hash slot and user-id limit, wrong or null hash -> same 401 as /auth/password; DELETE own key by id, someone else's or unknown id -> 404; all JWT only."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "Admin API key endpoints /auth/admin/apikeys",
+   "type": "functional",
+   "source": "00 R45, R47 (6)",
+   "core_or_auth": "auth",
+   "notes": "GET requires ownerUserId (else 400 BAD_REQUEST), returns even disabled owners' keys; POST {ownerUserId, name, scopes[], expiresInDays?, password} re-verifies the caller's password, records issuedByUserId; DELETE /:id (unknown 404); check order for POST: body 400 -> 404 unknown owner -> 403 R31 (target protection and scope cover) -> 400 disabled owner -> password 401/429; unknown owner is also revealed by GET (accepted residual)."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "Key limits, lifetime bounds and expiresInDays validation",
+   "type": "functional",
+   "source": "00 R47 (6) 23판",
+   "core_or_auth": "auth",
+   "notes": "maxKeysPerUser default 20 counts live keys only (expired and stale excluded); maxApiKeyDays default 365 is both default and ceiling for endpoint issuance; expiresInDays must be a JSON integer > 0 (string '30' is 400, body parsed as Map to check type); app API may issue non-expiring keys."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "Key status in listings and JSON representation",
+   "type": "interface",
+   "source": "00 R47 (6) 23판-30판",
+   "core_or_auth": "auth",
+   "notes": "ApiKeyStatus ACTIVE|EXPIRED|STALE rendered as lower-case strings written directly by auth (not the app codec); status computed from the store-read owner ver, not cache; stale covers invariant-violating keys; MULTI_INSTANCE invariant-violating keys count toward the limit though shown stale; Javadoc/Kotlin docs say values may grow (else branch in when)."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "Service accounts",
+   "type": "functional",
+   "source": "00 R47 (7)",
+   "core_or_auth": "auth",
+   "notes": "AuthUser.isServiceAccount(): created by A2 or AuthUsers.create with a flag and no password (passwordHash null); password login behaves like a wrong password (401, same time, throttle counted); authenticates via API key only; marked in audit; flag immutable (mutator -> IllegalArgumentException); A4/A2 password on a service account or recovery of one -> 400 service_account_no_password."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "ApiKeyStore SPI method contract",
+   "type": "interface",
+   "source": "00 §6.3 ApiKeyStore 표, R47 (3)",
+   "core_or_auth": "auth",
+   "notes": "Methods: findByPrefix, findById (@Nullable), listByOwner, insertIfUnderLimit(key, maxLiveKeys, nowMillis) with ApiKeyPrefixCollisionException, deleteByIdAndOwner, deleteById, deleteAllByOwner, deleteStaleByOwner (ownerVer < v), default deleteFutureByOwner (ownerVer > v), deleteExpired, lastUsedAt update (name unconfirmed, default no-op), default supportsAtomicLimitInsert (false), default countKeysWithAdminScopes (-1); all synchronous throws Exception; live key for the limit = unexpired with ownerVer >= inserted key's ownerVer. Fixed before first release."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "StoredApiKey, ApiKey and IssuedApiKey value classes",
+   "type": "data",
+   "source": "00 R47 (3), §6.3, §7",
+   "core_or_auth": "auth",
+   "notes": "StoredApiKey (final, builder()/toBuilder(), secretHash lower-case hex 64, build() throws IllegalStateException when id, prefix, secretHash, ownerUserId, ownerVer, name, scopes, createdAt missing; toString masks secretHash); ApiKey public copy without secretHash; times as epoch-millis long/Long (expiresAt, lastUsedAt nullable); issuedByUserId @Nullable (null for app API issue)."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "InMemoryApiKeyStore",
+   "type": "functional",
+   "source": "00 §3, R47 (3)",
+   "core_or_auth": "auth",
+   "notes": "Default store for single-instance/test use; single-node simple count-then-insert is safe because auth holds the per-owner lock; must pass verifyApiKeyStore."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "Atomic limit insert declaration",
+   "type": "reliability",
+   "source": "00 R47 (3), R35",
+   "core_or_auth": "auth",
+   "notes": "maxKeysPerUser is enforced by one conditional insert; under MULTI_INSTANCE the store must implement it atomically across nodes and declare supportsAtomicLimitInsert() true else doctor FAIL; auth always calls it under a per-owner in-node lock."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "lastUsedAt maintenance",
+   "type": "performance",
+   "source": "00 R47 (3)",
+   "core_or_auth": "auth",
+   "notes": "At most once per key per minute, best effort off the request path; failures are logged only and do not affect the request."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "User deletion removes owned API keys",
+   "type": "functional",
+   "source": "00 R47 (3), R11",
+   "core_or_auth": "auth",
+   "notes": "A5 and AuthUsers.delete order: group memberships, then deleteAllByOwner, then clear the pending marker, then the user row; key deletion failure -> 503 and the user row is kept; retry resumes."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "API key store contract test verifyApiKeyStore",
+   "type": "functional",
+   "source": "00 R47 (3), §7",
+   "core_or_auth": "auth",
+   "notes": "verifyApiKeyStore(store) covers field round trip incl. null expiresAt/lastUsedAt and issuedByUserId, absent prefix null, prefix collision exception, limit with dead keys excluded, case-sensitive prefix ('aB' vs 'Ab' distinct rows), foreign-key delete false, deleteAllByOwner, deleteStaleByOwner(owner,5) on ownerVer 4/5/6 deletes only 4, deleteFutureByOwner(owner,5) deletes only 6; verifyApiKeyStore(a, b): 8 threads over two instances against an owner at limit-1 -> exactly one true and no exception."
+  },
+  {
+   "area": "APIKEY api keys and service accounts",
+   "candidate_title": "WebSocket handling of API key connections",
+   "type": "security",
+   "source": "00 R40 (23판-29판)",
+   "core_or_auth": "auth",
+   "notes": "Key-authenticated Upgrade closes at expiresAt (`close(1008, \"api key expired\")`), and each userCacheTtl recheck re-reads the key row: deleted, expired, stale, ownerVer above ver, or owner pending-marker with ownerVer > oldVer -> close; auth-deleted keys close immediately on that node."
+  },
+  {
+   "area": "JDBC reference stores",
+   "candidate_title": "JDBC user, group, refresh, throttle and device-trust stores",
+   "type": "functional",
+   "source": "00 §2, §9 v1 row, R37, R42",
+   "core_or_auth": "auth",
+   "notes": "JdbcUserStore.builder(ds).dialect(..).table(..), JdbcGroupStore, JdbcRefreshTokenStore, JdbcLoginThrottle, JdbcDeviceTrust using only java.sql/javax.sql.DataSource; JdbcUserStore is atomic-by-contract from the start (supportsAtomicFieldWrites true); password_hash is nullable; atomic UPDATE ... WHERE id=? AND password_hash=? style writes."
+  },
+  {
+   "area": "JDBC reference stores",
+   "candidate_title": "Reference DDL for SQLite, MySQL and PostgreSQL",
+   "type": "data",
+   "source": "00 §2 tree, R37, R47 (3)",
+   "core_or_auth": "auth",
+   "notes": "Reference schema per dialect for users (with serviceAccount column), groups, refresh tokens, throttle, device trust and API keys; naru_api_key_owner(owner_user_id PRIMARY KEY) lock table; unique prefix index with binary collation (MySQL utf8mb4_bin/ascii_bin); indexes (owner_user_id, expires_at, owner_ver) and (expires_at)."
+  },
+  {
+   "area": "JDBC reference stores",
+   "candidate_title": "JdbcApiKeyStore atomic limit-insert lock procedure",
+   "type": "reliability",
+   "source": "00 R47 (3) 잠금 절차 26판-28판",
+   "core_or_auth": "auth",
+   "notes": "1) autocommit statement creating the lock row (MySQL INSERT ... ON DUPLICATE KEY UPDATE owner_user_id=owner_user_id; PostgreSQL ON CONFLICT DO NOTHING); 2) open transaction (PostgreSQL READ COMMITTED; MySQL isolation unchanged; no START TRANSACTION WITH CONSISTENT SNAPSHOT and no plain read before step 3); 3) SELECT ... FOR UPDATE on the lock row; 4) plain COUNT(*) of live keys; 5) insert if below the limit and commit, else rollback and false. Retries up to 3x with 10-100 ms random delay on 40001, 40P01, 55P03 and MySQL 1205 (with explicit rollback)."
+  },
+  {
+   "area": "JDBC reference stores",
+   "candidate_title": "JdbcApiKeyStore session settings and connection hygiene",
+   "type": "reliability",
+   "source": "00 R47 (3) 27판-28판",
+   "core_or_auth": "auth",
+   "notes": "Set innodb_lock_wait_timeout=5 / lock_timeout=5 s before step 1; capture and restore autocommit, isolation and lock-wait settings (and busy_timeout) in all outcomes before returning the connection; accept only a DataSource that hands out connections not enlisted in outer transactions (no Spring TransactionAwareDataSourceProxy, no JTA); Javadoc documents this because doctor cannot detect it."
+  },
+  {
+   "area": "JDBC reference stores",
+   "candidate_title": "JdbcApiKeyStore SQLite variant",
+   "type": "reliability",
+   "source": "00 R47 (3) SQLite",
+   "core_or_auth": "auth",
+   "notes": "Connection stays autocommit; execute BEGIN IMMEDIATE and COMMIT/ROLLBACK statements directly (no lock row needed); PRAGMA busy_timeout 5000 ms, SQLITE_BUSY -> store error -> 503; one in-process lock per normalized DB file path (strip `file:` prefix and `?` parameters, absolute path; memory DBs keyed by the whole connection string) making two instances in one process deterministic; case-insensitive filesystems may yield two locks (accepted)."
+  },
+  {
+   "area": "JDBC reference stores",
+   "candidate_title": "JdbcApiKeyStore deleteExpired batching",
+   "type": "performance",
+   "source": "00 R47 (3) 28판-30판",
+   "core_or_auth": "auth",
+   "notes": "Delete expired keys in batches of 500 per statement/transaction until fewer than 500 are removed; MySQL `DELETE ... ORDER BY expires_at, id LIMIT 500`, PostgreSQL/SQLite `DELETE ... WHERE id IN (SELECT id ... LIMIT 500)`; Javadoc warns about MySQL warning 1592 under binlog_format=STATEMENT and recommends ROW or MIXED."
+  },
+  {
+   "area": "JDBC reference stores",
+   "candidate_title": "JdbcApiKeyStore deleteFutureByOwner and deleteStaleByOwner SQL",
+   "type": "functional",
+   "source": "00 §6.3 ApiKeyStore 표",
+   "core_or_auth": "auth",
+   "notes": "deleteFutureByOwner overridden as a single DELETE ... WHERE owner_user_id=? AND owner_ver>?; deleteStaleByOwner with owner_ver<?; both return deleted counts."
+  },
+  {
+   "area": "JDBC reference stores",
+   "candidate_title": "JDBC store verification without new runtime dependencies",
+   "type": "constraint",
+   "source": "00 §12, §2",
+   "core_or_auth": "auth",
+   "notes": "Drivers are the user's own; tests need a JDBC driver on the test classpath only (SQLite/H2) while MySQL/PostgreSQL procedures rest on documented behavior (00 §12 lists InnoDB read view, upsert locking and STATEMENT binlog as unmeasured). See ambiguity on test-scope drivers."
+  },
+  {
+   "area": "CROSS docs, build and release",
+   "candidate_title": "docs/api auth reference pages with Express mapping",
+   "type": "constraint",
+   "source": "CLAUDE.md API 문서",
+   "core_or_auth": "auth",
+   "notes": "docs/api entries for Auth builder, guards, events, stores, endpoints and the C4/C6/C7 Core changes, each with Express equivalent and Java/Kotlin examples; unnamed items marked (미확정) then settled at implementation; the Release doc test must stay green."
+  },
+  {
+   "area": "CROSS docs, build and release",
+   "candidate_title": "Build: no new dependency and API 21 gate",
+   "type": "constraint",
+   "source": "00 §2, CLAUDE.md 빌드",
+   "core_or_auth": "auth",
+   "notes": "Root build.gradle mainDependencies unchanged (`':NaruServe-api': [:]`); animal-sniffer android-api-level-21 check covers the new package; Java 8 release=8; SBOM/license check unaffected. Reports binary size growth of NaruServe-api after implementation (estimate: hundreds of KB)."
+  },
+  {
+   "area": "CROSS docs, build and release",
+   "candidate_title": "Cross-module implications of Core changes",
+   "type": "constraint",
+   "source": "00 §8, §12",
+   "core_or_auth": "core",
+   "notes": "Servlet adapter (SVL) must implement socketAddress() and the trust modes consistently; Kotlin module surface and existing tests re-pointed (e.g., RestApp method set tests IR-ENGINE-001 AC-7) when new RestApp methods land; completed-work docs and release guide checkpoints updated."
+  }
+ ],
+ "proposed_scope_split": [
+  {
+   "scope_name": "(existing) Application",
+   "prefix": "APP",
+   "areas": [
+    "C4 registration list and listener"
+   ],
+   "why": "C4 extends RestApp registration bookkeeping (IR-APP-002/003 area: use, onError, NEW-state guards, post-start registration); app.registrations() and app.onRegistration() belong with the RestApp surface."
+  },
+  {
+   "scope_name": "(existing) HTTP Core",
+   "prefix": "HTTP",
+   "areas": [
+    "C6a socket address",
+    "C7 request id"
+   ],
+   "why": "Both are Request accessors next to FR-HTTP-011 (remoteAddress/isSecure) and the requestId already shared with FR-APP-006; adapters get a small ENGINE/SVL note."
+  },
+  {
+   "scope_name": "(existing) Engine Adapter",
+   "prefix": "ENGINE",
+   "areas": [
+    "C6b proxy trust hops and CIDR"
+   ],
+   "why": "trustProxy(boolean) and its resolution live in IR-ENGINE-001/FR-ENGINE-008; hops/CIDR/XFP resolution and the accessors extend that. Servlet adapter conformance for C6a/C6b goes into SVL as a cross-reference."
+  },
+  {
+   "scope_name": "Auth Core and Pipeline",
+   "prefix": "AUTH",
+   "areas": [
+    "AUTH core and pipeline",
+    "CROSS docs, build and release"
+   ],
+   "why": "Builder, modes, profile, deployment, bootstrap/setup/recovery, install ordering, public paths, protectOnly, error layer, events, principal/guards, doctor, AuthTesting, packaging constraints."
+  },
+  {
+   "scope_name": "Auth Tokens, Keys and Passwords",
+   "prefix": "TOKEN",
+   "areas": [
+    "TOKEN tokens, keys and passwords"
+   ],
+   "why": "Crypto-heavy and independently testable without HTTP: Jwt, KeySources, MiniJson, refresh store, PBKDF2/bcrypt/legacy hashers, HashCost, hash slots and timing equalization."
+  },
+  {
+   "scope_name": "Auth Transport and Endpoints",
+   "prefix": "FLOW",
+   "areas": [
+    "FLOW transport and endpoints"
+   ],
+   "why": "Secure-transport rule, credential extraction, CSRF/Origin, token delivery matrix, cookies, the account/admin endpoints, logout decision table and the WebSocket wrapper (R28-R33, R40, R45)."
+  },
+  {
+   "scope_name": "Auth Abuse Protection",
+   "prefix": "GUARD",
+   "areas": [
+    "GUARD abuse protection"
+   ],
+   "why": "LoginThrottle, DeviceTrust, Lockout, password-attempt limit and the LoginThrottle SPI (R34); small cohesive scope, could be merged into FLOW if the user prefers fewer documents."
+  },
+  {
+   "scope_name": "Auth Users, Groups and Grants",
+   "prefix": "IAM",
+   "areas": [
+    "IAM users, groups and grants"
+   ],
+   "why": "UserStore contract, AuthUsers facade, file stores, groups, scopes, RolePolicy, grant rule, revocation by ver, principal cache (R31, R36, R37, R42, R44, R46)."
+  },
+  {
+   "scope_name": "Auth API Keys and Service Accounts",
+   "prefix": "APIKEY",
+   "areas": [
+    "APIKEY api keys and service accounts"
+   ],
+   "why": "R47 is a self-contained 56 KB rule set: presentation, verification chain, stale/ownerVer handling, restrictions, issuance endpoints, ApiKeyStore SPI and contract test."
+  },
+  {
+   "scope_name": "Auth JDBC Reference Stores",
+   "prefix": "JDBC",
+   "areas": [
+    "JDBC reference stores"
+   ],
+   "why": "java.sql-only stores and DDL with a very detailed JdbcApiKeyStore locking procedure; separate because verification (drivers, dialects) differs from the pure-Java scopes."
+  }
+ ],
+ "ambiguities": [
+  {
+   "id": "AMB-1",
+   "topic": "Details not in 00.overview.md but required for testable ACs",
+   "detail": "00 is authoritative for rules but defers to the stale files 01-07 for: admin endpoint table A1-A6 and G1-G8 (routes, bodies, statuses; 05 section 4.2), login/refresh/me request-response bodies, PBKDF2/bcrypt hash string formats and bcrypt internals (04 section 2.4/2.4.1), GroupStore/GroupExpander algorithm (02), RefreshTokenStore API and reuse detection (05 section 5.4), AuthProfile numeric presets and AuditEvent schema (07), reference DDL (04 section 3.3), AuthConfig file format (04 section 1). 00 section 11 explains how 00 overrode them.",
+   "proposed_default": "SRS authors read those sections as input but where they conflict with 00 take 00; R45 says the endpoint list must be fixed as a table in the SRS."
+  },
+  {
+   "id": "AMB-2",
+   "topic": "Test-scope JDBC drivers vs 'no new dependencies'",
+   "detail": "JDBC stores and the JdbcApiKeyStore locking procedure cannot be verified without a driver, while 00 forbids any new dependency; 00 section 12 admits MySQL/PostgreSQL behavior is unmeasured.",
+   "proposed_default": "Allow a test-only SQLite or H2 driver (testImplementation, not shipped); MySQL/PostgreSQL steps verified by SQL-text inspection plus documented limitation. Needs user confirmation if testImplementation additions are considered violating the constraint."
+  },
+  {
+   "id": "AMB-3",
+   "topic": "Kotlin extensions in NaruServe-kotlin",
+   "detail": "00 section 2 tree lists `req.principal` extension and reified `attr<T>()` for NaruServe-kotlin, but the roadmap v1 row does not mention them.",
+   "proposed_default": "Treat as out of 0.11.0 (only the mandatory Kotlin compile/run test of the Java API per CLAUDE.md T11); revisit if the user wants them."
+  }
+ ],
+ "implied_requirements": [
+  "Existing Core requirement statements that C4/C6b change (IR-ENGINE-001 AC-7 RestApp method-set test, FR-ENGINE-008 proxy semantics, FR-HTTP-011) must be extended by 'extends'/'supersedes' links, not rewritten.",
+  "Servlet adapter (SVL) must implement socketAddress() and the hop/CIDR trust modes or document the gap; 00 section 12 lists the container values as unverified.",
+  "All new public types need @Nullable/@NonNull annotations (compileOnly) and Kotlin SAM-friendly @FunctionalInterface callbacks per CLAUDE.md; getX/isX naming for value classes (AuthUser, ApiKey, AuthPrincipal).",
+  "Animal-sniffer API 21 check and a test that utils.auth imports no com.snoworca.naruserve.internal classes.",
+  "docs/api pages for every new public API with Express equivalents, plus the recommended nginx proxy configuration and the hop-mode precondition (node reachable only via LB).",
+  "The research doc status line says 'no SRS yet'; after SRS creation it should be cross-referenced (docs only, no behavior).",
+  "Open questions of 00 section 10 (default profile/min password length, refresh reuseGrace, browser WebSocket token delivery, AuthTesting location, Android SQLite store, hash benchmarks, throttle numbers) are settled during implementation per CLAUDE.md and the chosen values must be recorded in docs/api."
+ ],
+ "semantic_equivalences": []
+}

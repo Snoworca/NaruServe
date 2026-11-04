@@ -1,0 +1,22 @@
+tinyHttpdDir: TinyHttpd HEAD is 'de5c7ff', but NaruServe was verified against e73cd5d
+> Task :NaruServe-api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-api:compileKotlin NO-SOURCE
+> Task :NaruServe-api:compileJava UP-TO-DATE
+> Task :NaruServe-api:processResources UP-TO-DATE
+> Task :NaruServe-api:classes UP-TO-DATE
+> Task :NaruServe-api:jar UP-TO-DATE
+> Task :NaruServe-api:compileTestFixturesKotlin NO-SOURCE
+> Task :NaruServe-api:compileTestFixturesJava UP-TO-DATE
+> Task :NaruServe-api:processTestFixturesResources NO-SOURCE
+> Task :NaruServe-api:testFixturesClasses UP-TO-DATE
+> Task :NaruServe-api:testFixturesJar UP-TO-DATE
+> Task :NaruServe-api:processTestResources UP-TO-DATE
+> Task :NaruServe-api:compileTestKotlin
+> Task :NaruServe-api:compileTestJava
+> Task :NaruServe-api:testClasses
+
+> Task :NaruServe-api:test
+JAVA8_TEST_RUNTIME :NaruServe-api:test /Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/bin/java
+
+BUILD SUCCESSFUL in 2s
+9 actionable tasks: 3 executed, 6 up-to-date

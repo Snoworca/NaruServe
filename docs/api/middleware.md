@@ -2,7 +2,7 @@
 
 [English](en/middleware.md) | [문서 목록](README.md)
 
-0.10.0 체크아웃의 일반 HTTP 스택입니다. 콜백·응답·오류를 Java 8/API 21에서 사용하며 Promise·Coroutine 라이브러리를 필수로 요구하지 않습니다.
+0.11.0 체크아웃의 일반 HTTP 스택입니다. 콜백·응답·오류를 Java 8/API 21에서 사용하며 Promise·Coroutine 라이브러리를 필수로 요구하지 않습니다.
 
 ## 미들웨어
 
@@ -36,21 +36,21 @@ public interface Next {
 Middleware adminOnly = (req, res, next) -> next.run();   // 위 예제의 adminOnly 자리
 
 app.route("/api/admin")
-   .use(auth)
+   .use(checkAuth)
    .use(adminOnly)
    .get((req, res) -> res.send("admin"));
 ```
 
 ```kotlin
 app.route("/api/admin")
-    .use(auth)
+    .use(checkAuth)
     .use(adminOnly)
     .get { req, res -> res.send("admin") }
 ```
 
 ### 요청 ID와 인증
 
-아래 `auth`, `admin`, `User`는 앱에서 제공합니다. 응답한 뒤 계속할 의도가 없으면 `return`하고 `next.run()`을 부르지 않습니다.
+아래 `tokenService`, `checkAuth`(그것을 검사하는 미들웨어), `admin`, `User`는 앱에서 제공합니다. 내장 로그인·토큰·역할은 [auth 모듈](auth.md)을 쓰며, 그 `Auth` 객체는 경로 없이 `app.use(auth)`로만 붙입니다. 응답한 뒤 계속할 의도가 없으면 `return`하고 `next.run()`을 부르지 않습니다.
 
 ```java
 app.use((req, res, next) -> {
@@ -59,7 +59,7 @@ app.use((req, res, next) -> {
 });
 
 app.use("/api", (req, res, next) -> {
-    if (!auth.isAuthorized(req)) {
+    if (!tokenService.isAuthorized(req)) {
         res.status(401).json("Unauthorized");
         return;                  // next.run()을 부르지 않으면 여기서 끝
     }
@@ -79,7 +79,7 @@ app.get("/api/admin", adminOnly, (req, res) -> res.json(admin.status()));
 
 ```kotlin
 app.use("/api") { req, res, next ->
-    if (!auth.isAuthorized(req)) {
+    if (!tokenService.isAuthorized(req)) {
         res.status(401).json("Unauthorized")
         return@use
     }
@@ -98,7 +98,7 @@ app.cors(cors -> cors
     .allowedHeaders("Content-Type", "Authorization")
     .credentials(true)
     .maxAge(600));
-app.use(auth);
+app.use(checkAuth);
 ```
 
 - `allowedOrigins`는 경로·끝 슬래시 없는 정확한 HTTP(S) origin 목록입니다. 기본은 없음이며 `*`는 모든 origin, 문자열 `null`은 opaque origin을 허용합니다.
@@ -127,7 +127,7 @@ Middleware audit = (req, res, next) -> {
     next.run();
 };
 app.group("/api", api -> {
-    api.use(auth);
+    api.use(checkAuth);
     api.get("/users", (req, res) -> res.send("users"));
     api.group("/admin", admin -> {
         admin.use(adminOnly);
@@ -136,7 +136,7 @@ app.group("/api", api -> {
 });
 ```
 
-위 `/api/admin/reports`는 그룹 auth → adminOnly → audit → handler 순서입니다. 그룹의 `use`는 구성 콜백 안의 위치와 무관하게 그 그룹·하위 그룹 라우트 앞에 적용됩니다. 부모 미들웨어가 자식보다 먼저입니다. 그룹 밖의 같은 접두사 라우트에는 자동으로 붙지 않습니다.
+위 `/api/admin/reports`는 그룹 checkAuth → adminOnly → audit → handler 순서입니다. 그룹의 `use`는 구성 콜백 안의 위치와 무관하게 그 그룹·하위 그룹 라우트 앞에 적용됩니다. 부모 미들웨어가 자식보다 먼저입니다. 그룹 밖의 같은 접두사 라우트에는 자동으로 붙지 않습니다.
 
 그룹의 `route(path)`도 하나의 지속적인 Route builder이며 `.use`·메서드 콜백은 그 안에서 등록 순서대로 실행됩니다. 경로는 `/`로 시작하고 경계 슬래시를 합칩니다(`/api/` + `/users` → `/api/users`, `/api` + `/` → `/api`). dot/dot-dot, 쿼리, fragment, 역슬래시와 인코딩된 구분자를 거부합니다. `group`는 listen 전에 부르고, 그룹·그룹 builder는 구성 콜백 안에서만 사용하세요. 콜백이 실패하면 그 그룹의 라우트를 일부만 등록하지 않습니다.
 
@@ -147,7 +147,7 @@ app.group("/api", api -> {
 ```java
 Middleware requestId = (req, res, next) -> next.run();   // 요청마다 ID를 붙이는 전역 미들웨어라고 합시다
 app.use(requestId);          // 1번째로 실행
-app.use("/api", auth);       // /api 경로에서 2번째로 실행
+app.use("/api", checkAuth);       // /api 경로에서 2번째로 실행
 ```
 
 ### next.run 규칙
@@ -178,7 +178,7 @@ app.use((req, res, next) -> {
 
 ### WebSocket과 미들웨어
 
-기존 `app.use("/ws", auth)`는 HTTP Upgrade 인증에 쓰며 연결 뒤의 매 메시지에는 실행되지 않습니다. 유효한 기존 전역/문자열 접두사 미들웨어와 WS 엄격 경로·Origin 규칙은 유지합니다. HTTP 전용 고급 경로나 listen 이후 추가한 HTTP 레이어의 동작을 WS로 일반화하지 마세요. [WebSocket](websocket.md)
+기존 `app.use("/ws", checkAuth)`는 HTTP Upgrade 인증에 쓰며 연결 뒤의 매 메시지에는 실행되지 않습니다. 유효한 기존 전역/문자열 접두사 미들웨어와 WS 엄격 경로·Origin 규칙은 유지합니다. HTTP 전용 고급 경로나 listen 이후 추가한 HTTP 레이어의 동작을 WS로 일반화하지 마세요. [WebSocket](websocket.md)
 
 ## 오류 처리
 

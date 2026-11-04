@@ -1,0 +1,909 @@
+{
+  "scope": "AUTH",
+  "file": "docs/spec/17.auth.srs.md",
+  "mcp_calls": [
+    {
+      "tool": "Edit (template exception §1-§3)",
+      "result_id": "docs/spec/17.auth.srs.md",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement (dryRun)",
+      "result_id": "CON-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "CON-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "CON-AUTH-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "CON-AUTH-003",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "IR-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "CON-AUTH-004",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "CON-AUTH-005",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "CON-AUTH-006",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "CON-AUTH-007",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-AUTH-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-AUTH-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-AUTH-003",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-AUTH-004",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-AUTH-003",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-AUTH-005",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-AUTH-004",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-AUTH-005",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-AUTH-006",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-AUTH-006",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "IR-AUTH-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "IR-AUTH-003",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-AUTH-007",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-AUTH-008",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "IR-AUTH-004",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-AUTH-007",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "OPS-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "OPS-AUTH-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-AUTH-008",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-AUTH-009",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "IR-AUTH-005",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-AUTH-007 (attempts 1-2)",
+      "ok": false,
+      "note": "SRS_LOCKED by another writer; retried, then ok"
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-001 depends_on CON-BUILD-006",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-002 depends_on CON-BUILD-013",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-002 depends_on CON-BUILD-015",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-002 depends_on CON-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-003 depends_on CON-BUILD-012",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-003 depends_on CON-BUILD-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-003 depends_on CON-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-AUTH-001 depends_on CON-AUTH-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-004 depends_on FR-KT-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-004 depends_on FR-KT-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-004 depends_on FR-KT-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-004 depends_on CON-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-005 depends_on OPS-REL-008",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-005 depends_on CON-HTTP-009",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-005 depends_on CON-AUTH-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-006 depends_on CON-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-007 depends_on IR-HTTP-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-007 depends_on IR-ENGINE-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-007 depends_on FR-ENGINE-008",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-AUTH-006 depends_on FR-APP-006",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-AUTH-004 depends_on FR-DX-010",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-AUTH-005 depends_on FR-APP-021",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-AUTH-005 depends_on FR-DX-008",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-AUTH-001 depends_on FR-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-AUTH-001 depends_on SEC-AUTH-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-AUTH-002 depends_on FR-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-AUTH-003 depends_on FR-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-AUTH-004 depends_on FR-AUTH-005",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-AUTH-004 depends_on OPS-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-AUTH-004 depends_on FR-AUTH-008",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-AUTH-003 depends_on FR-AUTH-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-AUTH-003 depends_on FR-AUTH-008",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-AUTH-004 depends_on OPS-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-AUTH-005 depends_on FR-AUTH-005",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-AUTH-006 depends_on SEC-AUTH-005",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-AUTH-006 depends_on OPS-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-AUTH-006 depends_on FR-AUTH-005",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-AUTH-002 depends_on IR-AUTH-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-AUTH-002 depends_on FR-AUTH-006",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-AUTH-007 depends_on IR-AUTH-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-AUTH-008 depends_on FR-AUTH-007",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-AUTH-004 depends_on SEC-AUTH-007",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-AUTH-004 depends_on IR-AUTH-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-AUTH-007 depends_on IR-AUTH-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "OPS-AUTH-001 depends_on FR-AUTH-005",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "OPS-AUTH-001 depends_on SEC-AUTH-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "OPS-AUTH-002 depends_on FR-AUTH-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-AUTH-009 depends_on SEC-AUTH-008",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-AUTH-005 depends_on IR-AUTH-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-AUTH-005/SEC-AUTH-003/SEC-AUTH-007 first attempts",
+      "ok": false,
+      "note": "SRS_LOCKED; each retried and written"
+    },
+    {
+      "tool": "validate_spec",
+      "result_id": "workspace",
+      "ok": true
+    }
+  ],
+  "added_ids": [
+    "CON-AUTH-001",
+    "CON-AUTH-002",
+    "CON-AUTH-003",
+    "IR-AUTH-001",
+    "CON-AUTH-004",
+    "CON-AUTH-005",
+    "CON-AUTH-006",
+    "CON-AUTH-007",
+    "SEC-AUTH-001",
+    "FR-AUTH-001",
+    "FR-AUTH-002",
+    "SEC-AUTH-002",
+    "FR-AUTH-003",
+    "FR-AUTH-004",
+    "SEC-AUTH-003",
+    "FR-AUTH-005",
+    "SEC-AUTH-004",
+    "SEC-AUTH-005",
+    "SEC-AUTH-006",
+    "FR-AUTH-006",
+    "IR-AUTH-002",
+    "IR-AUTH-003",
+    "FR-AUTH-007",
+    "FR-AUTH-008",
+    "IR-AUTH-004",
+    "SEC-AUTH-007",
+    "OPS-AUTH-001",
+    "OPS-AUTH-002",
+    "SEC-AUTH-008",
+    "FR-AUTH-009",
+    "IR-AUTH-005"
+  ],
+  "inventory_mapping": [
+    {
+      "candidate_title": "Auth module packaging inside NaruServe-api",
+      "req_id": "CON-AUTH-001"
+    },
+    {
+      "candidate_title": "utils.auth uses only Core public API",
+      "req_id": "CON-AUTH-002"
+    },
+    {
+      "candidate_title": "API 21 and Java 8 conformance of auth classes",
+      "req_id": "CON-AUTH-003"
+    },
+    {
+      "candidate_title": "TimeSource time injection SAM",
+      "req_id": "IR-AUTH-001"
+    },
+    {
+      "candidate_title": "Auth.builder(secret) minimal path and secret validation",
+      "req_id": "SEC-AUTH-001"
+    },
+    {
+      "candidate_title": "Builder validation reports all incompatibilities at once",
+      "req_id": "FR-AUTH-001"
+    },
+    {
+      "candidate_title": "AuthConfig.load(file) with env: and file: secret references",
+      "req_id": "FR-AUTH-002"
+    },
+    {
+      "candidate_title": "AuthMode DEV and PROD with fromEnv()",
+      "req_id": "SEC-AUTH-002"
+    },
+    {
+      "candidate_title": "AuthProfile BASELINE, STANDARD, STRICT",
+      "req_id": "FR-AUTH-003"
+    },
+    {
+      "candidate_title": "Deployment SINGLE_INSTANCE and MULTI_INSTANCE",
+      "req_id": "FR-AUTH-003"
+    },
+    {
+      "candidate_title": "Bootstrap .user(...) seeding on start",
+      "req_id": "FR-AUTH-004"
+    },
+    {
+      "candidate_title": "First-admin setup endpoint and recovery mode",
+      "req_id": "SEC-AUTH-003"
+    },
+    {
+      "candidate_title": "install(app) ordering check against registrations",
+      "req_id": "FR-AUTH-005"
+    },
+    {
+      "candidate_title": "Pre-install middleware and CORS ordering doctor rules",
+      "req_id": "SEC-AUTH-004"
+    },
+    {
+      "candidate_title": "install wiring: middleware, routers and lifecycle hooks",
+      "req_id": "FR-AUTH-005"
+    },
+    {
+      "candidate_title": "Public path matching (permit, permitPrefix)",
+      "req_id": "SEC-AUTH-005"
+    },
+    {
+      "candidate_title": "Optional authentication on public paths",
+      "req_id": "SEC-AUTH-005"
+    },
+    {
+      "candidate_title": "protectOnly(prefix...) mode and path normalization",
+      "req_id": "SEC-AUTH-006"
+    },
+    {
+      "candidate_title": "WebSocket upgrade always protected; permitWebSocket",
+      "req_id": "SEC-AUTH-006"
+    },
+    {
+      "candidate_title": "All auth responses are JSON; middleware and router error handling",
+      "req_id": "FR-AUTH-006"
+    },
+    {
+      "candidate_title": "auth.errors() and auth.errorMiddleware() for app handlers",
+      "req_id": "IR-AUTH-002"
+    },
+    {
+      "candidate_title": "Error layer placement check at request time",
+      "req_id": "IR-AUTH-002"
+    },
+    {
+      "candidate_title": "AuthRejection value type and Retry-After",
+      "req_id": "IR-AUTH-003"
+    },
+    {
+      "candidate_title": "Auth status and error code catalog",
+      "req_id": "IR-AUTH-003"
+    },
+    {
+      "candidate_title": "AuthEvents: before and on events",
+      "req_id": "FR-AUTH-007"
+    },
+    {
+      "candidate_title": "User-change path and event matrix",
+      "req_id": "FR-AUTH-008"
+    },
+    {
+      "candidate_title": "AuthEventContext.getOrigin() semantics",
+      "req_id": "FR-AUTH-008"
+    },
+    {
+      "candidate_title": "Event callbacks never receive passwordHash",
+      "req_id": "FR-AUTH-007"
+    },
+    {
+      "candidate_title": "Principal API: AuthPrincipal, user(req), userOrNull, loadUser, authenticated()",
+      "req_id": "IR-AUTH-004"
+    },
+    {
+      "candidate_title": "Guards: require(scope...), requireRole(...), authenticated()",
+      "req_id": "IR-AUTH-004"
+    },
+    {
+      "candidate_title": "statelessAccess(true) minimal principal",
+      "req_id": "SEC-AUTH-007"
+    },
+    {
+      "candidate_title": "Principal cache with explicit invalidation",
+      "req_id": "SEC-AUTH-007"
+    },
+    {
+      "candidate_title": "doctor startup check suite",
+      "req_id": "OPS-AUTH-001"
+    },
+    {
+      "candidate_title": "describe() and startup log summary",
+      "req_id": "OPS-AUTH-002"
+    },
+    {
+      "candidate_title": "Sensitive value hygiene in logs, messages and audit",
+      "req_id": "SEC-AUTH-008"
+    },
+    {
+      "candidate_title": "Audit event stream: AuditEvent, AuditSink, AuditSinks",
+      "req_id": "FR-AUTH-009"
+    },
+    {
+      "candidate_title": "AuthTesting test kit",
+      "req_id": "IR-AUTH-005"
+    },
+    {
+      "candidate_title": "Interface evolution rule for user-implemented SPIs",
+      "req_id": "CON-AUTH-006"
+    },
+    {
+      "candidate_title": "Unknown-proxy and trust WARNs",
+      "req_id": "OPS-AUTH-001"
+    },
+    {
+      "candidate_title": "docs/api auth reference pages with Express mapping",
+      "req_id": "CON-AUTH-005"
+    },
+    {
+      "candidate_title": "Build: no new dependency and API 21 gate",
+      "req_id": "CON-AUTH-001 + CON-AUTH-003"
+    },
+    {
+      "candidate_title": "Cross-module implications of Core changes",
+      "req_id": "CON-AUTH-007"
+    },
+    {
+      "candidate_title": "(owned cross-cutting, not an inventory row) Kotlin nullability and naming",
+      "req_id": "CON-AUTH-004"
+    }
+  ],
+  "pending_cross_links": [
+    {
+      "from_id": "CON-AUTH-002",
+      "to_area_or_title": "CORE C4 app.registrations()/onRegistration (APP)",
+      "relation": "depends_on",
+      "reason": "auth reads Core info only via public accessors"
+    },
+    {
+      "from_id": "CON-AUTH-002",
+      "to_area_or_title": "CORE C6a req.socketAddress() and C7 req.requestId() (HTTP)",
+      "relation": "depends_on",
+      "reason": "public accessors replace internal access"
+    },
+    {
+      "from_id": "CON-AUTH-002",
+      "to_area_or_title": "CORE C6b trustProxyHops/trustProxyCidrs + read accessor (ENGINE)",
+      "relation": "depends_on",
+      "reason": "public trust-setting accessor"
+    },
+    {
+      "from_id": "CON-AUTH-007",
+      "to_area_or_title": "CORE C4, C6a, C6b, C7 requirements",
+      "relation": "depends_on",
+      "reason": "cross-module consistency of those changes"
+    },
+    {
+      "from_id": "FR-AUTH-005",
+      "to_area_or_title": "CORE C4 registration list and listener (APP)",
+      "relation": "depends_on",
+      "reason": "install ordering check reads C4 kinds"
+    },
+    {
+      "from_id": "SEC-AUTH-004",
+      "to_area_or_title": "CORE C4 (CORS and PATH_MIDDLEWARE kinds)",
+      "relation": "depends_on",
+      "reason": "doctor ordering FAILs read C4"
+    },
+    {
+      "from_id": "SEC-AUTH-006",
+      "to_area_or_title": "CORE C4 listener order validate->listener->apply->record",
+      "relation": "depends_on",
+      "reason": "post-start regex registration rejected before apply"
+    },
+    {
+      "from_id": "IR-AUTH-002",
+      "to_area_or_title": "CORE C4 (target = original onError handler)",
+      "relation": "depends_on",
+      "reason": "doctor identifies errors() object"
+    },
+    {
+      "from_id": "FR-AUTH-006",
+      "to_area_or_title": "CORE C7 req.requestId() (HTTP)",
+      "relation": "depends_on",
+      "reason": "requestId in error body"
+    },
+    {
+      "from_id": "FR-AUTH-009",
+      "to_area_or_title": "CORE C7 req.requestId() (HTTP)",
+      "relation": "depends_on",
+      "reason": "audit requestId"
+    },
+    {
+      "from_id": "OPS-AUTH-001",
+      "to_area_or_title": "CORE C6b trust read accessor (ENGINE)",
+      "relation": "depends_on",
+      "reason": "detect legacy trustProxy(true)"
+    },
+    {
+      "from_id": "SEC-AUTH-003",
+      "to_area_or_title": "FLOW R33 secure transport / local request definition (C6a)",
+      "relation": "depends_on",
+      "reason": "setup requires local request"
+    },
+    {
+      "from_id": "SEC-AUTH-003",
+      "to_area_or_title": "FLOW anonymous-entry endpoint CSRF/Origin and token delivery for setup",
+      "relation": "depends_on",
+      "reason": "setup is an anonymous-entry endpoint"
+    },
+    {
+      "from_id": "SEC-AUTH-003",
+      "to_area_or_title": "IAM R31 (6) recovery and * holder semantics",
+      "relation": "depends_on",
+      "reason": "recovery grants admin"
+    },
+    {
+      "from_id": "SEC-AUTH-005",
+      "to_area_or_title": "FLOW R33 secure transport rule and credential endpoint list",
+      "relation": "depends_on",
+      "reason": "optional auth only on secure transport"
+    },
+    {
+      "from_id": "SEC-AUTH-002",
+      "to_area_or_title": "FLOW R33 secure transport rule",
+      "relation": "depends_on",
+      "reason": "DEV relaxes R33"
+    },
+    {
+      "from_id": "SEC-AUTH-001",
+      "to_area_or_title": "TOKEN KeySources / kid key sets / key strength",
+      "relation": "depends_on",
+      "reason": "Auth.builder(String) = KeySources.of"
+    },
+    {
+      "from_id": "IR-AUTH-001",
+      "to_area_or_title": "TOKEN JWT exp verification and clock tolerance",
+      "relation": "depends_on",
+      "reason": "AC-4 uses token expiry"
+    },
+    {
+      "from_id": "IR-AUTH-004",
+      "to_area_or_title": "IAM R46 scope grammar / R31 coverage",
+      "relation": "depends_on",
+      "reason": "guard scope matching"
+    },
+    {
+      "from_id": "SEC-AUTH-007",
+      "to_area_or_title": "IAM group expansion, RoleStore, R31 grant rule",
+      "relation": "depends_on",
+      "reason": "principal built from groups/roles; R31 bypasses cache"
+    },
+    {
+      "from_id": "FR-AUTH-007",
+      "to_area_or_title": "IAM AuthUsers facade (four exceptions, hash-free copies)",
+      "relation": "depends_on",
+      "reason": "event contract test covers AuthUsers"
+    },
+    {
+      "from_id": "FR-AUTH-008",
+      "to_area_or_title": "IAM admin endpoints A2/A4/A5, FLOW register/me/password endpoints",
+      "relation": "depends_on",
+      "reason": "matrix paths"
+    },
+    {
+      "from_id": "IR-AUTH-003",
+      "to_area_or_title": "APIKEY R47 (10) codes; FLOW csrf_failed/insecure_transport; IAM security_write_conflict",
+      "relation": "depends_on",
+      "reason": "catalog consumers"
+    },
+    {
+      "from_id": "OPS-AUTH-001",
+      "to_area_or_title": "FLOW R40 WebSocket doctor items; IAM R37 supportsAtomicFieldWrites; APIKEY R47 doctor items; TOKEN hash cost/key strength; R42 file state",
+      "relation": "depends_on",
+      "reason": "individual doctor checks owned elsewhere"
+    },
+    {
+      "from_id": "FR-AUTH-009",
+      "to_area_or_title": "APIKEY issue/revoke audit; IAM self-protection denial and security_write_conflict",
+      "relation": "depends_on",
+      "reason": "audit emitters"
+    },
+    {
+      "from_id": "IR-AUTH-005",
+      "to_area_or_title": "APIKEY verifyApiKeyStore contract; IAM verifyUserStore contract; FLOW CSRF token (R2, R29 (e))",
+      "relation": "depends_on",
+      "reason": "test kit delegates"
+    },
+    {
+      "from_id": "SEC-AUTH-008",
+      "to_area_or_title": "APIKEY IssuedApiKey/StoredApiKey toString masking; FLOW cookies naru_at/naru_rt/naru_csrf/naru_device",
+      "relation": "depends_on",
+      "reason": "hygiene covers those values"
+    },
+    {
+      "from_id": "CON-AUTH-006",
+      "to_area_or_title": "IAM ForwardingUserStore atomic-field forwarding; FLOW ForwardingLoginThrottle/LoginThrottle defaults",
+      "relation": "depends_on",
+      "reason": "Forwarding classes defined elsewhere"
+    },
+    {
+      "from_id": "FR-AUTH-003",
+      "to_area_or_title": "IAM/FLOW JDBC shared stores (JdbcRefreshTokenStore, JdbcLoginThrottle, JdbcDeviceTrust)",
+      "relation": "depends_on",
+      "reason": "MULTI_INSTANCE requires shared stores"
+    },
+    {
+      "from_id": "(TOKEN, FLOW, IAM, APIKEY all REQs)",
+      "to_area_or_title": "CON-AUTH-001, CON-AUTH-002, CON-AUTH-003, CON-AUTH-004",
+      "relation": "depends_on",
+      "reason": "cross-cutting constraints owned by AUTH"
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "OQ-AUTH-1",
+      "question": "Default AuthProfile and STANDARD minimum password length (00 §10 Q1; 07 recommends STANDARD with min 8 vs NIST 15). Per-profile numbers exist only in stale 07 §1.3.",
+      "affects": [
+        "FR-AUTH-003"
+      ]
+    },
+    {
+      "id": "OQ-AUTH-2",
+      "question": "AuthConfig file key names and precedence between code, file and env; whether plaintext secrets in the file are rejected at STANDARD+ (07 §7.2 only).",
+      "affects": [
+        "FR-AUTH-002"
+      ]
+    },
+    {
+      "id": "OQ-AUTH-3",
+      "question": "403 code for auth.requireRole failure (00 gives none; insufficient_scope assumed but not written into the AC).",
+      "affects": [
+        "IR-AUTH-004"
+      ]
+    },
+    {
+      "id": "OQ-AUTH-4",
+      "question": "AuthTesting location: main utils.auth.testing vs NaruServe-api testFixtures (00 §10 Q4).",
+      "affects": [
+        "IR-AUTH-005"
+      ]
+    },
+    {
+      "id": "OQ-AUTH-5",
+      "question": "AuditEvent type/outcome value sets and which AuditSinks factories ship in 0.11.0 (07 §6.1 only).",
+      "affects": [
+        "FR-AUTH-009"
+      ]
+    },
+    {
+      "id": "OQ-AUTH-6",
+      "question": "Setup token format, length and lifetime (00 silent; 04 §8.1 shows 30 min).",
+      "affects": [
+        "SEC-AUTH-003"
+      ]
+    },
+    {
+      "id": "OQ-AUTH-7",
+      "question": "Names not final: TimeSource builder setter and system instance, AuthErrorCode members, describe() format, doctor report type, userCacheTtl setter, csrfTokenFor, app.onRegistration/registrations.",
+      "affects": [
+        "IR-AUTH-001",
+        "IR-AUTH-003",
+        "OPS-AUTH-001",
+        "OPS-AUTH-002",
+        "SEC-AUTH-007",
+        "IR-AUTH-005"
+      ]
+    },
+    {
+      "id": "OQ-AUTH-8",
+      "question": "Whether calling Auth.Builder.build() twice is allowed (00 silent).",
+      "affects": [
+        "FR-AUTH-001"
+      ]
+    }
+  ],
+  "known_defects": [
+    "FR-AUTH-004 implementationNotes says 'onStart hook registered by install (FR-AUTH-004 below)'; it should read FR-AUTH-005. Not fixable via edit_requirement_fields (notes field not editable); main session may patch.",
+    "FR-AUTH-005 AC-7 says the second install 'sees the auth MIDDLEWARE registration'; strictly the ordering rule trips on the ROUTER_MOUNT /auth entry. Behaviour (IllegalStateException) is derived, not stated by 00."
+  ],
+  "validate_spec_result": {
+    "workspace": {
+      "errors": 1,
+      "warnings": 182,
+      "byCode": {
+        "SRS-E020": 1,
+        "SRS-W023": 160,
+        "SRS-W015": 22
+      }
+    },
+    "my_file": {
+      "errors": 0,
+      "warnings": 31,
+      "byCode": {
+        "SRS-W023": 31
+      },
+      "note": "W023 = draft stability, intended by the brief"
+    },
+    "other_files_note": "SRS-E020 in docs/spec/21.auth-api-keys.srs.md:976 (SEC-APIKEY-009 heading), not AUTH's; W015 in 91.completed-work-log.md pre-existing"
+  }
+}

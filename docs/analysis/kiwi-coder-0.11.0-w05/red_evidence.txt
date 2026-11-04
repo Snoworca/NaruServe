@@ -1,0 +1,20 @@
+Red evidence / TDD-order note for 0.11.0-w05.
+
+- Jwt/JwtClaims/JwtException (SEC-TOKEN-003) were written before JwtTest (deviation from test-first); JwtTest was
+  then written against the AC text and passed on its first run. AccessTokens and the Auth wiring followed RealJwtPathTest.
+- For the other components the test file was written first and the production class immediately after in the same
+  step; the "red" of each was a compile failure of the test source set (missing classes: FileUserStore,
+  RefreshTokenStore/RefreshRecord, InMemory/File/JdbcRefreshTokenStore, StoredApiKey/ApiKey/IssuedApiKey/ApiKeyStore,
+  AuditEvent/AuditSink/AuditSinks, Auth.describe/permitWebSocket/refreshTokens/apiKeys/audit/cookies), not a
+  recorded run.
+- Recorded red runs (first runs after implementation that failed and were then fixed):
+  * ProtectOnlyTest SEC_AUTH_006_AC6: TestTimedOutException (synchronous upgrade send blocked) -> fixed the test to
+    submit the upgrade and close the channel.
+  * RefreshTokenStoreTest FR_TOKEN_002_AC5: "condition not reached" (cleanup thread of another test's app counted)
+    -> fixed the test to follow the thread this start created.
+  * AuthSpiSnapshotTest / CallbackInventoryTest / AuthKotlinContractTest: new user-implemented interfaces
+    (ApiKeyStore, AuditSink, RefreshTokenStore) unrecorded -> record lines and CALLBACK_TYPES added, plus a Kotlin
+    request-path test for the AuditSink lambda.
+  * AuthBuilderTest multiInstanceRefusesLocalStoresAndImplicitDefaults: message wording -> implementation keeps the
+    original phrase (test unchanged).
+  * KotlinDocsMarkersTest: new kotlin doc blocks without markers -> marked tests added.

@@ -1,0 +1,21 @@
+{
+ "target": "0.11.0",
+ "total_reqs_evaluated": 12,
+ "feasibility_distribution": {
+  "high": 12,
+  "medium": 0,
+  "low": 0,
+  "blocked": 0
+ },
+ "target_verdict": "release-ready-for-implementation",
+ "target_stability_after": {
+  "evolving": 165,
+  "draft": 0
+ },
+ "dependency_cycles": 0,
+ "srs_corrections_during_run": [
+  "FR-FLOW-009 AC-5 / SEC-FLOW-012 AC-6: lockout release clears user-only key (00 \u00a76.4)",
+  "FR-IAM-014 statement+AC-11: post-password failure -> 503+applied+audit (00 R37 14th ed.)",
+  "FR-AUTH-006 statement: A4 exception routing aligned (eval F01)"
+ ]
+}

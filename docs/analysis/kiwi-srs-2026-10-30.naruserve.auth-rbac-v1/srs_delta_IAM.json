@@ -1,0 +1,799 @@
+{
+  "writer": "IAM",
+  "scope_file": "docs/spec/20.auth-identity-and-grants.srs.md",
+  "target": "0.11.0",
+  "mcp_calls": [
+    {
+      "tool": "add_requirement",
+      "result_id": "DR-IAM-001 (dryRun)",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "DR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "IR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "REL-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "REL-IAM-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "REL-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "IR-IAM-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "REL-IAM-004",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-IAM-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "IR-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-IAM-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-IAM-004",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-IAM-005",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-IAM-006",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "DR-IAM-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-IAM-007",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "IR-IAM-004",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-IAM-008",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-IAM-004",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-IAM-009",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-IAM-005",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-IAM-006",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "CON-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-IAM-010",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-IAM-011",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-IAM-012",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-IAM-013",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "DR-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "CON-IAM-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-IAM-001 depends_on DR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "REL-IAM-001 depends_on IR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "REL-IAM-002 depends_on REL-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "REL-IAM-002 depends_on IR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "REL-IAM-003 depends_on IR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-IAM-002 depends_on IR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-001 depends_on IR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-002 depends_on FR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-002 depends_on REL-IAM-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-002 depends_on IR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-IAM-003 depends_on IR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-IAM-003 depends_on DR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-IAM-001 depends_on IR-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-IAM-001 depends_on REL-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-003 depends_on FR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-003 depends_on IR-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-IAM-002 depends_on IR-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-004 depends_on IR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-004 depends_on REL-IAM-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-004 depends_on FR-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-IAM-003 depends_on REL-IAM-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-IAM-003 depends_on REL-IAM-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-006 depends_on FR-IAM-005",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-007 depends_on DR-IAM-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-IAM-004 depends_on DR-IAM-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-IAM-004 depends_on FR-IAM-007",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-008 depends_on IR-IAM-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-008 depends_on IR-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-009 depends_on FR-IAM-006",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-009 depends_on FR-IAM-007",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-009 depends_on FR-IAM-005",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-IAM-004 depends_on FR-IAM-009",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-IAM-005 depends_on SEC-IAM-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-IAM-005 depends_on IR-IAM-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-IAM-006 depends_on REL-IAM-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-IAM-006 depends_on SEC-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-IAM-001 depends_on IR-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-IAM-001 depends_on IR-IAM-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-010 depends_on REL-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-010 depends_on DR-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-010 depends_on REL-IAM-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-011 depends_on IR-IAM-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-011 depends_on DR-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-012 depends_on DR-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-IAM-013 depends_on DR-IAM-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "DR-IAM-003 depends_on CON-IAM-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement / add_trace_link",
+      "result_id": "9 calls refused with SRS_LOCKED (lock held by another writer) and retried successfully; no ignoreLock used",
+      "ok": true
+    },
+    {
+      "tool": "validate_spec",
+      "result_id": "0 errors",
+      "ok": true
+    }
+  ],
+  "added_ids": [
+    "DR-IAM-001",
+    "IR-IAM-001",
+    "REL-IAM-001",
+    "REL-IAM-002",
+    "REL-IAM-003",
+    "IR-IAM-002",
+    "FR-IAM-001",
+    "REL-IAM-004",
+    "FR-IAM-002",
+    "IR-IAM-003",
+    "SEC-IAM-001",
+    "FR-IAM-003",
+    "SEC-IAM-002",
+    "FR-IAM-004",
+    "SEC-IAM-003",
+    "FR-IAM-005",
+    "FR-IAM-006",
+    "DR-IAM-002",
+    "FR-IAM-007",
+    "IR-IAM-004",
+    "FR-IAM-008",
+    "SEC-IAM-004",
+    "FR-IAM-009",
+    "SEC-IAM-005",
+    "SEC-IAM-006",
+    "CON-IAM-001",
+    "FR-IAM-010",
+    "FR-IAM-011",
+    "FR-IAM-012",
+    "FR-IAM-013",
+    "DR-IAM-003",
+    "CON-IAM-002"
+  ],
+  "inventory_mapping": [
+    {
+      "candidate_title": "AuthUser value class",
+      "req_id": "DR-IAM-001"
+    },
+    {
+      "candidate_title": "UserStore SPI and required methods",
+      "req_id": "IR-IAM-001"
+    },
+    {
+      "candidate_title": "Default field-method algorithm for SINGLE_INSTANCE",
+      "req_id": "REL-IAM-001"
+    },
+    {
+      "candidate_title": "MULTI_INSTANCE UserStore contract and supportsAtomicFieldWrites",
+      "req_id": "REL-IAM-003"
+    },
+    {
+      "candidate_title": "changePassword race and retry rules",
+      "req_id": "REL-IAM-002"
+    },
+    {
+      "candidate_title": "InMemoryUserStore and FileUserStore",
+      "req_id": "FR-IAM-002"
+    },
+    {
+      "candidate_title": "AtomicFiles write and recovery protocol",
+      "req_id": "REL-IAM-004"
+    },
+    {
+      "candidate_title": "ForwardingUserStore",
+      "req_id": "IR-IAM-002"
+    },
+    {
+      "candidate_title": "AuthUsers facade for apps (auth.users())",
+      "req_id": "IR-IAM-003"
+    },
+    {
+      "candidate_title": "UserMutator rules and update(id, mutator)",
+      "req_id": "SEC-IAM-001"
+    },
+    {
+      "candidate_title": "rename and username normalization",
+      "req_id": "FR-IAM-003"
+    },
+    {
+      "candidate_title": "AuthUsers.checkPassword behavior",
+      "req_id": "SEC-IAM-002"
+    },
+    {
+      "candidate_title": "DuplicateUserException and uniqueness contract",
+      "req_id": "FR-IAM-001"
+    },
+    {
+      "candidate_title": "verifyUserStore contract test",
+      "req_id": "FR-IAM-004"
+    },
+    {
+      "candidate_title": "Revocation by ver",
+      "req_id": "SEC-IAM-003"
+    },
+    {
+      "candidate_title": "Scope grammar and covering semantics",
+      "req_id": "FR-IAM-005"
+    },
+    {
+      "candidate_title": "RolePolicy builder, RoleStore and built-in admin role",
+      "req_id": "FR-IAM-006"
+    },
+    {
+      "candidate_title": "Grant rule: only what you hold (R31 (1)-(3))",
+      "req_id": "SEC-IAM-004"
+    },
+    {
+      "candidate_title": "Group delete and edge removal scale limit",
+      "req_id": "SEC-IAM-005"
+    },
+    {
+      "candidate_title": "Group model: GroupStore, GroupAdminStore, DAG expansion and limits",
+      "req_id": "DR-IAM-002, FR-IAM-007, IR-IAM-004, FR-IAM-008 (split: model/read SPI, expansion+limits, write SPI+built-ins, delete ordering)"
+    },
+    {
+      "candidate_title": "Registry-agnostic role/scope resolution into the principal",
+      "req_id": "FR-IAM-009"
+    },
+    {
+      "candidate_title": "Kotlin compile-and-run test for auth public API",
+      "req_id": "CON-IAM-001 (IAM types only; AUTH owns the cross-cutting part)"
+    },
+    {
+      "candidate_title": "JDBC user, group, refresh, throttle and device-trust stores",
+      "req_id": "FR-IAM-010, FR-IAM-011, FR-IAM-012, FR-IAM-013 (split per store)"
+    },
+    {
+      "candidate_title": "Reference DDL for SQLite, MySQL and PostgreSQL",
+      "req_id": "DR-IAM-003 (non-API-key tables; API key tables, naru_api_key_owner, prefix collation and indexes -> APIKEY)"
+    },
+    {
+      "candidate_title": "JDBC store verification without new runtime dependencies",
+      "req_id": "CON-IAM-002"
+    },
+    {
+      "candidate_title": "JdbcApiKeyStore atomic limit-insert lock procedure",
+      "req_id": "EXCLUDED (APIKEY writer)"
+    },
+    {
+      "candidate_title": "JdbcApiKeyStore session settings and connection hygiene",
+      "req_id": "EXCLUDED (APIKEY writer)"
+    },
+    {
+      "candidate_title": "JdbcApiKeyStore SQLite variant",
+      "req_id": "EXCLUDED (APIKEY writer)"
+    },
+    {
+      "candidate_title": "JdbcApiKeyStore deleteExpired batching",
+      "req_id": "EXCLUDED (APIKEY writer)"
+    },
+    {
+      "candidate_title": "JdbcApiKeyStore deleteFutureByOwner and deleteStaleByOwner SQL",
+      "req_id": "EXCLUDED (APIKEY writer)"
+    },
+    {
+      "candidate_title": "(extra key material) Recovery R31 (6) user-state outcome",
+      "req_id": "SEC-IAM-006 (endpoint mechanics stay with AUTH inventory item 'First-admin setup endpoint and recovery mode')"
+    }
+  ],
+  "pending_cross_links": [
+    {
+      "from_id": "REL-IAM-003",
+      "to_area_or_title": "AUTH: doctor startup check suite / Deployment SINGLE_INSTANCE|MULTI_INSTANCE (R35)",
+      "relation": "depends_on",
+      "reason": "supportsAtomicFieldWrites FAIL is a doctor item evaluated under MULTI_INSTANCE"
+    },
+    {
+      "from_id": "FR-IAM-002",
+      "to_area_or_title": "AUTH: Deployment declaration (MULTI_INSTANCE + in-memory/file store -> build() fails, R35)",
+      "relation": "depends_on",
+      "reason": "built-in stores are SINGLE_INSTANCE only"
+    },
+    {
+      "from_id": "FR-IAM-002",
+      "to_area_or_title": "TOKEN: MiniJson FILE profile (R43)",
+      "relation": "depends_on",
+      "reason": "FileUserStore/FileGroupStore persist with MiniJson FILE profile"
+    },
+    {
+      "from_id": "FR-IAM-001",
+      "to_area_or_title": "AUTH: error layer auth.errors()/auth.errorMiddleware() (R30)",
+      "relation": "depends_on",
+      "reason": "409 JSON mapping of DuplicateUserException"
+    },
+    {
+      "from_id": "FR-IAM-001",
+      "to_area_or_title": "AUTH: Bootstrap .user(...) seeding on start (R41)",
+      "relation": "depends_on",
+      "reason": "seed duplicate -> INFO already exists (AC-4)"
+    },
+    {
+      "from_id": "IR-IAM-003",
+      "to_area_or_title": "AUTH: AuthEvents before/on events, user-change path and event matrix, AuthEventContext.getOrigin()/UserOrigin, event callbacks never receive passwordHash",
+      "relation": "depends_on",
+      "reason": "AuthUsers fires the APP-origin rows of the event table; event contract test covers AuthUsers returns"
+    },
+    {
+      "from_id": "IR-IAM-003",
+      "to_area_or_title": "AUTH: AuthRejection / AuthUnavailableException / AuthStateException exception types",
+      "relation": "depends_on",
+      "reason": "AuthUsers throws only four exception types"
+    },
+    {
+      "from_id": "SEC-IAM-002",
+      "to_area_or_title": "TOKEN: hash slot and timing equalization (R38) / PasswordHasher dummy hash",
+      "relation": "depends_on",
+      "reason": "checkPassword uses the hash slot and dummy hash"
+    },
+    {
+      "from_id": "SEC-IAM-002",
+      "to_area_or_title": "FLOW: Per-user password attempt limit shared by password confirmations (R34 (7))",
+      "relation": "depends_on",
+      "reason": "shared 15 min / 5 user-id counter"
+    },
+    {
+      "from_id": "REL-IAM-002",
+      "to_area_or_title": "FLOW: POST /auth/password endpoint",
+      "relation": "depends_on",
+      "reason": "endpoint uses changePassword retry rules; listed as from FLOW -> REL-IAM-002 if main session prefers dependent direction"
+    },
+    {
+      "from_id": "FR-IAM-003",
+      "to_area_or_title": "FLOW: Admin PATCH A4 application order and applied list (username via rename path)",
+      "relation": "depends_on",
+      "reason": "A4 username change reuses rename semantics; FLOW REQ should depend on FR-IAM-003"
+    },
+    {
+      "from_id": "FR-IAM-003",
+      "to_area_or_title": "FLOW: DeviceTrust fingerprint check R34 (2)(b)",
+      "relation": "depends_on",
+      "reason": "AC-6 relies on device-token fingerprint mismatch after rename"
+    },
+    {
+      "from_id": "FR-IAM-003",
+      "to_area_or_title": "FLOW: GET/PATCH /auth/me allowedAttributes",
+      "relation": "depends_on",
+      "reason": "docs warning about login attributes in allowedAttributes"
+    },
+    {
+      "from_id": "SEC-IAM-001",
+      "to_area_or_title": "FLOW: Admin user and group endpoints (A2 attributes init rule)",
+      "relation": "depends_on",
+      "reason": "AC-6 A2 attributes follow init rule"
+    },
+    {
+      "from_id": "SEC-IAM-003",
+      "to_area_or_title": "TOKEN: access/refresh/device token ver checks; FLOW: logout ?all=true, WebSocket wrapper (R40); APIKEY: stale key detection",
+      "relation": "depends_on",
+      "reason": "one ver++ revokes all credential kinds"
+    },
+    {
+      "from_id": "SEC-IAM-003",
+      "to_area_or_title": "AUTH: Principal cache with explicit invalidation (R36) and statelessAccess(true) exception",
+      "relation": "depends_on",
+      "reason": "role/group changes propagate through the 5 s cache"
+    },
+    {
+      "from_id": "FR-IAM-009",
+      "to_area_or_title": "AUTH: Principal API and principal cache (R36)",
+      "relation": "depends_on",
+      "reason": "resolver feeds the principal; cache is AUTH"
+    },
+    {
+      "from_id": "FR-IAM-009",
+      "to_area_or_title": "APIKEY: API key principal and effective scopes; admin scopes on API keys and the * rule",
+      "relation": "depends_on",
+      "reason": "APIKEY REQs should depend on FR-IAM-009 both-cover predicate (reverse direction)"
+    },
+    {
+      "from_id": "SEC-IAM-004",
+      "to_area_or_title": "FLOW: Admin user and group endpoints (R39 endpoint scopes, A1-A6/G1-G8 table)",
+      "relation": "depends_on",
+      "reason": "FLOW endpoint REQ should depend on SEC-IAM-004; R39 checks precede R31"
+    },
+    {
+      "from_id": "SEC-IAM-004",
+      "to_area_or_title": "AUTH: Audit event stream AuditEvent/AuditSink",
+      "relation": "depends_on",
+      "reason": "R31 denials emit audit events"
+    },
+    {
+      "from_id": "SEC-IAM-004",
+      "to_area_or_title": "APIKEY: Admin API key endpoints / key actor R31 rules (R31 23판-26판)",
+      "relation": "depends_on",
+      "reason": "APIKEY extends the grant rule to keys and key actors"
+    },
+    {
+      "from_id": "SEC-IAM-005",
+      "to_area_or_title": "FLOW: Admin group endpoints G4 DELETE /groups/:id and G8 DELETE /groups/:id/parents/:parentId",
+      "relation": "depends_on",
+      "reason": "G4/G8 call the enumeration check"
+    },
+    {
+      "from_id": "SEC-IAM-006",
+      "to_area_or_title": "AUTH: First-admin setup endpoint and recovery mode (R31 (6), R41, R45)",
+      "relation": "depends_on",
+      "reason": "endpoint mechanics; DEDUP needed — both cover recovery"
+    },
+    {
+      "from_id": "FR-IAM-008",
+      "to_area_or_title": "APIKEY: ApiKeyStore.deleteAllByOwner and pending-delete marker clearing (R47 (3) 23판, 29판)",
+      "relation": "depends_on",
+      "reason": "user delete removes keys before the row"
+    },
+    {
+      "from_id": "FR-IAM-008",
+      "to_area_or_title": "FLOW: Admin delete A5 DELETE /auth/admin/users/:id",
+      "relation": "depends_on",
+      "reason": "A5 uses the same delete ordering"
+    },
+    {
+      "from_id": "FR-IAM-012",
+      "to_area_or_title": "TOKEN: RefreshTokenStore SPI with in-memory, file and JDBC defaults",
+      "relation": "depends_on",
+      "reason": "JdbcRefreshTokenStore implements the TOKEN SPI; possible overlap with TOKEN item 62 (JDBC default) — dedupe"
+    },
+    {
+      "from_id": "FR-IAM-013",
+      "to_area_or_title": "FLOW/GUARD: LoginThrottle SPI (limit-argument defaults, usesLimitArguments, ForwardingLoginThrottle) and DeviceTrust SPI",
+      "relation": "depends_on",
+      "reason": "JDBC implementations of FLOW SPIs"
+    },
+    {
+      "from_id": "DR-IAM-003",
+      "to_area_or_title": "APIKEY: JdbcApiKeyStore reference DDL (naru_api_key, naru_api_key_owner, binary prefix collation, indexes)",
+      "relation": "relates_to",
+      "reason": "DDL split between IAM and APIKEY"
+    },
+    {
+      "from_id": "CON-IAM-002",
+      "to_area_or_title": "AUTH: no new main dependency / Core public API only / API 21 cross-cutting constraints",
+      "relation": "depends_on",
+      "reason": "test-only driver must not change mainDependencies"
+    },
+    {
+      "from_id": "CON-IAM-002",
+      "to_area_or_title": "APIKEY: JDBC store verification of JdbcApiKeyStore (feasibility:medium items, §12)",
+      "relation": "relates_to",
+      "reason": "same test-only sqlite-jdbc dependency"
+    },
+    {
+      "from_id": "CON-IAM-001",
+      "to_area_or_title": "AUTH: Kotlin coverage of Auth builder, guards, events (T11)",
+      "relation": "relates_to",
+      "reason": "Kotlin test split by scope"
+    },
+    {
+      "from_id": "FR-IAM-006",
+      "to_area_or_title": "AUTH: Auth.Builder .roles(...) option and R41 admin-role counting for null-password .user",
+      "relation": "depends_on",
+      "reason": "builder wiring and admin-role determination"
+    },
+    {
+      "from_id": "FR-IAM-005",
+      "to_area_or_title": "AUTH: guards auth.require(...) registration-time scope validation",
+      "relation": "depends_on",
+      "reason": "required scopes validated by Scopes"
+    }
+  ],
+  "open_questions": [
+    "AuthUser ver getter name (getTokenVersion in 05 vs a ver-named getter) and ver column name in DDL (token_version vs ver) — not fixed by 00; decide at implementation.",
+    "HTTP status/code when group expansion exceeds depth 8 or size 256 at request time: 00 says only 'error, not truncation'; 05 says GroupLimitException -> 500. FR-IAM-007 AC-3 requires only a non-allowing JSON error.",
+    "Error code strings for group cycle / too-deep 409 (05: GROUP_CYCLE, GROUP_TOO_DEEP uppercase), duplicate group (DuplicateGroupException / GROUP_EXISTS), and the 409 for >1,000 affected users in R31 (2): 00 gives status only.",
+    "HTTP status for an invalid group id on G2 (05: 422 INVALID_GROUP_ID; 00 R30 24판 says auth input validation 400 is Core BAD_REQUEST) — FLOW endpoint table decides.",
+    "Whether R31 grant checks apply to app-side AuthUsers calls: 00 states only that auth.apiKeys() skips R31 (R47 (5)); SEC-IAM-004 implementationNotes assume AuthUsers is an app-trusted path too — confirm.",
+    "Fixed vs sliding window semantics of JdbcLoginThrottle counters in SQL (00 R42 gives only the atomic count + 1 form).",
+    "FileUserStore file layout and whether the 04 §3.2 '>1,000 users -> doctor WARN' applies (not restated by 00).",
+    "Whether JdbcUserStore offers a dev-only createTablesIfMissing (04 §3.3) — 00 is silent; FR-IAM-010 AC-6 only requires no automatic CREATE TABLE.",
+    "Exact GroupAdminStore method list and GroupStore.rolesOfGroups name come from 05 §3.5 (00 names only the types) — tagged INFERRED.",
+    "Recovery (SEC-IAM-006) overlaps the AUTH inventory item 'First-admin setup endpoint and recovery mode'; main session should dedupe or keep SEC-IAM-006 as the user-state outcome and AUTH as endpoint mechanics.",
+    "JdbcRefreshTokenStore (FR-IAM-012) may overlap TOKEN item 'RefreshTokenStore SPI with in-memory, file and JDBC defaults'; dedupe default-selection ACs.",
+    "Admin endpoints /auth/admin/* (R45) and the user-change event table/UserOrigin were listed as IAM key material but the inventory places them in FLOW (items 90, 91) and AUTH (items 43, 44); IAM wrote no requirement for the endpoint table or event matrix and records them as pending cross links."
+  ],
+  "validate_spec_result": {
+    "errors": 0,
+    "warnings_total": 183,
+    "warnings_by_code": {
+      "SRS-W023": 161,
+      "SRS-W015": 22
+    },
+    "iam_file_diagnostics": "32 x SRS-W023 'Draft requirement is not ready as an implementation contract' (one per new IAM block; expected because Stability=draft by design). No errors and no other codes in docs/spec/20.auth-identity-and-grants.srs.md."
+  },
+  "notes": [
+    "Template sections §1-§3 replaced once by Edit before the first mutation; no hand edits afterwards.",
+    "No existing requirements were modified; no stability/status changes."
+  ]
+}

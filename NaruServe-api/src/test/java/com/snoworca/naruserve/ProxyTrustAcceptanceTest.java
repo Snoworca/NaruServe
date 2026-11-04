@@ -21,7 +21,7 @@ public class ProxyTrustAcceptanceTest {
         return new String(t.send("GET", "/who", headers).body(), StandardCharsets.UTF_8);
     }
 
-    // FR-ENGINE-008 AC-1
+    // FR-ENGINE-008 AC-1; CON-ENGINE-001 AC-1 (legacy test kept unchanged)
     @Test
     public void FR_ENGINE_008_AC1_withoutTrustProxyForwardedHeadersAreIgnored() {
         TestApp t = app(false, "127.0.0.1", false);
@@ -29,7 +29,7 @@ public class ProxyTrustAcceptanceTest {
                 "Forwarded", "for=198.51.100.1;proto=https"));
     }
 
-    // SDS-AC-8; FR-ENGINE-008 AC-2
+    // SDS-AC-8; FR-ENGINE-008 AC-2; CON-ENGINE-001 AC-1
     @Test
     public void sdsAc8_FR_ENGINE_008_AC2_trustedModeUsesTheLeftMostForAndTheFirstProto() {
         TestApp t = app(true, "127.0.0.1", false);
@@ -46,7 +46,7 @@ public class ProxyTrustAcceptanceTest {
         assertEquals("10.1.2.3 false", who(secure, "X-Forwarded-Proto", "http"));
     }
 
-    // SDS-AC-9; FR-ENGINE-008 AC-3
+    // SDS-AC-9; FR-ENGINE-008 AC-3; CON-ENGINE-001 AC-1
     @Test
     public void sdsAc9_FR_ENGINE_008_AC3_forwardedAloneAndBlankEntriesKeepTheExchangeValues() {
         TestApp t = app(true, "10.1.2.3", false);

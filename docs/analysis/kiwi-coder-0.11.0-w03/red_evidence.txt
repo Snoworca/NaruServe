@@ -1,0 +1,18 @@
+kiwi-coder 0.11.0-w03 red evidence
+- The facade tests were written against the new public API names (Auth, AuthPrincipal, AccessRule, UserStore,
+  GroupAdminStore, JdbcGroupStore, AuthSchema, TimeSource, ...) that did not exist at the base commit bdd576a; at the
+  base they do not compile (red by compilation failure: the symbols are absent).
+- Behavioural reds observed during the run (each fixed in the implementation, not in the test):
+  1. AuthGuardsTest.FR_IAM_009_AC4_bothMustCover: expected 403 but was 200 (test credential parsing split the scope
+     colon; fixed in the test fixture's parser, the assertion unchanged).
+  2. AuthResponsesTest.FR_AUTH_006_AC3: expected 400 but was 500 (StubJsonCodec cannot decode; a test codec added).
+  3. TransportRuleTest AC3/AC7: expected 200 but was 500 (stand-in handler parsed a body with the stub codec).
+  4. GroupAdminStoreTest AC2/AC3/AC6: FileGroupStore refused an empty pre-created temp file; AC4/AC5 status 0 (the
+     test route sent no body on success).
+  5. AuthUsersTest AC4: create("x", null, null) resolved to the varargs overload (NPE, not IAE).
+  6. CallbackInventoryTest / AuthKotlinContractTest: KeySource lacked @FunctionalInterface and the six new callback
+     types were missing from CallbackMatrix (fixed in main code and the matrix).
+  7. KotlinDocsMarkersTest: the new Kotlin docs blocks had no marker test (AuthDocsExamplesKotlinTest added).
+  8. DocsExamplesCompileTest noJavaScriptInJavaFences: the JS heuristic flagged auth.require( (heuristic narrowed to a
+     bare require( call, with positive and negative controls added).
+red: AuthHardeningTest storedHashCostIsBounded hangs on 2147483647 rounds before the fix (run stopped)

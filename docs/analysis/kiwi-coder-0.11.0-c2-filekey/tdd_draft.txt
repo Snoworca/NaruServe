@@ -1,0 +1,7 @@
+run 0.11.0-c2-filekey, REQ set SEC-IAM-008, FR-IAM-015 (no SDS)
+tests written before AuthFileKey/FileUserStore/KeySources/Auth changes:
+- NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/SecretBoxTest.java  SEC-IAM-008 AC-2, AC-3, AC-4, AC-6
+- NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/FileSecretsTest.java  SEC-IAM-008 AC-1, AC-3, AC-4, AC-5, AC-7, AC-8; FR-IAM-015 AC-1..AC-8, AC-10
+- NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFileKeyKotlinTest.kt  FR-IAM-015 AC-9 (+ docs marker auth.md#48)
+- NaruServe-api/src/test/java/com/snoworca/naruserve/StartApiTest.java  ENV_READERS += AuthFileKey#fromEnv (FR-DX-012 AC-1 widened; Core check untouched)
+red: ./gradlew :NaruServe-api:compileTestJava -> exit 1, cannot find symbol AuthFileKey

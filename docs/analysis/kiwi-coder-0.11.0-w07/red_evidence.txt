@@ -1,0 +1,22 @@
+kiwi-coder 0.11.0-w07 red evidence and TDD-order record
+
+Delegated slices (tests first, red confirmed before implementation):
+- JdbcApiKeyStore + ApiKeyStoreContract: ./gradlew :NaruServe-api:test --tests 'com.snoworca.naruserve.utils.auth.jdbc.JdbcApiKeyStore*' --tests 'com.snoworca.naruserve.utils.auth.testing.VerifyApiKeyStoreTest'
+  against a compile-only skeleton -> 36 tests completed, 36 failed (UnsupportedOperationException in the store, AssertionError "not implemented yet" in the contract, docs tests "Javadoc lacks: warning 1592").
+- UserStoreContract + JdbcLoginThrottle + JdbcDeviceTrust: ./gradlew :NaruServe-api:test --tests '*VerifyUserStoreTest' --tests '*JdbcThrottleTest'
+  against the placeholder contract and stub JDBC classes -> 19 tests completed, 17 failed ("not implemented yet", "UnsupportedOperationException: stub", missing naru_device_trust window/invalidated columns).
+
+Main-thread slice (TokenCodec, TokenService reuse, CSRF middleware, AuthTesting token methods, DeviceTokens/InMemoryDeviceTrust,
+PasswordLogin, FailureFloor, TokenDelivery, insecure-transport TTLs, MULTI_INSTANCE shared stores): TDD-order deviation —
+the production code was written before the Wave7*Test files, so no separate red run exists for these tests. The tests were
+written against the SRS AC text (not the implementation), and their first runs exposed real defects that were then fixed
+(test expectations unchanged where they encoded the AC): requestId in error bodies, the Kotlin codec clock, and the
+Core CORS restriction to HTTP(S) origins (docs example changed, residual recorded).
+
+Review-fix round 1 (prickly review: HIGH 1, MEDIUM 4): regression tests written first.
+./gradlew :NaruServe-api:test --tests '*Wave7ReviewFixesTest' --tests '*JdbcManualCommitTest'
+-> compilation red: DeviceTrust has no purgeExpired to override, JdbcLoginThrottle.DEFAULT_RETENTION_MILLIS missing,
+   Auth.cleanupRun private, InMemoryDeviceTrust.purgeExpired missing.
+Review-fix round 2: Wave7ReviewFixesTest.abandonedCompletionAnswersUnavailableAndWipes red (PasswordLogin.Completion missing); JdbcManualCommitTest.userAndRefreshWritesSurviveAutocommitOffConnections added.
+Review-fix round 3: JdbcManualCommitTest.apiKeyAndGroupWritesSurviveAutocommitOffConnections red (3 tests, 1 failed) before the fix.
+Review-fix round 4: Wave7ReviewFixesTest stopAbandonsEveryDroppedTaskEvenWhenOneAnswerThrows red (Auth.abandonAll missing).

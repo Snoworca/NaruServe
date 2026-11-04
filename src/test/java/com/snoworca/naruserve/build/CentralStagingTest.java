@@ -22,8 +22,8 @@ import org.junit.Test;
  */
 public class CentralStagingTest {
 
-    // OPS-REL-009 AC-1: assert the new publication, including every generated internal edge.
-    private static final String VERSION = "0.10.0";
+    // OPS-REL-010 AC-1 (was OPS-REL-009 AC-1 for 0.10.0): assert the new publication, including every generated internal edge.
+    private static final String VERSION = "0.11.0";
 
     private static File moduleDir(String artifactId) {
         String root = System.getProperty("naruserve.centralStaging");

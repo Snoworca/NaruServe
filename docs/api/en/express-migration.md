@@ -2,7 +2,7 @@
 
 [한국어](../express-migration.md) | [API index](README.md)
 
-The **common HTTP routing profile in the 0.10.0 checkout** provides common Express5 string paths, ordering, Router, param, next and error flow through Java APIs. It does not claim all of Express, the Node runtime, every middleware package or JavaScript regex compatibility. Typed bodies, text/plain string responses and retained WS/SSE/file/security extensions remain NaruServe contracts. See [installation](README.md) for current artifacts.
+The **common HTTP routing profile in the 0.11.0 checkout** provides common Express5 string paths, ordering, Router, param, next and error flow through Java APIs. It does not claim all of Express, the Node runtime, every middleware package or JavaScript regex compatibility. Typed bodies, text/plain string responses and retained WS/SSE/file/security extensions remain NaruServe contracts. See [installation](README.md) for current artifacts.
 
 ## API mapping
 
@@ -89,7 +89,9 @@ Java body(Class/TypeRef) returns null for JSON null. Optional Kotlin `body<T>()`
 
 ### 4. Binding and validation defaults remain
 
-Default binding is127.0.0.1. For LAN, explicitly configure `app.server(o -> o.bindAddress("0.0.0.0"))` and authentication. Non-loopback binding logs a security warning. Proxy trust defaults false; `trustProxy(true)` uses unvalidated first X-Forwarded-For/Proto values, so enable only behind a trusted proxy overwriting those headers. Host, request-line and framing limits remain separate.
+Default binding is 127.0.0.1. For LAN, explicitly configure `app.server(o -> o.bindAddress("0.0.0.0"))` and authentication. Non-loopback binding logs a security warning. Proxy trust defaults false; `trustProxy(true)` uses unvalidated first X-Forwarded-For/Proto values, so enable only behind a trusted proxy overwriting those headers. Host, request-line and framing limits remain separate.
+
+The left-most value that `trustProxy(true)` uses is unverified and client-controlled. It is kept for compatibility with 0.10.0 apps, and the auth module's doctor reports it as FAIL in `PROD` (R32). Behind a proxy use [`trustProxyHops` or `trustProxyCidrs`](app.md#proxy-trust). Express's `app.set('trust proxy', 1)` is `app.trustProxyHops(1)` (only when the node is reachable only through the load balancer), and a CIDR list is `app.trustProxyCidrs("10.0.0.0/8")`. Configure nginx with `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;` and `proxy_set_header X-Forwarded-Proto $scheme;`; a proxy that passes `X-Forwarded-Proto` through without overwriting it is an unsupported setup. The real connection address is `req.socketAddress()` (Express `req.socket.remoteAddress`) and the request id is `req.requestId()`.
 
 ### 5. String defaults are case-insensitive, non-strict and ordered
 
@@ -124,8 +126,9 @@ Use, routes, mounts and error layers share one order. A static mount before auth
 
 ```java
 Middleware requestId = (req, res, next) -> next.run();   // Example global request-ID middleware
+Auth auth = Auth.builder(System.getenv("JWT_SECRET")).protectOnly("/api").build(); // protect only /api
 app.use(requestId);      // First
-app.use("/api", auth);   // Second on /api paths
+app.use(auth);           // Second. No path: a path prefix throws IllegalArgumentException at registration
 ```
 
 ## Example: migrating an Express app

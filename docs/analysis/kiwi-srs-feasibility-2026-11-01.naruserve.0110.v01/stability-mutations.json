@@ -1,0 +1,1299 @@
+{
+  "mode": "live",
+  "applied": [
+    {
+      "req_id": "FR-APIKEY-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 82). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-APIKEY-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 86). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:65-68 header(String)/headers(String) give every Authorization value. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-APIKEY-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 89). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:65-68 header(String)/headers(String) give every Authorization value. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "CON-APIKEY-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 87). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-APIKEY-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 93). Blockers: none. Evidence: android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-APIKEY-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 81). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:95-150 code(400)=BAD_REQUEST, code(415), code(503)=SERVICE_UNAVAILABLE. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-APIKEY-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 86). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-APIKEY-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 91). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "REL-APIKEY-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 89). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-APIKEY-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 89). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-APIKEY-006",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 81). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "REL-APIKEY-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 87). Blockers: none. Evidence: android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "REL-APIKEY-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 81). Blockers: none. Evidence: docs/spec/20.auth-identity-and-grants.srs.md REL-IAM-001 AC-7 now states the re-entrant per-user lock (closes open question Q86). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "REL-APIKEY-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 81). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-APIKEY-007",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 85). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-APIKEY-009",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 82). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "OPS-APIKEY-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-APIKEY-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 83). Blockers: none. Evidence: build.gradle:96-99 kotlin-stdlib in test scope of every module (Kotlin tests possible); FR-KT-001 verified. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-APIKEY-010",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-APIKEY-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:24-35 (HttpException(400) -> BAD_REQUEST), :57-73 withHeader/headers for WWW-Authenticate. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-APIKEY-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:24-35 (HttpException(400) -> BAD_REQUEST), :57-73 withHeader/headers for WWW-Authenticate. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-APIKEY-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 84). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:24-35 (HttpException(400) -> BAD_REQUEST), :57-73 withHeader/headers for WWW-Authenticate. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-APIKEY-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 83). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-APIKEY-006",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 85). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-APIKEY-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 85). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "DR-APIKEY-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 85). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-APIKEY-007",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 89). Blockers: none. Evidence: android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-APIKEY-008",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 89). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-APIKEY-009",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 88). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-APIKEY-010",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 90). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "PERF-APIKEY-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 88). Blockers: none. Evidence: code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-APIKEY-011",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 87). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketSession.java:27 close(int,String); testFixtures InMemoryWebSocketChannel.java exists. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-APIKEY-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 91). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:24-35 (HttpException(400) -> BAD_REQUEST), :57-73 withHeader/headers for WWW-Authenticate. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "DR-APIKEY-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 83). Blockers: none. Evidence: android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "REL-APIKEY-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 81). Blockers: none. Evidence: android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "REL-APIKEY-006",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 87). Blockers: none. Evidence: android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "REL-APIKEY-007",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 87). Blockers: none. Evidence: android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "PERF-APIKEY-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 88). Blockers: none. Evidence: android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "CON-AUTH-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 94). Blockers: none. Evidence: build.gradle:L61. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "CON-AUTH-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 90). Blockers: none. Evidence: build.gradle:L105-L140. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "CON-AUTH-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 93). Blockers: none. Evidence: build.gradle:L432-L441. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-AUTH-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 91). Blockers: none. Evidence: code_context.json modules (utils dir absent). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "CON-AUTH-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 90). Blockers: none. Evidence: NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:L27-L28. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "CON-AUTH-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 85). Blockers: none. Evidence: docs/api/middleware.md:L90-L92. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "CON-AUTH-006",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 90). Blockers: none. Evidence: NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:L27-L28. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "CON-AUTH-007",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 87). Blockers: none. Evidence: NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:L117. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-AUTH-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 84). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L155-L159. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-AUTH-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 89). Blockers: none. Evidence: code_context.json trace_validation FR-AUTH-001. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-AUTH-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 81). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthConfig.java (addition site). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-AUTH-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 86). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L97-L100. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-AUTH-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 82). Blockers: none. Evidence: code_context.json trace_validation FR-AUTH-003. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-AUTH-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 82). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L131. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-AUTH-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 83). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java (no registrations method). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-AUTH-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 86). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L822-L828. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-AUTH-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 87). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:L115. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-AUTH-006",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:L180. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-AUTH-006",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 83). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java:L30-L41. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-AUTH-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 83). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L939-L948. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-AUTH-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 88). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:L15-L72. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-AUTH-007",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 84). Blockers: none. Evidence: CON-AUTH-003 research: default methods allowed on API 21. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-AUTH-008",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 81). Blockers: none. Evidence: code_context.json trace_validation FR-AUTH-008. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-AUTH-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 84). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L107-L123. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "OPS-AUTH-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L125. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "OPS-AUTH-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 82). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L155. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-AUTH-009",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 81). Blockers: none. Evidence: code_context.json trace_validation FR-AUTH-009. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-AUTH-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 81). Blockers: none. Evidence: build.gradle:L96-L97. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-HTTP-010",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 97). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:123-130 (application() default throws UnsupportedOperationException). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-HTTP-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 94). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:51. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-HTTP-029",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 96). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:208,214-215 (handleHttp). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-APP-008",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 91). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:76-102 (Registration, MiddlewareRegistration). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-APP-025",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 90). Blockers: none. Evidence: DefaultRestApp.java:822-828 (cors -> use(options.middleware())). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-APP-026",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 84). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRouter.java:8-33 (no parent link). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-APP-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 88). Blockers: none. Evidence: DefaultRestApp.java:905-919 (register: validate+apply in http.methods at :917). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-ENGINE-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 94). Blockers: none. Evidence: DefaultRestApp.java:125 (volatile boolean trustProxy). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-ENGINE-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 94). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ProxyTrust.java:17-37 (left-most of first header). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-ENGINE-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 92). Blockers: none. Evidence: ProxyTrust.java:1-38. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-ENGINE-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 91). Blockers: none. Evidence: ProxyTrust.java:24-27 legacy isSecure. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "CON-ENGINE-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 96). Blockers: none. Evidence: RestApp.java:221-227 trustProxy Javadoc. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-SVL-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 88). Blockers: none. Evidence: NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:117-118. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 88). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:96-100 remoteAddress()/isSecure() exist; no socketAddress() yet (C6a, SEC-HTTP-001 0.11.0 draft). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 87). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/CookieOptions.java:9-36 path/domain/maxAge/secure/httpOnly/sameSite. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 82). Blockers: none. Evidence: utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 87). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:63-66 header(String)/headers(String) list. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-FLOW-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 89). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:57 withHeader(String,String). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-FLOW-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 83). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:34,104 isJsonType is package-private in internal; auth (Core public API only) must re-apply the same header test. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 92). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:34,104 isJsonType is package-private in internal; auth (Core public API only) must re-apply the same header test. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-006",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 82). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21 on main source set. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-007",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 87). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:63-66 header(String)/headers(String) list. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-008",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 86). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:157-175 cookie(String) first only; getCookies() keeps duplicates (FR-COOKIE-002 verified). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-FLOW-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 82). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/CookieOptions.java:9-36 path/domain/maxAge/secure/httpOnly/sameSite. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-009",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 88). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/CookieOptions.java:9-36 path/domain/maxAge/secure/httpOnly/sameSite. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-010",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:157-175 cookie(String) first only; getCookies() keeps duplicates (FR-COOKIE-002 verified). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-FLOW-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 83). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:136-147 code(415)=UNSUPPORTED_MEDIA_TYPE, code(503)=SERVICE_UNAVAILABLE. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "OPS-FLOW-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 90). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/CorsOptions.java:7-11 allowedOrigins/allowedHeaders exist. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-FLOW-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 84). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19-21 methodAsync(String,Object,AsyncRouteHandler). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-FLOW-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19-21 methodAsync(String,Object,AsyncRouteHandler). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-FLOW-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 83). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:146-175. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-011",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 81). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:491-498 legacy boolean trustProxy; C6b (IR-ENGINE-003) not implemented. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-012",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-014",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:128-140. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-FLOW-007",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 82). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19-21 methodAsync(String,Object,AsyncRouteHandler). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-015",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 87). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:57 withHeader(String,String). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-FLOW-008",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 82). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketSession.java:27,39 close(int,String) and onClose(listener); internal/WebSocketUpgrade.java:87-95 Origin checked before upgrade. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-FLOW-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 90). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21 on main source set. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "DR-IAM-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 96). Blockers: none. Evidence: API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/util/UUID. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-IAM-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 89). Blockers: none. Evidence: build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "REL-IAM-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 82). Blockers: none. Evidence: API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/util/concurrent/locks/ReentrantLock and java/util/concurrent/ConcurrentHashMap. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "REL-IAM-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 83). Blockers: none. Evidence: build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "REL-IAM-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 87). Blockers: none. Evidence: build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-IAM-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 93). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-IAM-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 91). Blockers: none. Evidence: API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/sql/SQLIntegrityConstraintViolationException and SQLException.getSQLState. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "REL-IAM-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 90). Blockers: none. Evidence: API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/io/FileDescriptor (sync) (established). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-IAM-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 89). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-IAM-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 89). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java:26-42 an unmapped exception renders an HTML <pre> stack trace. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-IAM-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 84). Blockers: none. Evidence: API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) lacks java/util/Base64, java/time/* and java/util/function/Function (re-checked). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-IAM-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 85). Blockers: none. Evidence: API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/text/Normalizer and the NFKC form (established; re-checked). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-IAM-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 84). Blockers: none. Evidence: build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-IAM-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 89). Blockers: none. Evidence: build.gradle:96-97 junit/jspecify are testImplementation only. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-IAM-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-IAM-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 95). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-IAM-006",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 88). Blockers: none. Evidence: API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) lacks ConcurrentHashMap.newKeySet and contains Collections.newSetFromMap. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "DR-IAM-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 93). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-IAM-007",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 93). Blockers: none. Evidence: API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/util/ArrayDeque. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-IAM-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 89). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-IAM-008",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 86). Blockers: none. Evidence: build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-IAM-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 81). Blockers: none. Evidence: build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-IAM-009",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 89). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2, sourceSets=[main] only (tests unchecked). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-IAM-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-IAM-006",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 84). Blockers: none. Evidence: build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "CON-IAM-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 91). Blockers: none. Evidence: NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:27-28 PUBLIC_PACKAGES lists only naruserve, spi, routing. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-IAM-010",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 84). Blockers: none. Evidence: API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/sql/*, javax/sql/DataSource, java/lang/AutoCloseable, Throwable.addSuppressed; lacks setNetworkTimeout/abort/closeOnCompletion (established). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-IAM-011",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 89). Blockers: none. Evidence: API 21 signature android-api-level-21-5.0.1_r2.signature (Gradle cache) contains java/sql/PreparedStatement. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-IAM-012",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 85). Blockers: none. Evidence: build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "DR-IAM-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 91). Blockers: none. Evidence: build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "CON-IAM-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 96). Blockers: none. Evidence: build.gradle:362-370 Jetty servletTestDependencies testImplementation precedent (CON-SVL-001). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-IAM-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 83). Blockers: none. Evidence: NaruServe-api/src/main/java/com/snoworca/naruserve/Router.java:6-11 Router exposes no registration enumeration; IR-APP-008 registrations() is a 0.11.0 CORE sibling (judged high 91). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-IAM-007",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 82). Blockers: none. Evidence: build.gradle:59-60 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-TOKEN-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 93). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain jav",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-TOKEN-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 88). Blockers: none. Evidence: build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-TOKEN-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 87). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain jav",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-TOKEN-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain jav",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-TOKEN-005",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 86). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain jav",
+      "ok": true
+    },
+    {
+      "req_id": "FR-TOKEN-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 84). Blockers: none. Evidence: build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-TOKEN-006",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 85). Blockers: none. Evidence: n/a. Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "FR-TOKEN-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 81). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain jav",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-TOKEN-007",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 94). Blockers: none. Evidence: docs/research/auth-rbac/06.threat-model-and-verification.md:42-43 (F10 PBKDF2WithHmacSHA256 is API 26+, F11 HmacSHA256 is API 1+, both [confirmed] against the AOSP javadoc tables). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "PERF-TOKEN-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 87). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain jav",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-TOKEN-008",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 84). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain jav",
+      "ok": true
+    },
+    {
+      "req_id": "FR-TOKEN-003",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 83). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain jav",
+      "ok": true
+    },
+    {
+      "req_id": "REL-TOKEN-001",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 84). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain jav",
+      "ok": true
+    },
+    {
+      "req_id": "PERF-TOKEN-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 82). Blockers: none. Evidence: build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain jav",
+      "ok": true
+    },
+    {
+      "req_id": "FR-TOKEN-004",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    },
+    {
+      "req_id": "IR-TOKEN-002",
+      "from": "draft",
+      "to": "evolving",
+      "reason": "Feasibility=high (score 80). Blockers: none. Evidence: build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main dependency to add). Run: 2026-11-01.naruserve.0110.v01",
+      "ok": true
+    }
+  ],
+  "skipped": [
+    {
+      "req_id": "SEC-APIKEY-008",
+      "from": "draft",
+      "to": "draft",
+      "reason": "keep draft (feasibility medium)"
+    },
+    {
+      "req_id": "SEC-AUTH-003",
+      "from": "draft",
+      "to": "draft",
+      "reason": "keep draft (feasibility medium)"
+    },
+    {
+      "req_id": "SEC-AUTH-007",
+      "from": "draft",
+      "to": "draft",
+      "reason": "keep draft (feasibility medium)"
+    },
+    {
+      "req_id": "SEC-AUTH-008",
+      "from": "draft",
+      "to": "draft",
+      "reason": "keep draft (feasibility medium)"
+    },
+    {
+      "req_id": "FR-FLOW-006",
+      "from": "draft",
+      "to": "draft",
+      "reason": "keep draft (feasibility medium)"
+    },
+    {
+      "req_id": "SEC-FLOW-013",
+      "from": "draft",
+      "to": "draft",
+      "reason": "keep draft (feasibility medium)"
+    },
+    {
+      "req_id": "FR-FLOW-009",
+      "from": "draft",
+      "to": "draft",
+      "reason": "keep draft (feasibility medium)"
+    },
+    {
+      "req_id": "REL-FLOW-001",
+      "from": "draft",
+      "to": "draft",
+      "reason": "keep draft (feasibility medium)"
+    },
+    {
+      "req_id": "FR-IAM-013",
+      "from": "draft",
+      "to": "draft",
+      "reason": "keep draft (feasibility medium)"
+    },
+    {
+      "req_id": "FR-IAM-014",
+      "from": "draft",
+      "to": "draft",
+      "reason": "keep draft (feasibility medium)"
+    },
+    {
+      "req_id": "SEC-TOKEN-009",
+      "from": "draft",
+      "to": "draft",
+      "reason": "keep draft (feasibility medium)"
+    },
+    {
+      "req_id": "IR-TOKEN-001",
+      "from": "draft",
+      "to": "draft",
+      "reason": "keep draft (feasibility medium)"
+    }
+  ],
+  "guard_blocked": [],
+  "user_rejected": [],
+  "system_failed": [],
+  "tag_fixes": [
+    {
+      "req_id": "SEC-SVL-001",
+      "from": "feasibility:medium",
+      "to": "feasibility:high",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-007",
+      "from": "feasibility:medium",
+      "to": "feasibility:high",
+      "ok": true
+    },
+    {
+      "req_id": "FR-FLOW-002",
+      "from": "feasibility:medium",
+      "to": "feasibility:high",
+      "ok": true
+    },
+    {
+      "req_id": "REL-APIKEY-005",
+      "from": "feasibility:medium",
+      "to": "feasibility:high",
+      "ok": true
+    },
+    {
+      "req_id": "REL-APIKEY-006",
+      "from": "feasibility:medium",
+      "to": "feasibility:high",
+      "ok": true
+    },
+    {
+      "req_id": "REL-APIKEY-007",
+      "from": "feasibility:medium",
+      "to": "feasibility:high",
+      "ok": true
+    },
+    {
+      "req_id": "PERF-APIKEY-002",
+      "from": "feasibility:medium",
+      "to": "feasibility:high",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-AUTH-003",
+      "from": "feasibility:high",
+      "to": "feasibility:medium",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-AUTH-007",
+      "from": "feasibility:high",
+      "to": "feasibility:medium",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-AUTH-008",
+      "from": "feasibility:high",
+      "to": "feasibility:medium",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-TOKEN-009",
+      "from": "feasibility:high",
+      "to": "feasibility:medium",
+      "ok": true
+    },
+    {
+      "req_id": "IR-TOKEN-001",
+      "from": "feasibility:high",
+      "to": "feasibility:medium",
+      "ok": true
+    },
+    {
+      "req_id": "FR-FLOW-006",
+      "from": "feasibility:high",
+      "to": "feasibility:medium",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-FLOW-013",
+      "from": "feasibility:high",
+      "to": "feasibility:medium",
+      "ok": true
+    },
+    {
+      "req_id": "FR-FLOW-009",
+      "from": "feasibility:high",
+      "to": "feasibility:medium",
+      "ok": true
+    },
+    {
+      "req_id": "REL-FLOW-001",
+      "from": "feasibility:high",
+      "to": "feasibility:medium",
+      "ok": true
+    },
+    {
+      "req_id": "FR-IAM-013",
+      "from": "feasibility:high",
+      "to": "feasibility:medium",
+      "ok": true
+    },
+    {
+      "req_id": "FR-IAM-014",
+      "from": "feasibility:high",
+      "to": "feasibility:medium",
+      "ok": true
+    },
+    {
+      "req_id": "SEC-APIKEY-008",
+      "from": "feasibility:high",
+      "to": "feasibility:medium",
+      "ok": true
+    }
+  ],
+  "validate": {
+    "errors": 0,
+    "warnings": 34,
+    "byCode": {
+      "SRS-W023": 12,
+      "SRS-W015": 22
+    }
+  },
+  "summary_target": {
+    "countsByStatus": {
+      "planned": 165
+    },
+    "countsByStability": {
+      "evolving": 153,
+      "draft": 12
+    }
+  },
+  "sync_check": {
+    "mismatches": 0,
+    "applied_headings_with_draft_marker": 0,
+    "kept_draft_headings_marker_intact": 12,
+    "note": "MCP values from list_requirements(target 0.11.0); tag reads for 18 of 19 rows taken from the Markdown Tags row instead of get_requirement (same source, avoids ~15KB diagnostics per call)"
+  },
+  "summary": {
+    "applied_count": 153,
+    "skipped_count": 12,
+    "guard_blocked_count": 0,
+    "user_rejected_count": 0,
+    "system_failed_count": 0
+  }
+}

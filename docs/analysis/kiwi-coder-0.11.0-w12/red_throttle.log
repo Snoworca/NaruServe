@@ -1,0 +1,67 @@
+tinyHttpdDir: TinyHttpd HEAD is 'de5c7ff', but NaruServe was verified against e73cd5d
+> Task :NaruServe-api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-api:compileKotlin NO-SOURCE
+> Task :NaruServe-api:compileJava
+> Task :NaruServe-api:processResources UP-TO-DATE
+> Task :NaruServe-api:classes
+> Task :NaruServe-api:jar
+> Task :NaruServe-api:compileTestFixturesKotlin NO-SOURCE
+> Task :NaruServe-api:compileTestFixturesJava UP-TO-DATE
+> Task :NaruServe-api:processTestFixturesResources NO-SOURCE
+> Task :NaruServe-api:testFixturesClasses UP-TO-DATE
+> Task :NaruServe-api:testFixturesJar UP-TO-DATE
+> Task :NaruServe-api:processTestResources UP-TO-DATE
+> Task :NaruServe-api:compileTestKotlin
+
+> Task :NaruServe-api:compileTestJava
+warning: unknown enum constant ElementType.MODULE
+1 warning
+
+> Task :NaruServe-api:testClasses
+
+> Task :NaruServe-api:test
+
+Wave12ThrottleTest > REL_FLOW_001_AC3_throttleFileIsASnapshotNotPerFailure FAILED
+    java.lang.ClassCastException at Wave12ThrottleTest.java:302
+
+Wave12ThrottleTest > REL_FLOW_001_AC4_deviceInvalidationIsWrittenAtOnce FAILED
+    java.lang.ClassCastException at Wave12ThrottleTest.java:354
+
+Wave12ThrottleTest > REL_FLOW_001_AC8_REL_IAM_004_AC7_everyAuthFileIsVersioned FAILED
+    java.nio.file.NoSuchFileException at Wave12ThrottleTest.java:556
+
+Wave12ThrottleTest > SEC_FLOW_011_AC8_loginFailuresDoNotBlockTheServiceAccountKey FAILED
+    com.snoworca.naruserve.utils.auth.internal.AuthArgumentException at Wave12ThrottleTest.java:255
+
+Wave12ThrottleTest > SEC_FLOW_011_AC7_configuredLimitsReplaceTheDefaults FAILED
+    java.lang.AssertionError at Wave12ThrottleTest.java:99
+
+Wave12ThrottleTest > REL_FLOW_001_AC5_defaultsFollowTheUserStore FAILED
+    java.lang.ClassCastException at Wave12ThrottleTest.java:411
+
+Wave12ThrottleTest > IR_FLOW_003_AC2_builtInThrottlesHonourTheArguments FAILED
+    java.lang.AssertionError at Wave12ThrottleTest.java:605
+
+Wave12ThrottleTest > IR_APIKEY_001_AC1_keyPathUsesOnlyTheLimitArgumentMethods FAILED
+    com.snoworca.naruserve.utils.auth.internal.AuthArgumentException at Wave12ThrottleTest.java:672
+
+Wave12ThrottleTest > REL_FLOW_001_AC3_theSchedulerWritesTheSnapshot FAILED
+    java.lang.ClassCastException at Wave12ThrottleTest.java:333
+
+17 tests completed, 9 failed
+
+> Task :NaruServe-api:test FAILED
+
+[Incubating] Problems report is available at: file:///Users/beom/work/git/NaruServe/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':NaruServe-api:test'.
+> There were failing tests. See the report at: file:///Users/beom/work/git/NaruServe/NaruServe-api/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights.
+
+BUILD FAILED in 19s
+9 actionable tasks: 5 executed, 4 up-to-date

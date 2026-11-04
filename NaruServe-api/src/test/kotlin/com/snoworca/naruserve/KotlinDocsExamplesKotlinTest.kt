@@ -442,6 +442,7 @@ class KotlinDocsExamplesKotlinTest {
     // docs-example: logging.md#1
     @Test
     fun `SDS-AC-2 FR-KT-004 AC-2 logging md ConsoleLogger format names the level and the message`() {
+        // adapted: this file is in package com.snoworca.naruserve, so the block's two imports are implicit
         val line = ConsoleLogger.format(LogLevel.WARN, "disk almost full")
         assertTrue(line, line.contains("WARN"))
         assertTrue(line, line.contains("disk almost full"))
@@ -450,10 +451,10 @@ class KotlinDocsExamplesKotlinTest {
     // docs-example: middleware.md#1
     @Test
     fun `SDS-AC-2 FR-KT-004 AC-2 middleware md route builder runs its middleware in order`() {
-        val auth = Middleware { req, res, next -> if (req.header("Authorization") == null) res.status(401).end() else next.run() }
+        val checkAuth = Middleware { req, res, next -> if (req.header("Authorization") == null) res.status(401).end() else next.run() }
         val adminOnly = Middleware { req, res, next -> if (req.header("X-Role") != "admin") res.status(403).end() else next.run() }
         app.route("/api/admin")
-            .use(auth)
+            .use(checkAuth)
             .use(adminOnly)
             .get { req, res -> res.send("admin") }
 
@@ -465,11 +466,11 @@ class KotlinDocsExamplesKotlinTest {
     // docs-example: middleware.md#2
     @Test
     fun `SDS-AC-2 FR-KT-004 AC-2 middleware md return at use answers 401 Unauthorized`() {
-        val auth = object {
+        val tokenService = object {
             fun isAuthorized(req: Request) = req.header("Authorization") == "ok"
         }
         app.use("/api") { req, res, next ->
-            if (!auth.isAuthorized(req)) {
+            if (!tokenService.isAuthorized(req)) {
                 res.status(401).json("Unauthorized")
                 return@use
             }

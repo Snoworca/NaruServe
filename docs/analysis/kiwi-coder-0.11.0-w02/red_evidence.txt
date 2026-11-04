@@ -1,0 +1,35 @@
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:3:48 Unresolved reference 'GroupStore'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:4:47 Unresolved reference 'RolePolicy'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:5:47 Unresolved reference 'Scopes'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:6:47 Unresolved reference 'AuthIds'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:7:47 Unresolved reference 'AuthUser'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:20:20 Unresolved reference 'AuthUser'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:37:29 Unresolved reference 'AuthIds'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:39:20 Unresolved reference 'AuthIds'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:45:30 Unresolved reference 'GroupStore'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:46:13 'groupsOfUser' overrides nothing.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:48:13 'parentsOf' overrides nothing.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:51:53 Unresolved reference 'effectiveGroupsOfUser'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:52:45 Unresolved reference 'rolesOfGroups'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:53:27 Unresolved reference 'effectiveGroupsOfUser'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:53:67 Unresolved reference 'hasNext'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:60:22 Unresolved reference 'RolePolicy'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:63:20 Unresolved reference 'AuthUser'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:64:41 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:64:77 Unresolved reference 'Scopes'.
+e: file:///Users/beom/work/git/NaruServe/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt:64:91 Unresolved reference 'it'.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':NaruServe-api:compileTestKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 686ms

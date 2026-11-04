@@ -1,0 +1,7 @@
+{"pass":"formal-check (script)","run_id":"0.11.0-w05","axes":{
+ "mock_regex":{"result":"PASS","detail":"no Mockito/mockk/@Mock/mock( in the wave-5 test files; recording fakes only"},
+ "build_types":{"result":"PASS","detail":"./gradlew build --continue exit 0 (compile, animal-sniffer API 21, javadoc, 2678 tests)"},
+ "sds_code_mapping":{"result":"not applicable","detail":"run without SDS"},
+ "test_coverage":{"result":"PASS (66 of 110 ACs cited and green)","detail":"speckiwi coverage --tests --ids <17 reqs>; the 44 uncited ACs need endpoints of later waves and are listed as open"},
+ "caller_check":{"result":"PASS with entry points","detail":"public API entry points: Jwt/JwtClaims/JwtException, AuditEvent/AuditSink/AuditSinks, FileUserStore, RefreshTokenStore/RefreshRecord/InMemory/File/JdbcRefreshTokenStore, ApiKeyStore/StoredApiKey/ApiKey/IssuedApiKey/ApiKeyStatus/ApiKeyPrefixCollisionException, Auth.describe/permitWebSocket/refreshTokens/apiKeys/audit/cookies. Internal AccessTokens, AuditTrail, ThrottleKeys are referenced by Auth/DefaultAuthUsers. Internal GrantRule, LoginLimits, AuthCookies have no production caller yet: they are the building blocks the admin, login and cookie endpoints of later waves call (component-tested in Wave5ComponentsTest)."}},
+ "severity":{"CRITICAL":0,"HIGH":0,"MEDIUM":0,"LOW":0}}

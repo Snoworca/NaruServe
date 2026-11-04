@@ -1,0 +1,5 @@
+{"pass":"prickly-review","iter":3,"run_id":"0.11.0-w10","severity":{"CRITICAL":0,"HIGH":0,"MEDIUM":0,"LOW":2},
+"findings":[
+{"id":"R3-1","severity":"LOW","disposition":"deferred to the final review loop: taking the hold before the stripe breaks the existing Wave8AccountTest.SEC_IAM_002_AC3_sharedStripeWaitIsBounded, which pins the stripe behaviour; reverted to stripe-then-hold"},
+{"id":"R3-2","severity":"LOW","disposition":"fixed (checkPassword 503 after the waits documented, ko+en)"}],
+"gate":"CRITICAL=0, HIGH=0, MEDIUM=0"}

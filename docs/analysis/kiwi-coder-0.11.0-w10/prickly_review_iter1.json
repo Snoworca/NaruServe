@@ -1,0 +1,16 @@
+{"pass":"prickly-review","iter":1,"run_id":"0.11.0-w10","req_ids":["REL-APIKEY-002","SEC-APIKEY-011","FR-APIKEY-005","FR-APIKEY-003","FR-APIKEY-004","IR-FLOW-002","FR-FLOW-006","SEC-APIKEY-008"],
+"severity":{"CRITICAL":0,"HIGH":1,"MEDIUM":4,"LOW":8},
+"findings":[
+{"id":"P-1","severity":"HIGH","disposition":"fixed","note":"DefaultAuthApiKeys.revokedThrough audits api_key_revoked (revokedApiKeyId, owner target, actor key id) on both DELETE endpoints; test FR_APIKEY_004_AC6_revokesThroughTheEndpointsAreAudited"},
+{"id":"P-2","severity":"MEDIUM","disposition":"fixed","note":"in-handler apiKeyId refusal added to issueOwnKey and issueKey; the built-in endpoints live in the internal account router, so a second mount of auth.routes() does not expose them (verified: 404)"},
+{"id":"P-3","severity":"MEDIUM","disposition":"fixed","note":"recheck invalidates the principal before reading; test SEC_APIKEY_011_AC8_theRecheckDoesNotTrustAFreshCacheEntry"},
+{"id":"P-4","severity":"MEDIUM","disposition":"rejected","note":"00 R37: under MULTI_INSTANCE UserStore.update must not write passwordHash/ver/enabled/roles (verifyUserStore checks it); under SINGLE_INSTANCE the in-node user lock covers every auth write. PATCH /me uses the same auth.users().update path."},
+{"id":"P-5","severity":"MEDIUM","disposition":"fixed","note":"one confirmation in flight per user (Auth.keyConfirmations), others 503; test FR_APIKEY_003_AC2_aBurstCannotOutrunTheLimit. /auth/password keeps its pre-existing pattern (residual)"},
+{"id":"P-6","severity":"LOW","disposition":"fixed (list shape); helper duplication deferred"},
+{"id":"P-7","severity":"LOW","disposition":"fixed (empty patch: no write, no event)"},
+{"id":"P-8","severity":"LOW","disposition":"deferred to final review loop"},
+{"id":"P-9","severity":"LOW","disposition":"(b) fixed; (a),(c) deferred"},
+{"id":"P-10","severity":"LOW","disposition":"deferred"},
+{"id":"P-11","severity":"LOW","disposition":"fixed (docs ko+en)"},
+{"id":"P-12","severity":"LOW","disposition":"deferred"},
+{"id":"P-13","severity":"LOW","disposition":"deferred"}]}

@@ -1,0 +1,26 @@
+kiwi-coder 0.11.0-w06 — TDD order record
+
+Deviation: for the main-thread slice (TokenService/TokenPair, PrincipalCache, AdminEndpoints, PasswordChanges,
+Lockout, ApiKeyUsage, auth.webSocket) the production classes were written before their test files, as in wave 5
+for Jwt. The red state was therefore not observed for those tests before implementation; each test was run once
+against the implementation and its first-run failures (below) were real defects or test mistakes that were fixed.
+
+First-run failures observed (green afterwards):
+- AdminEndpointsTest: 3/42 failed first (SEC_IAM_007_AC4 target protection on a reader target; SEC_IAM_007_AC8 bad
+  fixture secretHash; SEC_IAM_004_AC4 target protection) -> test fixtures corrected to the AC wording.
+- PrincipalCacheTest SEC_AUTH_007_AC2: cache not warmed before the direct store change -> test corrected.
+- WebSocketWrapperTest: 8/8 failed first (ws registered after listen), then 2/8 (handler/track race) -> fixture waits
+  for the wrapped handler.
+- Wave6ComponentsTest lastUsedFailureIsLoggedNotThrown: RecordingLogger read through toString -> lines.
+Existing tests broken by the new contracts and adapted without weakening (see coder report):
+- RealJwtPathTest.accessTokenIsAStandaloneJwt: verifies with the access-purpose key (SEC-TOKEN-005 AC-4).
+- RealJwtPathTest.SEC_AUTH_006_AC1: its stand-in admin route moved from /users to /probe (IR-IAM-005 owns /users).
+- AuthInstallTest.FR_AUTH_005_AC3: expected registration shape lists the 15 IR-IAM-005 admin routes.
+- AuthGuardsTest IR_AUTH_004_AC2/AC5: .userCacheTtl(0) so direct store changes are read per request (SEC-AUTH-007).
+
+Subagent slices (JdbcUserStore/DDL, PasswordHashers.chain/RehashQueue) were written test-first by their agents.
+
+Review-fix loop (coordinator request): Wave6ReviewFixesTest adds one regression test per HIGH/MEDIUM fix.
+Red check with the fix reverted (then restored):
+- staleLoadIsNotCachedAfterInvalidation: RED without the PrincipalCache epoch (expected 2 loads, was 1).
+- trackedSocketNeverLandsInAnOrphanedSet: RED without the synchronized track/removal (failed at round 363).

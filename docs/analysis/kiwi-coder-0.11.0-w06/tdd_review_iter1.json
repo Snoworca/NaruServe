@@ -1,0 +1,13 @@
+{"pass":"tdd-verification","iter":1,"req_set":"0.11.0 wave 6 (17 requirements + carried ACs)","verifier":"single subagent (S1 intent + S2 quality)",
+ "severity_summary":{"CRITICAL":0,"HIGH":6,"MEDIUM":9,"LOW":13},
+ "findings_fixed":["HIGH SEC-TOKEN-005 AC-3 typ half -> SEC_TOKEN_005_AC3_typAloneSeparatesPurposes",
+  "HIGH SEC-AUTH-007 AC-2 group clear not discriminating -> docs:read via group + second cached user reloaded",
+  "HIGH IR-IAM-005 AC-7 worker release -> dispatching worker stack checked while A2 waits",
+  "HIGH SEC-IAM-004 AC-6 concurrent mutual demotion -> SEC_IAM_004_AC6_concurrentMutualDemotionNotBlocked",
+  "HIGH PERF-APIKEY-001 AC-4 production wiring -> uses auth.apiKeyUsage()",
+  "HIGH FR-FLOW-008 AC-8 async close race -> server session isOpen()",
+  "MEDIUM FR-FLOW-008 AC-2/AC-3 same race","MEDIUM FR-TOKEN-001 AC-4 ordering","MEDIUM IR-IAM-005 AC-5 bodies",
+  "MEDIUM SEC-IAM-005 AC-5 limit and self rule","MEDIUM SEC-IAM-004 codes","MEDIUM RehashQueueTest wipe timing",
+  "LOW origins AC-9/11","LOW self role-add actor/target","LOW SEC-IAM-001 AC-4 gid","LOW SEC-IAM-001 AC-7 HTTP 400"],
+ "findings_deferred":["MEDIUM FR-TOKEN-001 AC-5 second half bound to POST /auth/password (later wave)","MEDIUM SEC-IAM-001 AC-2 lock race not exercised",
+  "LOW fixtures not stopped","LOW IR-IAM-005 AC-4 vacuous mount loop","LOW SEC-IAM-007 AC-1/AC-4 handler-run counters","others LOW accepted"]}

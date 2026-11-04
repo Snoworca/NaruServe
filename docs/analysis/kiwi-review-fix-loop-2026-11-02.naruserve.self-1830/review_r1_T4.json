@@ -1,0 +1,443 @@
+{
+ "chunk": "T4",
+ "round": 1,
+ "findings": [
+  {
+   "id": "T4-F01",
+   "axis": "P7",
+   "severity": "HIGH",
+   "title": "SEC-TOKEN-009 AC-8 Servlet half: the \"answered while the failure waits\" assertion cannot fail",
+   "location": {
+    "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAuthFailureFloorTest.java",
+    "line_range": "124-133"
+   },
+   "description": "healthAt is taken right after the synchronous /health call returns, and failedAt is taken after failing.get(...), which is only called after /health has returned. System.nanoTime is monotonic, so failedAt >= healthAt on every run and `healthAt < failedAt` holds whatever the server does. Scenario: the floor is changed to sleep inside the request thread, or Jetty serves /health only after the delayed 401 is written; the test still passes. Nothing checks that the failing login was still pending when /health answered (Thread.sleep(10) does not even guarantee the login reached the server first). The SRS evidence for SEC-TOKEN-009 AC-8 (VE-2, Servlet half) therefore does not cover the concurrency clause of the AC.",
+   "suggested_fix": "After /health returns, assert !failing.isDone() (the failure is still waiting), and time each exchange from its own start as the TinyHttpd half does. Before sending /health, wait until the login has reached the server (for example a latch in a LoginThrottle.retryAfter test double, or a RecordingLogger/access-log line), not a fixed 10 ms sleep.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "bug"
+   ]
+  },
+  {
+   "id": "T4-F02",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "TinyHttpd AC-8 check compares durations from separate starts, so it does not show the two requests overlapped",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AuthFailureFloorSocketTest.java",
+    "line_range": "210-219"
+   },
+   "description": "health.millis and failed.millis are each measured from that request's own start. If the pool thread opens its socket late (the 10 ms Thread.sleep is the only ordering) and /health is answered before the failing login arrives, the failure still takes T + 1.25T, so `health.millis + 10 < failed.millis` holds although the two requests never overlapped. The AC clause \"a concurrent non-auth request is answered while the failure waits\" is then not shown. With 4 workers a floor that blocks its worker would also pass, but that half is covered by the AC-5 test. Earlier waves deferred this as \"floor-test wall-clock margins\" (W10); it is still there.",
+   "suggested_fix": "Assert !failing.isDone() right after /health returns. Order the requests by an event (the login reached the throttle or hash slot) rather than Thread.sleep(10).",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "deferred"
+   ]
+  },
+  {
+   "id": "T4-F03",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "AC-5 check compares a loaded-server latency with one idle-server probe",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AuthFailureFloorSocketTest.java",
+    "line_range": "233-254"
+   },
+   "description": "floorMillis comes from a single probe on an idle server, and health.millis is measured while 50 logins each run a 200 000-iteration PBKDF2. On a slow 2-vCPU CI or an Android-speed JVM, CPU contention can push /health past one idle floor, and the test then fails for timing alone. The sleep max(20, floor/4) is also a fixed wall-clock wait. This is the deferred W10 \"floor-test wall-clock margins\" item; it is still present.",
+   "suggested_fix": "Keep `pending > 0` as the main signal. Bound health.millis by a margin derived from the probe (for example < 0.5 * 50 * floorMillis / workers, which is what a worker-held floor would cost) rather than by one floor.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "deferred"
+   ]
+  },
+  {
+   "id": "T4-F04",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Expected AuthRejection on refresh-token reuse has no fail() when nothing is thrown",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave7KotlinTest.kt",
+    "line_range": "97-102"
+   },
+   "description": "The second refresh(pair.refreshToken) is wrapped in try/catch(AuthRejection) with no fail() after the call. If reuse detection started returning a new pair and still fired onRefreshTokenReused, the test would pass, although the docs example (auth.md#35) says a reused token is rejected.",
+   "suggested_fix": "Add fail(\"a reused refresh token was accepted\") after the second refresh, or use assertThrows.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T4-F05",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Two docs-example tests run with no assertion",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave7KotlinTest.kt",
+    "line_range": "133-170"
+   },
+   "description": "`docs auth csrf guarded route` (133-142) and `docs auth cors before install` (159-170) only build and install. They pass as long as nothing throws, so a guard that let a POST without a CSRF token through, or an install that dropped the CORS middleware, would not be noticed. As T11 compile checks they are acceptable, but their names suggest a behaviour check.",
+   "suggested_fix": "Either name them as compile checks, or send one request through an InMemoryHttpAdapter (for example POST /api/posts without the CSRF token gives 403, and the preflight carries Access-Control-Allow-Origin).",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T4-F06",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "The \"lockout and websocket wrapper\" test checks neither the lockout nor the wrapper",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave6KotlinTest.kt",
+    "line_range": "26-42"
+   },
+   "description": "Lockout.after(3).forMinutes(1) is set but no failed login is ever attempted. The auth.webSocket { } wrapper is registered on an app that is never started or sent an upgrade, so its lambda never runs. `auth.describe().contains(\"auth\")` is close to always true. Only the token-service half is asserted.",
+   "suggested_fix": "Add assertions that exercise the lockout (three failed passwordLogin attempts lead to the lock), or drop \"lockout and websocket wrapper\" from the name and keep it as a compile check.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T4-F07",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "The JDBC half of \"refresh token stores from Kotlin\" is a tautology",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave5KotlinTest.kt",
+    "line_range": "140-157"
+   },
+   "description": "The comment says the in-memory, file and JDBC stores share one SPI, but the JDBC store is checked only by `assertEquals(\"JdbcRefreshTokenStore\", JdbcRefreshTokenStore::class.java.simpleName)`, which compares a class with its own name and cannot fail. Nothing calls JdbcRefreshTokenStore from Kotlin.",
+   "suggested_fix": "Add a JdbcRefreshTokenStore over a TemporaryFolder SQLite DataSource (as AuthWave6JdbcKotlinTest does) to the `stores` list, or remove the line.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T4-F08",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "The SQLite database is a File.createTempFile in the system temp dir, cleaned only by deleteOnExit",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave7KotlinTest.kt",
+    "line_range": "109-118"
+   },
+   "description": "File.createTempFile(\"naru\", \".db\") plus deleteOnExit leaves the file behind when the Gradle test JVM is killed. SQLite's -journal or -wal side files are not covered by deleteOnExit at all. The sibling AuthWave6JdbcKotlinTest uses the TemporaryFolder rule.",
+   "suggested_fix": "Use a @get:Rule TemporaryFolder and put the database in tmp.newFolder().",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T4-F09",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Jar names hard-code 0.10.0, and the module-list check matches exact whitespace",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java",
+    "line_range": "47-76"
+   },
+   "description": "jar() builds \"<module>-0.10.0<suffix>.jar\". The 0.11.0 version bump will make CON_AUTH_001_AC3 fail on a missing file, not on a placement error. CON_AUTH_001_AC2 checks for a literal including a newline and 19 spaces of indentation, so reformatting build.gradle breaks it with no change in behaviour. The same hard-coding exists in BuildLayoutTest, CentralStagingTest and PublishedPomTest.",
+   "suggested_fix": "Read the version from a system property set from project.version (as naruserve.rootDir is), and parse naruModules with a regex that tolerates whitespace.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "style"
+   ]
+  },
+  {
+   "id": "T4-F10",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Duplicate transient-hash tests, and the AC-2 \"negative control\" does not test the checker",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/AuthDocsTest.java",
+    "line_range": "38-191"
+   },
+   "description": "transientHashLimitIsDocumented (38-50) and DR_IAM_001_AC7_transientHashLimitInJavadocAndDocs (78-95) assert the same KO_HASH/EN_HASH and the same AuthUser Javadoc, so a change has to be made twice. In CON_AUTH_005_AC2 the \"negative control\" `assertFalse(ko.contains(\"`NoSuchAuthType`\"))` (190) only checks that the page lacks a made-up string. It never runs the missing-type logic on an absent type, so a broken check (for example publicUtilsTypes() returning the wrong names) would not be caught. Compare CON_AUTH_005_AC3, which feeds apiEntryGaps a synthetic page.",
+   "suggested_fix": "Remove the unannotated duplicate. Make the control run the same membership check over a list with a fake type and assert that it is reported missing.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "style"
+   ]
+  },
+  {
+   "id": "T4-F11",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "cited() accepts any line holding the AC token within four lines above any @Test",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/build/CrossModuleAuthGateTest.java",
+    "line_range": "59-84"
+   },
+   "description": "The Java branch matches the AC token on any line, such as an assertion message string or a comment near the end of the previous method body, and then accepts the next @Test within four lines. Scenario: the owner test of SEC-HTTP-001 AC-2 is deleted, but a neighbouring test ends with assertEquals(\"SEC-HTTP-001 AC-2 ...\", ...) and is followed by another @Test. The gate still reports the AC as cited. It also does not check that the cited method is in a class that runs (it could be abstract or a helper).",
+   "suggested_fix": "Only count comment lines (`//` or `*`) that are followed by annotations or blank lines up to the @Test. Better, match the test method name convention (for example SEC_HTTP_001_AC2) as CrossAdapterTest names do.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T4-F12",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "The narrowed JS require( heuristic (deferred W3 review item) still has edge misclassifications",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+    "line_range": "137-138"
+   },
+   "description": "Reviewed as the W3 report asked. `(.*[^.\\w])?require\\(` correctly exempts `auth.require(`, and the three new controls (563-566) pin that. Remaining edges: a Java method reference or a qualified static call written `Guards::require(` or `auth .require(` (space before the dot) is still flagged as JavaScript, and JS member calls such as `jwt.require(` are no longer caught. No current page hits either case. Low impact, recorded as still present.",
+   "suggested_fix": "Optionally add `:` and whitespace before `.` to the exemption and add a control for `x::require(`. Otherwise accept it as is.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "deferred"
+   ]
+  },
+  {
+   "id": "T4-F13",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "In-memory TestApps started by send() are never shut down (deferred \"started TestApps are not shut down\")",
+   "location": {
+    "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletProxyTrustTest.java",
+    "line_range": "90-98"
+   },
+   "description": "inMemory() starts a new TestApp, with a cached daemon worker pool in InMemoryHttpAdapter, for each setting and peer: six per run of SEC_SVL_001_AC1_AC2_AC3_AC4. None is shut down, so threads and app state are left until JVM exit. The same pattern is in AuthUsersGsonTest (t.send). The threads are daemon and idle out after 60 s, so the impact is small.",
+   "suggested_fix": "Call t.app().shutdown(...) in a finally block (or add a TestApp.close()), and collect the bodies first.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "deferred"
+   ]
+  },
+  {
+   "id": "T4-F14",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "The AC-5 test checks no response values under the hop setting",
+   "location": {
+    "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletProxyTrustTest.java",
+    "line_range": "131-140"
+   },
+   "description": "For \"hops=1\" the body check is skipped entirely, including socketAddress() (the first token), which must still equal the captured getRemoteAddr() 198.51.100.20 under every setting. SEC-SVL-001 AC-5 asks that the exchange values equal the captured values for every setting and header combination. Under hops the test verifies only the call recording.",
+   "suggested_fix": "Under hops, assert that each body starts with \"198.51.100.20 \" (socketAddress), and keep the full check for the other settings.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave5KotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthWave5KotlinTest"
+   ],
+   "findings": [
+    "T4-F07"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave6JdbcKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthWave6JdbcKotlinTest"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave6KotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthWave6KotlinTest"
+   ],
+   "findings": [
+    "T4-F06"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave6PasswordKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthWave6PasswordKotlinTest"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave7KotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthWave7KotlinTest"
+   ],
+   "findings": [
+    "T4-F04",
+    "T4-F05",
+    "T4-F08"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave8KotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthWave8KotlinTest"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave9KotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthWave9KotlinTest"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/ApiKeyGsonTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ApiKeyGsonTest"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/AuthUserGsonTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthUserGsonTest"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/AuthUsersGsonTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthUsersGsonTest"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAuthFailureFloorTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ServletAuthFailureFloorTest"
+   ],
+   "findings": [
+    "T4-F01"
+   ]
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletProxyTrustTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ServletProxyTrustTest"
+   ],
+   "findings": [
+    "T4-F13",
+    "T4-F14"
+   ]
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// SDS-AC-3; FR-SVL-002 AC-3; CON-ENGINE-001 AC-1 — trustProxy acts in the core over the container's values"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AuthFailureFloorSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthFailureFloorSocketTest"
+   ],
+   "findings": [
+    "T4-F02",
+    "T4-F03"
+   ]
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/BothAdaptersCases.java",
+   "hunks_total": 1,
+   "anchors": [
+    "proxyTrustModeCases"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/CrossAdapterTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "// FR-ENGINE-008 AC-4; CON-ENGINE-001 AC-1",
+    "SEC_ENGINE_001_AC6_SEC_ENGINE_002_AC6_SEC_ENGINE_003_AC7_SEC_HTTP_001_AC4_hopAndCidrTrustMatchOnBoth"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthPlacementTest"
+   ],
+   "findings": [
+    "T4-F09"
+   ]
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/CrossModuleAuthGateTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "CrossModuleAuthGateTest"
+   ],
+   "findings": [
+    "T4-F11"
+   ]
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/AuthCoreDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthCoreDocsTest"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/AuthDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthDocsTest"
+   ],
+   "findings": [
+    "T4-F10"
+   ]
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "hunks_total": 4,
+   "anchors": [
+    "\".*=>.*|^\\\\s*(const|let|var|function)\\\\s.*|(.*[^.\\\\w])?require\\\\(.*|.*'[^'\\\\\\\\]{2,}'.*\");",
+    "apikey",
+    "assertFalse(JS_LINE.matcher(\"app.post(\\\"/p\\\", auth.require(\\\"posts:write\\\"), h);\").matches());",
+    "CON_AUTH_005_AC4_everyAuthPageJavaBlockCompilesOrIsNamedSkip"
+   ],
+   "findings": [
+    "T4-F12"
+   ]
+  }
+ ],
+ "summary": {
+  "total": 14,
+  "by_severity": {
+   "HIGH": 1,
+   "MEDIUM": 1,
+   "LOW": 12
+  }
+ }
+}

@@ -87,7 +87,7 @@ public class HttpApiSurfaceTest {
 
     // SDS-AC-1; IR-HTTP-001 AC-1; IR-APP-004 AC-3 adds application and service from wave 4; SDS-AC-11 of
     // docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-3.sds.md; FR-COOKIE-002 AC-8 adds the cookie readers; IR-MULTIPART-002 AC-6 adds
-    // form, file, files and parts
+    // form, file, files and parts; IR-HTTP-010 AC-2 adds socketAddress and requestId
     @Test
     public void sdsAc1_IR_HTTP_001_AC1_requestDeclaresTheWave3Methods() throws Exception {
         assertTrue(Request.class.isInterface());
@@ -109,7 +109,9 @@ public class HttpApiSurfaceTest {
                 // wave 5: FR-COOKIE-002 AC-8
                 "cookie(String)->Cookie", "getCookies()->Cookie[]",
                 // wave 6: IR-MULTIPART-002 AC-6
-                "form(String)->String", "file(String)->UploadFile", "files(String)->List", "parts()->List"),
+                "form(String)->String", "file(String)->UploadFile", "files(String)->List", "parts()->List",
+                // 0.11.0: IR-HTTP-010 AC-2 (C6a, C7)
+                "socketAddress()->String", "requestId()->String"),
                 signatures(Request.class));
         for (String name : new String[] {"queries", "headers"}) {
             assertEquals(name, "java.util.List<java.lang.String>",
@@ -326,7 +328,7 @@ public class HttpApiSurfaceTest {
 
     // SDS-AC-6; IR-HTTP-005 AC-1, AC-2, AC-3, AC-5; IR-APP-002 AC-2 (wave 4 SDS-AC-5: re-pointed to the wave 4 set);
     // SDS-AC-3 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; IR-ENGINE-001 AC-7: the wave 5 set;
-    // IR-STATIC-002 AC-5: the wave 6 set
+    // IR-STATIC-002 AC-5: the wave 6 set; IR-APP-008 AC-5 and IR-ENGINE-003 AC-5: the 0.11.0 set
     @Test
     public void sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_IR_APP_002_AC2_restAppDeclaresExactlyTheWave4Methods() {
         assertTrue(RestApp.class.isInterface());
@@ -374,7 +376,12 @@ public class HttpApiSurfaceTest {
                 // wave 7: IR-WS-001 AC-1, AC-6
                 "ws(String,WebSocketHandler)->RestApp", "webSocket(Configurer)->RestApp",
                 // wave 7: IR-SSE-001 AC-4
-                "sse(Configurer)->RestApp"), signatures(RestApp.class));
+                "sse(Configurer)->RestApp",
+                // 0.11.0: IR-APP-008 AC-5 (C4)
+                "registrations()->List", "onRegistration(RegistrationListener)->RestApp",
+                // 0.11.0: IR-ENGINE-003 AC-5 (C6b)
+                "trustProxyHops(int)->RestApp", "trustProxyCidrs(String[])->RestApp", "trustProxy()->boolean",
+                "trustProxyHops()->int", "trustProxyCidrs()->List"), signatures(RestApp.class));
         // CON-APP-010 AC-5; FR-APP-021 AC-3: inherited methods are checked exhaustively below.
         assertEquals(Arrays.<Class<?>>asList(HttpRoutes.class), Arrays.asList(RestApp.class.getInterfaces()));
         assertEquals("com.snoworca.naruserve.HttpRoutes<com.snoworca.naruserve.RestApp>",

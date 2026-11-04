@@ -1,0 +1,996 @@
+{
+ "group": "TOKEN",
+ "prescreen": {
+  "senior_targets": [
+   "SEC-TOKEN-002",
+   "SEC-TOKEN-003",
+   "SEC-TOKEN-004",
+   "SEC-TOKEN-005",
+   "FR-TOKEN-001",
+   "SEC-TOKEN-006",
+   "FR-TOKEN-002",
+   "PERF-TOKEN-001",
+   "SEC-TOKEN-008",
+   "FR-TOKEN-003",
+   "REL-TOKEN-001",
+   "SEC-TOKEN-009",
+   "PERF-TOKEN-002",
+   "FR-TOKEN-004",
+   "IR-TOKEN-001",
+   "IR-TOKEN-002"
+  ],
+  "quick_pass": [
+   "SEC-TOKEN-001",
+   "SEC-TOKEN-007"
+  ],
+  "quick_block": []
+ },
+ "judgements": [
+  {
+   "req_id": "SEC-TOKEN-001",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "Base64Url, an HMAC-SHA256 wrapper with a Mac per call or ThreadLocal, and an XOR-accumulate compare are small, use only API 1 classes, and are written by hand because java.util.Base64 is not in the API 21 signature.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain java/util/Base64",
+      "docs/research/auth-rbac/06.threat-model-and-verification.md:42-43 (F10 PBKDF2WithHmacSHA256 is API 26+, F11 HmacSHA256 is API 1+, both [confirmed] against the AOSP javadoc tables)",
+      "build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "The verifies trace ApiJarClasses.java:27-28 exists and matches AC-5 (internal is outside PUBLIC_PACKAGES). The addition-site parent exists.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:27-28 PUBLIC_PACKAGES lists only naruserve, spi, routing"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "Depends only on CON-AUTH-001..003, which are 0.11.0 build-rule siblings. It is not in a depends_on cycle.",
+     "evidence": [
+      "existing_srs_context.json req_summaries SEC-TOKEN-001 transitive_0110_dependency_count=6"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "All five ACs are unit tests. The AC-3 16-thread equality check is probabilistic, but standard.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Internal primitives owned by TOKEN.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "A building block for the v1 Jwt, CSRF and API key items (00 §9 v1 row), but not named in the row itself.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add a check, test-side, that utils.auth.internal stays out of ApiJarClasses.PUBLIC_PACKAGES"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-TOKEN-002",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "A strict streaming JSON parser and writer that checks depth, size and string limits while scanning, rejects duplicate keys, and keeps integers exact (up to 2^53) is moderate work. It needs no platform API and no Gson.",
+     "evidence": [
+      "build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main dependency to add)",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain java/util/Base64"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "The verifies trace build.gradle:60-80 matches AC-7 (the api module has no main dependency). The MiniJson design is concrete: two profiles with numeric limits.",
+     "evidence": [
+      "build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "OPS-AUTH-001 and REL-IAM-004 are draft 0.11.0 siblings and are needed only for AC-6. Not in a cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1 to AC-5 and AC-7 are unit tests. AC-6 needs the REL-IAM-004 start-up FAIL path. The open WARN question (Q33/Q42) is explicitly excluded, so the test can be written.",
+     "evidence": [
+      "open_questions.md Q33, Q42"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "MiniJson (R43) is named in the 00 §9 v1 row.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Interpret KB as KiB (1,024 bytes) and record this in docs/api",
+    "Keep integer claims exact and reject exp above 2^53 (06 AUTH-T05)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-TOKEN-003",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "HS256 sign and verify sit on Mac (API 1) plus the SEC-TOKEN-001/002 primitives. The verification order is fixed by 01 §2.4. TimeSource is new because no clock abstraction exists today.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain java/util/Base64",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/ has no utils package yet (code_context packaging_note; utils.auth has 0 files)",
+      "find: no TimeSource*.java in the repository"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "No verifies trace: everything is an addition site. The trace itself marks TimeSource missing_evidence. The design is concrete: header members, order and leeway bounds.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "Its four depends_on are draft 0.11.0 siblings and all implementable. It is in the 70-member SCC through SEC-TOKEN-004 ⇄ SEC-AUTH-001 (-4).",
+     "evidence": [
+      "existing_srs_context.json cycles[1]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Every AC maps to a concrete malformed-token test (AUTH-T01..T11). AC-8's reason names are not final, but the test can still be written.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "HS256 Jwt is the first item in the 00 §9 v1 row.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Decide the no-kid single-key case (Q29) and record it in docs/api",
+    "Add a Kotlin compile/run test for the public jwt package (T11)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-TOKEN-004",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "The factories are simple. fromFile needs owner-only permissions through File.setReadable(false,false)/(true,true), which is in the signature, and a never-overwrite write through AtomicFiles (IAM). SecureRandom is in the signature.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain java/util/Base64"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition sites only. The rotating() argument shape and the KeySources package are not fixed (Q36).",
+     "evidence": [
+      "open_questions.md Q36"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Five draft cross-scope depends_on (FR-AUTH-001, OPS-AUTH-001, SEC-AUTH-001/002, REL-IAM-004). It is in a direct 2-cycle with SEC-AUTH-001 inside the SCC (-5).",
+     "evidence": [
+      "existing_srs_context.json sample_shortest_cycles [SEC-AUTH-001, SEC-TOKEN-004]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1, AC-2, AC-4 and AC-6 are unit tests. AC-8 needs a full login and a protected request through Auth.builder. The owner-only check in AC-5 is POSIX-dependent.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "'KeySource + kid key set' is in the 00 §9 v1 row.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut the SEC-TOKEN-004 ⇄ SEC-AUTH-001 depends_on edge (make one side related_to) before wave scheduling",
+    "Fix the rotating() signature and the KeySources package in docs/api (Q36)",
+    "Make the AC-5 permission assertion conditional on a POSIX file system"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-TOKEN-005",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Purpose keys are HMAC(secret, label) per kid on Mac (API 1). Token assembly is thin over Jwt.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain java/util/Base64"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Addition sites only (TokenService, HmacSigner). The claim set and headers are concrete. The labels for the access and refresh keys are open (Q28).",
+     "evidence": [
+      "open_questions.md Q28"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "Depends on SEC-TOKEN-003/004 and SEC-IAM-003, all draft siblings. It is in the SCC (-4).",
+     "evidence": [
+      "existing_srs_context.json cycles[1]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-4 proves the keys differ without knowing the labels, so Q28 does not block a test. AC-5 fixes the device labels.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of the v1 TokenService (R2, R8).",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Choose the access and refresh derivation labels and fix them in docs/api (Q28)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-TOKEN-001",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Issue and rotate on top of Jwt and the store SPI. The concurrency risk sits in the atomic markUsed of FR-TOKEN-002.",
+     "evidence": [
+      "build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Addition sites for TokenService and TokenPair. The rotation algorithm is concrete (R1, R2, R10).",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "Depends on SEC-TOKEN-005, FR-TOKEN-002 and FR-AUTH-003 (AuthProfile). It is in the SCC on the FR-FLOW-002 → FR-TOKEN-001 path (-5).",
+     "evidence": [
+      "existing_srs_context.json sample_shortest_cycles FR-FLOW-002→FR-TOKEN-001→SEC-TOKEN-005"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "The ACs are concrete. AC-6's defaults come from the AuthProfile value recorded in docs/api (Q38 open), so the test reads that value. AC-2's names are not final.",
+     "evidence": [
+      "open_questions.md Q38"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "TokenService is in the 00 §9 v1 row.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Record the AuthProfile access/refresh TTL defaults in docs/api before the AC-6 test"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-TOKEN-006",
+   "feasibility": "high",
+   "score": 85,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Reuse means the store's markUsed returns false. It then calls revokeFamily and the event, and wraps store errors as AuthUnavailableException. Small logic.",
+     "evidence": []
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Addition sites for TokenService and RefreshTokenStore. Concrete per RFC 9700 §4.14.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "Depends on FR-TOKEN-001/002, FR-AUTH-007 and IR-AUTH-002, all draft. It is in the SCC (-5).",
+     "evidence": [
+      "existing_srs_context.json cycles[1]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Every AC pins reuseGrace=0, so the open default (Q27) and the within-grace behaviour (Q40) do not block tests.",
+     "evidence": [
+      "open_questions.md Q27, Q40"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Part of RefreshTokenStore (00 §9 v1).",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Decide the reuseGrace default and the within-grace behaviour, and record them in docs/api (Q27, Q40)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-TOKEN-002",
+   "feasibility": "high",
+   "score": 81,
+   "axes": {
+    "implementability": {
+     "score": 23,
+     "rationale": "The SPI and the in-memory store are trivial. The file store needs AtomicFiles and the MiniJson FILE profile. The JDBC default needs java.sql/javax.sql.DataSource, which are present in the API 21 signature file (the build has not exercised them yet). The 10-minute daemon ScheduledExecutorService is in the signature.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain java/util/Base64",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:129-135 onStart/onStop LifecycleCallback"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "The verifies trace RestApp.java:129-135 (onStop) exists and matches AC-5's stop-in-onStop.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:129-135 onStart/onStop LifecycleCallback"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "Six draft cross-scope depends_on (SEC-TOKEN-002, FR-IAM-002, REL-IAM-004, FR-AUTH-003, OPS-AUTH-001, FR-AUTH-005). Not in a cycle, but transitive_0110_dependency_count=27.",
+     "evidence": [
+      "existing_srs_context.json req_summaries FR-TOKEN-002"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1, AC-4, AC-5 and AC-7 are concrete. AC-3 (a single merged doctor WARN) and AC-5 (ApiKeyStore.deleteExpired) need AUTH/APIKEY pieces. The SPI method names are not final (Q34, Q43) but testable.",
+     "evidence": [
+      "open_questions.md Q34, Q43"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "The JDBC default overlaps FR-IAM-012 JdbcRefreshTokenStore (Q67). The default-selection ACs need deduplication.",
+     "evidence": [
+      "docs/spec/20.auth-identity-and-grants.srs.md:1742 FR-IAM-012",
+      "open_questions.md Q67"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "RefreshTokenStore is in the 00 §9 v1 row.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Confirm java.sql and javax.sql.DataSource pass animal-sniffer once the JDBC store lands (present in the signature file)",
+    "Dedupe the default-selection ACs with FR-IAM-012 (Q67)",
+    "Fix the RefreshTokenStore method set and the purgeExpired default body in docs/api (Q34, Q43)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-TOKEN-007",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "SecretKeyFactory PBKDF2WithHmacSHA256 is API 26+. The block and 00 §1/§2 therefore require a hand-written RFC 8018 §5.2 loop over Mac(\"HmacSHA256\"), which is API 1+, about 30 lines. SecureRandom and SecretKeySpec are in the API 21 signature. Animal-sniffer cannot see algorithm strings, so AC-6 must be a source/bytecode test.",
+     "evidence": [
+      "docs/research/auth-rbac/06.threat-model-and-verification.md:42-43 (F10 PBKDF2WithHmacSHA256 is API 26+, F11 HmacSHA256 is API 1+, both [confirmed] against the AOSP javadoc tables)",
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain java/util/Base64",
+      "docs/research/auth-rbac/01.jwt-user-management.md:240"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "Addition sites (password/, internal/Pbkdf2.java). The format and test vectors are concrete (RFC 7914 §11).",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "Depends only on SEC-TOKEN-001. Not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json req_summaries SEC-TOKEN-007 transitive=7"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "The vectors, format, accepts and grep checks are direct. AC-5 (HMAC init once per call) needs a counting seam on HmacSigner.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "The default hasher is in the 00 §9 v1 row (PBKDF2 calibration and chain).",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Expose an init-count seam on HmacSigner/Pbkdf2 for AC-5",
+    "Make AC-6 a test that scans utils.auth classes for SecretKeyFactory/\"PBKDF2WithHmacSHA256\" (animal-sniffer does not check algorithm strings)",
+    "Encode salt and hash with base64url and record this in docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "PERF-TOKEN-001",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Calibration uses System.nanoTime (in the signature) behind a measurement stub. Rounding, clamping and thresholds are arithmetic.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain java/util/Base64"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Addition site HashCost.java. The numbers are concrete (50k-600k, 10k steps, 80/125 %).",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "Depends on SEC-TOKEN-007 and OPS-AUTH-001, both draft. Not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json req_summaries PERF-TOKEN-001 transitive=13"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1 to AC-4 are pure arithmetic. AC-6 needs the SEC-TOKEN-009 login fixture. AC-7 accepts either refuse or clamp (Q142). The doctor level (Q24) and T under fixed(n) (Q45) are open but excluded from the ACs.",
+     "evidence": [
+      "open_questions.md Q24, Q45, Q142"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "PBKDF2 calibration (R27, R38) is in the 00 §9 v1 row.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Decide refuse-vs-clamp and the default target (Q142), and T under fixed(n) (Q45/Q141), then record them in docs/api",
+    "Provide an injectable measurement stub"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-TOKEN-008",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 22,
+     "rationale": "The hardest unit in the scope: Blowfish/EksBlowfish written by hand from the Provos-Mazieres paper (18 P-array words, 4x256 S-box pi constants, 2^cost key schedule). It must not be ported from jBCrypt because of the ISC notice. It uses only int arithmetic, so it is Java 8 / API 21 safe.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain java/util/Base64",
+      "build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Addition sites for BcryptPasswordHasher and internal/Blowfish. The variant rules, cost cap and length checks are concrete.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "Depends on SEC-TOKEN-001 and REL-TOKEN-001 (slots). Not in a cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Published OpenBSD and PHP vectors decide AC-1 and AC-4. AC-6 needs the slot pool. The builder name in AC-3 is not final, but the test can be written.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Legacy bcrypt is in the 00 §9 v1 row.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Write Blowfish from the paper and spec, not from jBCrypt (licence), and record where the pi constants come from",
+    "Keep the S-box tables within the class-file static-initialiser size limit (for example split arrays)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-TOKEN-003",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "The chain selection is trivial. The digest and saltedDigest verifiers use MessageDigest MD5/SHA-1/SHA-256 (in the signature). The rehash goes through the IAM updatePasswordHash path.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain java/util/Base64"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Addition site PasswordHashers.java. The prefix and rehash rules are concrete (00 §4.3, R37).",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Depends on SEC-TOKEN-007/008, PERF-TOKEN-002, IR-IAM-001 and REL-IAM-001, all draft. It is in the SCC on the FR-AUTH-009 → … → FR-TOKEN-003 → REL-IAM-001 path (-5).",
+     "evidence": [
+      "existing_srs_context.json sample_shortest_cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1, AC-2, AC-4 and AC-5 are unit tests. AC-3, AC-6 and AC-7 need login plus an IAM store, but are deterministic.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "The hash chain and MD5/SHA legacy verifiers are in the 00 §9 v1 row.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Fix the parameter type of digest(prefix, algorithm, encoding) in docs/api",
+    "Add a Kotlin PasswordHasher test (T11)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "REL-TOKEN-001",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "A fair Semaphore plus a bounded waiter count is in the signature. The non-blocking wait and the 503 rely on the existing methodAsync/Deferred path. The tests already write responses from a pool thread.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain java/util/Base64",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19-21 methodAsync/AsyncMiddleware; internal/HttpExecution.java:128-140 Deferred lease kept until settled",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpTransportRetentionContractTest.java:120 and HttpDeferredLifetimeContractTest.java:217 already write response.send from a pool thread; Deferred.java:26-28 resolve/reject are synchronized"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "The verifies trace HttpExecution.java:128-140 exists and matches the async lease that keeps the request open without a thread.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19-21 methodAsync/AsyncMiddleware; internal/HttpExecution.java:128-140 Deferred lease kept until settled"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "depends_on is empty, although AC-2, AC-4 and AC-5 reference SEC-TOKEN-009, AuthUsers.create (IAM) and auth.errors() (AUTH): edges are missing. Not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json req_summaries REL-TOKEN-001 depends_on=[]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1 needs an injectable core count (Runtime.availableProcessors). The AC-3 5-second cap needs an injected clock or scheduler. The Retry-After value is open (Q32), but its presence is testable.",
+     "evidence": [
+      "open_questions.md Q32"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "The R5 concurrency limit supports the v1 PBKDF2 calibration; it is not a separately named row item.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add the missing depends_on edges to SEC-TOKEN-009, the AuthUsers (IAM) item and the AUTH error layer",
+    "Inject the core count and the wait clock for AC-1 and AC-3",
+    "Fix the Retry-After value (Q32; 06 suggests 1 s)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-TOKEN-009",
+   "feasibility": "medium",
+   "score": 79,
+   "axes": {
+    "implementability": {
+     "score": 23,
+     "rationale": "Equal work per attempt (one real or dummy PBKDF2 inside one slot) plus a scheduler-delayed failure response at max(1.25T, elapsed) plus jitter. 00 §12 leaves the scheduler-thread write unconfirmed. Existing tests already call response.send from a pool thread and Deferred settlement is synchronized, which lowers the risk. The attempt boundary depends on the FLOW step order (SEC-FLOW-012 ①–④).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19-21 methodAsync/AsyncMiddleware; internal/HttpExecution.java:128-140 Deferred lease kept until settled",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/HttpTransportRetentionContractTest.java:120 and HttpDeferredLifetimeContractTest.java:217 already write response.send from a pool thread; Deferred.java:26-28 resolve/reject are synchronized"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "The verifies trace HttpExecution.java:128-140 matches the async completion path. The equalizer itself is an addition site.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19-21 methodAsync/AsyncMiddleware; internal/HttpExecution.java:128-140 Deferred lease kept until settled"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Five depends_on, two of them FLOW (SEC-FLOW-011/012), all draft. It is in the SCC (-5).",
+     "evidence": [
+      "existing_srs_context.json cycles[1]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-2 and AC-3 are deterministic only with an injected scheduler, a fake hasher and a jitter source. AC-5 is a thread-starvation test. T under fixed(n) is open but excluded (Q45). Q39 (whether in-handler early rejections are floored) touches the attempt boundary.",
+     "evidence": [
+      "open_questions.md Q39, Q45"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "R38 constant-work login is part of the v1 PBKDF2 calibration (00 §9 v1 row).",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Confirm with an adapter-level test (TinyHttpd and Servlet) that completing the async login response from the scheduler thread is safe (00 §12)",
+    "Inject the scheduler, jitter and nanoTime sources",
+    "Settle the attempt boundary with SEC-FLOW-012 (Q39)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "PERF-TOKEN-002",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "An ArrayBlockingQueue(100) with offer(), one daemon worker taking a slot, and Arrays.fill on char[]. All are in the signature.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21:5.0.1_r2 (main source set only); the cached signature file contains javax/crypto/Mac, javax/crypto/spec/SecretKeySpec, java/security/SecureRandom, java/security/MessageDigest, java/util/concurrent/Semaphore, ArrayBlockingQueue, ScheduledThreadPoolExecutor, File.setReadable, Runtime.availableProcessors, System.nanoTime, java/sql/Connection, javax/sql/DataSource, and does not contain java/util/Base64"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Only the addition site utils/auth/internal/ (a directory). The queue design is concrete.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "Depends on REL-TOKEN-001 and REL-IAM-001. It is in the SCC through REL-IAM-001 → FR-AUTH-009 (-5).",
+     "evidence": [
+      "existing_srs_context.json sample_shortest_cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "The latch, capacity, thread-type and zeroed-char[] tests are direct. AC-5 needs the IAM re-read compare.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Supports the v1 rehash path (R38); not separately named in the row.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Stop the worker from the auth onStop hook (AUTH install)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-TOKEN-004",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "A length check and an optional SAM call before the slot is taken. Trivial. Wiring it into the six set-password paths spans FLOW and IAM.",
+     "evidence": [
+      "build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition sites PasswordPolicy and spi/BreachedPasswordChecker. The policy numbers are not in 00 (Q31).",
+     "evidence": [
+      "open_questions.md Q31"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Depends on REL-TOKEN-001, FR-AUTH-003 and FR-FLOW-004. It is in the SCC through FR-FLOW-004 → FR-FLOW-002 (-5).",
+     "evidence": [
+      "existing_srs_context.json sample_shortest_cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "The tests configure the policy explicitly, so the open default minimum (Q31) does not block them. The violation status code is open, but 'rejected with zero hash calls' is testable on each path.",
+     "evidence": [
+      "open_questions.md Q31, Q41"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "PasswordPolicy and BreachedPasswordChecker are in the 00 §2 tree but not named in the 00 §9 v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:64, 79"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Decide the default minimum length and the lower-case violation error code with FLOW, and record them in docs/api (Q31)",
+    "Add a Kotlin SAM test for BreachedPasswordChecker (T11)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "IR-TOKEN-001",
+   "feasibility": "medium",
+   "score": 76,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "The password seam is clear (05 §3.9). The Bearer and API key authenticator method shapes are not given in 00 (Q35), so the SPI shape must be designed during implementation. No platform risk.",
+     "evidence": [
+      "open_questions.md Q35",
+      "build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Only the addition site spi/Authenticator.java. The built-in shapes are unspecified.",
+     "evidence": []
+    },
+    "dependency_health": {
+     "score": 6,
+     "rationale": "Seven depends_on across TOKEN, APIKEY and FLOW, all draft. It is in direct short cycles, including the 2-cycle IR-TOKEN-001 ⇄ SEC-FLOW-004 (-6). It is the most entangled TOKEN item.",
+     "evidence": [
+      "existing_srs_context.json sample_shortest_cycles [IR-TOKEN-001, SEC-FLOW-004]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-2 to AC-5 are testable once the pipeline exists. AC-6 needs the AUTH 503 renderer. The AC-1 builder name is not final.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "'Authenticator (password, Bearer, API key)' is in the 00 §9 v1 row.",
+     "evidence": []
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut the IR-TOKEN-001 ⇄ SEC-FLOW-004 depends_on 2-cycle before wave scheduling",
+    "Fix the Authenticator method set for the Bearer and API key credentials in docs/api (Q35)",
+    "Add a Kotlin SAM test (T11)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "IR-TOKEN-002",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "An interface plus a default codec that delegates to Jwt and the purpose keys. Small.",
+     "evidence": [
+      "build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main dependency to add)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Only the addition site spi/TokenCodec.java. The method set and claims type are advisory from 05 §3.8 (Q44).",
+     "evidence": [
+      "open_questions.md Q44"
+     ]
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "Depends on SEC-TOKEN-003/004/005 (draft, in the SCC) and FR-KT-001 (verified/evolving). It is not in a cycle itself.",
+     "evidence": [
+      "docs/spec/13.kotlin-compatibility.srs.md:39-49 FR-KT-001 verified, evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1 and AC-3 are unit-testable. AC-2 needs a full login and a protected request with a custom codec. The names are not final, but testable.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Ships only a seam with one implementation. Replacement codecs are v2.",
+     "evidence": []
+    },
+    "product_fit": {
+     "score": 7,
+     "rationale": "TokenCodec is in the 00 §2 spi tree as v1 (line 77) but is not named in the 00 §9 v1 row. Nice-to-have in v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:77, 198"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Fix the TokenCodec method set, claims type and builder option name (.tokens vs .tokenCodec) in docs/api (Q44)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  }
+ ]
+}

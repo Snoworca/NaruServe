@@ -152,6 +152,22 @@ public final class KotlinDocsMarkersTest {
         assertEquals(String.join("\n", failures), Collections.<String>emptyList(), failures);
     }
 
+    // CON-AUTH-005 AC-4: every Kotlin block of auth.md and en/auth.md has its compiled, run Kotlin test marker
+    @Test
+    public void CON_AUTH_005_AC4_authPageKotlinBlocksHaveNoMarkerFailure() throws IOException {
+        Map<String, String> docs = docs();
+        for (String page : new String[] {"auth.md", "en/auth.md"}) {
+            String text = docs.get(page);
+            assertTrue("auth page " + page, text != null);
+            assertTrue(page + " holds kotlin blocks", text.split("```kotlin", -1).length - 1 > 10);
+        }
+        List<String> authFailures = new ArrayList<>();
+        for (String f : KotlinDocsMarkers.failures(docs, kotlinSources())) {
+            if (f.startsWith("auth.md#") || f.startsWith("en/auth.md#")) authFailures.add(f);
+        }
+        assertEquals(String.join("\n", authFailures), Collections.<String>emptyList(), authFailures);
+    }
+
     @Test
     public void sdsAc1_FR_KT_004_AC_1_a_matching_fixture_gives_no_failure() {
         assertEquals(Collections.<String>emptyList(), KotlinDocsMarkers.failures(one("t.md", DOC), one("T.kt", SOURCE)));

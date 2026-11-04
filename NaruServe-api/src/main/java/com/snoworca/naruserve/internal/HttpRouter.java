@@ -27,40 +27,67 @@ public final class HttpRouter {
         this.mergeParams=mergeParams;this.caseSensitive=caseSensitive;this.strict=strict;
     }
     public synchronized void param(String name,ParamHandler callback) {
-        Objects.requireNonNull(name,"name");Objects.requireNonNull(callback,"callback");
+        checkParam(name,callback);
         Map<String,ParamHandler[]> copy=new LinkedHashMap<>(paramHooks);
         ParamHandler[] old=copy.get(name);if(old==null)old=new ParamHandler[0];
         ParamHandler[] next=Arrays.copyOf(old,old.length+1);next[old.length]=callback;copy.put(name,next);
         paramHooks=Collections.unmodifiableMap(copy);
     }
-    public void error(Object path,ErrorMiddleware callback) {
+    // FR-APP-021 AC-3; SEC-APP-002: each prepare* validates every input and builds the unpublished layer, so the
+    // registration watcher runs between validation and apply(Layer), and apply can no longer fail for an input.
+    public void error(Object path,ErrorMiddleware callback) { apply(prepareError(path,callback)); }
+    // @req SEC-APP-002
+    Layer prepareError(Object path,ErrorMiddleware callback) {
         Objects.requireNonNull(callback,"callback");
-        append(new Layer(path(path,false,false),callback));
+        return new Layer(path(path,false,false),callback);
     }
-    public void mount(Object path,HttpRouter child) {
+    public void mount(Object path,HttpRouter child) { apply(prepareMount(path,child)); }
+    // @req SEC-APP-002
+    Layer prepareMount(Object path,HttpRouter child) {
         Objects.requireNonNull(child,"router");
-        append(new Layer(path(path,false,false),null,null,child));
+        return new Layer(path(path,false,false),null,null,child);
     }
-    public RouteBuilder route(Object path) {
+    public RouteBuilder route(Object path) { return route(path,DIRECT); }
+    /** A builder whose method registrations pass through {@code hook}, which must run the apply it receives. */
+    // @req FR-APP-025
+    // @req SEC-APP-002
+    RouteBuilder route(Object path,BuilderHook hook) {
         Route route=new Route(path(path,true,strict));
         append(new Layer(route.path,route,null));
-        return new Builder(route);
+        return new Builder(route,Objects.requireNonNull(hook,"hook"));
     }
-    public void method(String token,Object path,Middleware... callbacks) {
+    public void method(String token,Object path,Middleware... callbacks) { apply(prepareMethod(token,path,callbacks)); }
+    // @req SEC-APP-002
+    Layer prepareMethod(String token,Object path,Middleware[] callbacks) {
         String method=method(token); Middleware[] checked=callbacks(callbacks);
         Route route=new Route(path(path,true,strict));
-        route.append(method,checked); append(new Layer(route.path,route,null));
+        route.append(method,checked); return new Layer(route.path,route,null);
     }
-    void methods(MethodSet methods,Object path,Middleware[] callbacks) {
+    void methods(MethodSet methods,Object path,Middleware[] callbacks) { apply(prepareMethods(methods,path,callbacks)); }
+    // @req SEC-APP-002
+    Layer prepareMethods(MethodSet methods,Object path,Middleware[] callbacks) {
         Middleware[] checked=callbacks(callbacks);
         Route route=new Route(path(path,true,strict));
         for(Method method:Objects.requireNonNull(methods,"methods")) route.append(method.name(),checked);
-        append(new Layer(route.path,route,null));
+        return new Layer(route.path,route,null);
     }
-    public void use(Object path,Middleware middleware) {
+    public void use(Object path,Middleware middleware) { apply(prepareUse(path,middleware)); }
+    // @req SEC-APP-002
+    Layer prepareUse(Object path,Middleware middleware) {
         Objects.requireNonNull(middleware,"middleware");
-        append(new Layer(path(path,false,false),null,middleware));
+        return new Layer(path(path,false,false),null,middleware);
     }
+    /** Publishes a layer a prepare* method built. */
+    // @req SEC-APP-002
+    void apply(Layer layer) { append(layer); }
+    static void checkParam(String name,ParamHandler callback) {
+        Objects.requireNonNull(name,"name");Objects.requireNonNull(callback,"callback");
+    }
+    /** Runs the apply of one builder method registration; the app and Router hooks watch and record around it. */
+    // @req SEC-APP-002
+    @FunctionalInterface
+    interface BuilderHook { void admit(@org.jspecify.annotations.Nullable String method,Middleware[] callbacks,Runnable apply); }
+    private static final BuilderHook DIRECT=(method,callbacks,apply)->apply.run();
     private synchronized void append(Layer layer) {
         Layer[] copy=Arrays.copyOf(layers,layers.length+1); copy[copy.length-1]=layer; layers=copy;
     }
@@ -109,10 +136,17 @@ public final class HttpRouter {
         }
     }
     private static final class Builder implements RouteBuilder {
-        final Route route;
-        Builder(Route route) { this.route=route; }
-        public RouteBuilder method(String token,Middleware... callbacks) { route.append(HttpRouter.method(token),HttpRouter.callbacks(callbacks));return this; }
-        public RouteBuilder use(Middleware callback) { route.append("",HttpRouter.callbacks(new Middleware[]{callback}));return this; }
+        final Route route; final BuilderHook hook;
+        Builder(Route route,BuilderHook hook) { this.route=route;this.hook=hook; }
+        public RouteBuilder method(String token,Middleware... callbacks) {
+            String method=HttpRouter.method(token);Middleware[] checked=HttpRouter.callbacks(callbacks);
+            hook.admit(method,checked,()->route.append(method,checked));return this;
+        }
+        // FR-APP-025 AC-1: a route-level use is a builder method too; the hook watches it (method null) before append.
+        public RouteBuilder use(Middleware callback) {
+            Middleware[] checked=HttpRouter.callbacks(new Middleware[]{callback});
+            hook.admit(null,checked,()->route.append("",checked));return this;
+        }
         public RouteBuilder get(RouteHandler callback) { return method("GET",HttpRoutes.terminal(callback)); }
         public RouteBuilder post(RouteHandler callback) { return method("POST",HttpRoutes.terminal(callback)); }
         public RouteBuilder put(RouteHandler callback) { return method("PUT",HttpRoutes.terminal(callback)); }

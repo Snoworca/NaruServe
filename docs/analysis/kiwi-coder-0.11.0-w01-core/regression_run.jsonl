@@ -1,0 +1,4 @@
+{"run":"baseline","command":"./gradlew build --continue","exit_code":0,"tests":2181,"failures":0,"head":"bdd576a"}
+{"run":"after-impl-1","command":"./gradlew build --offline --continue","exit_code":1,"tests_root":324,"failures":1,"failed":["AuthCoreDocsTest.SEC_SVL_001_AC5_observedContainerValuesRecorded (docs phrasing)"],"new_failure_attributed":"this run (docs) — fixed"}
+{"run":"after-impl-2","command":"./gradlew build --offline --continue","exit_code":0,"tests":2262,"failures":0,"regressions_vs_baseline":0}
+{"run":"after-review-fix","command":"./gradlew build --offline --continue","exit_code":0,"failures":0}

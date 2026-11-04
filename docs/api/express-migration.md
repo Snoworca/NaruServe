@@ -2,7 +2,7 @@
 
 [English](en/express-migration.md) | [문서 목록](README.md)
 
-**0.10.0 체크아웃의 일반 HTTP 라우팅 프로필**은 Express5의 흔한 문자열 경로·등록 순서·Router·param·next·오류 흐름을 Java API로 제공합니다. Express 전체, Node 런타임, 모든 미들웨어, JavaScript 정규식 호환을 주장하지 않습니다. NaruServe의 타입 지정 본문·text/plain 문자열 응답·기존 WS/SSE/파일·보안 확장은 유지합니다. 현재 아티팩트 사용법은 [설치 안내](README.md)를 보세요.
+**0.11.0 체크아웃의 일반 HTTP 라우팅 프로필**은 Express5의 흔한 문자열 경로·등록 순서·Router·param·next·오류 흐름을 Java API로 제공합니다. Express 전체, Node 런타임, 모든 미들웨어, JavaScript 정규식 호환을 주장하지 않습니다. NaruServe의 타입 지정 본문·text/plain 문자열 응답·기존 WS/SSE/파일·보안 확장은 유지합니다. 현재 아티팩트 사용법은 [설치 안내](README.md)를 보세요.
 
 ## API 대응
 
@@ -89,7 +89,9 @@ Java의 body(Class/TypeRef)는 JSON null을 null로 돌려줍니다. 선택 Kotl
 
 ### 4. 바인딩과 검증 기본값은 유지합니다
 
-기본은127.0.0.1입니다. LAN은 `app.server(o -> o.bindAddress("0.0.0.0"))`를 명시하고 인증을 설치하세요. 루프백 밖은 보안 경고를 남깁니다. proxy 신뢰 기본 false이며 `trustProxy(true)`는 검증되지 않은 첫 X-Forwarded-For/Proto 값을 사용하므로 헤더를 덮어쓰는 신뢰 프록시 뒤에서만 켭니다. Host·request-line·프레이밍 제한은 별개로 유지합니다.
+기본은 127.0.0.1입니다. LAN은 `app.server(o -> o.bindAddress("0.0.0.0"))`를 명시하고 인증을 설치하세요. 루프백 밖은 보안 경고를 남깁니다. proxy 신뢰 기본 false이며 `trustProxy(true)`는 검증되지 않은 첫 X-Forwarded-For/Proto 값을 사용하므로 헤더를 덮어쓰는 신뢰 프록시 뒤에서만 켭니다. Host·request-line·프레이밍 제한은 별개로 유지합니다.
+
+`trustProxy(true)`의 맨 왼쪽 값은 검증되지 않은, 클라이언트가 고를 수 있는 값입니다. 0.10.0 앱과의 호환을 위해 남겨 두었고, auth 모듈의 doctor는 `PROD`에서 이 설정을 FAIL로 보고합니다(R32). 프록시 뒤에서는 [`trustProxyHops`·`trustProxyCidrs`](app.md#프록시-신뢰)를 쓰세요. Express의 `app.set('trust proxy', 1)`은 `app.trustProxyHops(1)`이고(이 노드에 로드 밸런서를 거쳐서만 접속할 수 있을 때만), CIDR 목록은 `app.trustProxyCidrs("10.0.0.0/8")`입니다. nginx는 `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`와 `proxy_set_header X-Forwarded-Proto $scheme;`를 쓰고, `X-Forwarded-Proto`를 덮어쓰지 않고 그대로 넘기는 프록시 구성은 지원하지 않습니다. 실제 연결 주소는 `req.socketAddress()`(Express `req.socket.remoteAddress`), 요청 ID는 `req.requestId()`입니다.
 
 ### 5. 문자열 기본은 case-insensitive·non-strict, 등록 순서입니다
 
@@ -124,8 +126,9 @@ use와 라우트/마운트/오류 레이어 전체가 하나의 순서입니다.
 
 ```java
 Middleware requestId = (req, res, next) -> next.run();   // 요청마다 ID를 붙이는 전역 미들웨어라고 합시다
+Auth auth = Auth.builder(System.getenv("JWT_SECRET")).protectOnly("/api").build(); // /api 아래만 보호
 app.use(requestId);      // 1번째
-app.use("/api", auth);   // /api 경로에서 2번째
+app.use(auth);           // 2번째. 경로를 붙이지 않습니다(경로를 붙이면 등록할 때 IllegalArgumentException)
 ```
 
 ## 예: Express 앱 옮기기

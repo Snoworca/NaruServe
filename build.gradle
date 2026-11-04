@@ -22,7 +22,7 @@ def androidModules = naruModules - [':NaruServe-servlet', ':NaruServe-slf4j']
 
 allprojects {
     group = 'com.snoworca.naruserve'
-    version = '0.10.0'
+    version = '0.11.0'
 
     repositories {
         mavenCentral()
@@ -285,6 +285,9 @@ project(':NaruServe-api') {
         dependsOn tasks.named('jar')
         inputs.file(apiJar)
         doFirst { systemProperty 'naruserve.apiJar', apiJar.get().asFile.absolutePath }
+        // KeySources.fromEnv and AuthConfig env: references read a set variable in tests (FR-AUTH-002 AC-1).
+        // @req FR-AUTH-002
+        environment 'NARU_TEST_AUTH_SECRET', 'q7Vb2Nx9Lk4Rt1Wm8Hc3Zp6Jd0Gs5Fa-Ty'
     }
 }
 

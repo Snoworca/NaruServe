@@ -23,9 +23,23 @@ import java.util.jar.JarFile;
 // @req FR-KT-002
 final class ApiJarClasses {
 
-    /** The public API packages; {@code internal} is outside the method-level checks. */
+    /**
+     * The public API packages; {@code internal} and {@code utils.auth.internal} are outside the method-level checks.
+     * The utils packages are the auth module's public packages (CON-AUTH-004 AC-1).
+     */
     static final List<String> PUBLIC_PACKAGES = Collections.unmodifiableList(Arrays.asList(
-            "com.snoworca.naruserve", "com.snoworca.naruserve.spi", "com.snoworca.naruserve.routing"));
+            "com.snoworca.naruserve", "com.snoworca.naruserve.spi", "com.snoworca.naruserve.routing",
+            "com.snoworca.naruserve.utils",
+            "com.snoworca.naruserve.utils.auth",
+            "com.snoworca.naruserve.utils.auth.jwt",
+            "com.snoworca.naruserve.utils.auth.password",
+            "com.snoworca.naruserve.utils.auth.user",
+            "com.snoworca.naruserve.utils.auth.group",
+            "com.snoworca.naruserve.utils.auth.rbac",
+            "com.snoworca.naruserve.utils.auth.audit",
+            "com.snoworca.naruserve.utils.auth.apikey",
+            "com.snoworca.naruserve.utils.auth.spi",
+            "com.snoworca.naruserve.utils.auth.testing"));
 
     private static final String PREFIX = "com.snoworca.naruserve.";
 

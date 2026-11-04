@@ -8,7 +8,7 @@ Response corresponds to Express's res. status, header, addCookie and cache retur
 res.status(201).header("X-Request-ID", id).json(created);
 ```
 
-The common HTTP behavior below targets NaruServe 0.10.0.
+The common HTTP behavior below targets NaruServe 0.11.0.
 
 ## Method summary
 

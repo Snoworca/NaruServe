@@ -1,0 +1,946 @@
+{
+ "writer": "FLOW",
+ "scope_file": "docs/spec/19.auth-transport-and-endpoints.srs.md",
+ "target": "0.11.0",
+ "template_edit": "Filled §1 Scope Overview, §2 Scope Boundaries and §3 Assumptions once with Edit before the first MCP mutation.",
+ "mcp_calls": [
+  {
+   "tool": "add_requirement(dryRun)",
+   "result_id": "SEC-FLOW-001",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": null,
+   "ok": false,
+   "note": "SRS_LOCKED, retried"
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-001",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-002",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-003",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-004",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "IR-FLOW-001",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-FLOW-001",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-005",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-006",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-007",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-008",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-FLOW-002",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-009",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-010",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-FLOW-003",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "OPS-FLOW-001",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "IR-FLOW-002",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-FLOW-004",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-FLOW-005",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-011",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-012",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-FLOW-006",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-013",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-014",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-FLOW-007",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "SEC-FLOW-015",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-FLOW-008",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "FR-FLOW-009",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "REL-FLOW-001",
+   "ok": true
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": null,
+   "ok": false,
+   "note": "SRS_LOCKED, retried"
+  },
+  {
+   "tool": "add_requirement",
+   "result_id": "IR-FLOW-003",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-002 -> SEC-FLOW-001 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-003 -> SEC-FLOW-001 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-004 -> SEC-FLOW-001 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-001 -> SEC-FLOW-001 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-001 -> SEC-FLOW-004 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-001 -> SEC-FLOW-005 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-001 -> SEC-FLOW-007 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-006 -> SEC-FLOW-004 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-008 -> SEC-FLOW-006 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-008 -> SEC-FLOW-007 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-002 -> SEC-FLOW-007 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-002 -> SEC-FLOW-009 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-010 -> SEC-FLOW-008 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-010 -> SEC-FLOW-009 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-010 -> SEC-FLOW-003 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-003 -> SEC-FLOW-010 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-003 -> IR-FLOW-001 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "IR-FLOW-002 -> SEC-FLOW-003 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-004 -> SEC-FLOW-012 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-004 -> FR-FLOW-002 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-005 -> FR-FLOW-002 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-005 -> SEC-FLOW-008 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-012 -> SEC-FLOW-011 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-012 -> SEC-FLOW-013 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-011 -> IR-FLOW-003 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-013 -> REL-FLOW-001 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "REL-FLOW-001 -> IR-FLOW-003 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-014 -> SEC-FLOW-015 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-014 -> FR-FLOW-002 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-015 -> IR-FLOW-003 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-006 -> IR-FLOW-002 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-007 -> FR-FLOW-002 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-009 -> SEC-FLOW-011 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "OPS-FLOW-001 -> FR-FLOW-002 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-001 -> FR-HTTP-011 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-005 -> FR-JSON-001 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-009 -> FR-COOKIE-001 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-009 -> FR-DX-005 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "SEC-FLOW-004 -> FR-COOKIE-002 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "OPS-FLOW-001 -> FR-DX-010 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-008 -> FR-WS-003 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "FR-FLOW-008 -> FR-WS-001 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "add_trace_link",
+   "result_id": "IR-FLOW-001 -> FR-APP-006 (depends_on)",
+   "ok": true
+  },
+  {
+   "tool": "validate_spec",
+   "result_id": null,
+   "ok": true
+  }
+ ],
+ "added_ids": [
+  "SEC-FLOW-001",
+  "SEC-FLOW-002",
+  "SEC-FLOW-003",
+  "SEC-FLOW-004",
+  "IR-FLOW-001",
+  "FR-FLOW-001",
+  "SEC-FLOW-005",
+  "SEC-FLOW-006",
+  "SEC-FLOW-007",
+  "SEC-FLOW-008",
+  "FR-FLOW-002",
+  "SEC-FLOW-009",
+  "SEC-FLOW-010",
+  "FR-FLOW-003",
+  "OPS-FLOW-001",
+  "IR-FLOW-002",
+  "FR-FLOW-004",
+  "FR-FLOW-005",
+  "SEC-FLOW-011",
+  "SEC-FLOW-012",
+  "FR-FLOW-006",
+  "SEC-FLOW-013",
+  "SEC-FLOW-014",
+  "FR-FLOW-007",
+  "SEC-FLOW-015",
+  "FR-FLOW-008",
+  "FR-FLOW-009",
+  "REL-FLOW-001",
+  "IR-FLOW-003"
+ ],
+ "inventory_mapping": [
+  {
+   "candidate_title": "Secure-transport rule (per request)",
+   "req_id": "SEC-FLOW-001"
+  },
+  {
+   "candidate_title": "allowInsecureTransport(reason) opt-in",
+   "req_id": "SEC-FLOW-002"
+  },
+  {
+   "candidate_title": "Credential endpoint classification",
+   "req_id": "SEC-FLOW-003"
+  },
+  {
+   "candidate_title": "Credential extraction per transport mode",
+   "req_id": "SEC-FLOW-004"
+  },
+  {
+   "candidate_title": "Request decision order for auth endpoints",
+   "req_id": "FR-FLOW-001"
+  },
+  {
+   "candidate_title": "WWW-Authenticate challenge shapes",
+   "req_id": "IR-FLOW-001"
+  },
+  {
+   "candidate_title": "JSON-only POST bodies on auth endpoints",
+   "req_id": "SEC-FLOW-005"
+  },
+  {
+   "candidate_title": "CSRF token construction and verification",
+   "req_id": "SEC-FLOW-006"
+  },
+  {
+   "candidate_title": "Origin and Referer verification",
+   "req_id": "SEC-FLOW-007"
+  },
+  {
+   "candidate_title": "CSRF for anonymous-entry endpoints refresh and logout",
+   "req_id": [
+    "SEC-FLOW-008",
+    "SEC-FLOW-010"
+   ]
+  },
+  {
+   "candidate_title": "Token delivery per transport mode",
+   "req_id": "FR-FLOW-002"
+  },
+  {
+   "candidate_title": "Cookie attributes, paths and clearing rules",
+   "req_id": "SEC-FLOW-009"
+  },
+  {
+   "candidate_title": "CORS guidance for cross-origin clients",
+   "req_id": "OPS-FLOW-001"
+  },
+  {
+   "candidate_title": "POST /auth/login",
+   "req_id": "FR-FLOW-004"
+  },
+  {
+   "candidate_title": "POST /auth/refresh",
+   "req_id": "FR-FLOW-005"
+  },
+  {
+   "candidate_title": "POST /auth/logout and identity decision table",
+   "req_id": [
+    "SEC-FLOW-010",
+    "FR-FLOW-003"
+   ]
+  },
+  {
+   "candidate_title": "GET /auth/me and PATCH /auth/me",
+   "req_id": "FR-FLOW-006"
+  },
+  {
+   "candidate_title": "POST /auth/password",
+   "req_id": "SEC-FLOW-014"
+  },
+  {
+   "candidate_title": "POST /auth/register (default off)",
+   "req_id": "FR-FLOW-007"
+  },
+  {
+   "candidate_title": "Admin user and group endpoints",
+   "req_id": null,
+   "note": "Not written in FLOW: the assignment gives admin endpoints to the IAM writer. DELETE /auth/admin/users/:id/lockout behavior is covered by FR-FLOW-009. See pending_cross_links."
+  },
+  {
+   "candidate_title": "Admin PATCH A4 application order and applied list",
+   "req_id": null,
+   "note": "Not written in FLOW: the assignment gives admin endpoints to the IAM writer. DELETE /auth/admin/users/:id/lockout behavior is covered by FR-FLOW-009. See pending_cross_links."
+  },
+  {
+   "candidate_title": "auth.webSocket(handler) wrapper",
+   "req_id": "FR-FLOW-008"
+  },
+  {
+   "candidate_title": "Login throttling keys, limits and enumeration resistance",
+   "req_id": "SEC-FLOW-011"
+  },
+  {
+   "candidate_title": "Throttle check order with DeviceTrust",
+   "req_id": "SEC-FLOW-012"
+  },
+  {
+   "candidate_title": "DeviceTrust device token",
+   "req_id": "SEC-FLOW-013"
+  },
+  {
+   "candidate_title": "Optional hard Lockout",
+   "req_id": "FR-FLOW-009"
+  },
+  {
+   "candidate_title": "LoginThrottle SPI with limit arguments and ForwardingLoginThrottle",
+   "req_id": "IR-FLOW-003"
+  },
+  {
+   "candidate_title": "Throttle storage, memory cap and persistence",
+   "req_id": "REL-FLOW-001"
+  },
+  {
+   "candidate_title": "Per-user password attempt limit shared by password confirmations",
+   "req_id": "SEC-FLOW-015"
+  },
+  {
+   "candidate_title": "(added) R45 account endpoint table fixed in the SRS",
+   "req_id": "IR-FLOW-002"
+  }
+ ],
+ "pending_cross_links": [
+  {
+   "from_id": "SEC-FLOW-001",
+   "to_area_or_title": "CORE/HTTP: C6a req.socketAddress() public accessor",
+   "relation": "depends_on",
+   "reason": "Local-request test uses the raw socket address."
+  },
+  {
+   "from_id": "SEC-FLOW-001",
+   "to_area_or_title": "CORE/ENGINE: C6b trustProxyHops/trustProxyCidrs and X-Forwarded-Proto rule (isSecure)",
+   "relation": "depends_on",
+   "reason": "Secure flag behind a TLS-terminating proxy comes from C6b."
+  },
+  {
+   "from_id": "SEC-FLOW-001",
+   "to_area_or_title": "AUTH: AuthMode DEV and PROD with fromEnv()",
+   "relation": "depends_on",
+   "reason": "DEV disables the transport check."
+  },
+  {
+   "from_id": "SEC-FLOW-002",
+   "to_area_or_title": "AUTH: AuthMode DEV and PROD / builder validation all-at-once",
+   "relation": "depends_on",
+   "reason": "Opt-in is a PROD builder option validated in build()."
+  },
+  {
+   "from_id": "SEC-FLOW-002",
+   "to_area_or_title": "TOKEN: TokenService and TokenPair issue (access/refresh TTL)",
+   "relation": "depends_on",
+   "reason": "Opt-in forces 5 min / 24 h TTLs."
+  },
+  {
+   "from_id": "SEC-FLOW-003",
+   "to_area_or_title": "AUTH: Public path matching (permit, permitPrefix) and optional authentication on public paths",
+   "relation": "depends_on",
+   "reason": "Credential endpoints are classified independently of .permit."
+  },
+  {
+   "from_id": "SEC-FLOW-003",
+   "to_area_or_title": "APIKEY: API key verification procedure (steps 1-11) and endpoints forbidden to API-key actors",
+   "relation": "depends_on",
+   "reason": "Anonymous-entry endpoints apply the key procedure like protected paths."
+  },
+  {
+   "from_id": "SEC-FLOW-004",
+   "to_area_or_title": "APIKEY: API key presentation scheme and header parsing",
+   "relation": "depends_on",
+   "reason": "Key scheme header is read in every mode; key + naru_at is multiple credentials."
+  },
+  {
+   "from_id": "IR-FLOW-001",
+   "to_area_or_title": "AUTH: Auth status and error code catalog",
+   "relation": "depends_on",
+   "reason": "Challenge shapes accompany the catalog codes unauthenticated/invalid_token/insufficient_scope."
+  },
+  {
+   "from_id": "IR-FLOW-001",
+   "to_area_or_title": "APIKEY: apiKeyScheme validation",
+   "relation": "depends_on",
+   "reason": "Second challenge uses the configured scheme name."
+  },
+  {
+   "from_id": "FR-FLOW-001",
+   "to_area_or_title": "APIKEY: API key verification procedure (steps 1-11)",
+   "relation": "depends_on",
+   "reason": "Key requests follow the R47 (2) chain after transport and multiple-credential checks."
+  },
+  {
+   "from_id": "FR-FLOW-001",
+   "to_area_or_title": "AUTH: All auth responses are JSON; middleware and router error handling",
+   "relation": "depends_on",
+   "reason": "415/400 are Core HttpExceptions rendered by the auth router error middleware."
+  },
+  {
+   "from_id": "SEC-FLOW-005",
+   "to_area_or_title": "AUTH: All auth responses are JSON; middleware and router error handling",
+   "relation": "depends_on",
+   "reason": "Malformed JSON 400 without stack trace."
+  },
+  {
+   "from_id": "SEC-FLOW-006",
+   "to_area_or_title": "TOKEN: HS256 Jwt encode and verify (fam claim, R2)",
+   "relation": "depends_on",
+   "reason": "CSRF HMAC binds to the access token's sub and fam."
+  },
+  {
+   "from_id": "SEC-FLOW-006",
+   "to_area_or_title": "TOKEN: Internal primitives Base64Url, HmacSigner, ConstantTime",
+   "relation": "depends_on",
+   "reason": "CsrfTokens uses these primitives."
+  },
+  {
+   "from_id": "AUTH: AuthTesting test kit (csrfTokenFor)",
+   "to_area_or_title": "SEC-FLOW-006",
+   "relation": "depends_on",
+   "reason": "AuthTesting.csrfTokenFor must produce tokens accepted by SEC-FLOW-006 (reverse direction: AUTH -> FLOW)."
+  },
+  {
+   "from_id": "AUTH: First-admin setup endpoint and recovery mode",
+   "to_area_or_title": "FR-FLOW-002",
+   "relation": "depends_on",
+   "reason": "setup is one of the five token-issuing responses (reverse direction: AUTH -> FLOW)."
+  },
+  {
+   "from_id": "AUTH: First-admin setup endpoint and recovery mode",
+   "to_area_or_title": "SEC-FLOW-007",
+   "relation": "depends_on",
+   "reason": "setup checks Origin only in cookie modes (reverse direction)."
+  },
+  {
+   "from_id": "FR-FLOW-002",
+   "to_area_or_title": "TOKEN: TokenService and TokenPair issue and refresh rotation",
+   "relation": "depends_on",
+   "reason": "Delivery writes the pair TokenService issues."
+  },
+  {
+   "from_id": "SEC-FLOW-009",
+   "to_area_or_title": "AUTH: Builder validation reports all incompatibilities at once",
+   "relation": "depends_on",
+   "reason": "mountPath '/' in cookie modes is a build() AuthConfigException."
+  },
+  {
+   "from_id": "SEC-FLOW-009",
+   "to_area_or_title": "AUTH: Sensitive value hygiene in logs, messages and audit",
+   "relation": "refines",
+   "reason": "Cookie-value hygiene is a specific case of the AUTH rule."
+  },
+  {
+   "from_id": "SEC-FLOW-010",
+   "to_area_or_title": "TOKEN: RefreshTokenStore SPI (find without markUsed, revokeFamily)",
+   "relation": "depends_on",
+   "reason": "Logout validity check reads the store without reuse detection."
+  },
+  {
+   "from_id": "FR-FLOW-003",
+   "to_area_or_title": "IAM: Revocation by ver",
+   "relation": "depends_on",
+   "reason": "?all=true and no-RefreshTokenStore logout are ver++."
+  },
+  {
+   "from_id": "FR-FLOW-003",
+   "to_area_or_title": "AUTH: AuthEvents before and on events (onLogout)",
+   "relation": "depends_on",
+   "reason": "onLogout only when an identity was found."
+  },
+  {
+   "from_id": "FR-FLOW-003",
+   "to_area_or_title": "AUTH: AuthTesting test kit (tokenFor synthetic fam)",
+   "relation": "depends_on",
+   "reason": "Synthetic-fam logout behavior."
+  },
+  {
+   "from_id": "IR-FLOW-002",
+   "to_area_or_title": "AUTH: install wiring: middleware, routers and lifecycle hooks",
+   "relation": "depends_on",
+   "reason": "auth.routes() is mounted at the mount path by install."
+  },
+  {
+   "from_id": "IR-FLOW-002",
+   "to_area_or_title": "APIKEY: Personal access token endpoints /auth/me/apikeys",
+   "relation": "depends_on",
+   "reason": "Three extra account endpoints when .apiKeys(store) is set."
+  },
+  {
+   "from_id": "IR-FLOW-002",
+   "to_area_or_title": "IAM: admin user and group endpoint table (A1-A6, G1-G8, DELETE users/:id/lockout)",
+   "relation": "related_to",
+   "reason": "Account table here; admin table must be fixed by IAM (inventory items 90/91 sit in the FLOW area but the assignment gives admin endpoints to IAM)."
+  },
+  {
+   "from_id": "FR-FLOW-004",
+   "to_area_or_title": "TOKEN: Constant-work login and 1.25T failure floor / Hash concurrency slots and 503 backpressure / Authenticator SPI",
+   "relation": "depends_on",
+   "reason": "Login verification and timing equalization."
+  },
+  {
+   "from_id": "FR-FLOW-004",
+   "to_area_or_title": "IAM: rename and username normalization",
+   "relation": "depends_on",
+   "reason": "Login normalizes the username with the same rule."
+  },
+  {
+   "from_id": "FR-FLOW-004",
+   "to_area_or_title": "AUTH: AuthEvents before and on events (beforeLogin)",
+   "relation": "depends_on",
+   "reason": "beforeLogin rejection."
+  },
+  {
+   "from_id": "FR-FLOW-004",
+   "to_area_or_title": "APIKEY: Service accounts",
+   "relation": "depends_on",
+   "reason": "Service account with a password gets the same 401 as a wrong password."
+  },
+  {
+   "from_id": "FR-FLOW-005",
+   "to_area_or_title": "TOKEN: TokenService and TokenPair issue and refresh rotation / RefreshTokenStore SPI",
+   "relation": "depends_on",
+   "reason": "Rotation and reuse detection."
+  },
+  {
+   "from_id": "FR-FLOW-005",
+   "to_area_or_title": "APIKEY: Endpoints and writes forbidden to API-key actors",
+   "relation": "depends_on",
+   "reason": "403 api_key_not_allowed on refresh."
+  },
+  {
+   "from_id": "FR-FLOW-006",
+   "to_area_or_title": "IAM: AuthUsers facade / UserMutator rules",
+   "relation": "depends_on",
+   "reason": "PATCH /auth/me writes via the mutator path."
+  },
+  {
+   "from_id": "FR-FLOW-006",
+   "to_area_or_title": "AUTH: User-change path and event matrix / AuthEventContext.getOrigin()",
+   "relation": "depends_on",
+   "reason": "SELF origin events."
+  },
+  {
+   "from_id": "FR-FLOW-006",
+   "to_area_or_title": "APIKEY: Endpoints and writes forbidden to API-key actors",
+   "relation": "depends_on",
+   "reason": "PATCH /auth/me forbidden to keys."
+  },
+  {
+   "from_id": "SEC-FLOW-014",
+   "to_area_or_title": "IAM: changePassword race and retry rules / UserStore SPI",
+   "relation": "depends_on",
+   "reason": "Atomic hash swap with expectedVer and single retry."
+  },
+  {
+   "from_id": "SEC-FLOW-014",
+   "to_area_or_title": "TOKEN: Hash concurrency slots / PasswordPolicy",
+   "relation": "depends_on",
+   "reason": "Hashing and policy for the new password."
+  },
+  {
+   "from_id": "SEC-FLOW-014",
+   "to_area_or_title": "AUTH: User-change path and event matrix",
+   "relation": "depends_on",
+   "reason": "beforeUserUpdate/onUserUpdated/onPasswordChanged with SELF."
+  },
+  {
+   "from_id": "FR-FLOW-007",
+   "to_area_or_title": "IAM: DuplicateUserException and uniqueness contract / AuthUsers facade",
+   "relation": "depends_on",
+   "reason": "Duplicate username -> 409."
+  },
+  {
+   "from_id": "FR-FLOW-007",
+   "to_area_or_title": "AUTH: AuthEvents (beforeUserCreate, origin REGISTER)",
+   "relation": "depends_on",
+   "reason": "Registration events."
+  },
+  {
+   "from_id": "FR-FLOW-007",
+   "to_area_or_title": "TOKEN: Hash concurrency slots",
+   "relation": "depends_on",
+   "reason": "Register hashes through the slot."
+  },
+  {
+   "from_id": "FR-FLOW-008",
+   "to_area_or_title": "CORE/APP: Read-only registration list app.registrations() (C4)",
+   "relation": "depends_on",
+   "reason": "Doctor compares WEBSOCKET registrations with wrapper uses."
+  },
+  {
+   "from_id": "FR-FLOW-008",
+   "to_area_or_title": "AUTH: doctor startup check suite",
+   "relation": "depends_on",
+   "reason": "Wildcard Origin FAIL / C5-absent WARN / wrapper-count WARN."
+  },
+  {
+   "from_id": "FR-FLOW-008",
+   "to_area_or_title": "IAM or AUTH: Principal cache with explicit invalidation (userCacheTtl)",
+   "relation": "depends_on",
+   "reason": "Recheck period and immediate invalidation."
+  },
+  {
+   "from_id": "APIKEY: WebSocket handling of API key connections",
+   "to_area_or_title": "FR-FLOW-008",
+   "relation": "depends_on",
+   "reason": "Key-connection closing extends the wrapper (reverse direction: APIKEY -> FLOW)."
+  },
+  {
+   "from_id": "SEC-FLOW-011",
+   "to_area_or_title": "CORE/ENGINE: remoteAddress() and isSecure() under hop and CIDR modes (C6b)",
+   "relation": "depends_on",
+   "reason": "IP key uses the C6b-resolved address."
+  },
+  {
+   "from_id": "SEC-FLOW-011",
+   "to_area_or_title": "AUTH: TimeSource time injection SAM",
+   "relation": "depends_on",
+   "reason": "Windows measured with TimeSource."
+  },
+  {
+   "from_id": "APIKEY: API key failure counting and IP limit",
+   "to_area_or_title": "IR-FLOW-003",
+   "relation": "depends_on",
+   "reason": "Key failures are counted only through the limit-argument methods (reverse direction)."
+  },
+  {
+   "from_id": "APIKEY: API key failure counting and IP limit",
+   "to_area_or_title": "SEC-FLOW-011",
+   "relation": "related_to",
+   "reason": "Key failures never count toward the login IP key (reverse direction)."
+  },
+  {
+   "from_id": "SEC-FLOW-013",
+   "to_area_or_title": "TOKEN: KeySource, KeySources and kid key sets",
+   "relation": "depends_on",
+   "reason": "Device token signature/fingerprint verified with kid-addressed keys."
+  },
+  {
+   "from_id": "FR-FLOW-009",
+   "to_area_or_title": "IAM: admin user endpoints (DELETE /auth/admin/users/:id/lockout route, R31/R39 checks)",
+   "relation": "depends_on",
+   "reason": "Lockout release route lives in adminRoutes owned by IAM."
+  },
+  {
+   "from_id": "IR-FLOW-003",
+   "to_area_or_title": "AUTH: Interface evolution rule for user-implemented SPIs (R20)",
+   "relation": "depends_on",
+   "reason": "Default methods fixed before first release."
+  },
+  {
+   "from_id": "IR-FLOW-003",
+   "to_area_or_title": "AUTH: doctor startup check suite",
+   "relation": "depends_on",
+   "reason": "usesLimitArguments() false with API keys -> WARN."
+  },
+  {
+   "from_id": "IAM: JDBC user, group, refresh, throttle and device-trust stores",
+   "to_area_or_title": "IR-FLOW-003",
+   "relation": "depends_on",
+   "reason": "JdbcLoginThrottle must honor limit arguments and return true (reverse direction)."
+  },
+  {
+   "from_id": "REL-FLOW-001",
+   "to_area_or_title": "IAM: JDBC user, group, refresh, throttle and device-trust stores / AtomicFiles write and recovery protocol",
+   "relation": "depends_on",
+   "reason": "Shared counting and file persistence implementations."
+  },
+  {
+   "from_id": "REL-FLOW-001",
+   "to_area_or_title": "AUTH: Deployment SINGLE_INSTANCE and MULTI_INSTANCE",
+   "relation": "related_to",
+   "reason": "MULTI_INSTANCE requires shared throttle storage."
+  },
+  {
+   "from_id": "IAM: AuthUsers.checkPassword behavior",
+   "to_area_or_title": "SEC-FLOW-015",
+   "relation": "depends_on",
+   "reason": "checkPassword shares the per-user limit (reverse direction)."
+  },
+  {
+   "from_id": "APIKEY: Personal access token endpoints / Admin API key endpoints",
+   "to_area_or_title": "SEC-FLOW-015",
+   "relation": "depends_on",
+   "reason": "Password confirmations share the per-user limit (reverse direction)."
+  },
+  {
+   "from_id": "SEC-FLOW-015",
+   "to_area_or_title": "AUTH: AuthRejection value type and Retry-After",
+   "relation": "depends_on",
+   "reason": "429 for app calls carries retryAfterSeconds."
+  }
+ ],
+ "open_questions": [
+  "Failed-login 401 code: 00 does not restate it; FR-FLOW-004 AC-2 uses invalid_credentials (05 INVALID_CREDENTIALS lower-cased by the R30 code rule) tagged [INFERRED:med:advisory].",
+  "Refresh failure 401 code: FR-FLOW-005 AC-4 uses invalid_refresh_token (05) tagged [INFERRED:med:advisory]; 00 only says '401'.",
+  "Wrong current password on POST /auth/password: SEC-FLOW-014 AC-2 uses 403 current_password_invalid from 05 [INFERRED]; 00 does not restate it.",
+  "PATCH /auth/me with a non-allowed attribute: 05 says 422 ATTRIBUTE_NOT_ALLOWED, 00 R30 puts auth input checks under 400 BAD_REQUEST; FR-FLOW-006 AC-3 fixes only 'rejected, unchanged'. PATCH /auth/me success status 200 is from 05 [INFERRED].",
+  "CSRF token HMAC key derivation is not specified in 00 (device tokens use HMAC(secret,'naru-device')); token string format base64url(random16).HMAC is from 05 [INFERRED].",
+  "naru_device cookie attributes (Path, HttpOnly, SameSite, Max-Age) are not given in 00 or 05; other cookie defaults (HttpOnly/SameSite/Path/Max-Age/Secure) are from 05 only [INFERRED].",
+  "DeviceTrust SPI method signatures are not specified in 00 or 05.",
+  "Lockout: response status/code for a locked account, policy parameters and builder shape (07 proposes .lockout(Lockout.after(5).forMinutes(15)), tagged INFERRED, name not final), and success status of DELETE /auth/admin/users/:id/lockout are not given.",
+  "Builder method names for login-throttle limits ('수치는 빌더로 바꾼다', R34 (1)) are not named.",
+  "allowInsecureTransport: handling of null/empty reason and how often the 'cookies without Secure' warning is logged are not specified.",
+  "Whether the JWT 403 insufficient_scope challenge also carries scope=\"<s>\" (05 §4.0) is not restated by 00.",
+  "Cache-Control: no-store on token responses comes from 05 only [INFERRED].",
+  "Response status when POST /auth/register is disabled (404 vs other) is not specified; ACs only assert no user and not 201.",
+  "Browser WebSocket token transport recommendation (cookie mode vs Sec-WebSocket-Protocol) is open per 00 §10 Q3.",
+  "LoginThrottle return-value semantics (0 allow, positive ms) are from 05 §3.9 [INFERRED].",
+  "Ownership: inventory items 'Admin user and group endpoints' and 'Admin PATCH A4 application order' sit in the FLOW area but the assignment gives admin endpoints to IAM; FLOW did not write them. Main session should confirm IAM covers A1-A6/G1-G8 + A4 order + DELETE lockout route table."
+ ],
+ "validate_spec_result": {
+  "errors": 0,
+  "warnings_total": 183,
+  "by_code": {
+   "SRS-W023": 161,
+   "SRS-W015": 22
+  },
+  "my_file_diagnostics": "29 x SRS-W023 'Draft requirement is not ready as an implementation contract' (one per new block; expected because Stability=draft by design). No errors, no other warnings in docs/spec/19.auth-transport-and-endpoints.srs.md."
+ }
+}

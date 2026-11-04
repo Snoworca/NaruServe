@@ -2,7 +2,7 @@
 
 [한국어](../routing.md) | [API index](README.md)
 
-This reference describes the **common HTTP profile in the 0.10.0 checkout**. The retained `routing.Router` and WebSocket upgrade rules use a [separate strict profile](#legacy-router-and-websocket). Check the [installation guide](README.md) for artifact availability.
+This reference describes the **common HTTP profile in the 0.11.0 checkout**. The retained `routing.Router` and WebSocket upgrade rules use a [separate strict profile](#legacy-router-and-websocket). Check the [installation guide](README.md) for artifact availability.
 
 ## Registering routes
 

@@ -24,6 +24,7 @@ object CallbackMatrix {
         RouteHandler::class.java,
         SseClient.CloseListener::class.java,
         WebSocketHandler::class.java,
+        RegistrationListener::class.java,
         WebSocketSession.BinaryListener::class.java,
         WebSocketSession.CloseListener::class.java,
         WebSocketSession.ErrorListener::class.java,
@@ -33,5 +34,14 @@ object CallbackMatrix {
         ExchangeHandler::class.java,
         StreamDrain::class.java,
         UpgradeHandler::class.java,
+        com.snoworca.naruserve.utils.TimeSource::class.java,
+        com.snoworca.naruserve.utils.auth.AccessRule::class.java,
+        com.snoworca.naruserve.utils.auth.audit.AuditSink::class.java,
+        com.snoworca.naruserve.utils.auth.rbac.RoleStore::class.java,
+        com.snoworca.naruserve.utils.auth.spi.AuthResponses::class.java,
+        com.snoworca.naruserve.utils.auth.spi.Authenticator::class.java,
+        com.snoworca.naruserve.utils.auth.spi.BreachedPasswordChecker::class.java,
+        com.snoworca.naruserve.utils.auth.spi.KeySource::class.java,
+        com.snoworca.naruserve.utils.auth.user.UserMutator::class.java,
     ).map { it.name }
 }

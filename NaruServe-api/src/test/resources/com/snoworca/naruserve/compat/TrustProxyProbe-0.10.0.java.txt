@@ -1,0 +1,13 @@
+package naruprobe;
+
+import com.snoworca.naruserve.RestApp;
+
+/** Compiled against the NaruServe-api 0.10.0 sources (git tag v0.10.0); calls app.trustProxy(true). */
+public final class TrustProxyProbe {
+    private TrustProxyProbe() {
+    }
+
+    public static Object run(Object app) {
+        return ((RestApp) app).trustProxy(true);
+    }
+}

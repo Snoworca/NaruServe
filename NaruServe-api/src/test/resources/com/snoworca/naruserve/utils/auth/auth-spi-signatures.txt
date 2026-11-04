@@ -1,0 +1,84 @@
+# Binary-compatibility record of the user-implemented auth interfaces (CON-AUTH-006 AC-4).
+# A line is: interface kind name(parameters) return [throws ...]. Add lines for new default methods and new
+# interfaces; never edit or remove a line after the first public release.
+com.snoworca.naruserve.utils.auth.group.GroupStore abstract groupsOfUser(java.lang.String) java.util.Set<java.lang.String> throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.group.GroupStore abstract parentsOf(java.util.Set<java.lang.String>) java.util.Set<java.lang.String> throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.group.GroupStore default effectiveGroupsOfUser(java.lang.String) java.util.Set<java.lang.String> throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.group.GroupStore default rolesOfGroups(java.util.Set<java.lang.String>) java.util.Set<java.lang.String> throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.rbac.RoleStore abstract scopesOf(java.lang.String) java.util.Set<java.lang.String> throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.AuthEvents default beforeLogin(com.snoworca.naruserve.utils.auth.user.AuthUser, com.snoworca.naruserve.utils.auth.AuthEventContext) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.AuthEvents default beforeUserCreate(com.snoworca.naruserve.utils.auth.user.AuthUser, com.snoworca.naruserve.utils.auth.AuthEventContext) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.AuthEvents default beforeUserDelete(com.snoworca.naruserve.utils.auth.user.AuthUser, com.snoworca.naruserve.utils.auth.AuthEventContext) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.AuthEvents default beforeUserUpdate(com.snoworca.naruserve.utils.auth.user.AuthUser, com.snoworca.naruserve.utils.auth.user.AuthUser, com.snoworca.naruserve.utils.auth.AuthEventContext) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.AuthEvents default onLogin(com.snoworca.naruserve.utils.auth.user.AuthUser, com.snoworca.naruserve.utils.auth.AuthEventContext) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.AuthEvents default onLogout(java.lang.String, boolean, com.snoworca.naruserve.utils.auth.AuthEventContext) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.AuthEvents default onPasswordChanged(com.snoworca.naruserve.utils.auth.user.AuthUser, com.snoworca.naruserve.utils.auth.AuthEventContext) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.AuthEvents default onTokenRefreshed(com.snoworca.naruserve.utils.auth.user.AuthUser, com.snoworca.naruserve.utils.auth.AuthEventContext) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.AuthEvents default onUserCreated(com.snoworca.naruserve.utils.auth.user.AuthUser, com.snoworca.naruserve.utils.auth.AuthEventContext) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.AuthEvents default onUserDeleted(com.snoworca.naruserve.utils.auth.user.AuthUser, com.snoworca.naruserve.utils.auth.AuthEventContext) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.AuthEvents default onUserUpdated(com.snoworca.naruserve.utils.auth.user.AuthUser, com.snoworca.naruserve.utils.auth.user.AuthUser, java.util.Set<com.snoworca.naruserve.utils.auth.UserChange>, com.snoworca.naruserve.utils.auth.AuthEventContext) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.user.UserStore abstract create(com.snoworca.naruserve.utils.auth.user.AuthUser) com.snoworca.naruserve.utils.auth.user.AuthUser throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.user.UserStore abstract delete(java.lang.String) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.user.UserStore abstract findById(java.lang.String) com.snoworca.naruserve.utils.auth.user.AuthUser throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.user.UserStore abstract findByUsername(java.lang.String) com.snoworca.naruserve.utils.auth.user.AuthUser throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.user.UserStore abstract update(com.snoworca.naruserve.utils.auth.user.AuthUser) com.snoworca.naruserve.utils.auth.user.AuthUser throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.user.UserStore default bumpTokenVersion(java.lang.String) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.user.UserStore default changePassword(java.lang.String, java.lang.String, long, java.lang.String) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.user.UserStore default list(int, int, java.lang.String) com.snoworca.naruserve.utils.auth.user.UserPage throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.user.UserStore default setEnabled(java.lang.String, boolean) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.user.UserStore default setRoles(java.lang.String, java.util.Set<java.lang.String>) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.user.UserStore default supportsAtomicFieldWrites() boolean
+com.snoworca.naruserve.utils.auth.user.UserStore default updatePasswordHash(java.lang.String, java.lang.String, java.lang.String) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.group.GroupAdminStore abstract addMember(java.lang.String, java.lang.String) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.group.GroupAdminStore abstract addParent(java.lang.String, java.lang.String) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.group.GroupAdminStore abstract childrenOf(java.lang.String) java.util.Set<java.lang.String> throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.group.GroupAdminStore abstract createGroup(java.lang.String) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.group.GroupAdminStore abstract deleteGroup(java.lang.String) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.group.GroupAdminStore abstract groupExists(java.lang.String) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.group.GroupAdminStore abstract listGroups() java.util.List<java.lang.String> throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.group.GroupAdminStore abstract membersOf(java.lang.String) java.util.Set<java.lang.String> throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.group.GroupAdminStore abstract removeMember(java.lang.String, java.lang.String) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.group.GroupAdminStore abstract removeParent(java.lang.String, java.lang.String) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.group.GroupAdminStore default removeUser(java.lang.String) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.AuthResponses abstract error(com.snoworca.naruserve.Request, com.snoworca.naruserve.Response, int, java.lang.String, java.lang.String) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.KeySource abstract signingKey() byte[] throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.password.PasswordHasher abstract accepts(java.lang.String) boolean
+com.snoworca.naruserve.utils.auth.password.PasswordHasher abstract hash(char[]) java.lang.String
+com.snoworca.naruserve.utils.auth.password.PasswordHasher abstract verify(char[], java.lang.String) boolean
+com.snoworca.naruserve.utils.auth.password.PasswordHasher default needsRehash(java.lang.String) boolean
+com.snoworca.naruserve.utils.auth.spi.LoginThrottle abstract recordFailure(java.lang.String) long throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.LoginThrottle abstract reset(java.lang.String) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.LoginThrottle abstract retryAfter(java.lang.String) long throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.LoginThrottle default recordFailure(java.lang.String, int, long) long throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.LoginThrottle default retryAfter(java.lang.String, int, long) long throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.LoginThrottle default usesLimitArguments() boolean
+com.snoworca.naruserve.utils.auth.spi.KeySource default keys() com.snoworca.naruserve.utils.auth.jwt.JwtKeys throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.KeySource default signingKid() java.lang.String
+com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore abstract deleteAllByOwner(java.lang.String) int throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore abstract deleteById(java.lang.String) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore abstract deleteByIdAndOwner(java.lang.String, java.lang.String) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore abstract deleteExpired(long) int throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore abstract deleteStaleByOwner(java.lang.String, long) int throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore abstract findById(java.lang.String) com.snoworca.naruserve.utils.auth.apikey.StoredApiKey throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore abstract findByPrefix(java.lang.String) com.snoworca.naruserve.utils.auth.apikey.StoredApiKey throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore abstract insertIfUnderLimit(com.snoworca.naruserve.utils.auth.apikey.StoredApiKey, int, long) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore abstract listByOwner(java.lang.String) java.util.List<com.snoworca.naruserve.utils.auth.apikey.StoredApiKey> throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore default countKeysWithAdminScopes() int throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore default deleteFutureByOwner(java.lang.String, long) int throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore default supportsAtomicLimitInsert() boolean
+com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore default updateLastUsed(java.lang.String, long) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.audit.AuditSink abstract record(com.snoworca.naruserve.utils.auth.audit.AuditEvent) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.RefreshTokenStore abstract find(java.lang.String) com.snoworca.naruserve.utils.auth.spi.RefreshRecord throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.RefreshTokenStore abstract markUsed(java.lang.String, long) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.RefreshTokenStore abstract revokeFamily(java.lang.String) int throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.RefreshTokenStore abstract save(com.snoworca.naruserve.utils.auth.spi.RefreshRecord) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.RefreshTokenStore default purgeExpired(long) int throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.AuthEvents default onRefreshTokenReused(java.lang.String, java.lang.String, com.snoworca.naruserve.utils.auth.AuthEventContext) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.DeviceTrust abstract isInvalidated(com.snoworca.naruserve.utils.auth.spi.DeviceToken) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.DeviceTrust abstract recordFailure(com.snoworca.naruserve.utils.auth.spi.DeviceToken, int, long) boolean throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.DeviceTrust default issued(com.snoworca.naruserve.utils.auth.spi.DeviceToken) void throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.TokenCodec abstract decode(java.lang.String, java.lang.String) com.snoworca.naruserve.utils.auth.jwt.JwtClaims throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.TokenCodec abstract encode(com.snoworca.naruserve.utils.auth.jwt.JwtClaims) java.lang.String throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.DeviceTrust default purgeExpired(long) int throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.Authenticator abstract authenticate(java.lang.String, char[], com.snoworca.naruserve.utils.auth.AuthEventContext) com.snoworca.naruserve.utils.auth.user.AuthUser throws java.lang.Exception
+com.snoworca.naruserve.utils.auth.spi.BreachedPasswordChecker abstract isBreached(char[]) boolean throws java.lang.Exception

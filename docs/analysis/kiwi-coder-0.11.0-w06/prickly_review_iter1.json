@@ -1,0 +1,37 @@
+{
+ "pass": "prickly-review",
+ "iter": 1,
+ "reviewer": "single subagent, 8 axes",
+ "severity_summary": {
+  "CRITICAL": 0,
+  "HIGH": 4,
+  "MEDIUM": 9,
+  "LOW": 7
+ },
+ "fixed": [
+  "H1 GrantRule key-actor scopes (owner AND key, key never covers * or auth-* via *) + keyActorScopesInTheGrantRule test",
+  "H2 PrincipalCache invalidation epoch (stale load never cached)",
+  "H3 track/tick socket-set race (synchronized add vs empty removal)",
+  "H4 docs: API key usage recorder not yet called; PERF-APIKEY-001 AC-1/2/4 and PERF-TOKEN-002 AC-2 un-cited (request path waits)",
+  "M5 A4 grant rule re-run under the user lock after the hash wait",
+  "M6 JSON null fields treated as absent in A4",
+  "M7 RejectedExecutionException / onStop abandon -> 503 (AdminEndpoints.Continuation)",
+  "M8 background executor 4 core threads",
+  "M9 A4 enabled step split, false results -> 404, password+disable bumps ver once",
+  "M10 PasswordChanges retry checks the hash before the session (409 vs 401) + test bumps ver",
+  "M11 auth.users().delete closes sockets; docs drop 'logs out'",
+  "M12 DELETE /apikeys/:id runs R31 on the owner and forgets usage",
+  "M13 G7 self rule via the actor's groups",
+  "L14 JdbcUserStore unique violation narrowed (23505/1062/SQLite UNIQUE)",
+  "L15 Java examples added to the new docs sections"
+ ],
+ "deferred": [
+  "L16 refactoring (shared store-call helper, hash-then helper, AdminEndpoints size)",
+  "L17 executors not recreated after onStop; ticker keeps running when idle",
+  "L18 webSocket wrapper count counts calls not registrations",
+  "L19 GET /apikeys unknown owner answers []",
+  "L20 accessTtl > refreshTtl not rejected; sub-second TTL truncated in expiresIn"
+ ],
+ "regression_tests": "Wave6ReviewFixesTest (11 tests, one per HIGH/MEDIUM fix; H1 keyActorScopesInTheGrantRule in AdminEndpointsTest; M10 by the strengthened REL_IAM_002_AC4_AC6 fake); H2/H3 tests shown RED with the fix reverted",
+ "build": "./gradlew build --continue PASS, 2815 tests, 0 failures"
+}

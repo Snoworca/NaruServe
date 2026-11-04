@@ -2,7 +2,7 @@
 
 [한국어](../servlet.md) | [English](servlet.md)
 
-> **Documentation version:** This page targets NaruServe 0.10.0. See [installation](README.md) for coordinates and the source-build fallback when that version is unavailable.
+> **Documentation version:** This page targets NaruServe 0.11.0. See [installation](README.md) for coordinates and the source-build fallback when that version is unavailable.
 
 `NaruServe-servlet` runs a NaruServe application inside a Servlet container such as Tomcat or Jetty. The container accepts connections instead of the embedded engine; route, middleware and `req`/`res` code remain the same.
 
@@ -16,9 +16,9 @@
 
 ```groovy
 // Dependencies for a web application running in a Servlet container.
-implementation 'com.snoworca.naruserve:naruserve-servlet:0.10.0'
+implementation 'com.snoworca.naruserve:naruserve-servlet:0.11.0'
 // JSON codec; otherwise configure Builder.jsonCodec(...) yourself.
-implementation 'com.snoworca.naruserve:naruserve-gson:0.10.0'
+implementation 'com.snoworca.naruserve:naruserve-gson:0.11.0'
 // The container provides the Servlet API.
 compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
 ```
@@ -223,3 +223,7 @@ static void configure(RestApp app) {
     app.get("/api/users", (req, res) -> res.json(req.service(UserService.class).findAll()));
 }
 ```
+
+## Proxy trust and connection address
+
+On this adapter `socketAddress()` (`req.socketAddress()`) is the `getRemoteAddr()` the container gave when the request arrived, and the exchange's TLS flag is the container's `isSecure()`; both were observed on the embedded Jetty 9.4 test container (`getRemoteAddr()` is the socket peer, for example `127.0.0.1`, and `isSecure()` is `false` on plain HTTP). The adapter never reads `X-Forwarded-For`, `X-Forwarded-Proto` or `Forwarded` and never calls `getRemoteHost()` (no reverse DNS): `app.trustProxy(true)`, `trustProxyHops` and `trustProxyCidrs` apply in the core with the same results as on the in-memory and TinyHttpd adapters. Turn off container-level forwarding (Tomcat RemoteIpValve, Jetty ForwardedRequestCustomizer) when you use Core proxy trust; otherwise the container already rewrote `getRemoteAddr()` and `isSecure()` from the headers and Core trust would apply a second time. Other containers were not measured.

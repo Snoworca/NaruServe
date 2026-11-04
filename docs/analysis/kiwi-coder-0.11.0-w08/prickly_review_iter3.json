@@ -1,0 +1,6 @@
+{"pass":"prickly-review","round":3,"counts":{"CRITICAL":0,"HIGH":0,"MEDIUM":1,"LOW":3},"round2_fixes":"all hold",
+"findings":[
+{"sev":"MEDIUM","where":"DefaultAuthApiKeys.call","issue":"plain IllegalArgumentException from a store escaped","status":"fixed; test storeIllegalArgumentIsUnavailable"},
+{"sev":"LOW","where":"PasswordLogin trusted flag with a custom authenticator naming another user","status":"fixed"},
+{"sev":"LOW","where":"throttle test name claimed no floor","status":"renamed"},
+{"sev":"LOW","where":"tests for service account via custom authenticator","status":"added customAuthenticatorCannotLogInAServiceAccount"}]}

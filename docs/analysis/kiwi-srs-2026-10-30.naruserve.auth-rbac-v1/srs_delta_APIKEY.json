@@ -1,0 +1,935 @@
+{
+  "writer": "APIKEY",
+  "scope": "APIKEY",
+  "file": "docs/spec/21.auth-api-keys.srs.md",
+  "target": "0.11.0",
+  "mcp_calls": [
+    {
+      "tool": "Edit (template exception)",
+      "result_id": "docs/spec/21.auth-api-keys.srs.md §1-§3",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement (dryRun)",
+      "result_id": "FR-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-APIKEY-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "CON-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-APIKEY-003",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-APIKEY-005",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "IR-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "REL-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-APIKEY-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-APIKEY-006",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "REL-APIKEY-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "REL-APIKEY-003",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "REL-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-APIKEY-007",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-APIKEY-008",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-APIKEY-009",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "OPS-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "IR-APIKEY-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-APIKEY-010",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-APIKEY-003",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-APIKEY-005",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "IR-APIKEY-003",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-APIKEY-006",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "IR-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "DR-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-APIKEY-007",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-APIKEY-008",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-APIKEY-009",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "FR-APIKEY-010",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "PERF-APIKEY-001 (first attempt)",
+      "ok": false,
+      "error": "SRS_LOCKED, retried"
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "PERF-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "SEC-APIKEY-011",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "IR-APIKEY-005",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "DR-APIKEY-002",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "REL-APIKEY-005",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "REL-APIKEY-006",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "REL-APIKEY-007",
+      "ok": true
+    },
+    {
+      "tool": "add_requirement",
+      "result_id": "PERF-APIKEY-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-APIKEY-002 depends_on SEC-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-APIKEY-001 depends_on FR-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "CON-APIKEY-001 depends_on FR-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-APIKEY-004 depends_on SEC-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-APIKEY-004 depends_on SEC-APIKEY-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-APIKEY-005 depends_on IR-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-APIKEY-005 depends_on SEC-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-APIKEY-006 depends_on SEC-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "REL-APIKEY-002 depends_on SEC-APIKEY-006",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "REL-APIKEY-003 depends_on IR-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "REL-APIKEY-004 depends_on REL-APIKEY-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-APIKEY-007 depends_on SEC-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-APIKEY-008 depends_on SEC-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-APIKEY-009 depends_on SEC-APIKEY-007",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "OPS-APIKEY-001 depends_on IR-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "OPS-APIKEY-001 depends_on IR-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "OPS-APIKEY-001 depends_on SEC-APIKEY-009",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-APIKEY-002 depends_on SEC-APIKEY-010",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-APIKEY-010 depends_on IR-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-APIKEY-010 depends_on SEC-APIKEY-003",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-APIKEY-003 depends_on SEC-APIKEY-010",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-APIKEY-003 depends_on FR-APIKEY-005",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-APIKEY-004 depends_on SEC-APIKEY-010",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-APIKEY-004 depends_on FR-APIKEY-005",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-APIKEY-005 depends_on IR-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-APIKEY-003 depends_on SEC-APIKEY-006",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-APIKEY-004 depends_on DR-APIKEY-001",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-APIKEY-007 depends_on IR-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-APIKEY-007 depends_on FR-APIKEY-009",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "PERF-APIKEY-001 depends_on IR-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-APIKEY-008 depends_on REL-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-APIKEY-009 depends_on IR-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-APIKEY-010 depends_on IR-APIKEY-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-APIKEY-011 depends_on SEC-APIKEY-006",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "SEC-APIKEY-011 depends_on REL-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "IR-APIKEY-005 depends_on SEC-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "FR-APIKEY-002 depends_on SEC-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "REL-APIKEY-001 depends_on SEC-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "DR-APIKEY-002 depends_on IR-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "REL-APIKEY-005 depends_on DR-APIKEY-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "REL-APIKEY-005 depends_on IR-APIKEY-004",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "REL-APIKEY-006 depends_on REL-APIKEY-005",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "REL-APIKEY-007 depends_on DR-APIKEY-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "PERF-APIKEY-002 depends_on DR-APIKEY-002",
+      "ok": true
+    },
+    {
+      "tool": "add_trace_link",
+      "result_id": "6 calls first failed with SRS_LOCKED (OPS-001>SEC-009, SEC-010>SEC-003 x2, FR-004>SEC-010, DR-002>IR-004); all retried successfully",
+      "ok": true
+    },
+    {
+      "tool": "validate_spec",
+      "result_id": "run 1: SRS-E020 on SEC-APIKEY-009 heading (backticked *)",
+      "ok": false
+    },
+    {
+      "tool": "edit_requirement_fields",
+      "result_id": "SEC-APIKEY-009 title -> 'auth-* admin scopes on keys and the key wildcard scope rule'",
+      "ok": true
+    },
+    {
+      "tool": "validate_spec",
+      "result_id": "run 2",
+      "ok": true
+    }
+  ],
+  "added_ids": [
+    "FR-APIKEY-001",
+    "SEC-APIKEY-001",
+    "SEC-APIKEY-002",
+    "CON-APIKEY-001",
+    "SEC-APIKEY-003",
+    "SEC-APIKEY-004",
+    "SEC-APIKEY-005",
+    "IR-APIKEY-001",
+    "REL-APIKEY-001",
+    "FR-APIKEY-002",
+    "SEC-APIKEY-006",
+    "REL-APIKEY-002",
+    "REL-APIKEY-003",
+    "REL-APIKEY-004",
+    "SEC-APIKEY-007",
+    "SEC-APIKEY-008",
+    "SEC-APIKEY-009",
+    "OPS-APIKEY-001",
+    "IR-APIKEY-002",
+    "SEC-APIKEY-010",
+    "FR-APIKEY-003",
+    "FR-APIKEY-004",
+    "FR-APIKEY-005",
+    "IR-APIKEY-003",
+    "FR-APIKEY-006",
+    "IR-APIKEY-004",
+    "DR-APIKEY-001",
+    "FR-APIKEY-007",
+    "FR-APIKEY-008",
+    "FR-APIKEY-009",
+    "FR-APIKEY-010",
+    "PERF-APIKEY-001",
+    "SEC-APIKEY-011",
+    "IR-APIKEY-005",
+    "DR-APIKEY-002",
+    "REL-APIKEY-005",
+    "REL-APIKEY-006",
+    "REL-APIKEY-007",
+    "PERF-APIKEY-002"
+  ],
+  "inventory_mapping": [
+    {
+      "candidate_title": "API keys disabled by default; .apiKeys(store) opt-in",
+      "req_id": "FR-APIKEY-001"
+    },
+    {
+      "candidate_title": "API key presentation scheme and header parsing",
+      "req_id": "SEC-APIKEY-001, SEC-APIKEY-002"
+    },
+    {
+      "candidate_title": "apiKeyScheme validation",
+      "req_id": "CON-APIKEY-001"
+    },
+    {
+      "candidate_title": "Key format and generation",
+      "req_id": "SEC-APIKEY-003"
+    },
+    {
+      "candidate_title": "API key verification procedure (steps 1-11)",
+      "req_id": "SEC-APIKEY-004"
+    },
+    {
+      "candidate_title": "API key failure counting and IP limit",
+      "req_id": "SEC-APIKEY-005, IR-APIKEY-001"
+    },
+    {
+      "candidate_title": "No key-row caching and immediate delete propagation",
+      "req_id": "REL-APIKEY-001"
+    },
+    {
+      "candidate_title": "Key expiry rule",
+      "req_id": "FR-APIKEY-002"
+    },
+    {
+      "candidate_title": "Stale key detection and ownerVer invariant handling",
+      "req_id": "SEC-APIKEY-006"
+    },
+    {
+      "candidate_title": "Stale-key deletion scheduling and pending markers",
+      "req_id": "REL-APIKEY-002, REL-APIKEY-003, REL-APIKEY-004"
+    },
+    {
+      "candidate_title": "API key principal and effective scopes",
+      "req_id": "SEC-APIKEY-007"
+    },
+    {
+      "candidate_title": "Endpoints and writes forbidden to API-key actors",
+      "req_id": "SEC-APIKEY-008"
+    },
+    {
+      "candidate_title": "Admin scopes on API keys and the `*` rule",
+      "req_id": "SEC-APIKEY-009"
+    },
+    {
+      "candidate_title": "Opt-in doctor warnings for admin-scoped keys",
+      "req_id": "OPS-APIKEY-001"
+    },
+    {
+      "candidate_title": "AuthApiKeys app facade: issue, list, revoke",
+      "req_id": "IR-APIKEY-002"
+    },
+    {
+      "candidate_title": "Key issuance common rules and ownerVer source",
+      "req_id": "SEC-APIKEY-010"
+    },
+    {
+      "candidate_title": "Personal access token endpoints /auth/me/apikeys",
+      "req_id": "FR-APIKEY-003"
+    },
+    {
+      "candidate_title": "Admin API key endpoints /auth/admin/apikeys",
+      "req_id": "FR-APIKEY-004"
+    },
+    {
+      "candidate_title": "Key limits, lifetime bounds and expiresInDays validation",
+      "req_id": "FR-APIKEY-005"
+    },
+    {
+      "candidate_title": "Key status in listings and JSON representation",
+      "req_id": "IR-APIKEY-003"
+    },
+    {
+      "candidate_title": "Service accounts",
+      "req_id": "FR-APIKEY-006"
+    },
+    {
+      "candidate_title": "ApiKeyStore SPI method contract",
+      "req_id": "IR-APIKEY-004"
+    },
+    {
+      "candidate_title": "StoredApiKey, ApiKey and IssuedApiKey value classes",
+      "req_id": "DR-APIKEY-001"
+    },
+    {
+      "candidate_title": "InMemoryApiKeyStore",
+      "req_id": "FR-APIKEY-007"
+    },
+    {
+      "candidate_title": "Atomic limit insert declaration",
+      "req_id": "IR-APIKEY-004 (declaration), OPS-APIKEY-001 AC-1 (doctor FAIL), SEC-APIKEY-010 (per-owner lock), REL-APIKEY-005 (Jdbc true)"
+    },
+    {
+      "candidate_title": "lastUsedAt maintenance",
+      "req_id": "PERF-APIKEY-001"
+    },
+    {
+      "candidate_title": "User deletion removes owned API keys",
+      "req_id": "FR-APIKEY-008"
+    },
+    {
+      "candidate_title": "API key store contract test verifyApiKeyStore",
+      "req_id": "FR-APIKEY-009"
+    },
+    {
+      "candidate_title": "WebSocket handling of API key connections",
+      "req_id": "SEC-APIKEY-011"
+    },
+    {
+      "candidate_title": "(R47 (9)) AuthTesting.apiKeyFor",
+      "req_id": "FR-APIKEY-010"
+    },
+    {
+      "candidate_title": "(R47 (1)/(10)) WWW-Authenticate shape and error code notation",
+      "req_id": "IR-APIKEY-005"
+    },
+    {
+      "candidate_title": "JDBC reference stores: Reference DDL for SQLite, MySQL and PostgreSQL (API key part only)",
+      "req_id": "DR-APIKEY-002 (users/groups/refresh/throttle/device DDL and serviceAccount column belong to IAM; FR-APIKEY-006 AC-6 requires the column)"
+    },
+    {
+      "candidate_title": "JDBC reference stores: JdbcApiKeyStore atomic limit-insert lock procedure",
+      "req_id": "REL-APIKEY-005"
+    },
+    {
+      "candidate_title": "JDBC reference stores: JdbcApiKeyStore session settings and connection hygiene",
+      "req_id": "REL-APIKEY-006"
+    },
+    {
+      "candidate_title": "JDBC reference stores: JdbcApiKeyStore SQLite variant",
+      "req_id": "REL-APIKEY-007"
+    },
+    {
+      "candidate_title": "JDBC reference stores: JdbcApiKeyStore deleteExpired batching",
+      "req_id": "PERF-APIKEY-002"
+    },
+    {
+      "candidate_title": "JDBC reference stores: JdbcApiKeyStore deleteFutureByOwner and deleteStaleByOwner SQL",
+      "req_id": "PERF-APIKEY-002"
+    },
+    {
+      "candidate_title": "JDBC reference stores: JDBC store verification without new runtime dependencies (API key part)",
+      "req_id": "covered in DR-APIKEY-002, REL-APIKEY-005..007, PERF-APIKEY-002 implementationNotes/ACs (test-only sqlite-jdbc, SQL-text/fake-JDBC, §12 limit in REL-APIKEY-005 AC-8); the build constraint itself is owned by AUTH"
+    },
+    {
+      "candidate_title": "JDBC reference stores: JDBC user, group, refresh, throttle and device-trust stores",
+      "req_id": "not covered here - owned by IAM"
+    }
+  ],
+  "pending_cross_links": [
+    {
+      "from_id": "FR-APIKEY-001",
+      "to_area_or_title": "AUTH: Auth.Builder / install / auth.routes()+adminRoutes() registration",
+      "relation": "depends_on",
+      "reason": "key endpoints and authenticator attach through the AUTH builder and install"
+    },
+    {
+      "from_id": "FR-APIKEY-001",
+      "to_area_or_title": "AUTH: cross-cutting no-new-dependency / Core public API only / API 21 constraints",
+      "relation": "depends_on",
+      "reason": "all APIKEY code is bound by them"
+    },
+    {
+      "from_id": "SEC-APIKEY-001",
+      "to_area_or_title": "FLOW: credential extraction (Bearer/cookie access token) and multi-credential 400 (R30)",
+      "relation": "depends_on",
+      "reason": "key + cookie access token rule and Bearer path"
+    },
+    {
+      "from_id": "SEC-APIKEY-002",
+      "to_area_or_title": "FLOW: R33 credential endpoint list and AUTH: R29 public paths/anonymous-entry endpoints",
+      "relation": "depends_on",
+      "reason": "classification decides 400 vs anonymous"
+    },
+    {
+      "from_id": "SEC-APIKEY-004",
+      "to_area_or_title": "FLOW: R33 secure-transport rule (403 insecure_transport)",
+      "relation": "depends_on",
+      "reason": "transport check is step 0 of the key order"
+    },
+    {
+      "from_id": "SEC-APIKEY-004",
+      "to_area_or_title": "TOKEN: internal ConstantTime helper",
+      "relation": "depends_on",
+      "reason": "constant-time SHA-256 compare"
+    },
+    {
+      "from_id": "SEC-APIKEY-005",
+      "to_area_or_title": "FLOW: LoginThrottle base contract, R34 (5) IP resolution (IPv6 /64), login IP limit 15 min/20",
+      "relation": "depends_on",
+      "reason": "key counter reuses LoginThrottle with a distinct key kind"
+    },
+    {
+      "from_id": "IR-APIKEY-001",
+      "to_area_or_title": "FLOW: LoginThrottle / InMemoryLoginThrottle base SPI",
+      "relation": "extends",
+      "reason": "adds limit-argument defaults and usesLimitArguments(); possible overlap if FLOW also writes these members - dedupe"
+    },
+    {
+      "from_id": "IR-APIKEY-001",
+      "to_area_or_title": "IAM: JdbcLoginThrottle",
+      "relation": "depends_on",
+      "reason": "must return usesLimitArguments() true and honour limits"
+    },
+    {
+      "from_id": "REL-APIKEY-001",
+      "to_area_or_title": "IAM: principal cache R36 (userCacheTtl, 5 s)",
+      "relation": "depends_on",
+      "reason": "owner-side revocation window"
+    },
+    {
+      "from_id": "SEC-APIKEY-006",
+      "to_area_or_title": "IAM: UserStore ver monotonic invariant (R44) and read-after-write advice (R35)",
+      "relation": "depends_on",
+      "reason": "stale/invariant judgement"
+    },
+    {
+      "from_id": "REL-APIKEY-003",
+      "to_area_or_title": "FLOW: logout ?all=true and /auth/password ver++ paths; IAM: disable/recovery ver++ and R37 user write lock",
+      "relation": "depends_on",
+      "reason": "deleteFutureByOwner hook before every auth-triggered ver++"
+    },
+    {
+      "from_id": "REL-APIKEY-004",
+      "to_area_or_title": "IAM/AUTH: R42 10-minute cleanup scheduler",
+      "relation": "depends_on",
+      "reason": "retries pending markers"
+    },
+    {
+      "from_id": "SEC-APIKEY-007",
+      "to_area_or_title": "AUTH: AuthPrincipal, auth.user(req), principal accessor; AUTH: audit events",
+      "relation": "extends",
+      "reason": "adds getApiKeyId() and key id in audit"
+    },
+    {
+      "from_id": "SEC-APIKEY-007",
+      "to_area_or_title": "IAM: R31 both-cover predicate / ScopeMatcher",
+      "relation": "depends_on",
+      "reason": "effective scope intersection"
+    },
+    {
+      "from_id": "SEC-APIKEY-008",
+      "to_area_or_title": "FLOW: account endpoints (refresh, PATCH /auth/me, GET /auth/me); IAM: A2/A4 admin user endpoints",
+      "relation": "depends_on",
+      "reason": "key-actor checks hook into those handlers"
+    },
+    {
+      "from_id": "SEC-APIKEY-009",
+      "to_area_or_title": "IAM: R31 grant rule (1)(2)(4), R46 admin scopes auth-users|auth-groups|auth-apikeys",
+      "relation": "depends_on",
+      "reason": "key-specific cover rules"
+    },
+    {
+      "from_id": "OPS-APIKEY-001",
+      "to_area_or_title": "AUTH: doctor framework (FAIL stops start) and R35 deployment",
+      "relation": "depends_on",
+      "reason": "registers key checks"
+    },
+    {
+      "from_id": "IR-APIKEY-002",
+      "to_area_or_title": "AUTH: AuthRejection, AuthStateException, AuthUnavailableException, auth.errors()",
+      "relation": "depends_on",
+      "reason": "exception set and JSON mapping"
+    },
+    {
+      "from_id": "IR-APIKEY-002",
+      "to_area_or_title": "IAM: AuthUsers exception set, R46 scope validation",
+      "relation": "depends_on",
+      "reason": "same exceptions; scope validity"
+    },
+    {
+      "from_id": "SEC-APIKEY-010",
+      "to_area_or_title": "IAM: R31 store re-read; FLOW: checkPassword path",
+      "relation": "depends_on",
+      "reason": "ownerVer source per issuance path"
+    },
+    {
+      "from_id": "FR-APIKEY-003",
+      "to_area_or_title": "FLOW: /auth/password wrong-current-password 401 code, R34 (7) per-user-id limit; TOKEN: hash slot R38 and dummy hash",
+      "relation": "depends_on",
+      "reason": "PAT password re-check"
+    },
+    {
+      "from_id": "FR-APIKEY-004",
+      "to_area_or_title": "IAM: R31 target protection; FLOW: R34 (7) limit; TOKEN: hash slot",
+      "relation": "depends_on",
+      "reason": "admin issuance order"
+    },
+    {
+      "from_id": "FR-APIKEY-005",
+      "to_area_or_title": "AUTH: R30 error layer (HttpException 400 BAD_REQUEST)",
+      "relation": "depends_on",
+      "reason": "input-error code"
+    },
+    {
+      "from_id": "FR-APIKEY-006",
+      "to_area_or_title": "IAM: AuthUser/UserStore/AuthUsers.create/UserMutator, InMemory/File/JdbcUserStore, users DDL serviceAccount column",
+      "relation": "extends",
+      "reason": "adds isServiceAccount flag semantics"
+    },
+    {
+      "from_id": "FR-APIKEY-006",
+      "to_area_or_title": "FLOW: POST /auth/login (same 401/time, R34 counting); AUTH/FLOW: recovery R31 (6)",
+      "relation": "depends_on",
+      "reason": "service-account login and recovery behaviour"
+    },
+    {
+      "from_id": "FR-APIKEY-007",
+      "to_area_or_title": "AUTH: R35 refusal of in-memory stores under MULTI_INSTANCE",
+      "relation": "depends_on",
+      "reason": "AC-3"
+    },
+    {
+      "from_id": "FR-APIKEY-008",
+      "to_area_or_title": "IAM: A5 / AuthUsers.delete and R11 membership deletion order",
+      "relation": "extends",
+      "reason": "inserts key deletion step"
+    },
+    {
+      "from_id": "FR-APIKEY-009",
+      "to_area_or_title": "AUTH: AuthTesting location (00 §10 open question)",
+      "relation": "depends_on",
+      "reason": "class location"
+    },
+    {
+      "from_id": "FR-APIKEY-010",
+      "to_area_or_title": "AUTH: AuthTesting (tokenFor etc.)",
+      "relation": "depends_on",
+      "reason": "same class"
+    },
+    {
+      "from_id": "SEC-APIKEY-011",
+      "to_area_or_title": "FLOW: auth.webSocket wrapper R40 and Upgrade auth R28",
+      "relation": "extends",
+      "reason": "key-specific close rules"
+    },
+    {
+      "from_id": "IR-APIKEY-005",
+      "to_area_or_title": "AUTH: auth.errors() / R30 error layer; FLOW: Bearer WWW-Authenticate for JWT",
+      "relation": "depends_on",
+      "reason": "challenge assembly"
+    },
+    {
+      "from_id": "IR-APIKEY-005",
+      "to_area_or_title": "APP: FR-APP-006 Core error body shape and request id",
+      "relation": "depends_on",
+      "reason": "existing verified REQ - not linked by this writer per brief scope; main session may add"
+    },
+    {
+      "from_id": "DR-APIKEY-002",
+      "to_area_or_title": "IAM: Jdbc* stores dialect builder and other reference DDL",
+      "relation": "depends_on",
+      "reason": "shared dialect/DDL packaging"
+    },
+    {
+      "from_id": "REL-APIKEY-005",
+      "to_area_or_title": "AUTH: build constraint test-only sqlite-jdbc testImplementation (qna_log)",
+      "relation": "depends_on",
+      "reason": "verification approach"
+    },
+    {
+      "from_id": "REL-APIKEY-007",
+      "to_area_or_title": "AUTH: build constraint test-only sqlite-jdbc testImplementation (qna_log)",
+      "relation": "depends_on",
+      "reason": "SQLite tests"
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "OQ-APIKEY-1",
+      "question": "Name of the key table and its column names in the reference DDL",
+      "detail": "00 gives only naru_api_key_owner(owner_user_id) and column names owner_user_id/expires_at/owner_ver used in SQL snippets; key table name (e.g. naru_api_keys) not stated. Left as (name not final) in DR-APIKEY-002."
+    },
+    {
+      "id": "OQ-APIKEY-2",
+      "question": "Final names of .apiKeyFailureLimit(int,long) and the ApiKeyStore lastUsedAt update method",
+      "detail": "Both marked (미확정) in 00; settled during implementation and recorded in docs/api."
+    },
+    {
+      "id": "OQ-APIKEY-3",
+      "question": "Name of the accessor returning AuthPrincipal for a request",
+      "detail": "SEC-APIKEY-007 AC-2 writes auth.principal(req) as a placeholder; 00 names only auth.user(req)/userOrNull(req) and AuthPrincipal.getApiKeyId(). Name not final - owned by AUTH."
+    },
+    {
+      "id": "OQ-APIKEY-4",
+      "question": "Exact 401 code for a wrong current password on PAT/admin issuance",
+      "detail": "00 R47 (10) says the code equals /auth/password's and 'the name is left open'; ACs say 'same 401 as /auth/password' without a code."
+    },
+    {
+      "id": "OQ-APIKEY-5",
+      "question": "Name of the service-account flag in A2 body / AuthUsers.create",
+      "detail": "00 says 'service-account flag' without a JSON field or method name; owned jointly with IAM."
+    },
+    {
+      "id": "OQ-APIKEY-6",
+      "question": "Java type of ownerVer",
+      "detail": "Not stated beyond long currentOwnerVer parameters; DR-APIKEY-001 assumes long."
+    }
+  ],
+  "notes": [
+    "FR-APIKEY-001 research text says the always-on alternative was the '7th edition and earlier' design; 00 only states keys are off by default since edition 8 (S-10) and does not describe that alternative's history. Treat that sentence as unsupported; fix via edit tool if desired (research field not editable by edit_requirement_fields).",
+    "Some ACs contain test-design numbers not in 00: FR-APIKEY-009 AC-6 '20 repeated runs', PERF-APIKEY-001 AC-4 '5 seconds' blocking store, SEC-APIKEY-003 AC-5 7-char prefix example. They are test fixtures, not product values.",
+    "edit_requirement_fields on SEC-APIKEY-009 dropped the '[DRAFT — pending decision]' heading suffix that other blocks carry (tool behaviour); Stability is still draft.",
+    "REL-APIKEY-007 tagged feasibility:medium per assignment (JDBC locking); it is the dialect actually testable with sqlite-jdbc."
+  ],
+  "validate_spec_result": {
+    "after_fix": {
+      "errors_total": 0,
+      "warnings_total": 182,
+      "byCode_total": {
+        "SRS-W023": 160,
+        "SRS-W015": 22
+      }
+    },
+    "this_file": {
+      "errors": 0,
+      "warnings": 39,
+      "codes": {
+        "SRS-W023": 39
+      },
+      "note": "SRS-W023 = draft requirement not ready as implementation contract; expected because Stability=draft by brief"
+    },
+    "fixed": [
+      "SRS-E020 forbidden Markdown in heading of SEC-APIKEY-009 (backticked *) - title edited via edit_requirement_fields"
+    ]
+  }
+}

@@ -1,0 +1,1514 @@
+{
+ "target": "0.11.0",
+ "target_total": 165,
+ "by_scope": {
+  "APIKEY": 39,
+  "AUTH": 31,
+  "ENGINE": 5,
+  "IAM": 35,
+  "APP": 4,
+  "FLOW": 29,
+  "HTTP": 3,
+  "TOKEN": 18,
+  "SVL": 1
+ },
+ "by_status": {
+  "planned": 165
+ },
+ "by_stability": {
+  "draft": 165
+ },
+ "filter": {
+  "excluded_stable_frozen": 0,
+  "excluded_discarded_deprecated": 0
+ },
+ "evaluated": [
+  {
+   "id": "CON-APIKEY-001",
+   "scope": "APIKEY",
+   "type": "constraint",
+   "status": "planned",
+   "stability": "draft",
+   "title": "apiKeyScheme accepts one RFC 9110 token that is not a reserved scheme",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "CON-AUTH-001",
+   "scope": "AUTH",
+   "type": "constraint",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Auth module placement in NaruServe-api with no new dependency",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "CON-AUTH-002",
+   "scope": "AUTH",
+   "type": "constraint",
+   "status": "planned",
+   "stability": "draft",
+   "title": "utils.auth uses only Core public API",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "CON-AUTH-003",
+   "scope": "AUTH",
+   "type": "constraint",
+   "status": "planned",
+   "stability": "draft",
+   "title": "API 21 and Java 8 conformance of auth classes",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "CON-AUTH-004",
+   "scope": "AUTH",
+   "type": "constraint",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Kotlin nullability, naming and lambda compatibility of the auth public API",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "CON-AUTH-005",
+   "scope": "AUTH",
+   "type": "constraint",
+   "status": "planned",
+   "stability": "draft",
+   "title": "docs/api reference pages for the auth public API",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "CON-AUTH-006",
+   "scope": "AUTH",
+   "type": "constraint",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Evolution rule for user-implemented auth interfaces and Forwarding classes",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "CON-AUTH-007",
+   "scope": "AUTH",
+   "type": "constraint",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Cross-module consistency of the 0.11.0 Core changes",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "CON-ENGINE-001",
+   "scope": "ENGINE",
+   "type": "constraint",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Legacy app.trustProxy(boolean) keeps its left-most behaviour for compatibility, and its Javadoc and docs state the spoofing risk and point to hop or CIDR mode",
+   "file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "id": "CON-IAM-001",
+   "scope": "IAM",
+   "type": "constraint",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Kotlin compile-and-run test for the identity and grants public API",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "CON-IAM-002",
+   "scope": "IAM",
+   "type": "constraint",
+   "status": "planned",
+   "stability": "draft",
+   "title": "JDBC store verification with a test-only SQLite driver and recorded limits",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "DR-APIKEY-001",
+   "scope": "APIKEY",
+   "type": "data",
+   "status": "planned",
+   "stability": "draft",
+   "title": "StoredApiKey, ApiKey and IssuedApiKey value types and secret hygiene",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "DR-APIKEY-002",
+   "scope": "APIKEY",
+   "type": "data",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Reference DDL for the API key tables in SQLite, MySQL and PostgreSQL",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "DR-IAM-001",
+   "scope": "IAM",
+   "type": "data",
+   "status": "planned",
+   "stability": "draft",
+   "title": "AuthUser immutable value class with transient password hash, and the AuthIds id helper",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "DR-IAM-002",
+   "scope": "IAM",
+   "type": "data",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Group model and GroupStore read SPI",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "DR-IAM-003",
+   "scope": "IAM",
+   "type": "data",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Reference DDL for SQLite, MySQL and PostgreSQL identity tables",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-APIKEY-001",
+   "scope": "APIKEY",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "API keys are off by default and enabled by .apiKeys(store)",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "FR-APIKEY-002",
+   "scope": "APIKEY",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "API key expiry judged without leeway on the evaluating node's clock, and scheduled deletion of expired keys",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "FR-APIKEY-003",
+   "scope": "APIKEY",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Personal access token endpoints under /auth/me/apikeys",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "FR-APIKEY-004",
+   "scope": "APIKEY",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Admin API key endpoints under /auth/admin/apikeys and their check order",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "FR-APIKEY-005",
+   "scope": "APIKEY",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Key count limit, lifetime bound and issuance body validation",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "FR-APIKEY-006",
+   "scope": "APIKEY",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Service accounts without passwords",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "FR-APIKEY-007",
+   "scope": "APIKEY",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "InMemoryApiKeyStore for single-instance and tests",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "FR-APIKEY-008",
+   "scope": "APIKEY",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "User deletion clears the owner's pending key marker and stops the deleted owner's keys",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "FR-APIKEY-009",
+   "scope": "APIKEY",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "ApiKeyStore contract test AuthTesting.verifyApiKeyStore",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "FR-APIKEY-010",
+   "scope": "APIKEY",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "AuthTesting.apiKeyFor issues a real key for tests",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "FR-APP-025",
+   "scope": "APP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Every registration API is recorded once, in call order, with its C4 kind and the original registered object as target",
+   "file": "docs/spec/05.application.srs.md"
+  },
+  {
+   "id": "FR-APP-026",
+   "scope": "APP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Registrations inside mounted Routers and groups are expanded with the mount path, including later additions to a live mounted Router",
+   "file": "docs/spec/05.application.srs.md"
+  },
+  {
+   "id": "FR-AUTH-001",
+   "scope": "AUTH",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Aggregated build() validation of incompatible configuration",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "FR-AUTH-002",
+   "scope": "AUTH",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "AuthConfig.load(file) with env: and file: secret references",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "FR-AUTH-003",
+   "scope": "AUTH",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "AuthProfile presets and Deployment SINGLE_INSTANCE / MULTI_INSTANCE",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "FR-AUTH-004",
+   "scope": "AUTH",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Bootstrap .user(...) account seeding on start",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "FR-AUTH-005",
+   "scope": "AUTH",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "auth.install(app) ordering check and wiring",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "FR-AUTH-006",
+   "scope": "AUTH",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "All auth responses are JSON in middleware, guards and auth routers",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "FR-AUTH-007",
+   "scope": "AUTH",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "AuthEvents before/on semantics and hash-free event payloads",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "FR-AUTH-008",
+   "scope": "AUTH",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "User-change path and event matrix with AuthEventContext.getOrigin()",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "FR-AUTH-009",
+   "scope": "AUTH",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Audit event stream: AuditEvent, AuditSink and AuditSinks",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "FR-FLOW-001",
+   "scope": "FLOW",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Fixed decision order for requests to auth endpoints",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "FR-FLOW-002",
+   "scope": "FLOW",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Token delivery rule for the five token-issuing responses",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "FR-FLOW-003",
+   "scope": "FLOW",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Logout outcomes: family revocation, all-devices logout, no-identity responses and store errors",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "FR-FLOW-004",
+   "scope": "FLOW",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "POST /auth/login password login",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "FR-FLOW-005",
+   "scope": "FLOW",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "POST /auth/refresh token rotation endpoint",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "FR-FLOW-006",
+   "scope": "FLOW",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "GET /auth/me and PATCH /auth/me self profile endpoints",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "FR-FLOW-007",
+   "scope": "FLOW",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "POST /auth/register self-registration, off by default",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "FR-FLOW-008",
+   "scope": "FLOW",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "auth.webSocket(handler) wrapper closing connections on expiry and revocation",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "FR-FLOW-009",
+   "scope": "FLOW",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Optional hard Lockout for password login",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "FR-HTTP-029",
+   "scope": "HTTP",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "req.requestId() returns the dispatcher's id for the request, equal to the error-body requestId and the access-log id",
+   "file": "docs/spec/04.http-core.srs.md"
+  },
+  {
+   "id": "FR-IAM-001",
+   "scope": "IAM",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "DuplicateUserException and the store-enforced unique-name contract",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-IAM-002",
+   "scope": "IAM",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "InMemoryUserStore and FileUserStore built-in stores",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-IAM-003",
+   "scope": "IAM",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Opaque username as the single login identifier, normalization and rename",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-IAM-004",
+   "scope": "IAM",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "AuthTesting.verifyUserStore store contract test",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-IAM-005",
+   "scope": "IAM",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Scope grammar, covering semantics and reserved auth-* resources",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-IAM-006",
+   "scope": "IAM",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "RolePolicy builder, built-in admin role holding * and the RoleStore SPI",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-IAM-007",
+   "scope": "IAM",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Group expansion with depth 8 and size 256 limits that fail instead of truncating",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-IAM-008",
+   "scope": "IAM",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "User delete ordering: memberships, then API keys, then the user row",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-IAM-009",
+   "scope": "IAM",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Effective role and scope resolution and the \"both cover\" predicate",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-IAM-010",
+   "scope": "IAM",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "JdbcUserStore atomic-by-contract reference store",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-IAM-011",
+   "scope": "IAM",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "JdbcGroupStore reference group store",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-IAM-012",
+   "scope": "IAM",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "JdbcRefreshTokenStore shared refresh-family store",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-IAM-013",
+   "scope": "IAM",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "JdbcLoginThrottle and JdbcDeviceTrust shared counters",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-IAM-014",
+   "scope": "IAM",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Admin PATCH A4: one R31 check, fixed application order and the applied list",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "FR-TOKEN-001",
+   "scope": "TOKEN",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "TokenService issues TokenPair and rotates refresh tokens within a family",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "FR-TOKEN-002",
+   "scope": "TOKEN",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "RefreshTokenStore SPI with defaults that follow the user store and scheduled cleanup",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "FR-TOKEN-003",
+   "scope": "TOKEN",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "PasswordHashers.chain with digest and saltedDigest legacy verifiers and migration to PBKDF2",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "FR-TOKEN-004",
+   "scope": "TOKEN",
+   "type": "functional",
+   "status": "planned",
+   "stability": "draft",
+   "title": "PasswordPolicy and BreachedPasswordChecker applied before every new password is hashed",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "IR-APIKEY-001",
+   "scope": "APIKEY",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Key failures counted only through the LoginThrottle limit-argument methods",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "IR-APIKEY-002",
+   "scope": "APIKEY",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "AuthApiKeys app facade issue, list and revoke",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "IR-APIKEY-003",
+   "scope": "APIKEY",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Key status in listings and its JSON form",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "IR-APIKEY-004",
+   "scope": "APIKEY",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "ApiKeyStore SPI method contract",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "IR-APIKEY-005",
+   "scope": "APIKEY",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Configured key scheme name in WWW-Authenticate challenges",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "IR-APP-008",
+   "scope": "APP",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Public surface of the registration list app.registrations() and the watcher app.onRegistration(RegistrationListener)",
+   "file": "docs/spec/05.application.srs.md"
+  },
+  {
+   "id": "IR-AUTH-001",
+   "scope": "AUTH",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "TimeSource time injection SAM and epoch-millisecond timestamps",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "IR-AUTH-002",
+   "scope": "AUTH",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "auth.errors() and auth.errorMiddleware() with placement checks",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "IR-AUTH-003",
+   "scope": "AUTH",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "AuthRejection value type and the auth status and error code catalog",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "IR-AUTH-004",
+   "scope": "AUTH",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Principal access API and route guards",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "IR-AUTH-005",
+   "scope": "AUTH",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "AuthTesting test kit issuing real credentials without a back door",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "IR-ENGINE-003",
+   "scope": "ENGINE",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Proxy trust configuration API: app.trustProxyHops(int), app.trustProxyCidrs(String...) and read accessors for the current proxy trust setting",
+   "file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "id": "IR-FLOW-001",
+   "scope": "FLOW",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "WWW-Authenticate challenge shapes for 401 and 403 auth responses",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "IR-FLOW-002",
+   "scope": "FLOW",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Account endpoint table of auth.routes()",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "IR-FLOW-003",
+   "scope": "FLOW",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "LoginThrottle SPI with limit-argument default methods, usesLimitArguments() and ForwardingLoginThrottle",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "IR-HTTP-010",
+   "scope": "HTTP",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Request surface gains req.socketAddress() and req.requestId() with Kotlin-safe nullability, Kotlin coverage and bilingual docs",
+   "file": "docs/spec/04.http-core.srs.md"
+  },
+  {
+   "id": "IR-IAM-001",
+   "scope": "IAM",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "UserStore SPI: five required methods, five default field methods, the default listing method and the atomic declaration",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "IR-IAM-002",
+   "scope": "IAM",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "ForwardingUserStore decorator base class",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "IR-IAM-003",
+   "scope": "IAM",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "AuthUsers app facade auth.users() with hash-stripped copies and four exception types",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "IR-IAM-004",
+   "scope": "IAM",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "GroupAdminStore write SPI, cycle check and InMemoryGroupStore / FileGroupStore",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "IR-IAM-005",
+   "scope": "IAM",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Admin endpoint table of auth.adminRoutes()",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "IR-TOKEN-001",
+   "scope": "TOKEN",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Authenticator SPI with built-in password, Bearer JWT and API key authenticators",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "IR-TOKEN-002",
+   "scope": "TOKEN",
+   "type": "interface",
+   "status": "planned",
+   "stability": "draft",
+   "title": "TokenCodec SPI with the default HS256 codec",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "OPS-APIKEY-001",
+   "scope": "APIKEY",
+   "type": "operational",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Doctor checks for API keys",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "OPS-AUTH-001",
+   "scope": "AUTH",
+   "type": "operational",
+   "status": "planned",
+   "stability": "draft",
+   "title": "doctor startup check suite and proxy-trust warnings",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "OPS-AUTH-002",
+   "scope": "AUTH",
+   "type": "operational",
+   "status": "planned",
+   "stability": "draft",
+   "title": "describe() and startup log summary",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "OPS-FLOW-001",
+   "scope": "FLOW",
+   "type": "operational",
+   "status": "planned",
+   "stability": "draft",
+   "title": "CORS guidance for cross-origin auth clients in docs/api",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "PERF-APIKEY-001",
+   "scope": "APIKEY",
+   "type": "performance",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Best-effort lastUsedAt update at most once per key per minute",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "PERF-APIKEY-002",
+   "scope": "APIKEY",
+   "type": "performance",
+   "status": "planned",
+   "stability": "draft",
+   "title": "JdbcApiKeyStore delete statements and batched expired-key cleanup",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "PERF-TOKEN-001",
+   "scope": "TOKEN",
+   "type": "performance",
+   "status": "planned",
+   "stability": "draft",
+   "title": "HashCost calibration, fixed cost and rehash thresholds at 80 and 125 percent",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "PERF-TOKEN-002",
+   "scope": "TOKEN",
+   "type": "performance",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Low-priority rehash queue outside the hash slot",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "REL-APIKEY-001",
+   "scope": "APIKEY",
+   "type": "reliability",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Key rows are never cached so delete and expiry apply on the next request",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "REL-APIKEY-002",
+   "scope": "APIKEY",
+   "type": "reliability",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Off-request stale-key deletion deduplicated per owner",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "REL-APIKEY-003",
+   "scope": "APIKEY",
+   "type": "reliability",
+   "status": "planned",
+   "stability": "draft",
+   "title": "SINGLE_INSTANCE future-key deletion before ver++ and before issuance",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "REL-APIKEY-004",
+   "scope": "APIKEY",
+   "type": "reliability",
+   "status": "planned",
+   "stability": "draft",
+   "title": "In-memory pending marker after a failed future-key deletion",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "REL-APIKEY-005",
+   "scope": "APIKEY",
+   "type": "reliability",
+   "status": "planned",
+   "stability": "draft",
+   "title": "JdbcApiKeyStore atomic limit insert lock procedure for MySQL and PostgreSQL",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "REL-APIKEY-006",
+   "scope": "APIKEY",
+   "type": "reliability",
+   "status": "planned",
+   "stability": "draft",
+   "title": "JdbcApiKeyStore lock-wait settings, connection restoration and DataSource rule",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "REL-APIKEY-007",
+   "scope": "APIKEY",
+   "type": "reliability",
+   "status": "planned",
+   "stability": "draft",
+   "title": "JdbcApiKeyStore SQLite limit insert with BEGIN IMMEDIATE and per-file in-process lock",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "REL-FLOW-001",
+   "scope": "FLOW",
+   "type": "reliability",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Throttle and device-trust counter storage: memory cap, snapshots and shared counting",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "REL-IAM-001",
+   "scope": "IAM",
+   "type": "reliability",
+   "status": "planned",
+   "stability": "draft",
+   "title": "SINGLE_INSTANCE default field-method algorithm under a per-user lock",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "REL-IAM-002",
+   "scope": "IAM",
+   "type": "reliability",
+   "status": "planned",
+   "stability": "draft",
+   "title": "changePassword atomic hash swap with ver++, null-hash equality and race retry rules",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "REL-IAM-003",
+   "scope": "IAM",
+   "type": "reliability",
+   "status": "planned",
+   "stability": "draft",
+   "title": "MULTI_INSTANCE UserStore contract and supportsAtomicFieldWrites declaration",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "REL-IAM-004",
+   "scope": "IAM",
+   "type": "reliability",
+   "status": "planned",
+   "stability": "draft",
+   "title": "AtomicFiles write and start-up recovery protocol",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "REL-TOKEN-001",
+   "scope": "TOKEN",
+   "type": "reliability",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Hash concurrency slots with bounded wait queue and 503 backpressure",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "SEC-APIKEY-001",
+   "scope": "APIKEY",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "API key presentation through the Authorization scheme only",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "SEC-APIKEY-002",
+   "scope": "APIKEY",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Multiple and comma-merged Authorization headers with keys on",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "SEC-APIKEY-003",
+   "scope": "APIKEY",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "API key format nk_prefix8_secret32 and SHA-256 storage",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "SEC-APIKEY-004",
+   "scope": "APIKEY",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "API key verification order on protected paths",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "SEC-APIKEY-005",
+   "scope": "APIKEY",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Key-only per-IP failure counter and 429 too_many_attempts",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "SEC-APIKEY-006",
+   "scope": "APIKEY",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Stale-key detection and ownerVer invariant handling",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "SEC-APIKEY-007",
+   "scope": "APIKEY",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "API key principal and effective scopes",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "SEC-APIKEY-008",
+   "scope": "APIKEY",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Endpoints and writes forbidden to API key actors",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "SEC-APIKEY-009",
+   "scope": "APIKEY",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "auth-* admin scopes on keys and the key wildcard scope rule",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "SEC-APIKEY-010",
+   "scope": "APIKEY",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Common issuance rules: ownerVer source, owner lock and prefix-collision retry",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "SEC-APIKEY-011",
+   "scope": "APIKEY",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "WebSocket connections opened with an API key",
+   "file": "docs/spec/21.auth-api-keys.srs.md"
+  },
+  {
+   "id": "SEC-APP-002",
+   "scope": "APP",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Each registration runs validate, watcher, apply, record in that order; a watcher exception vetoes it; post-start registration scope is unchanged",
+   "file": "docs/spec/05.application.srs.md"
+  },
+  {
+   "id": "SEC-AUTH-001",
+   "scope": "AUTH",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Auth.builder(secret) minimal path and secret rejection",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "SEC-AUTH-002",
+   "scope": "AUTH",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "AuthMode DEV and PROD with a fixed relaxation table",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "SEC-AUTH-003",
+   "scope": "AUTH",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "First-admin POST /auth/setup and recovery mode",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "SEC-AUTH-004",
+   "scope": "AUTH",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Pre-install path middleware and CORS ordering doctor rules",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "SEC-AUTH-005",
+   "scope": "AUTH",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Public path matching and optional authentication on public paths",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "SEC-AUTH-006",
+   "scope": "AUTH",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "protectOnly protection range and always-protected WebSocket upgrades",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "SEC-AUTH-007",
+   "scope": "AUTH",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Principal cache with explicit invalidation and statelessAccess minimal principal",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "SEC-AUTH-008",
+   "scope": "AUTH",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Sensitive value hygiene in logs, exception messages and audit events",
+   "file": "docs/spec/17.auth.srs.md"
+  },
+  {
+   "id": "SEC-ENGINE-001",
+   "scope": "ENGINE",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Hop mode: after app.trustProxyHops(n), req.remoteAddress() is the nth X-Forwarded-For entry counted from the right",
+   "file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "id": "SEC-ENGINE-002",
+   "scope": "ENGINE",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "CIDR mode: after app.trustProxyCidrs(...), a trusted peer's req.remoteAddress() is the first X-Forwarded-For entry from the right outside the trusted CIDRs",
+   "file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "id": "SEC-ENGINE-003",
+   "scope": "ENGINE",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "X-Forwarded-Proto rule for req.isSecure() in hop and CIDR modes, read only from a trusted peer and failing closed on ambiguous lists",
+   "file": "docs/spec/06.engine-adapter.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-001",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Per-request secure-transport rule before any credential is read",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-002",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "allowInsecureTransport(reason) opt-in with forced short token lifetimes",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-003",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Credential endpoint classes: anonymous-entry and subject-required",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-004",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Credentials read per transport mode and multiple-credential detection",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-005",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "JSON-only POST bodies on auth endpoints with 415 UNSUPPORTED_MEDIA_TYPE",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-006",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Signed double-submit CSRF token bound to the token family for cookie-authenticated writes",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-007",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Origin and Referer check for cookie-planting responses and cookie-token use",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-008",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "CSRF for refresh by naru_rt and body refresh tokens per transport mode",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-009",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Auth cookie names, attributes, refresh cookie path and clearing rules",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-010",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Logout identity decision table with per-source CSRF",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-011",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Login throttling keys, limits and enumeration-resistant 429",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-012",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Throttle check order combined with device trust",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-013",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "DeviceTrust signed device token with name fingerprint and per-token failure limit",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-014",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "POST /auth/password self password change with atomic hash swap",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-FLOW-015",
+   "scope": "FLOW",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Per-user current-password attempt limit shared by all password confirmations",
+   "file": "docs/spec/19.auth-transport-and-endpoints.srs.md"
+  },
+  {
+   "id": "SEC-HTTP-001",
+   "scope": "HTTP",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "req.socketAddress() returns the connection peer address the adapter reports, independent of every proxy setting and forwarding header",
+   "file": "docs/spec/04.http-core.srs.md"
+  },
+  {
+   "id": "SEC-IAM-001",
+   "scope": "IAM",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "UserMutator security-field rules for AuthUsers.update and create init",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "SEC-IAM-002",
+   "scope": "IAM",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "AuthUsers.checkPassword re-verification with hash slot, shared user limit and equal timing",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "SEC-IAM-003",
+   "scope": "IAM",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Revocation by a single ver++ and which changes bump ver",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "SEC-IAM-004",
+   "scope": "IAM",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Grant rule: you can only grant what you have, target protection and self-change ban",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "SEC-IAM-005",
+   "scope": "IAM",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Group delete and edge removal: indirect-member protection and the 1,000-user limit",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "SEC-IAM-006",
+   "scope": "IAM",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Recovery path user-state outcome",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "SEC-IAM-007",
+   "scope": "IAM",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Admin endpoint scope guard (R39) ahead of the R31 grant rule",
+   "file": "docs/spec/20.auth-identity-and-grants.srs.md"
+  },
+  {
+   "id": "SEC-SVL-001",
+   "scope": "SVL",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Servlet adapter conformance for req.socketAddress(), hop and CIDR proxy trust and isSecure()",
+   "file": "docs/spec/14.servlet-adapter.srs.md"
+  },
+  {
+   "id": "SEC-TOKEN-001",
+   "scope": "TOKEN",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Internal Base64Url, HmacSigner and ConstantTime primitives",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "SEC-TOKEN-002",
+   "scope": "TOKEN",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "MiniJson strict parser and writer with CLAIMS and FILE profiles",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "SEC-TOKEN-003",
+   "scope": "TOKEN",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Standalone HS256 Jwt sign and verify with fixed algorithm and kid lookup",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "SEC-TOKEN-004",
+   "scope": "TOKEN",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "KeySource SPI, KeySources factories and kid key sets with rotation",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "SEC-TOKEN-005",
+   "scope": "TOKEN",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Access and refresh token format with typ separation and purpose-derived keys",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "SEC-TOKEN-006",
+   "scope": "TOKEN",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Per-family refresh token reuse detection and family revocation",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "SEC-TOKEN-007",
+   "scope": "TOKEN",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "PasswordHasher SPI and hand-written Pbkdf2PasswordHasher (PBKDF2-HMAC-SHA256)",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "SEC-TOKEN-008",
+   "scope": "TOKEN",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Hand-written BcryptPasswordHasher legacy verifier with variant and cost limits",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  },
+  {
+   "id": "SEC-TOKEN-009",
+   "scope": "TOKEN",
+   "type": "security",
+   "status": "planned",
+   "stability": "draft",
+   "title": "Constant-work login and the 1.25T failure-response floor",
+   "file": "docs/spec/18.auth-tokens.srs.md"
+  }
+ ],
+ "source": "speckiwi list --target 0.11.0 --json (read-only)",
+ "filtered_count": 165
+}

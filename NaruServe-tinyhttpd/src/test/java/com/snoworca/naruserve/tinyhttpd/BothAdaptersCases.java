@@ -150,4 +150,51 @@ abstract class BothAdaptersCases {
             }
         }
     }
+
+    /**
+     * SEC-ENGINE-001 AC-6, SEC-ENGINE-002 AC-6, SEC-ENGINE-003 AC-7, SEC-HTTP-001 AC-4: hop and CIDR trust on the
+     * loopback peer of both adapters; every result is the core's, no adapter reads a forwarding header.
+     */
+    void proxyTrustModeCases() throws Exception {
+        String[][] headerSets = {
+            {},
+            {"X-Forwarded-For", "1.2.3.4, 203.0.113.7"},
+            {"X-Forwarded-For", "203.0.113.7", "X-Forwarded-Proto", "https"},
+            {"X-Forwarded-For", "198.51.100.9, 203.0.113.7", "X-Forwarded-Proto", "https, http"},
+            {"X-Forwarded-For", "203.0.113.7", "X-Forwarded-Proto", "https, https"},
+            {"X-Forwarded-For", "198.51.100.9", "X-Forwarded-For", "203.0.113.7"},
+            {"Forwarded", "for=198.51.100.1;proto=https"},
+        };
+        String[] settings = {"hops=1", "hops=2", "cidrs=127.0.0.0/8", "cidrs=10.0.0.0/8"};
+        String[][] expected = {
+            {"127.0.0.1 127.0.0.1 false", "127.0.0.1 203.0.113.7 false", "127.0.0.1 203.0.113.7 true",
+                "127.0.0.1 203.0.113.7 false", "127.0.0.1 203.0.113.7 false", "127.0.0.1 203.0.113.7 false",
+                "127.0.0.1 127.0.0.1 false"},
+            {"127.0.0.1 127.0.0.1 false", "127.0.0.1 1.2.3.4 false", "127.0.0.1 203.0.113.7 true",
+                "127.0.0.1 198.51.100.9 true", "127.0.0.1 203.0.113.7 false", "127.0.0.1 198.51.100.9 false",
+                "127.0.0.1 127.0.0.1 false"},
+            {"127.0.0.1 127.0.0.1 false", "127.0.0.1 203.0.113.7 false", "127.0.0.1 203.0.113.7 true",
+                "127.0.0.1 203.0.113.7 false", "127.0.0.1 203.0.113.7 false", "127.0.0.1 203.0.113.7 false",
+                "127.0.0.1 127.0.0.1 false"},
+            {"127.0.0.1 127.0.0.1 false", "127.0.0.1 127.0.0.1 false", "127.0.0.1 127.0.0.1 false",
+                "127.0.0.1 127.0.0.1 false", "127.0.0.1 127.0.0.1 false", "127.0.0.1 127.0.0.1 false",
+                "127.0.0.1 127.0.0.1 false"},
+        };
+        for (int s = 0; s < settings.length; s++) {
+            RestApp app = newApp();
+            String setting = settings[s];
+            if (setting.startsWith("hops=")) {
+                app.trustProxyHops(Integer.parseInt(setting.substring(5)));
+            } else {
+                app.trustProxyCidrs(setting.substring(6));
+            }
+            app.get("/who", (req, res) -> res.send(req.socketAddress() + " " + req.remoteAddress() + " " + req.isSecure()));
+            for (int i = 0; i < headerSets.length; i++) {
+                Reply r = send(app, "GET", "/who", headerSets[i]);
+                record(setting + " " + String.join(",", headerSets[i]), r);
+                assertEquals(200, r.status());
+                assertEquals(setting + " " + String.join(",", headerSets[i]), expected[s][i], r.body());
+            }
+        }
+    }
 }

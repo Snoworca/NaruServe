@@ -1,0 +1,2097 @@
+{
+ "gap_reqs_added": [
+  {
+   "id": "IR-IAM-005",
+   "title": "Admin endpoint table of auth.adminRoutes()",
+   "inventory": "Admin user and group endpoints (00 R45, R39, R31)"
+  },
+  {
+   "id": "SEC-IAM-007",
+   "title": "Admin endpoint scope guard (R39) ahead of the R31 grant rule",
+   "inventory": "Admin user and group endpoints (00 R39, R31)"
+  },
+  {
+   "id": "FR-IAM-014",
+   "title": "Admin PATCH A4: one R31 check, fixed application order and the applied list",
+   "inventory": "Admin PATCH A4 application order and applied list (00 R37)"
+  }
+ ],
+ "gap_open_questions": [
+  "Success status of DELETE /auth/admin/users/:id/lockout not given by 00 or 05.",
+  "409 code strings for duplicate group, GROUP_CYCLE, GROUP_TOO_DEEP and the >1,000 affected-users refusal not fixed by 00.",
+  "G2 invalid group id: 05 says 422 INVALID_GROUP_ID, 00 R30 ed.24 says auth input validation is 400 BAD_REQUEST.",
+  "Element format of the A4 applied list and the A4 409 code string not given by 00.",
+  "Whether an R39 guard denial (not R31) emits an audit event is not stated in 00."
+ ],
+ "links_added": [
+  {
+   "id": "IR-IAM-005",
+   "reference": "FR-AUTH-005",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "IR-IAM-005",
+   "reference": "FR-AUTH-006",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "IR-IAM-005",
+   "reference": "IR-AUTH-003",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "IR-IAM-005",
+   "reference": "REL-TOKEN-001",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "IR-IAM-005",
+   "reference": "FR-IAM-008",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "IR-IAM-005",
+   "reference": "IR-IAM-004",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "IR-IAM-005",
+   "reference": "SEC-IAM-005",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "SEC-IAM-007",
+   "reference": "IR-IAM-005",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "SEC-IAM-007",
+   "reference": "SEC-IAM-004",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "SEC-IAM-007",
+   "reference": "FR-IAM-005",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "SEC-IAM-007",
+   "reference": "FR-IAM-009",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "SEC-IAM-007",
+   "reference": "IR-AUTH-004",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "FR-IAM-014",
+   "reference": "IR-IAM-005",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "FR-IAM-014",
+   "reference": "SEC-IAM-007",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "FR-IAM-014",
+   "reference": "SEC-IAM-004",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "FR-IAM-014",
+   "reference": "FR-IAM-003",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "FR-IAM-014",
+   "reference": "REL-IAM-002",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "FR-IAM-014",
+   "reference": "SEC-IAM-001",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "FR-IAM-014",
+   "reference": "SEC-IAM-003",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "FR-IAM-014",
+   "reference": "FR-AUTH-008",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "FR-IAM-014",
+   "reference": "FR-AUTH-009",
+   "relation": "depends_on",
+   "source": "GAP"
+  },
+  {
+   "id": "FR-APIKEY-001",
+   "reference": "FR-AUTH-005",
+   "relation": "depends_on",
+   "source": "APIKEY#0"
+  },
+  {
+   "id": "FR-APIKEY-001",
+   "reference": "FR-AUTH-001",
+   "relation": "depends_on",
+   "source": "APIKEY#0"
+  },
+  {
+   "id": "FR-APIKEY-001",
+   "reference": "CON-AUTH-001",
+   "relation": "depends_on",
+   "source": "APIKEY#1"
+  },
+  {
+   "id": "FR-APIKEY-001",
+   "reference": "CON-AUTH-002",
+   "relation": "depends_on",
+   "source": "APIKEY#1"
+  },
+  {
+   "id": "FR-APIKEY-001",
+   "reference": "CON-AUTH-003",
+   "relation": "depends_on",
+   "source": "APIKEY#1"
+  },
+  {
+   "id": "SEC-APIKEY-001",
+   "reference": "SEC-FLOW-004",
+   "relation": "depends_on",
+   "source": "APIKEY#2"
+  },
+  {
+   "id": "SEC-APIKEY-002",
+   "reference": "SEC-FLOW-003",
+   "relation": "depends_on",
+   "source": "APIKEY#3"
+  },
+  {
+   "id": "SEC-APIKEY-002",
+   "reference": "SEC-AUTH-005",
+   "relation": "depends_on",
+   "source": "APIKEY#3"
+  },
+  {
+   "id": "SEC-APIKEY-004",
+   "reference": "SEC-FLOW-001",
+   "relation": "depends_on",
+   "source": "APIKEY#4"
+  },
+  {
+   "id": "SEC-APIKEY-004",
+   "reference": "SEC-TOKEN-001",
+   "relation": "depends_on",
+   "source": "APIKEY#5"
+  },
+  {
+   "id": "SEC-APIKEY-005",
+   "reference": "IR-FLOW-003",
+   "relation": "depends_on",
+   "source": "APIKEY#6"
+  },
+  {
+   "id": "SEC-APIKEY-005",
+   "reference": "SEC-FLOW-011",
+   "relation": "depends_on",
+   "source": "APIKEY#6"
+  },
+  {
+   "id": "IR-APIKEY-001",
+   "reference": "IR-FLOW-003",
+   "relation": "extends",
+   "source": "APIKEY#7"
+  },
+  {
+   "id": "FR-IAM-013",
+   "reference": "IR-APIKEY-001",
+   "relation": "depends_on",
+   "source": "APIKEY#8"
+  },
+  {
+   "id": "REL-APIKEY-001",
+   "reference": "SEC-AUTH-007",
+   "relation": "depends_on",
+   "source": "APIKEY#9"
+  },
+  {
+   "id": "SEC-APIKEY-006",
+   "reference": "SEC-IAM-003",
+   "relation": "depends_on",
+   "source": "APIKEY#10"
+  },
+  {
+   "id": "SEC-APIKEY-006",
+   "reference": "REL-IAM-003",
+   "relation": "depends_on",
+   "source": "APIKEY#10"
+  },
+  {
+   "id": "REL-APIKEY-003",
+   "reference": "FR-FLOW-003",
+   "relation": "depends_on",
+   "source": "APIKEY#11"
+  },
+  {
+   "id": "REL-APIKEY-003",
+   "reference": "SEC-FLOW-014",
+   "relation": "depends_on",
+   "source": "APIKEY#11"
+  },
+  {
+   "id": "REL-APIKEY-003",
+   "reference": "SEC-IAM-003",
+   "relation": "depends_on",
+   "source": "APIKEY#11"
+  },
+  {
+   "id": "REL-APIKEY-003",
+   "reference": "REL-IAM-001",
+   "relation": "depends_on",
+   "source": "APIKEY#11"
+  },
+  {
+   "id": "REL-APIKEY-004",
+   "reference": "FR-TOKEN-002",
+   "relation": "depends_on",
+   "source": "APIKEY#12"
+  },
+  {
+   "id": "SEC-APIKEY-007",
+   "reference": "IR-AUTH-004",
+   "relation": "extends",
+   "source": "APIKEY#13"
+  },
+  {
+   "id": "SEC-APIKEY-007",
+   "reference": "FR-AUTH-009",
+   "relation": "extends",
+   "source": "APIKEY#13"
+  },
+  {
+   "id": "SEC-APIKEY-007",
+   "reference": "FR-IAM-009",
+   "relation": "depends_on",
+   "source": "APIKEY#14"
+  },
+  {
+   "id": "SEC-APIKEY-008",
+   "reference": "FR-FLOW-005",
+   "relation": "depends_on",
+   "source": "APIKEY#15"
+  },
+  {
+   "id": "SEC-APIKEY-008",
+   "reference": "FR-FLOW-006",
+   "relation": "depends_on",
+   "source": "APIKEY#15"
+  },
+  {
+   "id": "SEC-APIKEY-008",
+   "reference": "IR-IAM-005",
+   "relation": "depends_on",
+   "source": "APIKEY#15"
+  },
+  {
+   "id": "SEC-APIKEY-008",
+   "reference": "FR-IAM-014",
+   "relation": "depends_on",
+   "source": "APIKEY#15"
+  },
+  {
+   "id": "SEC-APIKEY-009",
+   "reference": "SEC-IAM-004",
+   "relation": "depends_on",
+   "source": "APIKEY#16"
+  },
+  {
+   "id": "SEC-APIKEY-009",
+   "reference": "FR-IAM-005",
+   "relation": "depends_on",
+   "source": "APIKEY#16"
+  },
+  {
+   "id": "OPS-APIKEY-001",
+   "reference": "OPS-AUTH-001",
+   "relation": "depends_on",
+   "source": "APIKEY#17"
+  },
+  {
+   "id": "OPS-APIKEY-001",
+   "reference": "FR-AUTH-003",
+   "relation": "depends_on",
+   "source": "APIKEY#17"
+  },
+  {
+   "id": "IR-APIKEY-002",
+   "reference": "IR-AUTH-003",
+   "relation": "depends_on",
+   "source": "APIKEY#18"
+  },
+  {
+   "id": "IR-APIKEY-002",
+   "reference": "IR-AUTH-002",
+   "relation": "depends_on",
+   "source": "APIKEY#18"
+  },
+  {
+   "id": "IR-APIKEY-002",
+   "reference": "IR-IAM-003",
+   "relation": "depends_on",
+   "source": "APIKEY#19"
+  },
+  {
+   "id": "IR-APIKEY-002",
+   "reference": "FR-IAM-005",
+   "relation": "depends_on",
+   "source": "APIKEY#19"
+  },
+  {
+   "id": "SEC-APIKEY-010",
+   "reference": "SEC-IAM-004",
+   "relation": "depends_on",
+   "source": "APIKEY#20"
+  },
+  {
+   "id": "SEC-APIKEY-010",
+   "reference": "SEC-IAM-002",
+   "relation": "depends_on",
+   "source": "APIKEY#20"
+  },
+  {
+   "id": "FR-APIKEY-003",
+   "reference": "SEC-FLOW-014",
+   "relation": "depends_on",
+   "source": "APIKEY#21"
+  },
+  {
+   "id": "FR-APIKEY-003",
+   "reference": "SEC-FLOW-015",
+   "relation": "depends_on",
+   "source": "APIKEY#21"
+  },
+  {
+   "id": "FR-APIKEY-003",
+   "reference": "REL-TOKEN-001",
+   "relation": "depends_on",
+   "source": "APIKEY#21"
+  },
+  {
+   "id": "FR-APIKEY-003",
+   "reference": "SEC-TOKEN-009",
+   "relation": "depends_on",
+   "source": "APIKEY#21"
+  },
+  {
+   "id": "FR-APIKEY-004",
+   "reference": "SEC-IAM-004",
+   "relation": "depends_on",
+   "source": "APIKEY#22"
+  },
+  {
+   "id": "FR-APIKEY-004",
+   "reference": "SEC-FLOW-015",
+   "relation": "depends_on",
+   "source": "APIKEY#22"
+  },
+  {
+   "id": "FR-APIKEY-004",
+   "reference": "REL-TOKEN-001",
+   "relation": "depends_on",
+   "source": "APIKEY#22"
+  },
+  {
+   "id": "FR-APIKEY-005",
+   "reference": "FR-AUTH-006",
+   "relation": "depends_on",
+   "source": "APIKEY#23"
+  },
+  {
+   "id": "FR-APIKEY-005",
+   "reference": "IR-AUTH-003",
+   "relation": "depends_on",
+   "source": "APIKEY#23"
+  },
+  {
+   "id": "FR-APIKEY-006",
+   "reference": "DR-IAM-001",
+   "relation": "extends",
+   "source": "APIKEY#24"
+  },
+  {
+   "id": "FR-APIKEY-006",
+   "reference": "IR-IAM-001",
+   "relation": "extends",
+   "source": "APIKEY#24"
+  },
+  {
+   "id": "FR-APIKEY-006",
+   "reference": "IR-IAM-003",
+   "relation": "extends",
+   "source": "APIKEY#24"
+  },
+  {
+   "id": "FR-APIKEY-006",
+   "reference": "SEC-IAM-001",
+   "relation": "extends",
+   "source": "APIKEY#24"
+  },
+  {
+   "id": "FR-APIKEY-006",
+   "reference": "DR-IAM-003",
+   "relation": "extends",
+   "source": "APIKEY#24"
+  },
+  {
+   "id": "FR-APIKEY-006",
+   "reference": "FR-FLOW-004",
+   "relation": "depends_on",
+   "source": "APIKEY#25"
+  },
+  {
+   "id": "FR-APIKEY-006",
+   "reference": "SEC-FLOW-011",
+   "relation": "depends_on",
+   "source": "APIKEY#25"
+  },
+  {
+   "id": "FR-APIKEY-006",
+   "reference": "SEC-IAM-006",
+   "relation": "depends_on",
+   "source": "APIKEY#25"
+  },
+  {
+   "id": "FR-APIKEY-007",
+   "reference": "FR-AUTH-003",
+   "relation": "depends_on",
+   "source": "APIKEY#26"
+  },
+  {
+   "id": "FR-APIKEY-008",
+   "reference": "FR-IAM-008",
+   "relation": "extends",
+   "source": "APIKEY#27"
+  },
+  {
+   "id": "FR-APIKEY-009",
+   "reference": "IR-AUTH-005",
+   "relation": "depends_on",
+   "source": "APIKEY#28"
+  },
+  {
+   "id": "FR-APIKEY-010",
+   "reference": "IR-AUTH-005",
+   "relation": "depends_on",
+   "source": "APIKEY#29"
+  },
+  {
+   "id": "SEC-APIKEY-011",
+   "reference": "FR-FLOW-008",
+   "relation": "extends",
+   "source": "APIKEY#30"
+  },
+  {
+   "id": "SEC-APIKEY-011",
+   "reference": "SEC-AUTH-006",
+   "relation": "extends",
+   "source": "APIKEY#30"
+  },
+  {
+   "id": "IR-APIKEY-005",
+   "reference": "IR-AUTH-002",
+   "relation": "depends_on",
+   "source": "APIKEY#31"
+  },
+  {
+   "id": "IR-APIKEY-005",
+   "reference": "IR-FLOW-001",
+   "relation": "depends_on",
+   "source": "APIKEY#31"
+  },
+  {
+   "id": "IR-APIKEY-005",
+   "reference": "FR-APP-006",
+   "relation": "depends_on",
+   "source": "APIKEY#32"
+  },
+  {
+   "id": "DR-APIKEY-002",
+   "reference": "DR-IAM-003",
+   "relation": "depends_on",
+   "source": "APIKEY#33"
+  },
+  {
+   "id": "DR-APIKEY-002",
+   "reference": "FR-IAM-010",
+   "relation": "depends_on",
+   "source": "APIKEY#33"
+  },
+  {
+   "id": "REL-APIKEY-005",
+   "reference": "CON-IAM-002",
+   "relation": "depends_on",
+   "source": "APIKEY#34"
+  },
+  {
+   "id": "REL-APIKEY-007",
+   "reference": "CON-IAM-002",
+   "relation": "depends_on",
+   "source": "APIKEY#35"
+  },
+  {
+   "id": "CON-AUTH-002",
+   "reference": "IR-APP-008",
+   "relation": "depends_on",
+   "source": "AUTH#0"
+  },
+  {
+   "id": "CON-AUTH-002",
+   "reference": "IR-HTTP-010",
+   "relation": "depends_on",
+   "source": "AUTH#1"
+  },
+  {
+   "id": "CON-AUTH-002",
+   "reference": "IR-ENGINE-003",
+   "relation": "depends_on",
+   "source": "AUTH#2"
+  },
+  {
+   "id": "CON-AUTH-007",
+   "reference": "IR-APP-008",
+   "relation": "depends_on",
+   "source": "AUTH#3"
+  },
+  {
+   "id": "CON-AUTH-007",
+   "reference": "IR-HTTP-010",
+   "relation": "depends_on",
+   "source": "AUTH#3"
+  },
+  {
+   "id": "CON-AUTH-007",
+   "reference": "FR-HTTP-029",
+   "relation": "depends_on",
+   "source": "AUTH#3"
+  },
+  {
+   "id": "CON-AUTH-007",
+   "reference": "IR-ENGINE-003",
+   "relation": "depends_on",
+   "source": "AUTH#3"
+  },
+  {
+   "id": "CON-AUTH-007",
+   "reference": "SEC-SVL-001",
+   "relation": "depends_on",
+   "source": "AUTH#3"
+  },
+  {
+   "id": "FR-AUTH-005",
+   "reference": "IR-APP-008",
+   "relation": "depends_on",
+   "source": "AUTH#4"
+  },
+  {
+   "id": "FR-AUTH-005",
+   "reference": "FR-APP-025",
+   "relation": "depends_on",
+   "source": "AUTH#4"
+  },
+  {
+   "id": "SEC-AUTH-004",
+   "reference": "FR-APP-025",
+   "relation": "depends_on",
+   "source": "AUTH#5"
+  },
+  {
+   "id": "SEC-AUTH-006",
+   "reference": "SEC-APP-002",
+   "relation": "depends_on",
+   "source": "AUTH#6"
+  },
+  {
+   "id": "IR-AUTH-002",
+   "reference": "FR-APP-025",
+   "relation": "depends_on",
+   "source": "AUTH#7"
+  },
+  {
+   "id": "FR-AUTH-006",
+   "reference": "FR-HTTP-029",
+   "relation": "depends_on",
+   "source": "AUTH#8"
+  },
+  {
+   "id": "FR-AUTH-009",
+   "reference": "FR-HTTP-029",
+   "relation": "depends_on",
+   "source": "AUTH#9"
+  },
+  {
+   "id": "OPS-AUTH-001",
+   "reference": "IR-ENGINE-003",
+   "relation": "depends_on",
+   "source": "AUTH#10"
+  },
+  {
+   "id": "SEC-AUTH-003",
+   "reference": "SEC-FLOW-001",
+   "relation": "depends_on",
+   "source": "AUTH#11"
+  },
+  {
+   "id": "SEC-AUTH-003",
+   "reference": "SEC-FLOW-003",
+   "relation": "depends_on",
+   "source": "AUTH#12"
+  },
+  {
+   "id": "SEC-AUTH-003",
+   "reference": "SEC-FLOW-007",
+   "relation": "depends_on",
+   "source": "AUTH#12"
+  },
+  {
+   "id": "SEC-AUTH-003",
+   "reference": "FR-FLOW-002",
+   "relation": "depends_on",
+   "source": "AUTH#12"
+  },
+  {
+   "id": "SEC-AUTH-005",
+   "reference": "SEC-FLOW-001",
+   "relation": "depends_on",
+   "source": "AUTH#14"
+  },
+  {
+   "id": "SEC-FLOW-001",
+   "reference": "SEC-AUTH-002",
+   "relation": "depends_on",
+   "source": "AUTH#15"
+  },
+  {
+   "id": "SEC-AUTH-001",
+   "reference": "SEC-TOKEN-004",
+   "relation": "depends_on",
+   "source": "AUTH#16"
+  },
+  {
+   "id": "IR-AUTH-004",
+   "reference": "FR-IAM-005",
+   "relation": "depends_on",
+   "source": "AUTH#18"
+  },
+  {
+   "id": "IR-AUTH-004",
+   "reference": "FR-IAM-009",
+   "relation": "depends_on",
+   "source": "AUTH#18"
+  },
+  {
+   "id": "SEC-AUTH-007",
+   "reference": "FR-IAM-007",
+   "relation": "depends_on",
+   "source": "AUTH#19"
+  },
+  {
+   "id": "SEC-AUTH-007",
+   "reference": "FR-IAM-006",
+   "relation": "depends_on",
+   "source": "AUTH#19"
+  },
+  {
+   "id": "SEC-AUTH-007",
+   "reference": "FR-IAM-009",
+   "relation": "depends_on",
+   "source": "AUTH#19"
+  },
+  {
+   "id": "IR-APIKEY-005",
+   "reference": "IR-AUTH-003",
+   "relation": "depends_on",
+   "source": "AUTH#22"
+  },
+  {
+   "id": "SEC-FLOW-006",
+   "reference": "IR-AUTH-003",
+   "relation": "depends_on",
+   "source": "AUTH#22"
+  },
+  {
+   "id": "REL-IAM-002",
+   "reference": "IR-AUTH-003",
+   "relation": "depends_on",
+   "source": "AUTH#22"
+  },
+  {
+   "id": "SEC-TOKEN-004",
+   "reference": "OPS-AUTH-001",
+   "relation": "depends_on",
+   "source": "AUTH#23"
+  },
+  {
+   "id": "FR-APIKEY-004",
+   "reference": "FR-AUTH-009",
+   "relation": "depends_on",
+   "source": "AUTH#24"
+  },
+  {
+   "id": "SEC-IAM-004",
+   "reference": "FR-AUTH-009",
+   "relation": "depends_on",
+   "source": "AUTH#24"
+  },
+  {
+   "id": "FR-IAM-004",
+   "reference": "IR-AUTH-005",
+   "relation": "depends_on",
+   "source": "AUTH#25"
+  },
+  {
+   "id": "IR-AUTH-005",
+   "reference": "SEC-FLOW-006",
+   "relation": "depends_on",
+   "source": "AUTH#25"
+  },
+  {
+   "id": "DR-APIKEY-001",
+   "reference": "SEC-AUTH-008",
+   "relation": "depends_on",
+   "source": "AUTH#26"
+  },
+  {
+   "id": "SEC-FLOW-009",
+   "reference": "SEC-AUTH-008",
+   "relation": "depends_on",
+   "source": "AUTH#26"
+  },
+  {
+   "id": "IR-IAM-002",
+   "reference": "CON-AUTH-006",
+   "relation": "depends_on",
+   "source": "AUTH#27"
+  },
+  {
+   "id": "IR-FLOW-003",
+   "reference": "CON-AUTH-006",
+   "relation": "depends_on",
+   "source": "AUTH#27"
+  },
+  {
+   "id": "SEC-AUTH-004",
+   "reference": "IR-APP-008",
+   "relation": "depends_on",
+   "source": "CORE#0"
+  },
+  {
+   "id": "SEC-AUTH-006",
+   "reference": "FR-APP-026",
+   "relation": "depends_on",
+   "source": "CORE#1"
+  },
+  {
+   "id": "SEC-AUTH-004",
+   "reference": "FR-APP-026",
+   "relation": "depends_on",
+   "source": "CORE#1"
+  },
+  {
+   "id": "IR-AUTH-002",
+   "reference": "FR-APP-026",
+   "relation": "depends_on",
+   "source": "CORE#2"
+  },
+  {
+   "id": "IR-AUTH-002",
+   "reference": "SEC-APP-002",
+   "relation": "depends_on",
+   "source": "CORE#2"
+  },
+  {
+   "id": "OPS-AUTH-002",
+   "reference": "IR-APP-008",
+   "relation": "depends_on",
+   "source": "CORE#3"
+  },
+  {
+   "id": "OPS-AUTH-002",
+   "reference": "FR-APP-025",
+   "relation": "depends_on",
+   "source": "CORE#3"
+  },
+  {
+   "id": "FR-FLOW-008",
+   "reference": "IR-APP-008",
+   "relation": "depends_on",
+   "source": "CORE#3"
+  },
+  {
+   "id": "FR-FLOW-008",
+   "reference": "FR-APP-025",
+   "relation": "depends_on",
+   "source": "CORE#3"
+  },
+  {
+   "id": "SEC-FLOW-001",
+   "reference": "SEC-HTTP-001",
+   "relation": "depends_on",
+   "source": "CORE#5"
+  },
+  {
+   "id": "SEC-FLOW-001",
+   "reference": "SEC-ENGINE-003",
+   "relation": "depends_on",
+   "source": "CORE#5"
+  },
+  {
+   "id": "SEC-FLOW-011",
+   "reference": "SEC-ENGINE-001",
+   "relation": "depends_on",
+   "source": "CORE#6"
+  },
+  {
+   "id": "SEC-FLOW-011",
+   "reference": "SEC-ENGINE-002",
+   "relation": "depends_on",
+   "source": "CORE#6"
+  },
+  {
+   "id": "OPS-AUTH-001",
+   "reference": "CON-ENGINE-001",
+   "relation": "depends_on",
+   "source": "CORE#7"
+  },
+  {
+   "id": "SEC-FLOW-002",
+   "reference": "SEC-AUTH-002",
+   "relation": "depends_on",
+   "source": "FLOW#3"
+  },
+  {
+   "id": "SEC-FLOW-002",
+   "reference": "FR-AUTH-001",
+   "relation": "depends_on",
+   "source": "FLOW#3"
+  },
+  {
+   "id": "SEC-FLOW-002",
+   "reference": "FR-TOKEN-001",
+   "relation": "depends_on",
+   "source": "FLOW#4"
+  },
+  {
+   "id": "SEC-FLOW-003",
+   "reference": "SEC-AUTH-005",
+   "relation": "depends_on",
+   "source": "FLOW#5"
+  },
+  {
+   "id": "SEC-FLOW-003",
+   "reference": "SEC-APIKEY-004",
+   "relation": "depends_on",
+   "source": "FLOW#6"
+  },
+  {
+   "id": "IR-FLOW-001",
+   "reference": "IR-AUTH-003",
+   "relation": "depends_on",
+   "source": "FLOW#8"
+  },
+  {
+   "id": "IR-FLOW-001",
+   "reference": "CON-APIKEY-001",
+   "relation": "depends_on",
+   "source": "FLOW#9"
+  },
+  {
+   "id": "FR-FLOW-001",
+   "reference": "SEC-APIKEY-004",
+   "relation": "depends_on",
+   "source": "FLOW#10"
+  },
+  {
+   "id": "FR-FLOW-001",
+   "reference": "FR-AUTH-006",
+   "relation": "depends_on",
+   "source": "FLOW#11"
+  },
+  {
+   "id": "SEC-FLOW-005",
+   "reference": "FR-AUTH-006",
+   "relation": "depends_on",
+   "source": "FLOW#12"
+  },
+  {
+   "id": "SEC-FLOW-006",
+   "reference": "SEC-TOKEN-003",
+   "relation": "depends_on",
+   "source": "FLOW#13"
+  },
+  {
+   "id": "SEC-FLOW-006",
+   "reference": "SEC-TOKEN-005",
+   "relation": "depends_on",
+   "source": "FLOW#13"
+  },
+  {
+   "id": "SEC-FLOW-006",
+   "reference": "SEC-TOKEN-001",
+   "relation": "depends_on",
+   "source": "FLOW#14"
+  },
+  {
+   "id": "FR-FLOW-002",
+   "reference": "FR-TOKEN-001",
+   "relation": "depends_on",
+   "source": "FLOW#18"
+  },
+  {
+   "id": "SEC-FLOW-009",
+   "reference": "FR-AUTH-001",
+   "relation": "depends_on",
+   "source": "FLOW#19"
+  },
+  {
+   "id": "SEC-FLOW-010",
+   "reference": "FR-TOKEN-002",
+   "relation": "depends_on",
+   "source": "FLOW#21"
+  },
+  {
+   "id": "FR-FLOW-003",
+   "reference": "SEC-IAM-003",
+   "relation": "depends_on",
+   "source": "FLOW#22"
+  },
+  {
+   "id": "FR-FLOW-003",
+   "reference": "FR-AUTH-007",
+   "relation": "depends_on",
+   "source": "FLOW#23"
+  },
+  {
+   "id": "FR-FLOW-003",
+   "reference": "IR-AUTH-005",
+   "relation": "depends_on",
+   "source": "FLOW#24"
+  },
+  {
+   "id": "IR-FLOW-002",
+   "reference": "FR-AUTH-005",
+   "relation": "depends_on",
+   "source": "FLOW#25"
+  },
+  {
+   "id": "IR-FLOW-002",
+   "reference": "FR-APIKEY-003",
+   "relation": "depends_on",
+   "source": "FLOW#26"
+  },
+  {
+   "id": "FR-FLOW-004",
+   "reference": "SEC-TOKEN-009",
+   "relation": "depends_on",
+   "source": "FLOW#28"
+  },
+  {
+   "id": "FR-FLOW-004",
+   "reference": "REL-TOKEN-001",
+   "relation": "depends_on",
+   "source": "FLOW#28"
+  },
+  {
+   "id": "FR-FLOW-004",
+   "reference": "IR-TOKEN-001",
+   "relation": "depends_on",
+   "source": "FLOW#28"
+  },
+  {
+   "id": "FR-FLOW-004",
+   "reference": "FR-IAM-003",
+   "relation": "depends_on",
+   "source": "FLOW#29"
+  },
+  {
+   "id": "FR-FLOW-004",
+   "reference": "FR-AUTH-007",
+   "relation": "depends_on",
+   "source": "FLOW#30"
+  },
+  {
+   "id": "FR-FLOW-005",
+   "reference": "FR-TOKEN-001",
+   "relation": "depends_on",
+   "source": "FLOW#32"
+  },
+  {
+   "id": "FR-FLOW-005",
+   "reference": "FR-TOKEN-002",
+   "relation": "depends_on",
+   "source": "FLOW#32"
+  },
+  {
+   "id": "FR-FLOW-005",
+   "reference": "SEC-TOKEN-006",
+   "relation": "depends_on",
+   "source": "FLOW#32"
+  },
+  {
+   "id": "FR-FLOW-006",
+   "reference": "IR-IAM-003",
+   "relation": "depends_on",
+   "source": "FLOW#34"
+  },
+  {
+   "id": "FR-FLOW-006",
+   "reference": "SEC-IAM-001",
+   "relation": "depends_on",
+   "source": "FLOW#34"
+  },
+  {
+   "id": "FR-FLOW-006",
+   "reference": "FR-AUTH-008",
+   "relation": "depends_on",
+   "source": "FLOW#35"
+  },
+  {
+   "id": "SEC-FLOW-014",
+   "reference": "REL-IAM-002",
+   "relation": "depends_on",
+   "source": "FLOW#37"
+  },
+  {
+   "id": "SEC-FLOW-014",
+   "reference": "IR-IAM-001",
+   "relation": "depends_on",
+   "source": "FLOW#37"
+  },
+  {
+   "id": "SEC-FLOW-014",
+   "reference": "REL-TOKEN-001",
+   "relation": "depends_on",
+   "source": "FLOW#38"
+  },
+  {
+   "id": "SEC-FLOW-014",
+   "reference": "FR-TOKEN-004",
+   "relation": "depends_on",
+   "source": "FLOW#38"
+  },
+  {
+   "id": "SEC-FLOW-014",
+   "reference": "FR-AUTH-008",
+   "relation": "depends_on",
+   "source": "FLOW#39"
+  },
+  {
+   "id": "FR-FLOW-007",
+   "reference": "FR-IAM-001",
+   "relation": "depends_on",
+   "source": "FLOW#40"
+  },
+  {
+   "id": "FR-FLOW-007",
+   "reference": "IR-IAM-003",
+   "relation": "depends_on",
+   "source": "FLOW#40"
+  },
+  {
+   "id": "FR-FLOW-007",
+   "reference": "FR-AUTH-007",
+   "relation": "depends_on",
+   "source": "FLOW#41"
+  },
+  {
+   "id": "FR-FLOW-007",
+   "reference": "REL-TOKEN-001",
+   "relation": "depends_on",
+   "source": "FLOW#42"
+  },
+  {
+   "id": "FR-FLOW-008",
+   "reference": "OPS-AUTH-001",
+   "relation": "depends_on",
+   "source": "FLOW#44"
+  },
+  {
+   "id": "FR-FLOW-008",
+   "reference": "SEC-AUTH-007",
+   "relation": "depends_on",
+   "source": "FLOW#45"
+  },
+  {
+   "id": "SEC-FLOW-011",
+   "reference": "IR-AUTH-001",
+   "relation": "depends_on",
+   "source": "FLOW#48"
+  },
+  {
+   "id": "SEC-FLOW-013",
+   "reference": "SEC-TOKEN-004",
+   "relation": "depends_on",
+   "source": "FLOW#51"
+  },
+  {
+   "id": "SEC-FLOW-013",
+   "reference": "SEC-TOKEN-005",
+   "relation": "depends_on",
+   "source": "FLOW#51"
+  },
+  {
+   "id": "FR-FLOW-009",
+   "reference": "IR-IAM-005",
+   "relation": "depends_on",
+   "source": "FLOW#52"
+  },
+  {
+   "id": "FR-FLOW-009",
+   "reference": "SEC-IAM-007",
+   "relation": "depends_on",
+   "source": "FLOW#52"
+  },
+  {
+   "id": "IR-FLOW-003",
+   "reference": "OPS-AUTH-001",
+   "relation": "depends_on",
+   "source": "FLOW#54"
+  },
+  {
+   "id": "FR-IAM-013",
+   "reference": "IR-FLOW-003",
+   "relation": "depends_on",
+   "source": "FLOW#55"
+  },
+  {
+   "id": "REL-FLOW-001",
+   "reference": "REL-IAM-004",
+   "relation": "depends_on",
+   "source": "FLOW#56"
+  },
+  {
+   "id": "REL-FLOW-001",
+   "reference": "FR-AUTH-003",
+   "relation": "depends_on",
+   "source": "FLOW#57"
+  },
+  {
+   "id": "SEC-IAM-002",
+   "reference": "SEC-FLOW-015",
+   "relation": "depends_on",
+   "source": "FLOW#58"
+  },
+  {
+   "id": "SEC-FLOW-015",
+   "reference": "IR-AUTH-003",
+   "relation": "depends_on",
+   "source": "FLOW#60"
+  },
+  {
+   "id": "REL-IAM-003",
+   "reference": "OPS-AUTH-001",
+   "relation": "depends_on",
+   "source": "IAM#0"
+  },
+  {
+   "id": "REL-IAM-003",
+   "reference": "FR-AUTH-003",
+   "relation": "depends_on",
+   "source": "IAM#0"
+  },
+  {
+   "id": "FR-IAM-002",
+   "reference": "FR-AUTH-003",
+   "relation": "depends_on",
+   "source": "IAM#1"
+  },
+  {
+   "id": "FR-IAM-002",
+   "reference": "SEC-TOKEN-002",
+   "relation": "depends_on",
+   "source": "IAM#2"
+  },
+  {
+   "id": "FR-IAM-001",
+   "reference": "IR-AUTH-002",
+   "relation": "depends_on",
+   "source": "IAM#3"
+  },
+  {
+   "id": "FR-IAM-001",
+   "reference": "FR-AUTH-004",
+   "relation": "depends_on",
+   "source": "IAM#4"
+  },
+  {
+   "id": "IR-IAM-003",
+   "reference": "FR-AUTH-007",
+   "relation": "depends_on",
+   "source": "IAM#5"
+  },
+  {
+   "id": "IR-IAM-003",
+   "reference": "FR-AUTH-008",
+   "relation": "depends_on",
+   "source": "IAM#5"
+  },
+  {
+   "id": "IR-IAM-003",
+   "reference": "IR-AUTH-003",
+   "relation": "depends_on",
+   "source": "IAM#6"
+  },
+  {
+   "id": "SEC-IAM-002",
+   "reference": "REL-TOKEN-001",
+   "relation": "depends_on",
+   "source": "IAM#7"
+  },
+  {
+   "id": "SEC-IAM-002",
+   "reference": "SEC-TOKEN-009",
+   "relation": "depends_on",
+   "source": "IAM#7"
+  },
+  {
+   "id": "FR-IAM-003",
+   "reference": "SEC-FLOW-013",
+   "relation": "depends_on",
+   "source": "IAM#11"
+  },
+  {
+   "id": "FR-FLOW-006",
+   "reference": "FR-IAM-003",
+   "relation": "depends_on",
+   "source": "IAM#12"
+  },
+  {
+   "id": "SEC-IAM-001",
+   "reference": "IR-IAM-005",
+   "relation": "depends_on",
+   "source": "IAM#13"
+  },
+  {
+   "id": "SEC-TOKEN-005",
+   "reference": "SEC-IAM-003",
+   "relation": "depends_on",
+   "source": "IAM#14"
+  },
+  {
+   "id": "FR-FLOW-008",
+   "reference": "SEC-IAM-003",
+   "relation": "depends_on",
+   "source": "IAM#14"
+  },
+  {
+   "id": "SEC-IAM-003",
+   "reference": "SEC-AUTH-007",
+   "relation": "depends_on",
+   "source": "IAM#15"
+  },
+  {
+   "id": "SEC-APIKEY-009",
+   "reference": "FR-IAM-009",
+   "relation": "depends_on",
+   "source": "IAM#17"
+  },
+  {
+   "id": "FR-IAM-008",
+   "reference": "IR-APIKEY-004",
+   "relation": "depends_on",
+   "source": "IAM#23"
+  },
+  {
+   "id": "FR-IAM-012",
+   "reference": "FR-TOKEN-002",
+   "relation": "depends_on",
+   "source": "IAM#25"
+  },
+  {
+   "id": "FR-IAM-013",
+   "reference": "SEC-FLOW-013",
+   "relation": "depends_on",
+   "source": "IAM#26"
+  },
+  {
+   "id": "CON-IAM-002",
+   "reference": "CON-AUTH-001",
+   "relation": "depends_on",
+   "source": "IAM#28"
+  },
+  {
+   "id": "FR-IAM-006",
+   "reference": "FR-AUTH-004",
+   "relation": "depends_on",
+   "source": "IAM#31"
+  },
+  {
+   "id": "SEC-TOKEN-001",
+   "reference": "CON-AUTH-001",
+   "relation": "depends_on",
+   "source": "TOKEN#0"
+  },
+  {
+   "id": "SEC-TOKEN-001",
+   "reference": "CON-AUTH-002",
+   "relation": "depends_on",
+   "source": "TOKEN#0"
+  },
+  {
+   "id": "SEC-TOKEN-001",
+   "reference": "CON-AUTH-003",
+   "relation": "depends_on",
+   "source": "TOKEN#0"
+  },
+  {
+   "id": "SEC-TOKEN-003",
+   "reference": "IR-AUTH-001",
+   "relation": "depends_on",
+   "source": "TOKEN#1"
+  },
+  {
+   "id": "SEC-TOKEN-004",
+   "reference": "FR-AUTH-001",
+   "relation": "depends_on",
+   "source": "TOKEN#2"
+  },
+  {
+   "id": "SEC-TOKEN-004",
+   "reference": "SEC-AUTH-002",
+   "relation": "depends_on",
+   "source": "TOKEN#3"
+  },
+  {
+   "id": "SEC-TOKEN-004",
+   "reference": "REL-IAM-004",
+   "relation": "depends_on",
+   "source": "TOKEN#4"
+  },
+  {
+   "id": "IR-AUTH-005",
+   "reference": "SEC-TOKEN-005",
+   "relation": "depends_on",
+   "source": "TOKEN#6"
+  },
+  {
+   "id": "FR-FLOW-004",
+   "reference": "FR-TOKEN-001",
+   "relation": "depends_on",
+   "source": "TOKEN#8"
+  },
+  {
+   "id": "SEC-FLOW-014",
+   "reference": "FR-TOKEN-001",
+   "relation": "depends_on",
+   "source": "TOKEN#8"
+  },
+  {
+   "id": "FR-TOKEN-001",
+   "reference": "FR-AUTH-003",
+   "relation": "depends_on",
+   "source": "TOKEN#9"
+  },
+  {
+   "id": "SEC-TOKEN-006",
+   "reference": "FR-AUTH-007",
+   "relation": "depends_on",
+   "source": "TOKEN#11"
+  },
+  {
+   "id": "SEC-TOKEN-006",
+   "reference": "IR-AUTH-002",
+   "relation": "depends_on",
+   "source": "TOKEN#11"
+  },
+  {
+   "id": "SEC-FLOW-010",
+   "reference": "SEC-TOKEN-006",
+   "relation": "depends_on",
+   "source": "TOKEN#12"
+  },
+  {
+   "id": "FR-TOKEN-002",
+   "reference": "FR-IAM-002",
+   "relation": "depends_on",
+   "source": "TOKEN#14"
+  },
+  {
+   "id": "FR-TOKEN-002",
+   "reference": "REL-IAM-004",
+   "relation": "depends_on",
+   "source": "TOKEN#14"
+  },
+  {
+   "id": "FR-TOKEN-002",
+   "reference": "FR-AUTH-003",
+   "relation": "depends_on",
+   "source": "TOKEN#15"
+  },
+  {
+   "id": "FR-TOKEN-002",
+   "reference": "OPS-AUTH-001",
+   "relation": "depends_on",
+   "source": "TOKEN#15"
+  },
+  {
+   "id": "FR-TOKEN-002",
+   "reference": "FR-AUTH-005",
+   "relation": "depends_on",
+   "source": "TOKEN#16"
+  },
+  {
+   "id": "SEC-TOKEN-002",
+   "reference": "OPS-AUTH-001",
+   "relation": "depends_on",
+   "source": "TOKEN#17"
+  },
+  {
+   "id": "PERF-TOKEN-001",
+   "reference": "OPS-AUTH-001",
+   "relation": "depends_on",
+   "source": "TOKEN#18"
+  },
+  {
+   "id": "FR-TOKEN-003",
+   "reference": "IR-IAM-001",
+   "relation": "depends_on",
+   "source": "TOKEN#19"
+  },
+  {
+   "id": "FR-TOKEN-003",
+   "reference": "REL-IAM-001",
+   "relation": "depends_on",
+   "source": "TOKEN#19"
+  },
+  {
+   "id": "PERF-TOKEN-002",
+   "reference": "REL-IAM-001",
+   "relation": "depends_on",
+   "source": "TOKEN#20"
+  },
+  {
+   "id": "IR-IAM-003",
+   "reference": "REL-TOKEN-001",
+   "relation": "depends_on",
+   "source": "TOKEN#21"
+  },
+  {
+   "id": "IR-FLOW-002",
+   "reference": "REL-TOKEN-001",
+   "relation": "depends_on",
+   "source": "TOKEN#22"
+  },
+  {
+   "id": "SEC-TOKEN-009",
+   "reference": "SEC-FLOW-011",
+   "relation": "depends_on",
+   "source": "TOKEN#25"
+  },
+  {
+   "id": "FR-TOKEN-004",
+   "reference": "FR-AUTH-003",
+   "relation": "depends_on",
+   "source": "TOKEN#27"
+  },
+  {
+   "id": "IR-TOKEN-001",
+   "reference": "SEC-APIKEY-004",
+   "relation": "depends_on",
+   "source": "TOKEN#28"
+  },
+  {
+   "id": "IR-TOKEN-001",
+   "reference": "SEC-APIKEY-001",
+   "relation": "depends_on",
+   "source": "TOKEN#28"
+  },
+  {
+   "id": "IR-TOKEN-001",
+   "reference": "SEC-FLOW-004",
+   "relation": "depends_on",
+   "source": "TOKEN#29"
+  },
+  {
+   "id": "IR-TOKEN-001",
+   "reference": "IR-FLOW-001",
+   "relation": "depends_on",
+   "source": "TOKEN#29"
+  },
+  {
+   "id": "FR-FLOW-007",
+   "reference": "FR-AUTH-008",
+   "relation": "depends_on",
+   "source": "AUTH#21"
+  },
+  {
+   "id": "FR-FLOW-007",
+   "reference": "FR-TOKEN-004",
+   "relation": "depends_on",
+   "source": "TOKEN#26"
+  },
+  {
+   "id": "SEC-AUTH-003",
+   "reference": "FR-TOKEN-004",
+   "relation": "depends_on",
+   "source": "TOKEN#26"
+  }
+ ],
+ "links_skipped": [
+  {
+   "from": "OPS-AUTH-001",
+   "to": "FR-FLOW-008/REL-IAM-003/OPS-APIKEY-001/PERF-TOKEN-001/SEC-TOKEN-004",
+   "why": "AUTH#23: inverted direction; added as check-owner -> OPS-AUTH-001 (FLOW#44, IAM#0, APIKEY#17, TOKEN#18, AUTH#23 SEC-TOKEN-004); 'R42 file state' check owner not identifiable"
+  },
+  {
+   "from": "IR-AUTH-003",
+   "to": "APIKEY/FLOW/IAM consumers",
+   "why": "AUTH#22: inverted direction; added as consumer -> IR-AUTH-003"
+  },
+  {
+   "from": "FR-AUTH-009",
+   "to": "APIKEY/IAM emitters",
+   "why": "AUTH#24: inverted direction; added as emitter -> FR-AUTH-009"
+  },
+  {
+   "from": "IR-AUTH-005",
+   "to": "FR-APIKEY-009/FR-IAM-004",
+   "why": "AUTH#25: inverted direction; contract tests live in AuthTesting, added as FR-* -> IR-AUTH-005 (APIKEY#28)"
+  },
+  {
+   "from": "SEC-AUTH-008",
+   "to": "DR-APIKEY-001/SEC-FLOW-009",
+   "why": "AUTH#26: inverted; specific hygiene depends on the general rule"
+  },
+  {
+   "from": "CON-AUTH-006",
+   "to": "IR-IAM-002/IR-FLOW-003",
+   "why": "AUTH#27: inverted; Forwarding classes depend on the evolution rule"
+  },
+  {
+   "from": "TOKEN/FLOW/IAM/APIKEY all REQs",
+   "to": "CON-AUTH-001..004",
+   "why": "AUTH#29: blanket rule over ~125 REQs (~500 rows); stated in every implementationNotes; only writer-specific instances added (APIKEY#1, TOKEN#0, IAM#28)"
+  },
+  {
+   "from": "FR-AUTH-006/FR-AUTH-009",
+   "to": "FR-HTTP-029",
+   "why": "CORE#4: duplicate of AUTH#8/AUTH#9"
+  },
+  {
+   "from": "FR-AUTH-005",
+   "to": "IR-APP-008, FR-APP-025",
+   "why": "CORE#0: duplicate of AUTH#4"
+  },
+  {
+   "from": "OPS-AUTH-001",
+   "to": "IR-ENGINE-003",
+   "why": "CORE#7: duplicate of AUTH#10 (CON-ENGINE-001 added)"
+  },
+  {
+   "from": "SEC-FLOW-001",
+   "to": "SEC-HTTP-001",
+   "why": "FLOW#0: duplicate of CORE#5"
+  },
+  {
+   "from": "SEC-FLOW-001",
+   "to": "SEC-ENGINE-003",
+   "why": "FLOW#1: duplicate of CORE#5"
+  },
+  {
+   "from": "IR-AUTH-005",
+   "to": "SEC-FLOW-006",
+   "why": "FLOW#15: duplicate of AUTH#25"
+  },
+  {
+   "from": "SEC-FLOW-009",
+   "to": "SEC-AUTH-008",
+   "why": "FLOW#20: relation refines -> recorded as depends_on under AUTH#26"
+  },
+  {
+   "from": "IR-FLOW-002",
+   "to": "IR-IAM-005",
+   "why": "FLOW#27: related_to only, no dependency either way; IAM now owns the admin table"
+  },
+  {
+   "from": "SEC-APIKEY-011",
+   "to": "FR-FLOW-008",
+   "why": "FLOW#46: duplicate of APIKEY#30 (extends)"
+  },
+  {
+   "from": "SEC-APIKEY-005",
+   "to": "SEC-FLOW-011",
+   "why": "FLOW#50: duplicate of APIKEY#6 (related_to)"
+  },
+  {
+   "from": "SEC-IAM-002",
+   "to": "SEC-FLOW-015",
+   "why": "IAM#8: duplicate of FLOW#58"
+  },
+  {
+   "from": "FR-IAM-003",
+   "to": "FR-IAM-014",
+   "why": "IAM#10: inverted per writer note; added FR-IAM-014 -> FR-IAM-003"
+  },
+  {
+   "from": "SEC-IAM-004",
+   "to": "SEC-IAM-007",
+   "why": "IAM#18: inverted per writer note; added SEC-IAM-007 -> SEC-IAM-004"
+  },
+  {
+   "from": "SEC-IAM-004",
+   "to": "FR-AUTH-009",
+   "why": "IAM#19: duplicate of AUTH#24"
+  },
+  {
+   "from": "SEC-IAM-005",
+   "to": "IR-IAM-005",
+   "why": "IAM#21: inverted per writer note; added IR-IAM-005 -> SEC-IAM-005"
+  },
+  {
+   "from": "FR-IAM-008",
+   "to": "IR-IAM-005",
+   "why": "IAM#24: inverted per writer note; added IR-IAM-005 -> FR-IAM-008"
+  },
+  {
+   "from": "DR-IAM-003",
+   "to": "DR-APIKEY-002",
+   "why": "IAM#27: relates_to; dependency already recorded as DR-APIKEY-002 -> DR-IAM-003 (APIKEY#33)"
+  },
+  {
+   "from": "CON-IAM-002",
+   "to": "REL-APIKEY-005/REL-APIKEY-007",
+   "why": "IAM#29: relates_to; dependency already recorded the other way (APIKEY#34/#35)"
+  },
+  {
+   "from": "CON-IAM-001",
+   "to": "CON-AUTH-004",
+   "why": "IAM#30: relates_to only (Kotlin test split by scope); no dependency"
+  },
+  {
+   "from": "SEC-FLOW-006",
+   "to": "SEC-TOKEN-005",
+   "why": "TOKEN#7: duplicate of FLOW#13"
+  },
+  {
+   "from": "FR-TOKEN-002",
+   "to": "FR-IAM-012",
+   "why": "TOKEN#13: would form a 2-cycle with FR-IAM-012 -> FR-TOKEN-002 (IAM#25); kept implementation -> SPI"
+  },
+  {
+   "from": "IR-APIKEY-001",
+   "to": "FR-IAM-013",
+   "why": "APIKEY#8: inverted; added FR-IAM-013 -> IR-APIKEY-001 (implementation depends on SPI)"
+  },
+  {
+   "from": "SEC-AUTH-002",
+   "to": "SEC-FLOW-001",
+   "why": "AUTH#15: inverted; duplicate of FLOW#2 SEC-FLOW-001 -> SEC-AUTH-002"
+  },
+  {
+   "from": "REL-IAM-002",
+   "to": "SEC-FLOW-014",
+   "why": "IAM#9: inverted per writer note; added SEC-FLOW-014 -> REL-IAM-002"
+  },
+  {
+   "from": "SEC-IAM-003",
+   "to": "SEC-TOKEN-005/FR-FLOW-008/SEC-APIKEY-006",
+   "why": "IAM#14: inverted; credential kinds depend on the ver rule"
+  },
+  {
+   "from": "FR-IAM-009",
+   "to": "SEC-APIKEY-007/SEC-APIKEY-009",
+   "why": "IAM#17: inverted per writer note"
+  },
+  {
+   "from": "SEC-IAM-004",
+   "to": "SEC-APIKEY-010",
+   "why": "IAM#20: inverted; APIKEY extends the grant rule"
+  },
+  {
+   "from": "FR-IAM-005",
+   "to": "IR-AUTH-004",
+   "why": "IAM#32: inverted; guards use the scope grammar"
+  },
+  {
+   "from": "SEC-TOKEN-005",
+   "to": "SEC-FLOW-013",
+   "why": "TOKEN#5: inverted per writer note"
+  },
+  {
+   "from": "SEC-TOKEN-005",
+   "to": "IR-AUTH-005",
+   "why": "TOKEN#6: inverted per writer note"
+  },
+  {
+   "from": "FR-TOKEN-001",
+   "to": "FR-FLOW-004/SEC-FLOW-014",
+   "why": "TOKEN#8: inverted per writer note"
+  },
+  {
+   "from": "SEC-TOKEN-006",
+   "to": "SEC-FLOW-010",
+   "why": "TOKEN#12: inverted per writer note"
+  },
+  {
+   "from": "REL-TOKEN-001",
+   "to": "SEC-IAM-002/IR-IAM-003",
+   "why": "TOKEN#21: inverted per writer note"
+  },
+  {
+   "from": "REL-TOKEN-001",
+   "to": "SEC-FLOW-014/IR-FLOW-002",
+   "why": "TOKEN#22: inverted per writer note"
+  },
+  {
+   "from": "REL-TOKEN-001",
+   "to": "FR-APIKEY-003",
+   "why": "TOKEN#23: inverted per writer note"
+  },
+  {
+   "from": "SEC-TOKEN-009",
+   "to": "FR-FLOW-004",
+   "why": "TOKEN#24: inverted per writer note"
+  },
+  {
+   "from": "SEC-TOKEN-001",
+   "to": "SEC-APIKEY-004",
+   "why": "TOKEN#30: inverted per writer note; duplicate of APIKEY#5"
+  },
+  {
+   "from": "FR-IAM-003",
+   "to": "FR-FLOW-006",
+   "why": "IAM#12: inverted: docs warning belongs to the /me endpoint"
+  },
+  {
+   "from": "SEC-IAM-006",
+   "to": "SEC-AUTH-003",
+   "why": "IAM#22: 2-cycle with AUTH#13 SEC-AUTH-003 -> SEC-IAM-006; endpoint depends on the user-state outcome"
+  },
+  {
+   "from": "FR-IAM-009",
+   "to": "IR-AUTH-004",
+   "why": "IAM#16: 2-cycle with AUTH#18 IR-AUTH-004 -> FR-IAM-009; guards use the resolver"
+  },
+  {
+   "from": "FR-AUTH-003",
+   "to": "FR-IAM-012/FR-IAM-013",
+   "why": "AUTH#28: would close a cycle FR-AUTH-003 -> FR-IAM-012 -> FR-TOKEN-002 -> FR-AUTH-003; deployment refusal does not need JDBC stores to exist"
+  },
+  {
+   "from": "IR-AUTH-001",
+   "to": "SEC-TOKEN-003",
+   "why": "AUTH#17: 2-cycle with TOKEN#1 SEC-TOKEN-003 -> IR-AUTH-001; TimeSource is the primitive"
+  },
+  {
+   "from": "SEC-TOKEN-004",
+   "to": "SEC-AUTH-001",
+   "why": "TOKEN#2: 2-cycle with AUTH#16 SEC-AUTH-001 -> SEC-TOKEN-004 (builder(String) = KeySources.of); FR-AUTH-001 kept"
+  },
+  {
+   "from": "SEC-AUTH-005",
+   "to": "SEC-FLOW-003",
+   "why": "AUTH#14: 2-cycle with FLOW#5 SEC-FLOW-003 -> SEC-AUTH-005"
+  },
+  {
+   "from": "SEC-FLOW-004",
+   "to": "SEC-APIKEY-001",
+   "why": "FLOW#7: 2-cycle with APIKEY#2; optional key feature depends on base credential reading"
+  },
+  {
+   "from": "FR-FLOW-005",
+   "to": "SEC-APIKEY-008",
+   "why": "FLOW#33: 2-cycle with APIKEY#15; key restriction hooks into the endpoint"
+  },
+  {
+   "from": "FR-FLOW-006",
+   "to": "SEC-APIKEY-008",
+   "why": "FLOW#36: 2-cycle with APIKEY#15; key restriction hooks into the endpoint"
+  },
+  {
+   "from": "FR-FLOW-004",
+   "to": "FR-APIKEY-006",
+   "why": "FLOW#31: 2-cycle with APIKEY#25; service-account login rule depends on login"
+  },
+  {
+   "from": "FR-AUTH-007",
+   "to": "IR-IAM-003",
+   "why": "AUTH#20: 2-cycle with IAM#5 IR-IAM-003 -> FR-AUTH-007; AuthUsers fires events"
+  },
+  {
+   "from": "FR-AUTH-008",
+   "to": "IR-IAM-005/FR-FLOW-007/FR-FLOW-006/SEC-FLOW-014",
+   "why": "AUTH#21: 2-cycles with FLOW#35/#39; endpoints depend on the event matrix (reversed; IR-IAM-005 covered via FR-IAM-014 -> FR-AUTH-008)"
+  },
+  {
+   "from": "FR-TOKEN-004",
+   "to": "FR-FLOW-007/SEC-FLOW-014/SEC-AUTH-003",
+   "why": "TOKEN#26: 2-cycle with FLOW#38; endpoints apply the policy (reversed)"
+  },
+  {
+   "from": "SEC-FLOW-003",
+   "to": "SEC-APIKEY-008",
+   "why": "FLOW#6: would close cycle SEC-FLOW-003 -> SEC-APIKEY-008 -> FR-FLOW-006 -> IR-FLOW-002 -> SEC-FLOW-003"
+  },
+  {
+   "from": "REL-FLOW-001",
+   "to": "FR-IAM-013",
+   "why": "FLOW#56: would close cycle REL-FLOW-001 -> FR-IAM-013 -> SEC-FLOW-013 -> REL-FLOW-001; JDBC implementation depends on the contract"
+  },
+  {
+   "from": "SEC-APIKEY-004",
+   "to": "SEC-TOKEN-001",
+   "why": "deduplicated: listed by APIKEY#5, TOKEN#30"
+  },
+  {
+   "from": "SEC-APIKEY-005",
+   "to": "IR-FLOW-003",
+   "why": "deduplicated: listed by APIKEY#6, FLOW#49"
+  },
+  {
+   "from": "SEC-APIKEY-006",
+   "to": "SEC-IAM-003",
+   "why": "deduplicated: listed by APIKEY#10, IAM#14"
+  },
+  {
+   "from": "SEC-APIKEY-010",
+   "to": "SEC-IAM-004",
+   "why": "deduplicated: listed by APIKEY#20, IAM#20"
+  },
+  {
+   "from": "FR-APIKEY-003",
+   "to": "SEC-FLOW-015",
+   "why": "deduplicated: listed by APIKEY#21, FLOW#59"
+  },
+  {
+   "from": "FR-APIKEY-003",
+   "to": "REL-TOKEN-001",
+   "why": "deduplicated: listed by APIKEY#21, TOKEN#23"
+  },
+  {
+   "from": "FR-APIKEY-004",
+   "to": "SEC-FLOW-015",
+   "why": "deduplicated: listed by APIKEY#22, FLOW#59"
+  },
+  {
+   "from": "SEC-AUTH-003",
+   "to": "SEC-FLOW-007",
+   "why": "deduplicated: listed by AUTH#12, FLOW#17"
+  },
+  {
+   "from": "SEC-AUTH-003",
+   "to": "FR-FLOW-002",
+   "why": "deduplicated: listed by AUTH#12, FLOW#16"
+  },
+  {
+   "from": "SEC-FLOW-001",
+   "to": "SEC-AUTH-002",
+   "why": "deduplicated: listed by AUTH#15, FLOW#2"
+  },
+  {
+   "from": "IR-AUTH-004",
+   "to": "FR-IAM-005",
+   "why": "deduplicated: listed by AUTH#18, IAM#32"
+  },
+  {
+   "from": "IR-FLOW-003",
+   "to": "CON-AUTH-006",
+   "why": "deduplicated: listed by AUTH#27, FLOW#53"
+  },
+  {
+   "from": "FR-FLOW-008",
+   "to": "IR-APP-008",
+   "why": "deduplicated: listed by CORE#3, FLOW#43"
+  },
+  {
+   "from": "SEC-FLOW-011",
+   "to": "SEC-ENGINE-001",
+   "why": "deduplicated: listed by CORE#6, FLOW#47"
+  },
+  {
+   "from": "SEC-FLOW-011",
+   "to": "SEC-ENGINE-002",
+   "why": "deduplicated: listed by CORE#6, FLOW#47"
+  },
+  {
+   "from": "FR-FLOW-004",
+   "to": "SEC-TOKEN-009",
+   "why": "deduplicated: listed by FLOW#28, TOKEN#24"
+  },
+  {
+   "from": "SEC-FLOW-014",
+   "to": "REL-IAM-002",
+   "why": "deduplicated: listed by FLOW#37, IAM#9"
+  },
+  {
+   "from": "SEC-FLOW-014",
+   "to": "REL-TOKEN-001",
+   "why": "deduplicated: listed by FLOW#38, TOKEN#22"
+  },
+  {
+   "from": "SEC-FLOW-013",
+   "to": "SEC-TOKEN-005",
+   "why": "deduplicated: listed by FLOW#51, TOKEN#5"
+  },
+  {
+   "from": "SEC-IAM-002",
+   "to": "REL-TOKEN-001",
+   "why": "deduplicated: listed by IAM#7, TOKEN#21"
+  },
+  {
+   "from": "FR-TOKEN-001",
+   "to": "FR-AUTH-003",
+   "why": "deduplicated: listed by TOKEN#9, TOKEN#10"
+  }
+ ],
+ "unresolved": [
+  "AUTH#23 part \"R42 file state\" doctor item: no single owning REQ identified (REL-IAM-004 / FR-TOKEN-002 candidates).",
+  "AUTH#29 blanket CON-AUTH-001..004 from every TOKEN/FLOW/IAM/APIKEY REQ: not expanded (see links_skipped)."
+ ],
+ "duplicates": [
+  {
+   "ids": [
+    "SEC-IAM-006",
+    "SEC-AUTH-003"
+   ],
+   "overlap": "Both specify the recovery outcome: create-or-enable + new password + grant admin + ver++, service-account target 400 service_account_no_password, username_mismatch for .user(name,null) setup, close after one success (404), WARN per start, audit per use, no before events (SEC-AUTH-003 AC-4..AC-7 vs SEC-IAM-006 AC-1..AC-5).",
+   "contradiction": false,
+   "note": "Consistent; SEC-IAM-006 is stricter (exactly one ver++, onPasswordChanged also fires, null stored hash accepted). Suggest SEC-AUTH-003 keep endpoint mechanics (local request, token, 404 states) and drop its AC-4..AC-6 user-state checks in favour of SEC-IAM-006. Link added SEC-AUTH-003 -> SEC-IAM-006."
+  },
+  {
+   "ids": [
+    "FR-IAM-012",
+    "FR-TOKEN-002"
+   ],
+   "overlap": "Default refresh-store selection by user store (FR-IAM-012 AC-4 = FR-TOKEN-002 AC-2), 10-minute cleanup scheduler stopped in onStop and write-only-on-login/refresh/logout (FR-IAM-012 AC-5 = FR-TOKEN-002 AC-4/AC-5); atomic markUsed (8 threads, exactly one true) in both for different implementations.",
+   "contradiction": false,
+   "note": "Keep FR-TOKEN-002 as SPI + defaults + scheduler; FR-IAM-012 should keep only JDBC-specific ACs (AC-1..AC-3). Link added FR-IAM-012 -> FR-TOKEN-002."
+  },
+  {
+   "ids": [
+    "IR-APIKEY-001",
+    "IR-FLOW-003",
+    "FR-IAM-013"
+   ],
+   "overlap": "IR-APIKEY-001 and IR-FLOW-003 both define the same LoginThrottle members: 3-argument retryAfter/recordFailure defaults delegating to 1-argument methods, usesLimitArguments() default false, ForwardingLoginThrottle forwarding, InMemoryLoginThrottle true; FR-IAM-013 AC-3 restates JdbcLoginThrottle usesLimitArguments() true, also in IR-APIKEY-001.",
+   "contradiction": false,
+   "note": "Same SPI specified twice. IR-FLOW-003 owns the SPI; IR-APIKEY-001 should keep only AC-4 (key failures counted only via the 3-argument methods, no reset after a successful key). Recorded as IR-APIKEY-001 extends IR-FLOW-003."
+  },
+  {
+   "ids": [
+    "SEC-FLOW-014",
+    "FR-APIKEY-003"
+   ],
+   "overlap": "Status for a wrong current password on POST /auth/password.",
+   "contradiction": true,
+   "note": "SEC-FLOW-014 AC-2 says 403 current_password_invalid [INFERRED from 05]; FR-APIKEY-003 AC-2 says the PAT wrong password returns 'the same 401 as a wrong current password on /auth/password'. 00 R47 (6) (edition 21+) states that wrong is 'the same 401 as /auth/password current-password error', so 00 implies 401 and SEC-FLOW-014 AC-2 contradicts 00."
+  },
+  {
+   "ids": [
+    "FR-IAM-008",
+    "FR-APIKEY-008"
+   ],
+   "overlap": "User delete order memberships -> API keys -> user row, 503 with the row kept on a failed earlier step, retry resumes, for both A5 and AuthUsers.delete.",
+   "contradiction": false,
+   "note": "FR-APIKEY-008 adds the pending-marker clear step between keys and row; compatible. Recorded as FR-APIKEY-008 extends FR-IAM-008."
+  },
+  {
+   "ids": [
+    "SEC-IAM-002",
+    "SEC-FLOW-015"
+   ],
+   "overlap": "checkPassword shares the per-user 5-failures-per-15-minutes limit with /auth/password, success does not reset, AuthRejection(429) with retryAfterSeconds and Retry-After via auth.errors().",
+   "contradiction": false,
+   "note": "ACs agree; wording differs (SEC-IAM-002 statement says '5 attempts', SEC-FLOW-015 '5 failures'; the ACs of both count failures)."
+  },
+  {
+   "ids": [
+    "SEC-AUTH-003",
+    "SEC-IAM-006",
+    "FR-APIKEY-006"
+   ],
+   "overlap": "Recovery naming an existing service account -> 400 service_account_no_password (SEC-AUTH-003 AC-6, SEC-IAM-006 AC-3, FR-APIKEY-006 AC-4).",
+   "contradiction": false,
+   "note": "Same check in three blocks."
+  },
+  {
+   "ids": [
+    "FR-IAM-001",
+    "FR-AUTH-004"
+   ],
+   "overlap": "Bootstrap seed whose create throws DuplicateUserException logs INFO 'already exists' and start continues (FR-IAM-001 AC-4 = FR-AUTH-004 AC-3).",
+   "contradiction": false,
+   "note": "Identical AC."
+  },
+  {
+   "ids": [
+    "REL-IAM-002",
+    "SEC-FLOW-014"
+   ],
+   "overlap": "Self password change race: retry once only if the re-read hash verifies the current password, else 409; ver mismatch -> 401 (REL-IAM-002 AC-2..AC-4 vs SEC-FLOW-014 AC-3, AC-4).",
+   "contradiction": false,
+   "note": "Consistent."
+  },
+  {
+   "ids": [
+    "FR-FLOW-009",
+    "SEC-IAM-007"
+   ],
+   "overlap": "DELETE /auth/admin/users/:id/lockout without auth-users:write -> 403 insufficient_scope and the lock stays (FR-FLOW-009 AC-6 = SEC-IAM-007 AC-6).",
+   "contradiction": false,
+   "note": "Introduced by the gap requirement on purpose (guard table completeness); one of the two can drop it."
+  },
+  {
+   "ids": [
+    "SEC-IAM-004",
+    "SEC-IAM-007",
+    "FR-IAM-014"
+   ],
+   "overlap": "Delegated admin (auth-users:write + posts:read) blocked by R31: SEC-IAM-004 AC-1/AC-2, SEC-IAM-007 AC-5 and FR-IAM-014 AC-5 use the same scenario on different surfaces.",
+   "contradiction": false,
+   "note": "Different observables (grant rule, guard order, A4 all-or-nothing); acceptable overlap."
+  },
+  {
+   "ids": [
+    "SEC-APIKEY-008",
+    "FR-APIKEY-006"
+   ],
+   "overlap": "A2 with the service-account flag and a non-null password: key actor 403 api_key_not_allowed before 400 service_account_no_password (SEC-APIKEY-008 AC-7, FR-APIKEY-006 AC-3).",
+   "contradiction": false,
+   "note": "Consistent."
+  }
+ ],
+ "validate_spec_result": {
+  "errors": 0,
+  "warnings": 186,
+  "byCode": {
+   "SRS-W023": 164,
+   "SRS-W015": 22
+  },
+  "note": "W023 = draft-stability warning for the 164 new 0.11.0 blocks (expected); W015 = pre-existing Completed Work Log entries in 91.completed-work-log.md, unrelated"
+ }
+}

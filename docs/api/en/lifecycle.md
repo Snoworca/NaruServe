@@ -184,7 +184,7 @@ Calling shutdown from an SSE `onClose` listener also returns immediately and run
 
 ## Deferred callbacks and request resources
 
-The 0.10.0 common HTTP checkout separates callback return, response completion and request cleanup. An ordinary callback that returns without responding or continuing leaves the request pending. A later callback can call `next.run()`, send JSON, or start a stream/SSE. Fulfillment does not implicitly continue or end a response.
+The 0.11.0 common HTTP checkout separates callback return, response completion and request cleanup. An ordinary callback that returns without responding or continuing leaves the request pending. A later callback can call `next.run()`, send JSON, or start a stream/SSE. Fulfillment does not implicitly continue or end a response.
 
 Use `app.getAsync` or `app.methodAsync` when background work must retain request resources after an early response. Return that work's pending `Deferred`; creating one without returning it does not acquire a request lease. Schedule work with an executor owned by your application. No new executor or `CompletionStage` dependency is required by the core.
 

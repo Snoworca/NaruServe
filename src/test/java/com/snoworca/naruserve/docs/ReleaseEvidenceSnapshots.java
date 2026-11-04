@@ -12,6 +12,7 @@ final class ReleaseEvidenceSnapshots {
     static final String PIN="2498edaa643593474f830259b8cf3c31a9590702";
     static final String HISTORICAL="docs/release/test-results.md", HISTORICAL_SCAN="docs/release/vulnerability-scan.md";
     static final String CURRENT="docs/release/0.10.0-test-results.md", CURRENT_SCAN="docs/release/0.10.0-vulnerability-scan.md";
+    static final String NEXT="docs/release/0.11.0-test-results.md", NEXT_SCAN="docs/release/0.11.0-vulnerability-scan.md";
     private ReleaseEvidenceSnapshots() {}
 
     private static File repository() { return new File(System.getProperty("naruserve.rootDir")); }
@@ -90,7 +91,13 @@ final class ReleaseEvidenceSnapshots {
         Matcher version=Pattern.compile("(?m)^\\s*version\\s*=\\s*'([^']+)'").matcher(read(root,"build.gradle","version"));
         assertTrue("version declaration missing",version.find());String actualVersion=version.group(1);
         assertFalse("version declaration ambiguous",version.find());
-        assertTrue("unsupported release version: "+actualVersion,actualVersion.equals("0.9.0")||actualVersion.equals("0.10.0"));
+        assertTrue("unsupported release version: "+actualVersion,actualVersion.equals("0.9.0")||actualVersion.equals("0.10.0")
+                ||actualVersion.equals("0.11.0"));
+        // OPS-REL-010 AC-3: 0.11.0 is prepared ahead of its release run; once the run writes a 0.11.0 record, the gate must
+        // be pointed at the 0.11.0 records (CURRENT/CURRENT_SCAN) before it passes again
+        boolean next=actualVersion.equals("0.11.0");
+        assertFalse("0.11.0 release records exist: point CURRENT and CURRENT_SCAN at docs/release/0.11.0-*",next
+                &&(new File(root,NEXT).isFile()||new File(root,NEXT_SCAN).isFile()));
         boolean results=new File(root,CURRENT).isFile(),report=new File(root,CURRENT_SCAN).isFile();
         if(!results&&!report&&actualVersion.equals("0.9.0"))return false;
         assertTrue("current evidence requires result record and scan",results&&report);
@@ -102,6 +109,6 @@ final class ReleaseEvidenceSnapshots {
         String scan=record(root,CURRENT_SCAN,null,true);
         assertTrue("current scan must be completed",Pattern.compile("(?m)^Status: completed$").matcher(scan).find());
         scan(root,CURRENT_SCAN,null,runtime);
-        return true;
+        return !next; // 0.11.0: the 0.10.0 records still hold; the 0.11.0 ones are pending
     }
 }

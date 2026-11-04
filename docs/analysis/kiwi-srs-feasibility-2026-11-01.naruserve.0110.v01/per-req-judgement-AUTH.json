@@ -1,0 +1,1775 @@
+{
+ "group": "AUTH",
+ "prescreen": {
+  "senior_targets": [
+   "CON-AUTH-003",
+   "CON-AUTH-004",
+   "CON-AUTH-005",
+   "SEC-AUTH-001",
+   "FR-AUTH-002",
+   "SEC-AUTH-002",
+   "FR-AUTH-003",
+   "FR-AUTH-004",
+   "SEC-AUTH-003",
+   "FR-AUTH-005",
+   "SEC-AUTH-004",
+   "SEC-AUTH-005",
+   "SEC-AUTH-006",
+   "FR-AUTH-006",
+   "IR-AUTH-002",
+   "IR-AUTH-003",
+   "FR-AUTH-007",
+   "FR-AUTH-008",
+   "IR-AUTH-004",
+   "SEC-AUTH-007",
+   "OPS-AUTH-001",
+   "SEC-AUTH-008",
+   "FR-AUTH-009",
+   "IR-AUTH-005"
+  ],
+  "quick_pass": [
+   "CON-AUTH-001",
+   "CON-AUTH-002",
+   "CON-AUTH-006",
+   "CON-AUTH-007",
+   "IR-AUTH-001",
+   "FR-AUTH-001",
+   "OPS-AUTH-002"
+  ],
+  "quick_block": []
+ },
+ "judgements": [
+  {
+   "req_id": "CON-AUTH-001",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Placement and zero main dependencies is the current state: mainDependencies ':NaruServe-api' is [:] and naruModules is fixed; only a new package is added, no build.gradle edit needed (code_context packaging_note).",
+     "evidence": [
+      "build.gradle:L61",
+      "build.gradle:L14-L15",
+      "code_context.json build_facts.packaging_note"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "verifies traces build.gradle:L60-L61 and L14-L21 exist and match; addition_site parent NaruServe-api/src/main/java/com/snoworca/naruserve exists (trace_validation ok).",
+     "evidence": [
+      "code_context.json trace_validation CON-AUTH-001"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "Only dependency CON-BUILD-006 is verified/evolving; not in any cycle.",
+     "evidence": [
+      "docs/spec CON-BUILD-006 Status verified, Stability evolving"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1..AC-4 are build/dependency-report tests; AC-3 needs every subpackage to exist, so it is green only when sibling scopes land; AC-5 is a release-record check (docs test).",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "00 §1(2)/§2: no new dependency is a v1 design principle.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-3 lists subpackages owned by TOKEN/IAM/APIKEY (jwt, password, apikey, jdbc); run it after those scopes land",
+    "Record jar size before/after (AC-5) in the 0.11.0 completed-work record"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "CON-AUTH-002",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "build.gradle already has a constant-pool scanner (scanClassRefs) and classRefPrefixes for ':NaruServe-api'; adding the com/snoworca/naruserve/internal/ prefix filtered to utils/ is small. Today requestId() is package-private, so C7 public accessor is a prerequisite.",
+     "evidence": [
+      "build.gradle:L105-L140",
+      "build.gradle:L144-L150",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:L389-L391"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "verifies traces exist and match the statement; AuthArchitectureTest addition_site parent exists.",
+     "evidence": [
+      "code_context.json trace_validation CON-AUTH-002"
+     ]
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "CON-BUILD-013/015 verified; IR-APP-008, IR-HTTP-010, IR-ENGINE-003 are 0.11.0 drafts (Core C4/C6/C7) that must land first; no cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "Architecture test plus explicit negative-control fixture (AC-2) and a setAccessible scan; fully automatable.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Design rule of 00 §1(3); enables later module split.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Prefix must be exactly com/snoworca/naruserve/internal/ so utils.auth.internal is not flagged",
+    "Land C4/C6a/C6b/C7 public accessors before auth reads them"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "CON-AUTH-003",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "animal-sniffer android-api-level-21 is already applied to NaruServe-api main. The 00 §12 open check is settled at signature level: the API 21 signature file contains javax/sql/DataSource, java/sql/Connection, java/sql/PreparedStatement, java/text/Normalizer(+$Form), java/io/FileDescriptor with sync()V, javax/crypto/Mac, java/security/MessageDigest; it contains no java/time/Instant, java/util/Base64 or javax/naming/. Residual risk: JCA algorithm names are not statically checked.",
+     "evidence": [
+      "build.gradle:L432-L441",
+      "build.gradle:L42",
+      "android-api-level-21-5.0.1_r2.signature (gradle cache, gzip-decoded grep)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "verifies traces build.gradle:L431-L442 and L40-L44 match; addition_site parent exists.",
+     "evidence": [
+      "code_context.json trace_validation CON-AUTH-003"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "CON-BUILD-012, CON-BUILD-004 verified; CON-AUTH-001 sibling quick_pass; no cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Class-reference scan, major-version check and animalsnifferMain run are automatic; AC-4 is meaningful only once auth classes actually reference java.sql/Normalizer/FileDescriptor.sync (JDBC stores, AtomicFiles).",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "00 §9 v1 row names this item; core.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Confirm by an actual animalsnifferMain run once JDBC/AtomicFiles/Normalizer users exist (signature grep already shows the classes present)",
+    "Do not request JCA algorithms by name where API 21 lacks them (PBKDF2 in-house over Mac)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "IR-AUTH-001",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "A one-method @FunctionalInterface SAM plus a System.currentTimeMillis instance; no Core clock exists today and nothing above API 21 is needed.",
+     "evidence": [
+      "code_context.json modules (utils dir absent)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/package-info.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Pure addition: TimeSource.java and utils/package-info.java; parent dir exists. Design concrete (long nowMillis()).",
+     "evidence": [
+      "code_context.json trace_validation IR-AUTH-001"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "Depends only on CON-AUTH-003 (high); AC-4 additionally relies on TOKEN JWT verification and its clock tolerance value.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1..AC-3 trivially testable (Kotlin lambda, reflection). AC-4 needs the TOKEN clock-tolerance value, which TOKEN owns; test is writable once that constant exists.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "00 §2 tree, R47: all public times are epoch-ms.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Builder setter and system-instance factory names are (name not final): settle and document in docs/api",
+    "JWT verification must read only the injected TimeSource (no System.currentTimeMillis) for AC-4"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "CON-AUTH-004",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Existing checks just need the new packages: ApiJarClasses.PUBLIC_PACKAGES currently lists only naruserve, spi, routing; CallbackInventoryTest compares CallbackInventory to CallbackMatrix.CALLBACK_TYPES; jspecify is compileOnly.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:L27-L28",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/CallbackInventoryTest.java:L85",
+      "build.gradle:L93"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "verifies traces exist and match the cited gap (PUBLIC_PACKAGES omits utils).",
+     "evidence": [
+      "code_context.json trace_validation CON-AUTH-004"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "FR-KT-001/002/003 verified/evolving; CON-AUTH-001 sibling; no cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1..AC-4, AC-6 are reflection/compile tests. AC-5 needs the whole minimal path (install, guard, AuthTesting token) and so is green only near the end of 0.11.0; AC-4 must be kept in exact sync with the callback inventory.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "CLAUDE.md Kotlin rule (T11) is mandatory for every public API.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add every public auth subpackage to PUBLIC_PACKAGES in the same change that creates it, otherwise FR-KT checks pass vacuously",
+    "Never use org.jspecify @NonNull (FR-KT-001 AC-3)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "CON-AUTH-005",
+   "feasibility": "high",
+   "score": 85,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Documentation plus extension of existing docs tests (docs/api ko/en mirror already exists; CON-HTTP-009 compile check exists).",
+     "evidence": [
+      "docs/api/middleware.md:L90-L92",
+      "docs/api/README.md"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "verifies trace docs/api/middleware.md exists; auth.md pages are additions.",
+     "evidence": [
+      "code_context.json trace_validation CON-AUTH-005"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "OPS-REL-008, CON-HTTP-009 verified; CON-AUTH-004 sibling (high). Content depends on every other auth scope's final names.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Type-coverage, compile and statement tests are automatable; AC-5 is a release-time grep that can only pass after all (name not final) items are settled.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Required by CLAUDE.md API-docs rule; supporting rather than runtime function.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Write pages after names are implemented; settle every (name not final) before release",
+    "Keep 0.10.0 historical doc evidence valid (OPS-REL-008)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "CON-AUTH-006",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Reflection over declared methods and a committed signature snapshot resource; no platform API involved.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:L27-L28"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition sites ForwardingUserStore (utils.auth.user) and ForwardingLoginThrottle (utils.auth.spi); parents ok. Rule concrete (00 R20).",
+     "evidence": [
+      "code_context.json trace_validation CON-AUTH-006"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "Only CON-AUTH-001; interface tables come from IAM/FLOW/APIKEY siblings.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Each AC has an automated check with defined negative controls (AC-2, AC-4 fixtures).",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "00 §2 R20, §7 Forwarding classes in v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Commit the API signature snapshot only after LoginThrottle/UserStore/ApiKeyStore tables are final (00 §7)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "CON-AUTH-007",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Adapters already expose the raw peer: ServletExchange remoteAddress, TinyHttpdExchange remoteAddress, InMemoryHttpAdapter(String remoteAddress, boolean secure); trustProxy(boolean) stays on RestApp. Mostly verification work.",
+     "evidence": [
+      "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:L117",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:L176-L177",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:L77",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L227"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "All three verifies traces exist and match.",
+     "evidence": [
+      "code_context.json trace_validation CON-AUTH-007"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "IR-HTTP-001, IR-ENGINE-001, FR-ENGINE-008 verified; seven 0.11.0 draft siblings (IR-APP-008, IR-HTTP-010, FR-HTTP-029, IR-ENGINE-003, SEC-SVL-001, SEC-HTTP-001, CON-ENGINE-001) must all land; no cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1 is a gate over owner ACs; AC-2 needs a class compiled against 0.10.0 (binary fixture); AC-3 needs an actual Java 8 runtime run.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Cross-module guard; touches servlet/tinyhttpd tests.",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "00 §9 선행(Core) row: C4, C6a, C6b, C7 required.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Provide a 0.10.0-compiled class fixture (or compile against the published 0.10.0 jar) for AC-2",
+    "Keep the actual-Java-8 test run available for AC-3"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "NaruServe-servlet, NaruServe-tinyhttpd, NaruServe-kotlin tests only (no main code change expected)",
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-AUTH-001",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "String length via StandardCharsets UTF-8, distinct-byte count, SecureRandom temp key; all on API 21. Logs can be captured because RestApp.logger(Logger) is replaceable.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L155-L159",
+      "android-api-level-21-5.0.1_r2.signature (gradle cache, gzip-decoded grep): java/security/SecureRandom present"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition sites Auth.java, AuthConfigException.java; message fragments concrete in 00 §3.",
+     "evidence": [
+      "code_context.json trace_validation SEC-AUTH-001"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "Deps FR-AUTH-001, SEC-AUTH-002 (high), SEC-TOKEN-004, SEC-AUTH-008 (drafts). In a 2-cycle with SEC-TOKEN-004 and in the member of the 70-member depends_on SCC in existing_srs_context.json cycles (brief says 76; file lists 70); -4 for ordering.",
+     "evidence": [
+      "existing_srs_context.json sample_shortest_cycles [SEC-AUTH-001, SEC-TOKEN-004]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Thresholds (32 bytes, example list, <8 distinct bytes) are INFERRED from 04 but concrete and testable; DEV WARN source (build vs doctor, Q17/Q26) does not block the test because AC-8 asserts only the WARN.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "00 §9 v1 row names this item; core.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut the SEC-AUTH-001 <-> SEC-TOKEN-004 edge for wave scheduling (implement KeySources.of first)",
+    "Decide where the DEV weak-key WARN is emitted (build() vs doctor) and record it in docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-AUTH-001",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "A violation collector and one unchecked exception; pure Java.",
+     "evidence": []
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition sites Auth.java and AuthConfigException.java; rule list concrete (R28, R29, R35, apiKeyScheme).",
+     "evidence": [
+      "code_context.json trace_validation FR-AUTH-001"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "Depends on FR-IAM-006 (0.11.0 draft, itself in a 2-cycle with FR-AUTH-004); FR-AUTH-001 is not in a cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1..AC-3, AC-5 directly testable. AC-4 allows two outcomes for a second build(); either is testable once chosen. AC-2's mountPath '/' rule needs FLOW transport enum.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "00 §9 v1 row names this item; core.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Decide build()-twice behaviour (independent Auth vs IllegalStateException) and document it",
+    "Keep store-dependent checks (null-password .user) out of build(); they run in onStart"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-AUTH-002",
+   "feasibility": "high",
+   "score": 81,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "java.util.Properties + java.io FileInputStream + System.getenv; no java.nio.file. No reflection-based instantiation keeps R8-safe.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthConfig.java (addition site)",
+      "CON-AUTH-003 forbidden list"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Addition site only; format/keys/precedence come from stale 07 §7.2 (INFERRED), 00 fixes only the env:/file: and unknown-key rules.",
+     "evidence": [
+      "code_context.json trace_validation FR-AUTH-002"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "Only FR-AUTH-001 (high sibling); no cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 11,
+     "rationale": "AC-1 needs an environment variable set/unset inside a test: needs an injectable env lookup or Gradle test environment(); key names are settled at implementation. Writable, but needs that seam.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Config-file loading; operator-facing.",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "AuthConfig is listed in the 00 §9 v1 row, but it is convenience over the code builder.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Provide a package-private/injectable environment lookup so env: tests are deterministic",
+    "Fix key names, format and code/file/env precedence and record them in docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-AUTH-002",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "An enum plus a fixed relaxation table; NARU_ENV lookup; locality is consumed from FLOW R33/C6a.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L97-L100"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Addition site AuthMode.java only; relaxation list concrete in 00 R41.",
+     "evidence": [
+      "code_context.json trace_validation SEC-AUTH-002"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "No declared depends_on (graph root), but AC-2/AC-4/AC-5 exercise FLOW (R33, CSRF, throttle) and IAM grant rules, which are 0.11.0 drafts.",
+     "evidence": [
+      "existing_srs_context.json roots includes SEC-AUTH-002"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1 needs injectable env (several NARU_ENV values in one JVM). AC-4 is a 7-behaviour regression list across scopes; each item testable once its owner lands.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "00 §9 v1 row names this item; core.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Same env-lookup seam as FR-AUTH-002 for AuthMode.fromEnv() tests",
+    "Add depends_on edges to SEC-FLOW-001 (R33) so scheduling reflects AC-2/AC-4"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-AUTH-003",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Two enums, a profile-defaults table and two once-only runtime WARNs (AtomicBoolean); store-type classification at build().",
+     "evidence": []
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Addition sites AuthProfile.java, Deployment.java; per-profile numbers not fixed by 00 (§10 Q1).",
+     "evidence": [
+      "code_context.json trace_validation FR-AUTH-003",
+      "docs/research/auth-rbac/00.overview.md:L771"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "FR-AUTH-001 (high); AC-3/AC-5 lean on TOKEN refresh store and APIKEY store classification; no cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 11,
+     "rationale": "AC-6 values are chosen at implementation (Q19) but the test is writable once chosen; AC-5 needs refresh family-id lookup from TOKEN/FLOW.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Profile + deployment semantics shared with TOKEN/FLOW.",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "00 §9 v1 row: AuthProfile, AuthMode, Deployment.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Choose default profile and per-profile defaults (00 §10 Q1) and publish the table in docs/api ko/en before FR-TOKEN-001 AC-6 uses it as oracle"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-AUTH-004",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "onStart callbacks run before the adapter binds, so seeding/doctor FAIL stop start before the port opens; hashing happens once in build().",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L131",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L494-L511"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "verifies trace RestApp.java:L131 exists and matches; addition site Auth.java.",
+     "evidence": [
+      "code_context.json trace_validation FR-AUTH-004"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "Deps FR-AUTH-005, OPS-AUTH-001, FR-AUTH-008, FR-IAM-006 (all 0.11.0 drafts). In the 2-member cycle FR-AUTH-004 <-> FR-IAM-006; -4 for ordering.",
+     "evidence": [
+      "existing_srs_context.json cycles[0]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1..AC-6 concrete; AC-5 avoids the open Q16 case (admin defined with * under replaceBuiltinRoles) by using role name 'root'.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "00 §9 v1 row: first-admin bootstrap.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut the FR-AUTH-004 <-> FR-IAM-006 edge (FR-IAM-006 needs only the admin-role rule, not seeding)",
+    "Decide Q16 (admin with * under replaceBuiltinRoles) and document it"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-AUTH-003",
+   "feasibility": "medium",
+   "score": 79,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "SecureRandom token and constant-time compare via MessageDigest.isEqual are on API 21; locality needs C6a socketAddress plus header inspection.",
+     "evidence": [
+      "android-api-level-21-5.0.1_r2.signature (gradle cache, gzip-decoded grep): java/security/MessageDigest, isEqual present",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:L77"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Addition site Auth.java only; flow concrete in 00 §4.4/R31(6).",
+     "evidence": [
+      "code_context.json trace_validation SEC-AUTH-003"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Eight 0.11.0 draft deps across FLOW/TOKEN/AUTH (SEC-FLOW-001/003/007, FR-FLOW-002, FR-TOKEN-004, FR-AUTH-004, FR-AUTH-008, IR-AUTH-003); member of the 70-member depends_on SCC in existing_srs_context.json cycles (brief says 76; file lists 70); -4 for ordering.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Rejection status/code for wrong token and non-local secure request are open (Q15, Q23); ACs assert 'rejected and creates nothing', which is testable, but the exact answer cannot be asserted until chosen.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "00 §9 v1 row names this item; core.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Choose and document the setup rejection status/code (Q15, Q23) under the IR-AUTH-003 AC-3 rule",
+    "Schedule after SEC-FLOW-001 (R33) and FR-AUTH-004; break SCC edges first"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-AUTH-005",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 23,
+     "rationale": "The C4 registration list/listener does not exist yet: RestApp has no registrations()/onRegistration, and middleware registrations are internal. WebSocket upgrades see only use(Middleware)/use(String, Middleware) middleware, so install must use those.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java (no registrations method)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L840-L856",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L1019-L1025"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "verifies traces DefaultRestApp.java:L840-L856 and L1008-L1050 exist and match.",
+     "evidence": [
+      "code_context.json trace_validation FR-AUTH-005"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "FR-APP-021, FR-DX-008 verified; IR-APP-008, FR-APP-025 (C4) are 0.11.0 drafts that must land first; no cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1..AC-7 concrete; AC-3 relies on FR-APP-026 expansion order; AC-8 needs the FLOW login endpoint. Admin mount under custom mountPath is open (Q6) and not asserted.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "00 §9 v1 row names this item; core.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Land C4 (IR-APP-008, FR-APP-025, FR-APP-026) before install",
+    "Decide whether adminRoutes follows .mountPath (Q6/Q20) and document it"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-AUTH-004",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "cors() re-enters use(Middleware), and DefaultCors passes requests with no Origin to next, so the doctor needs C4's CORS/PATH_MIDDLEWARE kinds to tell them apart; logic itself is simple.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L822-L828",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultCors.java:L41-L42"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "verifies traces exist and match the statement.",
+     "evidence": [
+      "code_context.json trace_validation SEC-AUTH-004"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "FR-DX-010 verified; OPS-AUTH-001, FR-APP-025, IR-APP-008, FR-APP-026 0.11.0 drafts; no cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Five concrete scenarios, all in-memory testable.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "00 R28 install rules are part of v1 install.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "C4 must tag cors() registrations as CORS separately from plain MIDDLEWARE"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-AUTH-005",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "For common HTTP, req.path() is the raw undecoded path, so exact string matching gives the fail-closed behaviour the requirement wants.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:L115",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L68"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "verifies trace DefaultRequest.java:L115 exists and matches.",
+     "evidence": [
+      "code_context.json trace_validation SEC-AUTH-005"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "FR-AUTH-005 (high sibling) and SEC-FLOW-001 (R33 predicate, 0.11.0 draft); no cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Six concrete ACs with explicit adapters (InMemoryHttpAdapter(\"127.0.0.1\", false) etc.); some token-reading checks delegated to SEC-FLOW-001 AC-5/AC-6.",
+     "evidence": [
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:L77"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "00 §9 v1 row names this item; core.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Consume FLOW's single R33 predicate; do not re-implement locality"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-AUTH-006",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 22,
+     "rationale": "Needs a wider-than-Core normalizer, upgrade detection across all header lines (Dispatcher joins Connection/Upgrade), and a post-start registration veto that runs before apply (SEC-APP-002) — the largest Core-coupling in AUTH.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:L180",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:L151-L157",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L68"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "verifies traces Dispatcher.java:L175-L185 and AppLifecycle.java:L151-L157 exist and match.",
+     "evidence": [
+      "code_context.json trace_validation SEC-AUTH-006"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "SEC-AUTH-005, FR-AUTH-005 (high siblings); SEC-APP-002, FR-APP-026, OPS-AUTH-001 0.11.0 drafts; no cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Eight concrete ACs; admin-mount location under custom mountPath is open (Q6/Q20) but AC-1 is written location-agnostic; AC-4 wording 'not final' means substring assertion only after it is fixed; Q18 (401 code on out-of-range expired token) leaves AC-7 asserting status only.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "protectOnly is in the 00 §9 v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "SEC-APP-002 must guarantee validate -> watcher -> apply order so a veto leaves no served route",
+    "Resolve Q18 and the describe() wording before release"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-AUTH-006",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Auth must catch its own failures because FinalHandler renders printStackTrace as HTML; Core codes can be read through public HttpException.code() instead of internal StandardErrors (CON-AUTH-002); JSON written via res API.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java:L30-L41",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:L47",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:L33-L64"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "All three verifies traces exist and match; AuthResponses addition site concrete.",
+     "evidence": [
+      "code_context.json trace_validation FR-AUTH-006"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "FR-APP-006 verified; FR-HTTP-029 (C7), FR-AUTH-005, IR-AUTH-003 are 0.11.0 siblings; no cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1, AC-2, AC-4, AC-5, AC-7 concrete; AC-3 pulls in FR-IAM-014/REL-IAM-002 behaviour; AuthResponses method set and setter name open (Q7, Q8) but test is writable once named.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Admin PATCH A4 exception reaches into IAM.",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "00 §9 v1 row names this item; core.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Do not reference internal.StandardErrors from utils (use HttpException.code() or own constants)",
+    "Settle AuthResponses method set and builder setter (Q8)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "IR-AUTH-002",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 23,
+     "rationale": "onError is rejected after start and wraps the handler in a lambda while keeping the original in errorHandlers, so C4 must record the original target; use(ErrorMiddleware) is accepted after start. Request-time WARN with once-per-minute throttle via TimeSource.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L939-L948",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:L14-L15"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "verifies traces exist and match exactly (lambda wrap at L942-L945).",
+     "evidence": [
+      "code_context.json trace_validation IR-AUTH-002"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "IR-AUTH-003, FR-AUTH-006 siblings; FR-APP-025, FR-APP-026, SEC-APP-002 0.11.0 drafts; no cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1..AC-6 concrete; AC-5's per-minute rate limit and Router mount-position rule need C4 record details (FR-APP-026 Q2).",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "errors() is in the 00 §3 minimal path.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "C4 registration target for onError must be the original ErrorHandler, not the wrapping lambda"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "IR-AUTH-003",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Two unchecked exception classes with argument validation and a constant catalog; Core HttpException already exposes status/code.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:L15-L72"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "verifies traces StandardErrors.java and HttpException.java exist; AuthRejection addition site.",
+     "evidence": [
+      "code_context.json trace_validation IR-AUTH-003"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "No depends_on (graph root); not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json roots includes IR-AUTH-003"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 10,
+     "rationale": "AC-1, AC-2, AC-4..AC-6 concrete. AC-3's closed-set catalog test can be written only after the open codes (409 family Q14, setup rejection Q15/Q23, requireRole/check 403 Q5, wrong-current-password Q22) are chosen; not impossible, but the oracle is incomplete today.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "00 §9 v1 row names this item; core.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Choose all open codes (Q5, Q14, Q15, Q22, Q23), add AuthErrorCode constants and list them in docs/api before the catalog test is written"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-AUTH-007",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Interface with default no-op methods (allowed under release 8 + D8) and one wrapper helper for uniform exception mapping; hash-free copies.",
+     "evidence": [
+      "CON-AUTH-003 research: default methods allowed on API 21"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Addition site AuthEvents.java; contract concrete in 00 R30(7).",
+     "evidence": [
+      "code_context.json trace_validation FR-AUTH-007"
+     ]
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "Declared dep IR-AUTH-003 only, but ACs drive register, A4, AuthUsers (FLOW/IAM drafts) that are not declared.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1..AC-4 concrete; AC-5 must drive every user-change path plus login/refresh, so it is green only after FLOW/IAM endpoints land.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "AuthEvents in the 00 §9 v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add depends_on to the FLOW/IAM endpoint requirements the contract test drives"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-AUTH-008",
+   "feasibility": "high",
+   "score": 81,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Enum values plus an AuthEventContext; each emitter is a call site in FLOW/IAM paths.",
+     "evidence": []
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Addition sites AuthEventContext.java, UserOrigin.java; matrix concrete in 00 §6.3.",
+     "evidence": [
+      "code_context.json trace_validation FR-AUTH-008"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "FR-AUTH-007 sibling; the paths (register, A2, A4, A5, PATCH /auth/me, POST /auth/password, recovery) are owned by FLOW/IAM drafts and not declared.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Matrix-driven tests are mechanical; UserOrigin names are proposals (name not final) but this does not stop the test.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Part of the v1 event model.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Settle UserOrigin/UserChange names and document them"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "IR-AUTH-004",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Guards are Core Middleware; (String, Middleware, RouteHandler) overloads exist for the Kotlin trailing lambda; RouteGroup has route(path) and RouteBuilder.use(Middleware); principal attaches through Request.attribute.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L107-L123",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteGroup.java:L10-L22",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteBuilder.java:L49",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L109-L115"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "verifies traces RestApp.java:L107-L123 and RouteGroup.java:L10-L22 exist and match.",
+     "evidence": [
+      "code_context.json trace_validation IR-AUTH-004"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Deps SEC-AUTH-007, IR-AUTH-002, FR-IAM-005, FR-IAM-009, IR-AUTH-003 (drafts) and FR-KT-001 (verified); member of the 70-member depends_on SCC in existing_srs_context.json cycles (brief says 76; file lists 70); -4 for ordering.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Concrete; 403 code of requireRole/auth.check open (Q5, Q15) so AC-4/AC-8 assert status only; AC-8 is INFERRED but testable.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "00 §9 v1 row names this item; core.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Choose the requireRole/check 403 code (Q5, Q15)",
+    "Break SCC edges (e.g. IR-AUTH-005 -> IR-AUTH-004 direction) before wave scheduling"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-AUTH-007",
+   "feasibility": "medium",
+   "score": 79,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Per-user cache on java.util.concurrent with TimeSource TTL; minimal principal; promotion in guards. No Core change.",
+     "evidence": [
+      "android-api-level-21-5.0.1_r2.signature (gradle cache, gzip-decoded grep): java/util/concurrent/ConcurrentHashMap present"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "rationale": "Addition site internal/PrincipalCache.java; behaviour concrete in 00 R36.",
+     "evidence": [
+      "code_context.json trace_validation SEC-AUTH-007"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Deps IR-AUTH-001 (high) and FR-IAM-006/007/009, SEC-IAM-004 (drafts); member of the 70-member depends_on SCC in existing_srs_context.json cycles (brief says 76; file lists 70); -4 for ordering.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1..AC-6 concrete with fixed TimeSource; AC-7 spans logout, refresh, device token, API key and auth.webSocket close (FLOW/APIKEY), so it is green late.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Principal cache (R36) is in the 00 §9 v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Schedule AC-7 after FLOW logout/webSocket and APIKEY ver checks",
+    "Break SCC edges for scheduling"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "OPS-AUTH-001",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 22,
+     "rationale": "Runner itself is simple and onStart failure stops start before bind, but the suite spans ~19 items owned by every auth scope; legacy trustProxy detection needs the C6b read accessor because the flag is private in DefaultRestApp.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L125",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L494-L511"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "verifies traces DefaultRestApp.java:L125 and L488-L515 exist and match.",
+     "evidence": [
+      "code_context.json trace_validation OPS-AUTH-001"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "FR-AUTH-005, SEC-AUTH-002 siblings; CON-ENGINE-001, IR-ENGINE-003 drafts; implicitly every scope that owns a doctor item; no cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 10,
+     "rationale": "Table-driven test is writable, but hash-cost threshold/level (Q24), three INFERRED triggers (Q25) and DEV weak-key WARN source (Q26) are open; AC-2 is phrased to avoid asserting them, which weakens the oracle without making it impossible.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "doctor is in the 00 §9 v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Decide hash-cost threshold and level (Q24) and the 04 §6.2 triggers (Q25)",
+    "Doctor items owned by other scopes must register into one runner"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "OPS-AUTH-002",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "String summary built from builder state and C4 records; logger is the app logger.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L155"
+     ]
+    },
+    "evidence_strength": {
+     "score": 13,
+     "rationale": "Addition site Auth.java only; format not fixed by 00.",
+     "evidence": [
+      "code_context.json trace_validation OPS-AUTH-002"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "FR-AUTH-003, FR-AUTH-005 (high) plus IR-APP-008, FR-APP-025, SEC-AUTH-008 drafts; no cycle.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Substring assertions on describe() and captured log lines; AC-2 delegated to SEC-AUTH-008 marker test.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "describe() in v1 row; operator aid.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Fix the describe() format and wording before docs are written"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-AUTH-008",
+   "feasibility": "medium",
+   "score": 75,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Log capture is possible because RestApp.logger(Logger) is replaceable; char[] wipe with Arrays.fill. Main cost is a single integration test across HEADER/COOKIE/BOTH flows, API keys, setup and doctor.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L157-L159"
+     ]
+    },
+    "evidence_strength": {
+     "score": 12,
+     "rationale": "Addition site is a directory (utils/auth/internal/); no verifies trace; redaction helper design not concrete.",
+     "evidence": [
+      "code_context.json trace_validation SEC-AUTH-008"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Deps SEC-AUTH-003, FR-AUTH-004 (drafts in cycles) and implicitly every flow; member of the 70-member depends_on SCC in existing_srs_context.json cycles (brief says 76; file lists 70); -4 for ordering.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 11,
+     "rationale": "AC-1 is testable but needs almost every 0.11.0 flow to exist (last-to-green); AC-3 is INFERRED.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Security hygiene is required by 00 R29(d), R47(3).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Implement after login/refresh/logout/API key/setup/doctor exist; run as the final cross-scope gate",
+    "Route every log write through one redaction helper"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-AUTH-009",
+   "feasibility": "high",
+   "score": 81,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Final immutable value class, SAM-like sink interface, static factories; only Core public API needed for requestId (C7).",
+     "evidence": []
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Three addition sites in utils.auth.audit; field list from stale 07 §6.1 (INFERRED).",
+     "evidence": [
+      "code_context.json trace_validation FR-AUTH-009"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Deps SEC-AUTH-008 (draft in SCC) and FR-HTTP-029 (C7 draft); member of the 70-member depends_on SCC in existing_srs_context.json cycles (brief says 76; file lists 70); -4 for ordering.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1, AC-3, AC-4, AC-6, AC-7 concrete; AC-2 needs recovery, R31 self-denial, security_write_conflict and API key issue/revoke from other scopes; factory set open (Q21) but AC-6 needs only one.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "AuditSink in the 00 §9 v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Choose AuditSinks factory set and event type/outcome values (Q21) and document them"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "IR-AUTH-005",
+   "feasibility": "high",
+   "score": 81,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Must issue through TokenService without copying the key; main jar may not reference JUnit (junit is testImplementation only). No JDBC driver is declared, but AC-3 accepts any non-in-memory store, so a custom test UserStore suffices; a test-only sqlite-jdbc is allowed if a real JDBC store is wanted.",
+     "evidence": [
+      "build.gradle:L96-L97",
+      "code_context.json build_facts.jdbc_test_driver",
+      "build.gradle:L236-L239"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition site AuthTesting.java; TestApp exists in testFixtures; location decision recorded (00 §10 Q4 settled for main).",
+     "evidence": [
+      "code_context.json trace_validation IR-AUTH-005"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Deps IR-AUTH-004, SEC-TOKEN-005, SEC-FLOW-006 (drafts); member of the 70-member depends_on SCC in existing_srs_context.json cycles (brief says 76; file lists 70); -4 for ordering.",
+     "evidence": []
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1..AC-3, AC-5, AC-7 concrete; AC-4/AC-6 only require presence (behaviour owned elsewhere); csrfTokenFor name not final.",
+     "evidence": []
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside AUTH scope boundaries (17.auth.srs.md §2 In Scope).",
+     "evidence": [
+      "docs/spec/17.auth.srs.md:L15-L29"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "AuthTesting is in the 00 §9 v1 row.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:L764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Keep AuthTesting free of JUnit/test-framework references (AC-7)",
+    "If a JDBC-backed store is used for AC-3, add sqlite-jdbc as testImplementation only"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  }
+ ]
+}

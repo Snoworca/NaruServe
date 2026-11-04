@@ -1,0 +1,15 @@
+{
+  "target": "0.11.0",
+  "classification": "new-scope (auth module, 5 scopes) + new-feature (Core C4/C6a/C6b/C7 in APP/HTTP/ENGINE)",
+  "affected_existing_reqs": [
+    {"id": "FR-ENGINE-008", "relation": "extends", "diff_summary": "C6b adds hops/CIDR resolution; trustProxy(boolean) keeps its left-most behaviour and AC-1..AC-4. Its rationale rejected hops/CIDR; the new REQ records why that is reopened (security defect noted in 00 §8)."},
+    {"id": "FR-HTTP-011", "relation": "extends", "diff_summary": "socketAddress() is the raw peer address; remoteAddress() keeps its proxy-aware meaning."},
+    {"id": "IR-HTTP-001", "relation": "extends", "diff_summary": "Request method set gains socketAddress() and requestId()."},
+    {"id": "FR-APP-021", "relation": "extends", "diff_summary": "C4 records all registration kinds in the shared order and adds the listener contract validate->listener->apply->record."},
+    {"id": "IR-ENGINE-001", "relation": "extends", "diff_summary": "New RestApp methods follow the configuration guards."},
+    {"id": "FR-APP-006", "relation": "depends_on", "diff_summary": "auth uses the same error body shape and request id."}
+  ],
+  "scope_boundary_impact": null,
+  "external_module_impact": null,
+  "confidence": "high"
+}

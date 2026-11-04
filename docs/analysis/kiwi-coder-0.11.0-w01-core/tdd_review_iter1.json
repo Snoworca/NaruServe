@@ -1,0 +1,5 @@
+{"pass":"tdd-verification","iter":1,"reviewer":"subagent S1+S2","req_set":"0.11.0-w01-core (13 REQ)","severity":{"CRITICAL":0,"HIGH":1,"MEDIUM":6,"LOW":8},
+ "resolved":["HIGH hops>XFF single XFP: decided 'one value used as is' (SEC-ENGINE-003 Requirement text applies position rule to two or more values) and pinned by ProxyTrustModesTest.SEC_ENGINE_003_AC1_oneValueIsUsedAsIsWhateverTheHopCount + docs",
+  "MEDIUM FR-APP-026 AC-7 watcher-time 404 asserted","MEDIUM SEC-APP-002 AC-3 observable layers","MEDIUM SEC-SVL-001 AC-5 snapshot-loop sequence over every setting","MEDIUM undocumented XFP/XFF decisions documented in docs/api/app.md#프록시-신뢰","MEDIUM FR-APP-025 AC-1 all seven verbs x overload families",
+  "LOW refused listener recording, fail() in order test, reader/writer overlap latch, left-most Javadoc assert, fixture 'forwarded' scan"],
+ "open_low":["no explicit @NonNull check (covered by FR-KT-001 jar scan KotlinNullabilityTest)","ServletProxyTrustTest does not reuse RecordingRequest (needs arg recording)","apps from SharedApp.onJetty not shut down (ContainerRule stops Jetty)"]}

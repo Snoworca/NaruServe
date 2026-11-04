@@ -1,0 +1,25 @@
+{
+ "pass": "prickly-review",
+ "rounds": [
+  {
+   "iter": 2,
+   "MEDIUM": 1,
+   "what": "24 h purge cut longer windows / purged app throttle",
+   "fix": "throttleRetentionMillis, !explicitThrottle"
+  },
+  {
+   "iter": 3,
+   "MEDIUM": 1,
+   "what": "JDBC purge fixed 24 h",
+   "fix": "JdbcLoginThrottle.purgeExpired(now, retentionMillis)"
+  },
+  {
+   "iter": 4,
+   "CRITICAL": 0,
+   "HIGH": 0,
+   "MEDIUM": 0,
+   "LOW": 3,
+   "fix": "javadoc wording fixed"
+  }
+ ]
+}

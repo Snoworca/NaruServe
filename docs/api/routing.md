@@ -2,7 +2,7 @@
 
 [English](en/routing.md) | [문서 목록](README.md)
 
-이 문서는 **0.10.0 체크아웃의 일반 HTTP 프로필**을 설명합니다. 기존 `routing.Router`와 WebSocket 업그레이드의 엄격 규칙은 [별도 프로필](#기존-라우터와-websocket)로 유지합니다. 배포 좌표의 공개 여부는 [설치 안내](README.md)에서 확인하세요.
+이 문서는 **0.11.0 체크아웃의 일반 HTTP 프로필**을 설명합니다. 기존 `routing.Router`와 WebSocket 업그레이드의 엄격 규칙은 [별도 프로필](#기존-라우터와-websocket)로 유지합니다. 배포 좌표의 공개 여부는 [설치 안내](README.md)에서 확인하세요.
 
 ## 라우트 등록
 

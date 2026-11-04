@@ -1,0 +1,10 @@
+{"pass":"tdd-verification (1 subagent, S1+S2)","run_id":"0.11.0-w05","severity":{"CRITICAL":0,"HIGH":2,"MEDIUM":5,"LOW":8},
+"fixed":["HIGH SEC-TOKEN-002 AC-6: FAIL message now names the limit, the constructor option and JDBC advice (FileUserStore, FileRefreshTokenStore); test asserts them",
+"HIGH SEC-AUTH-006 AC-6: encoded upgrade /%63hat under permitWebSocket(\"/chat\") opens, /%6Fther stays 401",
+"MEDIUM SEC-AUTH-006 AC-1: admin users route proven served at /api/auth/admin/users with a valid token",
+"MEDIUM SEC-AUTH-006 AC-4: startup INFO line for the mountPath variant asserted",
+"MEDIUM FR-IAM-002 AC-6: a real store write interrupted after the temp file synced (rename blocked) leaves memory and the main file old and the temp file new",
+"MEDIUM DR-APIKEY-001 AC-6 / IR-APIKEY-004 AC-7: reflection on jspecify @Nullable return annotations and @NullMarked package added to the Kotlin test",
+"LOW OPS-AUTH-002 AC-3 second start; LOW requestId non-null; LOW IR-APIKEY-004 AC-1 exact count; LOW DuplicateUserException catch; LOW pool shutdown in finally"],
+"deferred":["MEDIUM started TestApps are not shut down in the new tests (daemon cleanup/HashSlots threads stay idle in the test JVM) — same pattern as earlier waves; review-fix-loop",
+"LOW OPS-AUTH-002 AC-2 encoded key forms; LOW FR-TOKEN-002 AC-5 default-purge run observation; LOW FR-IAM-003 AC-7 section-scoped search; LOW volatile flag in the WS test"]}

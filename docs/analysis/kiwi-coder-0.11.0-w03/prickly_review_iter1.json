@@ -1,0 +1,18 @@
+{"pass":"prickly-review","iter":1,"reviewer":"general-purpose subagent (session model)","req_set":"0.11.0-w03 (20 requirements)",
+ "findings":[
+  {"id":1,"severity":"CRITICAL","what":"case/trailing-slash path variants bypass protectOnly, mount and credential-endpoint checks","resolution":"fixed: Auth.canonical() used for protected-range, mount and credential checks; AuthHardeningTest.caseAndTrailingSlashVariantsStayProtected"},
+  {"id":2,"severity":"HIGH","what":"routes added to auth.routes() after install escape the auth error middleware (HTML stack trace)","resolution":"fixed: each router mounted inside an outer router whose last layer is the error middleware; AuthHardeningTest.routesAddedAfterInstallKeepTheJsonErrors"},
+  {"id":3,"severity":"MEDIUM","what":"permitPrefix over the mount made admin endpoints public","resolution":"fixed: admin range never public; test permitPrefixNeverOpensTheAdminRouter"},
+  {"id":4,"severity":"MEDIUM","what":"requireRole ignored API-key narrowing","resolution":"fixed: requireRole answers 403 api_key_not_allowed for key principals; documented"},
+  {"id":5,"severity":"MEDIUM","what":"AuthStateException Javadoc claimed auth.errors() mapping that does not exist","resolution":"fixed: Javadoc reworded; auth.errors() is IR-AUTH-002 (wave 4)"},
+  {"id":6,"severity":"MEDIUM","what":"FileGroupStore kept memory changes when the file write failed","resolution":"fixed: change() restores the graph on IOException; test failedGroupWriteRollsBack"},
+  {"id":7,"severity":"MEDIUM","what":"MySQL default collation merges accented names","resolution":"fixed: COLLATE utf8mb4_bin on id/name columns; test mysqlIdentityColumnsAreBinary"},
+  {"id":8,"severity":"LOW","what":"JdbcGroupStore accepted members/edges of missing groups","resolution":"fixed: requireGroup check"},
+  {"id":9,"severity":"LOW","what":"group limits configured twice","resolution":"documented: pass the same GroupLimits to the store"},
+  {"id":10,"severity":"LOW","what":"unbounded rounds in stored hash","resolution":"fixed: MAX_ROUNDS and 32-byte key; test storedHashCostIsBounded"},
+  {"id":11,"severity":"LOW","what":"custom KeySource key not copied","resolution":"fixed: clone()"},
+  {"id":12,"severity":"LOW","what":"SecretRules comment character list","resolution":"fixed"},
+  {"id":13,"severity":"LOW","what":"Pbkdf2 wipe comment overstated","resolution":"fixed"},
+  {"id":14,"severity":"LOW","what":"AuthConfig violations accumulated across applications","resolution":"fixed: applyTo returns a fresh list; test reusedConfigDoesNotRepeatViolations"},
+  {"id":15,"severity":"LOW","what":"plain IllegalArgumentException from group writes became 500","resolution":"fixed: GroupGraph and JdbcGroupStore throw AuthArgumentException (400)"}],
+ "residual":{"CRITICAL":0,"HIGH":0}}

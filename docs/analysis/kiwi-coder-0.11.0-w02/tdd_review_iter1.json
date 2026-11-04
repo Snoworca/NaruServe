@@ -1,0 +1,13 @@
+{"pass":"tdd-review","iter":1,"run":"0.11.0-w02","verdict":"FAIL","critical":1,"high":2,"medium":7,"low":7,
+ "findings":["CRITICAL RolePolicyTest deferral comment matched the FR-IAM-006 AC-6 citation pattern -> reworded",
+  "HIGH ServletRequestTest CON-ENGINE-001 AC-1 citation on the wrong test -> moved to the trustProxy case",
+  "HIGH CON-AUTH-004 AC-4 citation vacuous -> uncited (component test kept)",
+  "MEDIUM AC-2 parameter nullability unchecked -> parameter/constructor checks added",
+  "MEDIUM CON-AUTH-002 AC-4 missing proxy-trust accessors -> added",
+  "MEDIUM DR-IAM-001 AC-7 half deliverable -> uncited, Javadoc search scoped to the class Javadoc",
+  "MEDIUM IR-AUTH-003 decisions not asserted in docs -> decision sentences asserted",
+  "MEDIUM AtomicFiles sync hook did not check the synced stream -> length checks added",
+  "MEDIUM module.json skipped when absent -> now required",
+  "MEDIUM HashSlots wait-cap test flake -> started latch",
+  "LOW CrossAdapterTest FR-ENGINE-008 AC-4 untagged -> tagged; LOW ScopeMatcher regex names widened; LOW snapshot keyed by FQN; LOW NaruServe-utils-jdbc dir added",
+  "LOW kept: nested type-use nullness recursion, AuthEvents no-effect assertion, ErrorBodies via onError until auth.errors(), hard-coded 0.10.0 jar version (as BuildLayoutTest)"]}

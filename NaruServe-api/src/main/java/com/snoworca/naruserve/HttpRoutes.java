@@ -48,7 +48,6 @@ public interface HttpRoutes<T> {
     default T head(Object path,RouteHandler callback) { return method("HEAD",path,terminal(callback)); }
     default T options(Object path,RouteHandler callback) { return method("OPTIONS",path,terminal(callback)); }
     static Middleware terminal(RouteHandler callback) {
-        java.util.Objects.requireNonNull(callback,"callback");
-        return (request,response,next)->callback.handle(request,response);
+        return new com.snoworca.naruserve.internal.TerminalMiddleware(callback);
     }
 }

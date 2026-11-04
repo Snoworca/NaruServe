@@ -1,0 +1,18 @@
+run 0.11.0-w04 — red evidence and TDD-order note
+
+Deviation (recorded, as in w03): for most components the tests were written alongside the implementation, not
+strictly before it. Red was observed in these forms during the run:
+- compile red: every new test class first ran against a tree where its subject did not compile or did not exist
+  (CredentialTransportTest failed to compile on `extends InMemoryUserStore` (final), AuthBootstrapTest on
+  UserPage.getUsers(), AuthJsonBodyTest on Request.bodyText()), and then 13/14 CredentialTransportTest cases failed at
+  runtime ("a new user has no id yet") before the fixture was corrected.
+- behaviour red: AuthErrorLayerTest IR_AUTH_002_AC5 failed (a route added after start to a router mounted before the
+  error layer was counted at its record position, giving a request-time WARN; expected 0) until Auth.errorLayerMissing
+  learned to count records at their outermost mount position; IR_AUTH_002_AC1 failed (401 instead of 500 for the
+  public AuthStateException route; NPE in create(name, null)) until the fixture used permitPrefix and the
+  (char[]) null overload.
+Independent oracles: PBKDF2 vectors cross-checked with python hashlib.pbkdf2_hmac; bcrypt vectors are the published
+jBCrypt/OpenBSD set, the PHP manual password_verify sample and two Apache htpasswd -B (crypt_blowfish) hashes made
+during the run (non-ASCII password, cost 15); Blowfish cipher vectors 4EF997456198DD78 / 51866FD5B85ECB8A.
+The 0.10.0 binary-compat probe (CON-AUTH-007 AC-2) was compiled with javac --release 8 against `git archive v0.10.0
+NaruServe-api/src/main/java`; source in NaruServe-api/src/test/resources/com/snoworca/naruserve/compat/.

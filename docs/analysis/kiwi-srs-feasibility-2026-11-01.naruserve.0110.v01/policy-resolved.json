@@ -1,0 +1,16 @@
+{
+  "policy_source": "default",
+  "searched": [".kiwi/feasibility-policy.yaml (absent)", "~/.kiwi/feasibility-policy.yaml (absent)"],
+  "rules": [
+    {"if": {"feasibility": "high", "has_verification": true}, "then": {"stability": "stable", "require_user_confirm": true}},
+    {"if": {"feasibility": "high"}, "then": {"stability": "evolving", "require_user_confirm": false}},
+    {"if": {"feasibility": "medium"}, "then": {"stability": "keep", "require_user_confirm": false}},
+    {"if": {"feasibility": "low"}, "then": {"stability": "draft", "require_user_confirm": "on-demotion"}},
+    {"if": {"feasibility": "blocked", "status_in": ["in_progress", "implemented", "verified"]}, "then": {"stability": "keep", "report_conflict": true}},
+    {"if": {"feasibility": "blocked"}, "then": {"stability": "deprecated", "require_user_confirm": true}},
+    {"if": {"no_match": true}, "then": {"stability": "keep", "require_user_confirm": true}}
+  ],
+  "gates": {"status_conflict_policy": "warn"},
+  "has_verification_definition": "true only when the requirement already carries verification evidence rows; all 165 are planned with none, so the stable row cannot match",
+  "reason_template": "Feasibility={label} (score {score}). Blockers: {blockers}. Evidence: {evidence}. Run: 2026-11-01.naruserve.0110.v01"
+}

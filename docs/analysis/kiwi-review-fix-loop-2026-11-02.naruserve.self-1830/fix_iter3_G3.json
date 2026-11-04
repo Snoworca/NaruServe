@@ -1,0 +1,73 @@
+{
+ "run": "G3",
+ "fixes": [
+  {
+   "finding_id": "R2-T1-F03",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+     "line_range": "15, 632-656"
+    }
+   ],
+   "red_test": "RefreshTokenStoreTest.hugeRefreshFileFailsBeforeItIsRead run with java.io.tmpdir on a 64 MB FAT32 hdiutil volume (Gradle init script outside the repo): failure message=\"java.io.IOException: No space left on device\" at r.setLength(3L * 1024 * 1024 * 1024)",
+   "why_no_red": null,
+   "rationale_full": "The test's 3 GB setLength needs sparse files or 3 GB free disk. It now creates a file of MiniJson.DEFAULT_FILE_BYTES + 1 bytes and still goes through the default constructor new FileRefreshTokenStore(f). Every earlier assertion is kept: FAIL prefix, 'above the limit', the app-provided-store advice, no 'Jdbc'. Added assertions: the message names the file length ('has <size> bytes') and the default limit, and the file length is unchanged after the refusal. This keeps the default-limit path covered. It is an additive alternative to the suggested small-limit constructor, so no default-limit assertion has to change. After the change the test is green on the FAT32 volume and on APFS. Mutation check 1: disabled the pre-read length check in AtomicFiles.parse ('if (false && length > maxBytes)'). The test went red with 'FAIL: cannot read auth store file ...', because read() stops at the limit and the outer message no longer says 'above the limit'. So the test still proves the limit is checked before the file is read. AtomicFiles was restored from a backup. Mutation check 2: going back to the 3 GB setup is the red run above."
+  },
+  {
+   "finding_id": "T2-F07",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7TokenTest.java",
+     "line_range": "5, 382-417"
+    }
+   ],
+   "red_test": "Wave7TokenTest.customCodecIssuesAndAuthenticates: new deterministic block (issue access tokens until one ends in \"AA\", then forge it with the shared forgedSignature helper). With the helper holding the old line-381 formula ('\"x.\" + substring(2, len-2) + \"AA\"') it failed: java.lang.AssertionError: Values should be different. Actual: x.eyJhbGciOiJIUzI1NiIsInR5cCI6ImF0K2p3dCIsImtpZCI6Ijh2OF9KREFuIn0... at assertNotEquals(endsInAa, forgedAa)",
+   "why_no_red": null,
+   "rationale_full": "Forging moved into a private static forgedSignature(token) helper that uses the guard from line 138: the suffix is token.endsWith(\"AA\") ? \"BB\" : \"AA\". The original forged request now also asserts assertNotEquals(token, forged). The 1-in-1024 case used to be left to chance. A new block now hits it every run: it issues access tokens (bounded at 50,000; about 1,024 expected, runs in about 60 ms) until one ends in \"AA\". It asserts that the forged token differs, that it answers the same status as the throwing-decode request (401), and that the body is the same apart from requestId. No existing assertion was removed. The red run shown was the revert of the fix (old formula in the helper). With the guard it was green 3 times in a row with --rerun."
+  },
+  {
+   "finding_id": "R2-T2-F06",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java",
+     "line_range": "210-231"
+    }
+   ],
+   "red_test": "FileUserStoreTest.SEC_TOKEN_002_AC6_hugeFileFailsBeforeItIsRead run with java.io.tmpdir on a 64 MB FAT32 hdiutil volume: failure message=\"java.io.IOException: No space left on device\" at r.setLength(3L * 1024 * 1024 * 1024)",
+   "why_no_red": null,
+   "rationale_full": "Same cause as R2-T1-F03. The file is now FileUserStore.DEFAULT_MAX_FILE_BYTES + 1 bytes and still goes through the default new FileUserStore(f), so all original assertions stay as they were: FAIL prefix, '8388608', and the 'new FileUserStore(file, maxFileBytes, logger)' hint. Added an assertion that the message names the file length. The length check after the refusal now compares against the new size, which is just as strict. The SEC-TOKEN-002 AC-6 citation is kept. After the change the test is green on FAT32 and on APFS. The mutation check disabled the AtomicFiles pre-read check: the test went red with 'FAIL: cannot read auth store file ...users.json'. AtomicFiles was restored."
+  },
+  {
+   "finding_id": "R2-T2-F04",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave6KotlinTest.kt",
+     "line_range": "51-76"
+    },
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave7KotlinTest.kt",
+     "line_range": "108-136, 153-174"
+    },
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthKotlinTestsStopKotlinTest.kt",
+     "line_range": "1-47 (new)"
+    }
+   ],
+   "red_test": "AuthKotlinTestsStopKotlinTest (new; runs each of the 3 tests through JUnitCore, then polls up to 10 s until no new live 'naru*'/'in-memory-http*' thread remains): all 3 failed before the fix, e.g. 'docs auth csrf guarded route left live threads: [naru-auth-cleanup-4, naru-auth-hash-3-1, naru-auth-hash-3-2]' and 'token service, lockout and websocket wrapper from Kotlin left live threads: [in-memory-http-1, naru-auth-background-1..4, naru-auth-cleanup-2, naru-auth-hash-2-1..6, naru-auth-websocket-3, naruserve-49153-ws-...]'",
+   "why_no_red": null,
+   "rationale_full": "Each of the three test bodies after TestApp creation is wrapped in try { ... } finally { app.shutdown(5, TimeUnit.SECONDS) }, which is the AuthFileKeyKotlinTest pattern. The variable is 'web' in the cors test. No assertion was changed. The new Kotlin regression test runs each test on its own, checks that it passes, and then waits for the framework threads it started to end. It polls every 10 ms with a 10 s deadline, and the passing path returns at once. After the fix all 3 are green. Mutation check: replaced the csrf test's shutdown with Unit. AuthKotlinTestsStopKotlinTest went red ('docs auth csrf guarded route left live threads: [naru-auth-cleanup-4, naru-auth-hash-3-1, naru...'), and the file was restored."
+  }
+ ],
+ "public_api_changes": [],
+ "docs_changed": [],
+ "build": {
+  "tests": 3371,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+ }
+}

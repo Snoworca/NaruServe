@@ -13,8 +13,18 @@ Request corresponds to Express's req. Use methods such as `req.param("id")` rath
 | `rawPath()` | String | Encoded req.path | Original raw path without query; never trimmed by mounts |
 | `remoteAddress()` | String | req.ip | Peer address |
 | `isSecure()` | boolean | req.secure | Whether transport uses TLS |
+| `socketAddress()` | String | `req.socket.remoteAddress` | The real connection peer; independent of proxy settings |
+| `requestId()` | String | none (Express has no built-in request id) | This request's id; the same value as the error body and the access log |
 
 By default, proxy headers are ignored. With app.trustProxy(true), remoteAddress uses the first X-Forwarded-For header's leftmost trimmed entry; isSecure uses the first X-Forwarded-Proto entry, with https meaning true. Missing/blank entries retain transport values. Values are not validated; enable this only behind a proxy that overwrites these headers. Forwarded is never read. This corresponds to Express's trust proxy setting. See [server options](app.md#server-options).
+
+The left-most value that `trustProxy(true)` uses is unverified and client-controlled. It is kept for compatibility with 0.10.0 apps, and the auth module's doctor reports it as FAIL in `PROD` (R32). Behind a proxy use [`trustProxyHops` or `trustProxyCidrs`](app.md#proxy-trust).
+
+Hop mode `app.trustProxyHops(1)` (Express `app.set('trust proxy', 1)`) trusts the socket peer and uses the nth `X-Forwarded-For` entry from the right as `remoteAddress()`; use it only when the node is reachable only through the load balancer. CIDR mode `app.trustProxyCidrs("10.0.0.0/8")` (an Express CIDR list) trusts the socket peer only inside a trusted CIDR and uses the first entry from the right outside them. In both modes `isSecure()` reads the trusted proxy's `X-Forwarded-Proto` at the same position and is `false` when that is ambiguous. Configure nginx with `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;` and `proxy_set_header X-Forwarded-Proto $scheme;`. A proxy that passes `X-Forwarded-Proto` through without overwriting it is an unsupported setup. The full rules are in [proxy trust](app.md#proxy-trust).
+
+`socketAddress()` ignores every proxy setting and header (`trustProxy`, `trustProxyHops`, `trustProxyCidrs`, `X-Forwarded-*`, `Forwarded`) and returns the connection peer address the adapter reports, unchanged (`::1` stays `::1`). `remoteAddress()` follows the proxy trust setting. Use `socketAddress()` to decide whether a request is local.
+
+`requestId()` is the id the dispatcher gave the request. It is the same in every middleware, mounted Router, route and error middleware, and equals the `requestId` of the standard error body of automatic error answers and the `rid` of the access log. A WebSocket upgrade's middleware before `101` reads the `rid` of its handshake line. Put it into the JSON errors you write yourself to match them with the log.
 
 ## Path parameters, query and headers
 
@@ -265,4 +275,26 @@ app.get("/files{/*parts}", (request, response) -> {
     String optional = request.paramOrNull("parts");
     response.json(parts);
 });
+```
+
+## Connection address and request id
+
+```java
+app.get("/whoami", (req, res) -> {
+    String peer = req.socketAddress();
+    String client = req.remoteAddress();
+    String id = req.requestId();
+    res.send(peer + " " + client + " " + id);
+});
+```
+
+Kotlin:
+
+```kotlin
+app.get("/whoami") { req, res ->
+    val peer: String = req.socketAddress()
+    val client: String = req.remoteAddress()
+    val id: String = req.requestId()
+    res.send("$peer $client $id")
+}
 ```

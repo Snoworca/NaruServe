@@ -60,49 +60,234 @@ public class StartApiTest {
         assertFalse(AutoCloseable.class.isAssignableFrom(ServerHandle.class));
     }
 
-    // FR-DX-012 AC-1: no environment variable is an input of the core
+    /**
+     * The methods allowed to read the environment (FR-DX-012 AC-1): explicit auth calls the app makes, the
+     * {@code NARU_AUTH_RECOVERY} switch {@code Auth.Builder.recoveryFromEnv()} included (SEC-AUTH-003), and the
+     * {@code NARU_AUTH_FILE_KEY} read of {@code AuthFileKey.fromEnv()} (FR-IAM-015).
+     */
+    static final java.util.Set<String> ENV_READERS = java.util.Collections.unmodifiableSet(new java.util.TreeSet<>(
+            java.util.Arrays.asList("com/snoworca/naruserve/utils/auth/AuthMode#fromEnv",
+                    "com/snoworca/naruserve/utils/auth/KeySources#fromEnv",
+                    "com/snoworca/naruserve/utils/auth/Auth$Builder#recoveryFromEnv",
+                    "com/snoworca/naruserve/utils/auth/AuthFileKey#fromEnv")));
+
+    // FR-DX-012 AC-1: no Core class reads the environment (0.10.0 check: no Core class file holds the bytes "getenv"
+    // at all, so a reflective read or a getenv constant is caught too); inside utils.auth only the allowed explicit
+    // calls do
     @Test
     public void FR_DX_012_AC1_noMainClassOfTheApiCallsGetenv() throws Exception {
         List<String> hits = new ArrayList<>();
+        java.util.Set<String> readers = new java.util.TreeSet<>();
         File location = codeSource();
         if (location.isDirectory()) {
-            scanDir(location, location, hits);
+            scanDir(location, location, hits, readers);
         } else {
             try (JarFile jar = new JarFile(location)) {
                 for (Enumeration<JarEntry> e = jar.entries(); e.hasMoreElements(); ) {
                     JarEntry entry = e.nextElement();
                     if (entry.getName().endsWith(".class")) {
                         try (InputStream in = jar.getInputStream(entry)) {
-                            if (contains(readAll(in), "getenv")) {
-                                hits.add(entry.getName());
-                            }
+                            scan(readAll(in), hits, readers);
                         }
                     }
                 }
             }
         }
         assertEquals(hits.toString(), 0, hits.size());
+        assertEquals("the allowed readers are the only getenv callers", ENV_READERS, readers);
+    }
+
+    // FR-DX-012 AC-1: negative controls; a Core class or an unlisted auth method calling getenv is a hit
+    @Test
+    public void FR_DX_012_AC1_getenvOutsideTheAllowedMethodsIsCaught() throws Exception {
+        List<String> hits = new ArrayList<>();
+        java.util.Set<String> readers = new java.util.TreeSet<>();
+        classify(readAll(StartApiTest.class.getResourceAsStream("StartApiTest$CoreEnvFixture.class")), hits, readers);
+        assertEquals(1, hits.size());
+        assertTrue(hits.get(0), hits.get(0).contains("CoreEnvFixture#read"));
+        hits.clear();
+        classify(readAll(com.snoworca.naruserve.utils.auth.EnvFixture.class.getResourceAsStream("EnvFixture.class")),
+                hits, readers);
+        assertEquals(hits.toString(), 1, hits.size());
+        assertTrue(hits.get(0), hits.get(0).contains("utils/auth/EnvFixture#fromEnvLike"));
+        hits.clear();
+        classify(readAll(StartApiTest.class.getResourceAsStream("StartApiTest.class")), hits, readers);
+        assertEquals("this test names getenv only as a string", 0, hits.size());
+    }
+
+    // FR-DX-012 AC-1: negative control of the 0.10.0 Core check; a Core class that reads getenv reflectively has no
+    // getenv Methodref, so the method-level classify() misses it, but the scan of a main class catches it by name
+    @Test
+    public void FR_DX_012_AC1_reflectiveGetenvInCoreIsCaught() throws Exception {
+        byte[] fixture = readAll(StartApiTest.class.getResourceAsStream("StartApiTest$ReflectiveCoreEnvFixture.class"));
+        List<String> hits = new ArrayList<>();
+        java.util.Set<String> readers = new java.util.TreeSet<>();
+        classify(fixture, hits, readers);
+        assertEquals("no getenv Methodref in the reflective fixture: " + hits, 0, hits.size());
+        scan(fixture, hits, readers);
+        assertEquals(hits.toString(), 1, hits.size());
+        assertTrue(hits.get(0), hits.get(0).contains("StartApiTest$ReflectiveCoreEnvFixture"));
+        assertTrue(readers.toString(), readers.isEmpty());
+        hits.clear();
+        scan(readAll(StartApiTest.class.getResourceAsStream("StartApiTest$CoreEnvFixture.class")), hits, readers);
+        assertEquals("a direct call is one hit, not two: " + hits, 1, hits.size());
+        assertTrue(hits.get(0), hits.get(0).contains("CoreEnvFixture#read"));
+        hits.clear();
+        scan(readAll(com.snoworca.naruserve.utils.auth.EnvFixture.class.getResourceAsStream("EnvFixture.class")),
+                hits, readers);
+        assertEquals("utils.auth keeps the method-level check: " + hits, 1, hits.size());
+        assertTrue(hits.get(0), hits.get(0).contains("utils/auth/EnvFixture#fromEnvLike"));
+    }
+
+    /** A Core-package class reading the environment. */
+    static final class CoreEnvFixture {
+        static String read() {
+            return System.getenv("HOME");
+        }
+    }
+
+    /** A Core-package class reading the environment through reflection, with no getenv Methodref. */
+    static final class ReflectiveCoreEnvFixture {
+        static Object read() throws Exception {
+            return System.class.getMethod("getenv", String.class).invoke(null, "HOME");
+        }
+    }
+
+    /**
+     * One main class file: the method-level {@link #classify}, and for a class outside utils.auth (Core) also the
+     * 0.10.0 check, under which the bytes {@code getenv} anywhere in the class file are a hit (a reflective read or a
+     * {@code getenv} constant included). A Core class that classify() already flagged is not counted twice.
+     */
+    static void scan(byte[] bytes, List<String> hits, java.util.Set<String> readers) throws IOException {
+        int before = hits.size();
+        String self = classify(bytes, hits, readers);
+        if (!self.startsWith("com/snoworca/naruserve/utils/auth/") && hits.size() == before
+                && contains(bytes, "getenv")) {
+            hits.add(self + " holds the bytes getenv (a Core class)");
+        }
+    }
+
+    private static boolean contains(byte[] bytes, String needle) {
+        return new String(bytes, StandardCharsets.ISO_8859_1).contains(needle);
     }
 
     private static File codeSource() throws URISyntaxException {
         return new File(RestApp.class.getProtectionDomain().getCodeSource().getLocation().toURI());
     }
 
-    private static void scanDir(File root, File dir, List<String> hits) throws IOException {
+    private static void scanDir(File root, File dir, List<String> hits, java.util.Set<String> readers)
+            throws IOException {
         File[] files = dir.listFiles();
         if (files == null) {
             return;
         }
         for (File f : files) {
             if (f.isDirectory()) {
-                scanDir(root, f, hits);
+                scanDir(root, f, hits, readers);
             } else if (f.getName().endsWith(".class")) {
                 try (InputStream in = new java.io.FileInputStream(f)) {
-                    if (contains(readAll(in), "getenv")) {
-                        hits.add(f.getPath());
+                    scan(readAll(in), hits, readers);
+                }
+            }
+        }
+    }
+
+    /**
+     * Finds the methods of one class file whose code calls {@code System.getenv} (an {@code invokestatic} of that
+     * Methodref) or that hold it as a method handle. A caller outside utils.auth, or a utils.auth method not in
+     * {@link #ENV_READERS}, is a hit; allowed callers are collected in {@code readers}. Returns the class's internal
+     * name.
+     */
+    static String classify(byte[] bytes, List<String> hits, java.util.Set<String> readers) throws IOException {
+        java.io.DataInputStream in = new java.io.DataInputStream(new java.io.ByteArrayInputStream(bytes));
+        in.readInt();
+        in.readUnsignedShort();
+        in.readUnsignedShort();
+        int count = in.readUnsignedShort();
+        String[] utf8 = new String[count];
+        int[] classIdx = new int[count];
+        int[] refClass = new int[count];
+        int[] refNat = new int[count];
+        int[] natName = new int[count];
+        int[] handleRef = new int[count];
+        int[] tags = new int[count];
+        for (int i = 1; i < count; i++) {
+            int tag = in.readUnsignedByte();
+            tags[i] = tag;
+            switch (tag) {
+                case 1: utf8[i] = in.readUTF(); break;
+                case 7: classIdx[i] = in.readUnsignedShort(); break;
+                case 9: case 10: case 11: refClass[i] = in.readUnsignedShort(); refNat[i] = in.readUnsignedShort(); break;
+                case 12: natName[i] = in.readUnsignedShort(); in.readUnsignedShort(); break;
+                case 15: in.readUnsignedByte(); handleRef[i] = in.readUnsignedShort(); break;
+                case 8: case 16: case 19: case 20: in.skipBytes(2); break;
+                case 3: case 4: case 17: case 18: in.skipBytes(4); break;
+                case 5: case 6: in.skipBytes(8); i++; break;
+                default: throw new IOException("unknown constant pool tag " + tag);
+            }
+        }
+        java.util.Set<Integer> getenv = new java.util.HashSet<>();
+        for (int i = 1; i < count; i++) {
+            if ((tags[i] == 10 || tags[i] == 11) && "java/lang/System".equals(utf8[classIdx[refClass[i]]])
+                    && "getenv".equals(utf8[natName[refNat[i]]])) {
+                getenv.add(i);
+            }
+        }
+        in.readUnsignedShort();
+        String self = utf8[classIdx[in.readUnsignedShort()]];
+        if (getenv.isEmpty()) {
+            return self;
+        }
+        for (int i = 1; i < count; i++) {
+            if (tags[i] == 15 && getenv.contains(handleRef[i])) {
+                hits.add(self + " holds System.getenv as a method handle");
+            }
+        }
+        in.readUnsignedShort();
+        in.skipBytes(2 * in.readUnsignedShort());
+        int fields = in.readUnsignedShort();
+        for (int f = 0; f < fields; f++) {
+            in.skipBytes(6);
+            skipAttributes(in);
+        }
+        int methods = in.readUnsignedShort();
+        for (int m = 0; m < methods; m++) {
+            in.readUnsignedShort();
+            String name = utf8[in.readUnsignedShort()];
+            in.readUnsignedShort();
+            int attrs = in.readUnsignedShort();
+            boolean calls = false;
+            for (int a = 0; a < attrs; a++) {
+                String attr = utf8[in.readUnsignedShort()];
+                byte[] body = new byte[in.readInt()];
+                in.readFully(body);
+                if (attr.equals("Code")) {
+                    int codeLength = (body[4] & 0xff) << 24 | (body[5] & 0xff) << 16 | (body[6] & 0xff) << 8
+                            | body[7] & 0xff;
+                    for (int c = 8; c + 2 < 8 + codeLength; c++) {
+                        if ((body[c] & 0xff) == 0xb8 && getenv.contains((body[c + 1] & 0xff) << 8 | body[c + 2] & 0xff)) {
+                            calls = true;
+                        }
                     }
                 }
             }
+            if (calls) {
+                String where = self + "#" + name;
+                if (self.startsWith("com/snoworca/naruserve/utils/auth/") && ENV_READERS.contains(where)) {
+                    readers.add(where);
+                } else {
+                    hits.add(where);
+                }
+            }
+        }
+        return self;
+    }
+
+    private static void skipAttributes(java.io.DataInputStream in) throws IOException {
+        int attrs = in.readUnsignedShort();
+        for (int a = 0; a < attrs; a++) {
+            in.readUnsignedShort();
+            in.skipBytes(in.readInt());
         }
     }
 
@@ -113,10 +298,6 @@ public class StartApiTest {
             out.write(buf, 0, n);
         }
         return out.toByteArray();
-    }
-
-    private static boolean contains(byte[] bytes, String needle) {
-        return new String(bytes, StandardCharsets.ISO_8859_1).contains(needle);
     }
 
     // FR-DX-012 AC-2: a null configuration lambda fails before create() looks for a provider (there is none here)

@@ -15,6 +15,8 @@ import com.snoworca.naruserve.MimeTypes;
 import com.snoworca.naruserve.MethodSet;
 import com.snoworca.naruserve.Middleware;
 import com.snoworca.naruserve.MultipartOptions;
+import com.snoworca.naruserve.RegistrationKind;
+import com.snoworca.naruserve.RegistrationListener;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.RouteBuilder;
 import com.snoworca.naruserve.RouteGroup;
@@ -71,6 +73,10 @@ import org.jspecify.annotations.Nullable;
 // @req FR-APP-012
 // @req IR-JSON-002
 // @req IR-WS-001
+// @req IR-APP-008
+// @req FR-APP-025
+// @req SEC-APP-002
+// @req IR-ENGINE-003
 public final class DefaultRestApp implements RestApp {
 
     /** One registration call as recorded; the router is built from these at freeze. */
@@ -121,8 +127,10 @@ public final class DefaultRestApp implements RestApp {
     private final DefaultApplicationContext context = new DefaultApplicationContext(lifecycle, this);
     private final DefaultAccessLogOptions accessLogOptions = new DefaultAccessLogOptions();
     private final DefaultServerOptions serverOptions = new DefaultServerOptions();
-    // Written only in NEW; the Dispatcher reads it once at freeze.
-    private volatile boolean trustProxy;
+    // Written only in NEW; the Dispatcher reads it once at freeze. The last trust call replaces it.
+    private volatile ProxyTrustSetting proxyTrust = ProxyTrustSetting.NONE;
+    /** The public registration list and watchers (C4). */
+    private final RegistrationLog registrationLog = new RegistrationLog(this, lifecycle);
     private final ShutdownParticipants shutdownParticipants = new ShutdownParticipants();
     private final SpoolRegistry spool = new SpoolRegistry();
 
@@ -186,10 +194,13 @@ public final class DefaultRestApp implements RestApp {
 
     // @req IR-JSON-002
     @Override
-    public synchronized RestApp jsonCodec(JsonCodec codec) {
-        lifecycle.requireConfigurable("jsonCodec");
-        this.codec = Objects.requireNonNull(codec, "codec");
-        return this;
+    public RestApp jsonCodec(JsonCodec codec) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("jsonCodec");
+            this.codec = Objects.requireNonNull(codec, "codec");
+            return this;
+        }
     }
 
     /** The JSON body limit in bytes; 1048576 unless {@link #jsonLimit(long)} changed it. */
@@ -200,10 +211,13 @@ public final class DefaultRestApp implements RestApp {
 
     // @req IR-JSON-002
     @Override
-    public synchronized RestApp jsonLimit(long bytes) {
-        lifecycle.requireConfigurable("jsonLimit");
-        this.jsonLimit = byteLimit("jsonLimit", bytes);
-        return this;
+    public RestApp jsonLimit(long bytes) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("jsonLimit");
+            this.jsonLimit = byteLimit("jsonLimit", bytes);
+            return this;
+        }
     }
 
     /** A field-by-field copy of an options object. */
@@ -228,9 +242,12 @@ public final class DefaultRestApp implements RestApp {
 
     // @req IR-MULTIPART-001
     @Override
-    public synchronized RestApp multipart(Configurer<MultipartOptions> configurer) {
-        this.multipartSettings = reconfigure("multipart", configurer, multipartSettings::copy);
-        return this;
+    public RestApp multipart(Configurer<MultipartOptions> configurer) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            this.multipartSettings = reconfigure("multipart", configurer, multipartSettings::copy);
+            return this;
+        }
     }
 
     /** The current WebSocket options; the defaults unless {@link #webSocket(Configurer)} changed them. */
@@ -241,9 +258,12 @@ public final class DefaultRestApp implements RestApp {
 
     // @req IR-WS-001
     @Override
-    public synchronized RestApp webSocket(Configurer<WebSocketOptions> configurer) {
-        this.webSocketOptions = reconfigure("webSocket", configurer, webSocketOptions::copy);
-        return this;
+    public RestApp webSocket(Configurer<WebSocketOptions> configurer) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            this.webSocketOptions = reconfigure("webSocket", configurer, webSocketOptions::copy);
+            return this;
+        }
     }
 
     /** The current SSE options; the defaults unless {@link #sse(Configurer)} changed them. */
@@ -254,18 +274,25 @@ public final class DefaultRestApp implements RestApp {
 
     // @req IR-SSE-001
     @Override
-    public synchronized RestApp sse(Configurer<SseOptions> configurer) {
-        this.sseOptions = reconfigure("sse", configurer, sseOptions::copy);
-        return this;
+    public RestApp sse(Configurer<SseOptions> configurer) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            this.sseOptions = reconfigure("sse", configurer, sseOptions::copy);
+            return this;
+        }
     }
 
     // @req IR-WS-001
     @Override
-    public synchronized RestApp ws(String path, WebSocketHandler handler) {
-        lifecycle.requireConfigurable("ws");
-        Objects.requireNonNull(path, "path");
-        Objects.requireNonNull(handler, "handler");
-        return webSocketRoute(path, new WebSocketRoute(handler));
+    public RestApp ws(String path, WebSocketHandler handler) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("ws");
+            Objects.requireNonNull(path, "path");
+            Objects.requireNonNull(handler, "handler");
+            webSocketRoute(path, new WebSocketRoute(handler), handler);
+            return this;
+        }
     }
 
     /** {@code bytes} checked against 1..{@link JsonBodyReader#MAX_LIMIT}, the range of every body limit. */
@@ -284,10 +311,13 @@ public final class DefaultRestApp implements RestApp {
 
     // @req IR-MULTIPART-001
     @Override
-    public synchronized RestApp formLimit(long bytes) {
-        lifecycle.requireConfigurable("formLimit");
-        this.formLimit = byteLimit("formLimit", bytes);
-        return this;
+    public RestApp formLimit(long bytes) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("formLimit");
+            this.formLimit = byteLimit("formLimit", bytes);
+            return this;
+        }
     }
 
     // @req IR-STATIC-001
@@ -307,30 +337,40 @@ public final class DefaultRestApp implements RestApp {
      * directory is not checked here: a missing root serves nothing.
      */
     // @req IR-STATIC-001
-    synchronized RestApp addStatic(String prefix, File dir, @Nullable Configurer<StaticOptions> options) {
-        lifecycle.requireConfigurable("staticFiles");
-        Objects.requireNonNull(prefix, "prefix");
-        Objects.requireNonNull(dir, "dir");
-        if (!prefix.startsWith("/")) {
-            throw new IllegalArgumentException("static prefix must start with '/': " + prefix);
+    RestApp addStatic(String prefix, File dir, @Nullable Configurer<StaticOptions> options) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("staticFiles");
+            Objects.requireNonNull(prefix, "prefix");
+            Objects.requireNonNull(dir, "dir");
+            if (!prefix.startsWith("/")) {
+                throw new IllegalArgumentException("static prefix must start with '/': " + prefix);
+            }
+            String p = prefix.length() > 1 && prefix.endsWith("/") ? prefix.substring(0, prefix.length() - 1) : prefix;
+            DefaultStaticOptions o = new DefaultStaticOptions();
+            if (options != null) {
+                options.configure(o);
+            }
+            int mount=staticMounts.size();
+            HttpRouter.Layer layer=http.prepareUse("",(request,response,next)->{
+                if(!((Dispatcher)dispatcher()).serveStatic(mount,(DefaultRequest)request,(DefaultResponse)response))next.run();
+            });
+            // FR-APP-025 AC-2: one STATIC record, not the MIDDLEWARE its inner use("") would be.
+            admit(RegistrationKind.STATIC, null, p, dir, () -> {
+                staticMounts.add(new StaticMount(p, dir, o));
+                http.apply(layer);
+            });
+            return this;
         }
-        String p = prefix.length() > 1 && prefix.endsWith("/") ? prefix.substring(0, prefix.length() - 1) : prefix;
-        DefaultStaticOptions o = new DefaultStaticOptions();
-        if (options != null) {
-            options.configure(o);
-        }
-        int mount=staticMounts.size();
-        staticMounts.add(new StaticMount(p, dir, o));
-        http.use("",(request,response,next)->{
-            if(!((Dispatcher)dispatcher()).serveStatic(mount,(DefaultRequest)request,(DefaultResponse)response))next.run();
-        });
-        return this;
     }
 
     /** The registered mounts in registration order. */
     // @req IR-STATIC-001
-    public synchronized List<StaticMount> staticMounts() {
-        return Collections.unmodifiableList(new ArrayList<>(staticMounts));
+    public List<StaticMount> staticMounts() {
+        refuseForeignWatcher();
+        synchronized (this) {
+            return Collections.unmodifiableList(new ArrayList<>(staticMounts));
+        }
     }
 
     // @req IR-STATIC-002
@@ -341,10 +381,13 @@ public final class DefaultRestApp implements RestApp {
 
     // @req IR-STATIC-002
     @Override
-    public synchronized RestApp defaultCache(@Nullable CachePolicy policy) {
-        lifecycle.requireConfigurable("defaultCache");
-        this.defaultCache = policy;
-        return this;
+    public RestApp defaultCache(@Nullable CachePolicy policy) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("defaultCache");
+            this.defaultCache = policy;
+            return this;
+        }
     }
 
     /** The app-wide Cache-Control policy; null (the default) adds none. */
@@ -362,39 +405,145 @@ public final class DefaultRestApp implements RestApp {
     // @req IR-APP-006
     // @req FR-APP-002
     @Override
-    public synchronized RestApp logger(Logger logger) {
-        lifecycle.requireConfigurable("logger");
-        this.logger = Objects.requireNonNull(logger, "logger");
-        return this;
+    public RestApp logger(Logger logger) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("logger");
+            this.logger = Objects.requireNonNull(logger, "logger");
+            return this;
+        }
     }
 
     // @req IR-APP-007
     @Override
-    public synchronized RestApp accessLog(Configurer<AccessLogOptions> configurer) {
-        lifecycle.requireConfigurable("accessLog");
-        Objects.requireNonNull(configurer, "configurer");
-        synchronized (accessLogOptions) {
-            configurer.configure(accessLogOptions);
+    public RestApp accessLog(Configurer<AccessLogOptions> configurer) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("accessLog");
+            Objects.requireNonNull(configurer, "configurer");
+            synchronized (accessLogOptions) {
+                configurer.configure(accessLogOptions);
+            }
+            return this;
         }
-        return this;
     }
 
     // @req IR-ENGINE-001
     @Override
-    public synchronized RestApp server(Configurer<ServerOptions> configurer) {
-        lifecycle.requireConfigurable("server");
-        Objects.requireNonNull(configurer, "configurer");
-        configurer.configure(serverOptions);
-        return this;
+    public RestApp server(Configurer<ServerOptions> configurer) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("server");
+            Objects.requireNonNull(configurer, "configurer");
+            configurer.configure(serverOptions);
+            return this;
+        }
     }
 
     // @req IR-ENGINE-001
     // @req FR-ENGINE-008
+    // @req CON-ENGINE-001
     @Override
-    public synchronized RestApp trustProxy(boolean trust) {
-        lifecycle.requireConfigurable("trustProxy");
-        this.trustProxy = trust;
-        return this;
+    public RestApp trustProxy(boolean trust) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("trustProxy");
+            this.proxyTrust = ProxyTrustSetting.legacy(trust);
+            return this;
+        }
+    }
+
+    // @req IR-ENGINE-003
+    // @req SEC-ENGINE-001
+    @Override
+    public RestApp trustProxyHops(int hops) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("trustProxyHops");
+            this.proxyTrust = ProxyTrustSetting.hops(hops);
+            return this;
+        }
+    }
+
+    // @req IR-ENGINE-003
+    // @req SEC-ENGINE-002
+    @Override
+    public RestApp trustProxyCidrs(String... cidrs) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("trustProxyCidrs");
+            this.proxyTrust = ProxyTrustSetting.cidrs(cidrs);
+            return this;
+        }
+    }
+
+    // @req IR-ENGINE-003
+    @Override
+    public boolean trustProxy() {
+        return proxyTrust.legacyFlag();
+    }
+
+    // @req IR-ENGINE-003
+    @Override
+    public int trustProxyHops() {
+        return proxyTrust.hopCount();
+    }
+
+    // @req IR-ENGINE-003
+    @Override
+    public List<String> trustProxyCidrs() {
+        return proxyTrust.cidrList();
+    }
+
+    // @req IR-APP-008
+    @Override
+    public List<com.snoworca.naruserve.Registration> registrations() {
+        return registrationLog.snapshot();
+    }
+
+    // @req IR-APP-008
+    @Override
+    public RestApp onRegistration(RegistrationListener listener) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("onRegistration");
+            registrationLog.addListener(Objects.requireNonNull(listener, "listener"));
+            return this;
+        }
+    }
+
+    /** The registration list and watchers, for same-package tests (the trace seam). */
+    RegistrationLog registrationLog() {
+        return registrationLog;
+    }
+
+    /**
+     * SEC-APP-002: a registration watcher runs holding the registration lock, so it must not wait for the monitor of
+     * another app, where a registration may hold that monitor and wait for the lock: it fails fast with
+     * {@link IllegalStateException} before taking the monitor. A watcher deciding on a registration of this app (or of
+     * a Router this app mounts) already holds this monitor and passes.
+     */
+    private void refuseForeignWatcher() {
+        if (!Thread.holdsLock(this)) {
+            RegistrationLog.requireNotWatchingElsewhere();
+        }
+    }
+
+    /** One app-level record of {@code kind}: validated already; watched, applied by {@code apply}, then recorded. */
+    // @req SEC-APP-002
+    private void admit(RegistrationKind kind, @Nullable String method, Object path, Object target, Runnable apply) {
+        RegistrationLog.requireNotWatching();
+        registrationLog.admit(Collections.singletonList(RegistrationRecord.of(kind, method, path, target, null, null)),
+                apply);
+    }
+
+    /** {@code methods} as one record method: the upper-case tokens in set order joined by ",". */
+    private static String methodText(MethodSet methods) {
+        StringBuilder b = new StringBuilder();
+        for (Method m : methods) {
+            b.append(b.length() == 0 ? "" : ",").append(m.name());
+        }
+        return b.toString();
     }
 
     /** True for 127.0.0.0/8, ::1 and localhost, the binds that need no LAN warning. */
@@ -432,18 +581,24 @@ public final class DefaultRestApp implements RestApp {
 
     // @req IR-APP-005
     @Override
-    public synchronized RestApp onStart(LifecycleCallback cb) {
-        lifecycle.requireConfigurable("onStart");
-        startCallbacks.add(Objects.requireNonNull(cb, "cb"));
-        return this;
+    public RestApp onStart(LifecycleCallback cb) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("onStart");
+            startCallbacks.add(Objects.requireNonNull(cb, "cb"));
+            return this;
+        }
     }
 
     // @req IR-APP-005
     @Override
-    public synchronized RestApp onStop(LifecycleCallback cb) {
-        lifecycle.requireConfigurable("onStop");
-        stopCallbacks.add(Objects.requireNonNull(cb, "cb"));
-        return this;
+    public RestApp onStop(LifecycleCallback cb) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("onStop");
+            stopCallbacks.add(Objects.requireNonNull(cb, "cb"));
+            return this;
+        }
     }
 
     // @req IR-APP-005
@@ -467,6 +622,8 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-APP-012
     @Override
     public ServerHandle listen(int port) {
+        // SEC-APP-002: a watcher deciding on a NEW-only registration must not start the app under it.
+        RegistrationLog.requireNotWatching();
         if (port < 0 || port > 65535) {
             throw new IllegalArgumentException("port must be in 0..65535: " + port);
         }
@@ -638,6 +795,8 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-APP-012
     @Override
     public void shutdown(long timeout, TimeUnit unit) {
+        // SEC-APP-002: a watcher deciding on a registration must not stop the app under it (also ServerHandle.shutdown).
+        RegistrationLog.requireNotWatching();
         if (timeout < 0) {
             throw new IllegalArgumentException("timeout must not be negative: " + timeout);
         }
@@ -820,39 +979,87 @@ public final class DefaultRestApp implements RestApp {
 
     // @req FR-DX-010
     @Override
-    public synchronized RestApp cors(Configurer<CorsOptions> configurer) {
-        lifecycle.requireConfigurable("cors");
-        DefaultCorsOptions options = new DefaultCorsOptions();
-        Objects.requireNonNull(configurer, "configurer").configure(options);
-        return use(options.middleware());
+    public RestApp cors(Configurer<CorsOptions> configurer) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("cors");
+            DefaultCorsOptions options = new DefaultCorsOptions();
+            Objects.requireNonNull(configurer, "configurer").configure(options);
+            Middleware mw = options.middleware();
+            HttpRouter.Layer layer = http.prepareUse("", mw);
+            // FR-APP-025 AC-2: one CORS record, not the MIDDLEWARE of the use(mw) it amounts to.
+            admit(RegistrationKind.CORS, null, "", configurer, () -> {
+                http.apply(layer);
+                middlewareRegistrations.add(new MiddlewareRegistration(null, mw));
+            });
+            return this;
+        }
     }
 
     // @req FR-DX-009
     @Override
-    public synchronized RestApp group(String prefix, Configurer<RouteGroup> configurer) {
-        lifecycle.requireConfigurable("group");
-        DefaultRouteGroup.configure(this, prefix, configurer);
-        return this;
+    public RestApp group(String prefix, Configurer<RouteGroup> configurer) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("group");
+            RegistrationLog.requireNotWatching();
+            // FR-APP-026 AC-2: GROUP once the configurer returned, before its routes replay as their own registrations.
+            DefaultRouteGroup.configure(this, prefix, configurer,
+                    () -> admit(RegistrationKind.GROUP, null, com.snoworca.naruserve.common.RoutePaths.join("/", prefix),
+                            configurer, () -> { }));
+            return this;
+        }
+    }
+
+    // @req IR-APP-002
+    // @req FR-APP-003
+    // @req FR-AUTH-010
+    @Override
+    public RestApp use(Middleware mw) {
+        refuseForeignWatcher();
+        if (mw instanceof com.snoworca.naruserve.Installable) {
+            ((com.snoworca.naruserve.Installable) mw).install(this); // it registers itself; no record of its own
+            return this;
+        }
+        synchronized (this) {
+            lifecycle.requireHttpRegistration("use");
+            HttpRouter.Layer layer=http.prepareUse("",Objects.requireNonNull(mw,"mw"));
+            admit(RegistrationKind.MIDDLEWARE, null, "", RegistrationLog.target(mw), () -> {
+                http.apply(layer);
+                middlewareRegistrations.add(new MiddlewareRegistration(null,mw));
+            });
+            return this;
+        }
+    }
+
+    /** FR-AUTH-010 AC-7: an Installable attaches itself to the whole app, so a path use would silently skip install. */
+    // @req FR-AUTH-010
+    private static void refusePathInstallable(Object path, Middleware mw) {
+        if (mw instanceof com.snoworca.naruserve.Installable && !"".equals(path) && !"/".equals(path)) {
+            throw new IllegalArgumentException("app.use(" + (path instanceof String ? "\"" + path + "\"" : path)
+                    + ", mw): " + mw.getClass().getSimpleName() + " installs itself on the whole app; call app.use(mw) "
+                    + "without a path (to protect only a prefix with auth, build it with .protectOnly(\"/api\"))");
+        }
     }
 
     // @req IR-APP-002
     // @req FR-APP-003
     @Override
-    public synchronized RestApp use(Middleware mw) {
-        lifecycle.requireHttpRegistration("use");
-        http.use("",Objects.requireNonNull(mw,"mw"));
-        middlewareRegistrations.add(new MiddlewareRegistration(null,mw));
-        return this;
-    }
-
-    // @req IR-APP-002
-    // @req FR-APP-003
-    @Override
-    public synchronized RestApp use(String prefix, Middleware mw) {
-        lifecycle.requireHttpRegistration("use");
-        http.use(prefix,mw);
-        middlewareRegistrations.add(new MiddlewareRegistration(prefix,mw));
-        return this;
+    public RestApp use(String prefix, Middleware mw) {
+        if ("/".equals(prefix) && mw instanceof com.snoworca.naruserve.Installable) {
+            return use(mw); // OPS-AUTH-033 AC-4: the Express habit app.use("/", mw) installs like app.use(mw)
+        }
+        refuseForeignWatcher();
+        refusePathInstallable(prefix, mw);
+        synchronized (this) {
+            lifecycle.requireHttpRegistration("use");
+            HttpRouter.Layer layer=http.prepareUse(prefix,mw);
+            admit(RegistrationKind.MIDDLEWARE, null, prefix, RegistrationLog.target(mw), () -> {
+                http.apply(layer);
+                middlewareRegistrations.add(new MiddlewareRegistration(prefix,mw));
+            });
+            return this;
+        }
     }
 
     @Override
@@ -906,90 +1113,168 @@ public final class DefaultRestApp implements RestApp {
 
     /** Guard, then record one HTTP registration. */
     // @req FR-APP-002
-    private synchronized RestApp register(String name, MethodSet methods, String path, @Nullable Middleware mw,
+    private RestApp register(String name, MethodSet methods, String path, @Nullable Middleware mw,
             boolean withMiddleware, RouteHandler h) {
-        lifecycle.requireHttpRegistration(name);
-        Objects.requireNonNull(methods,"methods"); Objects.requireNonNull(h,"h");
-        List<Middleware> route = withMiddleware?Collections.singletonList(Objects.requireNonNull(mw,"mw")):Collections.emptyList();
-        Middleware[] callbacks=withMiddleware?new Middleware[]{mw,com.snoworca.naruserve.HttpRoutes.terminal(h)}:
-                new Middleware[]{com.snoworca.naruserve.HttpRoutes.terminal(h)};
-        // Validate all inputs before publishing a Route layer.
-        http.methods(methods,path,callbacks);
-        registrations.add(new Registration(methods,path,route.isEmpty()?h:new MiddlewarePipeline.RouteChain(route,h),RouteKind.HTTP));
-        return this;
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireHttpRegistration(name);
+            Objects.requireNonNull(methods,"methods"); Objects.requireNonNull(h,"h");
+            List<Middleware> route = withMiddleware?Collections.singletonList(Objects.requireNonNull(mw,"mw")):Collections.emptyList();
+            Middleware[] callbacks=withMiddleware?new Middleware[]{mw,com.snoworca.naruserve.HttpRoutes.terminal(h)}:
+                    new Middleware[]{com.snoworca.naruserve.HttpRoutes.terminal(h)};
+            // Validate all inputs before the watcher, publish only after it (SEC-APP-002).
+            HttpRouter.Layer layer=http.prepareMethods(methods,path,callbacks);
+            admit(RegistrationKind.ROUTE, methodText(methods), path, h, () -> {
+                http.apply(layer);
+                registrations.add(new Registration(methods,path,route.isEmpty()?h:new MiddlewarePipeline.RouteChain(route,h),RouteKind.HTTP));
+            });
+            return this;
+        }
     }
 
     // @req FR-ROUTE-019 AC-1; FR-ROUTE-020 AC-1; FR-ROUTE-021 AC-5
     @Override public RestApp use(Object path,Middleware callback) {
-        lifecycle.requireHttpRegistration("use");http.use(path,callback);return this;
+        if ("/".equals(path) && callback instanceof com.snoworca.naruserve.Installable) {
+            return use(callback); // OPS-AUTH-033 AC-4
+        }
+        refuseForeignWatcher();
+        refusePathInstallable(path, callback);
+        synchronized (this) {
+            lifecycle.requireHttpRegistration("use");
+            HttpRouter.Layer layer=http.prepareUse(path,callback);
+            admit(RegistrationKind.MIDDLEWARE,null,path,RegistrationLog.target(callback),()->http.apply(layer));
+            return this;
+        }
     }
+    // @req FR-APP-026 AC-1 AC-7
     @Override public RestApp use(Object path,com.snoworca.naruserve.Router child) {
-        lifecycle.requireHttpRegistration("use");http.mount(path,DefaultRouter.unwrap(child));return this;
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireHttpRegistration("use");
+            RegistrationLog.requireNotWatching();
+            DefaultRouter mounted=DefaultRouter.unwrapRouter(child);
+            HttpRouter.Layer layer=http.prepareMount(path,mounted.registry);
+            synchronized(RegistrationLog.LOCK) {
+                // The mount and every record already in the Router reach the watchers before the mount is live.
+                RegistrationRecord mount=RegistrationRecord.of(RegistrationKind.ROUTER_MOUNT,null,path,child,null,mounted);
+                registrationLog.admit(RegistrationLog.mountBatch(mount,mounted),()->http.apply(layer));
+            }
+            return this;
+        }
     }
     @Override public RestApp use(Object path,com.snoworca.naruserve.ErrorMiddleware callback) {
-        lifecycle.requireHttpRegistration("use");http.error(path,callback);return this;
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireHttpRegistration("use");
+            HttpRouter.Layer layer=http.prepareError(path,callback);
+            admit(RegistrationKind.ERROR_MIDDLEWARE,null,path,callback,()->http.apply(layer));
+            return this;
+        }
     }
     @Override public RestApp param(String name,com.snoworca.naruserve.ParamHandler callback) {
-        lifecycle.requireHttpRegistration("param");http.param(name,callback);return this;
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireHttpRegistration("param");
+            HttpRouter.checkParam(name,callback);
+            admit(RegistrationKind.PARAM,null,"",callback,()->http.param(name,callback));
+            return this;
+        }
     }
 
     // @req IR-APP-003
     // @req FR-APP-005
     @Override
-    public synchronized RestApp onError(ErrorHandler handler) {
-        lifecycle.requireConfigurable("onError");
-        Objects.requireNonNull(handler,"handler");
-        http.error("",(error,request,response,next)->{
-            handler.handle(error,request,response);
-            if(((DefaultResponse)response).state()==ResponseState.NEW)next.error(error);
-        });
-        errorHandlers.add(handler);
-        return this;
+    public RestApp onError(ErrorHandler handler) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("onError");
+            Objects.requireNonNull(handler,"handler");
+            HttpRouter.Layer layer=http.prepareError("",(error,request,response,next)->{
+                handler.handle(error,request,response);
+                if(((DefaultResponse)response).state()==ResponseState.NEW)next.error(error);
+            });
+            // FR-APP-025 AC-6: the target is the handler itself, not the error middleware wrapped around it.
+            admit(RegistrationKind.ERROR_MIDDLEWARE,null,"",handler,()->{
+                http.apply(layer);
+                errorHandlers.add(handler);
+            });
+            return this;
+        }
     }
 
     @Override
-    public synchronized RouteBuilder route(String path) {
-        lifecycle.requireHttpRegistration("route");
-        return new DefaultRouteBuilder(path,http.route(path));
+    public RouteBuilder route(String path) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireHttpRegistration("route");
+            RegistrationLog.requireNotWatching();
+            return new DefaultRouteBuilder(path,http.route(path,builderHook(path)));
+        }
     }
 
     // @req FR-APP-021 AC-1 AC-2 AC-4; FR-ROUTE-019 AC-1
     @Override public RouteBuilder route(Object path) {
-        lifecycle.requireHttpRegistration("route"); return new DefaultRouteBuilder(null,http.route(path));
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireHttpRegistration("route");
+            RegistrationLog.requireNotWatching();
+            return new DefaultRouteBuilder(null,http.route(path,builderHook(path)));
+        }
+    }
+
+    /** FR-APP-025 AC-1: each builder method is one ROUTE record, watched before its handlers are appended. */
+    private HttpRouter.BuilderHook builderHook(Object path) {
+        return (method,callbacks,apply)->{
+            refuseForeignWatcher();
+            synchronized(this) {
+                admit(RegistrationKind.ROUTE,method,path,RegistrationLog.routeTarget(callbacks),apply);
+            }
+        };
     }
     @Override public RestApp method(String token,Object path,Middleware... callbacks) {
-        lifecycle.requireHttpRegistration("method"); http.method(token,path,callbacks);return this;
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireHttpRegistration("method");
+            HttpRouter.Layer layer=http.prepareMethod(token,path,callbacks);
+            admit(RegistrationKind.ROUTE,HttpRouter.method(token),path,RegistrationLog.routeTarget(callbacks),
+                    ()->http.apply(layer));
+            return this;
+        }
     }
 
     // @req FR-HTTP-008
     @Override
-    public synchronized RestApp routerPolicy(RouterPolicy policy) {
-        lifecycle.requireConfigurable("routerPolicy");
-        if (policy == null) {
-            throw new NullPointerException("policy");
+    public RestApp routerPolicy(RouterPolicy policy) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("routerPolicy");
+            if (policy == null) {
+                throw new NullPointerException("policy");
+            }
+            http.configurePolicy(policy);
+            this.policy = policy;
+            return this;
         }
-        http.configurePolicy(policy);
-        this.policy = policy;
-        return this;
     }
 
     /** Internal hook for a WebSocket route (kind WEBSOCKET, counted as GET); not on {@link RestApp}. */
     // @req FR-HTTP-008
-    public synchronized DefaultRestApp webSocketRoute(String path, RouteHandler h) {
-        record("webSocketRoute", MethodSet.of(Method.GET), path, Collections.<Middleware>emptyList(), h,
-                RouteKind.WEBSOCKET);
-        return this;
+    public DefaultRestApp webSocketRoute(String path, RouteHandler h) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("webSocketRoute");
+            webSocketRoute(path, h, h);
+            return this;
+        }
     }
 
-    private void record(String name, MethodSet methods, String path, List<Middleware> route, RouteHandler h,
-            RouteKind kind) {
-        lifecycle.requireConfigurable(name);
-        if (methods == null || h == null) {
-            throw new NullPointerException(methods == null ? "methods" : "h");
-        }
+    /** One WEBSOCKET record whose target is {@code target} (the WebSocketHandler for {@link #ws}). */
+    // @req FR-APP-025
+    private void webSocketRoute(String path, RouteHandler h, Object target) {
+        Objects.requireNonNull(h, "h");
         RoutePattern.parse(path);
-        registrations.add(new Registration(methods, path,
-                route.isEmpty() ? h : new MiddlewarePipeline.RouteChain(route, h), kind));
+        admit(RegistrationKind.WEBSOCKET, null, path, target, () -> registrations.add(new Registration(
+                MethodSet.of(Method.GET), path, h, RouteKind.WEBSOCKET)));
     }
 
     /**
@@ -1005,72 +1290,83 @@ public final class DefaultRestApp implements RestApp {
     // @req FR-WS-010
     // @req FR-SSE-005
     // @req FR-APP-020
-    public synchronized void freeze() {
-        if (dispatcher != null) {
-            return;
-        }
-        Router<RouteHandler> router = new Router<>(policy);
-        for (Registration r : registrations) {
-            if (r.kind == RouteKind.WEBSOCKET) {
-                router.addWebSocket(r.pattern, r.handler);
+    public void freeze() {
+        refuseForeignWatcher();
+        synchronized (this) {
+            RegistrationLog.requireNotWatching();
+            if (dispatcher != null) {
+                return;
             }
-        }
-        router.freeze();
-        MiddlewarePipeline pipeline = new MiddlewarePipeline(policy);
-        for (MiddlewareRegistration registration : middlewareRegistrations) {
-            if (registration.prefix == null) {
-                pipeline.addGlobal(registration.middleware);
-            } else {
-                pipeline.addCommonPrefix(registration.prefix, registration.middleware);
+            Router<RouteHandler> router = new Router<>(policy);
+            for (Registration r : registrations) {
+                if (r.kind == RouteKind.WEBSOCKET) {
+                    router.addWebSocket(r.pattern, r.handler);
+                }
             }
+            router.freeze();
+            MiddlewarePipeline pipeline = new MiddlewarePipeline(policy);
+            for (MiddlewareRegistration registration : middlewareRegistrations) {
+                if (registration.prefix == null) {
+                    pipeline.addGlobal(registration.middleware);
+                } else {
+                    pipeline.addCommonPrefix(registration.prefix, registration.middleware);
+                }
+            }
+            DefaultWebSocketOptions ws = webSocketOptions().copy();
+            frozenWebSocketOptions = ws;
+            DefaultSseOptions sse = sseOptions().copy();
+            frozenSseOptions = sse;
+            SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
+            WebSocketSender.IntSupplier port = () -> boundPort; // threads are made after bind, so they see the real port
+            WebSocketSender sender = new WebSocketSender(serverOptions.maxUpgradedConnections(), port, safe);
+            WebSocketIdleScheduler idle = new WebSocketIdleScheduler(port, safe);
+            WebSocketRegistry registry = new WebSocketRegistry(sender, idle);
+            SseRegistry streams = new SseRegistry(sse, lifecycle, safe);
+            AccessLog accessLog = new AccessLog(accessLogOptions, safe); // shared with the sessions for their lines
+            dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
+                    accessLog, context, jsonCodec(), jsonLimit(), proxyTrust.legacyFlag(),
+                    multipartSettings().copy(), formLimit(), spool(), new StaticHandler(staticMounts, mimeTypes, defaultCache),
+                    new WebSocketUpgrade(ws, jsonCodec(), safe, sender, idle, registry, accessLog),
+                    streams);
+            dispatcher.proxyTrust(proxyTrust);
+            dispatcher.commonHttp(http,lifecycle);
+            webSocketRegistry = registry;
+            sseRegistry = streams;
+            // SSE first: its closeAll returns at once, while the WebSocket one waits for the closes.
+            shutdownParticipants.add(ShutdownParticipants.Phase.BEFORE_WAIT,
+                    (ShutdownParticipants.DeadlineParticipant) streams::closeAll);
+            shutdownParticipants.add(ShutdownParticipants.Phase.BEFORE_WAIT,
+                    (ShutdownParticipants.DeadlineParticipant) registry::closeAll);
+            shutdownParticipants.add(ShutdownParticipants.Phase.FORCE_CLOSE, registry::terminate);
+            shutdownParticipants.add(ShutdownParticipants.Phase.FORCE_CLOSE, streams::terminate);
+            lifecycle.markFrozen();
         }
-        DefaultWebSocketOptions ws = webSocketOptions().copy();
-        frozenWebSocketOptions = ws;
-        DefaultSseOptions sse = sseOptions().copy();
-        frozenSseOptions = sse;
-        SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app
-        WebSocketSender.IntSupplier port = () -> boundPort; // threads are made after bind, so they see the real port
-        WebSocketSender sender = new WebSocketSender(serverOptions.maxUpgradedConnections(), port, safe);
-        WebSocketIdleScheduler idle = new WebSocketIdleScheduler(port, safe);
-        WebSocketRegistry registry = new WebSocketRegistry(sender, idle);
-        SseRegistry streams = new SseRegistry(sse, lifecycle, safe);
-        AccessLog accessLog = new AccessLog(accessLogOptions, safe); // shared with the sessions for their lines
-        dispatcher = new Dispatcher(router, pipeline, new ErrorPath(errorHandlers, safe),
-                accessLog, context, jsonCodec(), jsonLimit(), trustProxy,
-                multipartSettings().copy(), formLimit(), spool(), new StaticHandler(staticMounts, mimeTypes, defaultCache),
-                new WebSocketUpgrade(ws, jsonCodec(), safe, sender, idle, registry, accessLog),
-                streams);
-        dispatcher.commonHttp(http,lifecycle);
-        webSocketRegistry = registry;
-        sseRegistry = streams;
-        // SSE first: its closeAll returns at once, while the WebSocket one waits for the closes.
-        shutdownParticipants.add(ShutdownParticipants.Phase.BEFORE_WAIT,
-                (ShutdownParticipants.DeadlineParticipant) streams::closeAll);
-        shutdownParticipants.add(ShutdownParticipants.Phase.BEFORE_WAIT,
-                (ShutdownParticipants.DeadlineParticipant) registry::closeAll);
-        shutdownParticipants.add(ShutdownParticipants.Phase.FORCE_CLOSE, registry::terminate);
-        shutdownParticipants.add(ShutdownParticipants.Phase.FORCE_CLOSE, streams::terminate);
-        lifecycle.markFrozen();
     }
 
     /** The WebSocket session registry built by a successful {@link #freeze()}; for internal tests. */
     // @req FR-WS-010
-    synchronized WebSocketRegistry webSocketRegistry() {
-        WebSocketRegistry r = webSocketRegistry;
-        if (r == null) {
-            throw new IllegalStateException("RestApp is not frozen; call freeze() first");
+    WebSocketRegistry webSocketRegistry() {
+        refuseForeignWatcher();
+        synchronized (this) {
+            WebSocketRegistry r = webSocketRegistry;
+            if (r == null) {
+                throw new IllegalStateException("RestApp is not frozen; call freeze() first");
+            }
+            return r;
         }
-        return r;
     }
 
     /** The SSE stream registry built by a successful {@link #freeze()}; for internal tests. */
     // @req FR-SSE-005
-    synchronized SseRegistry sseRegistry() {
-        SseRegistry r = sseRegistry;
-        if (r == null) {
-            throw new IllegalStateException("RestApp is not frozen; call freeze() first");
+    SseRegistry sseRegistry() {
+        refuseForeignWatcher();
+        synchronized (this) {
+            SseRegistry r = sseRegistry;
+            if (r == null) {
+                throw new IllegalStateException("RestApp is not frozen; call freeze() first");
+            }
+            return r;
         }
-        return r;
     }
 
     /** The dispatcher built by a successful {@link #freeze()}; {@link IllegalStateException} before that. */
@@ -1080,18 +1376,24 @@ public final class DefaultRestApp implements RestApp {
         return frozenDispatcher();
     }
 
-    private synchronized Dispatcher frozenDispatcher() {
-        Dispatcher d = dispatcher;
-        if (d == null) {
-            throw new IllegalStateException("RestApp is not frozen; call freeze() first");
+    private Dispatcher frozenDispatcher() {
+        refuseForeignWatcher();
+        synchronized (this) {
+            Dispatcher d = dispatcher;
+            if (d == null) {
+                throw new IllegalStateException("RestApp is not frozen; call freeze() first");
+            }
+            return d;
         }
-        return d;
     }
 
-    /** Snapshot of the recorded registrations, for tests. */
+    /** Snapshot of the recorded route and WebSocket registrations the router is built from, for tests. */
     // @req FR-HTTP-008
-    synchronized List<Registration> registrations() {
-        return Collections.unmodifiableList(new ArrayList<>(registrations));
+    List<Registration> routeRegistrations() {
+        refuseForeignWatcher();
+        synchronized (this) {
+            return Collections.unmodifiableList(new ArrayList<>(registrations));
+        }
     }
 
     /** Builder bound to one path; each method registers through this app, so freeze rules apply. */
@@ -1108,6 +1410,7 @@ public final class DefaultRestApp implements RestApp {
         }
 
         private RouteBuilder add(String name, Method method, RouteHandler h) {
+            refuseForeignWatcher();
             synchronized (DefaultRestApp.this) {
                 lifecycle.requireHttpRegistration(name);
                 Objects.requireNonNull(h,"h"); delegate.method(method.name(),com.snoworca.naruserve.HttpRoutes.terminal(h));
@@ -1120,6 +1423,7 @@ public final class DefaultRestApp implements RestApp {
         // @req FR-APP-003
         @Override
         public RouteBuilder use(Middleware mw) {
+            refuseForeignWatcher();
             synchronized (DefaultRestApp.this) {
                 lifecycle.requireHttpRegistration("use");
                 delegate.use(Objects.requireNonNull(mw,"mw")); middleware.add(mw);

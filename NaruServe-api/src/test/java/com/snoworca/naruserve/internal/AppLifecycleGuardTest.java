@@ -1,6 +1,7 @@
 package com.snoworca.naruserve.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -187,6 +188,17 @@ public class AppLifecycleGuardTest {
         if (type == com.snoworca.naruserve.WebSocketHandler.class) {
             return (com.snoworca.naruserve.WebSocketHandler) (req, ws) -> { };
         }
+        // 0.11.0: IR-APP-008 AC-2 and IR-ENGINE-003 AC-1 put onRegistration, trustProxyHops and trustProxyCidrs
+        // under the same guard
+        if (type == com.snoworca.naruserve.RegistrationListener.class) {
+            return (com.snoworca.naruserve.RegistrationListener) r -> { };
+        }
+        if (type == int.class) {
+            return 1;
+        }
+        if (type == String[].class) {
+            return new String[] {"10.0.0.0/8"};
+        }
         throw new AssertionError("no test argument for " + type);
     }
 
@@ -215,7 +227,9 @@ public class AppLifecycleGuardTest {
         java.util.Set<String> configuration = new java.util.TreeSet<>(java.util.Arrays.asList(
                 "group", "cors", "routerPolicy", "onError", "onStart", "onStop", "logger", "accessLog",
                 "jsonCodec", "jsonLimit", "server", "trustProxy", "multipart", "formLimit", "staticFiles",
-                "defaultCache", "ws", "webSocket", "sse"));
+                "defaultCache", "ws", "webSocket", "sse",
+                // 0.11.0: IR-APP-008 AC-2 (onRegistration) and IR-ENGINE-003 AC-1 (trustProxyHops, trustProxyCidrs)
+                "onRegistration", "trustProxyHops", "trustProxyCidrs"));
         java.util.Set<String> observedHttp = new java.util.TreeSet<>(), observedConfiguration = new java.util.TreeSet<>();
         int checked = 0;
         for (java.lang.reflect.Method m : RestApp.class.getMethods()) {
@@ -246,6 +260,14 @@ public class AppLifecycleGuardTest {
         }
         assertEquals(http, observedHttp);
         assertEquals(configuration, observedConfiguration);
+        // IR-APP-008 AC-2: the refused configuration calls (onRegistration among them) recorded nothing
+        java.util.EnumSet<com.snoworca.naruserve.RegistrationKind> configurationKinds = java.util.EnumSet.of(
+                com.snoworca.naruserve.RegistrationKind.CORS, com.snoworca.naruserve.RegistrationKind.STATIC,
+                com.snoworca.naruserve.RegistrationKind.GROUP, com.snoworca.naruserve.RegistrationKind.WEBSOCKET);
+        for (com.snoworca.naruserve.Registration r : app.registrations()) {
+            assertFalse(r.getKind() + " " + r.getPath(), configurationKinds.contains(r.getKind()));
+            assertFalse("onError recorded after listen", r.getTarget() instanceof com.snoworca.naruserve.ErrorHandler);
+        }
         assertTrue("exhaustive mutations checked " + checked, checked >= 70);
         try { app.mimeTypes().register("webp", "image/webp"); fail("mimeTypes().register accepted in RUNNING"); }
         catch (IllegalStateException expected) { assertTrue(expected.getMessage().contains("RUNNING")); }
@@ -275,6 +297,144 @@ public class AppLifecycleGuardTest {
                 assertTrue(expected.getMessage(), expected.getMessage().contains("TERMINATED"));
             }
         }
+    }
+
+    // SEC-APP-002 AC-5: a watcher cannot shut the app down under the registration it is deciding on (app.shutdown
+    // as well as ServerHandle.shutdown).
+    @Test
+    public void SEC_APP_002_AC5_watcherCannotShutDownTheAppMidRegistration() {
+        DefaultRestApp app = newApp();
+        List<String> outcome = new ArrayList<>();
+        app.onRegistration(reg -> {
+            try {
+                app.shutdown(0, TimeUnit.SECONDS);
+                outcome.add("shut down");
+            } catch (IllegalStateException e) {
+                outcome.add("refused");
+            }
+        });
+        app.get("/w", H);
+        assertEquals(java.util.Collections.singletonList("refused"), outcome);
+        assertEquals(AppState.NEW, app.state());
+        assertEquals(1, app.registrations().size());
+        app.shutdown(1, TimeUnit.SECONDS);
+    }
+
+    // SEC-APP-002: a watcher on app A that calls into app B while another thread registers on B (it holds B's monitor
+    // and waits for the registration lock the watcher's thread holds) fails fast with IllegalStateException instead of
+    // deadlocking.
+    @Test
+    public void SEC_APP_002_watcherCallingAnotherAppFailsFastInsteadOfDeadlocking() throws Exception {
+        DefaultRestApp a = newApp();
+        DefaultRestApp b = newApp();
+        java.util.concurrent.CountDownLatch inWatcher = new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.atomic.AtomicReference<Thread> registrar = new java.util.concurrent.atomic.AtomicReference<>();
+        java.util.concurrent.atomic.AtomicReference<String> outcome = new java.util.concurrent.atomic.AtomicReference<>();
+        a.onRegistration(reg -> {
+            inWatcher.countDown();
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+            Thread t2;
+            while ((t2 = registrar.get()) == null || t2.getState() != Thread.State.BLOCKED) {
+                if (System.nanoTime() > deadline) {
+                    outcome.set("registrar never blocked");
+                    return;
+                }
+                Thread.yield();
+            }
+            try {
+                b.trustProxyHops(1);
+                outcome.set("called");
+            } catch (IllegalStateException e) {
+                outcome.set("refused");
+            }
+        });
+        Thread t1 = new Thread(() -> a.get("/x", H), "watcher-thread");
+        t1.setDaemon(true);
+        t1.start();
+        assertTrue(inWatcher.await(10, TimeUnit.SECONDS));
+        Thread t2 = new Thread(() -> b.get("/y", H), "b-registrar");
+        t2.setDaemon(true);
+        registrar.set(t2);
+        t2.start();
+        t1.join(10_000);
+        t2.join(10_000);
+        assertFalse("watcher thread deadlocked", t1.isAlive());
+        assertFalse("b registrar deadlocked", t2.isAlive());
+        assertEquals("refused", outcome.get());
+        assertEquals(1, b.registrations().size());
+    }
+
+    // SEC-APP-002: the apps mounting a Router are locked in one total order (creation order), never by identity hash
+    // alone, so two Routers mounted in the same apps in opposite orders cannot invert the monitor order.
+    @Test
+    public void SEC_APP_002_routerOwnersAreLockedInCreationOrder() {
+        List<DefaultRestApp> apps = new ArrayList<>();
+        for (int i = 0; i < 24; i++) {
+            apps.add(newApp());
+        }
+        DefaultRouter shared = (DefaultRouter) Router.create();
+        for (int i = apps.size() - 1; i >= 0; i--) {
+            apps.get(i).use("/r" + i, shared);
+        }
+        List<Object> owners;
+        synchronized (RegistrationLog.LOCK) {
+            owners = RegistrationLog.owners(shared);
+        }
+        assertEquals(new ArrayList<Object>(apps), owners);
+    }
+
+    // FR-APP-026 (M1-F04): a shared Router must not keep the apps it was mounted in reachable. Never-started apps that
+    // the caller dropped, and shut-down ones, are collectable without any later registration on the Router.
+    @Test
+    public void FR_APP_026_sharedRouterDoesNotRetainDroppedApps() throws Exception {
+        DefaultRouter shared = (DefaultRouter) Router.create();
+        List<java.lang.ref.WeakReference<DefaultRestApp>> never = mountDropped(shared, 30, false);
+        List<java.lang.ref.WeakReference<DefaultRestApp>> stopped = mountDropped(shared, 10, true);
+        assertEquals("never-started apps still reachable through the shared Router", 0, reachableAfterGc(never));
+        assertEquals("shut-down apps still reachable through the shared Router", 0, reachableAfterGc(stopped));
+        shared.get("/later", H);
+        DefaultRestApp live = newApp();
+        live.use("/live", shared);
+        shared.get("/after", H);
+        synchronized (RegistrationLog.LOCK) {
+            assertEquals(java.util.Collections.<Object>singletonList(live), RegistrationLog.owners(shared));
+        }
+    }
+
+    private static List<java.lang.ref.WeakReference<DefaultRestApp>> mountDropped(DefaultRouter shared, int n,
+            boolean startAndStop) throws Exception {
+        List<java.lang.ref.WeakReference<DefaultRestApp>> refs = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            DefaultRestApp app = newApp();
+            app.use("/r", shared);
+            if (startAndStop) {
+                app.listen(0);
+                app.shutdown(5, TimeUnit.SECONDS);
+            }
+            refs.add(new java.lang.ref.WeakReference<>(app));
+        }
+        return refs;
+    }
+
+    /** Polls System.gc() until every reference is cleared or a 10 s deadline passes; returns how many remain. */
+    private static int reachableAfterGc(List<java.lang.ref.WeakReference<DefaultRestApp>> refs)
+            throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        int alive;
+        do {
+            System.gc();
+            alive = 0;
+            for (java.lang.ref.WeakReference<DefaultRestApp> r : refs) {
+                if (r.get() != null) {
+                    alive++;
+                }
+            }
+            if (alive == 0) {
+                return 0;
+            }
+            Thread.sleep(20);
+        } while (System.nanoTime() < deadline);
+        return alive;
     }
 
 }

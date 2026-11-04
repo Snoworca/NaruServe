@@ -139,4 +139,21 @@ public class ReleaseEvidenceSnapshotsTest {
         }
     }
 
+    // OPS-REL-010 AC-3: 0.11.0 is pending only while none of its records exist; the 0.10.0 records are still checked,
+    // a 0.11.0 record fails until the gate points at it, and an unknown version is refused
+    @Test public void version011IsPendingOnlyWithoutItsRecordsAndStillChecks010()throws Exception {
+        Class<?>[] types=new Class<?>[]{File.class,List.class};
+        File bare=fixture("0.11.0");
+        rejected("current evidence",()->call("current",types,bare,Collections.emptyList()));
+        File local=fixture("0.11.0");write(local,PATH,"class Example { void currentOnly() {} }\n");
+        write(local,CURRENT,currentResults());write(local,CURRENT_SCAN,report("g:a:1"));
+        assertEquals(false,call("current",types,local,Arrays.asList("g:a:1")));
+        write(local,"docs/release/0.11.0-test-results.md","# Current\n");
+        rejected("0.11.0",()->call("current",types,local,Arrays.asList("g:a:1")));
+        File scanOnly=fixture("0.11.0");write(scanOnly,PATH,"class Example { void currentOnly() {} }\n");
+        write(scanOnly,CURRENT,currentResults());write(scanOnly,CURRENT_SCAN,report("g:a:1"));
+        write(scanOnly,"docs/release/0.11.0-vulnerability-scan.md",report("g:a:1"));
+        rejected("0.11.0",()->call("current",types,scanOnly,Arrays.asList("g:a:1")));
+        rejected("unsupported release version",()->call("current",types,fixture("0.12.0"),Collections.emptyList()));
+    }
 }

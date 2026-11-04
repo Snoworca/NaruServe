@@ -1,0 +1,216 @@
+{
+ "run": "F6",
+ "fixes": [
+  {
+   "finding_id": "T3-F08",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/password/PasswordHashersTest.java",
+     "line_range": "177-190"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): no product behaviour changes, so no red product test; the strengthened check is shown able to fail by reasoning below.",
+   "rationale_full": "The hypothesis asked to drop assertEquals(null, made); rule 2 forbids removing an assertion, so the additive alternative was used: the hash() call no longer fails inside the try. The catch records the exception, then assertEquals(null, made) and a fail() if nothing was thrown run after the try. made is non-null exactly when hash() returned a string, so the kept assertion can now fail."
+  },
+  {
+   "finding_id": "T3-F09",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/rbac/RolePolicyTest.java",
+     "line_range": "133-146"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): no product behaviour changes, so no red product test; the strengthened check is shown able to fail by reasoning below.",
+   "rationale_full": "Rather than deleting the line (rule 2), the assertion now reads the propagated exception caught from scopesOfRoles instead of the test's own 'down' object, and asserts its message is exactly 'db down', so it checks that the store error is not wrapped or replaced. It fails if EffectiveGrants wraps or replaces the exception."
+  },
+  {
+   "finding_id": "T3-F10",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFacadeKotlinTest.kt",
+     "line_range": "50-70"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): no product behaviour changes, so no red product test; the strengthened check is shown able to fail by reasoning below.",
+   "rationale_full": "Replaced the local-null probe with a typed probe on the real principal inside the auth.check lambda (val k: String? = p.apiKeyId), recorded per request. A user credential (id:0) and a key credential (id:0:k1:posts:read) are sent, and the test asserts the recorded list is [null, \"k1\"]. This checks at compile time that the property is nullable and at run time what it holds."
+  },
+  {
+   "finding_id": "T3-F11",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/ForwardingUserStoreTest.java",
+     "line_range": "180-195"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): no product behaviour changes, so no red product test; the strengthened check is shown able to fail by reasoning below.",
+   "rationale_full": "Rather than deleting the dead set and tautology (rule 2), the 'unused' set now collects each of the five field methods (updatePasswordHash, changePassword, setEnabled, bumpTokenVersion, setRoles) whose ForwardingUserStore source is not gated as 'delegate.supportsAtomicFieldWrites() ? delegate.X( ... : UserStore.super.X('. The test asserts the set is empty, plus the Javadoc phrase 'one rule for the five field methods'. So the rule the Javadoc states is checked against the code, and the assertion fails if any field method forwards without the gate."
+  },
+  {
+   "finding_id": "T4-F04",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave7KotlinTest.kt",
+     "line_range": "97-104"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): no product behaviour changes, so no red product test; the strengthened check is shown able to fail by reasoning below.",
+   "rationale_full": "Added fail(\"a reused refresh token was accepted\") after the second refresh inside the try (import org.junit.Assert.fail). If reuse returns a pair instead of throwing AuthRejection, the test now fails."
+  },
+  {
+   "finding_id": "T4-F05",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave7KotlinTest.kt",
+     "line_range": "106-165"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): no product behaviour changes, so no red product test; the strengthened check is shown able to fail by reasoning below.",
+   "rationale_full": "csrf: the docs example now runs on COOKIE transport (as the Java docs example does) over a TLS InMemoryHttpAdapter. A cookie-authenticated POST /api/posts without X-CSRF-Token must get 403 csrf_failed, and the same POST with the matching AuthTesting.csrfTokenFor header must get 201 'created'. cors: after install, a preflight OPTIONS /auth/login from https://spa.example must carry Access-Control-Allow-Origin https://spa.example and Allow-Credentials true. The '// adapted:' comments name the changes, so KotlinDocsMarkers still accepts them."
+  },
+  {
+   "finding_id": "T4-F06",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave6KotlinTest.kt",
+     "line_range": "1-81"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): no product behaviour changes, so no red product test; the strengthened check is shown able to fail by reasoning below.",
+   "rationale_full": "The test name was kept (no test-case removal) and both untested halves are now exercised. Lockout: user 'lo' has a real PBKDF2 hash. The right password gives SUCCESS, three wrong ones give INVALID_CREDENTIALS, and then the right password gives INVALID_CREDENTIALS (locked). This goes through auth.passwordLogin().attempt with a latch wait, the same helper AuthWave7KotlinTest uses. WebSocket wrapper: the app is started on an InMemoryHttpAdapter. An upgrade without a credential gets 401 and no handover. An upgrade with the Bearer access token opens a channel, and the wrapped handler sends auth.user(req).id (a deadline poll of 10 s, which the happy path does not wait for). The handshake is 101. The describe() assertion is kept (rule 2)."
+  },
+  {
+   "finding_id": "T4-F07",
+   "status": "not_reproduced",
+   "files_changed": [],
+   "red_test": null,
+   "why_no_red": "JDBC removed",
+   "rationale_full": "JDBC removed: the JdbcRefreshTokenStore tautology line no longer exists in AuthWave5KotlinTest (CON-IAM-003). The test checks only the in-memory and file stores."
+  },
+  {
+   "finding_id": "T4-F01",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAuthFailureFloorTest.java",
+     "line_range": "66-180"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): no product behaviour changes, so no red product test; the strengthened check is shown able to fail by reasoning below.",
+   "rationale_full": "Thread.sleep(10) is replaced by an event: ReachedLimit (a NoLimit subclass; NoLimit is no longer final) counts down a latch when the login reaches the user-only limit check (key 'login:u:'), the last step before the hash. The test awaits it (20 s) before sending /health. Right after /health returns it records !failing.isDone() and asserts it ('the failing login was still waiting when /health was answered'). Each exchange is timed from its own start (an AtomicLong set inside the pool task), so the kept healthAt < failedAt assertion compares real durations. The new assertion fails whenever the delayed 401 had already arrived before /health was answered."
+  },
+  {
+   "finding_id": "T4-F02",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AuthFailureFloorSocketTest.java",
+     "line_range": "73-250"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): no product behaviour changes, so no red product test; the strengthened check is shown able to fail by reasoning below.",
+   "rationale_full": "The same ReachedLimit latch on the 'login:u:' retryAfter replaces Thread.sleep(10) in the AC-8 test, so /health is sent only after the failing login is at the hash step. assertTrue(!failing.isDone()) right after /health returns shows the two requests overlapped. The existing health.millis + 10 < failed.millis assertion is kept."
+  },
+  {
+   "finding_id": "T4-F03",
+   "status": "skipped",
+   "files_changed": [
+    {
+     "path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AuthFailureFloorSocketTest.java",
+     "line_range": "265-280"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Not applied: the requested change weakens an existing assertion (rule 2). Only the fixed sleep was replaced by a latch.",
+   "rationale_full": "Partial, additive only. The fixed sleep max(20, floor/4) is replaced by an event (rule 3): the latch waits until as many failures as there are workers (2) have reached the hash step, with a 20 s deadline. A floor that held its worker would then hold every worker. pending > 0 stays the main signal. The requested relaxation of the bound (health.millis < floorMillis to < 0.5*50*floor/workers) was NOT applied, because rule 2 forbids weakening an assertion. The idle-probe-vs-loaded-latency bound and its residual CPU-contention flakiness stay as the reviewer described, and need a decision outside this fixer's rules."
+  },
+  {
+   "finding_id": "T4-F14",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletProxyTrustTest.java",
+     "line_range": "137-152"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): no product behaviour changes, so no red product test; the strengthened check is shown able to fail by reasoning below.",
+   "rationale_full": "Under hops=1 the AC-5 test now asserts that every body starts with '198.51.100.20 ' (socketAddress equals the captured getRemoteAddr). It also asserts that the whole body list equals the in-memory adapter's over the same captured peer and TLS flag, so the scheme and client address derived under hops match the captured values. The full literal check stays for the other settings."
+  },
+  {
+   "finding_id": "T1-F03",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+     "line_range": "289-312"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): no product behaviour changes, so no red product test; the strengthened check is shown able to fail by reasoning below.",
+   "rationale_full": "The NoPurgeStore half now also passes .apiKeys(keys2) (an ExpiringKeys counter) and its own RecordingLogger. Thread.sleep(100) is replaced by await(keys2.deletes >= 2), a poll with a 10 s deadline. cleanupRun calls deleteExpired after refreshTokens.purgeExpired on every run, so this observes at least two runs that passed the default purgeExpired. The test then asserts no 'cleanup of expired refresh tokens failed' line and no ERROR at all. assertSame and thread2.isAlive() are kept. The test fails if the task never runs (await times out) or if the default purge throws (an ERROR is logged)."
+  },
+  {
+   "finding_id": "T1-F04",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminEndpointsTest.java",
+     "line_range": "106-134"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): no product behaviour changes, so no red product test; the strengthened check is shown able to fail by reasoning below.",
+   "rationale_full": "The loop now counts the app-level (getMount()==null) ROUTER_MOUNT records at /auth/admin and asserts exactly 1, with non-null targets kept. It also asserts that every ROUTER_MOUNT path of the app is /auth or under /auth, so the app mounted nothing itself. The first draft without the getMount()==null filter failed with 2, because install's nested mountedAdminRoutes.use(adminRoutes) is expanded under the same path. That shows the new count is a real check."
+  },
+  {
+   "finding_id": "T1-F07",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/UserLifecycleTest.java",
+     "line_range": "517-540"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): no product behaviour changes, so no red product test; the strengthened check is shown able to fail by reasoning below.",
+   "rationale_full": "Thread.sleep(200) is replaced by a bounded poll (10 s deadline; it exits as soon as the thread leaves NEW/RUNNABLE) on logoutAll.getState(). The test then asserts isAlive (the kept assertion), that the state is BLOCKED, WAITING or TIMED_WAITING, and that the stored tokenVersion is still 7 while the profile mutator holds the lock. A ver++ that takes no lock would end (TERMINATED) or write 8 before release, and the test now fails then even on a slow scheduler."
+  },
+  {
+   "finding_id": "T4-F10",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/AuthDocsTest.java",
+     "line_range": "1-6, 175-206"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): no product behaviour changes, so no red product test; the strengthened check is shown able to fail by reasoning below.",
+   "rationale_full": "The membership check is extracted into unnamedTypes(types, ko, en) and used by the real check. The negative control now runs the same check over the real list plus 'NoSuchAuthType' and asserts it reports exactly [ko NoSuchAuthType, en NoSuchAuthType]. The test also asserts that publicUtilsTypes() holds real outer and nested names (Auth, Auth.Builder, AuthUser, Lockout.After) and no internal type (MiniJson, FailureFloor), so wrong names would be caught. The unannotated duplicate transientHashLimitIsDocumented was NOT removed: rule 2 forbids deleting a test case. It stays as a redundant check."
+  }
+ ],
+ "public_api_changes": [],
+ "docs_changed": [],
+ "build": {
+  "tests": 3347,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+ }
+}

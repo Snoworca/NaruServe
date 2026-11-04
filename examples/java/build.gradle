@@ -1,5 +1,12 @@
 plugins { id 'application' }
 repositories { mavenCentral() }
-dependencies { implementation 'com.snoworca.naruserve:naruserve:0.10.0' }
+dependencies { implementation 'com.snoworca.naruserve:naruserve:0.11.0' }
 application { mainClass = 'example.JavaExample' }
 java { sourceCompatibility = JavaVersion.VERSION_1_8; targetCompatibility = JavaVersion.VERSION_1_8 }
+// The auth example (OPS-AUTH-007): ./gradlew -p examples/java -PtinyHttpdFromMaven=true runAuth
+tasks.register('runAuth', JavaExec) {
+    group = 'application'
+    description = 'Runs the auth example example.AuthExample.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'example.AuthExample'
+}

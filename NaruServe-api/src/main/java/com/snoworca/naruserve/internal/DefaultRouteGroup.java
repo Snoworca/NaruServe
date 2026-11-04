@@ -32,9 +32,19 @@ final class DefaultRouteGroup implements RouteGroup {
     }
 
     static void configure(RestApp app, String prefix, Configurer<RouteGroup> configurer) {
+        configure(app, prefix, configurer, () -> { });
+    }
+
+    /**
+     * As above; {@code configured} runs once the configurer returned normally and before the buffered routes are
+     * replayed, so the app records its GROUP before them (a throwing configurer reaches neither).
+     */
+    // @req FR-APP-026
+    static void configure(RestApp app, String prefix, Configurer<RouteGroup> configurer, Runnable configured) {
         List<Runnable> registrations = new ArrayList<>();
         DefaultRouteGroup group = new DefaultRouteGroup(app, RoutePaths.join("/", prefix), null, registrations);
         group.configure(configurer);
+        configured.run();
         for (Runnable registration : registrations) registration.run();
     }
 

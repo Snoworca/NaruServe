@@ -8,7 +8,7 @@
 res.status(201).header("X-Request-ID", id).json(created);
 ```
 
-아래 공통 HTTP 동작은 NaruServe 0.10.0 기준입니다.
+아래 공통 HTTP 동작은 NaruServe 0.11.0 기준입니다.
 
 ## 메서드 요약
 

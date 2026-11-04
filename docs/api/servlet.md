@@ -2,7 +2,7 @@
 
 [한국어](servlet.md) | [English](en/servlet.md)
 
-> **문서 버전:** NaruServe 0.10.0 기준입니다. 좌표와 저장소 가용성에 따른 소스 빌드는 [설치 안내](README.md)를 참고하세요.
+> **문서 버전:** NaruServe 0.11.0 기준입니다. 좌표와 저장소 가용성에 따른 소스 빌드는 [설치 안내](README.md)를 참고하세요.
 
 `NaruServe-servlet`은 NaruServe 앱을 Tomcat, Jetty 같은 Servlet 컨테이너(WAS) 위에서 실행하는 어댑터입니다. 내장 HTTP 엔진 대신 컨테이너가 연결을 받고, 라우트·미들웨어·`req`/`res` 코드는 **그대로** 씁니다.
 
@@ -16,9 +16,9 @@
 
 ```groovy
 // Dependencies for a web application running in a Servlet container.
-implementation 'com.snoworca.naruserve:naruserve-servlet:0.10.0'
+implementation 'com.snoworca.naruserve:naruserve-servlet:0.11.0'
 // JSON codec; otherwise configure Builder.jsonCodec(...) yourself.
-implementation 'com.snoworca.naruserve:naruserve-gson:0.10.0'
+implementation 'com.snoworca.naruserve:naruserve-gson:0.11.0'
 // The container provides the Servlet API.
 compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
 ```
@@ -223,3 +223,7 @@ static void configure(RestApp app) {
     app.get("/api/users", (req, res) -> res.json(req.service(UserService.class).findAll()));
 }
 ```
+
+## 프록시 신뢰와 연결 주소
+
+이 어댑터에서 `socketAddress()`(`req.socketAddress()`)는 요청이 들어올 때 컨테이너가 준 `getRemoteAddr()`이고, exchange의 TLS 여부는 컨테이너의 `isSecure()`입니다. 둘 다 내장 Jetty 9.4 테스트 컨테이너에서 확인했습니다(`getRemoteAddr()`는 소켓 상대, 예를 들어 `127.0.0.1`이고, 평문 HTTP에서 `isSecure()`는 `false`). 어댑터는 `X-Forwarded-For`·`X-Forwarded-Proto`·`Forwarded`를 읽지 않고 `getRemoteHost()`도 부르지 않으므로(역방향 DNS 없음), `app.trustProxy(true)`·`trustProxyHops`·`trustProxyCidrs`는 Core에서 인메모리·TinyHttpd 어댑터와 같은 결과로 적용됩니다. Core 프록시 신뢰를 쓸 때는 컨테이너 수준의 전달 처리(Tomcat RemoteIpValve, Jetty ForwardedRequestCustomizer)를 끄세요. 켜 두면 컨테이너가 이미 헤더로 `getRemoteAddr()`와 `isSecure()`를 바꾼 뒤라 Core 신뢰가 한 번 더 적용됩니다. 다른 컨테이너는 측정하지 않았습니다.

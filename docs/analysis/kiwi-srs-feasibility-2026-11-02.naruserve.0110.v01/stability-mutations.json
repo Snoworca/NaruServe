@@ -1,0 +1,150 @@
+{
+ "mode": "live",
+ "applied": [
+  {
+   "req_id": "SEC-AUTH-003",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "SEC-AUTH-007",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "SEC-AUTH-008",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "SEC-TOKEN-009",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "IR-TOKEN-001",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-FLOW-006",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-FLOW-009",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "SEC-FLOW-013",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "REL-FLOW-001",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-IAM-013",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "FR-IAM-014",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  },
+  {
+   "req_id": "SEC-APIKEY-008",
+   "from": "draft",
+   "to": "evolving",
+   "ok": true
+  }
+ ],
+ "skipped": [],
+ "guard_blocked": [],
+ "user_rejected": [],
+ "system_failed": [],
+ "tag_fixes": [
+  {
+   "req_id": "SEC-AUTH-003",
+   "from": "feasibility:medium",
+   "to": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-AUTH-007",
+   "from": "feasibility:medium",
+   "to": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-AUTH-008",
+   "from": "feasibility:medium",
+   "to": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-TOKEN-009",
+   "from": "feasibility:medium",
+   "to": "feasibility:high"
+  },
+  {
+   "req_id": "IR-TOKEN-001",
+   "from": "feasibility:medium",
+   "to": "feasibility:high"
+  },
+  {
+   "req_id": "FR-FLOW-006",
+   "from": "feasibility:medium",
+   "to": "feasibility:high"
+  },
+  {
+   "req_id": "FR-FLOW-009",
+   "from": "feasibility:medium",
+   "to": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-FLOW-013",
+   "from": "feasibility:medium",
+   "to": "feasibility:high"
+  },
+  {
+   "req_id": "REL-FLOW-001",
+   "from": "feasibility:medium",
+   "to": "feasibility:high"
+  },
+  {
+   "req_id": "FR-IAM-013",
+   "from": "feasibility:medium",
+   "to": "feasibility:high"
+  },
+  {
+   "req_id": "FR-IAM-014",
+   "from": "feasibility:medium",
+   "to": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-APIKEY-008",
+   "from": "feasibility:medium",
+   "to": "feasibility:high"
+  }
+ ],
+ "summary": {
+  "applied_count": 12,
+  "skipped_count": 0,
+  "guard_blocked_count": 0,
+  "user_rejected_count": 0,
+  "system_failed_count": 0
+ }
+}

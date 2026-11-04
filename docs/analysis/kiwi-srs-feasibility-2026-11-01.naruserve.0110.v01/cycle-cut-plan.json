@@ -1,0 +1,67 @@
+[
+ {
+  "from": "FR-FLOW-006",
+  "to": "SEC-APIKEY-008",
+  "notes": "AC-5: key-actor outcomes on PATCH/GET /auth/me are owned by SEC-APIKEY-008 AC-2"
+ },
+ {
+  "from": "FR-IAM-003",
+  "to": "SEC-FLOW-013",
+  "notes": "device-token fingerprint mismatch after rename"
+ },
+ {
+  "from": "FR-IAM-006",
+  "to": "FR-AUTH-004",
+  "notes": "builder .roles and admin-role counting for null-password .user"
+ },
+ {
+  "from": "IR-TOKEN-001",
+  "to": "SEC-APIKEY-001",
+  "notes": "API key authenticator delegates to the key chain"
+ },
+ {
+  "from": "IR-TOKEN-001",
+  "to": "SEC-APIKEY-004",
+  "notes": "API key authenticator delegates to the key chain"
+ },
+ {
+  "from": "REL-APIKEY-003",
+  "to": "OPS-APIKEY-001",
+  "notes": "AC-5 runs on the MULTI_INSTANCE key fixture of OPS-APIKEY-001 AC-7"
+ },
+ {
+  "from": "SEC-APIKEY-010",
+  "to": "REL-APIKEY-003",
+  "notes": "The SINGLE_INSTANCE in-lock re-read of REL-APIKEY-003 selects only the deleteFutureByOwner argument; the new key's ownerVer stays the path's own earlier read (statement, AC-6; 00 R47 (2) 27th edition)."
+ },
+ {
+  "from": "SEC-AUTH-008",
+  "to": "SEC-AUTH-003",
+  "notes": "Carve-out: the one-time setup/recovery token is logged exactly once at start (00 §4.4, R31 (6))."
+ },
+ {
+  "from": "SEC-FLOW-003",
+  "to": "SEC-APIKEY-004",
+  "notes": "anonymous-entry endpoints apply the key procedure"
+ },
+ {
+  "from": "SEC-FLOW-004",
+  "to": "IR-TOKEN-001",
+  "notes": "Without .apiKeys(store) the API-key scheme header is no credential (IR-TOKEN-001 AC-5); the statement and AC-5 read it only with keys enabled."
+ },
+ {
+  "from": "SEC-IAM-005",
+  "to": "SEC-APIKEY-009",
+  "notes": "key actors cannot cover a conferred * (R31 (4)), so no enumeration skip for *-conferring groups (AC-7)"
+ },
+ {
+  "from": "SEC-IAM-007",
+  "to": "SEC-APIKEY-008",
+  "notes": "for a key actor every SEC-APIKEY-008 restriction, body-level A2/A4 ones included, answers 403 api_key_not_allowed before this guard (00 R47 (2) step 10 before 11; SEC-APIKEY-008 AC-9)"
+ },
+ {
+  "from": "SEC-TOKEN-004",
+  "to": "SEC-AUTH-001",
+  "notes": "Owner of the secret rejection cases (AC-2 to AC-4, AC-8) and of the Auth.builder(secret) = KeySources.of equivalence (AC-6); AC-3 and AC-7 here point to it."
+ }
+]

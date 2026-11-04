@@ -57,6 +57,8 @@ public final class Dispatcher implements ExchangeHandler {
     private final @Nullable JsonCodec codec;
     private final long jsonLimit;
     private final boolean trustProxy;
+    /** The app's proxy trust setting; legacy from the constructor's boolean until DefaultRestApp.freeze sets it. */
+    private volatile ProxyTrustSetting proxyTrust;
     private final MultipartSettings multipart;
     private final long formLimit;
     private final SpoolRegistry spool;
@@ -159,6 +161,7 @@ public final class Dispatcher implements ExchangeHandler {
         this.multipart = Objects.requireNonNull(multipart, "multipart");
         this.formLimit = formLimit;
         this.trustProxy = trustProxy;
+        this.proxyTrust = ProxyTrustSetting.legacy(trustProxy);
         this.codec = codec;
         this.jsonLimit = jsonLimit;
         this.context = context;
@@ -203,6 +206,13 @@ public final class Dispatcher implements ExchangeHandler {
         return statics.serveMount(mount,request,response);
     }
 
+    /** Replaces the proxy trust setting both request-construction sites pass; DefaultRestApp.freeze calls it. */
+    // @req IR-ENGINE-003
+    // @req SEC-ENGINE-003
+    void proxyTrust(ProxyTrustSetting setting) {
+        this.proxyTrust = Objects.requireNonNull(setting, "setting");
+    }
+
     // @req FR-HTTP-027; FR-APP-021; FR-APP-022; FR-APP-023
     private void handleHttp(HttpExchange ex) {
         String rid=RequestIds.next();long start=System.nanoTime();
@@ -212,7 +222,7 @@ public final class Dispatcher implements ExchangeHandler {
         if(!ex.rawPath().startsWith("/")) { automatic(ex,400,null,false,rid,start);return; }
         Method method=methodOf(ex.methodToken());
         DefaultRequest req=new DefaultRequest(ex,method,Collections.emptyMap(),context,codec,jsonLimit,trustProxy,multipart,formLimit,spool,true);
-        req.requestId(rid);req.startNanos(start);
+        req.requestId(rid);req.startNanos(start);req.proxyTrust(proxyTrust);
         DefaultResponse res=new DefaultResponse(ex,method==Method.HEAD,codec);
         res.mimeTypes(statics.mimeTypes());res.resolverTap(statics.resolverTap());res.request(req);
         res.applyDefaultCache(statics.defaultCache());res.sseRegistry(sse);
@@ -265,6 +275,7 @@ public final class Dispatcher implements ExchangeHandler {
                 multipart, formLimit, spool);
         req.requestId(rid);
         req.startNanos(start);
+        req.proxyTrust(proxyTrust);
         DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD, codec);
         res.mimeTypes(statics.mimeTypes());
         res.resolverTap(statics.resolverTap());

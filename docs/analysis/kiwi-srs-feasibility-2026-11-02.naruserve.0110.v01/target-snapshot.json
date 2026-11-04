@@ -1,0 +1,96 @@
+{
+ "run_id": "2026-11-02.naruserve.0110.v01",
+ "target": "0.11.0",
+ "target_total": 165,
+ "filter": "--req-filter (12 ids)",
+ "evaluated": [
+  {
+   "id": "SEC-AUTH-003",
+   "scope": "AUTH",
+   "title": "— First-admin POST /auth/setup and recovery mode [DRAFT — pending decision]",
+   "status": "planned",
+   "stability": "draft"
+  },
+  {
+   "id": "SEC-AUTH-007",
+   "scope": "AUTH",
+   "title": "— Principal cache with explicit invalidation and statelessAccess minimal principal [DRAFT — pending decision]",
+   "status": "planned",
+   "stability": "draft"
+  },
+  {
+   "id": "SEC-AUTH-008",
+   "scope": "AUTH",
+   "title": "— Sensitive value hygiene in logs, exception messages and audit events [DRAFT — pending decision]",
+   "status": "planned",
+   "stability": "draft"
+  },
+  {
+   "id": "SEC-TOKEN-009",
+   "scope": "TOKEN",
+   "title": "— Constant-work login and the 1.25T failure-response floor [DRAFT — pending decision]",
+   "status": "planned",
+   "stability": "draft"
+  },
+  {
+   "id": "IR-TOKEN-001",
+   "scope": "TOKEN",
+   "title": "— Authenticator SPI with built-in password, Bearer JWT and API key authenticators [DRAFT — pending decision]",
+   "status": "planned",
+   "stability": "draft"
+  },
+  {
+   "id": "FR-FLOW-006",
+   "scope": "FLOW",
+   "title": "— GET /auth/me and PATCH /auth/me self profile endpoints [DRAFT — pending decision]",
+   "status": "planned",
+   "stability": "draft"
+  },
+  {
+   "id": "FR-FLOW-009",
+   "scope": "FLOW",
+   "title": "— Optional hard Lockout for password login [DRAFT — pending decision]",
+   "status": "planned",
+   "stability": "draft"
+  },
+  {
+   "id": "SEC-FLOW-013",
+   "scope": "FLOW",
+   "title": "— DeviceTrust signed device token with name fingerprint and per-token failure limit [DRAFT — pending decision]",
+   "status": "planned",
+   "stability": "draft"
+  },
+  {
+   "id": "REL-FLOW-001",
+   "scope": "FLOW",
+   "title": "— Throttle and device-trust counter storage: memory cap, snapshots and shared counting [DRAFT — pending decision]",
+   "status": "planned",
+   "stability": "draft"
+  },
+  {
+   "id": "FR-IAM-013",
+   "scope": "IAM",
+   "title": "— JdbcLoginThrottle and JdbcDeviceTrust shared counters [DRAFT — pending decision]",
+   "status": "planned",
+   "stability": "draft"
+  },
+  {
+   "id": "FR-IAM-014",
+   "scope": "IAM",
+   "title": "— Admin PATCH A4: one R31 check, fixed application order and the applied list [DRAFT — pending decision]",
+   "status": "planned",
+   "stability": "draft"
+  },
+  {
+   "id": "SEC-APIKEY-008",
+   "scope": "APIKEY",
+   "title": "— Endpoints and writes forbidden to API key actors [DRAFT — pending decision]",
+   "status": "planned",
+   "stability": "draft"
+  }
+ ],
+ "excluded": {
+  "not_in_filter": 153
+ },
+ "empty_reason": null
+}

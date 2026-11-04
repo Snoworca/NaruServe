@@ -1,0 +1,1857 @@
+{
+ "modules": [
+  {
+   "path": "NaruServe-api (core: RestApp/DefaultRestApp, Request/DefaultRequest, Dispatcher, ProxyTrust)",
+   "exports_or_role": "Core public API + internal: DefaultRestApp 1169 lines (registration list/listener C4), DefaultRequest 587 (socketAddress C6a, requestId C7), Dispatcher 534, ProxyTrust 38 lines (legacy boolean trustProxy -> hops/CIDR C6b); 162 main / 196 test java files; testFixtures has 13 files (InMemoryHttpAdapter, TestApp)",
+   "complexity_estimate": "medium"
+  },
+  {
+   "path": "NaruServe-servlet",
+   "exports_or_role": "JVM-only Servlet 3.1 adapter (ServletExchange 694 lines, ServletAdapter 280); 11 main / 39 test files; Jetty 9.4.58 embedded in tests; only 1 requirement (SVL, remote address / proxy parity) targets it",
+   "complexity_estimate": "low"
+  },
+  {
+   "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth (new)",
+   "exports_or_role": "Does not exist yet (no utils dir). Planned subpackages jwt, password, user, group, rbac, audit, apikey, spi, jdbc, internal, testing; in-house JWT/PBKDF2/bcrypt/JSON claims parser, JDBC stores, 126 requirements across AUTH/TOKEN/IAM/APIKEY/FLOW; all draft; must stay dependency-free and API 21 clean",
+   "complexity_estimate": "high"
+  },
+  {
+   "path": "NaruServe-tinyhttpd / NaruServe-kotlin / NaruServe-gson",
+   "exports_or_role": "Referenced only by a few verifies rows (2/1/1); no auth changes expected beyond adapter parity",
+   "complexity_estimate": "low"
+  }
+ ],
+ "trace_validation": [
+  {
+   "req_id": "CON-APIKEY-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "CON-AUTH-001",
+   "trace_paths": [
+    "build.gradle:L60-L61",
+    "build.gradle:L14-L21",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "CON-AUTH-002",
+   "trace_paths": [
+    "build.gradle:L102-L150",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:L389-L396",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthArchitectureTest.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "CON-AUTH-003",
+   "trace_paths": [
+    "build.gradle:L431-L442",
+    "build.gradle:L40-L44",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthArchitectureTest.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "CON-AUTH-004",
+   "trace_paths": [
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:L27-L28",
+    "build.gradle:L93",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/package-info.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "CON-AUTH-005",
+   "trace_paths": [
+    "docs/api/middleware.md:L90-L92",
+    "docs/api/auth.md",
+    "docs/api/en/auth.md"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "CON-AUTH-006",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/ForwardingUserStore.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/ForwardingLoginThrottle.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "CON-AUTH-007",
+   "trace_paths": [
+    "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:L117",
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:L176-L177",
+    "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:L380-L445"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "CON-ENGINE-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L221-L227",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ProxyTrust.java:L1-L38",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ProxyTrustAcceptanceTest.java:L24-L57"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "CON-IAM-001",
+   "trace_paths": [
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:L27-L28",
+    "NaruServe-kotlin/src/test/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "CON-IAM-002",
+   "trace_paths": [
+    "build.gradle:L362-L369",
+    "build.gradle:L60-L61"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "DR-APIKEY-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/StoredApiKey.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/ApiKey.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/IssuedApiKey.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "DR-APIKEY-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/resources/com/snoworca/naruserve/utils/auth/jdbc/",
+    "build.gradle:L360-L369"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "DR-IAM-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/",
+    "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java:L62-L64"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "DR-IAM-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/GroupStore.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "DR-IAM-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-APIKEY-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-APIKEY-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/TimeSource.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-APIKEY-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:L24-L35"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-APIKEY-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:L24-L35"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-APIKEY-005",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:L24-L35"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-APIKEY-006",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/AuthUser.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-APIKEY-007",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/InMemoryApiKeyStore.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-APIKEY-008",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/AuthUsers.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-APIKEY-009",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/AuthTesting.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-APIKEY-010",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/AuthTesting.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-APP-025",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L939-L948",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L822-L829",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L840-L856",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L922-L934",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L308-L328",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-APP-026",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRouter.java:L9-L34",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpRouter.java:L29-L66",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:L151-L157",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:L5-L16"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-AUTH-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthConfigException.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-AUTH-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthConfig.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-AUTH-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthProfile.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Deployment.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-AUTH-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L131",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-AUTH-005",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L840-L856",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L1008-L1050",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-AUTH-006",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java:L26-L42",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:L95-L150",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:L33-L64",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/AuthResponses.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-AUTH-007",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthEvents.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-AUTH-008",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthEventContext.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/UserOrigin.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-AUTH-009",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/audit/AuditEvent.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/audit/AuditSink.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/audit/AuditSinks.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-FLOW-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:L33-L64",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-FLOW-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/CookieOptions.java:L8-L58",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-FLOW-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:L136-L147",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-FLOW-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:L128-L140",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-FLOW-005",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L146-L175",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-FLOW-006",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-FLOW-007",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:L5-L22",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-FLOW-008",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java:L87-L95",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketSession.java:L21-L27",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-FLOW-009",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Lockout.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-HTTP-029",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:L389-L396",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:L206-L245",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RequestIds.java:L7-L22",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:L95-L150"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-IAM-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/DuplicateUserException.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-IAM-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-IAM-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/AuthUsers.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-IAM-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/AuthTesting.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-IAM-005",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/rbac/Scopes.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/ScopeMatcher.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-IAM-006",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/rbac/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-IAM-007",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/GroupExpander.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/GroupLimits.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-IAM-008",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/AuthUsers.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-IAM-009",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-IAM-010",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcUserStore.java",
+    "build.gradle:L60-L61"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-IAM-011",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcGroupStore.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-IAM-012",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcRefreshTokenStore.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-IAM-013",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-IAM-014",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-TOKEN-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenService.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenPair.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-TOKEN-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/RefreshTokenStore.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L129-L135"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-TOKEN-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/PasswordHashers.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "FR-TOKEN-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/PasswordPolicy.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/BreachedPasswordChecker.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-APIKEY-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-APIKEY-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/AuthApiKeys.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-APIKEY-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/ApiKeyStatus.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-APIKEY-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/ApiKeyStore.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-APIKEY-005",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:L95-L150",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:L57-L73",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-APP-008",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L76-L102",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:L60-L70",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-AUTH-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/TimeSource.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/package-info.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-AUTH-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L939-L948",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:L5-L16",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-AUTH-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:L95-L150",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:L15-L72",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthRejection.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-AUTH-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L107-L123",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthPrincipal.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RouteGroup.java:L10-L22"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-AUTH-005",
+   "trace_paths": [
+    "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/TestApp.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/AuthTesting.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-ENGINE-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:L221-L227",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L392-L398",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L1008-L1050"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-FLOW-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:L15-L72",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-FLOW-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:L5-L22",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:L128-L140",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-FLOW-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/LoginThrottle.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/ForwardingLoginThrottle.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:L26-L28"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-HTTP-010",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L96-L100",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:L389-L396",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt:L15-L31"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-IAM-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/UserStore.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:L95-L150"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-IAM-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/ForwardingUserStore.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-IAM-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/AuthUsers.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java:L26-L42"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-IAM-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-IAM-005",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:L5-L22",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:L128-L140",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:L95-L150",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-TOKEN-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/Authenticator.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "IR-TOKEN-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/TokenCodec.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "OPS-APIKEY-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "OPS-AUTH-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L125",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L488-L515",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "OPS-AUTH-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "OPS-FLOW-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/CorsOptions.java:L5-L15",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultCors.java:L30-L48",
+    "docs/api/middleware.md:L90-L92"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "PERF-APIKEY-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "PERF-APIKEY-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcApiKeyStore.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "PERF-TOKEN-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/HashCost.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "PERF-TOKEN-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "REL-APIKEY-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "REL-APIKEY-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "REL-APIKEY-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "REL-APIKEY-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "REL-APIKEY-005",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcApiKeyStore.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "REL-APIKEY-006",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcApiKeyStore.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "REL-APIKEY-007",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcApiKeyStore.java",
+    "build.gradle:L360-L369"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "REL-FLOW-001",
+   "trace_paths": [
+    "build.gradle:L274-L280",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "REL-IAM-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/UserStore.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "REL-IAM-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/UserStore.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "REL-IAM-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/UserStore.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "REL-IAM-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "REL-TOKEN-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:L128-L140",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-APIKEY-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L65-L68",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-APIKEY-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L68",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-APIKEY-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-APIKEY-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:L95-L150"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-APIKEY-005",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/LoginThrottle.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-APIKEY-006",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-APIKEY-007",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthPrincipal.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-APIKEY-008",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-APIKEY-009",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/rbac/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-APIKEY-010",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-APIKEY-011",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketSession.java:L27",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java:L87-L95",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-APP-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L905-L920",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpRouter.java:L29-L66",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:L60-L70",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:L151-L157"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-AUTH-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthConfigException.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-AUTH-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthMode.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-AUTH-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-AUTH-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:L822-L829",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultCors.java:L30-L48",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-AUTH-005",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:L115",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-AUTH-006",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:L175-L185",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/AppLifecycle.java:L151-L157",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-AUTH-007",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/PrincipalCache.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-AUTH-008",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-ENGINE-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ProxyTrust.java:L1-L38",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:L486-L500",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:L206-L245",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ProxyTrustAcceptanceTest.java:L32-L47"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-ENGINE-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ProxyTrust.java:L1-L38",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:L486-L500",
+    "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:L43-L82"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-ENGINE-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ProxyTrust.java:L1-L38",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:L486-L500",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java:L87-L95"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L96-L100",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:L486-L500",
+    "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:L43-L82",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/CookieOptions.java:L8-L58",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L62-L102",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-005",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:L33-L64",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:L136-L147",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-006",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Cookie.java:L90-L96",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/CsrfTokens.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-007",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L62-L102",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/CsrfTokens.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-008",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Cookie.java:L90-L96",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/CsrfTokens.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L157-L175"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-009",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/CookieOptions.java:L8-L58",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/SameSite.java:L5-L9",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-010",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Cookie.java:L90-L96",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L157-L175"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-011",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:L486-L500",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/LoginThrottle.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-012",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/DeviceTrust.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-013",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L62-L68",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/DeviceTrust.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:L157-L175"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-014",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:L128-L140",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-FLOW-015",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:L15-L72",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/LoginThrottle.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-HTTP-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:L486-L500",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/spi/HttpExchange.java:L51",
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:L176-L177",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:L247-L270"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-IAM-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/UserMutator.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-IAM-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/AuthUsers.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-IAM-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/UserStore.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-IAM-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-IAM-005",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-IAM-006",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-IAM-007",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:L5-L16",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-SVL-001",
+   "trace_paths": [
+    "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:L117",
+    "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:L214",
+    "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestTest.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-TOKEN-001",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:L26-L28"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-TOKEN-002",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/MiniJson.java",
+    "build.gradle:L60-L80"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-TOKEN-003",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jwt/",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/TimeSource.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-TOKEN-004",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/KeySource.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeySources.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jwt/JwtKeys.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-TOKEN-005",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenService.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/HmacSigner.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-TOKEN-006",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenService.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/RefreshTokenStore.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-TOKEN-007",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Pbkdf2.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-TOKEN-008",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/BcryptPasswordHasher.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Blowfish.java"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  },
+  {
+   "req_id": "SEC-TOKEN-009",
+   "trace_paths": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:L128-L140",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/"
+   ],
+   "all_verifies_paths_exist": true,
+   "missing": [],
+   "addition_site_parents_ok": true,
+   "external_paths_detected": []
+  }
+ ],
+ "build_facts": {
+  "api_main_dependencies": "none: build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (CON-BUILD-006); servlet/tinyhttpd/gson depend on it via api",
+  "animal_sniffer": "ru.vyarus.animalsniffer 2.0.1; applied to androidModules (all naruModules except servlet, slf4j) incl. NaruServe-api; sourceSets=[main] only (tests unchecked); signature net.sf.androidscents.signature:android-api-level-21:5.0.1_r2 (build.gradle:431-441); java.sql/DataSource/Normalizer/FileDescriptor.sync availability on API 21 is unconfirmed by the build until auth classes land",
+  "java_target": "options.release=8; project version 0.10.0 (build.gradle allprojects)",
+  "test_fixtures": "java-test-fixtures plugin applied to NaruServe-api (build.gradle:275); 13 files under src/testFixtures/java/com/snoworca/naruserve/testing; fixtures use compileOnly jspecify/junit; consumed by servlet, tinyhttpd, gson, kotlin tests and root tests",
+  "test_deps_global": "junit 4.13.2, jspecify 1.0.0 (+ kotlin-stdlib in kotlin tests) at build.gradle:96-99",
+  "jdbc_test_driver": "NONE declared: no org.xerial sqlite-jdbc, H2, HSQLDB or Derby in build.gradle/settings. A test-only driver must be added (testImplementation on NaruServe-api); precedent: Jetty servletTestDependencies (CON-SVL-001). com.h2database exists in the local gradle cache but is not wired in",
+  "dependency_rule_checks": "checkDependencyRules task (CON-BUILD-007/009/013) and ConsumerRulesTest; mainDependencies map is asserted so auth must not alter it",
+  "packaging_note": "no utils package, no build.gradle edits needed for new package; add AuthArchitectureTest in NaruServe-api/src/test"
+ },
+ "code_metrics": {
+  "total_main_files": 196,
+  "test_files": 298,
+  "api_main_files": 162,
+  "api_test_files": 196,
+  "test_fixture_files": 13,
+  "note": "counts cover *.java and *.kt under Naru*/src/main and src/test; utils.auth has 0 files"
+ }
+}

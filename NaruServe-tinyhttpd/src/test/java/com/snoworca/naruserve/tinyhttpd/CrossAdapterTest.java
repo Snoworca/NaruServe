@@ -252,13 +252,20 @@ public class CrossAdapterTest {
         onBoth(BothAdaptersCases::handlerReachingCases);
     }
 
-    // FR-ENGINE-008 AC-4
+    // FR-ENGINE-008 AC-4; CON-ENGINE-001 AC-1
     @Test(timeout = 30000)
     public void FR_ENGINE_008_AC4_proxyTrustGivesTheSameRemoteAddressAndIsSecureOnBoth() throws Exception {
         onBoth(BothAdaptersCases::proxyTrustCases);
     }
 
-    // FR-ENGINE-008 AC-4: the trust decision lives in DefaultRequest, so no adapter class names a forwarded header.
+    // SEC-ENGINE-001 AC-6; SEC-ENGINE-002 AC-6; SEC-ENGINE-003 AC-7; SEC-HTTP-001 AC-4
+    @Test(timeout = 30000)
+    public void SEC_ENGINE_001_AC6_SEC_ENGINE_002_AC6_SEC_ENGINE_003_AC7_SEC_HTTP_001_AC4_hopAndCidrTrustMatchOnBoth()
+            throws Exception {
+        onBoth(BothAdaptersCases::proxyTrustModeCases);
+    }
+
+    // FR-ENGINE-008 AC-4; CON-ENGINE-001 AC-1: the trust decision lives in DefaultRequest, so no adapter class names a forwarded header.
     @Test
     public void FR_ENGINE_008_AC4_noAdapterClassReadsForwardedHeaders() throws Exception {
         Map<String, String> classes = new java.util.TreeMap<>();

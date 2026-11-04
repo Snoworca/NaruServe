@@ -1,0 +1,1 @@
+{"pass":"tdd-review (combined with prickly round 1, single verifier)","target":["SEC-IAM-008","FR-IAM-015"],"req_mapping":"speckiwi coverage --tests: gaps []","red":"compileTestJava exit 1 (AuthFileKey absent); round-2 tests 4 red before fixes, 1 red before .bak restore","findings":"see prickly_review_iter1.json item 8 (weak tests) - fixed"}

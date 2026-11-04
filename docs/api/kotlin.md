@@ -4,7 +4,7 @@
 
 NaruServe는 Java로 작성되었지만 Kotlin에서 별도 DSL 없이 씁니다. 콜백이 모두 Java 함수형 인터페이스(`@FunctionalInterface`)라서 Kotlin 람다가 그대로 들어갑니다.
 
-이 문서는 NaruServe 0.10.0을 설명합니다. [설치 절차](README.md)를 따르세요. 코어는 Java 8/API 21 호환이며 Kotlin 라이브러리는 선택 Kotlin 모듈에 둡니다.
+이 문서는 NaruServe 0.11.0을 설명합니다. [설치 절차](README.md)를 따르세요. 코어는 Java 8/API 21 호환이며 Kotlin 라이브러리는 선택 Kotlin 모듈에 둡니다.
 
 ```kotlin
 val app = RestApp.create()
@@ -117,7 +117,7 @@ val user = req.body(User::class.java) ?: throw HttpException(400, "JSON body is 
 `reified`를 쓰는 Kotlin 확장 함수를 선택 모듈 `NaruServe-kotlin`으로 제공합니다. `kotlin-stdlib`은 이 모듈만 사용합니다. 이 모듈은 기본 조립 모듈 `NaruServe`(TinyHttpd + Gson)를 포함하므로, Kotlin 프로젝트는 이 모듈 하나로 `RestApp.create()`까지 씁니다.
 
 ```groovy
-implementation 'com.snoworca.naruserve:naruserve-kotlin:0.10.0'
+implementation 'com.snoworca.naruserve:naruserve-kotlin:0.11.0'
 ```
 
 ```kotlin
@@ -176,7 +176,7 @@ app.post("/users") { req, res ->
 
 ## Coroutine
 
-네이티브 `suspend` 핸들러나 필수 coroutine 의존성은 없습니다. 0.10.0 일반 HTTP는 늦은 Next 콜백과 Deferred를 반환하는 세 인자 AsyncRouteHandler를 지원합니다. 앱이 관리하는 coroutine/executor에 연결하려면 완료·취소·반환한 Deferred lease를 요청 수명에 맞춰 연결하세요. `runBlocking`은 호출 스레드를 점유하며 프레임워크의 비동기 어댑터가 아닙니다.
+네이티브 `suspend` 핸들러나 필수 coroutine 의존성은 없습니다. 0.11.0 일반 HTTP는 늦은 Next 콜백과 Deferred를 반환하는 세 인자 AsyncRouteHandler를 지원합니다. 앱이 관리하는 coroutine/executor에 연결하려면 완료·취소·반환한 Deferred lease를 요청 수명에 맞춰 연결하세요. `runBlocking`은 호출 스레드를 점유하며 프레임워크의 비동기 어댑터가 아닙니다.
 
 ## 한 줄로 시작하기
 

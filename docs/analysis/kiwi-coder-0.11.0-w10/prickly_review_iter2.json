@@ -1,0 +1,9 @@
+{"pass":"prickly-review","iter":2,"run_id":"0.11.0-w10","severity":{"CRITICAL":0,"HIGH":0,"MEDIUM":2,"LOW":5},
+"findings":[
+{"id":"R2-1","severity":"MEDIUM","disposition":"fixed","note":"ConfirmationHolds shared by /auth/password, PAT, admin issuance and checkPassword; busy -> 429 Retry-After 1"},
+{"id":"R2-2","severity":"MEDIUM","disposition":"fixed","note":"PrincipalCache.refresh (no epoch bump) used by the WebSocket recheck; test SEC_APIKEY_011_AC8_aRecheckDoesNotDefeatTheCache"},
+{"id":"R2-3","severity":"LOW","disposition":"fixed (per-request hold tokens, remove(id, hold))"},
+{"id":"R2-4","severity":"LOW","disposition":"fixed (floor computed before the hold)"},
+{"id":"R2-5","severity":"LOW","disposition":"fixed (429 Retry-After 1)"},
+{"id":"R2-6","severity":"LOW","disposition":"fixed (app revoke: revokedApiKeyId only)"},
+{"id":"R2-7","severity":"LOW","disposition":"fixed (deterministic Pausing-hasher test)"}]}

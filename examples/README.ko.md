@@ -41,9 +41,32 @@ curl http://127.0.0.1:3000/stream
 
 Kotlin 요청 DTO는 Unsafe를 사용하지 않는 기본 Gson에 맞춰 nullable 프로퍼티와 인자 없는 생성자를 사용합니다. 인자 없는 생성자가 없는 불변 data class에는 다른 코덱을 명시적으로 설정해야 합니다. Unsafe를 켜면 생성자를 우회하므로 해결책으로 삼지 마세요.
 
+## 인증 예제
+
+`example.AuthExample`(Java)과 `example/AuthExample.kt`(Kotlin)는 인증을 붙인 완전한 프로그램입니다. DEV 모드로 돌고, 기동할 때 계정 둘을 만듭니다. `alice`(비밀번호 `alice-password-1`, 역할 `editor`)와 `bob`(비밀번호 `bob-password-1`, 역할 없음)입니다. `/health`는 공개, `/me`는 로그인 필요, `POST /posts`는 `posts:write` 스코프를 가진 `editor`만 됩니다. `runAuth` 작업으로 실행합니다(기본 포트 3000).
+
+```bash
+./gradlew -p examples/java -PtinyHttpdFromMaven=true runAuth
+# 또는 Java를 종료하고 Kotlin을 실행합니다.
+./gradlew -p examples/kotlin -PtinyHttpdFromMaven=true runAuth
+```
+
+다른 터미널에서 확인합니다. 로그인 응답의 `accessToken` 값을 `eyJ...` 자리에 넣습니다.
+
+```bash
+curl http://127.0.0.1:3000/health                                   # ok
+curl -i http://127.0.0.1:3000/me                                    # 401 unauthenticated
+curl -X POST http://127.0.0.1:3000/auth/login -H 'Content-Type: application/json' \
+     -d '{"username":"alice","password":"alice-password-1"}'
+curl http://127.0.0.1:3000/me -H "Authorization: Bearer eyJ..."                     # alice
+curl -X POST http://127.0.0.1:3000/posts -H "Authorization: Bearer eyJ..."          # 201 created by alice
+```
+
+`bob`으로 로그인한 토큰으로 `POST /posts`를 부르면 403 `insufficient_scope`입니다. DEV는 로컬 개발용입니다. 배포 전에 [인증 가이드](../docs/api/auth.md)의 배포 안내를 읽으세요.
+
 ## 별도 소비자에서 Maven 좌표 사용
 
-별도 소비자 프로젝트에 예제 소스와 빌드 파일을 복사하고, `settings.gradle`에서 `includeBuild('../..')`를 제거하세요. `mavenCentral()`을 유지하고, 해당 버전을 Maven Central에서 받을 수 있을 때 Java는 `com.snoworca.naruserve:naruserve:0.10.0`, Kotlin은 `com.snoworca.naruserve:naruserve-kotlin:0.10.0`을 사용하세요. 가용성과 모듈 선택은 [설치 안내](../README.ko.md#설치)에서 확인하세요.
+별도 소비자 프로젝트에 예제 소스와 빌드 파일을 복사하고, `settings.gradle`에서 `includeBuild('../..')`를 제거하세요. `mavenCentral()`을 유지하고, 해당 버전을 Maven Central에서 받을 수 있을 때 Java는 `com.snoworca.naruserve:naruserve:0.11.0`, Kotlin은 `com.snoworca.naruserve:naruserve-kotlin:0.11.0`을 사용하세요. 가용성과 모듈 선택은 [설치 안내](../README.ko.md#설치)에서 확인하세요.
 
 버전을 찾지 못하면 NaruServe 루트에서 이 체크아웃을 로컬에 게시합니다.
 

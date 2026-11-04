@@ -1,0 +1,1753 @@
+{
+ "group": "FLOW",
+ "prescreen": {
+  "senior_targets": [
+   "SEC-FLOW-001",
+   "SEC-FLOW-003",
+   "SEC-FLOW-004",
+   "IR-FLOW-001",
+   "FR-FLOW-001",
+   "SEC-FLOW-006",
+   "SEC-FLOW-007",
+   "SEC-FLOW-008",
+   "FR-FLOW-002",
+   "SEC-FLOW-009",
+   "SEC-FLOW-010",
+   "FR-FLOW-003",
+   "IR-FLOW-002",
+   "FR-FLOW-004",
+   "FR-FLOW-005",
+   "SEC-FLOW-011",
+   "SEC-FLOW-012",
+   "FR-FLOW-006",
+   "SEC-FLOW-013",
+   "SEC-FLOW-014",
+   "FR-FLOW-007",
+   "FR-FLOW-008",
+   "FR-FLOW-009",
+   "REL-FLOW-001"
+  ],
+  "quick_pass": [
+   "SEC-FLOW-002",
+   "SEC-FLOW-005",
+   "OPS-FLOW-001",
+   "IR-FLOW-003",
+   "SEC-FLOW-015"
+  ],
+  "quick_block": []
+ },
+ "judgements": [
+  {
+   "req_id": "SEC-FLOW-001",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "First middleware step using req.isSecure(), header checks and a literal loopback test; no new API needed except req.socketAddress(), which does not exist yet and comes from sibling C6a.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:96-100 remoteAddress()/isSecure() exist; no socketAddress() yet (C6a, SEC-HTTP-001 0.11.0 draft)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:491-498 legacy boolean trustProxy; C6b (IR-ENGINE-003) not implemented",
+      "build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main deps; auth must stay in-house)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "verifies traces match: Request.java:96-100 isSecure(); InMemoryHttpAdapter(remoteAddress, secure) supports plain/secure and address fixtures.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:96-100 remoteAddress()/isSecure() exist; no socketAddress() yet (C6a, SEC-HTTP-001 0.11.0 draft)",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:77 InMemoryHttpAdapter(String remoteAddress, boolean secure)"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "FR-HTTP-011 verified; SEC-HTTP-001 (C6a), SEC-ENGINE-001/002/003, IR-ENGINE-003 (C6b) and SEC-AUTH-002 are 0.11.0 drafts that must land first. Not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json req_summaries",
+      "docs/spec/06.engine-adapter.srs.md SEC-ENGINE-001..003 planned/draft"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "AC-1..7 are HTTP fixture tests; AC-8 is a docs test over two new pages.",
+     "evidence": [
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:77 InMemoryHttpAdapter(String remoteAddress, boolean secure)",
+      "docs/api/auth.md and docs/api/en/auth.md do not exist yet (new pages)"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "R33 transport rule is in FLOW scope.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:17"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core: 00 §9 v1 lists 보안 연결 규칙(R33).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Land C6a req.socketAddress() (SEC-HTTP-001) and C6b proxy trust (IR-ENGINE-003) before this step",
+    "Loopback test on the literal address only (no DNS)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-FLOW-002",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Builder flag + TTL override at build() + per-start WARN; cookie Secure is already a CookieOptions attribute.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/CookieOptions.java:9-36 path/domain/maxAge/secure/httpOnly/sameSite",
+      "build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main deps; auth must stay in-house)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "CookieOptions verifies trace matches the Secure attribute; Auth.java is an addition site in a not-yet-existing package.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/CookieOptions.java:9-36 path/domain/maxAge/secure/httpOnly/sameSite",
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "Depends on SEC-FLOW-001, SEC-AUTH-002, FR-AUTH-001, FR-TOKEN-001: all 0.11.0 drafts, implementable. Not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json req_summaries"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "All ACs testable with a log capture; how often the no-Secure WARN repeats and null/empty reason handling are open (Q122) but AC-4 asserts only that a WARN appears.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:162"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "R33 opt-in belongs to transport scope.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:17"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "v1 (archetype B LAN plain HTTP); a narrow deployment case.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Decide null/empty reason handling in build() (Q122) and record it in docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-FLOW-003",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "A fixed method+path table under the mount path, consulted before the permit matcher; straightforward in-house code but it touches the APIKEY chain and mountPath.",
+     "evidence": [
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:63-66 header(String)/headers(String) list"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Only an addition-site trace; design concrete (8-entry list, two classes).",
+     "evidence": [
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "SEC-FLOW-001, SEC-AUTH-005, SEC-APIKEY-004, FR-AUTH-005, IR-TOKEN-001, IR-FLOW-001 are 0.11.0 drafts. In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Each AC is an HTTP outcome; AC-5..9 are long compound cases but deterministic. adminRoutes mount-path follow-up is open (Q6) and is deliberately not asserted.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:21"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Credential endpoint classes are FLOW scope.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:17"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1 (R29/R33).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Decide whether auth.adminRoutes() follows .mountPath (Q6) before writing the admin-apikeys classification"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-FLOW-004",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Per-mode credential read with duplicate detection uses existing Core accessors: headers() list for two Authorization headers, getCookies() for duplicate naru_at.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:63-66 header(String)/headers(String) list",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:157-175 cookie(String) first only; getCookies() keeps duplicates (FR-COOKIE-002 verified)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "verifies trace Request.java:62-102 matches; FR-COOKIE-002 duplicate-preserving getCookies is verified.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:63-66 header(String)/headers(String) list",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:157-175 cookie(String) first only; getCookies() keeps duplicates (FR-COOKIE-002 verified)"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "FR-COOKIE-002 verified; SEC-FLOW-001 and IR-TOKEN-001 0.11.0 drafts. In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "All HTTP fixture tests. Default HEADER mode is [INFERRED] (Q58) but fixed in AC-9, so testable.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:83"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Transport-mode credential reading is FLOW scope.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:18"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "IR-FLOW-001",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "One header-builder helper; HttpException.withHeader already exists for attaching WWW-Authenticate.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:57 withHeader(String,String)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "verifies trace HttpException.java:15-72 matches withHeader; FR-APP-006 error JSON is verified.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:57 withHeader(String,String)"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "FR-APP-006 verified; IR-AUTH-003 and CON-APIKEY-001 0.11.0 drafts. In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Header-value assertions. Whether the 403 challenge carries scope=\"...\" is open (Q123) and AC-7 asserts only error=.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:163"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Challenge shapes for FLOW credential reading.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:18"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1 (R30, R47).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Emit one combined WWW-Authenticate header, not two (wire shape)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-FLOW-001",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Ordered filter list; the 415 step must re-apply Core's JSON media-type test on headers because JsonBodyReader.isJsonType is package-private internal.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:34,104 isJsonType is package-private in internal; auth (Core public API only) must re-apply the same header test",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:57 withHeader(String,String)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "verifies trace JsonBodyReader.java:33-64 matches the Core 415 rule; addition site package new.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:34,104 isJsonType is package-private in internal; auth (Core public API only) must re-apply the same header test",
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "Ten 0.11.0 deps (SEC-FLOW-001/003/004/005/007/008/010, SEC-APIKEY-004, FR-AUTH-006, IR-TOKEN-001). In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Combined-fault requests with a single expected status; deterministic, but each AC needs most of the chain built first.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:395-400"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW decision order.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:19"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1 (R29 (f)).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Keep auth's media-type test in parity with JsonBodyReader.isJsonType (parity test) without calling internal"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-FLOW-005",
+   "feasibility": "high",
+   "score": 92,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Header-only check (Content-Type, Content-Length, Transfer-Encoding) then throw new HttpException(415); Core renders UNSUPPORTED_MEDIA_TYPE. Must duplicate the package-private isJsonType test.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:34,104 isJsonType is package-private in internal; auth (Core public API only) must re-apply the same header test",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:136-147 code(415)=UNSUPPORTED_MEDIA_TYPE, code(503)=SERVICE_UNAVAILABLE"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Both verifies traces match: JsonBodyReader content-type gate and StandardErrors 415 code.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:34,104 isJsonType is package-private in internal; auth (Core public API only) must re-apply the same header test",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:136-147 code(415)=UNSUPPORTED_MEDIA_TYPE, code(503)=SERVICE_UNAVAILABLE"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "FR-JSON-001 verified; FR-AUTH-006 0.11.0 draft. Not in a cycle.",
+     "evidence": [
+      "docs/spec/07.json.srs.md FR-JSON-001 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "Status and body-code assertions; AC-2 'token not used' checked by a later successful refresh.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:463-469"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW body format rule.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:19"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1 (login CSRF defence).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Parity test between auth's JSON media-type check and JsonBodyReader.isJsonType"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-FLOW-006",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "HMAC via javax.crypto (API 21) and in-house base64url (java.util.Base64 is unavailable on API 21) from TOKEN primitives; stateless recompute from sub/fam.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21 on main source set",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:157-175 cookie(String) first only; getCookies() keeps duplicates (FR-COOKIE-002 verified)",
+      "build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main deps; auth must stay in-house)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Cookie.java:90-96 getName/getValue verifies trace matches; CsrfTokens addition site is in a new package.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Cookie.java:90-96",
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "SEC-TOKEN-001/003/005, SEC-FLOW-004, IR-AUTH-003 0.11.0 drafts. In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Round-trip tests; AC-7 token format is [INFERRED] and the HMAC key derivation is open (Q117), but a format/round-trip test is still writable.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:157"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW CSRF.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:20"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1 (R29 (e), AuthTesting.csrfTokenFor).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Fix the CSRF HMAC key derivation label (Q117) and use ConstantTime for header/cookie comparison"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-FLOW-007",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Origin/Referer parse and compare to scheme://host[:port] from isSecure() and Host plus a trustedOrigins set; plain string/URI work.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:63-66 header(String)/headers(String) list",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:96-100 remoteAddress()/isSecure() exist; no socketAddress() yet (C6a, SEC-HTTP-001 0.11.0 draft)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Request.java:62-102 header access verifies trace matches; CsrfTokens addition site is new.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:63-66 header(String)/headers(String) list",
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "No declared depends_on; not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json SEC-FLOW-007 depends_on []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Synthetic Origin/Referer headers make every AC a fixture test.",
+     "evidence": [
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:77 InMemoryHttpAdapter(String remoteAddress, boolean secure)"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW Origin checks.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:20"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Core v1; real-browser Origin behaviour on old Android WebViews is unmeasured (00 §12), hence tag feasibility:medium.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:1265"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Request origin built from req.isSecure() after C6b so a TLS-terminating proxy reports https"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "SEC-FLOW-008",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Refresh handler composition: verify refresh token, multi-value naru_csrf match, Origin, then rotation; all on existing cookie APIs.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:157-175 cookie(String) first only; getCookies() keeps duplicates (FR-COOKIE-002 verified)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "Both verifies traces match (Cookie getters; getCookies duplicates for AC-10).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:157-175 cookie(String) first only; getCookies() keeps duplicates (FR-COOKIE-002 verified)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Cookie.java:90-96"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "SEC-FLOW-006/007 0.11.0 siblings; in the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "'Not marked used' checked by a follow-up refresh; Q61 code gap avoided by comparing against the CSRF-correct request (AC-9).",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:86"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW CSRF.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:20"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1 (R29 (a)).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-FLOW-002",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "One TokenDelivery writer over CookieOptions and res.addCookie; BOTH-mode Origin selection reuses SEC-FLOW-007.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/CookieOptions.java:9-36 path/domain/maxAge/secure/httpOnly/sameSite"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "CookieOptions verifies trace matches.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/CookieOptions.java:9-36 path/domain/maxAge/secure/httpOnly/sameSite"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "SEC-FLOW-007/009, FR-TOKEN-001, FR-AUTH-006 drafts; whether AuthResponses may reshape token bodies is open (Q9). In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)",
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:24"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Set-Cookie/body assertions; AC-8 Cache-Control is [INFERRED] (Q124); AC-9 needs SEC-AUTH-003 setup.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:164"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW delivery rule.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:21"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Core v1; relies on browsers sending Origin (00 §12, unmeasured on old WebViews).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:1265"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-FLOW-009",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Cookie factory on existing CookieOptions/SameSite; mountPath '/' check joins build() validation.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/CookieOptions.java:9-36 path/domain/maxAge/secure/httpOnly/sameSite",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/SameSite.java:5-9 STRICT"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "CookieOptions and SameSite verifies traces match the attributes asserted.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/CookieOptions.java:9-36 path/domain/maxAge/secure/httpOnly/sameSite",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/SameSite.java:5-9 STRICT"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "FR-COOKIE-001 and FR-DX-005 verified; FR-AUTH-001/005, SEC-AUTH-008 drafts. In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)",
+      "docs/spec/08.cookie.srs.md FR-COOKIE-001 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Attribute assertions; AC-4 defaults are [INFERRED] from 05; naru_device attributes are open (Q118) but not asserted; AC-8 docs test.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:158"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW cookies.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:20"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Choose naru_device Path/HttpOnly/SameSite/Max-Age (Q118) and document them"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-FLOW-010",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 23,
+     "rationale": "Deterministic 4-step decision table, but 15 ACs and reliance on RefreshTokenStore lookup without markUsed (TOKEN scope) and ver checks (IAM).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:157-175 cookie(String) first only; getCookies() keeps duplicates (FR-COOKIE-002 verified)",
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Cookie and getCookies verifies traces match; logic is new.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:157-175 cookie(String) first only; getCookies() keeps duplicates (FR-COOKIE-002 verified)"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "SEC-FLOW-003/008/009, FR-TOKEN-002, SEC-TOKEN-006 drafts. In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Every row decidable by revocation/ver observations; statelessAccess interaction (Q62) is excluded from AC-13.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:87"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW logout.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:22"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1 (R45).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-FLOW-003",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Outcome mapping on top of the decision table; 503 for store errors via HttpException(503).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:136-147 code(415)=UNSUPPORTED_MEDIA_TYPE, code(503)=SERVICE_UNAVAILABLE"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "StandardErrors verifies trace matches SERVICE_UNAVAILABLE.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:136-147 code(415)=UNSUPPORTED_MEDIA_TYPE, code(503)=SERVICE_UNAVAILABLE"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "SEC-FLOW-010, IR-FLOW-001, SEC-IAM-003, FR-AUTH-007, IR-AUTH-005 drafts. In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Status, header and ver/onLogout counters; store-failure fakes for AC-5.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:920-927"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW logout.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:22"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1 (R45).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "OPS-FLOW-001",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "Docs only; the CORS options it documents already exist.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/CorsOptions.java:7-11 allowedOrigins/allowedHeaders exist"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "CorsOptions/DefaultCors verifies traces match; docs/api/middleware.md:90-92 addition site exists; the auth pages are new.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/CorsOptions.java:7-11 allowedOrigins/allowedHeaders exist",
+      "docs/api/auth.md and docs/api/en/auth.md do not exist yet (new pages)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "FR-DX-010 verified; FR-FLOW-002 is a sibling in the SCC (this req is not).",
+     "evidence": [
+      "docs/spec/16.developer-experience.srs.md FR-DX-010 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Verification method inspection; header names and statements assertable by a docs test; Java/Kotlin examples must compile or be on the skip list (CON-HTTP-009).",
+     "evidence": [
+      "docs/api/auth.md and docs/api/en/auth.md do not exist yet (new pages)"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW CORS guidance.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:21"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "Docs guidance; required by CLAUDE.md docs rule but not runtime behaviour.",
+     "evidence": [
+      "CLAUDE.md API 문서"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "IR-FLOW-002",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "A Core Router with methodAsync registrations; conditional routes for register/apikeys.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19-21 methodAsync(String,Object,AsyncRouteHandler)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "HttpRoutes and HttpExecution verifies traces match methodAsync and async execution.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19-21 methodAsync(String,Object,AsyncRouteHandler)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:128-140"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "SEC-FLOW-003, FR-AUTH-005, FR-APIKEY-003, REL-TOKEN-001, FR-FLOW-007 drafts. In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1 registration enumeration needs a reader for Router registrations (C4 not yet present); AC-5 worker-pool-free test with hash slots taken is harder but doable; PATCH 200 [INFERRED] (Q49).",
+     "evidence": [
+      "RestApp.java has no registrations() accessor yet (grep), C4 is FR-APP-025/IR-APP-008, 0.11.0 draft",
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:74"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW account endpoints.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:22"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1 (R45).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Provide a way to enumerate auth router registrations for AC-1 (C4 app.registrations() or a router-level test hook)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-FLOW-004",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Handler composition over throttle, hash slot, constant-work verify and TokenService; NFKC normalization needs java.text.Normalizer, unconfirmed by the API 21 signature run.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19-21 methodAsync(String,Object,AsyncRouteHandler)",
+      "00 §12 and build_facts: java.text.Normalizer on API 21 not yet confirmed by animal-sniffer (Android has had it since API 9, but the build has not checked it)",
+      "build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main deps; auth must stay in-house)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "HttpExecution verifies trace matches async registration; logic is new.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:128-140"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Eight 0.11.0 drafts (SEC-FLOW-012, FR-FLOW-002, SEC-TOKEN-009, REL-TOKEN-001, IR-TOKEN-001, FR-IAM-003, FR-AUTH-007, FR-TOKEN-001). In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "401 code invalid_credentials is [INFERRED] (Q46) but fixed in AC-2; AC-5 timing floor needs a TimeSource-driven test.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:71"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW login endpoint.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:22"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Confirm java.text.Normalizer passes the android-api-level-21 signature"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-FLOW-005",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Refresh handler: body-first source choice via req.body and getCookies, rotation in TOKEN scope.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:146-175"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Request.java:146-175 verifies trace matches body(Class) and cookie readers.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:146-175"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "FR-FLOW-002, SEC-FLOW-003/008, FR-TOKEN-001/002, SEC-TOKEN-006, SEC-APIKEY-004 drafts. In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-2 needs reuseGrace configurable to 0 (00 §10 Q2 default open); AC-4 code [INFERRED] (Q47).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:772",
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:72"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW refresh endpoint.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:22"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-FLOW-011",
+   "feasibility": "high",
+   "score": 81,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Three counter keys over the LoginThrottle SPI, IPv6 /64 grouping on the literal address, NFKC name; IP must come from C6b remoteAddress(), which is still the legacy boolean trustProxy.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:491-498 legacy boolean trustProxy; C6b (IR-ENGINE-003) not implemented",
+      "00 §12 and build_facts: java.text.Normalizer on API 21 not yet confirmed by animal-sniffer (Android has had it since API 9, but the build has not checked it)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (DefaultRequest legacy, LoginThrottle new); design concrete (5/20/10 per 15 min).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:491-498 legacy boolean trustProxy; C6b (IR-ENGINE-003) not implemented",
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "IR-FLOW-003, SEC-ENGINE-001/002, IR-AUTH-001, FR-IAM-003 drafts. In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Counter tests with TimeSource; AC-7 builder method name open (Q121) but the test can be written once named.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:161"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW abuse protection.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:24"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1 (LoginThrottle).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Parse IPv6 literals without DNS (InetAddress on a literal, or manual parse)",
+    "Confirm java.text.Normalizer in the API 21 signature"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-FLOW-012",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Ordered composition of throttle checks and device-trust; counting fakes make step boundaries testable.",
+     "evidence": [
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "evidence_strength": {
+     "score": 13,
+     "rationale": "Only an addition-site trace (spi/DeviceTrust.java); order is concrete.",
+     "evidence": [
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "SEC-FLOW-011 and SEC-FLOW-013 drafts. In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Store-call counters decide AC-2/AC-3; AC-6 leaves the lockout-release question open (Q56) and does not assert it.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:81"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW abuse protection.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:24"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1 (R34).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-FLOW-006",
+   "feasibility": "medium",
+   "score": 78,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "GET/PATCH /me handlers over AuthUsers/UserMutator (IAM) and the event layer.",
+     "evidence": [
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "evidence_strength": {
+     "score": 13,
+     "rationale": "Only an addition-site trace; no verifies trace.",
+     "evidence": [
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Seven 0.11.0 drafts (IR-FLOW-002, IR-IAM-003, SEC-IAM-001, FR-AUTH-008, FR-IAM-003, SEC-APIKEY-008, FR-AUTH-006). In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "PATCH body shape is [INFERRED] and name not final (Q51); the reject status for a non-allowed attribute is open (Q49/Q53), so AC-3 asserts only a 4xx without change.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:76",
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:78"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW account endpoint.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:22"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1 (R45).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Settle the PATCH /auth/me body shape and the non-allowed-attribute status/code (Q49, Q51, Q53) and record them in docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-FLOW-013",
+   "feasibility": "medium",
+   "score": 79,
+   "axes": {
+    "implementability": {
+     "score": 23,
+     "rationale": "In-house signed token (HMAC + base64url, no java.util.Base64/java.time), per-kid key derivation from TOKEN scope, per-token failure counter, new public SPI plus Kotlin T11 test.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21 on main source set",
+      "build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main deps; auth must stay in-house)",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:26-27 PUBLIC_PACKAGES lists only naruserve, .spi, .routing"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Request.java:62-68 and 157-175 verifies traces match header/cookie reading; DeviceTrust SPI is new.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:63-66 header(String)/headers(String) list",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:157-175 cookie(String) first only; getCookies() keeps duplicates (FR-COOKIE-002 verified)"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "REL-FLOW-001, SEC-TOKEN-004/005, SEC-FLOW-007/011 drafts. In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-6 is an elaborate but deterministic TimeSource scenario; the SPI method set and builder option name are open (Q60, Q119) but the test can be written once chosen.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:85",
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:159"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW device trust.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:24"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1 (DeviceTrust R34).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Fix the DeviceTrust SPI method signatures before release (R20: later changes only by default methods)",
+    "Add utils.auth.spi to ApiJarClasses PUBLIC_PACKAGES",
+    "Choose naru_device cookie attributes (Q118)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-FLOW-014",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Handler over UserStore.changePassword CAS, one conditional retry, new pair/device/CSRF; all logic in-house.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:128-140"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "HttpExecution verifies trace matches async execution; addition site new.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:128-140",
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "Nine 0.11.0 drafts (SEC-FLOW-015/003, FR-FLOW-002, REL-IAM-002, REL-TOKEN-001, FR-TOKEN-004/001, FR-AUTH-008, IR-IAM-001). In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-2 code name not final (Q59) and body field names [INFERRED] (Q51); AC-4 needs a racing-store fake. All writable.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:84"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW account endpoint.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:22"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "FR-FLOW-007",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Conditional methodAsync route; creation through AuthUsers semantics; DuplicateUserException -> 409.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19-21 methodAsync(String,Object,AsyncRouteHandler)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "HttpRoutes verifies trace matches methodAsync.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19-21 methodAsync(String,Object,AsyncRouteHandler)"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "FR-FLOW-002, FR-IAM-001, IR-IAM-003, FR-AUTH-007/008, REL-TOKEN-001, FR-TOKEN-004 drafts. In the SCC.",
+     "evidence": [
+      "existing_srs_context.json cycles: member of the 70-member depends_on SCC (brief says 76; file lists 70)"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Disabled-endpoint status open (Q125); AC-1 asserts only no user and not 201, which is testable.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:165"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW account endpoint.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:22"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "v1 but off by default.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true
+  },
+  {
+   "req_id": "SEC-FLOW-015",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "One user-id key kind on the LoginThrottle SPI; AuthRejection(429) with retryAfterSeconds.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:57 withHeader(String,String)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "HttpException verifies trace matches header attachment for Retry-After; LoginThrottle addition site new.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:57 withHeader(String,String)",
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "IR-FLOW-003 and IR-AUTH-003 drafts; not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json req_summaries"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Counter sequences across three surfaces; deterministic.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:1637-1642"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW abuse protection.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:24"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core v1 (R34 (7)).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-FLOW-008",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 23,
+     "rationale": "Wrapper WebSocketHandler with scheduled close(1008,...) and a per-user session index; Core already runs the middleware and Origin check before 101. Doctor items need C4 registrations, which do not exist yet.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketSession.java:27,39 close(int,String) and onClose(listener); internal/WebSocketUpgrade.java:87-95 Origin checked before upgrade",
+      "RestApp.java has no registrations() accessor yet (grep), C4 is FR-APP-025/IR-APP-008, 0.11.0 draft"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "WebSocketUpgrade and WebSocketSession verifies traces match.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketSession.java:27,39 close(int,String) and onClose(listener); internal/WebSocketUpgrade.java:87-95 Origin checked before upgrade"
+     ]
+    },
+    "dependency_health": {
+     "score": 11,
+     "rationale": "FR-WS-001/003 verified; FR-APP-025, IR-APP-008, OPS-AUTH-001, SEC-AUTH-007, SEC-IAM-003 drafts. Not in a cycle.",
+     "evidence": [
+      "docs/spec/11.websocket.srs.md FR-WS-001/003 verified"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Expiry and recheck need an injected TimeSource and scheduler; AC-3 cross-node 'within userCacheTtl' is timing-sensitive; AC-8 statelessAccess promotion depends on SEC-AUTH-007.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:1697-1704"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW WebSocket wrapper.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:23"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "v1 (auth.webSocket R40); browser token transport still open (00 §10 Q3).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:773"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Land C4 app.registrations() (FR-APP-025) before the doctor ACs",
+    "Drive expiry/recheck through TimeSource and the auth scheduler, not wall-clock sleeps"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "FR-FLOW-009",
+   "feasibility": "medium",
+   "score": 77,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Lockout value class plus a counter check before hashing; release route in adminRoutes (IAM).",
+     "evidence": [
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "evidence_strength": {
+     "score": 13,
+     "rationale": "Only an addition-site trace (Lockout.java).",
+     "evidence": [
+      "utils/auth package has 0 files (code_context code_metrics); parent NaruServe-api/src/main/java/com/snoworca/naruserve exists"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "SEC-FLOW-011, IR-IAM-005, SEC-IAM-007, IR-AUTH-003 drafts; not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json req_summaries"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 11,
+     "rationale": "The refusal status/code, policy parameters, builder shape and DELETE success status are all open (Q54, Q55, Q120); ACs avoid them ('issues no tokens') so tests are writable but thin.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:79-80",
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:160"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW abuse protection.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:24"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "rationale": "v1 but opt-in.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Choose lockout refusal status/code under IR-AUTH-003 AC-3 and the builder shape (Q120), then update docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "REL-FLOW-001",
+   "feasibility": "medium",
+   "score": 77,
+   "axes": {
+    "implementability": {
+     "score": 21,
+     "rationale": "In-memory capped map is easy, but shared atomic JDBC counting needs java.sql (API 21 signature unconfirmed), file snapshots need AtomicFiles/FileDescriptor.sync (unconfirmed), Android detection must avoid android.*, and no JDBC test driver exists yet.",
+     "evidence": [
+      "code_context build_facts jdbc_test_driver: NONE declared; test-only sqlite-jdbc must be added at build.gradle:274-280 (project(':NaruServe-api') dependencies block)",
+      "build.gradle:431-441 animal-sniffer android-api-level-21 on main source set",
+      "code_context build_facts: java.sql/DataSource/FileDescriptor.sync availability on API 21 unconfirmed"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "build.gradle:274-280 addition site exists and is the correct block for a test-only driver.",
+     "evidence": [
+      "build.gradle:273-280"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "IR-FLOW-003, REL-IAM-004, FR-AUTH-003, OPS-AUTH-001 drafts; not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json req_summaries"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-2 Android default cannot run on a JVM test without a runtime-detection override; AC-6/AC-7 need the sqlite test driver; the rest are deterministic.",
+     "evidence": [
+      "code_context build_facts jdbc_test_driver: NONE declared; test-only sqlite-jdbc must be added at build.gradle:274-280 (project(':NaruServe-api') dependencies block)"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW counter storage.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:24"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "v1 (R42), multi-node counting matters only for MULTI_INSTANCE.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add test-only sqlite-jdbc as testImplementation in the project(':NaruServe-api') block (build.gradle:273-280), not a main dependency",
+    "Confirm java.sql and FileDescriptor.sync pass the android-api-level-21 signature",
+    "Make Android runtime detection injectable (system property) so AC-2 is testable on the JVM"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  },
+  {
+   "req_id": "IR-FLOW-003",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Java 8 interface default methods and a public abstract forwarding class; trivial on API 21.",
+     "evidence": [
+      "build.gradle:431-441 animal-sniffer android-api-level-21 on main source set",
+      "build.gradle:60-61 mainDependencies ':NaruServe-api': [:] (no main deps; auth must stay in-house)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "ApiJarClasses addition site exists and must gain utils.auth.spi.",
+     "evidence": [
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:26-27 PUBLIC_PACKAGES lists only naruserve, .spi, .routing"
+     ]
+    },
+    "dependency_health": {
+     "score": 12,
+     "rationale": "OPS-AUTH-001 and CON-AUTH-006 drafts; not in a cycle.",
+     "evidence": [
+      "existing_srs_context.json req_summaries"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Unit tests plus a Kotlin compile test; AC-5 return semantics [INFERRED] (Q127) but fixed in the AC.",
+     "evidence": [
+      "docs/analysis/kiwi-srs-2026-10-30.naruserve.auth-rbac-v1/open_questions.md:167"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "FLOW SPI.",
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:24"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "00 §9 v1 names LoginThrottle defaults, usesLimitArguments() and ForwardingLoginThrottle.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add com.snoworca.naruserve.utils.auth.spi to ApiJarClasses PUBLIC_PACKAGES"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false
+  }
+ ]
+}

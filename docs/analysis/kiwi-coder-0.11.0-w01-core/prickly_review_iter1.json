@@ -1,0 +1,7 @@
+{"pass":"prickly-review","iter":1,"reviewer":"subagent (session model)","severity":{"CRITICAL":0,"HIGH":1,"MEDIUM":3,"LOW":9},
+ "fixed":["HIGH watcher could listen()/freeze()/shutdown() mid-registration -> RegistrationLog.requireNotWatching in listen, freeze, shutdown; test SEC_APP_002_AC5_watcherCannotListenOrFreezeMidRegistration",
+  "MEDIUM deadlock app monitor vs LOCK on Router path -> admitRouter takes mounting apps' monitors (identity order) before LOCK, re-checks mounts",
+  "MEDIUM route(path).use(mw) bypassed watcher -> now a ROUTE record with getMethod null through the builder hook; docs/Javadoc updated",
+  "MEDIUM dead apps kept in Router mounts -> TERMINATED app mounts pruned; test FR_APP_026_AC4_terminatedAppLeavesTheRouterAlone",
+  "LOW TerminalMiddleware unwrapped only for route targets","LOW ASCII-only hex digits","LOW dotted IPv4 only as last IPv6 group","LOW IPv4-mapped CIDR normalized (prefix<96 rejected)","LOW prepareMethods null-check order restored","LOW false comment in RegistrationLog.admit","LOW GROUP/STATIC record normalized prefix","LOW no-rollback note in RegistrationListener Javadoc"],
+ "open":["LOW Dispatcher still keeps the legacy boolean beside proxyTrust(..) (behaviour-neutral)","LOW TerminalMiddleware public constructor in internal package (same pattern as AsyncMiddleware)","re-review round not run; fixes covered by new tests and full build green"]}

@@ -1,0 +1,27 @@
+kiwi-coder 0.11.0-w10 — red evidence and TDD-order note
+
+TDD-order deviation (recorded, as in w08): the issuance core (KeyIssuance), the /me routes and the key WebSocket rules
+were written in the same pass as their tests, because the tests needed the endpoints to exist to compile against the
+fixtures (W8, Wave9KeyAuthTest.Keys). Red was observed for the behaviours that existed before this wave and that the
+new tests pin down:
+
+- AdminEndpointsTest.SEC_IAM_007_AC8_keyRoutesNeedApikeyScopes: GET /auth/admin/apikeys?ownerUserId=u1 for an owner
+  id that is no user answered 200 before; FR-APIKEY-004 AC-1 now answers 404 (observed red: expected 200, got 404),
+  closed by making the fixture owner a stored user (data update forced by the new contract).
+- AuthInstallTest.FR_AUTH_005_AC3_registrationOrderAfterInstall: the exact registration list gained GET and PATCH
+  /auth/me (IR-FLOW-002 AC-1); observed red on the list and on the admin router index (12 -> 14).
+- Wave10PatTest.IR_FLOW_002_AC5_FR_APIKEY_004_AC9_theIssuersAreAsync: first run red on the probe route (401 from a
+  protected /health), fixed in the test.
+- Wave10AccountTest.SEC_APIKEY_008_AC10_AC11_unreadableBodiesGoToTheGuard: red (500 INTERNAL_ERROR) on the opt-in key
+  with a truncated body: the step-10 body read consumed the body and the handler's second read failed with
+  BodyAlreadyConsumedException. Fixed in AdminEndpoints (the failed read is carried to the handler as BODY_ERROR).
+- Wave10AccountTest.IR_FLOW_002_AC2/AC3: red from fixture mistakes (user of another node, Core HTML 404), fixed in the test.
+- Wave10CarryTest.FR_AUTH_008_...: red on the UserChange ordering of the recorder (enum order), fixed in the recorder.
+- Wave9KeyOwnersTest.REL_APIKEY_003_AC2: red (19 vs 20 rows) because the app issue of the setup ran the future-key
+  deletion first; fixed in the test setup order.
+
+Behaviours that were absent before this wave (POST /auth/me/apikeys 501, POST /auth/admin/apikeys 501, no GET/PATCH
+/auth/me, no key-row re-read at the WebSocket recheck, no per-owner max-ver dedupe of stale deletions, no key revoke
+close) make every new test citing FR-APIKEY-003, FR-APIKEY-004, FR-APIKEY-005, FR-FLOW-006, IR-FLOW-002 AC-1/AC-4,
+SEC-APIKEY-011 AC-2/AC-3/AC-4/AC-7 and REL-APIKEY-002 AC-1/AC-5 fail against the baseline (501 / 404 / open socket /
+two queued jobs / ver argument 5).

@@ -1,0 +1,215 @@
+{
+ "iter": 2,
+ "findings": [
+  {
+   "id": "F02",
+   "severity": "MEDIUM",
+   "axis": "contradictions",
+   "req_id": "SEC-TOKEN-009",
+   "evidence_path": "docs/spec/18.auth-tokens.srs.md:940; docs/research/auth-rbac/00.overview.md:305",
+   "description": "The floor scope is narrower than the literal text of 00 R38. 00 R38 says '모든 실패 응답(503 포함, 429 제외 — 해시를 하지 않는다 …)은 요청 시작부터 max(1.25T, 실제 경과) + 0–50 ms 난수 지터 뒤에 보낸다'. The SEC-TOKEN-009 statement floors only attempts that reached step ④, and also exempts 403 transport/CSRF, 415, the 400 shape answer and the multiple-credential/API-key rejections. A store-error 503 from findByUsername at step ③ is not floored either, but no list names that case; the 'attempt' definition excludes it only by implication. The reading is defensible: none of these precede-hash answers depend on account existence. But 00 does not record it, and the judgement handles it only as a docs/api note in its conditions.",
+   "suggested_action": "Name the step-③ store-error 503 explicitly (floored or not) in the SEC-TOKEN-009 statement and record the 00 R38 interpretation in docs/api. An owner note in 00 would remove the literal mismatch."
+  },
+  {
+   "id": "F03",
+   "severity": "MEDIUM",
+   "axis": "ac_verifiability",
+   "req_id": "FR-IAM-013",
+   "evidence_path": "docs/spec/20.auth-identity-and-grants.srs.md:1856,1860",
+   "description": "Two ACs pull against each other. AC-2 requires a SQL-text test that 'recordFailure issues an UPDATE ... SET <count> = <count> + 1 … rather than SELECT-then-UPDATE'. AC-6 (decided 2026-11-02) requires that 'the first failure after the window has passed resets the row to count 1 with a new window start in the same atomic statement', which needs a CASE on window_start. The research note says so ('reset or increment with a CASE'). A literal AC-2 text check for 'SET count = count + 1' fails on the CASE form.",
+   "suggested_action": "Reword AC-2 to assert a single atomic UPDATE/upsert with no preceding SELECT whose increment branch is count + 1, so the CASE reset form of AC-6 passes."
+  },
+  {
+   "id": "F04",
+   "severity": "MEDIUM",
+   "axis": "contradictions",
+   "req_id": "REL-FLOW-001",
+   "evidence_path": "docs/spec/20.auth-identity-and-grants.srs.md:1860; docs/spec/19.auth-transport-and-endpoints.srs.md:1849",
+   "description": "The fixed counting window was decided only for the JDBC counters (FR-IAM-013 AC-6: 'fixed, not sliding … node clocks are used the same way as the in-memory throttle'). REL-FLOW-001 and IR-FLOW-003 do not state a window rule for the in-memory and file counters. The claimed sameness has no SRS backing, so a sliding in-memory window would make limits behave differently between SINGLE_INSTANCE and MULTI_INSTANCE deployments.",
+   "suggested_action": "State the window semantics for InMemoryLoginThrottle and the file counters (REL-FLOW-001 or IR-FLOW-003), or drop the 'same way as the in-memory throttle' claim."
+  },
+  {
+   "id": "F05",
+   "severity": "MEDIUM",
+   "axis": "blocker_substantiation",
+   "req_id": "FR-FLOW-009",
+   "evidence_path": "docs/spec/19.auth-transport-and-endpoints.srs.md:1824; docs/spec/19.auth-transport-and-endpoints.srs.md:1849; docs/spec/20.auth-identity-and-grants.srs.md:1847",
+   "description": "The judgement misses a condition about where lock state lives. The FR-FLOW-009 implementation notes say 'lock state stored with the throttle/device-trust storage defaults (REL-FLOW-001)'. REL-FLOW-001 and FR-IAM-013 define storage for throttle counters and device-token invalidation only, and there is no JDBC lock store. Under MULTI_INSTANCE a lock set or released (AC-5 DELETE) on one node has no specified shared storage. This does not block the single-node ACs, but no condition records it.",
+   "suggested_action": "Add a condition: implement the Lockout on LoginThrottle keys through the limit-argument methods, so JdbcLoginThrottle shares it and reset(key) releases it. Otherwise state the storage in FR-FLOW-009/REL-FLOW-001."
+  },
+  {
+   "id": "F06",
+   "severity": "MEDIUM",
+   "axis": "blocker_substantiation",
+   "req_id": "SEC-TOKEN-009",
+   "evidence_path": "build.gradle:319-323; NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:22",
+   "description": "AC-8 requires a real-adapter test where a failed login (JSON body) on TinyHttpd gets a 401 JSON answer after the floor. The NaruServe-tinyhttpd test classpath holds only testFixtures(project(':NaruServe-api')) (build.gradle:321-322), and the fixture StubJsonCodec throws on decode. The judgement's condition names Gson for the servlet test classpath (build.gradle:370) but not for TinyHttpd. This is not a blocker, because a test-only codec or dependency fixes it, but the condition is missing.",
+   "suggested_action": "Add the condition: give NaruServe-tinyhttpd tests a decoding JsonCodec (testImplementation project(':NaruServe-gson') or a test codec) for AC-8."
+  },
+  {
+   "id": "F07",
+   "severity": "MEDIUM",
+   "axis": "ac_verifiability",
+   "req_id": "IR-TOKEN-001",
+   "evidence_path": "docs/spec/18.auth-tokens.srs.md:1141,1155",
+   "description": "AC-7 is hard to turn into a deterministic reflection test, for two reasons. (1) The statement's seam is 'authenticate(String username, char[] password, AuthEventContext ctx)', while AC-7 says the single abstract method 'takes a username String and a char[] password', which leaves open whether ctx is allowed. (2) 'no public type or Auth builder option accepts a replacement for the Bearer or the API key authenticator' cannot be decided by reflection while the public TokenCodec SPI (IR-TOKEN-002) changes Bearer verification.",
+   "suggested_action": "Fix the exact parameter list in AC-7, or say 'whose parameters include', and name the builder options to check, excluding TokenCodec explicitly."
+  },
+  {
+   "id": "F08",
+   "severity": "MEDIUM",
+   "axis": "contradictions",
+   "req_id": "SEC-TOKEN-009",
+   "evidence_path": "docs/spec/18.auth-tokens.srs.md:940; docs/spec/18.auth-tokens.srs.md:1141,1149",
+   "description": "The SEC-TOKEN-009 statement says 'Every password login attempt shall … run exactly one PBKDF2 computation'. IR-TOKEN-001 makes the password authenticator replaceable through the public Authenticator SPI (AC-1), for example for LDAP (00 §2), and such an authenticator runs no PBKDF2. Neither block says whether the one-PBKDF2 rule or only the floor applies when a custom Authenticator is set. The IR-TOKEN-001 note says only that 'the timing equalizer wraps the authenticator call'.",
+   "suggested_action": "Scope the one-PBKDF2 rule to the built-in password authenticator in SEC-TOKEN-009 or IR-TOKEN-001, and state that the slot and the floor still apply to a custom Authenticator."
+  },
+  {
+   "id": "F09",
+   "severity": "MEDIUM",
+   "axis": "score_label",
+   "req_id": "FR-FLOW-009",
+   "evidence_path": "docs/analysis/kiwi-srs-feasibility-2026-11-02.naruserve.0110.v01/verifier-input-judgements.json",
+   "description": "Parts of the judgement are stale. For FR-FLOW-009 and FR-IAM-014 the text was corrected on 2026-11-02 (blockers_resolved: 'SRS corrected 2026-11-02 to follow 00'). Yet the conditions still read 'Resolve the AC-5 / SEC-FLOW-012 AC-6 release semantics against 00 §6.4 … before implementation' and 'Resolve AC-11 and the statement's audit rule against 00 R37 14판 before implementation'. contradictions_found is still filled, and ac_verifiability stays at 10 for a contradiction that no longer holds. The label is not affected (83 stays high). The FR-FLOW-009 AC-5 and SEC-FLOW-012 AC-6 text now matches 00 §6.4 'R34 × 새 기기 admin' ('다른 관리자가 lockout 해제'). (iter2: still stands; verifier-input-judgements.json is unchanged since iter1 and still carries both 'before implementation' conditions at lines 388 and 619. The FR-IAM-014 replacement entry is no longer needed because F01 is resolved.)",
+   "suggested_action": "Remove the stale 'resolve before implementation' conditions, move the old contradictions to history, and re-score ac_verifiability for FR-FLOW-009 and FR-IAM-014."
+  },
+  {
+   "id": "F10",
+   "severity": "MEDIUM",
+   "axis": "ac_verifiability",
+   "req_id": "FR-FLOW-006",
+   "evidence_path": "docs/spec/19.auth-transport-and-endpoints.srs.md:1393,1396",
+   "description": "AC-6 says only that 'PATCH /auth/me carrying a username field does not change the username'. It does not fix the answer (field ignored with 200, or 400 BAD_REQUEST like the non-allowed attribute of AC-3). A test can assert only that nothing changed, so the client-visible behaviour is open.",
+   "suggested_action": "Fix the AC-6 answer, either 400 BAD_REQUEST (consistent with AC-3 and 00 R30 input checks) or 200 with the field ignored, and record it in docs/api."
+  },
+  {
+   "id": "F11",
+   "severity": "MEDIUM",
+   "axis": "evidence",
+   "req_id": "FR-IAM-014",
+   "evidence_path": "docs/spec/20.auth-identity-and-grants.srs.md:2202,2232",
+   "description": "evidence_strength is 15/20 based only on 'code_context.json trace_validation FR-IAM-014'. The only trace is an addition site, utils/auth/Auth.java, which does not exist yet. The block's own implementation notes place the A4 handler in the adminRoutes() router (IR-IAM-005), not Auth.java, so the addition site is not the concrete site. FR-FLOW-006 got 13 for a similar directory-only trace.",
+   "suggested_action": "Lower evidence_strength (to about 12–13) or point the trace at the admin router class. The label stays high either way (score of about 80–81)."
+  },
+  {
+   "id": "F12",
+   "severity": "LOW",
+   "axis": "ac_verifiability",
+   "req_id": "FR-FLOW-009",
+   "evidence_path": "docs/spec/19.auth-transport-and-endpoints.srs.md:1795; docs/spec/19.auth-transport-and-endpoints.srs.md:1392",
+   "description": "Decided values still carry stale '[INFERRED] (name not final)' markers: FR-FLOW-009 AC-2 'Lockout.after(5).forMinutes(15) (name not final) [INFERRED:med:advisory]' (decided Q120), and FR-FLOW-006 AC-2 body shape '[INFERRED:med:advisory]' (decided Q51).",
+   "suggested_action": "Drop the markers when the docs/api pages are written. The judgement already lists this as a condition."
+  },
+  {
+   "id": "F13",
+   "severity": "LOW",
+   "axis": "contradictions",
+   "req_id": "IR-AUTH-003",
+   "evidence_path": "docs/spec/17.auth.srs.md:1398",
+   "description": "IR-AUTH-003 AC-3 cites '(FR-FLOW-009 AC-2; 00 R34 (4))' for 'The Lockout login refusal … is the wrong-password answer invalid_credentials 401'. 00 R34 (4) says only that hard lock is opt-in, not applied to trusted devices, and released by DELETE. It names no response. The value comes from the 2026-11-02 decision Q54/Q55/Q120.",
+   "suggested_action": "Cite the decision (Q54/Q55/Q120) instead of R34 (4)."
+  },
+  {
+   "id": "F14",
+   "severity": "LOW",
+   "axis": "contradictions",
+   "req_id": "IR-AUTH-003",
+   "evidence_path": "docs/spec/17.auth.srs.md:1399",
+   "description": "IR-AUTH-003 AC-4 describes the A4-written 503 as 'written by the admin PATCH A4 handler with its applied list for a store failure of its steps'. Since the FR-IAM-014 AC-11 correction, A4 also writes a 503 SERVICE_UNAVAILABLE for a non-store AuthRejection or IllegalArgumentException after the password. The code stays SERVICE_UNAVAILABLE, so there is no conflict on the code, only an incomplete description. (iter2: still stands. FR-AUTH-006 now names the post-password AuthRejection/IllegalArgumentException 503, but IR-AUTH-003 AC-4 at 17.auth.srs.md:1399 still lists only 'a store failure of its steps, FR-IAM-014 AC-9'.)",
+   "suggested_action": "Add 'or an AuthRejection/IllegalArgumentException after the password step (FR-IAM-014 AC-11)'."
+  },
+  {
+   "id": "F15",
+   "severity": "LOW",
+   "axis": "contradictions",
+   "req_id": "FR-FLOW-009",
+   "evidence_path": "docs/spec/20.auth-identity-and-grants.srs.md:2068",
+   "description": "The IR-IAM-005 research note still reads 'Open: success status of DELETE /users/:id/lockout … not fixed', while FR-FLOW-009 AC-5 decided 204 on 2026-11-02.",
+   "suggested_action": "Append a dated note in IR-IAM-005 pointing to FR-FLOW-009 AC-5 (204)."
+  },
+  {
+   "id": "F16",
+   "severity": "LOW",
+   "axis": "contradictions",
+   "req_id": "SEC-AUTH-003",
+   "evidence_path": "docs/analysis/kiwi-srs-feasibility-2026-11-01.naruserve.0110.v01/draft-open-questions.md:19,31; docs/spec/17.auth.srs.md:937; docs/spec/19.auth-transport-and-endpoints.srs.md:1465",
+   "description": "The decision list and the blocks wrote different values. Q15 says 'wrong or missing setup token → 401 invalid_setup_token', while SEC-AUTH-003 AC-2 answers a missing or non-string token with 400 BAD_REQUEST, which follows 00 R30 24판. Q118 says 'Secure (except local DEV)', while SEC-FLOW-013 AC-10 says 'Secure present exactly when req.isSecure() is true'. In both cases the SRS text is the source of truth and is consistent with 00 and SEC-FLOW-009 AC-4.",
+   "suggested_action": "Annotate the decision list so it matches the SRS, so docs/api authors do not copy the list values."
+  },
+  {
+   "id": "F17",
+   "severity": "LOW",
+   "axis": "ac_verifiability",
+   "req_id": "FR-IAM-014",
+   "evidence_path": "docs/spec/20.auth-identity-and-grants.srs.md:2193",
+   "description": "The AC-9 (a) fixture is 'update() applies the rename but silently does not apply the hash change', yet the AC asserts 'the password hash and ver are unchanged'. The SINGLE_INSTANCE default changePassword writes hash and ver++ in one update(), so the fixture must also drop the ver change, and the text does not say so.",
+   "suggested_action": "Say the fixture ignores the password_hash and ver fields of that update()."
+  },
+  {
+   "id": "F18",
+   "severity": "LOW",
+   "axis": "mapping",
+   "req_id": "SEC-AUTH-003",
+   "evidence_path": "docs/spec/17.auth.srs.md:911,919",
+   "description": "The mapping is correct. policy-resolved.json is the default policy, every judgement has has_verification false and feasibility high, so the rule 'high → evolving' applies, and no stable or frozen is proposed. On promotion, though, all 12 blocks keep the heading suffix '[DRAFT — pending decision]' and the tag 'feasibility:medium', which will be stale.",
+   "suggested_action": "Update the tag to feasibility:high and the heading suffix with the stability change. The heading needs a guarded mutation, and requirement IDs must not change."
+  },
+  {
+   "id": "F19",
+   "severity": "LOW",
+   "axis": "evidence",
+   "req_id": "FR-FLOW-009",
+   "evidence_path": "docs/analysis/kiwi-srs-feasibility-2026-11-02.naruserve.0110.v01/verifier-input-judgements.json",
+   "description": "Some cited line numbers are off by one or two. 19.auth-transport-and-endpoints.srs.md:1768 should be 1769 (FR-FLOW-009 heading), :1430 should be 1431 (SEC-FLOW-013), and :1830 should be 1832 (REL-FLOW-001). build.gradle:273-280 starts one line before the project(':NaruServe-api') block, which the trace gives as L274-L280. All the other sampled citations matched: build.gradle:59-61, 362-370 and 431-441; the API 21 signature (java.sql.Connection, javax.sql.DataSource, Normalizer, FileDescriptor.sync, Mac, SecureRandom present; java.time and Base64 absent); RestApp.java:159 and 174; JsonBodyReader.java:39 (413); HttpRoutes.java:19; HttpExecution.java:128-140; StandardErrors.java:138; HttpException.java:15-72; StubJsonCodec.java:22; InMemoryHttpAdapter.java:77; Request.java:62-68 and 157-175; ApiJarClasses.java:27-28; the two adapter test files; 00.overview.md lines 77, 225, 296, 297, 304, 312, 314, 556, 764 and 782; 07:57.",
+   "suggested_action": "Correct the line numbers."
+  },
+  {
+   "id": "F20",
+   "severity": "MEDIUM",
+   "axis": "contradictions",
+   "req_id": "FR-IAM-014",
+   "evidence_path": "docs/spec/17.auth.srs.md:1255; docs/spec/20.auth-identity-and-grants.srs.md:2177,2233; docs/spec/20.auth-identity-and-grants.srs.md:703; docs/research/auth-rbac/00.overview.md:304",
+   "description": "After the password, the A4 handler now catches store exceptions, AuthUnavailableException, AuthRejection and IllegalArgumentException. The new FR-AUTH-006 catch-all ('Every other exception in the auth routers ... goes through the AC-3 ErrorMiddleware') sends every other failure after the password to the ErrorMiddleware, with no applied list and no audit event. Two examples are a Core HttpException(400) from an attribute check in the profile step and an unexpected RuntimeException (500). 00 R37 says that any field after the password that fails midway gets 503, applied and an audit event. No block says that A4 checks attribute keys and types before its first write, as A2 AC-6 does for create. So whether such a 400 can happen after the password is left open. This is an edge case, not a block-to-block contradiction: FR-AUTH-006 and FR-IAM-014 agree with each other.",
+   "suggested_action": "Pick one. (a) State in FR-IAM-014 that A4 checks all request fields (attribute keys, security-field names in attributes, value types) before the R31 check and the first write, so only store, listener or rejection failures can happen after the password. (b) Have A4 answer any exception after the password as 503 with applied and audit."
+  },
+  {
+   "id": "F21",
+   "severity": "MEDIUM",
+   "axis": "ac_verifiability",
+   "req_id": "FR-IAM-014",
+   "evidence_path": "docs/spec/20.auth-identity-and-grants.srs.md:2177,2195; docs/spec/17.auth.srs.md:1255",
+   "description": "The new routing is keyed on 'after the password was applied' (FR-IAM-014) and 'before the password step' (FR-AUTH-006). Neither block covers an A4 request that has no password. In A4 {username: a free name, roles}, the rename is applied, then setRoles throws AuthRejection(422) or IllegalArgumentException. Under both blocks this falls to the catch-all ErrorMiddleware and answers 422 with no applied list, so the client does not learn that the username changed. A store exception at the same point answers 503 with applied: [\"username\"], and it is unclear whether an audit event follows ('for every 503 after the password'). 00 R37 orders the steps by position (비밀번호 뒤의 필드) and does not say how to read it when there is no password. No AC tests this case.",
+   "suggested_action": "Say whether 'after the password' means after the password position in the order, or only when a password was actually applied. Add an AC for A4 {username, roles} with a rejecting setRoles, and say whether a 503 without a password step is audited."
+  },
+  {
+   "id": "F22",
+   "severity": "LOW",
+   "axis": "evidence",
+   "req_id": "FR-AUTH-006",
+   "evidence_path": "docs/spec/17.auth.srs.md:1276-1288,1290-1293,1299-1304",
+   "description": "The 2026-11-02 change to the FR-AUTH-006 statement (A4 also catches an AuthRejection or IllegalArgumentException after the password) has no Change Notes row and no dated Research note. The last row is still the 2026-11-01 stability change. The block's Trace Links have no FR-IAM-014 row, although the statement now cites FR-IAM-014 AC-6, AC-9 and AC-11.",
+   "suggested_action": "Add a dated Change Notes row (or Research note) that cites 00 R37 14th edition and FR-IAM-014 AC-11, and add a Requirement trace link to FR-IAM-014, through a guarded SRS mutation."
+  },
+  {
+   "id": "F23",
+   "severity": "LOW",
+   "axis": "contradictions",
+   "req_id": "FR-AUTH-009",
+   "evidence_path": "docs/spec/17.auth.srs.md:1887; docs/spec/20.auth-identity-and-grants.srs.md:2177,2193,2195",
+   "description": "FR-AUTH-009 AC-2 lists these audited events: recovery use, self-protection denial, security_write_conflict, and key issue and revoke. It does not list user_update_failed, which FR-IAM-014 statement, AC-9 (b) and AC-11 require through the builder's AuditSink. The FR-IAM-014 trace link names FR-AUTH-009 for 'the 503 partial-apply audit event'. Because the list is not exclusive this is not a contradiction, but the audit catalog is incomplete.",
+   "suggested_action": "Add user_update_failed (A4 failure after the password) to the FR-AUTH-009 AC-2 list."
+  }
+ ],
+ "resolved": [
+  "F01"
+ ],
+ "resolution_notes": {
+  "F01": "FR-AUTH-006 statement (17.auth.srs.md:1255) now lists, as A4-handled, an AuthRejection or IllegalArgumentException thrown by a step after the password was applied, answered 503 SERVICE_UNAVAILABLE with applied rather than the rejection's own status (00 R37 14th ed.; FR-IAM-014 AC-11). The catch-all now explicitly sends such exceptions raised before the password step to AC-3. This matches the FR-IAM-014 statement (20:2177: store-exception definition excludes AuthRejection/IAE; separate post-password AuthRejection/IAE sentence), AC-9 (store failures, A4-written), AC-11 (422 AuthRejection/IAE after changePassword -> 503 SERVICE_UNAVAILABLE, applied [\"password\"], A4-written), IR-AUTH-003 AC-4 (code SERVICE_UNAVAILABLE consistent; description incomplete, F14) and AC-6 (A4 catches AuthUnavailableException at rename/password/later step), and 00 R37 (비밀번호 뒤의 필드가 중간에 실패하면 503 + applied + 감사 이벤트). AC-3's AuthRejection own-status mapping still holds for every non-A4 path and for pre-password A4 rejections (e.g. the single beforeUserUpdate, FR-AUTH-007), so AC-3 and AC-11 can both pass."
+ },
+ "summary": {
+  "CRITICAL": 0,
+  "HIGH": 0,
+  "MEDIUM": 12,
+  "LOW": 10
+ }
+}

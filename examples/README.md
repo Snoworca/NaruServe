@@ -41,9 +41,32 @@ curl http://127.0.0.1:3000/stream
 
 Kotlin's request DTO deliberately uses nullable properties and a no-argument constructor compatible with the default Unsafe-free Gson. An immutable data class without a no-argument constructor needs another explicitly configured codec; enabling Unsafe bypasses constructors and is not the solution.
 
+## Auth example
+
+`example.AuthExample` (Java) and `example/AuthExample.kt` (Kotlin) are complete programs with auth attached. They run in DEV mode and create two accounts at start: `alice` (password `alice-password-1`, role `editor`) and `bob` (password `bob-password-1`, no role). `/health` is public, `/me` needs a login, and `POST /posts` is for `editor` only, the role holding the `posts:write` scope. Run them with the `runAuth` task (port 3000 by default).
+
+```bash
+./gradlew -p examples/java -PtinyHttpdFromMaven=true runAuth
+# Alternatively, stop Java and run Kotlin on the same port:
+./gradlew -p examples/kotlin -PtinyHttpdFromMaven=true runAuth
+```
+
+Check it from another terminal. Put the `accessToken` value of the login answer where `eyJ...` stands.
+
+```bash
+curl http://127.0.0.1:3000/health                                   # ok
+curl -i http://127.0.0.1:3000/me                                    # 401 unauthenticated
+curl -X POST http://127.0.0.1:3000/auth/login -H 'Content-Type: application/json' \
+     -d '{"username":"alice","password":"alice-password-1"}'
+curl http://127.0.0.1:3000/me -H "Authorization: Bearer eyJ..."                     # alice
+curl -X POST http://127.0.0.1:3000/posts -H "Authorization: Bearer eyJ..."          # 201 created by alice
+```
+
+`POST /posts` with a token of `bob` answers 403 `insufficient_scope`. DEV is for local development; read the deployment notes of the [auth guide](../docs/api/en/auth.md) before you deploy.
+
 ## Separate consumer using Maven coordinates
 
-For a separate consumer, copy the example sources and build file, and remove `includeBuild('../..')` from `settings.gradle`. Keep `mavenCentral()` and use `com.snoworca.naruserve:naruserve:0.10.0` for Java or `com.snoworca.naruserve:naruserve-kotlin:0.10.0` for Kotlin when those versions are available from Maven Central. Check the [installation guide](../README.md#install) for availability and module choices.
+For a separate consumer, copy the example sources and build file, and remove `includeBuild('../..')` from `settings.gradle`. Keep `mavenCentral()` and use `com.snoworca.naruserve:naruserve:0.11.0` for Java or `com.snoworca.naruserve:naruserve-kotlin:0.11.0` for Kotlin when those versions are available from Maven Central. Check the [installation guide](../README.md#install) for availability and module choices.
 
 If the version does not resolve, publish this checkout locally from the NaruServe root:
 

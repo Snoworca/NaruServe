@@ -1,0 +1,1844 @@
+{
+ "policy_source": "default",
+ "mappings_count": 7,
+ "predicted_transitions": [
+  {
+   "req_id": "CON-APIKEY-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "CON-AUTH-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "CON-AUTH-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "CON-AUTH-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "CON-AUTH-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "CON-AUTH-005",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "CON-AUTH-006",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "CON-AUTH-007",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "CON-ENGINE-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "CON-IAM-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "CON-IAM-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "DR-APIKEY-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "DR-APIKEY-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "DR-IAM-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "DR-IAM-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "DR-IAM-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-APIKEY-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-APIKEY-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-APIKEY-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-APIKEY-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-APIKEY-005",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-APIKEY-006",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-APIKEY-007",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-APIKEY-008",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-APIKEY-009",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-APIKEY-010",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-APP-025",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-APP-026",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-AUTH-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-AUTH-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-AUTH-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-AUTH-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-AUTH-005",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-AUTH-006",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-AUTH-007",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-AUTH-008",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-AUTH-009",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-FLOW-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-FLOW-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-FLOW-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-FLOW-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-FLOW-005",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-FLOW-006",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-FLOW-007",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-FLOW-008",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-FLOW-009",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-HTTP-029",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-IAM-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-IAM-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-IAM-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-IAM-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-IAM-005",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-IAM-006",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-IAM-007",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-IAM-008",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-IAM-009",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-IAM-010",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-IAM-011",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-IAM-012",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-IAM-013",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-IAM-014",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-TOKEN-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-TOKEN-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-TOKEN-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "FR-TOKEN-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-APIKEY-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-APIKEY-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-APIKEY-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-APIKEY-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-APIKEY-005",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-APP-008",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-AUTH-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-AUTH-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-AUTH-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-AUTH-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-AUTH-005",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-ENGINE-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-FLOW-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-FLOW-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-FLOW-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-HTTP-010",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-IAM-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-IAM-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-IAM-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-IAM-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-IAM-005",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-TOKEN-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "IR-TOKEN-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "OPS-APIKEY-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "OPS-AUTH-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "OPS-AUTH-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "OPS-FLOW-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "PERF-APIKEY-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "PERF-APIKEY-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "PERF-TOKEN-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "PERF-TOKEN-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "REL-APIKEY-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "REL-APIKEY-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "REL-APIKEY-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "REL-APIKEY-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "REL-APIKEY-005",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "REL-APIKEY-006",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "REL-APIKEY-007",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "REL-FLOW-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "REL-IAM-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "REL-IAM-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "REL-IAM-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "REL-IAM-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "REL-TOKEN-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-APIKEY-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-APIKEY-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-APIKEY-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-APIKEY-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-APIKEY-005",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-APIKEY-006",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-APIKEY-007",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-APIKEY-008",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-APIKEY-009",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-APIKEY-010",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-APIKEY-011",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-APP-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-AUTH-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-AUTH-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-AUTH-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-AUTH-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-AUTH-005",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-AUTH-006",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-AUTH-007",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-AUTH-008",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-ENGINE-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-ENGINE-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-ENGINE-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-005",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-006",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-007",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-008",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-009",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-010",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-011",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-012",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-013",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-014",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-FLOW-015",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-HTTP-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-IAM-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-IAM-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-IAM-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-IAM-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-IAM-005",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-IAM-006",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-IAM-007",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-SVL-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-TOKEN-001",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-TOKEN-002",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-TOKEN-003",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-TOKEN-004",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-TOKEN-005",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-TOKEN-006",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-TOKEN-007",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-TOKEN-008",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  },
+  {
+   "req_id": "SEC-TOKEN-009",
+   "current_stability": "draft",
+   "predicted_stability_range": [
+    "draft",
+    "evolving",
+    "deprecated"
+   ],
+   "requires_user_confirm": false,
+   "confirm_note": "true only if blocked->deprecated; high->evolving, medium/low->draft need no confirm"
+  }
+ ],
+ "transition_guard_rules": {
+  "source": "speckiwi dist/core/mutation/stability-transition.js + update-stability.js",
+  "levels_order": [
+   "draft",
+   "evolving",
+   "stable",
+   "frozen",
+   "deprecated"
+  ],
+  "draft_to_evolving": "allowed, adjacent, no warning, reason optional",
+  "draft_to_deprecated": "allowed, classified skip-forward (warning only, not blocking), reason optional",
+  "draft_to_stable": "allowed with skip-forward warning but unreachable under policy (has_verification false)",
+  "reason_required_only_for": "frozen (USAGE error if empty); reason max 500 chars, no control chars, appended to Change Notes",
+  "hard_block": "status=verified -> draft is MUTATION_DENIED (n/a: all planned)",
+  "draft_to_evolving_side_effect": "heading DRAFT marker removed",
+  "draft_to_deprecated_side_effect": "heading DRAFT marker removed (not DISCARDED)",
+  "rollback_warning": "to index < from index (e.g. evolving->draft)",
+  "redundant_warning": "from == to (medium/low keep draft: skip the call)"
+ },
+ "transition_guard_warnings": [
+  "draft->deprecated yields skip-forward warning (non-blocking); user confirmation required by policy"
+ ],
+ "work_mode": "sdd"
+}

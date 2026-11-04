@@ -1,0 +1,43 @@
+# red evidence 0.11.0-w09 (2026-11-02)
+command: ./gradlew :NaruServe-api:compileTestJava --offline -q
+exit: non-zero (test sources reference the wave 9 seams that do not exist yet)
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java:172: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java:188: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java:384: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java:397: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java:889: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java:891: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:117: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:118: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:183: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:250: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:259: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:274: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:287: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:296: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:310: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:315: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:333: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:341: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:357: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:373: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:383: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:386: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:406: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:407: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:408: error: cannot find symbol
+  /Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:94: error: cannot find symbol
+/Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java:172: error: cannot find symbol
+/Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java:188: error: cannot find symbol
+/Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java:384: error: cannot find symbol
+/Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java:397: error: cannot find symbol
+/Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java:889: error: cannot find symbol
+/Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java:891: error: cannot find symbol
+/Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:117: error: cannot find symbol
+/Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:118: error: cannot find symbol
+/Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:183: error: cannot find symbol
+/Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:250: error: cannot find symbol
+/Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:259: error: cannot find symbol
+/Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:274: error: cannot find symbol
+/Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:287: error: cannot find symbol
+/Users/beom/work/git/NaruServe/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java:296: error: cannot find symbol

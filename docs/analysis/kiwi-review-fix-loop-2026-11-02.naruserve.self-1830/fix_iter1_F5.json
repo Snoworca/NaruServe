@@ -1,0 +1,284 @@
+{
+ "run": "F5",
+ "fixes": [
+  {
+   "finding_id": "T2-F01",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/W8.java",
+     "line_range": "50-72"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+     "line_range": "1098-1160"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+     "line_range": "1211-1265"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; it can fail because a handler that blocks an adapter thread in HashSlots returns from handle() only after it has answered, so returnedEarly would never reach 3 while slotsHeld is true (or the final 201/200 assertions catch a 503 from the slot timeout).",
+   "rationale_full": "Added an additive W8.engine hook (UnaryOperator<HttpAdapter>, identity by default) and a test-local HandleObserving HttpAdapter wrapper that reports every exchange whose ExchangeHandler.handle() returned. The test now replaces Thread.sleep(200) with awaitRequested(slots, base+3) (bounded 10 s poll on HashSlots.requested(), new static helper) and asserts that all three hashing POSTs (/auth/me/apikeys, /auth/admin/apikeys, /auth/login) returned from handle() while the slots were still held, i.e. the adapter thread was given back before the answer. A synchronous handler only returns after answering: it either never returns while held (the count stays < 3) or returns after the 5 s slot cap with a 503, which the existing final 201/200 assertions reject. All original assertions (async registration, /api/x 200, isDone false, final statuses) are kept."
+  },
+  {
+   "finding_id": "T2-F02",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+     "line_range": "762-796"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+     "line_range": "1211-1222"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; the new pendingStale==5 check fails if the request path's cached-principal branch does not schedule, or schedules with a wrong ver.",
+   "rationale_full": "The ver-5 half now goes through real key requests: the key is issued at ownerVer 4, the store goes to ver 5 and a Bearer GET warms the principal cache at ver 5, then the store moves to 6 behind the cache (the test clock stands still, so the cache does not expire). 50 concurrent key requests run on the cached ver 5 and must coalesce into one pending deletion at ver 5 (new assertions: held.queued.size()==1, pendingStale==5). Then userRevoked and 50 concurrent requests read ver 6 from the store while that deletion is still pending. The original single-pending, pendingStale==6 and deleteStaleByOwner(u1, 6) assertions are kept. The internal scheduleStale(u1,5) shortcut and its hard-coded 401 are gone. New helper assertAll401."
+  },
+  {
+   "finding_id": "T2-F03",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave6ReviewFixesTest.java",
+     "line_range": "155-170"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; with the wait the role change always happens after the first grant check, so removing the recheck Step would let the PATCH answer 200 and fail assertEquals(403).",
+   "rationale_full": "Replaced Thread.sleep(200) with a bounded wait on f.auth.hashSlots().requested() reaching base+1 (AdminEndpoints.patchUser runs checkPatch before hashSlots().submit, so a slot request proves the first grant check passed), plus assertFalse(pending.isDone()). Only then are bob's roles changed, so the 403 can come only from the re-check under the user lock."
+  },
+  {
+   "finding_id": "T2-F04",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ApiKeyTest.java",
+     "line_range": "104-114"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ApiKeyTest.java",
+     "line_range": "278-320"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; before this change the failure flag was removed before the background update ran, so the updateLastUsed failure was usually never injected; the new failed-list and WARN checks fail if a failure is not injected or not reached.",
+   "rationale_full": "Flaky store records every call that threw (new Flaky.failed list). updateLastUsed now stays failing until a new 'WARN ...lastUsedAt...' line appears (bounded 10 s poll; the update runs on the background executor), then the test asserts that updateLastUsed really failed and that exactly one more WARN was logged. For the off-request deletions it asserts that nothing failed on the request path, and that after held.runAll()/cleanupRun() deleteStaleByOwner, deleteById and deleteExpired were each reached and failed, with the 'cleanup of expired API keys failed' ERROR logged. The original 401/invalid_api_key and 200 assertions are kept."
+  },
+  {
+   "finding_id": "T2-F05",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ThrottleTest.java",
+     "line_range": "156-200"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; a 429 sent through FailureFloor.send would add an entry to RecordingScheduler.delaysNanos and fail assertTrue(isEmpty).",
+   "rationale_full": "Added a deterministic floor-bypass proof through the existing package-private Auth.failureFloor(FailureFloor) seam: after the real-floor run, the floor is replaced with one over Wave7LoginTest.RecordingScheduler. A further 429 must schedule nothing (delaysNanos empty), and a wrong-password login of another user must still be answered through the floor (one scheduled delay), which shows the seam is live. The structural source check also refuses TimeUnit sleep and LockSupport. The wall-clock 429 bound is now a sanity bound at < 600 ms (was 400 ms). That is still under the 625 ms floor, so a floored 429 still fails it; the recording-scheduler assertion now carries the proof. The real-floor failure lower bound (>= 600 ms) is unchanged."
+  },
+  {
+   "finding_id": "T2-F06",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "662-668"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "704-722"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ThrottleTest.java",
+     "line_range": "338-372"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; the checks are now tied to real scheduler ticks, so 'nothing written' can no longer pass before the scheduler has run, and starvation only delays the wait instead of breaking it.",
+   "rationale_full": "Auth's scheduler now runs a private scheduledSnapshot() (snapshotRun() and then a package-private tick counter, snapshotTicks()). snapshotRun() itself is unchanged, and direct test calls are not counted. The test replaces every fixed sleep with awaitTicks(auth, 2), a bounded 10 s poll: two finished ticks with no change must write nothing; after the first write, two more ticks flush any catch-up of a tick that fell between the keys of one login (the second of those started after the login completed); then two more ticks must not change the write count."
+  },
+  {
+   "finding_id": "T2-F08",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8ApiKeysTest.java",
+     "line_range": "898-907"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; it fails if the stale key were deleted on the request path, or if more than one key were listed.",
+   "rationale_full": "The self-filled HashSet assertion is now a real check: seen holds the prefixes of f.auth.apiKeys().list(owner); the test asserts that it holds exactly one prefix and that this is the stale key's prefix, i.e. the held deletion has not removed the key. The size assertion is kept with a real meaning, not removed."
+  },
+  {
+   "finding_id": "T2-F09",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/RehashQueue.java",
+     "line_range": "42-100"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8AccountTest.java",
+     "line_range": "656-668"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; an enqueued rehash raises accepted() synchronously, and a synchronous rehash raises hashes, so both now fail at once with no timing window.",
+   "rationale_full": "Added RehashQueue.accepted(), a counter of entries offer() accepted (internal package, additive, for the tests). The rehash decision is made synchronously inside checkPassword, so the test replaces Thread.sleep(50) with deterministic checks: the stored hash qualifies for a rehash (Counting.needsRehash), rehashQueue().accepted()==0, and the counting hasher's hash() count is unchanged. The old stored-hash and size()==0 assertions are kept."
+  },
+  {
+   "finding_id": "T2-F14",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave11ClosureTest.java",
+     "line_range": "514-514"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; with an equal metric on both sides the check now requires four new ERROR/WARN lines from the failing routes.",
+   "rationale_full": "The baseline is now ERROR+WARN, the same metric as the later check (count(ERROR)+count(WARN) >= baseline+4), so WARNs logged at start no longer satisfy it."
+  },
+  {
+   "finding_id": "T3-F01",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/GroupGraph.java",
+     "line_range": "24-26"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/GroupGraph.java",
+     "line_range": "140-150"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/InMemoryGroupStore.java",
+     "line_range": "81-86"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/group/GroupAdminStoreTest.java",
+     "line_range": "171-235"
+    }
+   ],
+   "red_test": "IR_IAM_004_AC6_oneLockAndDurableFile with synchronized temporarily removed from InMemoryGroupStore.addParent (loop rounds set to 0) -> AssertionError at GroupAdminStoreTest.java:221 assertEquals(\"b -> a waits for the lock a -> b holds over its check and insert\", Thread.State.BLOCKED, y.getState()); reverted, green",
+   "why_no_red": null,
+   "rationale_full": "Added a package-private hook between the edge check and the insert (GroupGraph.checked, set through InMemoryGroupStore.afterEdgeCheck(Runnable); null in production). Without removing the 20-round loop, the test now forces the race: thread x passes the check for a->b and parks in the hook; thread y calls addParent(b,a) and must be BLOCKED on the store monitor (bounded 10 s poll on Thread.getState). After release, exactly one 409 is raised, childrenOf(b)=={a} and childrenOf(a) is empty."
+  },
+  {
+   "finding_id": "T3-F02",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Blowfish.java",
+     "line_range": "19-30"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Blowfish.java",
+     "line_range": "96-100"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/password/BcryptPasswordHasherTest.java",
+     "line_range": "73-98"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; a regression that ran the schedule before the cost check would raise keySchedules() and fail the new assertEquals deterministically, independent of CI speed.",
+   "rationale_full": "Added Blowfish.keySchedules() (internal package, additive, a counter of started bcrypt key schedules). The test warms the hasher up with a cheap verify (class loading and S-box init), then proves the refused cost-15 verify ran no key schedule (counter unchanged), and proves that the raised maxCost(15) verify does run one (the seam is live). The wall-clock bound stays as a sanity bound at < 1000 ms (a cost-15 schedule takes over a second; it was 200 ms). The method now has @Test(timeout = 120_000) for the real cost-15 verify. All original assertions are kept."
+  },
+  {
+   "finding_id": "T3-F04",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/WebSocketWrapperTest.java",
+     "line_range": "216-246"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; a wrong 1008 close at any point before the client close is now recorded and fails the closes==[1000] assertion.",
+   "rationale_full": "Replaced Thread.sleep(50) with a close listener on the server session (a latch plus the recorded codes). After the ticks the listener must not fire (a 500 ms bounded latch wait, which ends at once if a wrong close arrives). After finish() the test waits up to 10 s for the close and asserts that the one recorded close is the client's 1000, not a 1008 access revocation. The original isOpen assertions are kept. The recheck closes synchronously on the ticking thread (Auth.webSocketTick -> recheck -> close), so the per-tick isOpen() checks are the deterministic proof. The listener adds a guard against an asynchronous regression that stays effective up to the client close, not only for 50 ms."
+  },
+  {
+   "finding_id": "T3-F05",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/HashSlotsTest.java",
+     "line_range": "191-240"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; the new requested()/WAITING assertions fail if the caller has not entered the queue before shutdown.",
+   "rationale_full": "Replaced Thread.sleep(100) with a bounded 10 s poll until slots.requested()==3 (held, queued and the synchronous call) and the sync thread is WAITING. Both are asserted before shutdown, so the AuthUnavailableException must come from shutdown waking a queued waiter, not from the refused-after-shutdown path. The finally block now also calls slots.shutdown() (idempotent), so hash and timer threads no longer leak. The test timeout is raised from 10 s to 30 s to cover the 10 s deadline."
+  },
+  {
+   "finding_id": "T3-F06",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java",
+     "line_range": "905-933"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; a still-running scheduled task after onStop would raise ticked.expiredCalls within the 25-interval window and fail the new assertEquals.",
+   "rationale_full": "The tail assertion is kept and commented with what it really shows (the stopped node made no call while another node started and ran its cleanup). Added a real 'after onStop no further call' check against a scheduler seen ticking: a node over its own Keys with cleanupInterval(20 ms) must call deleteExpired at least twice on its own (bounded 10 s poll). After stop() (which waits for a run in progress) cleanupScheduled() is false, and expiredCalls stays unchanged over 25 intervals (500 ms, a poll that ends early on a late call)."
+  },
+  {
+   "finding_id": "T3-F07",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/MiniJsonTest.java",
+     "line_range": "57-80"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; an off-by-one that refuses total == 8192 now fails the exact-boundary parse.",
+   "rationale_full": "Renamed the 16-byte document to tiny (still parsed). Added a CLAIMS document of exactly 8192 UTF-8 bytes (eight 1000-character strings, each under 1 KB, padded with whitespace). Its size is asserted, it parses (from String and from bytes, eight elements), and the same document plus one byte is refused with the 8192 message."
+  },
+  {
+   "finding_id": "T3-F16",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/RehashQueueTest.java",
+     "line_range": "168-176"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java",
+     "line_range": "378-392"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/HashSlotsTest.java",
+     "line_range": "76-85"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding (is_behavioral false, tag test): the product code is correct, so there is no red on current code; the new structural assertions fail on any blocking or slot-waiting regression, independent of CI speed.",
+   "rationale_full": "Structural non-blocking proofs added, timing bounds kept as generous sanity bounds. RehashQueue: the 101st offer returned false while the worker is still parked in the hasher (running==1, made==0, nothing written); the bound is now 10 s (was 1 s; the blocking alternative is forever). Wave9 SEC_APIKEY_004_AC8: hashSlots().requested() is unchanged across the two key requests (no slot asked for); the bound is now < 5 s, just under the 5 s slot wait cap (was 3 s). HashSlots fullQueue: the refusal is delivered inside submit() (refused.done count 0 right after submit returns); the redundant bound is kept (not removed, per the no-assertion-removal rule) and raised to 10 s."
+  }
+ ],
+ "public_api_changes": [],
+ "non_public_test_seams_added": [
+  "Auth.snapshotTicks() (package-private) + private scheduledSnapshot() used by the snapshot scheduler",
+  "InMemoryGroupStore.afterEdgeCheck(@Nullable Runnable) (package-private) and GroupGraph.checked (package-private field)",
+  "RehashQueue.accepted() (public method on utils.auth.internal class, outside the public API packages per ApiJarClasses)",
+  "Blowfish.keySchedules() (public static on utils.auth.internal class, outside the public API packages)",
+  "W8.engine test-fixture field (test code)"
+ ],
+ "docs_changed": [],
+ "build": {
+  "tests": 3347,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+ }
+}

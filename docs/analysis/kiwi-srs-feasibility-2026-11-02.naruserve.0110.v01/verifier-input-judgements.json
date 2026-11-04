@@ -1,0 +1,695 @@
+{
+ "judgements": [
+  {
+   "req_id": "SEC-AUTH-003",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "evidence": [
+      "API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64",
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java:77",
+      "docs/spec/04.http-core.srs.md:4540 IR-HTTP-010 (socketAddress, evolving)",
+      "docs/spec/06.engine-adapter.srs.md:1545 IR-ENGINE-003 (trustProxyHops, evolving)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "evidence": [
+      "code_context.json trace_validation SEC-AUTH-003: addition_site_parents_ok",
+      "docs/spec/17.auth.srs.md:1398 IR-AUTH-003 AC-3 lists invalid_setup_token 401 and setup_not_local 403"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "evidence": [
+      "existing_srs_context.json SEC-AUTH-003 draft_deps: []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "evidence": [
+      "docs/spec/17.auth.srs.md:911 SEC-AUTH-003 AC-2, AC-8",
+      "docs/research/auth-rbac/00.overview.md:225 §4.4 gives no status or code"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/spec/17.auth.srs.md:28"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Record invalid_setup_token / setup_not_local in docs/api with their producing answers (IR-AUTH-003 AC-3 catalog test)",
+    "Schedule after SEC-FLOW-001 and IR-HTTP-010 (socketAddress) land"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": []
+  },
+  {
+   "req_id": "SEC-AUTH-007",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "evidence": [
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64",
+      "docs/spec/17.auth.srs.md:237 IR-AUTH-001 TimeSource (evolving)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "evidence": [
+      "code_context.json trace_validation SEC-AUTH-007: addition_site_parents_ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "evidence": [
+      "existing_srs_context.json SEC-AUTH-007 draft_deps: []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "evidence": [
+      "docs/spec/17.auth.srs.md:1618 SEC-AUTH-007 AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/spec/17.auth.srs.md:15"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Schedule AC-7 in the last wave, after FLOW logout/refresh/device trust, APIKEY ver checks and auth.webSocket exist"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": []
+  },
+  {
+   "req_id": "SEC-AUTH-008",
+   "feasibility": "high",
+   "score": 85,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:159 RestApp logger(Logger)",
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 12,
+     "evidence": [
+      "code_context.json trace_validation SEC-AUTH-008"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "evidence": [
+      "existing_srs_context.json SEC-AUTH-008 depends_on [FR-AUTH-004]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "evidence": [
+      "docs/spec/17.auth.srs.md:1805 SEC-AUTH-008 AC-1, AC-3"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/spec/17.auth.srs.md:15"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:296"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Run AC-1 as the final cross-scope gate test in the last wave",
+    "Route every auth log write and exception message through one redaction helper"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": []
+  },
+  {
+   "req_id": "SEC-TOKEN-009",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java:19 methodAsync",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:128-140",
+      "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyDeferredSocketTest.java",
+      "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRequestRetentionTest.java",
+      "API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "evidence": [
+      "code_context.json trace_validation SEC-TOKEN-009: all_verifies_paths_exist"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "evidence": [
+      "existing_srs_context.json SEC-TOKEN-009 draft_deps: []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "evidence": [
+      "docs/spec/18.auth-tokens.srs.md:656 PERF-TOKEN-001 AC-3, AC-6",
+      "docs/spec/18.auth-tokens.srs.md:923 SEC-TOKEN-009 AC-7, AC-8"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/spec/18.auth-tokens.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Inject scheduler, jitter and nanoTime/measurement sources",
+    "AC-8 adds tests in NaruServe-tinyhttpd and NaruServe-servlet test source sets (Jetty and Gson already on the servlet test classpath, build.gradle:362-369)",
+    "Note in docs/api that pre-hash rejections (403 transport/CSRF, 415, 400 shape, 429) are not floored: 00 R38 literally excludes only 429 but frames the floor around attempts that took a hash slot, so this reading is consistent"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "Test-only: NaruServe-tinyhttpd and NaruServe-servlet adapter tests (AC-8); no main code outside NaruServe-api",
+   "contradictions_found": []
+  },
+  {
+   "req_id": "IR-TOKEN-001",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "evidence": [
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "NaruServe-kotlin/src/test/kotlin/com/snoworca/naruserve/",
+      "docs/research/auth-rbac/00.overview.md:77 spi [구현] lists Authenticator"
+     ]
+    },
+    "evidence_strength": {
+     "score": 14,
+     "evidence": [
+      "code_context.json trace_validation IR-TOKEN-001: addition_site_parents_ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "evidence": [
+      "existing_srs_context.json IR-TOKEN-001 draft_deps: [SEC-TOKEN-009]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "evidence": [
+      "docs/spec/18.auth-tokens.srs.md:1124 IR-TOKEN-001 AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/spec/18.auth-tokens.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Implement with or after SEC-TOKEN-009 (password authenticator runs inside the timing equalizer)",
+    "Add utils.auth.spi to ApiJarClasses PUBLIC_PACKAGES (NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java:27-28)",
+    "Kotlin SAM test (T11) in NaruServe-kotlin"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "Test-only: Kotlin SAM test in NaruServe-kotlin (T11)",
+   "contradictions_found": []
+  },
+  {
+   "req_id": "FR-FLOW-006",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "evidence": [
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:138 BAD_REQUEST",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:15-72"
+     ]
+    },
+    "evidence_strength": {
+     "score": 13,
+     "evidence": [
+      "code_context.json trace_validation FR-FLOW-006"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "evidence": [
+      "existing_srs_context.json FR-FLOW-006 draft_deps: []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:297 R30 input-check 400",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:22 decode throws"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:312"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Record the PATCH body shape and 400 BAD_REQUEST in docs/api and drop the stale [INFERRED] marker in AC-2",
+    "Provide a decoding JsonCodec for NaruServe-api HTTP tests (StubJsonCodec.java:22 throws on decode)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": []
+  },
+  {
+   "req_id": "FR-FLOW-009",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "evidence": [
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64"
+     ]
+    },
+    "evidence_strength": {
+     "score": 13,
+     "evidence": [
+      "code_context.json trace_validation FR-FLOW-009",
+      "docs/research/auth-rbac/07.enterprise-and-customization.md:57"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "evidence": [
+      "existing_srs_context.json FR-FLOW-009 draft_deps: []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 10,
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:1768 FR-FLOW-009 AC-2, AC-5",
+      "docs/research/auth-rbac/00.overview.md:556"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 8,
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Resolve the AC-5 / SEC-FLOW-012 AC-6 release semantics against 00 §6.4 'R34 × 새 기기 admin' before implementation",
+    "Drop the stale '(name not final) [INFERRED]' marker on Lockout.after(5).forMinutes(15) in AC-2 and record it in docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": [
+    "Contradiction with 00 §6.4 (decided value of FR-FLOW-009 AC-5, shared by SEC-FLOW-012 AC-6). 00.overview.md:556 row 'R34 × 새 기기 admin': '사용자 단독 키로 429. 기존 기기에서 로그인하거나 다른 관리자가 lockout 해제. 남는 위험으로 문서화' (another admin's lockout release is a stated way out of the user-only-key 429). FR-FLOW-009 AC-5: 'The release clears only the Lockout state and leaves every login throttle key as it was (decided 2026-11-02; SEC-FLOW-012 AC-6)', and SEC-FLOW-012 AC-6: 'the same new-device login right after another admin's DELETE /auth/admin/users/:id/lockout still gets 429 from the user-only key'. 00 R34 (4) ties DELETE …/lockout to the hard lock only, so 00 is internally ambiguous; the decision picks R34 (4) and voids the §6.4 remedy. Needs an owner ruling: either DELETE also resets that user's user-only throttle key, or 00 §6.4 is amended."
+   ],
+   "blockers_resolved": [
+    {
+     "blocker": "Contradiction with 00 §6.4 (decided value of FR-FLOW-009 AC-5, shared by SEC-FLOW-012 AC-6). 00.overview.md:556 row 'R34 × 새 기기 admin': '사용자 단독 키로 429. 기존 기기에서 로그인하거나 다른 관리자가 lockout 해제. 남는 위험으로 문서화' (another admin's lockout release is a stated way out of the user-only-key 429). FR-FLOW-009 AC-5: 'The release clears only the Lockout state and leaves every login throttle key as it was (decided 2026-11-02; SEC-FLOW-012 AC-6)', and SEC-FLOW-012 AC-6: 'the same new-device login right after another admin's DELETE /auth/admin/users/:id/lockout still gets 429 from the user-only key'. 00 R34 (4) ties DELETE …/lockout to the hard lock only, so 00 is internally ambiguous; the decision picks R34 (4) and voids the §6.4 remedy. Needs an owner ruling: either DELETE also resets that user's user-only throttle key, or 00 §6.4 is amended.",
+     "resolution": "SRS corrected 2026-11-02 to follow 00 (see research note \"Correction\")"
+    }
+   ]
+  },
+  {
+   "req_id": "SEC-FLOW-013",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "evidence": [
+      "API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64",
+      "docs/spec/18.auth-tokens.srs.md SEC-TOKEN-005 AC-5 (evolving)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:62-68",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:157-175"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "evidence": [
+      "existing_srs_context.json SEC-FLOW-013 draft_deps: [REL-FLOW-001]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:1430 SEC-FLOW-013 AC-6, AC-9, AC-10",
+      "docs/research/auth-rbac/00.overview.md:782"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Fix the DeviceTrust method set before release and record it in docs/api (R20: later changes only as default methods); FR-IAM-013 AC-4 waits for it",
+    "Add utils.auth.spi to ApiJarClasses PUBLIC_PACKAGES (ApiJarClasses.java:27-28)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "Test-only: Kotlin DeviceTrust test in NaruServe-kotlin (T11)",
+   "contradictions_found": []
+  },
+  {
+   "req_id": "REL-FLOW-001",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "evidence": [
+      "API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64",
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "build.gradle:273-280 project(':NaruServe-api') dependencies block"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "evidence": [
+      "code_context.json trace_validation REL-FLOW-001: all_verifies_paths_exist"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "evidence": [
+      "existing_srs_context.json REL-FLOW-001 draft_deps: []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md:1830 REL-FLOW-001 AC-2, AC-6, AC-7"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/spec/19.auth-transport-and-endpoints.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as testImplementation in project(':NaruServe-api') (build.gradle:273-280), never a main dependency",
+    "Make Android detection injectable (system property) so AC-2 runs on the JVM",
+    "Schedule AC-5 (JDBC branch), AC-6 and AC-7 with or after FR-IAM-013"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": []
+  },
+  {
+   "req_id": "FR-IAM-013",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "evidence": [
+      "API 21 signature (build.gradle:431-441, android-api-level-21:5.0.1_r2, main source set) contains java.security.SecureRandom, MessageDigest, javax.crypto.Mac, ScheduledThreadPoolExecutor, System.nanoTime, java.sql, javax.sql.DataSource, FileDescriptor.sync; lacks java.time, java.util.Base64",
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "build.gradle:273-280"
+     ]
+    },
+    "evidence_strength": {
+     "score": 13,
+     "evidence": [
+      "code_context.json trace_validation FR-IAM-013"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "evidence": [
+      "existing_srs_context.json FR-IAM-013 draft_deps: [SEC-FLOW-013, REL-FLOW-001]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "evidence": [
+      "docs/spec/20.auth-identity-and-grants.srs.md:1830 FR-IAM-013 AC-4, AC-6"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/spec/20.auth-identity-and-grants.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Schedule after SEC-FLOW-013 fixes the DeviceTrust method set (AC-4)",
+    "Set a SQLite busy timeout (or WAL) in multi-instance tests",
+    "MySQL/PostgreSQL upsert forms checked by SQL-text tests only"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": []
+  },
+  {
+   "req_id": "FR-IAM-014",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "evidence": [
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)",
+      "docs/spec/17.auth.srs.md:1371 IR-AUTH-003 AC-3/AC-6 (evolving)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "evidence": [
+      "code_context.json trace_validation FR-IAM-014"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "evidence": [
+      "existing_srs_context.json FR-IAM-014 draft_deps: []"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 10,
+     "evidence": [
+      "docs/spec/20.auth-identity-and-grants.srs.md:2160 FR-IAM-014 AC-10, AC-11",
+      "docs/research/auth-rbac/00.overview.md:304"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/spec/20.auth-identity-and-grants.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:312"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Resolve AC-11 and the statement's audit rule against 00 R37 14판 before implementation",
+    "Schedule last in the IAM wave (needs SEC-IAM-004/007, REL-IAM-001/002, FR-AUTH-008/009)",
+    "Decoding JsonCodec for NaruServe-api HTTP tests"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": [
+    "Contradiction with 00 R37 (decided value Q76 in FR-IAM-014 statement and AC-11). 00.overview.md:304 R37 14판: '비밀번호 뒤의 필드가 중간에 실패하면 503과 함께 이미 적용된 필드 목록(applied)을 응답하고 감사 이벤트를 남긴다.' FR-IAM-014 AC-11: 'setRoles throws new AuthRejection(422, \"role_policy\") after changePassword succeeded answers 422 with code role_policy and applied: [\"password\"]', and the statement audits only 'every 503 after the password and every security_write_conflict answer', so a 422/400 failure after the password leaves no audit event. 00 says 503 plus an audit event for any failure after the password; the AC keeps the exception's own status (00 R30 general rule) and drops the audit. At minimum the audit omission contradicts 00; the status choice needs an owner ruling or a 00 amendment."
+   ],
+   "blockers_resolved": [
+    {
+     "blocker": "Contradiction with 00 R37 (decided value Q76 in FR-IAM-014 statement and AC-11). 00.overview.md:304 R37 14판: '비밀번호 뒤의 필드가 중간에 실패하면 503과 함께 이미 적용된 필드 목록(applied)을 응답하고 감사 이벤트를 남긴다.' FR-IAM-014 AC-11: 'setRoles throws new AuthRejection(422, \"role_policy\") after changePassword succeeded answers 422 with code role_policy and applied: [\"password\"]', and the statement audits only 'every 503 after the password and every security_write_conflict answer', so a 422/400 failure after the password leaves no audit event. 00 says 503 plus an audit event for any failure after the password; the AC keeps the exception's own status (00 R30 general rule) and drops the audit. At minimum the audit omission contradicts 00; the status choice needs an owner ruling or a 00 amendment.",
+     "resolution": "SRS corrected 2026-11-02 to follow 00 (see research note \"Correction\")"
+    }
+   ]
+  },
+  {
+   "req_id": "SEC-APIKEY-008",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:174 jsonLimit(long)",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:39 413",
+      "build.gradle:59-61 mainDependencies ':NaruServe-api': [:] (no main dependency)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "evidence": [
+      "code_context.json trace_validation SEC-APIKEY-008"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "evidence": [
+      "existing_srs_context.json SEC-APIKEY-008 draft_deps: [FR-FLOW-006, FR-IAM-014]"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:296 R29 (f) order",
+      "docs/analysis/kiwi-srs-feasibility-2026-11-01.naruserve.0110.v01/draft-open-questions.md Q57 row"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:314"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Schedule after FR-FLOW-006 and FR-IAM-014 handlers exist",
+    "Decoding JsonCodec for NaruServe-api tests",
+    "Keep AC-10 as written (00 R29 (f)); do not apply the Q57 '415 first' recommendation"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "contradictions_found": []
+  }
+ ]
+}

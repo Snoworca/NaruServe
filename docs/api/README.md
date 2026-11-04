@@ -5,7 +5,7 @@
 NaruServe는 Express.js처럼 쓰는 Java 8 / Kotlin용 경량 HTTP 서버 라이브러리입니다.
 Android 5.0(API 21)부터 최신 Android, 그리고 일반 JVM에서 같은 API로 동작합니다.
 
-> **문서 상태:** 0.10.0 공통 HTTP 프로파일과 기존 확장 API를 설명합니다. 설치 좌표와 저장소 가용성에 따른 소스 빌드는 [설치 안내](../../README.ko.md#설치)를 따르세요. 라우팅·오류·비동기 계약과 Java Pattern 경계는 [Express에서 오신 분께](express-migration.md)를 참고하세요.
+> **문서 상태:** 0.11.0 공통 HTTP 프로파일과 기존 확장 API를 설명합니다. 설치 좌표와 저장소 가용성에 따른 소스 빌드는 [설치 안내](../../README.ko.md#설치)를 따르세요. 라우팅·오류·비동기 계약과 Java Pattern 경계는 [Express에서 오신 분께](express-migration.md)를 참고하세요.
 
 Express를 써 봤다면 [Express에서 오신 분께](express-migration.md)부터 읽으세요.
 
@@ -67,16 +67,17 @@ DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답
 | [수명주기와 서비스](lifecycle.md) | `app.locals` | 요청 자원 보존·취소, `onStart`/`onStop`, `ApplicationContext`, `ServiceRegistry` |
 | [로깅](logging.md) | `morgan` | `app.accessLog`, `Logger` |
 | [기본값과 보안](defaults.md) | — | 크기·시간 한도 기본값, 기본 보안 정책 |
+| [인증 모듈](auth.md) | `passport`, `express-jwt` | 0.11.0: `app.use(auth)` 한 줄로 내장 `/auth/login`·refresh·logout·계정·관리 엔드포인트, 가드(`auth.require`), 그룹과 역할, API 키. 저장은 `UserStore` 등 인터페이스(SPI)와 메모리·파일 기본 저장소 |
 | [Kotlin](kotlin.md) | — | Kotlin에서 쓰는 법, null 처리, JSON 주의 |
 | [Servlet 모듈](servlet.md) | — | `NaruServe-servlet`으로 WAS 위에서 실행 |
 
 ## 모듈
 
-모든 모듈의 Maven group은 `com.snoworca.naruserve`, 버전은 `0.10.0`입니다. artifactId는 모듈 이름을 소문자로 쓴 것입니다(`NaruServe-api` → `naruserve-api`).
+모든 모듈의 Maven group은 `com.snoworca.naruserve`, 버전은 `0.11.0`입니다. artifactId는 모듈 이름을 소문자로 쓴 것입니다(`NaruServe-api` → `naruserve-api`).
 
 | 모듈 | 좌표 | 내용 | Android |
 |---|---|---|---|
-| `NaruServe-api` | `com.snoworca.naruserve:naruserve-api` | 공개 API(`RestApp`, `Request`, `Response` …)와 SPI(`HttpAdapter`, `JsonCodec`, `Logger`). 외부 실행 의존성 없음(JSpecify는 compile-only) | 지원(API 21+) |
+| `NaruServe-api` | `com.snoworca.naruserve:naruserve-api` | 공개 API(`RestApp`, `Request`, `Response`, `Logger` …), auth 모듈 `utils.auth`, SPI(`HttpAdapter`, `JsonCodec`). 외부 실행 의존성 없음(JSpecify는 compile-only) | 지원(API 21+) |
 | `NaruServe` | `com.snoworca.naruserve:naruserve` | `RestApp.create()` 기본 조립(TinyHttpd + Gson + 콘솔 로거). 일반 JDK와 Android 어디서나 씁니다 | 지원(API 21+) |
 | `NaruServe-tinyhttpd` | `com.snoworca.naruserve:naruserve-tinyhttpd` | TinyHttpd `HttpAdapter` | 지원(API 21+) |
 | `NaruServe-gson` | `com.snoworca.naruserve:naruserve-gson` | `GsonJsonCodec`(`com.google.code.gson:gson:2.14.0`) | 지원(API 21+) |
@@ -100,13 +101,13 @@ Android 앱은 `NaruServe-android`를 넣습니다. `NaruServe`에 Logcat 로거
 
 ```groovy
 // 일반 JDK(Java 8+): RestApp.create()로 바로 시작합니다.
-implementation 'com.snoworca.naruserve:naruserve:0.10.0'
+implementation 'com.snoworca.naruserve:naruserve:0.11.0'
 
 // Kotlin: NaruServe와 reified 확장
-implementation 'com.snoworca.naruserve:naruserve-kotlin:0.10.0'
+implementation 'com.snoworca.naruserve:naruserve-kotlin:0.11.0'
 
 // Android 앱: NaruServe와 Logcat 로거, INTERNET 권한
-implementation 'com.snoworca.naruserve:naruserve-android:0.10.0'
+implementation 'com.snoworca.naruserve:naruserve-android:0.11.0'
 ```
 
 Android 앱 모듈의 `build.gradle`에는 아래 설정도 넣습니다. TinyHttpd 3.1.1의 core와 websocket JAR에 같은 경로, 같은 내용의 라이선스 고지가 들어 있어, 이 설정이 없으면 앱 빌드의 리소스 병합(`mergeDebugJavaResource`)이 중복 파일로 실패합니다. 두 사본의 내용이 같으므로 하나만 남겨도 고지는 그대로 APK에 들어갑니다.

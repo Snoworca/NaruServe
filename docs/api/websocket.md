@@ -2,7 +2,7 @@
 
 [한국어](websocket.md) | [English](en/websocket.md)
 
-> **버전 범위:** 이 문서는 0.10.0 대상 체크아웃의 동작을 설명하며 Maven 배포 완료를 뜻하지 않습니다.
+> **버전 범위:** 이 문서는 0.11.0 대상 체크아웃의 동작을 설명하며 Maven 배포 완료를 뜻하지 않습니다.
 
 내장 어댑터는 HTTP와 **같은 포트**에서 WebSocket(RFC 6455)을 받습니다. 유지되는 NaruServe WebSocket 확장이며, `express-ws` 예제는 개념 비교입니다. Express 5 API·문법과 같다는 뜻은 아닙니다. Servlet 어댑터는 업그레이드하지 못하고 `501`을 답합니다.
 

@@ -1,0 +1,1 @@
+{"pass":"prickly-review","round":4,"counts":{"CRITICAL":0,"HIGH":0,"MEDIUM":0,"LOW":2},"findings":[{"sev":"LOW","where":"pre-hash ip/user waits not re-applied when a custom authenticator answers another user","status":"deferred"},{"sev":"LOW","where":"no test for device-token clearing across users; svc test does not prove the authenticator ran","status":"deferred"}]}

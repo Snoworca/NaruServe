@@ -1,0 +1,4 @@
+{"run":"w02-final-baseline","command":"./gradlew build","exit_code":0,"tests_api":2349,"failures":0,"head":"bdd576a","note":"w03 used the w02 end state as its baseline"}
+{"run":"after-impl-1","command":"./gradlew build","exit_code":1,"failures":1,"failed":["KotlinDocsMarkersTest.sdsAc1_FR_KT_004_AC_1"],"note":"new Kotlin docs blocks without marker tests"}
+{"run":"after-impl-2","command":"./gradlew build","exit_code":0,"tests":2486,"failures":0,"regressions_vs_baseline":0}
+{"run":"after-prickly-fix","command":"./gradlew build (+ :test docs.* after the docs-only edit)","exit_code":0,"tests":2494,"failures":0,"regressions_vs_baseline":0}

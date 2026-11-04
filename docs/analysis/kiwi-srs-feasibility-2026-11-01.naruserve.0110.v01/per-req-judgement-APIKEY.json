@@ -1,0 +1,2389 @@
+{
+ "group": "APIKEY",
+ "prescreen": {
+  "senior_targets": [
+   "FR-APIKEY-001",
+   "SEC-APIKEY-001",
+   "SEC-APIKEY-002",
+   "SEC-APIKEY-004",
+   "SEC-APIKEY-005",
+   "REL-APIKEY-001",
+   "FR-APIKEY-002",
+   "SEC-APIKEY-006",
+   "REL-APIKEY-002",
+   "REL-APIKEY-003",
+   "REL-APIKEY-004",
+   "SEC-APIKEY-007",
+   "SEC-APIKEY-008",
+   "SEC-APIKEY-009",
+   "OPS-APIKEY-001",
+   "IR-APIKEY-002",
+   "SEC-APIKEY-010",
+   "FR-APIKEY-003",
+   "FR-APIKEY-004",
+   "FR-APIKEY-005",
+   "IR-APIKEY-003",
+   "FR-APIKEY-006",
+   "IR-APIKEY-004",
+   "FR-APIKEY-009",
+   "PERF-APIKEY-001",
+   "SEC-APIKEY-011",
+   "DR-APIKEY-002",
+   "REL-APIKEY-005",
+   "REL-APIKEY-006",
+   "REL-APIKEY-007",
+   "PERF-APIKEY-002"
+  ],
+  "quick_pass": [
+   "CON-APIKEY-001",
+   "SEC-APIKEY-003",
+   "IR-APIKEY-001",
+   "IR-APIKEY-005",
+   "FR-APIKEY-007",
+   "FR-APIKEY-008",
+   "FR-APIKEY-010",
+   "DR-APIKEY-001"
+  ],
+  "quick_block": []
+ },
+ "judgements": [
+  {
+   "req_id": "FR-APIKEY-001",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Builder options plus conditional registration of the authenticator and six routes; plain Java on the new Auth.Builder. AC-2/AC-3 read C4 app.registrations() (IR-APP-008, a 0.11.0 Core sibling).",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)",
+      "build.gradle:60 ':NaruServe-api' : [:] (no main dependency; auth adds none)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "6 depends_on edge(s) to draft 0.11.0 siblings (FR-AUTH-005, FR-AUTH-001, CON-AUTH-001, CON-AUTH-002, CON-AUTH-003, IR-APIKEY-002); -3 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "AC-1..AC-4 are concrete HTTP/registration checks; .apiKeyFailureLimit is name-not-final but defaults stay testable; AC-5 delegates to IR-APIKEY-002 AC-6.",
+     "evidence": [
+      "5 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: 00 §9 v1 row: keys off by default, .apiKeys(store) attaches endpoints and authenticator (8판, S-10).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Settle and record the .apiKeyFailureLimit name in docs/api",
+    "Land C4 app.registrations() (IR-APP-008) before AC-2/AC-3"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-APIKEY-001",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Scheme compare with equalsIgnoreCase and a hand-written token68 parser; Core already returns all header values.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:65-68 header(String)/headers(String) give every Authorization value",
+      "build.gradle:60 ':NaruServe-api' : [:] (no main dependency; auth adds none)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "Verifies traces exist and match the statement; remaining traces are addition sites with validated parents.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:65-68 header(String)/headers(String) give every Authorization value"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "2 depends_on edge(s) to draft 0.11.0 siblings (FR-APIKEY-001, SEC-FLOW-004); -1 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Seven HTTP outcome ACs over header/query/cookie inputs; all decidable with in-process requests.",
+     "evidence": [
+      "7 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: v1 row: Authenticator (password, Bearer, API key).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Parse token68 by hand; no java.util.Base64 (absent from API 21 signature)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-APIKEY-002",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Counts Authorization values from Request.headers and applies the public-path / credential-endpoint split owned by AUTH/FLOW.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:65-68 header(String)/headers(String) give every Authorization value"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "Verifies traces exist and match the statement; remaining traces are addition sites with validated parents.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:65-68 header(String)/headers(String) give every Authorization value"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "4 depends_on edge(s) to draft 0.11.0 siblings (SEC-APIKEY-001, SEC-FLOW-003, SEC-AUTH-005, SEC-FLOW-001); -2 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Six concrete status/code outcomes; AC-6 delegates to SEC-FLOW-001 AC-2.",
+     "evidence": [
+      "6 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: Part of the v1 API key authentication rules (R47).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Confirm the engine adapters deliver two Authorization headers as two values (not pre-merged) for AC-1 tests"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "CON-APIKEY-001",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Builder validation: RFC 9110 tchar check and equalsIgnoreCase against five names.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "1 depends_on edge(s) to draft 0.11.0 siblings (FR-APIKEY-001); -1 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "Four build()-throws/accepts ACs, trivially decidable.",
+     "evidence": [
+      "4 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "core-supporting: Configuration hygiene for the v1 .apiKeyScheme option.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-APIKEY-003",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "SecureRandom.nextInt(62) base62, MessageDigest SHA-256, hand hex; all in the API 21 signature.",
+     "evidence": [
+      "android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control)",
+      "build.gradle:60 ':NaruServe-api' : [:] (no main dependency; auth adds none)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "0 depends_on edge(s) to draft 0.11.0 siblings (none); -0 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "Regex, hash and 401 checks; AC-4 also reads the key counter (SEC-APIKEY-005).",
+     "evidence": [
+      "5 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: Key format and SHA-256 storage are the core of v1 ApiKeyStore.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Use SecureRandom.nextInt(62) or rejection sampling, never byte % 62"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-APIKEY-004",
+   "feasibility": "high",
+   "score": 81,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Eleven-step order in one authenticator method, dummy-hash constant-time compare, store-error 503 vs anonymous on public paths with a 1/min process log, no hash slot. Complex but fully specified, plain Java.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:95-150 code(400)=BAD_REQUEST, code(415), code(503)=SERVICE_UNAVAILABLE",
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Verifies traces exist and match the statement; remaining traces are addition sites with validated parents.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:95-150 code(400)=BAD_REQUEST, code(415), code(503)=SERVICE_UNAVAILABLE"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "5 depends_on edge(s) to draft 0.11.0 siblings (SEC-APIKEY-001, SEC-APIKEY-003, SEC-FLOW-001, SEC-TOKEN-001, REL-APIKEY-004); -2 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "All ten ACs have concrete outcomes; AC-8 and AC-9 need test seams (hash/compare spy, timer spy) that must be designed in.",
+     "evidence": [
+      "10 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: The verification order is the heart of the v1 API key authenticator.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Expose an internal compare/hash spy seam for AC-9 and a timer/TimeSource seam for AC-8"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-APIKEY-005",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Key-only counter through the LoginThrottle limit-argument methods (IR-FLOW-003) and FLOW IP resolution; 429 via AuthRejection retry-after.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "4 depends_on edge(s) to draft 0.11.0 siblings (IR-APIKEY-001, SEC-APIKEY-004, IR-FLOW-003, SEC-FLOW-011); -2 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Eleven count/threshold ACs decidable with a fixed TimeSource; AC-11 is a docs test.",
+     "evidence": [
+      "11 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R47 (2) key failure counting is part of the v1 authenticator.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Use a key namespace distinct from login keys"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "IR-APIKEY-001",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Only a call-discipline rule on the throttle; a spy throttle decides it.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "1 depends_on edge(s) to draft 0.11.0 siblings (IR-FLOW-003); -1 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "One spy-based AC.",
+     "evidence": [
+      "1 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: v1 row: LoginThrottle limit-argument default methods (24판), usesLimitArguments (26판).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "REL-APIKEY-001",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "No key-row cache: one findByPrefix per request; two Auth instances over one InMemory store simulate two nodes.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "2 depends_on edge(s) to draft 0.11.0 siblings (SEC-APIKEY-004, SEC-AUTH-007); -1 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Counting store and TimeSource-based 5 s window make every AC decidable.",
+     "evidence": [
+      "4 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R47 revocation semantics of v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "FR-APIKEY-002",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Expiry compare on TimeSource millis and a deleteExpired call added to the FR-TOKEN-002 scheduler; no java.time.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)",
+      "android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "2 depends_on edge(s) to draft 0.11.0 siblings (SEC-APIKEY-004, FR-TOKEN-002); -1 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Boundary ACs with a fixed TimeSource; AC-5 needs the FR-TOKEN-002 scheduler run hook. Q85 (scheduler behaviour on throw) is outside the ACs.",
+     "evidence": [
+      "5 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R47 expiry and R42 cleanup are v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Expose a single-run hook on the R42 cleanup scheduler for AC-5"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-APIKEY-006",
+   "feasibility": "high",
+   "score": 81,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "ver compare by size, single owner re-read, SINGLE vs MULTI deletion branch, 1/min ERROR log. Needs a file-store ver rollback fixture and a replica-lag UserStore fake.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "4 depends_on edge(s) to draft 0.11.0 siblings (SEC-APIKEY-004, SEC-IAM-003, REL-IAM-003, OPS-APIKEY-001); -2 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Six concrete ACs; AC-4 uses the OPS-APIKEY-001 AC-7 fixture.",
+     "evidence": [
+      "6 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R47 stale-key rules are v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "REL-APIKEY-002",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "ConcurrentHashMap owner -> max ver drained by the auth executor; java.util.concurrent only.",
+     "evidence": [
+      "android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control)",
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "1 depends_on edge(s) to draft 0.11.0 siblings (SEC-APIKEY-006); -1 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Held-executor tests make the dedupe ACs deterministic.",
+     "evidence": [
+      "5 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "core-supporting: Supporting reliability rule (priority medium).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Make the auth background executor injectable"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "REL-APIKEY-003",
+   "feasibility": "high",
+   "score": 81,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Per-owner in-node lock taken inside the R37 re-entrant user lock, deleteFutureByOwner before five ver++ paths and three issuance paths; needs hooks in FLOW/IAM ver++ paths. Complex concurrency, but pure Java.",
+     "evidence": [
+      "docs/spec/20.auth-identity-and-grants.srs.md REL-IAM-001 AC-7 now states the re-entrant per-user lock (closes open question Q86)",
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Verifies traces exist and match the statement; remaining traces are addition sites with validated parents.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok",
+      "docs/spec/20.auth-identity-and-grants.srs.md REL-IAM-001 AC-7 now states the re-entrant per-user lock (closes open question Q86)"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "8 depends_on edge(s) to draft 0.11.0 siblings (IR-APIKEY-004, FR-FLOW-003, SEC-FLOW-014, SEC-IAM-003, REL-IAM-001, OPS-APIKEY-001, FR-IAM-014, IR-APIKEY-002); -3 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Seven concrete ACs; AC-6 needs an in-package lock-order instrumentation seam.",
+     "evidence": [
+      "7 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R47 (2) 27판 future-key deletion is v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Define the ver++ hook into the key module (called under the R37 user lock) before FLOW/IAM ver++ endpoints are built",
+    "Add a lock-acquisition probe for AC-6"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "REL-APIKEY-004",
+   "feasibility": "high",
+   "score": 81,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "In-memory marker map under the per-owner lock, retried by request path, issuance, later ver++ and the R42 scheduler, re-read inside the lock.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "2 depends_on edge(s) to draft 0.11.0 siblings (REL-APIKEY-003, FR-TOKEN-002); -1 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Nine ACs; AC-4, AC-8 and AC-9 need deterministic interleavings (held executor, scheduler single-run hook, latches).",
+     "evidence": [
+      "9 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R47 (2) 28-29판 pending marker is v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Injectable executor and scheduler single-run hook for the race ACs"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-APIKEY-007",
+   "feasibility": "high",
+   "score": 85,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Principal from owner with key scopes intersected by the IAM ScopeMatcher; getApiKeyId on AuthPrincipal; audit key id.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "2 depends_on edge(s) to draft 0.11.0 siblings (SEC-APIKEY-004, FR-IAM-009); -1 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Six ACs; the principal accessor name (Q94) is not final but does not block the test.",
+     "evidence": [
+      "6 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R47 (4) key principal is v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Record the principal accessor name in docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-APIKEY-008",
+   "feasibility": "medium",
+   "score": 79,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Step-10 bans across eight R33 credential endpoints, own-key endpoints, PATCH /auth/me and A2/A4 body-level bans read as Map before the R39 guard, with 415/400/413 ordering. Implementable, but the widest cross-scope surface in this scope.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java exists (Core 415/400/413 on req.body)",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:21-22 decode throws UnsupportedOperationException: endpoint tests with JSON bodies need a Map-decoding test codec"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 7,
+     "rationale": "11 depends_on edge(s) to draft 0.11.0 siblings (SEC-APIKEY-004, FR-FLOW-005, FR-FLOW-006, IR-IAM-005, FR-IAM-014, SEC-FLOW-003, FR-FLOW-001, SEC-FLOW-014, IR-FLOW-001, FR-APIKEY-004, SEC-FLOW-005); -3 for coupling; -5 for membership in the 70-member depends_on SCC and the 2-cycle with FR-FLOW-006 (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Eleven ACs, all with concrete outcomes; AC-10/AC-11 need a Map-decoding test codec and Core's JSON limit (Q90). The implementation note lags AC-11 (Q89) but the AC is authoritative.",
+     "evidence": [
+      "11 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:21-22 decode throws UnsupportedOperationException: endpoint tests with JSON bodies need a Map-decoding test codec"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R47 (5) key-actor restrictions are v1 security rules.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Cut one edge of the FR-FLOW-006 <-> SEC-APIKEY-008 2-cycle before wave scheduling",
+    "Provide a Map-decoding JsonCodec for NaruServe-api tests",
+    "Update the Implementation Notes with the AC-11 failed-read rule (Q89)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-APIKEY-009",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Key-specific cover filter inside the IAM R31 grant check plus the opt-in-off ignore when computing effective scopes.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "4 depends_on edge(s) to draft 0.11.0 siblings (SEC-APIKEY-007, SEC-IAM-004, FR-IAM-005, FR-IAM-009); -2 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Seven ACs with concrete 400/403 outcomes; AC-3/AC-4 restart by building a second Auth over the same stores.",
+     "evidence": [
+      "7 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R47 (5) admin-scope opt-in is v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "OPS-APIKEY-001",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Doctor items on the AUTH doctor framework; AC-7 is a hub fixture needing every FR-AUTH-003 AC-3 shared store as a non-in-memory fake or SQLite JDBC store.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)",
+      "code_context build_facts jdbc_test_driver: NONE declared yet"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "7 depends_on edge(s) to draft 0.11.0 siblings (IR-FLOW-003, IR-APIKEY-004, SEC-APIKEY-009, OPS-AUTH-001, FR-AUTH-003, REL-IAM-003, REL-APIKEY-005); -3 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Seven ACs; the WARN text is proposed (name not final) but the test asserts whatever text is chosen.",
+     "evidence": [
+      "7 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R47 (3)(5) doctor declarations are v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Build the MULTI_INSTANCE key fixture once and share it with SEC-APIKEY-006, SEC-APIKEY-011, IR-APIKEY-003, REL-APIKEY-003",
+    "Fix the WARN text in docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "IR-APIKEY-002",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Facade over the shared issuance core; @Nullable via compileOnly jspecify.",
+     "evidence": [
+      "build.gradle:96-99 kotlin-stdlib in test scope of every module (Kotlin tests possible); FR-KT-001 verified",
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "5 depends_on edge(s) to draft 0.11.0 siblings (SEC-APIKEY-010, IR-AUTH-003, IR-AUTH-002, IR-IAM-003, FR-IAM-005); -2 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Eight ACs; AC-8 needs a Javadoc docs test.",
+     "evidence": [
+      "8 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: v1 row: auth.apiKeys() facade (R47 (6)).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Kotlin compile/run test for the varargs signature (T11)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-APIKEY-010",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Shared issuance core: ownerVer from each path's own read, per-owner lock, collision retry x3 -> AuthUnavailableException.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "5 depends_on edge(s) to draft 0.11.0 siblings (IR-APIKEY-004, SEC-APIKEY-003, SEC-IAM-004, SEC-IAM-002, REL-APIKEY-003); -2 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Six ACs; AC-2 and AC-6 need a pausable PasswordHasher hook and a held deletion executor.",
+     "evidence": [
+      "6 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R47 (6) issuance rules are v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Provide a test PasswordHasher pause hook"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "FR-APIKEY-003",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Three PAT routes; POST re-verifies password through the hash slot, R34 (7) counter, 1.25T floor and CSRF/Origin of FLOW.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:24-35 (HttpException(400) -> BAD_REQUEST), :57-73 withHeader/headers for WWW-Authenticate",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:21-22 decode throws UnsupportedOperationException: endpoint tests with JSON bodies need a Map-decoding test codec"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Verifies traces exist and match the statement; remaining traces are addition sites with validated parents.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:24-35 (HttpException(400) -> BAD_REQUEST), :57-73 withHeader/headers for WWW-Authenticate"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "7 depends_on edge(s) to draft 0.11.0 siblings (SEC-APIKEY-010, FR-APIKEY-005, SEC-FLOW-014, SEC-FLOW-015, REL-TOKEN-001, SEC-TOKEN-009, SEC-FLOW-006); -3 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Ten ACs; AC-8 needs the SEC-TOKEN-009 measurement stub and an injected scheduler; AC-2 compares with /auth/password's 401 (code name open, Q95) without naming it.",
+     "evidence": [
+      "10 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:21-22 decode throws UnsupportedOperationException: endpoint tests with JSON bodies need a Map-decoding test codec"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: v1 row: personal PAT endpoints (R47, 21판).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Provide a Map-decoding test codec",
+    "Settle the wrong-current-password 401 code (Q95) in docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "FR-APIKEY-004",
+   "feasibility": "high",
+   "score": 80,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Three admin routes with a fixed POST check order (body 400 -> 404 -> 403 R31 -> disabled 400 -> password), methodAsync and hash slot.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:24-35 (HttpException(400) -> BAD_REQUEST), :57-73 withHeader/headers for WWW-Authenticate",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:21-22 decode throws UnsupportedOperationException: endpoint tests with JSON bodies need a Map-decoding test codec"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Verifies traces exist and match the statement; remaining traces are addition sites with validated parents.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:24-35 (HttpException(400) -> BAD_REQUEST), :57-73 withHeader/headers for WWW-Authenticate"
+     ]
+    },
+    "dependency_health": {
+     "score": 8,
+     "rationale": "9 depends_on edge(s) to draft 0.11.0 siblings (FR-APIKEY-005, SEC-APIKEY-010, SEC-IAM-004, SEC-FLOW-015, REL-TOKEN-001, FR-AUTH-009, SEC-IAM-007, FR-APIKEY-003, SEC-TOKEN-009); -3 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Ten concrete ACs; AC-9 needs the hash-slot saturation fixture; Q68 guard position is modelled by SEC-IAM-007.",
+     "evidence": [
+      "10 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:21-22 decode throws UnsupportedOperationException: endpoint tests with JSON bodies need a Map-decoding test codec"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R45/R47 admin key endpoints are v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Provide a Map-decoding test codec"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "FR-APIKEY-005",
+   "feasibility": "high",
+   "score": 84,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Limit via insertIfUnderLimit, days*86400000L, JSON integer type check on a Map body, Core HttpException(400).",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:24-35 (HttpException(400) -> BAD_REQUEST), :57-73 withHeader/headers for WWW-Authenticate",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:21-22 decode throws UnsupportedOperationException: endpoint tests with JSON bodies need a Map-decoding test codec"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Verifies traces exist and match the statement; remaining traces are addition sites with validated parents.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:24-35 (HttpException(400) -> BAD_REQUEST), :57-73 withHeader/headers for WWW-Authenticate"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "5 depends_on edge(s) to draft 0.11.0 siblings (IR-APIKEY-004, FR-AUTH-006, IR-AUTH-003, IR-APIKEY-003, FR-IAM-005); -2 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Seven ACs with fixed numbers.",
+     "evidence": [
+      "7 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)",
+      "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/StubJsonCodec.java:21-22 decode throws UnsupportedOperationException: endpoint tests with JSON bodies need a Map-decoding test codec"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R47 (6) limits are v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Provide a Map-decoding test codec"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "IR-APIKEY-003",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "ApiKeyStatus enum computed from a store owner read; auth writes lower-case strings in a Map for res.json.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "2 depends_on edge(s) to draft 0.11.0 siblings (SEC-APIKEY-006, OPS-APIKEY-001); -1 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Six ACs; AC-4 needs NaruServe-gson in the test classpath; AC-6 docs test.",
+     "evidence": [
+      "6 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "core-supporting: Listing status (priority medium).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Run AC-4 where NaruServe-gson is on the test classpath"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "FR-APIKEY-006",
+   "feasibility": "high",
+   "score": 85,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Adds a flag to IAM AuthUser and three user stores, and hooks login, A2/A4 and recovery outcomes.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "3 depends_on edge(s) to draft 0.11.0 siblings (FR-FLOW-004, SEC-FLOW-011, SEC-AUTH-003); -2 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Seven ACs; the flag name and the create overload shape (Q69, Q96) are open but chosen at implementation; AC-6 needs JdbcUserStore on SQLite.",
+     "evidence": [
+      "7 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: v1 row: service accounts AuthUser.isServiceAccount() (21판).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Decide the A2 flag name and AuthUsers.create shape (Q69/Q96) and record them in docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "IR-APIKEY-004",
+   "feasibility": "high",
+   "score": 85,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Interface with 13 methods, 4 defaults; default deleteFutureByOwner via listByOwner/deleteById.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)",
+      "build.gradle:96-99 kotlin-stdlib in test scope of every module (Kotlin tests possible); FR-KT-001 verified"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "1 depends_on edge(s) to draft 0.11.0 siblings (DR-APIKEY-001); external FR-KT-001 is verified; -1 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Reflection, behaviour and Kotlin nullability ACs; lastUsedAt method name not final.",
+     "evidence": [
+      "7 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: v1 row: ApiKeyStore.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Fix the lastUsedAt method name before the first release (R20)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "DR-APIKEY-001",
+   "feasibility": "high",
+   "score": 85,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Final value classes with builder/toBuilder and masked toString.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)",
+      "build.gradle:96-99 kotlin-stdlib in test scope of every module (Kotlin tests possible); FR-KT-001 verified"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 10,
+     "rationale": "1 depends_on edge(s) to draft 0.11.0 siblings (SEC-AUTH-008); -1 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Six ACs; AC-5 log capture via RecordingLogger; AC-6 Kotlin compile test.",
+     "evidence": [
+      "6 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: v1 value types for ApiKeyStore.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "FR-APIKEY-007",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "ConcurrentHashMap store with per-call synchronisation.",
+     "evidence": [
+      "android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "3 depends_on edge(s) to draft 0.11.0 siblings (IR-APIKEY-004, FR-APIKEY-009, FR-AUTH-003); -2 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Four ACs; AC-4 thread count is INFERRED test parameter only.",
+     "evidence": [
+      "4 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: v1 row: in-memory stores.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "FR-APIKEY-008",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Adds a marker-clear step inside the FR-IAM-008 delete order.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "2 depends_on edge(s) to draft 0.11.0 siblings (REL-APIKEY-004, FR-IAM-008); -1 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "Two simple ACs.",
+     "evidence": [
+      "2 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R47 (3) user deletion is v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "FR-APIKEY-009",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Contract checks throwing AssertionError, no JUnit at runtime; 8-thread two-instance check.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)",
+      "code_context build_facts jdbc_test_driver: NONE declared yet"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "2 depends_on edge(s) to draft 0.11.0 siblings (IR-APIKEY-004, IR-AUTH-005); -1 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Six ACs; AC-6 needs JdbcApiKeyStore over SQLite with the test-only driver.",
+     "evidence": [
+      "6 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: v1 row: AuthTesting verifyApiKeyStore (R47, 23판).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as testImplementation only (build.gradle:60 map unchanged)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "NaruServe-api test classpath gains org.xerial sqlite-jdbc (testImplementation only)",
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "FR-APIKEY-010",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Thin wrapper over auth.apiKeys().issue.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "2 depends_on edge(s) to draft 0.11.0 siblings (IR-APIKEY-002, IR-AUTH-005); -1 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "Five simple ACs; AC-4 needs SQLite JdbcApiKeyStore.",
+     "evidence": [
+      "5 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "core-supporting: Test helper (priority medium).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "NaruServe-api test classpath gains org.xerial sqlite-jdbc (testImplementation only)",
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "PERF-APIKEY-001",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Per-key last-write map and executor submission with TimeSource.",
+     "evidence": [
+      "code_context build_facts: utils.auth has 0 files yet (new code under NaruServe-api)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "1 depends_on edge(s) to draft 0.11.0 siblings (IR-APIKEY-004); -1 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Four ACs; method name not final; AC-1/AC-4 parameters INFERRED.",
+     "evidence": [
+      "4 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "core-supporting: Best-effort metadata (priority medium).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Record the lastUsedAt method name in docs/api"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "SEC-APIKEY-011",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Key-specific close rules on the FLOW auth.webSocket wrapper: expiry close via TimeSource, recheck re-reading key row and principal, immediate close on same-node revocation.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketSession.java:27 close(int,String); testFixtures InMemoryWebSocketChannel.java exists",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java:87-95 upgrade runs inside the dispatched request (after middleware)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "Verifies traces exist and match the statement; remaining traces are addition sites with validated parents.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/WebSocketSession.java:27 close(int,String); testFixtures InMemoryWebSocketChannel.java exists",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java:87-95 upgrade runs inside the dispatched request (after middleware)"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "4 depends_on edge(s) to draft 0.11.0 siblings (SEC-APIKEY-006, REL-APIKEY-004, OPS-APIKEY-001, SEC-IAM-003); -2 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Eight ACs; AC-2 needs a TimeSource-driven scheduler seam; rolesOfGroups name not final does not block AC-8.",
+     "evidence": [
+      "8 ACs, 0 INFERRED, 1 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R40 key WebSocket rules are v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Drive the expiry close from an injectable scheduler/TimeSource"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "IR-APIKEY-005",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Challenge header assembly with the configured scheme name on 401s.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:24-35 (HttpException(400) -> BAD_REQUEST), :57-73 withHeader/headers for WWW-Authenticate",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:95-150 code(400)=BAD_REQUEST, code(415), code(503)=SERVICE_UNAVAILABLE"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "Verifies traces exist and match the statement; remaining traces are addition sites with validated parents.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:24-35 (HttpException(400) -> BAD_REQUEST), :57-73 withHeader/headers for WWW-Authenticate"
+     ]
+    },
+    "dependency_health": {
+     "score": 13,
+     "rationale": "4 depends_on edge(s) to draft 0.11.0 siblings (SEC-APIKEY-004, IR-AUTH-002, IR-FLOW-001, IR-AUTH-003); external FR-APP-006 is verified; -2 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 15,
+     "rationale": "One concrete header/body AC.",
+     "evidence": [
+      "1 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: R47 (1) challenge shape is v1.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": null,
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "DR-APIKEY-002",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "DDL text resources for three dialects; SQLite applied for real once the test-only driver is added; MySQL/PostgreSQL checked as text.",
+     "evidence": [
+      "android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control)",
+      "build.gradle:360-369 Jetty servletTestDependencies: precedent for a test-only driver (sqlite-jdbc testImplementation)",
+      "code_context build_facts jdbc_test_driver: NONE declared yet"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Verifies traces exist and match the statement; remaining traces are addition sites with validated parents.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok",
+      "build.gradle:360-369 Jetty servletTestDependencies: precedent for a test-only driver (sqlite-jdbc testImplementation)"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "3 depends_on edge(s) to draft 0.11.0 siblings (IR-APIKEY-004, DR-IAM-003, FR-IAM-010); -2 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Five ACs: SQLite real, others SQL-text; table/column names (Q92) chosen at implementation.",
+     "evidence": [
+      "5 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: v1 row: utils.auth.jdbc ApiKey with 27-28판 indexes.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as testImplementation on NaruServe-api only",
+    "Record the table and column names in docs/api (Q92)"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "NaruServe-api test classpath gains org.xerial sqlite-jdbc (testImplementation only)",
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:high"
+  },
+  {
+   "req_id": "REL-APIKEY-005",
+   "feasibility": "high",
+   "score": 81,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "The five-step procedure and retry use only java.sql (all classes in the API 21 signature, ThreadLocalRandom present). What cannot be shown locally is the real InnoDB read-view and upsert-lock behaviour the design relies on (00 §12); fake JDBC proves the statement order, not DB semantics.",
+     "evidence": [
+      "android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control)",
+      "API 21 signature lacks JDBC 4.1 setNetworkTimeout, abort(Executor), closeOnCompletion (grep count 0) while getSQLState/getErrorCode/setTransactionIsolation are present",
+      "docs/research/auth-rbac/00.overview.md:1253-1268 §12: InnoDB read view, MySQL upsert lock wait and STATEMENT binlog 1592 are documentation-based, not measured"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes. Design correctness on real MySQL/PostgreSQL rests on vendor documentation (00 §12), not on measurement.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "3 depends_on edge(s) to draft 0.11.0 siblings (DR-APIKEY-002, IR-APIKEY-004, CON-IAM-002); -2 for coupling; -4 for membership in the 70-member depends_on SCC (ordering only, not implementability)",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "AC-1..AC-7 are fake-JDBC/SQL-text recordings fully decidable without a database; AC-8 is a docs check. The unmeasured behaviour does not make any AC impossible to write.",
+     "evidence": [
+      "8 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: v1 row names the JdbcApiKeyStore 26판 lock procedure and 27판 consistent-read count.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Build the fake JDBC with java.lang.reflect.Proxy over Connection/Statement/PreparedStatement/ResultSet (no new dependency)",
+    "Use only JDBC 4.0 methods present in the API 21 signature (no setNetworkTimeout/abort/closeOnCompletion)",
+    "Record the §12 verification limit in docs/api (AC-8); a real MySQL/PostgreSQL run is not part of 0.11.0 acceptance"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "NaruServe-api test classpath gains org.xerial sqlite-jdbc (testImplementation only)",
+   "in_dependency_cycle": true,
+   "tag_feasibility": "feasibility:medium",
+   "jdbc_locking_note": "Tagged feasibility:medium for 00 §12. Judged high: every AC is decidable by fake-JDBC (java.lang.reflect.Proxy), SQL-text or real-SQLite tests; java.sql/javax.sql are in the API 21 signature; the unmeasured InnoDB/PostgreSQL behaviour is a recorded residual verification limit (21 §3 assumptions), not an obstacle to implementing or testing the requirement as written."
+  },
+  {
+   "req_id": "REL-APIKEY-006",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Read/restore autocommit, isolation and lock-wait via SQL statements in finally; dialect queries are plain strings.",
+     "evidence": [
+      "android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control)",
+      "API 21 signature lacks JDBC 4.1 setNetworkTimeout, abort(Executor), closeOnCompletion (grep count 0) while getSQLState/getErrorCode/setTransactionIsolation are present"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes. Design correctness on real MySQL/PostgreSQL rests on vendor documentation (00 §12), not on measurement.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "1 depends_on edge(s) to draft 0.11.0 siblings (REL-APIKEY-005); -1 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Fake-JDBC records the set/restore calls; AC-4 runs on real SQLite; AC-5 docs test.",
+     "evidence": [
+      "5 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: v1 row: DataSource that does not join an outer transaction (28판).",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Set lock wait with SQL (SET SESSION / SET lock_timeout), not Connection.setNetworkTimeout (absent from API 21)",
+    "Add the sqlite-jdbc test-only driver"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "NaruServe-api test classpath gains org.xerial sqlite-jdbc (testImplementation only)",
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:medium",
+   "jdbc_locking_note": "Tagged feasibility:medium for 00 §12. Judged high: every AC is decidable by fake-JDBC (java.lang.reflect.Proxy), SQL-text or real-SQLite tests; java.sql/javax.sql are in the API 21 signature; the unmeasured InnoDB/PostgreSQL behaviour is a recorded residual verification limit (21 §3 assumptions), not an obstacle to implementing or testing the requirement as written."
+  },
+  {
+   "req_id": "REL-APIKEY-007",
+   "feasibility": "high",
+   "score": 87,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "BEGIN IMMEDIATE/COMMIT as statements in autocommit, PRAGMA busy_timeout, per-file lock keyed by File.getAbsolutePath (no java.nio.file). Measured with the real test-only SQLite driver; §12 limits do not apply to SQLite.",
+     "evidence": [
+      "android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control)",
+      "build.gradle:360-369 Jetty servletTestDependencies: precedent for a test-only driver (sqlite-jdbc testImplementation)",
+      "code_context build_facts jdbc_test_driver: NONE declared yet"
+     ]
+    },
+    "evidence_strength": {
+     "score": 16,
+     "rationale": "Verifies traces exist and match the statement; remaining traces are addition sites with validated parents.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok",
+      "build.gradle:360-369 Jetty servletTestDependencies: precedent for a test-only driver (sqlite-jdbc testImplementation)"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "2 depends_on edge(s) to draft 0.11.0 siblings (DR-APIKEY-002, CON-IAM-002); -1 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Six ACs; AC-3 needs a seam to obtain the JDBC URL (e.g. DatabaseMetaData.getURL or the builder) without real /data files; AC-5 waits the 5 s busy_timeout.",
+     "evidence": [
+      "6 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: v1 row: utils.auth.jdbc ApiKey store; SQLite is the verifiable dialect.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Add org.xerial sqlite-jdbc as testImplementation only",
+    "Decide how the store learns the JDBC URL from a DataSource for the lock key"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "NaruServe-api test classpath gains org.xerial sqlite-jdbc (testImplementation only)",
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:medium",
+   "jdbc_locking_note": "Tagged feasibility:medium for 00 §12. Judged high: every AC is decidable by fake-JDBC (java.lang.reflect.Proxy), SQL-text or real-SQLite tests; java.sql/javax.sql are in the API 21 signature; the unmeasured InnoDB/PostgreSQL behaviour is a recorded residual verification limit (21 §3 assumptions), not an obstacle to implementing or testing the requirement as written."
+  },
+  {
+   "req_id": "PERF-APIKEY-002",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Java loop of autocommit DELETE ... LIMIT 500 statements and single-statement owner deletes; SQLite runs for real, MySQL/PostgreSQL texts checked as strings. The 1592 warning is a documentation item.",
+     "evidence": [
+      "android-api-level-21-5.0.1_r2.signature (gradle cache, used at build.gradle:431-441) contains java/sql/Connection, javax/sql/DataSource, java/sql/SQLException, java/util/concurrent/ThreadLocalRandom, java/security/SecureRandom, java/security/MessageDigest, java/text/Normalizer; java/util/Base64 absent (positive control)",
+      "docs/research/auth-rbac/00.overview.md:1253-1268 §12: InnoDB read view, MySQL upsert lock wait and STATEMENT binlog 1592 are documentation-based, not measured"
+     ]
+    },
+    "evidence_strength": {
+     "score": 15,
+     "rationale": "Addition-site traces only (new code); parents validated, design concrete with ACs and implementation notes. Design correctness on real MySQL/PostgreSQL rests on vendor documentation (00 §12), not on measurement.",
+     "evidence": [
+      "code_context trace_validation: all verifies paths exist, addition_site parents ok"
+     ]
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "1 depends_on edge(s) to draft 0.11.0 siblings (DR-APIKEY-002); -1 for coupling",
+     "evidence": [
+      "existing_srs_context.json req_summaries/cycles"
+     ]
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Six ACs: statement count on real SQLite via a recording proxy, SQL-text checks, docs tests.",
+     "evidence": [
+      "6 ACs, 0 INFERRED, 0 name-not-final (existing_srs_context.json)"
+     ]
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Inside the APIKEY scope boundaries of docs/spec/21.auth-api-keys.srs.md §2; cross-scope parts delegated by explicit AC ownership.",
+     "evidence": [
+      "docs/spec/21.auth-api-keys.srs.md:13-33"
+     ]
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "core: v1 row: 28판 batched cleanup, 29판 ORDER BY expires_at, id, 30판 binlog Javadoc.",
+     "evidence": [
+      "docs/research/auth-rbac/00.overview.md:764 (§9 v1 row)"
+     ]
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Count statements with a recording Connection proxy over the real SQLite connection"
+   ],
+   "has_verification": false,
+   "current_stability": "draft",
+   "current_status": "planned",
+   "external_module_impact": "NaruServe-api test classpath gains org.xerial sqlite-jdbc (testImplementation only)",
+   "in_dependency_cycle": false,
+   "tag_feasibility": "feasibility:medium",
+   "jdbc_locking_note": "Tagged feasibility:medium for 00 §12. Judged high: every AC is decidable by fake-JDBC (java.lang.reflect.Proxy), SQL-text or real-SQLite tests; java.sql/javax.sql are in the API 21 signature; the unmeasured InnoDB/PostgreSQL behaviour is a recorded residual verification limit (21 §3 assumptions), not an obstacle to implementing or testing the requirement as written."
+  }
+ ]
+}

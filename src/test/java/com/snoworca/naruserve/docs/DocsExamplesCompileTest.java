@@ -135,7 +135,7 @@ public final class DocsExamplesCompileTest {
                     + "(class|interface|enum|@interface)\\s+(\\w+).*");
     private static final Pattern ONLY_ANNOTATION = Pattern.compile("^@\\w+(\\([^)]*\\))?$");
     private static final Pattern JS_LINE = Pattern.compile(
-            ".*=>.*|^\\s*(const|let|var|function)\\s.*|.*require\\(.*|.*'[^'\\\\]{2,}'.*");
+            ".*=>.*|^\\s*(const|let|var|function)\\s.*|(.*[^.\\w])?require\\(.*|.*'[^'\\\\]{2,}'.*");
 
     @Rule
     public TemporaryFolder tmp = new TemporaryFolder();
@@ -196,13 +196,38 @@ public final class DocsExamplesCompileTest {
             + "import com.snoworca.naruserve.spi.*;\n"
             + "import java.util.*;\n"
             + "import java.util.concurrent.*;\n"
-            + "import java.io.*;\n";
+            + "import java.io.*;\n"
+            // the auth guide (auth.md): its types are in the utils.auth packages (CON-AUTH-001)
+            + "import com.snoworca.naruserve.utils.auth.*;\n"
+            + "import com.snoworca.naruserve.utils.auth.user.*;\n"
+            + "import com.snoworca.naruserve.utils.auth.group.*;\n"
+            + "import com.snoworca.naruserve.utils.auth.rbac.*;\n"
+            + "import com.snoworca.naruserve.utils.auth.spi.*;\n"
+            + "import com.snoworca.naruserve.utils.auth.jwt.*;\n"
+            + "import com.snoworca.naruserve.utils.auth.password.*;\n"
+            + "import com.snoworca.naruserve.utils.auth.audit.*;\n"
+            + "import com.snoworca.naruserve.utils.auth.apikey.*;\n"
+            + "import com.snoworca.naruserve.utils.*;\n";
 
     /** A block that is not a type, placed in {@code DocExample<ordinal>.example()} with the docs' stub names. */
     // @req OPS-HTTP-004
     static String wrap(String block, int ordinal) {
+        // a fragment may open with the imports a reader needs (OPS-AUTH-011 AC-9); they go above the class, unchanged
+        StringBuilder imports = new StringBuilder();
+        String[] lines = block.split("\n", -1);
+        int body = 0;
+        while (body < lines.length && (lines[body].trim().startsWith("import ") || lines[body].trim().isEmpty())) {
+            if (!lines[body].trim().isEmpty()) {
+                imports.append(lines[body].trim()).append('\n');
+            }
+            body++;
+        }
+        if (imports.length() > 0) {
+            block = String.join("\n", java.util.Arrays.asList(lines).subList(body, lines.length));
+        }
         return "package docexample.u" + ordinal + ";\n"
                 + IMPORTS
+                + imports
                 + "@SuppressWarnings(\"unused\")\n"
                 + "class DocExample" + ordinal + " {\n"
                 + "    RestApp app;\n"
@@ -213,6 +238,7 @@ public final class DocsExamplesCompileTest {
                 + "    Object user;\n"
                 + "    ApplicationContext ctx;\n"
                 + "    Middleware auth;\n"
+                + "    Middleware checkAuth;\n"
                 + "    HttpAdapter myAdapter;\n"
                 + "    JsonCodec myCodec;\n"
                 + "    void example() throws Exception {\n"
@@ -548,6 +574,10 @@ public final class DocsExamplesCompileTest {
             }
         }
         assertTrue("relabel these fences ```js: " + js, js.isEmpty());
+        // JavaScript's bare require(...) is still caught; the Java guard call auth.require(...) is not (IR-AUTH-004)
+        assertTrue(JS_LINE.matcher("const jwt = require(\"express-jwt\");").matches());
+        assertTrue(JS_LINE.matcher("require(\"x\")").matches());
+        assertFalse(JS_LINE.matcher("app.post(\"/p\", auth.require(\"posts:write\"), h);").matches());
     }
 
     // SDS-AC-11; OPS-HTTP-004 AC-3
@@ -946,5 +976,30 @@ public final class DocsExamplesCompileTest {
         assertTrue("an app-defined example type such as UserService or Database is a named reason", appDefined);
         assertTrue(REASON.matcher("app-defined type `UserService`").matches());
         assertFalse(REASON.matcher("app-defined type").matches());
+    }
+
+    // CON-AUTH-005 AC-4: every Java block of auth.md and en/auth.md compiles under this check or sits on the named
+    // skip list with a reason; no compile diagnostic names an auth page
+    @Test
+    public void CON_AUTH_005_AC4_everyAuthPageJavaBlockCompilesOrIsNamedSkip() throws IOException {
+        List<String> diagnostics = docsDiagnostics();
+        for (String page : new String[] {"auth.md", "en/auth.md"}) {
+            List<String> blocks = docs().get(page);
+            assertNotNull("auth page " + page, blocks);
+            assertTrue(page + " holds Java blocks", blocks.size() > 10);
+            for (String d : diagnostics) {
+                assertFalse("compile diagnostic on " + page + ": " + d, d.startsWith(page + " #"));
+            }
+            int skipped = 0;
+            for (int i = 0; i < blocks.size(); i++) {
+                Skip s = skipFor(page, i + 1, blocks.get(i));
+                if (s != null) {
+                    skipped++;
+                    assertTrue("named skip reason " + s, REASON.matcher(s.reason).matches());
+                }
+            }
+            assertEquals("compiled plus named skips cover every Java block of " + page, blocks.size(),
+                    compiledPerFile.getOrDefault(page, 0) + skipped);
+        }
     }
 }

@@ -4,7 +4,7 @@
 
 `RestApp` corresponds to Express's `app`. Use it to register routes, middleware and configuration, then start and stop a server. Examples below are API fragments; use the [quick start](README.md#quick-start) for imports and an executable entry point. Application-specific types such as `Database` and `UserService` stand for your own implementations.
 
-This page describes common HTTP in **NaruServe 0.10.0**. Follow the [installation guide](README.md) for source/artifact setup. TinyHttpd is pinned to 3.1.1 with raw request-target delivery; default Gson remains 2.14.0. Core APIs target Java 8/API 21; this is not a device performance claim.
+This page describes common HTTP in **NaruServe 0.11.0**. Follow the [installation guide](README.md) for source/artifact setup. TinyHttpd is pinned to 3.1.1 with raw request-target delivery; default Gson remains 2.14.0. Core APIs target Java 8/API 21; this is not a device performance claim.
 
 ## Create an app
 
@@ -15,7 +15,7 @@ RestApp app = RestApp.create();
 `create()` assembles TinyHttpd, Gson 2.14.0 and a console logger through the bootstrap module `NaruServe`. Add that module, or use `NaruServe-kotlin` or `NaruServe-android`, which include it. On Android, `NaruServe-android` selects the Logcat logger.
 
 ```groovy
-implementation 'com.snoworca.naruserve:naruserve:0.10.0'
+implementation 'com.snoworca.naruserve:naruserve:0.11.0'
 ```
 
 Use the builder to select implementations yourself, including when depending only on `NaruServe-api`. Supply `new GsonJsonCodec()` as the codec to use Gson. `NaruServe` includes this type; when assembling without that module, add `com.snoworca.naruserve:naruserve-gson` yourself. See [Gson configuration](json.md#default-gson-configuration).
@@ -79,11 +79,13 @@ public interface RouteHandler {
 
 | Method | Purpose |
 |---|---|
-| `use(middleware)` | Every request |
+| `use(middleware)` | Every request. A middleware that is an `Installable` (such as auth) is not added as middleware: `middleware.install(app)` runs instead and registers what it needs |
 | `use(prefix, middleware)` | Prefix itself and descendants: `/api` and `/api/users`, excluding `/apix` |
 | `onError(handler)` | Error callback `(error, req, res) -> ...` |
 
 See [middleware and errors](middleware.md).
+
+`Installable` is an interface with one method, `void install(RestApp app)`. When `x` is a `Middleware` and an `Installable`, `app.use(x)` calls `x.install(app)` once and returns the app, leaving no registration record of its own (only what `install` registers). A path use `use(prefix, x)` with any path other than `""` or `"/"` throws `IllegalArgumentException`, because an `Installable` attaches itself to the whole app; `use("/", x)` installs it like `use(x)` (the Express habit `app.use("/", mw)`); `use("", x)` and a router's `use(x)` add it as plain middleware. Java and Kotlin both write it as `app.use(auth)` (the same as `auth.install(app)`, see [auth](auth.md#install-order)). Express counterpart: a package whose `app.use(pkg)` also adds its own routes.
 
 ### Configuration
 
@@ -95,7 +97,11 @@ See [middleware and errors](middleware.md).
 | `cors(options -> ...)` | HTTP allowed origins and preflight | [CORS](middleware.md#http-cors) |
 | `group(prefix, configurer)` | Routes sharing a prefix and middleware | [Groups](middleware.md#route-groups) |
 | `server(options -> ...)` | Bind address, allowed hosts, size, time and connection limits | [Server options](#server-options) |
-| `trustProxy(boolean)` | Trust X-Forwarded-For/Proto; default false | [Server options](#server-options) |
+| `trustProxy(boolean)` | Trust X-Forwarded-For/Proto; default false. Uses the left-most value, which can be forged | [Server options](#server-options) |
+| `trustProxyHops(n)` | Use the nth `X-Forwarded-For` entry from the right as the client address (hop mode) | [Proxy trust](#proxy-trust) |
+| `trustProxyCidrs(cidr...)` | Trust only proxies inside trusted CIDRs and use the first address from the right outside them (CIDR mode) | [Proxy trust](#proxy-trust) |
+| `onRegistration(listener)` | Registration watcher called before each later registration takes effect | [Registration list and watcher](#registration-list-and-watcher) |
+| `registrations()` | The registrations so far (read-only, readable in every state) | [Registration list and watcher](#registration-list-and-watcher) |
 | `multipart(config -> ...)` | Upload limits and temporary directory | [Uploads](multipart.md) |
 | `webSocket(options -> ...)` | WebSocket origins, message/queue limits, ping and idle timeout | [WebSocket](websocket.md) |
 | `sse(options -> ...)` | Heartbeat and send queue options; send reconnect delays per event with `SseEvent.retry(millis)` | [SSE](sse.md) |
@@ -151,6 +157,8 @@ Non-loopback binding logs a warning regardless of authentication. Add authentica
 
 Behind a proxy, `trustProxy(true)` replaces `remoteAddress()` with the trimmed leftmost entry of the first X-Forwarded-For header, and `isSecure()` with the first X-Forwarded-Proto entry (`https`, case-insensitive, means true). Missing or blank entries keep transport values. Default false; `Forwarded` is never read. Enable this only behind a proxy that overwrites these unvalidated headers, as with Express's `app.set('trust proxy', true)`.
 
+The left-most value that `trustProxy(true)` uses is unverified and client-controlled, so anyone can claim any address. It is kept for compatibility with 0.10.0 apps, and the auth module's doctor reports it as FAIL in `PROD` (R32). Behind a proxy use [`trustProxyHops` or `trustProxyCidrs`](#proxy-trust).
+
 ```java
 app.trustProxy(true);
 ```
@@ -160,6 +168,31 @@ Kotlin:
 ```kotlin
 app.trustProxy(true)
 ```
+
+### Proxy trust
+
+To get the client address safely behind a proxy, use one of the two modes that count from the right. Both may be called only in `NEW`, and the last of `trustProxy`, `trustProxyHops` and `trustProxyCidrs` replaces the earlier setting. `req.socketAddress()` stays the real connection address under every setting ([Request](request.md#request-information)). WebSocket upgrade requests use the same setting as ordinary requests.
+
+| Express | NaruServe | Meaning |
+|---|---|---|
+| `app.set('trust proxy', 1)` | `app.trustProxyHops(1)` | trust the socket peer (the load balancer); the first `X-Forwarded-For` entry from the right is the client |
+| `app.set('trust proxy', 2)` | `app.trustProxyHops(2)` | two proxy hops |
+| `app.set('trust proxy', 'loopback, 10.0.0.0/8')` | `app.trustProxyCidrs("127.0.0.0/8", "::1", "10.0.0.0/8")` | trust only a socket peer inside a trusted CIDR; the first entry from the right outside every trusted CIDR is the client |
+
+- **Hop mode** `trustProxyHops(n)`: with `n` of 1 or more the socket peer is trusted and `req.remoteAddress()` is the `n`th entry from the right; with fewer than `n` entries it is the left-most entry (as Express). `0` trusts nothing and keeps the adapter values; a negative count throws `IllegalArgumentException`. Use it only when the node is reachable only through the load balancer: a client that connects directly can forge both headers.
+- **CIDR mode** `trustProxyCidrs(cidr...)`: the socket peer is trusted only inside a trusted CIDR, and `req.remoteAddress()` is the first entry from the right outside every trusted CIDR; the left-most entry when all are inside, and the socket peer when there is no `X-Forwarded-For`. An untrusted peer's forwarding headers are all ignored. This is the mode to use for multi-node deployments that cannot prevent connections bypassing the load balancer.
+- A CIDR is an IPv4 or IPv6 literal with an optional `/prefix` (`10.0.0.0/8`, `fd00::/8`); without a prefix it is that one address. A `null` array or element throws `NullPointerException`; any other value (`10.0.0.0/33`, `abc/8`, a host name) throws `IllegalArgumentException` naming it, and no name is looked up in DNS. An empty array trusts nothing. An IPv4-mapped IPv6 address such as `::ffff:10.0.0.1` is compared with IPv4 CIDRs.
+- Both modes join the `X-Forwarded-For` header lines in arrival order and skip blank entries. An entry that is not an IP is treated as outside every trusted CIDR and returned as is. The `Forwarded` header is never read.
+- `X-Forwarded-Proto` is read only when the socket peer is trusted. One value is used as is (`https` case-insensitive); several values are matched by the position, counted from the right, of the `X-Forwarded-For` entry chosen as the client. With two or more values whose count differs from `X-Forwarded-For`, or a missing position, `isSecure()` is `false`. A trusted value replaces the adapter's TLS flag both ways (`http` gives `false` even on TLS); without the header the adapter value stays.
+
+Have nginx pass both headers like this. A proxy that passes `X-Forwarded-Proto` through without overwriting it is an unsupported setup, because its value cannot be told apart from a client's.
+
+```nginx
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+```
+
+Read the current setting with `trustProxy()` (`boolean`), `trustProxyHops()` (`int`, `0` outside hop mode) and `trustProxyCidrs()` (an unmodifiable `List<String>`, empty outside CIDR mode). None is `null`, and all can be read after `listen`. With no trust at all they read `false`, `0` and `[]`.
 
 ### Router policy
 
@@ -301,3 +334,58 @@ On Android, start includes synchronous binding and onStart work, so call it on a
 `use(path, router)` mounts a live independent Router; `param(name, ParamHandler)` preprocesses captures; four-argument `ErrorMiddleware` participates at its registration position. `getAsync`/`methodAsync`/`useAsync` take three-argument `AsyncRouteHandler` returning Deferred. Resolving does not implicitly next/end, and a returned pending result retains request resources after an early response. See [routing](routing.md), [request views](request.md#mounts-and-path-views) and [Deferred](middleware.md#deferred-and-late-work).
 
 `send("text")` stays text/plain, JSON request bodies stay typed/on-demand, and static/WS/Host/framing security remains enforced. This common HTTP profile does not claim every Express or third-party middleware API. Hand-written RestApp implementations must account for the expanded registration interface; default Request/Next/exchange hooks do not add mandatory abstract methods.
+
+## Registration list and watcher
+
+`registrations()` is a read-only `List<Registration>` of every registration so far, in registration order. It resembles Express's `app._router.stack`, but each layer carries its kind. It is a call-time snapshot: iterating it never throws `ConcurrentModificationException` while other threads register after `listen`, and later registrations appear only in a new call. It is readable in every state; `add` throws `UnsupportedOperationException`.
+
+`onRegistration(listener)` adds a registration watcher; Express has no counterpart. It may be called only in `NEW` (`IllegalStateException` after `listen`), and `null` throws `NullPointerException`. One registration runs **validate → watcher → apply → record**. An invalid registration throws the same exception as in 0.10.0 and never reaches the watcher. The watcher runs synchronously on the registering thread before the registration takes effect: the registration is not yet in the list and no request sees it. If the watcher throws, the registration is neither applied nor recorded, and the exception reaches the caller of `get`, `use` and so on unchanged; later registrations on a mounted Router behave the same. Several watchers run in the order they were added, and the first one that throws stops the rest. Registering, `listen` or `shutdown` from inside a watcher throws `IllegalStateException`. A watcher runs holding a registration lock shared by every app, so it must not wait for other threads, and calling a method of another app from inside a watcher throws `IllegalStateException` at once instead of deadlocking. When a later app's watcher refuses a registration on a Router mounted in several apps, earlier apps' watchers have already seen the record; there is no rollback call. A `TERMINATED` app no longer sees later registrations of the Routers it mounted. Registrations still accepted after `listen` (routes, `use`, Router mounts, `param`, `use(ErrorMiddleware)`) pass the watcher and are recorded; `cors`, `ws`, `staticFiles`, `group`, `onError` and `trustProxy` stay `NEW`-only.
+
+| Kind | Made by |
+|---|---|
+| `ROUTE` | `get`, `post`, `put`, `patch`, `delete`, `head`, `options` (every overload), `route(Method, ...)`, `route(MethodSet, ...)`, `method(...)`, `methodAsync`, `getAsync`, and one per method of a `route(path)` builder (its `use(mw)` included) |
+| `WEBSOCKET` | `ws(path, handler)` |
+| `STATIC` | `staticFiles(...)`; it uses middleware inside but is not also recorded as `MIDDLEWARE` |
+| `ROUTER_MOUNT` | `use(path, router)`, `use(router)` |
+| `GROUP` | `group(prefix, configurer)`; recorded after the callback returned normally and before its routes |
+| `CORS` | `cors(...)`; not also recorded as `MIDDLEWARE` |
+| `MIDDLEWARE` | middleware whose path is `""` or `"/"`: `use(mw)`, `use("/", mw)`, `useAsync(handler)` |
+| `PATH_MIDDLEWARE` | `use(path, mw)` and `useAsync(path, handler)` with any other path, a `Pattern` or an array |
+| `ERROR_MIDDLEWARE` | `use(ErrorMiddleware)`, `use(path, ErrorMiddleware)`, `onError(handler)` |
+| `PARAM` | `param(name, handler)` |
+
+| Accessor | Value |
+|---|---|
+| `getKind()` | the kind above (`RegistrationKind`) |
+| `getMethod()` | the upper-case method token of a `ROUTE` (`"GET"`, `"PURGE"`); one `route(MethodSet, ...)` call joins its tokens with commas, as `"GET,POST"`. `null` for a builder `use(mw)` and for other kinds |
+| `getPath()` | the full string path with the mount paths in front (`"/api/users"`). A registration without a path (`use(mw)`, `cors`, `onError`, `param`) has `""`, or the mount path inside a mount. `null` when this path or an enclosing mount path is a `Pattern` or an array |
+| `isStringPath()` | `true` when `getPath()` is not `null` |
+| `getPathSource()` | the path object this call passed, as given (a string, `Pattern` or array); `""` when it passed none |
+| `getTarget()` | the object the caller registered: the middleware, Router, `ErrorMiddleware`, the `onError` handler itself, the `AsyncRouteHandler` of `useAsync`, the `WebSocketHandler` of `ws`, the `param` handler, the configurer of `cors` and `group`, the directory of `staticFiles`. A route has its last callback (the handler). Never a wrapper the framework made |
+| `getMount()` | the `ROUTER_MOUNT` record this record was expanded under; `null` at app level |
+
+Registrations inside mounted Routers and groups are expanded with the mount path. `app.use("/api", r)` records `ROUTER_MOUNT /api` followed by the registrations of `r` in `r`'s order as `/api/...`; nested Routers get both prefixes. Mounting a Router that already holds registrations applies the mount only after the mount record and every expanded record passed the watchers, so if one is refused, none of that Router's routes opens. A registration added to a Router after it was mounted (also after `listen`) is appended to the end of the list and points through `getMount()` at the Router's mount record. A Router mounted twice is expanded once per mount. Mounting a Router inside itself throws `IllegalArgumentException`. The `use(mw)` of a `route(path)` builder is a builder method too and is recorded as one `ROUTE` whose `getMethod()` is `null` (it runs for every method of that route).
+
+```java
+app.onRegistration(r -> {
+    if (r.getKind() == RegistrationKind.ROUTE && !r.isStringPath()) {
+        throw new IllegalStateException("regex routes are not allowed: " + r.getPathSource());
+    }
+});
+app.get("/users", h);
+for (Registration r : app.registrations()) {
+    System.out.println(r.getKind() + " " + r.getMethod() + " " + r.getPath());
+}
+```
+
+Kotlin:
+
+```kotlin
+app.onRegistration { r ->
+    if (r.kind == RegistrationKind.ROUTE && !r.isStringPath) {
+        throw IllegalStateException("regex routes are not allowed: ${r.pathSource}")
+    }
+}
+app.get("/users") { _, res -> res.send("users") }
+for (r in app.registrations()) println("${r.kind} ${r.method} ${r.path}")
+```

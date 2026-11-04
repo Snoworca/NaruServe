@@ -1,0 +1,7597 @@
+{
+ "req_summaries": [
+  {
+   "id": "CON-APIKEY-001",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 2,
+   "depends_on": [
+    "FR-APIKEY-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "CON-AUTH-001",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 4,
+   "depends_on": [
+    "CON-BUILD-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 0,
+   "direct_0110_dependency_count": 0,
+   "external_depends_on": [
+    "CON-BUILD-006"
+   ]
+  },
+  {
+   "id": "CON-AUTH-002",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 9,
+   "depends_on": [
+    "CON-BUILD-013",
+    "CON-BUILD-015",
+    "CON-AUTH-001",
+    "IR-APP-008",
+    "IR-HTTP-010",
+    "IR-ENGINE-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 4,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": [
+    "CON-BUILD-013",
+    "CON-BUILD-015"
+   ]
+  },
+  {
+   "id": "CON-AUTH-003",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 6,
+   "depends_on": [
+    "CON-BUILD-012",
+    "CON-BUILD-004",
+    "CON-AUTH-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 1,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": [
+    "CON-BUILD-012",
+    "CON-BUILD-004"
+   ]
+  },
+  {
+   "id": "CON-AUTH-004",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 7,
+   "depends_on": [
+    "FR-KT-001",
+    "FR-KT-002",
+    "FR-KT-003",
+    "CON-AUTH-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 1,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": [
+    "FR-KT-001",
+    "FR-KT-002",
+    "FR-KT-003"
+   ]
+  },
+  {
+   "id": "CON-AUTH-005",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 6,
+   "depends_on": [
+    "OPS-REL-008",
+    "CON-HTTP-009",
+    "CON-AUTH-004"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 2,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": [
+    "OPS-REL-008",
+    "CON-HTTP-009"
+   ]
+  },
+  {
+   "id": "CON-AUTH-006",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 3,
+   "depends_on": [
+    "CON-AUTH-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 1,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "CON-AUTH-007",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 13,
+   "depends_on": [
+    "IR-HTTP-001",
+    "IR-ENGINE-001",
+    "FR-ENGINE-008",
+    "IR-APP-008",
+    "IR-HTTP-010",
+    "FR-HTTP-029",
+    "IR-ENGINE-003",
+    "SEC-SVL-001",
+    "SEC-HTTP-001",
+    "CON-ENGINE-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 10,
+   "direct_0110_dependency_count": 7,
+   "external_depends_on": [
+    "IR-HTTP-001",
+    "IR-ENGINE-001",
+    "FR-ENGINE-008"
+   ]
+  },
+  {
+   "id": "CON-ENGINE-001",
+   "scope": "ENGINE",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 5,
+   "depends_on": [
+    "IR-ENGINE-003"
+   ],
+   "extends": [
+    "FR-ENGINE-008"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 1,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "CON-IAM-001",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 5,
+   "depends_on": [
+    "IR-IAM-003",
+    "IR-IAM-002",
+    "FR-KT-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 10,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": [
+    "FR-KT-001"
+   ]
+  },
+  {
+   "id": "CON-IAM-002",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 3,
+   "depends_on": [
+    "CON-AUTH-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 1,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "DR-APIKEY-001",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 4,
+   "depends_on": [
+    "SEC-AUTH-008"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "DR-APIKEY-002",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 5,
+   "depends_on": [
+    "IR-APIKEY-004",
+    "DR-IAM-003",
+    "FR-IAM-010"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "DR-IAM-001",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 2,
+   "depends_on": [],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 1,
+   "transitive_0110_dependency_count": 0,
+   "direct_0110_dependency_count": 0,
+   "external_depends_on": []
+  },
+  {
+   "id": "DR-IAM-002",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 2,
+   "depends_on": [
+    "FR-KT-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 0,
+   "direct_0110_dependency_count": 0,
+   "external_depends_on": [
+    "FR-KT-001"
+   ]
+  },
+  {
+   "id": "DR-IAM-003",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 2,
+   "depends_on": [
+    "CON-IAM-002"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 2,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-APIKEY-001",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 8,
+   "depends_on": [
+    "FR-AUTH-005",
+    "FR-AUTH-001",
+    "CON-AUTH-001",
+    "CON-AUTH-002",
+    "CON-AUTH-003",
+    "IR-APIKEY-002"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 6,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-APIKEY-002",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 4,
+   "depends_on": [
+    "SEC-APIKEY-004",
+    "FR-TOKEN-002"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-APIKEY-003",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 10,
+   "trace_count": 9,
+   "depends_on": [
+    "SEC-APIKEY-010",
+    "FR-APIKEY-005",
+    "SEC-FLOW-014",
+    "SEC-FLOW-015",
+    "REL-TOKEN-001",
+    "SEC-TOKEN-009",
+    "SEC-FLOW-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 7,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-APIKEY-004",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 10,
+   "trace_count": 11,
+   "depends_on": [
+    "FR-APIKEY-005",
+    "SEC-APIKEY-010",
+    "SEC-IAM-004",
+    "SEC-FLOW-015",
+    "REL-TOKEN-001",
+    "FR-AUTH-009",
+    "SEC-IAM-007",
+    "FR-APIKEY-003",
+    "SEC-TOKEN-009"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 9,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-APIKEY-005",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 7,
+   "depends_on": [
+    "IR-APIKEY-004",
+    "FR-AUTH-006",
+    "IR-AUTH-003",
+    "IR-APIKEY-003",
+    "FR-IAM-005"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-APIKEY-006",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 9,
+   "depends_on": [
+    "FR-FLOW-004",
+    "SEC-FLOW-011",
+    "SEC-AUTH-003"
+   ],
+   "extends": [
+    "DR-IAM-001",
+    "IR-IAM-001",
+    "IR-IAM-003",
+    "SEC-IAM-001",
+    "DR-IAM-003"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-APIKEY-007",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 4,
+   "depends_on": [
+    "IR-APIKEY-004",
+    "FR-APIKEY-009",
+    "FR-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 129,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-APIKEY-008",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 2,
+   "trace_count": 4,
+   "depends_on": [
+    "REL-APIKEY-004",
+    "FR-IAM-008"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-APIKEY-009",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 3,
+   "depends_on": [
+    "IR-APIKEY-004",
+    "IR-AUTH-005"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-APIKEY-010",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 3,
+   "depends_on": [
+    "IR-APIKEY-002",
+    "IR-AUTH-005"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-APP-025",
+   "scope": "APP",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 8,
+   "depends_on": [
+    "IR-APP-008"
+   ],
+   "extends": [
+    "FR-APP-021"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 1,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-APP-026",
+   "scope": "APP",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 7,
+   "depends_on": [
+    "FR-APP-025",
+    "SEC-APP-002"
+   ],
+   "extends": [
+    "FR-APP-021"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 1,
+   "transitive_0110_dependency_count": 3,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-AUTH-001",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 3,
+   "depends_on": [
+    "FR-IAM-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 13,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-AUTH-002",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 2,
+   "depends_on": [
+    "FR-AUTH-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 14,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-AUTH-003",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 3,
+   "depends_on": [
+    "FR-AUTH-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 14,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-AUTH-004",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 6,
+   "depends_on": [
+    "FR-AUTH-005",
+    "OPS-AUTH-001",
+    "FR-AUTH-008",
+    "FR-IAM-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 12,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-AUTH-005",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 7,
+   "depends_on": [
+    "FR-APP-021",
+    "FR-DX-008",
+    "IR-APP-008",
+    "FR-APP-025"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 2,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": [
+    "FR-APP-021",
+    "FR-DX-008"
+   ]
+  },
+  {
+   "id": "FR-AUTH-006",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 9,
+   "depends_on": [
+    "FR-APP-006",
+    "FR-AUTH-005",
+    "FR-HTTP-029",
+    "IR-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 6,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": [
+    "FR-APP-006"
+   ]
+  },
+  {
+   "id": "FR-AUTH-007",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 2,
+   "depends_on": [
+    "IR-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 1,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-AUTH-008",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 3,
+   "depends_on": [
+    "FR-AUTH-007"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 2,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-AUTH-009",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 5,
+   "depends_on": [
+    "SEC-AUTH-008",
+    "FR-HTTP-029"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-FLOW-001",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 12,
+   "depends_on": [
+    "SEC-FLOW-001",
+    "SEC-FLOW-004",
+    "SEC-FLOW-005",
+    "SEC-FLOW-007",
+    "SEC-APIKEY-004",
+    "FR-AUTH-006",
+    "SEC-FLOW-008",
+    "SEC-FLOW-003",
+    "SEC-FLOW-010",
+    "IR-TOKEN-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 10,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-FLOW-002",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 9,
+   "trace_count": 6,
+   "depends_on": [
+    "SEC-FLOW-007",
+    "SEC-FLOW-009",
+    "FR-TOKEN-001",
+    "FR-AUTH-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-FLOW-003",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 7,
+   "depends_on": [
+    "SEC-FLOW-010",
+    "IR-FLOW-001",
+    "SEC-IAM-003",
+    "FR-AUTH-007",
+    "IR-AUTH-005"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-FLOW-004",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 10,
+   "depends_on": [
+    "SEC-FLOW-012",
+    "FR-FLOW-002",
+    "SEC-TOKEN-009",
+    "REL-TOKEN-001",
+    "IR-TOKEN-001",
+    "FR-IAM-003",
+    "FR-AUTH-007",
+    "FR-TOKEN-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 8,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-FLOW-005",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 9,
+   "depends_on": [
+    "FR-FLOW-002",
+    "SEC-FLOW-008",
+    "FR-TOKEN-001",
+    "FR-TOKEN-002",
+    "SEC-TOKEN-006",
+    "SEC-FLOW-003",
+    "SEC-APIKEY-004"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 7,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-FLOW-006",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 8,
+   "depends_on": [
+    "IR-FLOW-002",
+    "IR-IAM-003",
+    "SEC-IAM-001",
+    "FR-AUTH-008",
+    "FR-IAM-003",
+    "SEC-APIKEY-008",
+    "FR-AUTH-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 7,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-FLOW-007",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 9,
+   "depends_on": [
+    "FR-FLOW-002",
+    "FR-IAM-001",
+    "IR-IAM-003",
+    "FR-AUTH-007",
+    "REL-TOKEN-001",
+    "FR-AUTH-008",
+    "FR-TOKEN-004"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 7,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-FLOW-008",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 10,
+   "depends_on": [
+    "FR-WS-003",
+    "FR-WS-001",
+    "FR-APP-025",
+    "OPS-AUTH-001",
+    "SEC-AUTH-007",
+    "SEC-IAM-003",
+    "IR-APP-008"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": [
+    "FR-WS-003",
+    "FR-WS-001"
+   ]
+  },
+  {
+   "id": "FR-FLOW-009",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 5,
+   "depends_on": [
+    "SEC-FLOW-011",
+    "IR-IAM-005",
+    "SEC-IAM-007",
+    "IR-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 1,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-HTTP-029",
+   "scope": "HTTP",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 7,
+   "depends_on": [
+    "FR-APP-006",
+    "IR-HTTP-010"
+   ],
+   "extends": [
+    "IR-HTTP-001"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 1,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": [
+    "FR-APP-006"
+   ]
+  },
+  {
+   "id": "FR-IAM-001",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 5,
+   "depends_on": [
+    "IR-IAM-001",
+    "IR-AUTH-002",
+    "FR-AUTH-004",
+    "FR-AUTH-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 21,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-IAM-002",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 6,
+   "depends_on": [
+    "FR-IAM-001",
+    "REL-IAM-004",
+    "IR-IAM-001",
+    "FR-AUTH-003",
+    "SEC-TOKEN-002"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 26,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-IAM-003",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 5,
+   "depends_on": [
+    "IR-IAM-003",
+    "FR-IAM-001",
+    "SEC-FLOW-013"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-IAM-004",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 5,
+   "depends_on": [
+    "IR-IAM-001",
+    "REL-IAM-002",
+    "FR-IAM-001",
+    "IR-AUTH-005"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-IAM-005",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 2,
+   "depends_on": [],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 1,
+   "transitive_0110_dependency_count": 0,
+   "direct_0110_dependency_count": 0,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-IAM-006",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 3,
+   "depends_on": [
+    "FR-IAM-005",
+    "FR-AUTH-004"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 12,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-IAM-007",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 3,
+   "depends_on": [
+    "DR-IAM-002"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 1,
+   "transitive_0110_dependency_count": 1,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-IAM-008",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 4,
+   "depends_on": [
+    "IR-IAM-004",
+    "IR-IAM-003",
+    "IR-APIKEY-004"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-IAM-009",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 4,
+   "depends_on": [
+    "FR-IAM-006",
+    "FR-IAM-007",
+    "FR-IAM-005"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 15,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-IAM-010",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 6,
+   "depends_on": [
+    "REL-IAM-003",
+    "DR-IAM-003",
+    "REL-IAM-002",
+    "IR-IAM-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 1,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-IAM-011",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 3,
+   "depends_on": [
+    "IR-IAM-004",
+    "DR-IAM-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 6,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-IAM-012",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 3,
+   "depends_on": [
+    "DR-IAM-003",
+    "FR-TOKEN-002"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 31,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-IAM-013",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 5,
+   "depends_on": [
+    "DR-IAM-003",
+    "IR-FLOW-003",
+    "SEC-FLOW-013",
+    "REL-FLOW-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-IAM-014",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 9,
+   "trace_count": 13,
+   "depends_on": [
+    "IR-IAM-005",
+    "SEC-IAM-007",
+    "SEC-IAM-004",
+    "FR-IAM-003",
+    "REL-IAM-002",
+    "SEC-IAM-001",
+    "SEC-IAM-003",
+    "FR-AUTH-008",
+    "FR-AUTH-009",
+    "IR-AUTH-003",
+    "REL-IAM-001",
+    "FR-AUTH-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 12,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-TOKEN-001",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 5,
+   "depends_on": [
+    "SEC-TOKEN-005",
+    "FR-TOKEN-002",
+    "FR-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 1,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-TOKEN-002",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 8,
+   "depends_on": [
+    "SEC-TOKEN-002",
+    "FR-IAM-002",
+    "REL-IAM-004",
+    "FR-AUTH-003",
+    "OPS-AUTH-001",
+    "FR-AUTH-005"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 1,
+   "transitive_0110_dependency_count": 27,
+   "direct_0110_dependency_count": 6,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-TOKEN-003",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 6,
+   "depends_on": [
+    "SEC-TOKEN-007",
+    "SEC-TOKEN-008",
+    "PERF-TOKEN-002",
+    "IR-IAM-001",
+    "REL-IAM-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "FR-TOKEN-004",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 5,
+   "depends_on": [
+    "REL-TOKEN-001",
+    "FR-AUTH-003",
+    "FR-FLOW-004"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-APIKEY-001",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 1,
+   "trace_count": 2,
+   "depends_on": [
+    "IR-FLOW-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 10,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-APIKEY-002",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 6,
+   "depends_on": [
+    "SEC-APIKEY-010",
+    "IR-AUTH-003",
+    "IR-AUTH-002",
+    "IR-IAM-003",
+    "FR-IAM-005"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-APIKEY-003",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 3,
+   "depends_on": [
+    "SEC-APIKEY-006",
+    "OPS-APIKEY-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-APIKEY-004",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 5,
+   "depends_on": [
+    "DR-APIKEY-001",
+    "FR-KT-001"
+   ],
+   "extends": [],
+   "related_to": [
+    "REL-APIKEY-003",
+    "PERF-APIKEY-001"
+   ],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": [
+    "FR-KT-001"
+   ]
+  },
+  {
+   "id": "IR-APIKEY-005",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 1,
+   "trace_count": 8,
+   "depends_on": [
+    "SEC-APIKEY-004",
+    "IR-AUTH-002",
+    "IR-FLOW-001",
+    "FR-APP-006",
+    "IR-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": [
+    "FR-APP-006"
+   ]
+  },
+  {
+   "id": "IR-APP-008",
+   "scope": "APP",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 9,
+   "depends_on": [
+    "CON-APP-002",
+    "IR-ENGINE-001",
+    "FR-KT-003",
+    "FR-KT-001"
+   ],
+   "extends": [
+    "FR-APP-021"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 5,
+   "transitive_0110_dependency_count": 0,
+   "direct_0110_dependency_count": 0,
+   "external_depends_on": [
+    "CON-APP-002",
+    "IR-ENGINE-001",
+    "FR-KT-003",
+    "FR-KT-001"
+   ]
+  },
+  {
+   "id": "IR-AUTH-001",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 3,
+   "depends_on": [
+    "CON-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 2,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-AUTH-002",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 8,
+   "depends_on": [
+    "IR-AUTH-003",
+    "FR-AUTH-006",
+    "FR-APP-025",
+    "FR-APP-026",
+    "SEC-APP-002"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 9,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-AUTH-003",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 3,
+   "depends_on": [],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 3,
+   "transitive_0110_dependency_count": 0,
+   "direct_0110_dependency_count": 0,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-AUTH-004",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 9,
+   "depends_on": [
+    "SEC-AUTH-007",
+    "IR-AUTH-002",
+    "FR-IAM-005",
+    "FR-IAM-009",
+    "FR-KT-001",
+    "IR-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 1,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": [
+    "FR-KT-001"
+   ]
+  },
+  {
+   "id": "IR-AUTH-005",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 5,
+   "depends_on": [
+    "IR-AUTH-004",
+    "SEC-TOKEN-005",
+    "SEC-FLOW-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-ENGINE-003",
+   "scope": "ENGINE",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 6,
+   "depends_on": [
+    "IR-ENGINE-001",
+    "CON-APP-002",
+    "IR-HTTP-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 0,
+   "direct_0110_dependency_count": 0,
+   "external_depends_on": [
+    "IR-ENGINE-001",
+    "CON-APP-002",
+    "IR-HTTP-001"
+   ]
+  },
+  {
+   "id": "IR-FLOW-001",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 5,
+   "depends_on": [
+    "FR-APP-006",
+    "IR-AUTH-003",
+    "CON-APIKEY-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": [
+    "FR-APP-006"
+   ]
+  },
+  {
+   "id": "IR-FLOW-002",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 8,
+   "depends_on": [
+    "SEC-FLOW-003",
+    "FR-AUTH-005",
+    "FR-APIKEY-003",
+    "REL-TOKEN-001",
+    "FR-FLOW-007"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-FLOW-003",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 5,
+   "depends_on": [
+    "OPS-AUTH-001",
+    "CON-AUTH-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 9,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-HTTP-010",
+   "scope": "HTTP",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 5,
+   "depends_on": [],
+   "extends": [
+    "IR-HTTP-001"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 0,
+   "direct_0110_dependency_count": 0,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-IAM-001",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 5,
+   "depends_on": [
+    "DR-IAM-001",
+    "FR-KT-001"
+   ],
+   "extends": [],
+   "related_to": [
+    "SEC-APIKEY-004"
+   ],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 2,
+   "transitive_0110_dependency_count": 1,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": [
+    "FR-KT-001"
+   ]
+  },
+  {
+   "id": "IR-IAM-002",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 3,
+   "depends_on": [
+    "IR-IAM-001",
+    "CON-AUTH-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 4,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-IAM-003",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 8,
+   "depends_on": [
+    "IR-IAM-001",
+    "DR-IAM-001",
+    "FR-AUTH-007",
+    "FR-AUTH-008",
+    "IR-AUTH-003",
+    "REL-TOKEN-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 6,
+   "direct_0110_dependency_count": 6,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-IAM-004",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 3,
+   "depends_on": [
+    "DR-IAM-002",
+    "FR-IAM-007"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 2,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-IAM-005",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 12,
+   "depends_on": [
+    "FR-AUTH-005",
+    "FR-AUTH-006",
+    "IR-AUTH-003",
+    "REL-TOKEN-001",
+    "FR-IAM-008",
+    "IR-IAM-004",
+    "SEC-IAM-005",
+    "IR-IAM-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 8,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-TOKEN-001",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 8,
+   "depends_on": [
+    "SEC-TOKEN-009",
+    "FR-TOKEN-003",
+    "FR-TOKEN-001",
+    "SEC-APIKEY-004",
+    "SEC-APIKEY-001",
+    "SEC-FLOW-004",
+    "IR-FLOW-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 1,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 7,
+   "external_depends_on": []
+  },
+  {
+   "id": "IR-TOKEN-002",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 3,
+   "trace_count": 5,
+   "depends_on": [
+    "SEC-TOKEN-003",
+    "SEC-TOKEN-005",
+    "SEC-TOKEN-004",
+    "FR-KT-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": [
+    "FR-KT-001"
+   ]
+  },
+  {
+   "id": "OPS-APIKEY-001",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 9,
+   "depends_on": [
+    "IR-FLOW-003",
+    "IR-APIKEY-004",
+    "SEC-APIKEY-009",
+    "OPS-AUTH-001",
+    "FR-AUTH-003",
+    "REL-IAM-003",
+    "REL-APIKEY-005"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 7,
+   "external_depends_on": []
+  },
+  {
+   "id": "OPS-AUTH-001",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 7,
+   "depends_on": [
+    "FR-AUTH-005",
+    "SEC-AUTH-002",
+    "CON-ENGINE-001",
+    "IR-ENGINE-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 6,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "OPS-AUTH-002",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 3,
+   "trace_count": 6,
+   "depends_on": [
+    "FR-AUTH-003",
+    "IR-APP-008",
+    "FR-APP-025",
+    "SEC-AUTH-008",
+    "FR-AUTH-005"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "OPS-FLOW-001",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 5,
+   "depends_on": [
+    "FR-FLOW-002",
+    "FR-DX-010"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": [
+    "FR-DX-010"
+   ]
+  },
+  {
+   "id": "PERF-APIKEY-001",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 2,
+   "depends_on": [
+    "IR-APIKEY-004"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "PERF-APIKEY-002",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 2,
+   "depends_on": [
+    "DR-APIKEY-002"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "PERF-TOKEN-001",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 3,
+   "depends_on": [
+    "SEC-TOKEN-007",
+    "OPS-AUTH-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 13,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "PERF-TOKEN-002",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 3,
+   "depends_on": [
+    "REL-TOKEN-001",
+    "REL-IAM-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "REL-APIKEY-001",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 3,
+   "depends_on": [
+    "SEC-APIKEY-004",
+    "SEC-AUTH-007"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "REL-APIKEY-002",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 2,
+   "depends_on": [
+    "SEC-APIKEY-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "REL-APIKEY-003",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 9,
+   "depends_on": [
+    "IR-APIKEY-004",
+    "FR-FLOW-003",
+    "SEC-FLOW-014",
+    "SEC-IAM-003",
+    "REL-IAM-001",
+    "OPS-APIKEY-001",
+    "FR-IAM-014",
+    "IR-APIKEY-002"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 8,
+   "external_depends_on": []
+  },
+  {
+   "id": "REL-APIKEY-004",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 9,
+   "trace_count": 3,
+   "depends_on": [
+    "REL-APIKEY-003",
+    "FR-TOKEN-002"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "REL-APIKEY-005",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 4,
+   "depends_on": [
+    "DR-APIKEY-002",
+    "IR-APIKEY-004",
+    "CON-IAM-002"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "REL-APIKEY-006",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 2,
+   "depends_on": [
+    "REL-APIKEY-005"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "REL-APIKEY-007",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 4,
+   "depends_on": [
+    "DR-APIKEY-002",
+    "CON-IAM-002"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "REL-FLOW-001",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 6,
+   "depends_on": [
+    "IR-FLOW-003",
+    "REL-IAM-004",
+    "FR-AUTH-003",
+    "OPS-AUTH-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 19,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "REL-IAM-001",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 6,
+   "depends_on": [
+    "IR-IAM-001",
+    "IR-AUTH-003",
+    "FR-AUTH-006",
+    "FR-AUTH-009"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "REL-IAM-002",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 6,
+   "depends_on": [
+    "REL-IAM-001",
+    "IR-IAM-001",
+    "IR-AUTH-003",
+    "IR-IAM-005",
+    "FR-AUTH-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "REL-IAM-003",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 4,
+   "depends_on": [
+    "IR-IAM-001",
+    "OPS-AUTH-001",
+    "FR-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 17,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "REL-IAM-004",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 1,
+   "depends_on": [],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 0,
+   "direct_0110_dependency_count": 0,
+   "external_depends_on": []
+  },
+  {
+   "id": "REL-TOKEN-001",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 2,
+   "depends_on": [],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 0,
+   "direct_0110_dependency_count": 0,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-APIKEY-001",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 4,
+   "depends_on": [
+    "FR-APIKEY-001",
+    "SEC-FLOW-004"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-APIKEY-002",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 6,
+   "depends_on": [
+    "SEC-APIKEY-001",
+    "SEC-FLOW-003",
+    "SEC-AUTH-005",
+    "SEC-FLOW-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-APIKEY-003",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 2,
+   "depends_on": [],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 0,
+   "direct_0110_dependency_count": 0,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-APIKEY-004",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 10,
+   "trace_count": 7,
+   "depends_on": [
+    "SEC-APIKEY-001",
+    "SEC-APIKEY-003",
+    "SEC-FLOW-001",
+    "SEC-TOKEN-001",
+    "REL-APIKEY-004"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-APIKEY-005",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 11,
+   "trace_count": 6,
+   "depends_on": [
+    "IR-APIKEY-001",
+    "SEC-APIKEY-004",
+    "IR-FLOW-003",
+    "SEC-FLOW-011"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 129,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-APIKEY-006",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 5,
+   "depends_on": [
+    "SEC-APIKEY-004",
+    "SEC-IAM-003",
+    "REL-IAM-003",
+    "OPS-APIKEY-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-APIKEY-007",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 6,
+   "depends_on": [
+    "SEC-APIKEY-004",
+    "FR-IAM-009"
+   ],
+   "extends": [
+    "IR-AUTH-004",
+    "FR-AUTH-009"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-APIKEY-008",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 11,
+   "trace_count": 12,
+   "depends_on": [
+    "SEC-APIKEY-004",
+    "FR-FLOW-005",
+    "FR-FLOW-006",
+    "IR-IAM-005",
+    "FR-IAM-014",
+    "SEC-FLOW-003",
+    "FR-FLOW-001",
+    "SEC-FLOW-014",
+    "IR-FLOW-001",
+    "FR-APIKEY-004",
+    "SEC-FLOW-005"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 11,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-APIKEY-009",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 6,
+   "depends_on": [
+    "SEC-APIKEY-007",
+    "SEC-IAM-004",
+    "FR-IAM-005",
+    "FR-IAM-009"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-APIKEY-010",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 6,
+   "depends_on": [
+    "IR-APIKEY-004",
+    "SEC-APIKEY-003",
+    "SEC-IAM-004",
+    "SEC-IAM-002",
+    "REL-APIKEY-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-APIKEY-011",
+   "scope": "APIKEY",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 9,
+   "depends_on": [
+    "SEC-APIKEY-006",
+    "REL-APIKEY-004",
+    "OPS-APIKEY-001",
+    "SEC-IAM-003"
+   ],
+   "extends": [
+    "FR-FLOW-008",
+    "SEC-AUTH-006"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 1,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-APP-002",
+   "scope": "APP",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 7,
+   "depends_on": [
+    "IR-APP-008",
+    "CON-APP-002"
+   ],
+   "extends": [
+    "FR-APP-021"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 1,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": [
+    "CON-APP-002"
+   ]
+  },
+  {
+   "id": "SEC-AUTH-001",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 6,
+   "depends_on": [
+    "FR-AUTH-001",
+    "SEC-AUTH-002",
+    "SEC-TOKEN-004",
+    "SEC-AUTH-008"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-AUTH-002",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 1,
+   "depends_on": [],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 0,
+   "direct_0110_dependency_count": 0,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-AUTH-003",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 9,
+   "depends_on": [
+    "FR-AUTH-004",
+    "FR-AUTH-008",
+    "SEC-FLOW-001",
+    "SEC-FLOW-003",
+    "SEC-FLOW-007",
+    "FR-FLOW-002",
+    "FR-TOKEN-004",
+    "IR-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 8,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-AUTH-004",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 8,
+   "depends_on": [
+    "FR-DX-010",
+    "OPS-AUTH-001",
+    "FR-APP-025",
+    "IR-APP-008",
+    "FR-APP-026"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 9,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": [
+    "FR-DX-010"
+   ]
+  },
+  {
+   "id": "SEC-AUTH-005",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 4,
+   "depends_on": [
+    "FR-AUTH-005",
+    "SEC-FLOW-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 11,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-AUTH-006",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 8,
+   "depends_on": [
+    "SEC-AUTH-005",
+    "OPS-AUTH-001",
+    "SEC-APP-002",
+    "FR-APP-026",
+    "FR-AUTH-005"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 16,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-AUTH-007",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 6,
+   "depends_on": [
+    "IR-AUTH-001",
+    "FR-IAM-007",
+    "FR-IAM-006",
+    "FR-IAM-009",
+    "SEC-IAM-004"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-AUTH-008",
+   "scope": "AUTH",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 3,
+   "trace_count": 3,
+   "depends_on": [
+    "SEC-AUTH-003",
+    "FR-AUTH-004"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-ENGINE-001",
+   "scope": "ENGINE",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 6,
+   "depends_on": [
+    "IR-ENGINE-003"
+   ],
+   "extends": [
+    "FR-ENGINE-008"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 1,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-ENGINE-002",
+   "scope": "ENGINE",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 5,
+   "depends_on": [
+    "IR-ENGINE-003"
+   ],
+   "extends": [
+    "FR-ENGINE-008"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 1,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-ENGINE-003",
+   "scope": "ENGINE",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 6,
+   "depends_on": [
+    "SEC-ENGINE-001",
+    "SEC-ENGINE-002"
+   ],
+   "extends": [
+    "FR-ENGINE-008"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 3,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-FLOW-001",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 11,
+   "depends_on": [
+    "FR-HTTP-011",
+    "SEC-ENGINE-003",
+    "SEC-HTTP-001",
+    "SEC-AUTH-002",
+    "IR-ENGINE-003",
+    "SEC-ENGINE-002",
+    "SEC-ENGINE-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 7,
+   "direct_0110_dependency_count": 6,
+   "external_depends_on": [
+    "FR-HTTP-011"
+   ]
+  },
+  {
+   "id": "SEC-FLOW-002",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 6,
+   "depends_on": [
+    "SEC-FLOW-001",
+    "SEC-AUTH-002",
+    "FR-AUTH-001",
+    "FR-TOKEN-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-FLOW-003",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 9,
+   "trace_count": 7,
+   "depends_on": [
+    "SEC-FLOW-001",
+    "SEC-AUTH-005",
+    "SEC-APIKEY-004",
+    "FR-AUTH-005",
+    "IR-TOKEN-001",
+    "IR-FLOW-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 6,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-FLOW-004",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 9,
+   "trace_count": 5,
+   "depends_on": [
+    "SEC-FLOW-001",
+    "FR-COOKIE-002",
+    "IR-TOKEN-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": [
+    "FR-COOKIE-002"
+   ]
+  },
+  {
+   "id": "SEC-FLOW-005",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 5,
+   "depends_on": [
+    "FR-JSON-001",
+    "FR-AUTH-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 7,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": [
+    "FR-JSON-001"
+   ]
+  },
+  {
+   "id": "SEC-FLOW-006",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 7,
+   "depends_on": [
+    "SEC-FLOW-004",
+    "SEC-TOKEN-003",
+    "SEC-TOKEN-005",
+    "SEC-TOKEN-001",
+    "IR-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-FLOW-007",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 2,
+   "depends_on": [],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 0,
+   "direct_0110_dependency_count": 0,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-FLOW-008",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 10,
+   "trace_count": 5,
+   "depends_on": [
+    "SEC-FLOW-006",
+    "SEC-FLOW-007"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-FLOW-009",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 8,
+   "depends_on": [
+    "FR-COOKIE-001",
+    "FR-DX-005",
+    "FR-AUTH-001",
+    "SEC-AUTH-008",
+    "FR-AUTH-005"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": [
+    "FR-COOKIE-001",
+    "FR-DX-005"
+   ]
+  },
+  {
+   "id": "SEC-FLOW-010",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 15,
+   "trace_count": 8,
+   "depends_on": [
+    "SEC-FLOW-008",
+    "SEC-FLOW-009",
+    "SEC-FLOW-003",
+    "FR-TOKEN-002",
+    "SEC-TOKEN-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-FLOW-011",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 9,
+   "trace_count": 7,
+   "depends_on": [
+    "IR-FLOW-003",
+    "SEC-ENGINE-001",
+    "SEC-ENGINE-002",
+    "IR-AUTH-001",
+    "FR-IAM-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-FLOW-012",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 3,
+   "depends_on": [
+    "SEC-FLOW-011",
+    "SEC-FLOW-013"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-FLOW-013",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 9,
+   "trace_count": 8,
+   "depends_on": [
+    "REL-FLOW-001",
+    "SEC-TOKEN-004",
+    "SEC-TOKEN-005",
+    "SEC-FLOW-007",
+    "SEC-FLOW-011"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-FLOW-014",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 9,
+   "trace_count": 11,
+   "depends_on": [
+    "SEC-FLOW-015",
+    "FR-FLOW-002",
+    "REL-IAM-002",
+    "REL-TOKEN-001",
+    "FR-TOKEN-004",
+    "FR-AUTH-008",
+    "IR-IAM-001",
+    "FR-TOKEN-001",
+    "SEC-FLOW-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 9,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-FLOW-015",
+   "scope": "FLOW",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 4,
+   "depends_on": [
+    "IR-FLOW-003",
+    "IR-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 11,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-HTTP-001",
+   "scope": "HTTP",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 8,
+   "depends_on": [
+    "IR-HTTP-010",
+    "SEC-ENGINE-001",
+    "SEC-ENGINE-002"
+   ],
+   "extends": [
+    "FR-HTTP-011"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 4,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-IAM-001",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 5,
+   "depends_on": [
+    "IR-IAM-003",
+    "REL-IAM-001",
+    "IR-IAM-005",
+    "FR-AUTH-006"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-IAM-002",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 4,
+   "trace_count": 5,
+   "depends_on": [
+    "IR-IAM-003",
+    "SEC-FLOW-015",
+    "REL-TOKEN-001",
+    "SEC-TOKEN-009"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-IAM-003",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 4,
+   "depends_on": [
+    "REL-IAM-002",
+    "REL-IAM-001",
+    "SEC-AUTH-007"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-IAM-004",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 4,
+   "depends_on": [
+    "FR-IAM-009",
+    "FR-AUTH-009",
+    "IR-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 2,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-IAM-005",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 4,
+   "depends_on": [
+    "SEC-IAM-004",
+    "IR-IAM-004",
+    "SEC-APIKEY-009"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-IAM-006",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 2,
+   "trace_count": 4,
+   "depends_on": [
+    "REL-IAM-002",
+    "SEC-IAM-003",
+    "SEC-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 128,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-IAM-007",
+   "scope": "IAM",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 8,
+   "depends_on": [
+    "IR-IAM-005",
+    "SEC-IAM-004",
+    "FR-IAM-005",
+    "FR-IAM-009",
+    "IR-AUTH-004",
+    "SEC-APIKEY-008"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 6,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-SVL-001",
+   "scope": "SVL",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 8,
+   "depends_on": [
+    "SEC-HTTP-001",
+    "SEC-ENGINE-001",
+    "SEC-ENGINE-002",
+    "SEC-ENGINE-003"
+   ],
+   "extends": [
+    "FR-SVL-002"
+   ],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 6,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-TOKEN-001",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 5,
+   "trace_count": 5,
+   "depends_on": [
+    "CON-AUTH-001",
+    "CON-AUTH-002",
+    "CON-AUTH-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 6,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-TOKEN-002",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 4,
+   "depends_on": [
+    "OPS-AUTH-001",
+    "REL-IAM-004"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 8,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-TOKEN-003",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 6,
+   "depends_on": [
+    "SEC-TOKEN-001",
+    "SEC-TOKEN-002",
+    "SEC-TOKEN-004",
+    "IR-AUTH-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 1,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-TOKEN-004",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 8,
+   "trace_count": 8,
+   "depends_on": [
+    "FR-AUTH-001",
+    "OPS-AUTH-001",
+    "SEC-AUTH-002",
+    "REL-IAM-004",
+    "SEC-AUTH-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-TOKEN-005",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 5,
+   "depends_on": [
+    "SEC-TOKEN-003",
+    "SEC-TOKEN-004",
+    "SEC-IAM-003"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 3,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-TOKEN-006",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 6,
+   "depends_on": [
+    "FR-TOKEN-001",
+    "FR-TOKEN-002",
+    "FR-AUTH-007",
+    "IR-AUTH-002"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 4,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-TOKEN-007",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 3,
+   "depends_on": [
+    "SEC-TOKEN-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 7,
+   "direct_0110_dependency_count": 1,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-TOKEN-008",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 7,
+   "trace_count": 4,
+   "depends_on": [
+    "SEC-TOKEN-001",
+    "REL-TOKEN-001"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 8,
+   "direct_0110_dependency_count": 2,
+   "external_depends_on": []
+  },
+  {
+   "id": "SEC-TOKEN-009",
+   "scope": "TOKEN",
+   "status": "planned",
+   "stability": "draft",
+   "ac_count": 6,
+   "trace_count": 7,
+   "depends_on": [
+    "REL-TOKEN-001",
+    "PERF-TOKEN-001",
+    "SEC-TOKEN-007",
+    "SEC-FLOW-011",
+    "SEC-FLOW-012"
+   ],
+   "extends": [],
+   "related_to": [],
+   "inferred_ac_count": 0,
+   "name_not_final_count": 0,
+   "transitive_0110_dependency_count": 127,
+   "direct_0110_dependency_count": 5,
+   "external_depends_on": []
+  }
+ ],
+ "dependency_graph": {
+  "nodes": 165,
+  "edges": [
+   {
+    "from": "CON-APIKEY-001",
+    "to": "FR-APIKEY-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-001",
+    "to": "CON-BUILD-006",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "CON-AUTH-002",
+    "to": "CON-BUILD-013",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "CON-AUTH-002",
+    "to": "CON-BUILD-015",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "CON-AUTH-002",
+    "to": "CON-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-002",
+    "to": "IR-APP-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-002",
+    "to": "IR-HTTP-010",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-002",
+    "to": "IR-ENGINE-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-003",
+    "to": "CON-BUILD-012",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "CON-AUTH-003",
+    "to": "CON-BUILD-004",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "CON-AUTH-003",
+    "to": "CON-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-004",
+    "to": "FR-KT-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "CON-AUTH-004",
+    "to": "FR-KT-002",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "CON-AUTH-004",
+    "to": "FR-KT-003",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "CON-AUTH-004",
+    "to": "CON-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-005",
+    "to": "OPS-REL-008",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "CON-AUTH-005",
+    "to": "CON-HTTP-009",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "CON-AUTH-005",
+    "to": "CON-AUTH-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-006",
+    "to": "CON-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-007",
+    "to": "IR-HTTP-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "CON-AUTH-007",
+    "to": "IR-ENGINE-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "CON-AUTH-007",
+    "to": "FR-ENGINE-008",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "CON-AUTH-007",
+    "to": "IR-APP-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-007",
+    "to": "IR-HTTP-010",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-007",
+    "to": "FR-HTTP-029",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-007",
+    "to": "IR-ENGINE-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-007",
+    "to": "SEC-SVL-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-007",
+    "to": "SEC-HTTP-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-AUTH-007",
+    "to": "CON-ENGINE-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-ENGINE-001",
+    "to": "FR-ENGINE-008",
+    "relation": "extends",
+    "internal": false
+   },
+   {
+    "from": "CON-ENGINE-001",
+    "to": "IR-ENGINE-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-IAM-001",
+    "to": "IR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-IAM-001",
+    "to": "IR-IAM-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "CON-IAM-001",
+    "to": "FR-KT-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "CON-IAM-002",
+    "to": "CON-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "DR-APIKEY-001",
+    "to": "SEC-AUTH-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "DR-APIKEY-002",
+    "to": "IR-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "DR-APIKEY-002",
+    "to": "DR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "DR-APIKEY-002",
+    "to": "FR-IAM-010",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "DR-IAM-002",
+    "to": "FR-KT-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "DR-IAM-003",
+    "to": "CON-IAM-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-001",
+    "to": "FR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-001",
+    "to": "FR-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-001",
+    "to": "CON-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-001",
+    "to": "CON-AUTH-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-001",
+    "to": "CON-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-001",
+    "to": "IR-APIKEY-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-002",
+    "to": "SEC-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-002",
+    "to": "FR-TOKEN-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-003",
+    "to": "SEC-APIKEY-010",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-003",
+    "to": "FR-APIKEY-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-003",
+    "to": "SEC-FLOW-014",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-003",
+    "to": "SEC-FLOW-015",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-003",
+    "to": "REL-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-003",
+    "to": "SEC-TOKEN-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-003",
+    "to": "SEC-FLOW-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-004",
+    "to": "FR-APIKEY-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-004",
+    "to": "SEC-APIKEY-010",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-004",
+    "to": "SEC-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-004",
+    "to": "SEC-FLOW-015",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-004",
+    "to": "REL-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-004",
+    "to": "FR-AUTH-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-004",
+    "to": "SEC-IAM-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-004",
+    "to": "FR-APIKEY-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-004",
+    "to": "SEC-TOKEN-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-005",
+    "to": "IR-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-005",
+    "to": "FR-AUTH-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-005",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-005",
+    "to": "IR-APIKEY-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-005",
+    "to": "FR-IAM-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-006",
+    "to": "DR-IAM-001",
+    "relation": "extends",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-006",
+    "to": "IR-IAM-001",
+    "relation": "extends",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-006",
+    "to": "IR-IAM-003",
+    "relation": "extends",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-006",
+    "to": "SEC-IAM-001",
+    "relation": "extends",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-006",
+    "to": "DR-IAM-003",
+    "relation": "extends",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-006",
+    "to": "FR-FLOW-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-006",
+    "to": "SEC-FLOW-011",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-006",
+    "to": "SEC-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-007",
+    "to": "IR-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-007",
+    "to": "FR-APIKEY-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-007",
+    "to": "FR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-008",
+    "to": "REL-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-008",
+    "to": "FR-IAM-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-009",
+    "to": "IR-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-009",
+    "to": "IR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-010",
+    "to": "IR-APIKEY-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APIKEY-010",
+    "to": "IR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APP-025",
+    "to": "FR-APP-021",
+    "relation": "extends",
+    "internal": false
+   },
+   {
+    "from": "FR-APP-025",
+    "to": "IR-APP-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APP-026",
+    "to": "FR-APP-021",
+    "relation": "extends",
+    "internal": false
+   },
+   {
+    "from": "FR-APP-026",
+    "to": "FR-APP-025",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-APP-026",
+    "to": "SEC-APP-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-001",
+    "to": "FR-IAM-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-002",
+    "to": "FR-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-003",
+    "to": "FR-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-004",
+    "to": "FR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-004",
+    "to": "OPS-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-004",
+    "to": "FR-AUTH-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-004",
+    "to": "FR-IAM-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-005",
+    "to": "FR-APP-021",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "FR-AUTH-005",
+    "to": "FR-DX-008",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "FR-AUTH-005",
+    "to": "IR-APP-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-005",
+    "to": "FR-APP-025",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-006",
+    "to": "FR-APP-006",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "FR-AUTH-006",
+    "to": "FR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-006",
+    "to": "FR-HTTP-029",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-006",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-007",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-008",
+    "to": "FR-AUTH-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-009",
+    "to": "SEC-AUTH-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-AUTH-009",
+    "to": "FR-HTTP-029",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-001",
+    "to": "SEC-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-001",
+    "to": "SEC-FLOW-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-001",
+    "to": "SEC-FLOW-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-001",
+    "to": "SEC-FLOW-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-001",
+    "to": "SEC-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-001",
+    "to": "FR-AUTH-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-001",
+    "to": "SEC-FLOW-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-001",
+    "to": "SEC-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-001",
+    "to": "SEC-FLOW-010",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-001",
+    "to": "IR-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-002",
+    "to": "SEC-FLOW-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-002",
+    "to": "SEC-FLOW-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-002",
+    "to": "FR-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-002",
+    "to": "FR-AUTH-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-003",
+    "to": "SEC-FLOW-010",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-003",
+    "to": "IR-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-003",
+    "to": "SEC-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-003",
+    "to": "FR-AUTH-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-003",
+    "to": "IR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-004",
+    "to": "SEC-FLOW-012",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-004",
+    "to": "FR-FLOW-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-004",
+    "to": "SEC-TOKEN-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-004",
+    "to": "REL-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-004",
+    "to": "IR-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-004",
+    "to": "FR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-004",
+    "to": "FR-AUTH-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-004",
+    "to": "FR-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-005",
+    "to": "FR-FLOW-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-005",
+    "to": "SEC-FLOW-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-005",
+    "to": "FR-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-005",
+    "to": "FR-TOKEN-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-005",
+    "to": "SEC-TOKEN-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-005",
+    "to": "SEC-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-005",
+    "to": "SEC-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-006",
+    "to": "IR-FLOW-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-006",
+    "to": "IR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-006",
+    "to": "SEC-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-006",
+    "to": "FR-AUTH-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-006",
+    "to": "FR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-006",
+    "to": "SEC-APIKEY-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-006",
+    "to": "FR-AUTH-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-007",
+    "to": "FR-FLOW-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-007",
+    "to": "FR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-007",
+    "to": "IR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-007",
+    "to": "FR-AUTH-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-007",
+    "to": "REL-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-007",
+    "to": "FR-AUTH-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-007",
+    "to": "FR-TOKEN-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-008",
+    "to": "FR-WS-003",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "FR-FLOW-008",
+    "to": "FR-WS-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "FR-FLOW-008",
+    "to": "FR-APP-025",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-008",
+    "to": "OPS-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-008",
+    "to": "SEC-AUTH-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-008",
+    "to": "SEC-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-008",
+    "to": "IR-APP-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-009",
+    "to": "SEC-FLOW-011",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-009",
+    "to": "IR-IAM-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-009",
+    "to": "SEC-IAM-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-FLOW-009",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-HTTP-029",
+    "to": "FR-APP-006",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "FR-HTTP-029",
+    "to": "IR-HTTP-001",
+    "relation": "extends",
+    "internal": false
+   },
+   {
+    "from": "FR-HTTP-029",
+    "to": "IR-HTTP-010",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-001",
+    "to": "IR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-001",
+    "to": "IR-AUTH-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-001",
+    "to": "FR-AUTH-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-001",
+    "to": "FR-AUTH-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-002",
+    "to": "FR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-002",
+    "to": "REL-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-002",
+    "to": "IR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-002",
+    "to": "FR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-002",
+    "to": "SEC-TOKEN-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-003",
+    "to": "IR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-003",
+    "to": "FR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-003",
+    "to": "SEC-FLOW-013",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-004",
+    "to": "IR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-004",
+    "to": "REL-IAM-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-004",
+    "to": "FR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-004",
+    "to": "IR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-006",
+    "to": "FR-IAM-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-006",
+    "to": "FR-AUTH-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-007",
+    "to": "DR-IAM-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-008",
+    "to": "IR-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-008",
+    "to": "IR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-008",
+    "to": "IR-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-009",
+    "to": "FR-IAM-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-009",
+    "to": "FR-IAM-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-009",
+    "to": "FR-IAM-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-010",
+    "to": "REL-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-010",
+    "to": "DR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-010",
+    "to": "REL-IAM-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-010",
+    "to": "IR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-011",
+    "to": "IR-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-011",
+    "to": "DR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-012",
+    "to": "DR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-012",
+    "to": "FR-TOKEN-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-013",
+    "to": "DR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-013",
+    "to": "IR-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-013",
+    "to": "SEC-FLOW-013",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-013",
+    "to": "REL-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-014",
+    "to": "IR-IAM-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-014",
+    "to": "SEC-IAM-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-014",
+    "to": "SEC-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-014",
+    "to": "FR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-014",
+    "to": "REL-IAM-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-014",
+    "to": "SEC-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-014",
+    "to": "SEC-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-014",
+    "to": "FR-AUTH-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-014",
+    "to": "FR-AUTH-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-014",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-014",
+    "to": "REL-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-IAM-014",
+    "to": "FR-AUTH-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-001",
+    "to": "SEC-TOKEN-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-001",
+    "to": "FR-TOKEN-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-001",
+    "to": "FR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-002",
+    "to": "SEC-TOKEN-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-002",
+    "to": "FR-IAM-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-002",
+    "to": "REL-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-002",
+    "to": "FR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-002",
+    "to": "OPS-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-002",
+    "to": "FR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-003",
+    "to": "SEC-TOKEN-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-003",
+    "to": "SEC-TOKEN-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-003",
+    "to": "PERF-TOKEN-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-003",
+    "to": "IR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-003",
+    "to": "REL-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-004",
+    "to": "REL-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-004",
+    "to": "FR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "FR-TOKEN-004",
+    "to": "FR-FLOW-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-001",
+    "to": "IR-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-002",
+    "to": "SEC-APIKEY-010",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-002",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-002",
+    "to": "IR-AUTH-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-002",
+    "to": "IR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-002",
+    "to": "FR-IAM-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-003",
+    "to": "SEC-APIKEY-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-003",
+    "to": "OPS-APIKEY-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-004",
+    "to": "DR-APIKEY-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-004",
+    "to": "REL-APIKEY-003",
+    "relation": "related_to",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-004",
+    "to": "PERF-APIKEY-001",
+    "relation": "related_to",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-004",
+    "to": "FR-KT-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "IR-APIKEY-005",
+    "to": "SEC-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-005",
+    "to": "IR-AUTH-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-005",
+    "to": "IR-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-APIKEY-005",
+    "to": "FR-APP-006",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "IR-APIKEY-005",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-APP-008",
+    "to": "FR-APP-021",
+    "relation": "extends",
+    "internal": false
+   },
+   {
+    "from": "IR-APP-008",
+    "to": "CON-APP-002",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "IR-APP-008",
+    "to": "IR-ENGINE-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "IR-APP-008",
+    "to": "FR-KT-003",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "IR-APP-008",
+    "to": "FR-KT-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "IR-AUTH-001",
+    "to": "CON-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-AUTH-002",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-AUTH-002",
+    "to": "FR-AUTH-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-AUTH-002",
+    "to": "FR-APP-025",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-AUTH-002",
+    "to": "FR-APP-026",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-AUTH-002",
+    "to": "SEC-APP-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-AUTH-004",
+    "to": "SEC-AUTH-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-AUTH-004",
+    "to": "IR-AUTH-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-AUTH-004",
+    "to": "FR-IAM-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-AUTH-004",
+    "to": "FR-IAM-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-AUTH-004",
+    "to": "FR-KT-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "IR-AUTH-004",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-AUTH-005",
+    "to": "IR-AUTH-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-AUTH-005",
+    "to": "SEC-TOKEN-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-AUTH-005",
+    "to": "SEC-FLOW-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-ENGINE-003",
+    "to": "IR-ENGINE-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "IR-ENGINE-003",
+    "to": "CON-APP-002",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "IR-ENGINE-003",
+    "to": "IR-HTTP-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "IR-FLOW-001",
+    "to": "FR-APP-006",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "IR-FLOW-001",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-FLOW-001",
+    "to": "CON-APIKEY-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-FLOW-002",
+    "to": "SEC-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-FLOW-002",
+    "to": "FR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-FLOW-002",
+    "to": "FR-APIKEY-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-FLOW-002",
+    "to": "REL-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-FLOW-002",
+    "to": "FR-FLOW-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-FLOW-003",
+    "to": "OPS-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-FLOW-003",
+    "to": "CON-AUTH-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-HTTP-010",
+    "to": "IR-HTTP-001",
+    "relation": "extends",
+    "internal": false
+   },
+   {
+    "from": "IR-IAM-001",
+    "to": "DR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-001",
+    "to": "SEC-APIKEY-004",
+    "relation": "related_to",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-001",
+    "to": "FR-KT-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "IR-IAM-002",
+    "to": "IR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-002",
+    "to": "CON-AUTH-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-003",
+    "to": "IR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-003",
+    "to": "DR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-003",
+    "to": "FR-AUTH-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-003",
+    "to": "FR-AUTH-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-003",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-003",
+    "to": "REL-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-004",
+    "to": "DR-IAM-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-004",
+    "to": "FR-IAM-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-005",
+    "to": "FR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-005",
+    "to": "FR-AUTH-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-005",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-005",
+    "to": "REL-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-005",
+    "to": "FR-IAM-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-005",
+    "to": "IR-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-005",
+    "to": "SEC-IAM-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-IAM-005",
+    "to": "IR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-TOKEN-001",
+    "to": "SEC-TOKEN-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-TOKEN-001",
+    "to": "FR-TOKEN-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-TOKEN-001",
+    "to": "FR-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-TOKEN-001",
+    "to": "SEC-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-TOKEN-001",
+    "to": "SEC-APIKEY-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-TOKEN-001",
+    "to": "SEC-FLOW-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-TOKEN-001",
+    "to": "IR-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-TOKEN-002",
+    "to": "SEC-TOKEN-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-TOKEN-002",
+    "to": "SEC-TOKEN-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-TOKEN-002",
+    "to": "SEC-TOKEN-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "IR-TOKEN-002",
+    "to": "FR-KT-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "OPS-APIKEY-001",
+    "to": "IR-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-APIKEY-001",
+    "to": "IR-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-APIKEY-001",
+    "to": "SEC-APIKEY-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-APIKEY-001",
+    "to": "OPS-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-APIKEY-001",
+    "to": "FR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-APIKEY-001",
+    "to": "REL-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-APIKEY-001",
+    "to": "REL-APIKEY-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-AUTH-001",
+    "to": "FR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-AUTH-001",
+    "to": "SEC-AUTH-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-AUTH-001",
+    "to": "CON-ENGINE-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-AUTH-001",
+    "to": "IR-ENGINE-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-AUTH-002",
+    "to": "FR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-AUTH-002",
+    "to": "IR-APP-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-AUTH-002",
+    "to": "FR-APP-025",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-AUTH-002",
+    "to": "SEC-AUTH-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-AUTH-002",
+    "to": "FR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-FLOW-001",
+    "to": "FR-FLOW-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "OPS-FLOW-001",
+    "to": "FR-DX-010",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "PERF-APIKEY-001",
+    "to": "IR-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "PERF-APIKEY-002",
+    "to": "DR-APIKEY-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "PERF-TOKEN-001",
+    "to": "SEC-TOKEN-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "PERF-TOKEN-001",
+    "to": "OPS-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "PERF-TOKEN-002",
+    "to": "REL-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "PERF-TOKEN-002",
+    "to": "REL-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-001",
+    "to": "SEC-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-001",
+    "to": "SEC-AUTH-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-002",
+    "to": "SEC-APIKEY-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-003",
+    "to": "IR-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-003",
+    "to": "FR-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-003",
+    "to": "SEC-FLOW-014",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-003",
+    "to": "SEC-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-003",
+    "to": "REL-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-003",
+    "to": "OPS-APIKEY-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-003",
+    "to": "FR-IAM-014",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-003",
+    "to": "IR-APIKEY-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-004",
+    "to": "REL-APIKEY-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-004",
+    "to": "FR-TOKEN-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-005",
+    "to": "DR-APIKEY-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-005",
+    "to": "IR-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-005",
+    "to": "CON-IAM-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-006",
+    "to": "REL-APIKEY-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-007",
+    "to": "DR-APIKEY-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-APIKEY-007",
+    "to": "CON-IAM-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-FLOW-001",
+    "to": "IR-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-FLOW-001",
+    "to": "REL-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-FLOW-001",
+    "to": "FR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-FLOW-001",
+    "to": "OPS-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-IAM-001",
+    "to": "IR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-IAM-001",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-IAM-001",
+    "to": "FR-AUTH-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-IAM-001",
+    "to": "FR-AUTH-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-IAM-002",
+    "to": "REL-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-IAM-002",
+    "to": "IR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-IAM-002",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-IAM-002",
+    "to": "IR-IAM-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-IAM-002",
+    "to": "FR-AUTH-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-IAM-003",
+    "to": "IR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-IAM-003",
+    "to": "OPS-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "REL-IAM-003",
+    "to": "FR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-001",
+    "to": "FR-APIKEY-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-001",
+    "to": "SEC-FLOW-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-002",
+    "to": "SEC-APIKEY-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-002",
+    "to": "SEC-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-002",
+    "to": "SEC-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-002",
+    "to": "SEC-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-004",
+    "to": "SEC-APIKEY-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-004",
+    "to": "SEC-APIKEY-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-004",
+    "to": "SEC-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-004",
+    "to": "SEC-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-004",
+    "to": "REL-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-005",
+    "to": "IR-APIKEY-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-005",
+    "to": "SEC-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-005",
+    "to": "IR-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-005",
+    "to": "SEC-FLOW-011",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-006",
+    "to": "SEC-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-006",
+    "to": "SEC-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-006",
+    "to": "REL-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-006",
+    "to": "OPS-APIKEY-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-007",
+    "to": "SEC-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-007",
+    "to": "IR-AUTH-004",
+    "relation": "extends",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-007",
+    "to": "FR-AUTH-009",
+    "relation": "extends",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-007",
+    "to": "FR-IAM-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-008",
+    "to": "SEC-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-008",
+    "to": "FR-FLOW-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-008",
+    "to": "FR-FLOW-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-008",
+    "to": "IR-IAM-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-008",
+    "to": "FR-IAM-014",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-008",
+    "to": "SEC-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-008",
+    "to": "FR-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-008",
+    "to": "SEC-FLOW-014",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-008",
+    "to": "IR-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-008",
+    "to": "FR-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-008",
+    "to": "SEC-FLOW-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-009",
+    "to": "SEC-APIKEY-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-009",
+    "to": "SEC-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-009",
+    "to": "FR-IAM-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-009",
+    "to": "FR-IAM-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-010",
+    "to": "IR-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-010",
+    "to": "SEC-APIKEY-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-010",
+    "to": "SEC-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-010",
+    "to": "SEC-IAM-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-010",
+    "to": "REL-APIKEY-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-011",
+    "to": "SEC-APIKEY-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-011",
+    "to": "REL-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-011",
+    "to": "FR-FLOW-008",
+    "relation": "extends",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-011",
+    "to": "SEC-AUTH-006",
+    "relation": "extends",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-011",
+    "to": "OPS-APIKEY-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APIKEY-011",
+    "to": "SEC-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APP-002",
+    "to": "FR-APP-021",
+    "relation": "extends",
+    "internal": false
+   },
+   {
+    "from": "SEC-APP-002",
+    "to": "IR-APP-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-APP-002",
+    "to": "CON-APP-002",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "SEC-AUTH-001",
+    "to": "FR-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-001",
+    "to": "SEC-AUTH-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-001",
+    "to": "SEC-TOKEN-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-001",
+    "to": "SEC-AUTH-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-003",
+    "to": "FR-AUTH-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-003",
+    "to": "FR-AUTH-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-003",
+    "to": "SEC-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-003",
+    "to": "SEC-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-003",
+    "to": "SEC-FLOW-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-003",
+    "to": "FR-FLOW-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-003",
+    "to": "FR-TOKEN-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-003",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-004",
+    "to": "FR-DX-010",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "SEC-AUTH-004",
+    "to": "OPS-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-004",
+    "to": "FR-APP-025",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-004",
+    "to": "IR-APP-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-004",
+    "to": "FR-APP-026",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-005",
+    "to": "FR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-005",
+    "to": "SEC-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-006",
+    "to": "SEC-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-006",
+    "to": "OPS-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-006",
+    "to": "SEC-APP-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-006",
+    "to": "FR-APP-026",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-006",
+    "to": "FR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-007",
+    "to": "IR-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-007",
+    "to": "FR-IAM-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-007",
+    "to": "FR-IAM-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-007",
+    "to": "FR-IAM-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-007",
+    "to": "SEC-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-008",
+    "to": "SEC-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-AUTH-008",
+    "to": "FR-AUTH-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-ENGINE-001",
+    "to": "FR-ENGINE-008",
+    "relation": "extends",
+    "internal": false
+   },
+   {
+    "from": "SEC-ENGINE-001",
+    "to": "IR-ENGINE-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-ENGINE-002",
+    "to": "FR-ENGINE-008",
+    "relation": "extends",
+    "internal": false
+   },
+   {
+    "from": "SEC-ENGINE-002",
+    "to": "IR-ENGINE-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-ENGINE-003",
+    "to": "FR-ENGINE-008",
+    "relation": "extends",
+    "internal": false
+   },
+   {
+    "from": "SEC-ENGINE-003",
+    "to": "SEC-ENGINE-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-ENGINE-003",
+    "to": "SEC-ENGINE-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-001",
+    "to": "FR-HTTP-011",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "SEC-FLOW-001",
+    "to": "SEC-ENGINE-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-001",
+    "to": "SEC-HTTP-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-001",
+    "to": "SEC-AUTH-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-001",
+    "to": "IR-ENGINE-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-001",
+    "to": "SEC-ENGINE-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-001",
+    "to": "SEC-ENGINE-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-002",
+    "to": "SEC-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-002",
+    "to": "SEC-AUTH-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-002",
+    "to": "FR-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-002",
+    "to": "FR-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-003",
+    "to": "SEC-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-003",
+    "to": "SEC-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-003",
+    "to": "SEC-APIKEY-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-003",
+    "to": "FR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-003",
+    "to": "IR-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-003",
+    "to": "IR-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-004",
+    "to": "SEC-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-004",
+    "to": "FR-COOKIE-002",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "SEC-FLOW-004",
+    "to": "IR-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-005",
+    "to": "FR-JSON-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "SEC-FLOW-005",
+    "to": "FR-AUTH-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-006",
+    "to": "SEC-FLOW-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-006",
+    "to": "SEC-TOKEN-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-006",
+    "to": "SEC-TOKEN-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-006",
+    "to": "SEC-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-006",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-008",
+    "to": "SEC-FLOW-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-008",
+    "to": "SEC-FLOW-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-009",
+    "to": "FR-COOKIE-001",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "SEC-FLOW-009",
+    "to": "FR-DX-005",
+    "relation": "depends_on",
+    "internal": false
+   },
+   {
+    "from": "SEC-FLOW-009",
+    "to": "FR-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-009",
+    "to": "SEC-AUTH-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-009",
+    "to": "FR-AUTH-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-010",
+    "to": "SEC-FLOW-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-010",
+    "to": "SEC-FLOW-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-010",
+    "to": "SEC-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-010",
+    "to": "FR-TOKEN-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-010",
+    "to": "SEC-TOKEN-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-011",
+    "to": "IR-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-011",
+    "to": "SEC-ENGINE-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-011",
+    "to": "SEC-ENGINE-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-011",
+    "to": "IR-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-011",
+    "to": "FR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-012",
+    "to": "SEC-FLOW-011",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-012",
+    "to": "SEC-FLOW-013",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-013",
+    "to": "REL-FLOW-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-013",
+    "to": "SEC-TOKEN-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-013",
+    "to": "SEC-TOKEN-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-013",
+    "to": "SEC-FLOW-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-013",
+    "to": "SEC-FLOW-011",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-014",
+    "to": "SEC-FLOW-015",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-014",
+    "to": "FR-FLOW-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-014",
+    "to": "REL-IAM-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-014",
+    "to": "REL-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-014",
+    "to": "FR-TOKEN-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-014",
+    "to": "FR-AUTH-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-014",
+    "to": "IR-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-014",
+    "to": "FR-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-014",
+    "to": "SEC-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-015",
+    "to": "IR-FLOW-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-FLOW-015",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-HTTP-001",
+    "to": "FR-HTTP-011",
+    "relation": "extends",
+    "internal": false
+   },
+   {
+    "from": "SEC-HTTP-001",
+    "to": "IR-HTTP-010",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-HTTP-001",
+    "to": "SEC-ENGINE-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-HTTP-001",
+    "to": "SEC-ENGINE-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-001",
+    "to": "IR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-001",
+    "to": "REL-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-001",
+    "to": "IR-IAM-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-001",
+    "to": "FR-AUTH-006",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-002",
+    "to": "IR-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-002",
+    "to": "SEC-FLOW-015",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-002",
+    "to": "REL-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-002",
+    "to": "SEC-TOKEN-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-003",
+    "to": "REL-IAM-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-003",
+    "to": "REL-IAM-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-003",
+    "to": "SEC-AUTH-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-004",
+    "to": "FR-IAM-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-004",
+    "to": "FR-AUTH-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-004",
+    "to": "IR-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-005",
+    "to": "SEC-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-005",
+    "to": "IR-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-005",
+    "to": "SEC-APIKEY-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-006",
+    "to": "REL-IAM-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-006",
+    "to": "SEC-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-006",
+    "to": "SEC-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-007",
+    "to": "IR-IAM-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-007",
+    "to": "SEC-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-007",
+    "to": "FR-IAM-005",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-007",
+    "to": "FR-IAM-009",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-007",
+    "to": "IR-AUTH-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-IAM-007",
+    "to": "SEC-APIKEY-008",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-SVL-001",
+    "to": "FR-SVL-002",
+    "relation": "extends",
+    "internal": false
+   },
+   {
+    "from": "SEC-SVL-001",
+    "to": "SEC-HTTP-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-SVL-001",
+    "to": "SEC-ENGINE-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-SVL-001",
+    "to": "SEC-ENGINE-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-SVL-001",
+    "to": "SEC-ENGINE-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-001",
+    "to": "CON-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-001",
+    "to": "CON-AUTH-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-001",
+    "to": "CON-AUTH-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-002",
+    "to": "OPS-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-002",
+    "to": "REL-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-003",
+    "to": "SEC-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-003",
+    "to": "SEC-TOKEN-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-003",
+    "to": "SEC-TOKEN-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-003",
+    "to": "IR-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-004",
+    "to": "FR-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-004",
+    "to": "OPS-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-004",
+    "to": "SEC-AUTH-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-004",
+    "to": "REL-IAM-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-004",
+    "to": "SEC-AUTH-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-005",
+    "to": "SEC-TOKEN-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-005",
+    "to": "SEC-TOKEN-004",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-005",
+    "to": "SEC-IAM-003",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-006",
+    "to": "FR-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-006",
+    "to": "FR-TOKEN-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-006",
+    "to": "FR-AUTH-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-006",
+    "to": "IR-AUTH-002",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-007",
+    "to": "SEC-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-008",
+    "to": "SEC-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-008",
+    "to": "REL-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-009",
+    "to": "REL-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-009",
+    "to": "PERF-TOKEN-001",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-009",
+    "to": "SEC-TOKEN-007",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-009",
+    "to": "SEC-FLOW-011",
+    "relation": "depends_on",
+    "internal": true
+   },
+   {
+    "from": "SEC-TOKEN-009",
+    "to": "SEC-FLOW-012",
+    "relation": "depends_on",
+    "internal": true
+   }
+  ],
+  "edge_count": 597,
+  "edge_count_by_relation": {
+   "depends_on": 573,
+   "extends": 21,
+   "related_to": 3
+  },
+  "internal_depends_on_edges": 531,
+  "external_targets": {
+   "CON-BUILD-006": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-1"
+   },
+   "CON-BUILD-013": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-1"
+   },
+   "CON-BUILD-015": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-1"
+   },
+   "CON-BUILD-012": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-1"
+   },
+   "CON-BUILD-004": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-1"
+   },
+   "FR-KT-001": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-8"
+   },
+   "FR-KT-002": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-8"
+   },
+   "FR-KT-003": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-8"
+   },
+   "OPS-REL-008": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "0.10.0"
+   },
+   "CON-HTTP-009": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-3"
+   },
+   "IR-HTTP-001": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-3"
+   },
+   "IR-ENGINE-001": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-5"
+   },
+   "FR-ENGINE-008": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-5"
+   },
+   "FR-APP-021": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "0.10.0"
+   },
+   "FR-DX-008": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "api-usability"
+   },
+   "FR-APP-006": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-4"
+   },
+   "FR-WS-003": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-7"
+   },
+   "FR-WS-001": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-7"
+   },
+   "CON-APP-002": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-4"
+   },
+   "FR-DX-010": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "api-usability"
+   },
+   "FR-HTTP-011": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-3"
+   },
+   "FR-COOKIE-002": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-5"
+   },
+   "FR-JSON-001": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-5"
+   },
+   "FR-COOKIE-001": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-5"
+   },
+   "FR-DX-005": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "api-usability"
+   },
+   "FR-SVL-002": {
+    "status": "verified",
+    "stability": "evolving",
+    "target": "wave-8"
+   }
+  }
+ },
+ "cycles": [
+  {
+   "type": "scc",
+   "size": 2,
+   "members": [
+    "FR-AUTH-004",
+    "FR-IAM-006"
+   ]
+  },
+  {
+   "type": "scc",
+   "size": 70,
+   "members": [
+    "CON-APIKEY-001",
+    "DR-APIKEY-001",
+    "DR-APIKEY-002",
+    "FR-APIKEY-001",
+    "FR-APIKEY-003",
+    "FR-APIKEY-004",
+    "FR-APIKEY-005",
+    "FR-AUTH-009",
+    "FR-FLOW-001",
+    "FR-FLOW-002",
+    "FR-FLOW-003",
+    "FR-FLOW-004",
+    "FR-FLOW-005",
+    "FR-FLOW-006",
+    "FR-FLOW-007",
+    "FR-IAM-003",
+    "FR-IAM-008",
+    "FR-IAM-010",
+    "FR-IAM-014",
+    "FR-TOKEN-001",
+    "FR-TOKEN-003",
+    "FR-TOKEN-004",
+    "IR-APIKEY-002",
+    "IR-APIKEY-003",
+    "IR-APIKEY-004",
+    "IR-AUTH-004",
+    "IR-AUTH-005",
+    "IR-FLOW-001",
+    "IR-FLOW-002",
+    "IR-IAM-005",
+    "IR-TOKEN-001",
+    "OPS-APIKEY-001",
+    "PERF-TOKEN-002",
+    "REL-APIKEY-003",
+    "REL-APIKEY-004",
+    "REL-APIKEY-005",
+    "REL-IAM-001",
+    "REL-IAM-002",
+    "SEC-APIKEY-001",
+    "SEC-APIKEY-004",
+    "SEC-APIKEY-006",
+    "SEC-APIKEY-007",
+    "SEC-APIKEY-008",
+    "SEC-APIKEY-009",
+    "SEC-APIKEY-010",
+    "SEC-AUTH-001",
+    "SEC-AUTH-003",
+    "SEC-AUTH-007",
+    "SEC-AUTH-008",
+    "SEC-FLOW-003",
+    "SEC-FLOW-004",
+    "SEC-FLOW-006",
+    "SEC-FLOW-008",
+    "SEC-FLOW-009",
+    "SEC-FLOW-010",
+    "SEC-FLOW-011",
+    "SEC-FLOW-012",
+    "SEC-FLOW-013",
+    "SEC-FLOW-014",
+    "SEC-IAM-001",
+    "SEC-IAM-002",
+    "SEC-IAM-003",
+    "SEC-IAM-004",
+    "SEC-IAM-005",
+    "SEC-IAM-007",
+    "SEC-TOKEN-003",
+    "SEC-TOKEN-004",
+    "SEC-TOKEN-005",
+    "SEC-TOKEN-006",
+    "SEC-TOKEN-009"
+   ]
+  }
+ ],
+ "roots": [
+  "CON-AUTH-001",
+  "DR-IAM-001",
+  "DR-IAM-002",
+  "FR-IAM-005",
+  "IR-APP-008",
+  "IR-AUTH-003",
+  "IR-ENGINE-003",
+  "IR-HTTP-010",
+  "REL-IAM-004",
+  "REL-TOKEN-001",
+  "SEC-APIKEY-003",
+  "SEC-AUTH-002",
+  "SEC-FLOW-007"
+ ],
+ "scope_distribution": {
+  "APIKEY": 39,
+  "AUTH": 31,
+  "ENGINE": 5,
+  "IAM": 35,
+  "APP": 4,
+  "FLOW": 29,
+  "HTTP": 3,
+  "TOKEN": 18,
+  "SVL": 1
+ },
+ "sample_shortest_cycles": [
+  [
+   "FR-AUTH-004",
+   "FR-IAM-006",
+   "FR-AUTH-004"
+  ],
+  [
+   "FR-FLOW-006",
+   "SEC-APIKEY-008",
+   "FR-FLOW-006"
+  ],
+  [
+   "IR-TOKEN-001",
+   "SEC-FLOW-004",
+   "IR-TOKEN-001"
+  ],
+  [
+   "SEC-AUTH-001",
+   "SEC-TOKEN-004",
+   "SEC-AUTH-001"
+  ],
+  [
+   "FR-APIKEY-004",
+   "SEC-IAM-007",
+   "SEC-APIKEY-008",
+   "FR-APIKEY-004"
+  ],
+  [
+   "FR-IAM-003",
+   "SEC-FLOW-013",
+   "SEC-FLOW-011",
+   "FR-IAM-003"
+  ],
+  [
+   "FR-IAM-014",
+   "SEC-IAM-007",
+   "SEC-APIKEY-008",
+   "FR-IAM-014"
+  ],
+  [
+   "IR-APIKEY-002",
+   "SEC-APIKEY-010",
+   "REL-APIKEY-003",
+   "IR-APIKEY-002"
+  ],
+  [
+   "IR-TOKEN-001",
+   "SEC-APIKEY-001",
+   "SEC-FLOW-004",
+   "IR-TOKEN-001"
+  ],
+  [
+   "FR-FLOW-002",
+   "SEC-FLOW-009",
+   "SEC-AUTH-008",
+   "SEC-AUTH-003",
+   "FR-FLOW-002"
+  ],
+  [
+   "IR-TOKEN-001",
+   "SEC-APIKEY-004",
+   "SEC-APIKEY-001",
+   "SEC-FLOW-004",
+   "IR-TOKEN-001"
+  ],
+  [
+   "REL-APIKEY-003",
+   "SEC-FLOW-014",
+   "SEC-FLOW-003",
+   "SEC-APIKEY-004",
+   "REL-APIKEY-004",
+   "REL-APIKEY-003"
+  ],
+  [
+   "FR-FLOW-002",
+   "SEC-FLOW-009",
+   "SEC-AUTH-008",
+   "SEC-AUTH-003",
+   "FR-TOKEN-004",
+   "FR-FLOW-004",
+   "FR-FLOW-002"
+  ],
+  [
+   "FR-FLOW-003",
+   "SEC-FLOW-010",
+   "SEC-FLOW-003",
+   "SEC-APIKEY-004",
+   "REL-APIKEY-004",
+   "REL-APIKEY-003",
+   "FR-FLOW-003"
+  ],
+  [
+   "OPS-APIKEY-001",
+   "SEC-APIKEY-009",
+   "SEC-APIKEY-007",
+   "SEC-APIKEY-004",
+   "REL-APIKEY-004",
+   "REL-APIKEY-003",
+   "OPS-APIKEY-001"
+  ],
+  [
+   "CON-APIKEY-001",
+   "FR-APIKEY-001",
+   "IR-APIKEY-002",
+   "SEC-APIKEY-010",
+   "REL-APIKEY-003",
+   "FR-FLOW-003",
+   "IR-FLOW-001",
+   "CON-APIKEY-001"
+  ],
+  [
+   "FR-APIKEY-003",
+   "SEC-APIKEY-010",
+   "REL-APIKEY-003",
+   "FR-IAM-014",
+   "SEC-IAM-007",
+   "SEC-APIKEY-008",
+   "FR-APIKEY-004",
+   "FR-APIKEY-003"
+  ],
+  [
+   "FR-AUTH-009",
+   "SEC-AUTH-008",
+   "SEC-AUTH-003",
+   "SEC-FLOW-003",
+   "IR-TOKEN-001",
+   "FR-TOKEN-003",
+   "REL-IAM-001",
+   "FR-AUTH-009"
+  ],
+  [
+   "FR-FLOW-001",
+   "SEC-APIKEY-004",
+   "REL-APIKEY-004",
+   "REL-APIKEY-003",
+   "FR-IAM-014",
+   "SEC-IAM-007",
+   "SEC-APIKEY-008",
+   "FR-FLOW-001"
+  ],
+  [
+   "FR-FLOW-002",
+   "FR-TOKEN-001",
+   "SEC-TOKEN-005",
+   "SEC-TOKEN-004",
+   "SEC-AUTH-001",
+   "SEC-AUTH-008",
+   "SEC-AUTH-003",
+   "FR-FLOW-002"
+  ],
+  [
+   "FR-FLOW-005",
+   "SEC-APIKEY-004",
+   "REL-APIKEY-004",
+   "REL-APIKEY-003",
+   "FR-IAM-014",
+   "SEC-IAM-007",
+   "SEC-APIKEY-008",
+   "FR-FLOW-005"
+  ],
+  [
+   "DR-APIKEY-001",
+   "SEC-AUTH-008",
+   "SEC-AUTH-003",
+   "SEC-FLOW-003",
+   "SEC-APIKEY-004",
+   "REL-APIKEY-004",
+   "REL-APIKEY-003",
+   "IR-APIKEY-004",
+   "DR-APIKEY-001"
+  ],
+  [
+   "FR-APIKEY-003",
+   "SEC-APIKEY-010",
+   "REL-APIKEY-003",
+   "FR-IAM-014",
+   "SEC-IAM-007",
+   "SEC-APIKEY-008",
+   "FR-FLOW-006",
+   "IR-FLOW-002",
+   "FR-APIKEY-003"
+  ],
+  [
+   "FR-AUTH-009",
+   "SEC-AUTH-008",
+   "SEC-AUTH-003",
+   "FR-FLOW-002",
+   "FR-TOKEN-001",
+   "SEC-TOKEN-005",
+   "SEC-IAM-003",
+   "REL-IAM-001",
+   "FR-AUTH-009"
+  ],
+  [
+   "FR-AUTH-009",
+   "SEC-AUTH-008",
+   "SEC-AUTH-003",
+   "SEC-FLOW-003",
+   "IR-TOKEN-001",
+   "FR-TOKEN-003",
+   "PERF-TOKEN-002",
+   "REL-IAM-001",
+   "FR-AUTH-009"
+  ],
+  [
+   "FR-FLOW-002",
+   "FR-TOKEN-001",
+   "SEC-TOKEN-005",
+   "SEC-TOKEN-003",
+   "SEC-TOKEN-004",
+   "SEC-AUTH-001",
+   "SEC-AUTH-008",
+   "SEC-AUTH-003",
+   "FR-FLOW-002"
+  ],
+  [
+   "FR-FLOW-003",
+   "IR-AUTH-005",
+   "SEC-FLOW-006",
+   "SEC-FLOW-004",
+   "IR-TOKEN-001",
+   "SEC-APIKEY-004",
+   "REL-APIKEY-004",
+   "REL-APIKEY-003",
+   "FR-FLOW-003"
+  ],
+  [
+   "FR-FLOW-004",
+   "SEC-FLOW-012",
+   "SEC-FLOW-013",
+   "SEC-TOKEN-004",
+   "SEC-AUTH-001",
+   "SEC-AUTH-008",
+   "SEC-AUTH-003",
+   "FR-TOKEN-004",
+   "FR-FLOW-004"
+  ],
+  [
+   "FR-IAM-014",
+   "IR-IAM-005",
+   "SEC-IAM-005",
+   "SEC-APIKEY-009",
+   "SEC-APIKEY-007",
+   "SEC-APIKEY-004",
+   "REL-APIKEY-004",
+   "REL-APIKEY-003",
+   "FR-IAM-014"
+  ],
+  [
+   "FR-AUTH-009",
+   "SEC-AUTH-008",
+   "SEC-AUTH-003",
+   "FR-FLOW-002",
+   "FR-TOKEN-001",
+   "SEC-TOKEN-005",
+   "SEC-IAM-003",
+   "REL-IAM-002",
+   "REL-IAM-001",
+   "FR-AUTH-009"
+  ]
+ ],
+ "shortest_cycle_length_histogram": {
+  "2": 4,
+  "3": 5,
+  "4": 2,
+  "5": 1,
+  "6": 3,
+  "7": 6,
+  "8": 8,
+  "9": 6,
+  "10": 2,
+  "11": 2,
+  "12": 3,
+  "13": 1,
+  "14": 1
+ }
+}

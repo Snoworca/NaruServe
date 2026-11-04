@@ -69,7 +69,7 @@ public class ServletRequestTest {
         assertEquals("1,2|1|abc|s=abc; t=%20x|127.0.0.1|false", r.text());
     }
 
-    // SDS-AC-3; FR-SVL-002 AC-3 — trustProxy acts in the core over the container's values
+    // SDS-AC-3; FR-SVL-002 AC-3; CON-ENGINE-001 AC-1 — trustProxy acts in the core over the container's values
     @Test
     public void sdsAc3_FR_SVL_002_AC3_trustProxyTakesEffectInTheCore() throws Exception {
         SharedApp.onJetty(container, "/*", app -> {

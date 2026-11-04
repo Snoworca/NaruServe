@@ -13,7 +13,7 @@ The built-in multipart reader replaces typical multer usage. Configure app-wide 
 | limits.fileSize | app.multipart(c -> c.maxFileSize(...)) |
 | dest: uploads | tempDirectory for temporary storage, then file.save for persistence |
 
-The common HTTP behavior below targets NaruServe 0.10.0.
+The common HTTP behavior below targets NaruServe 0.11.0.
 
 ## Example
 

@@ -60,7 +60,7 @@ public class DefaultRestAppTest {
         DefaultRestApp app = new DefaultRestApp();
         app.get("/x", h);
         app.route("/x").get(h);
-        List<DefaultRestApp.Registration> regs = app.registrations();
+        List<DefaultRestApp.Registration> regs = app.routeRegistrations();
         assertEquals(2, regs.size());
         assertRegistration(regs.get(0), MethodSet.of(Method.GET), "/x", h, RouteKind.HTTP);
         assertRegistration(regs.get(1), MethodSet.of(Method.GET), "/x", h, RouteKind.HTTP);
@@ -89,7 +89,7 @@ public class DefaultRestAppTest {
         assertSame(app, same);
         RouteBuilder b = app.route("/u/:id");
         assertSame(b, b.get(h).post(h).put(h).patch(h).delete(h).head(h).options(h));
-        List<DefaultRestApp.Registration> regs = app.registrations();
+        List<DefaultRestApp.Registration> regs = app.routeRegistrations();
         Method[] expected = {Method.GET, Method.POST, Method.PUT, Method.PATCH, Method.DELETE, Method.HEAD,
             Method.OPTIONS, Method.PATCH};
         for (int i = 0; i < expected.length; i++) {
@@ -132,7 +132,7 @@ public class DefaultRestAppTest {
         } catch (RoutingConfigException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("/b/:"));
         }
-        assertEquals(0, app.registrations().size());
+        assertEquals(0, app.routeRegistrations().size());
     }
 
     // SDS-AC-12; FR-HTTP-008 AC-4
@@ -142,7 +142,7 @@ public class DefaultRestAppTest {
         DefaultRestApp app = new DefaultRestApp();
         app.webSocketRoute("/x", h);
         app.webSocketRoute("/x", h);
-        assertEquals(2, app.registrations().size());
+        assertEquals(2, app.routeRegistrations().size());
         try {
             app.freeze();
             fail("duplicate accepted");
@@ -163,7 +163,7 @@ public class DefaultRestAppTest {
             // still unfrozen
         }
         app.post("/y", h);
-        assertEquals(3, app.registrations().size());
+        assertEquals(3, app.routeRegistrations().size());
     }
 
     // SDS-AC-12; FR-HTTP-008 AC-4
@@ -225,17 +225,17 @@ public class DefaultRestAppTest {
             () -> early.delete(h), () -> early.head(h), () -> early.options(h),
             () -> app.route("/late").get(h));
         for (Runnable registration : live) registration.run();
-        assertEquals(1 + live.size(), app.registrations().size());
+        assertEquals(1 + live.size(), app.routeRegistrations().size());
         for (String verb : new String[]{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}) {
             assertEquals(verb, 200, send(app, verb, "/a").status());
             assertEquals(verb, 200, send(app, verb, "/b").status());
         }
-        int before = app.registrations().size();
+        int before = app.routeRegistrations().size();
         for (Runnable guarded : Arrays.<Runnable>asList(() -> app.routerPolicy(RouterPolicy.strict()), () -> app.webSocketRoute("/ws", h))) {
             try { guarded.run(); fail("configuration/WS accepted after freeze"); }
             catch (IllegalStateException expected) { }
         }
-        assertEquals(before, app.registrations().size());
+        assertEquals(before, app.routeRegistrations().size());
     }
 
     // SDS-AC-13; FR-HTTP-008 AC-7
@@ -243,7 +243,7 @@ public class DefaultRestAppTest {
     public void sdsAc13_FR_HTTP_008_AC7_webSocketHookRecordsAWebSocketRegistration() {
         DefaultRestApp app = new DefaultRestApp();
         assertSame(app, app.webSocketRoute("/ws", h));
-        assertRegistration(app.registrations().get(0), MethodSet.of(Method.GET), "/ws", h, RouteKind.WEBSOCKET);
+        assertRegistration(app.routeRegistrations().get(0), MethodSet.of(Method.GET), "/ws", h, RouteKind.WEBSOCKET);
         app.freeze();
         ClientResponse r = send(app, "GET", "/ws");
         assertEquals(426, r.status());
@@ -348,7 +348,7 @@ public class DefaultRestAppTest {
             try { calls.get(i).run(); fail(names[i] + " accepted after freeze"); }
             catch (IllegalStateException e) { assertTrue(e.getMessage(), e.getMessage().contains(names[i])); }
         }
-        assertEquals(2, app.registrations().size());
+        assertEquals(2, app.routeRegistrations().size());
     }
 
     // SDS-AC-6 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-7-2.sds.md; IR-WS-001 AC-6
@@ -405,7 +405,7 @@ public class DefaultRestAppTest {
         DefaultRestApp app = new DefaultRestApp();
         com.snoworca.naruserve.WebSocketHandler wh = (req, ws) -> { };
         assertSame(app, app.ws("/a/:id", wh));
-        DefaultRestApp.Registration r = app.registrations().get(0);
+        DefaultRestApp.Registration r = app.routeRegistrations().get(0);
         assertEquals(MethodSet.of(Method.GET), r.methods);
         assertEquals("/a/:id", r.pattern);
         assertEquals(RouteKind.WEBSOCKET, r.kind);

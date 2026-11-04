@@ -1,0 +1,48 @@
+{
+ "pass": "prickly-review",
+ "iter": 1,
+ "req_set": "0.11.0-w12 (20 reqs)",
+ "severity": {
+  "CRITICAL": 0,
+  "HIGH": 1,
+  "MEDIUM": 4,
+  "LOW": 9
+ },
+ "findings": [
+  {
+   "sev": "HIGH",
+   "what": "CON_AUTH_001_AC5_jarSizeIsRecorded red until the completed-work record exists",
+   "action": "record written through MCP add_completed_work before the final build"
+  },
+  {
+   "sev": "MEDIUM",
+   "what": "FileLoginThrottle stored raw login names and IPs with no retention",
+   "action": "keys hashed (SHA-256 base64url); 24 h purge in cleanupRun; docs"
+  },
+  {
+   "sev": "MEDIUM",
+   "what": "snapshot could exceed 64 MB; device trust uncapped",
+   "action": "fixed-size hashed keys, 256 MB limit; InMemoryDeviceTrust cap with one WARN"
+  },
+  {
+   "sev": "MEDIUM",
+   "what": "dirty flag set before mutation (lost update)",
+   "action": "dirty set in finally after the mutation"
+  },
+  {
+   "sev": "MEDIUM",
+   "what": "CON-AUTH-007 AC-3 test overclaims",
+   "action": "comment reworded as per-run anchor; build-run evidence recorded"
+  },
+  {
+   "sev": "LOW",
+   "what": "no disk I/O wording; snapshot messages; test timing; duplicate TTL branch; comment claim",
+   "action": "fixed"
+  },
+  {
+   "sev": "LOW",
+   "what": "shared store keeps first builder clock/logger; duplicate doctor FAILs per directory; invalidation write failure WARN; duplication between file stores",
+   "action": "deferred to the final review loop"
+  }
+ ]
+}

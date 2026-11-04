@@ -1,0 +1,143 @@
+{
+ "part": "round3",
+ "verdicts": [
+  {
+   "id": "N3-01",
+   "verdict": "drop",
+   "evidence": {
+    "command": "temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/Tmp501R4Test.java (deleted after the run); ./gradlew :NaruServe-api:test --offline --tests '*Tmp501R4Test*' -i | grep TMP501 (test registryIsWeakAndIdentity: a ForwardingUserStore subclass whose equals/hashCode dereference a field set after super(); two value-equal decorators over different stores; 100k garbage decorators then System.gc(); 8 threads x 20000 record+delegateOf); plus ./gradlew :NaruServe-api:test --offline --rerun --tests '*AtomicFilesTest*' --tests '*FileSecretsTest*' --tests '*AuthFileKeyKotlinTest*' and the JUnit XML headers",
+    "output": "TMP501 identity keep->true other->true\nTMP501 registry before=2 after100kGarbage=1 keepStill=true\nTMP501 concurrent wrong=0\nFileSecretsTest tests=21 skipped=0 failures=0 errors=0 (incl. FR_IAM_015_AC3_valueEqualityDecoratorsAreHeldToTheKeyRule: TenantUsers/StrictTenantUsers constructible, PROD refused without key)\nAuthFileKeyKotlinTest tests=3 skipped=0 failures=0 errors=0 (incl. 'FR-IAM-015 AC-3 data class decorator is held to the key rule')",
+    "intent_output": "decorator constructible (no NPE), FileUserStore inside a value-equality / Kotlin data class decorator found -> PROD AuthConfigException; registry does not leak"
+   },
+   "drop_reason": "already resolved: UserStoreDelegates now keys by an identity WeakReference Key (System.identityHashCode, ==) and never calls the decorator's hashCode/equals; the Java value-equality and strict decorators and the Kotlin data class are constructible and PROD without a key is refused; value-equal decorators keep distinct delegates; cleared keys are expunged (registry shrank to 1 after 100k garbage decorators); no wrong lookup under 8-thread concurrency",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/UserStoreDelegates.java",
+    "line_range": "21-81"
+   },
+   "title": "ForwardingUserStore constructor ran the half-built decorator's hashCode (WeakHashMap) -> NPE or stale bucket, PROD built without key",
+   "is_behavioral": true,
+   "tags": [
+    "auth",
+    "FR-IAM-015",
+    "previous-finding"
+   ]
+  },
+  {
+   "id": "N3-02",
+   "verdict": "drop",
+   "evidence": {
+    "command": "temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/Tmp501R4Test.java (deleted after the run); ./gradlew :NaruServe-api:test --offline --tests '*Tmp501R4Test*' -i | grep TMP501 (test caseRace: 400 fresh dirs, FileUserStore over dir/users.json and dir/USERS.json, both create() at a CyclicBarrier, reopen dir/users.json); plus the new AtomicFilesTest lockForFoldsTheCaseOfAFileThatDoesNotExistYet / racingFirstCreatesThroughCaseSpellingsLoseNothing (not skipped on this APFS volume)",
+    "output": "TMP501 N3-02 case lost=0 unreadable=0 zeroSuccess=0\nAtomicFilesTest tests=12 skipped=0 failures=0 errors=0",
+    "intent_output": "0 lost creates and 0 unreadable files for case spellings of a not-yet-existing file"
+   },
+   "drop_reason": "already resolved: lockKey uses canonical parent + name for a missing file and case-folds the key (Locale.ROOT), so users.json / USERS.json share one monitor before and after the first create; the 400-round race that gave 287 lost / 103 unreadable now gives 0 / 0",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "79-116"
+   },
+   "title": "Canonical-path lock key not stable for a not-yet-existing file on a case-insensitive file system",
+   "is_behavioral": true,
+   "tags": [
+    "auth",
+    "REL-IAM-004",
+    "previous-finding"
+   ]
+  },
+  {
+   "id": "N4-01",
+   "verdict": "keep",
+   "evidence": {
+    "command": "temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/Tmp501R4Test.java (deleted after the run); ./gradlew :NaruServe-api:test --offline --tests '*Tmp501R4Test*' -i | grep TMP501 (test unicodeNormalization: dir/caf\\u00e9.json in NFC and NFD, AtomicFiles.lockFor on both before and after creating the NFC file; test unicodeRace: same 400-round barrier race as N3-02 with FileUserStore over the NFC and the NFD spelling of a fresh dir, reopen the NFC spelling) on the default APFS volume (case- and normalization-insensitive)",
+    "output": "TMP501 NFC/NFD sameLockBefore=false\nTMP501 NFC/NFD nfdExistsAfterNfcCreate=true sameLockAfter=true\nTMP501 NFC/NFD race lost=249 unreadable=131 zeroSuccess=0",
+    "intent_output": "AtomicFiles Javadoc ('writes to one path ... are serialized within the process ... since two writers would share the temp file') and the new lockKey Javadoc ('a file that does not exist yet has no resolved spelling of its own' -> key must be the same for every spelling naming that one file whether or not it exists yet); docs/api/auth.md:747 (another writer's change is refused, the file stays readable): expected 0 lost / 0 unreadable as for the case spellings. Observed: the new missing-file key (canonical parent + raw name, case-folded) is not normalization-folded, so on APFS two spellings of one not-yet-existing file get two monitors while sharing one .tmp file; once the file exists getCanonicalPath folds them (sameLockAfter=true), so the key also changes across the first create."
+   },
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "101-116"
+   },
+   "title": "lockKey of a not-yet-existing file folds case but not Unicode normalization: NFC and NFD spellings of one APFS file lock separately, racing first creates are lost and the file is left unreadable",
+   "is_behavioral": true,
+   "tags": [
+    "auth",
+    "REL-IAM-004",
+    "race",
+    "data-loss",
+    "macos",
+    "incomplete-fix-of-N3-02"
+   ],
+   "suggested_fix": "In lockKey, normalize the key before case folding, e.g. key = java.text.Normalizer.normalize(key, Normalizer.Form.NFC).toLowerCase(Locale.ROOT) (java.text.Normalizer is API 9, Java 6), so the missing-file key equals the canonical key of the existing file; add an AtomicFilesTest asserting lockFor(NFC) == lockFor(NFD) for a missing file and the NFC/NFD barrier race with 0 lost / 0 unreadable."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import java.util.Locale;",
+    "* one writer at a time: writes to one path (by its canonical path, case-folded) are serialized within the process",
+    "String key = lockKey(file);",
+    "private static String lockKey(File file) {"
+   ],
+   "findings": [
+    "N3-02",
+    "N4-01"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/UserStoreDelegates.java",
+   "hunks_total": 8,
+   "anchors": [
+    "import java.lang.ref.ReferenceQueue;",
+    "import java.util.HashMap;",
+    "import java.util.WeakHashMap;",
+    "* class, would throw or be filed under a hash that changes once its fields are set). Internal: not part of the API",
+    "private static final Map<Key, WeakReference<Object>> DELEGATES = new HashMap<>();",
+    "/** Records that {@code decorator} forwards to {@code delegate}; calls no method of either. */",
+    "DELEGATES.put(new Key(decorator, CLEARED), new WeakReference<>(delegate));",
+    "private static void expunge() {"
+   ],
+   "findings": [
+    "N3-01"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/FileSecretsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "FR_IAM_015_AC3_valueEqualityDecoratorsAreHeldToTheKeyRule"
+   ],
+   "findings": [
+    "N3-01"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "lockForFoldsTheCaseOfAFileThatDoesNotExistYet"
+   ],
+   "findings": [
+    "N3-02",
+    "N4-01"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFileKeyKotlinTest.kt",
+   "hunks_total": 4,
+   "anchors": [
+    "import com.snoworca.naruserve.utils.auth.user.ForwardingUserStore",
+    "import org.junit.Assert.fail",
+    "data class N301TenantStore(val tenant: String, val inner: UserStore) : ForwardingUserStore(inner)",
+    "assertEquals(N301TenantStore(\"acme\", decorated.inner), decorated)"
+   ],
+   "findings": [
+    "N3-01"
+   ]
+  }
+ ],
+ "summary": {
+  "keep": 1,
+  "drop": 2,
+  "residual": 0
+ }
+}

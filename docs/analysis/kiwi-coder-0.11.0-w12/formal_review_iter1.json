@@ -1,0 +1,7 @@
+{
+ "pass": "formal-check",
+ "mock_regex": "none (hand-written Spy/Flaky/Gate/Recording fakes)",
+ "build": "PASS",
+ "coverage": "check_test_sufficiency: only FR-AUTH-008 AC-5 and IR-AUTH-003 AC-4 uncited (SRS wording)",
+ "caller_check": "FileLoginThrottle/FileDeviceTrust used by Auth defaults; loginFailureLimits public builder API; JdbcLoginThrottle.purgeExpired(long,long) public, called by Auth.cleanupRun"
+}

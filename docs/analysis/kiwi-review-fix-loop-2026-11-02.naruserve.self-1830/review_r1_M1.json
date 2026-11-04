@@ -1,0 +1,457 @@
+{
+ "chunk": "M1",
+ "round": 1,
+ "findings": [
+  {
+   "id": "M1-F01",
+   "axis": "P1",
+   "severity": "MEDIUM",
+   "title": "app.shutdown(...) is not refused inside a registration watcher (only ServerHandle.shutdown is)",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "line_range": "626-628, 729-735"
+   },
+   "description": "RegistrationListener's Javadoc says a watcher must not shut down the app (IllegalStateException), and the SEC-APP-002 trace note says requireNotWatching guards shutdown. In fact only the anonymous ServerHandle.shutdown (line 627, also mis-indented) calls RegistrationLog.requireNotWatching(); RestApp.shutdown(long, TimeUnit) at line 729 has no guard, and none of its other entry points do either. Scenario 1 (NEW): a watcher calls app.shutdown(0, SECONDS) while it decides on app.get(\"/w\", h). terminateIfNew moves the app to TERMINATED and closes the logger, the watcher returns normally, and the registration is then applied and recorded on a terminated app with no exception. Scenario 2 (RUNNING, registering thread is not a request thread): beginStop runs the stop sequence on this thread, which waits for in-flight requests while it holds the app monitor and the JVM-wide RegistrationLog.LOCK. Any in-flight request that registers (an app route, or a route on a Router mounted anywhere) blocks on LOCK, so the stop waits for the full timeout. The earlier w01 prickly HIGH (watcher could listen/freeze/shutdown) was fixed for only one of the two shutdown entry points.",
+   "suggested_fix": "Call RegistrationLog.requireNotWatching() first in DefaultRestApp.shutdown(long, TimeUnit), so the handle path is covered through delegation, and drop the duplicate in the handle. Add a test beside SEC_APP_002_AC5_watcherCannotListenOrFreezeMidRegistration that calls t.app().shutdown(...) from a watcher and expects ISE and state NEW.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "regression"
+   ]
+  },
+  {
+   "id": "M1-F02",
+   "axis": "P3",
+   "severity": "MEDIUM",
+   "title": "User watcher code runs under the JVM-global RegistrationLog.LOCK (and the app monitor), so registrations serialize across all apps and can deadlock",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationLog.java",
+    "line_range": "29-31, 129-138, 218-267"
+   },
+   "description": "LOCK is a static Object shared by every app and Router in the JVM. admit() and admitRouterLocked() call every RegistrationListener.onRegistration while holding it, and the app monitor too. A watcher is arbitrary user code (auth's protectOnly watcher, logging, I/O), and the lock serializes every registration of every app in the process behind it, including post-listen route/use/mount registrations. Concrete deadlock: thread T1 registers on app A, so its watcher runs holding A's monitor and LOCK. The watcher calls any synchronized config method of another app B, for example b.onRegistration(...), b.trustProxyHops(..) or b.ws(..), even one that would only throw ISE, and blocks taking B's monitor. Meanwhile T2 registers on a Router mounted in B: admitRouter takes B's monitor (holding()) and then waits for LOCK. Neither thread can continue, and there is no timeout. A watcher that waits for a Future doing a registration on another thread deadlocks the same way. The Javadoc forbids only registering from the watcher thread itself.",
+   "suggested_fix": "Use a per-app lock instead of the static LOCK, or at least do not hold LOCK while calling watchers: snapshot listeners, validate, and call watchers under the app monitor only, then take LOCK for apply+record (re-checking the Router's mounts as admitRouter already does). Document in RegistrationListener that the watcher must not block or touch another app.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "performance"
+   ]
+  },
+  {
+   "id": "M1-F03",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "Monitor ordering by System.identityHashCode has no tie-break, so a hash collision gives a lock-order inversion",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationLog.java",
+    "line_range": "184-208, 218-238"
+   },
+   "description": "owners() sorts the mounting apps by identityHashCode only. Collections.sort is stable, so apps with equal hash codes keep the order of router.mounts. Router R1 mounted in A then B and Router R2 mounted in B then A, with identityHashCode(A)==identityHashCode(B) (rare but possible, since identity hashes are not unique), give T1 (R1 registration) locking A then B and T2 (R2 registration) locking B then A: a classic deadlock with no timeout.",
+   "suggested_fix": "Give each RegistrationLog a unique long sequence number (static AtomicLong) and sort owners by it, or use it as the tie-break.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "M1-F04",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "A shared Router keeps strong references to every app it was ever mounted in",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationLog.java",
+    "line_range": "110-122, 184-192"
+   },
+   "description": "record() adds a Mount(log, record) to router.mounts for each ROUTER_MOUNT. A Mount pins the app's RegistrationLog, its owner (the DefaultRestApp) and all its records. Mounts are pruned only lazily in owners(), which runs only when a later registration is made through that Router, and only for TERMINATED apps. A static or shared Router mounted into many short-lived apps (per-test apps, hot-reload or per-tenant app factories, apps that fail before listen and are never shut down, which stay NEW forever) therefore retains every such app indefinitely once the Router stops receiving registrations.",
+   "suggested_fix": "Prune terminated mounts on app termination (AppLifecycle callback removing its Mounts under LOCK), or hold the log through a WeakReference in Mount.",
+   "is_behavioral": true,
+   "tags": [
+    "performance"
+   ]
+  },
+  {
+   "id": "M1-F05",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Dispatcher/DefaultRequest still carry the legacy trustProxy boolean that is immediately overwritten by proxyTrust(..)",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "line_range": "59-61, 161-164, 209-214, 224-225, 275-278"
+   },
+   "description": "Dispatcher keeps `private final boolean trustProxy` and passes it into every DefaultRequest constructor, then calls req.proxyTrust(proxyTrust) right after. DefaultRestApp.freeze (lines 1186-1190) passes proxyTrust.legacyFlag() to the constructor and then calls dispatcher.proxyTrust(proxyTrust) on a field that was just constructed. That makes two sources of truth, plus a volatile post-construction setter on a hot per-request object. A future construction site that forgets proxyTrust(..) silently falls back to legacy/none and drops hop/CIDR mode. Carried open item from w01 prickly review.",
+   "suggested_fix": "Pass ProxyTrustSetting through the Dispatcher and DefaultRequest constructors (final field) and delete the boolean parameter and the setters.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M1-F06",
+   "axis": "P5",
+   "severity": "LOW",
+   "title": "HttpRoutes.terminal now instantiates a public class from the internal package",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/TerminalMiddleware.java",
+    "line_range": "15-25"
+   },
+   "description": "The public default method HttpRoutes.terminal (HttpRoutes.java:51) returns `new com.snoworca.naruserve.internal.TerminalMiddleware(callback)`, so TerminalMiddleware and its public constructor become part of the published NaruServe-api jar surface that user code can reference. Its package-private `handler` field is read by RegistrationLog.routeTarget for record targets. Carried open item from the w01 prickly review (same pattern as AsyncMiddleware).",
+   "suggested_fix": "Keep the class but make the constructor reachable only through a package-private factory, or move the record-target unwrapping behind an internal interface that the default method's lambda implements.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M1-F07",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "AdminEndpoints is ~1,300 lines with one class handling users, groups, keys, guards and JSON",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AdminEndpoints.java",
+    "line_range": "1-1303"
+   },
+   "description": "Deferred L16 (w06): the class has grown to 1,303 lines. It mixes the scope guards, A1-A6 users with the multi-step A4 PATCH state machine, G1-G8 groups with the R31 enumeration, key endpoints and the JSON/body helpers. That makes the security-relevant paths (keyBodyFirst, checkPatch recheck, protectAffected) hard to review in isolation.",
+   "suggested_fix": "Split into UserAdminEndpoints, GroupAdminEndpoints and KeyAdminEndpoints with a shared EndpointSupport for guards and body/JSON helpers.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M1-F08",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Duplicated helpers between AccountEndpoints and AdminEndpoints",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AccountEndpoints.java",
+    "line_range": "122-208"
+   },
+   "description": "Deferred (w08): continueLater (AccountEndpoints 175-182 vs AdminEndpoints 327-334), checkNewPassword vs newPassword (161-173 vs 1164-1176), body(req) (122-128 vs 1230-1240, the Admin one also honours BODY_ERROR), string(..) helpers and the hash-slot submit + wipe + continueLater pattern (hashThen vs the inline blocks in createUser/patchUser) are copied. A fix to one copy, for example wiping or the BODY_ERROR replay, does not reach the other.",
+   "suggested_fix": "Move the helpers into one package-private EndpointSupport used by both classes.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M1-F09",
+   "axis": "P1",
+   "severity": "LOW",
+   "title": "API key lastUsedAt is recorded at verification, before the endpoint/middleware may refuse the key",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/ApiKeyCredentials.java",
+    "line_range": "171-174"
+   },
+   "description": "Deferred (w08): verify() calls auth.apiKeyUsage().used(k.getId()) as soon as the key verifies. The middleware then refuses key credentials on some paths, for example 403 api_key_not_allowed on /auth/me/apikeys, /auth/password or an anonymous-entry endpoint. Such a refused request still bumps the key's lastUsedAt, so the admin key list reports the key as used even though no request with it succeeded. That misleads stale-key cleanup decisions.",
+   "suggested_fix": "Return the key id in the Credential and record usage only once the middleware has accepted the principal for the route (or after the response status is < 400).",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M1-F10",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "Two user-store reads per ver++ and a stale-deletion entry dropped on executor rejection",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/ApiKeyOwners.java",
+    "line_range": "165-186, 207-222, 384-388"
+   },
+   "description": "Deferred (w10): bump() reads the owner in bumpInLock (findById at 210, or 199 on the busy path) and again in afterBump (171), plus keys.listByOwner. That makes two user-store reads for every logout?all, password change, disable or recovery. On RejectedExecutionException, scheduleStale removes staleVers[ownerId] and only WARNs. The stale keys then stay until a request presents one of them, and afterBump's 'next request schedules it again' covers only keys that are used.",
+   "suggested_fix": "Pass the ver re-read in bumpInLock to afterBump (ver+1 after a true write) instead of re-reading. On rejection, leave the work to the R42 cleanup run, for example by adding the owner to a retry set that cleanupRun drains.",
+   "is_behavioral": true,
+   "tags": [
+    "performance",
+    "deferred"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpRoutes.java",
+   "hunks_total": 1,
+   "anchors": [
+    "return new com.snoworca.naruserve.internal.TerminalMiddleware(callback);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Registration.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* object read with getters, so Kotlin reads it with property syntax ({@code r.kind}, {@code r.path})."
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RegistrationKind.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* {@code methodAsync} and each method of a {@code route(path)} builder, its {@code use(mw)} included. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RegistrationListener.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* Watches registrations: {@link RestApp#onRegistration(RegistrationListener)} calls it on the registering thread for"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* setting instead. The default throws {@link UnsupportedOperationException} so request fakes still compile."
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+   "hunks_total": 3,
+   "anchors": [
+    "* {@link #trustProxyCidrs(String...)}, which count from the right. The last of {@code trustProxy},",
+    "// @req CON-ENGINE-001",
+    "* {@link IllegalArgumentException} naming any other value; no name is resolved. An empty array trusts nothing."
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+   "hunks_total": 9,
+   "anchors": [
+    "/** The app's proxy trust setting; the Dispatcher sets it before any middleware runs. */",
+    "this.proxyTrust = ProxyTrustSetting.legacy(trustProxy);",
+    "/** The id the dispatcher gave this request, for automatic error bodies; empty until set. */",
+    "/** The adapter's peer address, whatever the proxy trust setting and the forwarding headers say. */",
+    "* The adapter's value, or the client address the proxy trust setting resolves from X-Forwarded-For (legacy: the",
+    "// @req SEC-ENGINE-002",
+    "return ProxyTrust.remoteAddress(trustProxy ? header(\"X-Forwarded-For\") : null, ex.remoteAddress());",
+    "// @req SEC-ENGINE-003",
+    ": t.isSecure(ex.remoteAddress(), ex.isSecure(), headers(\"X-Forwarded-For\"), headers(\"X-Forwarded-Proto\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "hunks_total": 33,
+   "anchors": [
+    "import com.snoworca.naruserve.RegistrationListener;",
+    "// @req IR-ENGINE-003",
+    "// Written only in NEW; the Dispatcher reads it once at freeze. The last trust call replaces it.",
+    "webSocketRoute(path, new WebSocketRoute(handler), handler);",
+    "HttpRouter.Layer layer=http.prepareUse(\"\",(request,response,next)->{",
+    "// FR-APP-025 AC-2: one STATIC record, not the MIDDLEWARE its inner use(\"\") would be.",
+    "// @req CON-ENGINE-001",
+    "public synchronized RestApp onRegistration(RegistrationListener listener) {",
+    "/** The registration list and watchers, for same-package tests (the trace seam). */",
+    "// SEC-APP-002: a watcher deciding on a NEW-only registration must not start the app under it.",
+    "RegistrationLog.requireNotWatching();",
+    "// FR-APP-025 AC-2: one CORS record, not the MIDDLEWARE of the use(mw) it amounts to.",
+    "() -> admit(RegistrationKind.GROUP, null, com.snoworca.naruserve.common.RoutePaths.join(\"/\", prefix),",
+    "admit(RegistrationKind.MIDDLEWARE, null, \"\", RegistrationLog.target(mw), () -> {",
+    "admit(RegistrationKind.MIDDLEWARE, null, prefix, RegistrationLog.target(mw), () -> {",
+    "registrations.add(new Registration(methods,path,route.isEmpty()?h:new MiddlewarePipeline.RouteChain(route,h),RouteKind.HTTP));",
+    "admit(RegistrationKind.MIDDLEWARE,null,path,RegistrationLog.target(callback),()->http.apply(layer));",
+    "// The mount and every record already in the Router reach the watchers before the mount is live.",
+    "@Override public synchronized RestApp use(Object path,com.snoworca.naruserve.ErrorMiddleware callback) {",
+    "lifecycle.requireHttpRegistration(\"param\");http.param(name,callback);return this;",
+    "HttpRouter.Layer layer=http.prepareError(\"\",(error,request,response,next)->{",
+    "// FR-APP-025 AC-6: the target is the handler itself, not the error middleware wrapped around it.",
+    "return new DefaultRouteBuilder(path,http.route(path,builderHook(path)));",
+    "lifecycle.requireHttpRegistration(\"route\"); return new DefaultRouteBuilder(null,http.route(path));",
+    "/** FR-APP-025 AC-1: each builder method is one ROUTE record, watched before its handlers are appended. */",
+    "record(\"webSocketRoute\", MethodSet.of(Method.GET), path, Collections.<Middleware>emptyList(), h,",
+    "private void record(String name, MethodSet methods, String path, List<Middleware> route, RouteHandler h,",
+    "admit(RegistrationKind.WEBSOCKET, null, path, target, () -> registrations.add(new Registration(",
+    "requireNotWatching",
+    "accessLog, context, jsonCodec(), jsonLimit(), proxyTrust.legacyFlag(),",
+    "dispatcher.proxyTrust(proxyTrust);",
+    "/** Snapshot of the recorded route and WebSocket registrations the router is built from, for tests. */",
+    "synchronized List<Registration> routeRegistrations() {"
+   ],
+   "findings": [
+    "M1-F01"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRouteGroup.java",
+   "hunks_total": 2,
+   "anchors": [
+    "* replayed, so the app records its GROUP before them (a throwing configurer reaches neither).",
+    "configured.run();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRouter.java",
+   "hunks_total": 12,
+   "anchors": [
+    "import java.util.ArrayList;",
+    "* Public mounted Router and RestApp share the same registry and execution implementation. Each registration is",
+    "// @req SEC-APP-002",
+    "/** This Router's own registrations in order. Guarded by RegistrationLog.LOCK. */",
+    "static DefaultRouter unwrapRouter(com.snoworca.naruserve.Router router) {",
+    "new RegistrationLog.Entry(RegistrationKind.ROUTE,method,path,RegistrationLog.routeTarget(callbacks),null),apply));",
+    "@Override public RouteBuilder route(Object path) { return registry.route(path); }",
+    "RegistrationLog.admitRouter(this,new RegistrationLog.Entry(RegistrationKind.ROUTE,HttpRouter.method(token),path,",
+    "RegistrationLog.admitRouter(this,new RegistrationLog.Entry(RegistrationKind.MIDDLEWARE,null,path,",
+    "RegistrationLog.admitRouter(this,new RegistrationLog.Entry(RegistrationKind.ROUTER_MOUNT,null,path,child,mounted),",
+    "RegistrationLog.admitRouter(this,new RegistrationLog.Entry(RegistrationKind.ERROR_MIDDLEWARE,null,path,callback,null),",
+    "RegistrationLog.admitRouter(this,new RegistrationLog.Entry(RegistrationKind.PARAM,null,\"\",callback,null),"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "hunks_total": 5,
+   "anchors": [
+    "/** The app's proxy trust setting; legacy from the constructor's boolean until DefaultRestApp.freeze sets it. */",
+    "this.proxyTrust = ProxyTrustSetting.legacy(trustProxy);",
+    "/** Replaces the proxy trust setting both request-construction sites pass; DefaultRestApp.freeze calls it. */",
+    "req.requestId(rid);req.startNanos(start);req.proxyTrust(proxyTrust);",
+    "req.proxyTrust(proxyTrust);"
+   ],
+   "findings": [
+    "M1-F05"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpRouter.java",
+   "hunks_total": 15,
+   "anchors": [
+    "Objects.requireNonNull(name,\"name\");Objects.requireNonNull(callback,\"callback\");",
+    "// registration watcher runs between validation and apply(Layer), and apply can no longer fail for an input.",
+    "append(new Layer(path(path,false,false),callback));",
+    "public void mount(Object path,HttpRouter child) { apply(prepareMount(path,child)); }",
+    "append(new Layer(path(path,false,false),null,null,child));",
+    "/** A builder whose method registrations pass through {@code hook}, which must run the apply it receives. */",
+    "return new Builder(route,Objects.requireNonNull(hook,\"hook\"));",
+    "public void method(String token,Object path,Middleware... callbacks) { apply(prepareMethod(token,path,callbacks)); }",
+    "route.append(method,checked); append(new Layer(route.path,route,null));",
+    "void methods(MethodSet methods,Object path,Middleware[] callbacks) { apply(prepareMethods(methods,path,callbacks)); }",
+    "append(new Layer(route.path,route,null));",
+    "public void use(Object path,Middleware middleware) { apply(prepareUse(path,middleware)); }",
+    "static void checkParam(String name,ParamHandler callback) {",
+    "/** Runs the apply of one builder method registration; the app and Router hooks watch and record around it. */",
+    "String method=HttpRouter.method(token);Middleware[] checked=HttpRouter.callbacks(callbacks);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ProxyTrustSetting.java",
+   "hunks_total": 1,
+   "anchors": [
+    "static final ProxyTrustSetting LEGACY = new ProxyTrustSetting(Mode.LEGACY, 0, Collections.<String>emptyList(),"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationLog.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** The app whose monitor guards its registrations; Router registrations take it before {@link #LOCK}. */"
+   ],
+   "findings": [
+    "M1-F02",
+    "M1-F03",
+    "M1-F04"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationRecord.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* level). The path is the mount path joined with {@code source} when both are strings; a middleware kind is"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/TerminalMiddleware.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* the handler so a registration record names the handler the caller passed, not this adapter."
+   ],
+   "findings": [
+    "M1-F06"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/SystemTimeSource.java",
+   "hunks_total": 1,
+   "anchors": [
+    "static final SystemTimeSource INSTANCE = new SystemTimeSource();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/TimeSource.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* {@code long} (or {@code Long}) read from the configured source; {@code java.time} is API 26+ and not used."
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AccessRule.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* Kotlin: {@code auth.check { p, req -> p.hasScope(\"posts:write\") || p.id == req.param(\"id\") }}."
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AccountEndpoints.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* when none was. Every 204 in COOKIE and BOTH clears the auth cookies. A store error is 503."
+   ],
+   "findings": [
+    "M1-F08"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AdminEndpoints.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* for the key's own owner is 403 {@code api_key_not_allowed} whatever its scopes. A body that cannot be read as a"
+   ],
+   "findings": [
+    "M1-F07"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/ApiKeyCredentials.java",
+   "hunks_total": 1,
+   "anchors": [
+    "boolean secretOk = ConstantTime.equals(presented.getBytes(StandardCharsets.US_ASCII),"
+   ],
+   "findings": [
+    "M1-F09"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/ApiKeyOwners.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* ver is re-read from the store and {@code deleteById} runs only when the key's ownerVer is still above it."
+   ],
+   "findings": [
+    "M1-F10"
+   ]
+  }
+ ],
+ "summary": {
+  "total": 10,
+  "by_severity": {
+   "MEDIUM": 2,
+   "LOW": 8
+  }
+ }
+}

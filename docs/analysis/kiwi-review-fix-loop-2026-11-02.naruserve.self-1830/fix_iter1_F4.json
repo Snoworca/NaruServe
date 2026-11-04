@@ -1,0 +1,96 @@
+{
+ "run": "F4",
+ "fixes": [
+  {
+   "finding_id": "M3-F04",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/PasswordChanges.java",
+     "line_range": "1-47 (selfService, call, locked, requireSession, conflict, the instance field and constructor removed; private constructor; Javadoc rewritten; beforeUpdate/afterUpdate kept unchanged)"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "296 (passwordChanges field removed), ~2939 (package-private passwordChanges() accessor removed)"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/TokenServiceTest.java",
+     "line_range": "11-46 (imports, class Javadoc), 84-124 (apps list, @After stopApps, serve(), changePassword(), accessToken()), 410-419 (FR_TOKEN_001_AC5), 495-509 (REL_IAM_002_AC3_AC5), 512-553 (REL_IAM_002_AC4_AC6)"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8AccountTest.java",
+     "line_range": "11 (unused HttpException import removed), 513-536 (refusals takes the target's token and posts POST /auth/password), 570-577"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8RevocationTest.java",
+     "line_range": "54-59"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "This is a test-evidence finding, not a behaviour change: the endpoint already works, so moved tests pass on the current code. To show the moved tests now guard the production path, I broke the endpoint's single retry for a while (AccountEndpoints.changePasswordHeld retry: `if (a == null || Boolean.TRUE) throw conflict()`). TokenServiceTest.REL_IAM_002_AC3_AC5_retryAfterRehash then failed with 'AssertionError: {\"error\":{\"code\":\"write_conflict\",...}} expected:<200> but was:<409>' (17 tests, 1 failed). I restored the file afterwards (cmp against the backup is identical). Before this change, the same mutation could not fail any test, because the tests called PasswordChanges.selfService.",
+   "rationale_full": "Confirmed: PasswordChanges.selfService had no production caller. POST /auth/password (AccountEndpoints.changePassword/changePasswordHeld) runs its own sequence and only reuses beforeUpdate/afterUpdate, yet the REL-IAM-002 / FR-TOKEN-001 AC-5 / FR-TOKEN-004 / SEC-IAM-003 AC-1 tests drove selfService. Every call site now goes through the real HTTP endpoint, and every assertion is kept. (1) TokenServiceTest gets a serve(auth) helper that installs auth on a listening RestApp over InMemoryHttpAdapter with AdminFixture.MiniJsonCodec and auth.errors(); the apps are shut down in @After. FR_TOKEN_001_AC5 posts with the first login's Bearer token and checks the returned accessToken's fam differs (from both earlier families, one added check) and ver == 1. REL_IAM_002_AC3_AC5 keeps the RacingRehash store and asserts a 200 pair, changeCalls == 2, ver + 1 and the new hash. REL_IAM_002_AC4_AC6 asserts 409 write_conflict with no tokens in the body, one store write and no refresh record saved. The disabled/bumped-session part now checks both the stale-ver token (401) and a token at the current ver after setEnabled(false) (401), still with calls == 1. (2) Wave8AccountTest.refusals logs the target in before the hash/verify counting window, posts POST /auth/password with each refused password, asserts the stored hash is unchanged and records 'password <status>'; the expected string 'password 422' is unchanged. The 'password IAE' alternative branch is gone because the endpoint answers over HTTP. (3) Wave8RevocationTest SEC_IAM_003_AC1 logs b in and posts POST /auth/password (asserts 200), then keeps the ver + 1 assertion. Then selfService and its private helpers (call, locked, requireSession, conflict, StoreCall) were deleted, along with the now-unreferenced package-private Auth.passwordChanges() accessor and field. PasswordChanges became a static-only holder of beforeUpdate/afterUpdate with a private constructor. No public API change. With selfService gone, there is also no unthrottled second implementation that could later be wired to a route."
+  },
+  {
+   "finding_id": "T1-F01",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/StartApiTest.java",
+     "line_range": "73-75 (comment), 81-96 (main scan calls scan()), 117-172 (new negative control FR_DX_012_AC1_reflectiveGetenvInCoreIsCaught, ReflectiveCoreEnvFixture, scan(), contains()), 196-201 and 239/283 (classify returns the class name)"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test-only finding: the main code has no Core getenv, so the restored check is green. To show the check can fail, I made scan()'s 0.10.0 substring branch dead for a while ('&& Boolean.FALSE'). StartApiTest.FR_DX_012_AC1_reflectiveGetenvInCoreIsCaught then failed with 'java.lang.AssertionError: [] expected:<1> but was:<0>' (11 tests, 1 failed); the file was restored afterwards. The same control asserts that the method-level classify() alone misses the reflective fixture, which documents the gap the review found.",
+   "rationale_full": "Confirmed against HEAD: the 0.10.0 FR-DX-012 AC-1 check flagged any main class whose bytes contained 'getenv', and the 0.11 classify() narrowed this for Core classes too. A new scan(bytes, hits, readers) runs classify() and, for any class outside com/snoworca/naruserve/utils/auth/, also restores the 0.10.0 byte-substring check: 'getenv' anywhere in the class file is a hit. To avoid a double count, the substring hit is added only when classify() found nothing for that class. utils.auth keeps the method-level classify() with ENV_READERS. ENV_READERS is unchanged at exactly the four allowed methods (AuthMode#fromEnv, KeySources#fromEnv, Auth$Builder#recoveryFromEnv, AuthFileKey#fromEnv). The jar and directory main scans now call scan(). The new negative control FR_DX_012_AC1_reflectiveGetenvInCoreIsCaught uses a Core fixture that reads System.class.getMethod(\"getenv\", String.class).invoke(...). classify() reports 0 hits for it and scan() reports 1, with no allowed reader collected. The direct-call CoreEnvFixture is exactly one hit containing '#read', and the utils/auth EnvFixture is still one method-level hit. The existing controls are unchanged, including 'StartApiTest names getenv only as a string' through classify(). FR_DX_012_AC1_noMainClassOfTheApiCallsGetenv passes with the restored check (no Core main class holds the bytes 'getenv')."
+  },
+  {
+   "finding_id": "T1-F02",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminFixture.java",
+     "line_range": "317-346 (stop(), static stopAll(List))"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminEndpointsTest.java",
+     "line_range": "17-29 (imports), 38-51 (fixtures list, fixture(), @After stopFixtures); 39 'new AdminFixture()' -> fixture()"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave6ComponentsTest.java",
+     "line_range": "imports, 36-49; 10 'new AdminFixture()' -> fixture()"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave6ReviewFixesTest.java",
+     "line_range": "25-28 (imports), 37-50; 8 'new AdminFixture()' -> fixture()"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/WebSocketWrapperTest.java",
+     "line_range": "8-18 (imports), 23-36; 9 'new AdminFixture()' -> fixture()"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave5ComponentsTest.java",
+     "line_range": "30-33 (imports), 40-57 (apps list, app(adapter), @After stopApps); 2 TestApp.create(adapter) -> app(adapter)"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave11ClosureTest.java",
+     "line_range": "896-909 (SEC_AUTH_002_AC3 TestApp in try/finally with shutdown)"
+    },
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletProxyTrustTest.java",
+     "line_range": "90-102 (inMemory() TestApp shut down in finally)"
+    }
+   ],
+   "red_test": null,
+   "why_no_red": "Test hygiene (resource teardown), with no behaviour to make red. Every assertion is unchanged; the change only adds teardown. Evidence: the six affected api classes pass (AdminEndpointsTest 45, Wave11ClosureTest 18, Wave5ComponentsTest 6, Wave6ComponentsTest 14, Wave6ReviewFixesTest 11, WebSocketWrapperTest 8), and their suite times stay sub-second apart from Wave11ClosureTest at 3.35 s, so the 5 s shutdowns do not stall. Auth.install registers app.onStop (Auth.java:587), which stops the naru-auth-cleanup scheduler and pools, so shutting the app down releases them.",
+   "rationale_full": "Confirmed: AdminFixture had no stop(), and AdminEndpointsTest, Wave6ComponentsTest, Wave6ReviewFixesTest and WebSocketWrapperTest had no @After, so each started app leaked its adapter pool, naru-auth-cleanup scheduler and hash/background pools into the shared test JVM. Wave5ComponentsTest (3 TestApps), Wave11ClosureTest.SEC_AUTH_002_AC3 (1 TestApp) and ServletProxyTrustTest.inMemory (6 per run) likewise. Added AdminFixture.stop(), which calls app.shutdown(5, SECONDS) and is a no-op before start; shutdown is idempotent once the app has terminated. Added AdminFixture.stopAll(list), which tries every fixture, throws the first failure with the rest suppressed, and clears the list. Each of the four AdminFixture classes tracks its fixtures per test instance through a private fixture() factory (no static registry, so nothing crosses test classes) and stops them in @After. Wave5ComponentsTest tracks its TestApps the same way. Wave11ClosureTest.SEC_AUTH_002_AC3 and ServletProxyTrustTest.inMemory shut their TestApp down in a finally block; the bodies are collected before the shutdown. No sleeps were added. Other classes the review listed (ProtectOnlyTest, AuthErrorLayerTest, Kotlin tests and others) were left out to keep the batch to the classifier's named file set. Wave10AccountTest already stops its W8 in @After (the classifier noted the review misread that)."
+  }
+ ],
+ "public_api_changes": [],
+ "docs_changed": [],
+ "build": {
+  "tests": 3347,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+ }
+}

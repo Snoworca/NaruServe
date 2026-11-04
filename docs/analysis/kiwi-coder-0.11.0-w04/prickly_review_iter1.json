@@ -1,0 +1,219 @@
+{
+  "pass": "prickly",
+  "iter": 1,
+  "findings": [
+    {
+      "id": "P-1",
+      "severity": "HIGH",
+      "axis": "1 intent vs ACs / 6 error handling",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+      "symbol_or_line_hint": "Builder.keySet(...) + KeySources.of(String) / JwtKeys.Builder.put (key.length == 0)",
+      "problem": "An empty secret (Auth.builder(\"\"), or System.getenv(\"JWT_SECRET\") set but empty, as with `JWT_SECRET=` in docker) is not treated as missing or short. KeySources.of(\"\") keeps a 0-byte key, JwtKeys.of() throws IllegalArgumentException(\"key <kid> is empty\"), and keySet() turns that into \"the secret failed to provide a signing key (IllegalArgumentException)\". So in PROD the message has neither the byte count nor \"openssl rand -base64 32\" (SEC-AUTH-001 AC-2, SEC-TOKEN-004 AC-3). In DEV build() throws instead of giving a WARN plus a temporary key (SEC-AUTH-001 AC-5/AC-8). An empty key file from fromFile (for example after a crash between createNewFile and write) fails the same unhelpful way on every start.",
+      "suggestion": "Treat a 0-byte key as 'not set' in KeySources.of (as fromEnv already does), or check SecretRules.weakness(raw) before JwtKeys.of in keySet so a short or empty key gets the normal finding (PROD violation with HOW_TO, DEV WARN or temp key). Add tests for \"\" in PROD and DEV and for an empty key file."
+    },
+    {
+      "id": "P-2",
+      "severity": "MEDIUM",
+      "axis": "2 security",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeySources.java",
+      "symbol_or_line_hint": "FileKey.create(): createNewFile() then setReadable/setWritable",
+      "problem": "createNewFile() makes the file with umask permissions (usually 0644). Another local user can open a read handle in the window before the chmod and read the 32-byte signing key later through that handle, because permissions are checked only at open(). The comment \"owner-only before any byte of the key is written\" is true but does not close this race. The return values of setReadable/setWritable are ignored, so a filesystem that cannot chmod leaves the key world-readable without any warning. Also, a crash between createNewFile and write leaves a permanent empty file (see P-1).",
+      "suggestion": "Make a private temp directory (mkdir, then setReadable/setWritable owner-only, and check the results), write the key to a file inside it, then renameTo the target (losing a race to another process means read theirs). Fail or WARN when a chmod returns false. Treat an existing empty file as a clear error that names the file."
+    },
+    {
+      "id": "P-3",
+      "severity": "MEDIUM",
+      "axis": "1 intent vs ACs / 8 comment claims",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Passwords.java",
+      "symbol_or_line_hint": "Passwords.hasher()/verify(); PasswordHasher class Javadoc; docs/api/(en/)auth.md Password hashing row 1 and the 'bcrypt and PBKDF2 share them' sentence",
+      "problem": "Auth uses exactly one PasswordHasher, and accepts() only decides 'real or dummy'. If an app configures .passwordHasher(PasswordHashers.bcrypt()), every PBKDF2 hash fails, and new hashes become bcrypt while needsRehash() is always true. If it keeps the default, every legacy $2 hash fails. So the shipped bcrypt 'legacy verifier' cannot migrate accounts unless the app writes its own chain, which is exactly what SEC_TOKEN_008_AC6 has to build in the test. Yet the PasswordHasher Javadoc says \"auth picks the hasher by that\" and the docs say \"auth picks the hasher with accepts\" and \"bcrypt and PBKDF2 share them\".",
+      "suggestion": "Either ship the selection: Passwords holds the default PBKDF2 plus extra legacy verifiers (for example .passwordHasher(...) adds verifiers, hash() always uses PBKDF2, verify() picks by accepts()). Or correct the Javadoc and docs to say the app must give a delegating hasher, and document how to write one."
+    },
+    {
+      "id": "P-4",
+      "severity": "MEDIUM",
+      "axis": "2 security / 8 docs",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+      "symbol_or_line_hint": "Builder.build() hashCost check; HashCost.fixed(int); docs AuthMode table 'hash-cost failures become WARNs | doctor FAIL'",
+      "problem": "In PROD, HashCost.fixed(n) takes any n from 1 to 10,000,000 with no FAIL or WARN, so fixed(1) or fixed(1000) silently stores near-plaintext-strength hashes in production. The docs' AuthMode tables say DEV turns hash-cost failures into WARN and PROD makes them a doctor FAIL, but no hash-cost FAIL exists. The only hash-cost check (a calibrate target outside 250..500 ms) is refused in DEV too, which contradicts the 'DEV relaxes' table.",
+      "suggestion": "Add a PROD finding for fixed(n) below HashCost.MIN_ITERATIONS (a FAIL, or a doctor WARN in DEV), or remove 'hash-cost failures' from the DEV/PROD tables and say that calibrate targets are refused in both modes."
+    },
+    {
+      "id": "P-5",
+      "severity": "MEDIUM",
+      "axis": "3 edge cases / 6 error handling",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/InMemoryLoginThrottle.java",
+      "symbol_or_line_hint": "retryAfter(String,int,long) -> blockedFor(): all[all.length - max]",
+      "problem": "recordFailure rejects max < 1 or windowMillis < 1, but retryAfter does not. retryAfter(k, 0, w) on any known key ends in ArrayIndexOutOfBoundsException (all[len - 0]), and a negative max does too. Once IR-APIKEY-001 passes .apiKeyFailureLimit values through, a bad limit would make every request on that key fail with 503 instead of failing at configuration time.",
+      "suggestion": "Validate max and windowMillis in retryAfter the same way as recordFailure (or in one shared check), and add a test for max = 0."
+    },
+    {
+      "id": "P-6",
+      "severity": "MEDIUM",
+      "axis": "1 intent vs ACs / 8 comment claims",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/InMemoryLoginThrottle.java",
+      "symbol_or_line_hint": "LinkedHashMap(..., true) field comment 'the first key is the one that failed longest ago'; class Javadoc; docs LoginThrottle table",
+      "problem": "The map is in access order, so every retryAfter() (which runs on each login attempt, before recordFailure) moves the key to the end. Eviction therefore drops the key read longest ago, not the one that 'failed longest ago' as the field comment, the class Javadoc and docs/api/(en/)auth.md say (REL-FLOW-001: 'evicting the oldest key'). Each retryAfter also leaves keys whose queue is now empty in the map.",
+      "suggestion": "Use insertion order and re-put the key only in recordFailure (remove + put), so the order is 'last failure'. Or reword every claim to 'least recently used'. Drop keys whose deque becomes empty after trim."
+    },
+    {
+      "id": "P-7",
+      "severity": "MEDIUM",
+      "axis": "4 concurrency / 1 intent (IR-AUTH-002 AC-5)",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+      "symbol_or_line_hint": "errorLayerCheck(): errorLayerDirty.compareAndSet(true,false) before the once-a-minute gate",
+      "problem": "The dirty flag is cleared even when the WARN is suppressed by the once-a-minute limit. A mistake made less than 60 s after the previous WARN is therefore never reported unless some other registration happens later. The test only passes because it adds '/again3'. Also, the flag is cleared before registrations() is read, so a registration that arrives concurrently (on another thread, or with the callback firing before the record is visible) can be consumed without being checked.",
+      "suggestion": "Clear the flag only after a check that either WARNed or found no problem (when rate-limited, set it back to dirty), and test: a mistake within the minute, no new registration, a request after 60 s -> WARN."
+    },
+    {
+      "id": "P-8",
+      "severity": "MEDIUM",
+      "axis": "3 edge cases / 1 intent (SEC-TOKEN-002 AC-5, AC-6)",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/MiniJson.java",
+      "symbol_or_line_hint": "write(StringBuilder, Object, int depth): depth > 64; no string/total limit",
+      "problem": "The writer allows depth 64 and strings and documents of any size, while the FILE reader refuses depth 9, strings over 64 KB and documents over the configured total. An auth file store can therefore write a file (for example a deep or large attribute value) that its own reader refuses on the next start, which is a REL-IAM-004 FAIL that stops startup. A silent write followed by a failed start is the worst order for this to happen.",
+      "suggestion": "Give write(...) a Limits argument (FILE for files) and check depth, string bytes and total bytes while writing, so the store throws at write time. Add a test that writing a depth-9 FILE document throws."
+    },
+    {
+      "id": "P-9",
+      "severity": "MEDIUM",
+      "axis": "8 docs claim",
+      "file": "docs/api/en/auth.md (and docs/api/auth.md)",
+      "symbol_or_line_hint": "Errors section: 'The input-validation 400 and the non-JSON-body 415 are raised as Core HttpException'; Credential reading section: 'Decided: ... right after the secure-transport and multiple-credential checks'",
+      "problem": "Auth.jsonBodyOk() writes the 415 directly with respond(...) and never raises an HttpException, so app onError handlers never see it, and a custom AuthResponses shapes it instead. For protected auth endpoints (POST /auth/password, the admin POSTs) the 415 check runs only after credential resolution and the user-store load, not 'right after the multiple-credential check'. An unauthenticated form POST there gets 401, not 415.",
+      "suggestion": "Change the docs to match the code (the auth middleware answers 415 itself, after authentication on protected auth endpoints), or move the check before credentials.resolve for every credential endpoint and raise it the way the docs say."
+    },
+    {
+      "id": "P-10",
+      "severity": "MEDIUM",
+      "axis": "7 test quality",
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/CredentialTransportTest.java",
+      "symbol_or_line_hint": "SEC_FLOW_004_AC6_IR_AUTH_003_AC5_twoAuthorizationHeaders: public GET /health",
+      "problem": "SEC-FLOW-004 AC-6 requires 'anonymous 200' on .permit(\"/health\"), but the /health handler in app() always sends \"health\". The test checks the 200 and never checks that no principal was attached, so an implementation that attached Alice's principal from the first header would still pass. (SEC_AUTH_005_AC3 does check this, but with publicApp and only in HEADER mode.)",
+      "suggestion": "Use publicApp(...) (whose handler answers \"anon\" or the id) for the public half and assert \"anon\" for every TokenTransport mode."
+    },
+    {
+      "id": "P-11",
+      "severity": "MEDIUM",
+      "axis": "7 test quality",
+      "file": "src/test/java/com/snoworca/naruserve/build/CrossModuleAuthGateTest.java",
+      "symbol_or_line_hint": "cited(ac, dir): regex over any .java/.kt text",
+      "problem": "The CON-AUTH-007 AC-1 gate passes when the AC string appears anywhere in a test source tree: in a comment, a Javadoc, an @Ignore'd test, or a helper file. It does not show that a test exercising the owner AC exists or runs ('so this build runs it' is not established). CON_IAM_001_AC5_apiHasNoKotlinStdlibDependency also depends on exact whitespace in build.gradle (\"':NaruServe-api'      : [:],\").",
+      "suggestion": "Require the citation to sit next to an @Test method (for example the comment line directly above `@Test`, or the method name holding the AC token) and reject @Ignore. For AC-5, look at the resolved runtimeClasspath (or match with a whitespace-tolerant regex) instead of a literal spacing."
+    },
+    {
+      "id": "P-12",
+      "severity": "MEDIUM",
+      "axis": "7 test quality",
+      "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave4KotlinTest.kt",
+      "symbol_or_line_hint": "`CON-IAM-001 AC-1 AuthUser properties` (val name: String = user.username ...)",
+      "problem": "Assigning a platform type (String!) to `val name: String` compiles without a warning, so this test cannot detect the platform types that CON-IAM-001 AC-1 is about. It only catches a member that is explicitly @Nullable. The actual guarantee comes from the AC-4 reflection check.",
+      "suggestion": "Keep the Kotlin test, but say in the comment that AC-1 is verified together with CON_IAM_001_AC4 (@NullMarked reflection on AuthUser). Or add a compile-time probe that fails on a platform type, for example passing the value to a function that takes String? and checking with -Werror that no 'unnecessary safe call' or nullability warning appears."
+    },
+    {
+      "id": "P-13",
+      "severity": "LOW",
+      "axis": "7 test quality",
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthArchitectureTest.java",
+      "symbol_or_line_hint": "SEC_TOKEN_007_AC3_SEC_TOKEN_008_AC7_hashersCompareInConstantTime",
+      "problem": "The test only checks that the class file references ConstantTime. A hasher that imports ConstantTime but compares with Arrays.equals or MessageDigest.isEqual would still pass.",
+      "suggestion": "Also assert that neither hasher class references java/util/Arrays.equals or java/security/MessageDigest.isEqual (look for the method refs in the constant pool)."
+    },
+    {
+      "id": "P-14",
+      "severity": "LOW",
+      "axis": "5 refactoring / 1 intent (REL-IAM-003)",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+      "symbol_or_line_hint": "multiInstanceProblems() always adds a violation; doctor() 'atomic field writes' FAIL",
+      "problem": "build() refuses every MULTI_INSTANCE configuration, so the supportsAtomicFieldWrites doctor FAIL (REL-IAM-003 AC-1/AC-2) cannot run on any Auth that can be built. It is dead and untested code, yet the docs' doctor list names it as an active check.",
+      "suggestion": "Either test it through a package-private seam now (a builder hook that marks the token stores as shared), or mark it in the doctor docs as arriving with the shared stores."
+    },
+    {
+      "id": "P-15",
+      "severity": "LOW",
+      "axis": "2 security (DoS bounds)",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/Pbkdf2PasswordHasher.java",
+      "symbol_or_line_hint": "MAX_STORED_ITERATIONS = 10_000_000",
+      "problem": "A stored or imported hash may ask for 10M iterations, about 16 times the 600,000 calibration maximum and roughly 10-20 s of CPU per verify on a phone. Each login attempt against such an account holds a hash slot that long. Bcrypt is capped at about 1 s (cost 14) and logs an ERROR, but PBKDF2 has no cap at a similar level and no log.",
+      "suggestion": "Cap the stored count near 2 x HashCost.MAX_ITERATIONS (or make it configurable) and log one ERROR when a hash is refused, like bcrypt does."
+    },
+    {
+      "id": "P-16",
+      "severity": "LOW",
+      "axis": "2 security (timing) / 8 comment claims",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Passwords.java",
+      "symbol_or_line_hint": "verify(): real = accepts(hash); Pbkdf2PasswordHasher.verify returns false on parse failure without deriving",
+      "problem": "The class Javadoc says a missing user or a non-accepted hash 'still costs one verification against a dummy hash'. A stored string that is accepted but malformed (for example 'pbkdf2-sha256$x$y$z') returns false immediately with no derivation, so it is timed differently. The first miss also pays for the dummy hash creation plus a verify (two derivations).",
+      "suggestion": "When the hasher accepts the string but the parse fails, verify against dummy() instead, and create the dummy eagerly (during the doctor) so no request pays for it."
+    },
+    {
+      "id": "P-17",
+      "severity": "LOW",
+      "axis": "6 error handling",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+      "symbol_or_line_hint": "keySet(): v.add(origin + \" failed to provide a signing key (\" + e.getClass().getSimpleName() + \")\")",
+      "problem": "For fromFile and app KeySources the violation keeps only the exception class, and origin is the generic 'the key source'. The FileKey IOException messages (the file path, 'larger than 4096 bytes', 'shrank while it was read') hold no secret but are dropped, so the operator cannot tell which file or why.",
+      "suggestion": "Give FileKey an origin (\"key file <path>\") and add e.getMessage() for IOException and for the KeySources-owned exceptions. Keep only the class name for app KeySources, whose messages might contain a secret."
+    },
+    {
+      "id": "P-18",
+      "severity": "LOW",
+      "axis": "3 edge cases / 8 comment claims",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/MiniJson.java",
+      "symbol_or_line_hint": "number(): integral && text.length() <= 19; parse(byte[]) new String(utf8, UTF_8); \\uD800 accepted",
+      "problem": "The Javadoc says 'integers that fit as Long (exact)', but a negative 19-digit integer has 20 characters and becomes a lossy Double (for example -9223372036854775808). parse(byte[]) silently replaces malformed UTF-8 with U+FFFD instead of refusing it, and lone surrogates from \\uD800 are accepted and written back, then lost when the text is encoded to a file.",
+      "suggestion": "Use a digit-count limit (19 digits, sign excluded). Decode with a CharsetDecoder set to REPORT and turn its error into a JsonFormatException. Refuse unpaired surrogates in string()."
+    },
+    {
+      "id": "P-19",
+      "severity": "LOW",
+      "axis": "2 security (log flooding)",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/BcryptPasswordHasher.java",
+      "symbol_or_line_hint": "verify(): logger.error(...) on storedCost > maxCost",
+      "problem": "Every verify against an over-cost hash logs an ERROR, and an attacker can trigger it with each login attempt. AC-3 asks for one ERROR per refusal, but nothing limits the rate.",
+      "suggestion": "Rate-limit the ERROR (once per minute, or once per distinct stored hash), as Auth already does for other repeated errors."
+    },
+    {
+      "id": "P-20",
+      "severity": "LOW",
+      "axis": "1 intent (PERF-TOKEN-001 AC-3)",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Pbkdf2.java",
+      "symbol_or_line_hint": "nanosFor(): warm-up derive + timed derive",
+      "problem": "Under fixed(n), HashTiming.resolve calls Pbkdf2.nanosFor(n), which runs two full hashes at n iterations (warm-up plus timed). With fixed(600_000) on a slow device that costs about 2 x 0.5-1 s at start, while AC-3 and the docs speak of 'the single start-time timing of one hash'.",
+      "suggestion": "For a fixed cost, warm up with a short derivation (for example SAMPLE_ITERATIONS), then time one derivation at n."
+    },
+    {
+      "id": "P-21",
+      "severity": "LOW",
+      "axis": "3 edge cases",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+      "symbol_or_line_hint": "nullPasswordItems(): catch (Exception e) { return; }",
+      "problem": "If findByUsername(seed.name) throws while the '__naru_probe__' probe succeeded (a store that fails for some names, or a transient error), the code returns and skips every remaining null-password rule with no finding. Start then continues into seed(), which throws a raw store exception.",
+      "suggestion": "Add a FAIL ('could not check .user(\"x\")') instead of returning silently."
+    },
+    {
+      "id": "P-22",
+      "severity": "LOW",
+      "axis": "3 edge cases (IR-AUTH-002 AC-6)",
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+      "symbol_or_line_hint": "errorLayerMissing(): any ERROR_MIDDLEWARE whose target is errorsMiddleware",
+      "problem": "app.use(\"/api\", auth.errorMiddleware()) after the routes is counted as covering every route, including routes outside /api that still get the Core error page. The doctor and the request-time WARN then stay silent.",
+      "suggestion": "Count only a path-less (\"\" or \"/\") error layer, or check the layer's path against each route's path."
+    },
+    {
+      "id": "P-23",
+      "severity": "LOW",
+      "axis": "7 test quality (flaky timing)",
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthHashSettingsTest.java",
+      "symbol_or_line_hint": "SEC_TOKEN_008_AC6_bcryptAndPbkdf2ShareTheSlots: assertEquals(2, maxConcurrent(2)) with a 400 ms partner wait",
+      "problem": "The positive control needs both threads to be inside verify within 400 ms of each other. On a loaded CI machine (pool threads start lazily, and bcrypt cost 6 is fast), the overlap may not be seen and the test fails spuriously.",
+      "suggestion": "Use a CyclicBarrier or CountDownLatch inside the hasher to force the overlap when two slots allow it (with a timeout), instead of a time window."
+    }
+  ],
+  "summary": {
+    "CRITICAL": 0,
+    "HIGH": 1,
+    "MEDIUM": 11,
+    "LOW": 11
+  }
+}

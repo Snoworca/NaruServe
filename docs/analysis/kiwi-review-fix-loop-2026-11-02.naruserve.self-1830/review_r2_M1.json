@@ -1,0 +1,709 @@
+{
+ "chunk": "M1",
+ "round": 2,
+ "findings": [
+  {
+   "id": "M1-F01",
+   "axis": "P6",
+   "severity": "MEDIUM",
+   "title": "M2-F01 partially resolved: login/logout churn still grows the refresh file until the 8 MB limit, then every login and refresh answers 503",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java",
+    "line_range": "167-176, 248-261"
+   },
+   "description": "pruneUsed() caps only the USED records of the family being saved. Each password login starts a new family (one unused record, expiresAt = now + refreshTtl), and logout/revokeFamily only flips revoked=true, so those records stay in the file until purgeExpired() reaches their own expiresAt (14 days under BASELINE). Scenario: a kiosk, test rig or mobile app that logs in on every launch and logs out (or simply drops its refresh token) every 30 s produces ~40k records in 14 days; at ~225 B each the document passes MiniJson.DEFAULT_FILE_BYTES (8 MB), MiniJson.write throws in commit(), TokenService maps it to AuthUnavailableException and every login and refresh of every user answers 503 until records expire. Successful logins are not throttled, so one authenticated client can drive it on purpose. Each save also still rewrites and fsyncs the whole file on the request path (quadratic I/O), which the round-1 finding also named.",
+   "suggested_fix": "Drop a revoked record on revokeFamily (or at the next cleanup) once nothing needs it for reuse detection, and cap live families per user (e.g. drop the oldest family of a user beyond N, as other session stores do), or document the bound and fail with a clear doctor WARN before the limit.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "performance",
+    "regression"
+   ]
+  },
+  {
+   "id": "M1-F02",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "onStop: an interrupt during the new awaits skips stopCleanup, so the final throttle/device snapshot is lost and the cleanup executor is never shut down",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "588-603"
+   },
+   "description": "The M2-F07 fix moved stopCleanup() after hashSlots.awaitTermination(5 s) and background.awaitTermination(5 s). Both throw InterruptedException; the lambda propagates it, runShutdownSequence logs 'onStop callback failed' and moves on, so stopCleanup() never runs: the cleanup ScheduledThreadPoolExecutor keeps its thread (daemon, but alive until JVM exit in a host that restarts apps, e.g. Android service restart) and the final snapshotRun() is skipped, so failures since the last 60 s tick are lost at restart, which is what the fix was meant to prevent. Before the fix stopCleanup ran first and only its own await could be interrupted.",
+   "suggested_fix": "Wrap the two awaits in try/finally (or catch InterruptedException, restore the interrupt flag) so stopCleanup() always runs.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "regression"
+   ]
+  },
+  {
+   "id": "M1-F03",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "AtomicFiles.lockFor keys on the absolute, not canonical, path: two FileUserStores over one file spelled differently bypass the per-path lock",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "72-83"
+   },
+   "description": "The M5-F01 fix relies on synchronized(AtomicFiles.lockFor(file)) around refuseForeignChange()+write. lockFor uses file.getAbsoluteFile().getPath(), so new File(\"data/users.json\") and new File(new File(\"./data\"), \"users.json\") (or a symlinked data dir) get two different monitors. Two such instances writing at the same time both pass the CRC check before either renames, both open and truncate the one shared <name>.tmp sibling, and the renamed file can interleave both contents (next start FAIL) or the later write silently rolls back the other instance's ver bump / password hash, which is exactly the M5-F01 failure.",
+   "suggested_fix": "Key the lock on getCanonicalPath() (fall back to the absolute path on IOException).",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "M1-F04",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "M3-F08 partially resolved: FileGroupStore still loads its file through the unbounded overload",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "153-155"
+   },
+   "description": "load(File, Parser, Logger) still passes Long.MAX_VALUE, and FileGroupStore (group/FileGroupStore.java:39) uses it, so the 'huge naru-groups file' case named in the round-1 finding still reads the whole file into a ByteArrayOutputStream (initial buffer up to 64 MB, toByteArray doubling the peak) and the String copy in parse; on Android a corrupt or grown groups file is an OOM at start instead of the FAIL message. The user, refresh, throttle and device-trust stores were moved to the bounded overload.",
+   "suggested_fix": "Give FileGroupStore a size limit (e.g. MiniJson.DEFAULT_FILE_BYTES) through the bounded load overload, and drop or bound the unbounded overload.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "M1-F05",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "AtomicFiles restricts the temp file only after FileOutputStream created it with umask permissions",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "102-113, 140-146"
+   },
+   "description": "writeLocked() creates <name>.tmp with new FileOutputStream (umask, typically 0644) and only then calls ownerOnly(tmp). A local user watching the data directory (inotify IN_CREATE) can open the temp file in that window and keep the descriptor; the content written next (users file with plain password hashes in DEV/without a key, throttle and refresh snapshots) is then readable through it, and the later chmod does not revoke an open descriptor. KeySources.publish avoids exactly this with an owner-only staging directory, so the two file paths of auth differ in protection.",
+   "suggested_fix": "Write the temp file inside an owner-only staging directory (as KeySources.publish does), or create it restricted before opening it for content.",
+   "is_behavioral": true,
+   "tags": [
+    "security"
+   ]
+  },
+  {
+   "id": "M1-F06",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Key-file migration on Windows: a failed delete of the raw .bak fails the build after a successful migration and leaves the raw key, which createOnce later restores",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeySources.java",
+    "line_range": "254-263, 334-353"
+   },
+   "description": "replaceWith() moves the raw key to .<name>.bak, renames the enc(...) file in, then throws IOException if old.delete() fails. The migration succeeded, but signingKey() fails, so build() reports a key-source failure; the raw signing key stays on disk next to its encrypted form (defeating SEC-IAM-008 for that file). Later, if the operator deletes the key file to make a new key (read() itself advises 'delete it to make a new key'), createOnce() sees the stale .bak and restores the old raw key instead of generating one. POSIX rename replaces in one step, so this is Windows (or any FS where rename does not replace) only.",
+   "suggested_fix": "After a successful second rename, log a WARN and retry/ignore the backup delete instead of throwing; in createOnce only restore a .bak when no replacement completed (e.g. compare with a marker or accept only when the main file is absent because of a crash, and log what was restored).",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "security"
+   ]
+  },
+  {
+   "id": "M1-F07",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "GrantRule.scopesOf(String) is now dead in main code and still answers 'empty' for a missing or disabled actor",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/GrantRule.java",
+    "line_range": "67-75"
+   },
+   "description": "Every actor read moved to actorScopes(), which refuses a missing or disabled actor (the M3-F02 fix). The public scopesOf(String) stays, unused by main code, with the exact semantics that caused M3-F02 (empty set for a disabled actor, so writes on scope-less targets pass coverage). The next caller that picks it for an actor check reintroduces the bypass silently.",
+   "suggested_fix": "Remove scopesOf(String) or make it package-private for tests, so the only public actor read is actorScopes().",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "M1-F08",
+   "axis": "P5",
+   "severity": "LOW",
+   "title": "Shared file default stores keep the first Auth's ComponentLogger, so after that app stops they log to its closed logger",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "3770, 3927-3948"
+   },
+   "description": "FILE_THROTTLES / FILE_DEVICE_TRUSTS / FILE_REFRESH_STORES share one store per FileUserStore across every Auth built over it, and the store is built with the first build's ComponentLogger, which install() points at the first app's logger. A second Auth over the same FileUserStore (an app restarted in the same process, an Android service re-created with a singleton store) reuses the stores, so their WARNs (throttle and device-trust cap warnings, recovery warnings) still go to the first app's logger, which SafeLogger.flushAndClose closed at that app's shutdown, and are lost; the second app's logger never sees them. Before the M2-F04 fix they went to a ConsoleLogger.",
+   "suggested_fix": "Retarget the shared store's logger on each install (keep the ComponentLogger with the cached store and point it at the newest app), or pass the logger per call.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "M1-F09",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "PROD file-key policy and doctor count only see a bare FileUserStore; a decorated one writes plain hashes in PROD with no refusal and no WARN",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "3836-3850, 894-912"
+   },
+   "description": "unkeyedFileStores() and plainSecretItems() test users instanceof FileUserStore. An app that wraps the shipped store, e.g. .users(new CachingUserStore(new FileUserStore(file))) or a logging/metrics decorator, gets no PROD AuthConfigException, no DEV WARN and no doctor item, and the inner store writes every passwordHash plain (format version 1) in PROD, which FR-IAM-015 says PROD refuses. The file defaults (refresh/throttle/device trust) are skipped too, so the gap is silent.",
+   "suggested_fix": "Record unkeyed FileUserStore instances in FileStoreKeys and let the PROD check fail when any unkeyed FileUserStore was created in this process for the build (or expose a doctor WARN for an unknown store wrapping one), or document that the PROD check covers only the store passed directly.",
+   "is_behavioral": true,
+   "tags": [
+    "security"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RegistrationListener.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* {@link IllegalStateException}). There is no rollback call: when a Router mounted in several apps is vetoed by"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "hunks_total": 56,
+   "anchors": [
+    "public synchronized RestApp jsonCodec(JsonCodec codec) {",
+    "public synchronized RestApp jsonLimit(long bytes) {",
+    "this.multipartSettings = reconfigure(\"multipart\", configurer, multipartSettings::copy);",
+    "this.webSocketOptions = reconfigure(\"webSocket\", configurer, webSocketOptions::copy);",
+    "public synchronized RestApp sse(Configurer<SseOptions> configurer) {",
+    "public synchronized RestApp ws(String path, WebSocketHandler handler) {",
+    "public synchronized RestApp formLimit(long bytes) {",
+    "String p = prefix.length() > 1 && prefix.endsWith(\"/\") ? prefix.substring(0, prefix.length() - 1) : prefix;",
+    "if(!((Dispatcher)dispatcher()).serveStatic(mount,(DefaultRequest)request,(DefaultResponse)response))next.run();",
+    "return Collections.unmodifiableList(new ArrayList<>(staticMounts));",
+    "public synchronized RestApp defaultCache(@Nullable CachePolicy policy) {",
+    "this.logger = Objects.requireNonNull(logger, \"logger\");",
+    "public synchronized RestApp accessLog(Configurer<AccessLogOptions> configurer) {",
+    "return this;",
+    "public synchronized RestApp server(Configurer<ServerOptions> configurer) {",
+    "public synchronized RestApp trustProxy(boolean trust) {",
+    "public synchronized RestApp trustProxyHops(int hops) {",
+    "public synchronized RestApp trustProxyCidrs(String... cidrs) {",
+    "public synchronized RestApp onRegistration(RegistrationListener listener) {",
+    "* {@link IllegalStateException} before taking the monitor. A watcher deciding on a registration of this app (or of",
+    "public synchronized RestApp onStart(LifecycleCallback cb) {",
+    "public synchronized RestApp onStop(LifecycleCallback cb) {",
+    "RegistrationLog.requireNotWatching();",
+    "// SEC-APP-002: a watcher deciding on a registration must not stop the app under it (also ServerHandle.shutdown).",
+    "// FR-APP-025 AC-2: one CORS record, not the MIDDLEWARE of the use(mw) it amounts to.",
+    "// FR-APP-026 AC-2: GROUP once the configurer returned, before its routes replay as their own registrations.",
+    "admit(RegistrationKind.MIDDLEWARE, null, \"\", RegistrationLog.target(mw), () -> {",
+    "admit(RegistrationKind.MIDDLEWARE, null, prefix, RegistrationLog.target(mw), () -> {",
+    "private synchronized RestApp register(String name, MethodSet methods, String path, @Nullable Middleware mw,",
+    "registrations.add(new Registration(methods,path,route.isEmpty()?h:new MiddlewarePipeline.RouteChain(route,h),RouteKind.HTTP));",
+    "admit(RegistrationKind.MIDDLEWARE,null,path,RegistrationLog.target(callback),()->http.apply(layer));",
+    "RegistrationRecord mount=RegistrationRecord.of(RegistrationKind.ROUTER_MOUNT,null,path,child,null,mounted);",
+    "return",
+    "@Override public synchronized RestApp use(Object path,com.snoworca.naruserve.ErrorMiddleware callback) {",
+    "@Override public synchronized RestApp param(String name,com.snoworca.naruserve.ParamHandler callback) {",
+    "// FR-APP-025 AC-6: the target is the handler itself, not the error middleware wrapped around it.",
+    "return new DefaultRouteBuilder(path,http.route(path,builderHook(path)));",
+    "return new DefaultRouteBuilder(null,http.route(path,builderHook(path)));",
+    "refuseForeignWatcher();",
+    "admit(RegistrationKind.ROUTE,HttpRouter.method(token),path,RegistrationLog.routeTarget(callbacks),",
+    "public synchronized RestApp routerPolicy(RouterPolicy policy) {",
+    "http.configurePolicy(policy);",
+    "public synchronized DefaultRestApp webSocketRoute(String path, RouteHandler h) {",
+    "Router<RouteHandler> router = new Router<>(policy);",
+    "pipeline.addCommonPrefix(registration.prefix, registration.middleware);",
+    "WebSocketSender.IntSupplier port = () -> boundPort; // threads are made after bind, so they see the real port",
+    "SafeLogger safe = new SafeLogger(logger); // the logger is fixed from here: logger(...) needs an unfrozen app",
+    "throw new IllegalStateException(\"RestApp is not frozen; call freeze() first\");",
+    "return r;",
+    "synchronized SseRegistry sseRegistry() {",
+    "r",
+    "private synchronized Dispatcher frozenDispatcher() {",
+    "return d;",
+    "return Collections.unmodifiableList(new ArrayList<>(registrations));",
+    "refuseForeignWatcher",
+    "            refuseForeignWatcher();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationLog.java",
+   "hunks_total": 8,
+   "anchors": [
+    "private static final java.util.concurrent.atomic.AtomicLong SEQUENCE = new java.util.concurrent.atomic.AtomicLong();",
+    "/** Unique per log and increasing in creation order; {@link #owners} locks the mounting apps in this order. */",
+    "* Refuses a call into another app made by a watcher: the watcher holds {@link #LOCK}, so waiting for that app's",
+    "/** The distinct live apps that mount {@code router}, in identity-hash order; drops terminated ones. Under LOCK. */",
+    "if (!logs.contains(m.log)) {",
+    "Collections.sort(logs, new java.util.Comparator<RegistrationLog>() {",
+    "return Integer.compare(System.identityHashCode(a), System.identityHashCode(b));",
+    "List<Object> out = new ArrayList<>(logs.size());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AdminEndpoints.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Set<String> actorScopes = rule.actorScopes(req, actorId, top, action);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "hunks_total": 51,
+   "anchors": [
+    "import java.sql.SQLException;",
+    "/** The key source's key file when it is {@code KeySources.fromFile}; null otherwise (FR-IAM-015 doctor count). */",
+    "/** The logger handed to every component built with this auth; {@link #install} points it at the app logger. */",
+    "private final PasswordChanges passwordChanges = new PasswordChanges(this);",
+    "private Auth(Builder b, JwtKeys keySet, Passwords passwords, List<Seed> seeds, ComponentLogger logger,",
+    "this.keyFile = b.keys instanceof KeySources.FileKey ? (KeySources.FileKey) b.keys : null;",
+    ": fileThrottle != null ? fileThrottle : defaultThrottle(this.users, b.time, logger);",
+    ": fileTrust != null ? fileTrust : defaultDeviceTrust(this.users, b.time, logger);",
+    "this.componentLogger = logger;",
+    "* R42: the login throttle that follows the user store when none is set: JDBC over a JdbcUserStore, else memory",
+    "return com.snoworca.naruserve.utils.auth.jdbc.JdbcLoginThrottle.builder(ju.getDataSource())",
+    "/** R42: the device trust that follows the user store when none is set: JDBC over a JdbcUserStore, else memory. */",
+    "return com.snoworca.naruserve.utils.auth.jdbc.JdbcDeviceTrust.builder(ju.getDataSource())",
+    "componentLogger.target(logger); // every component built with this auth logs to the app from now on",
+    "stopCleanup();",
+    "// REL-FLOW-001: a hash or login completion still running records its failure before the final snapshot",
+    "ex.scheduleWithFixedDelay(this::scheduledSnapshot, snapshotIntervalMillis, snapshotIntervalMillis,",
+    "* from a key's last failure. An app-provided throttle keeps its own retention; auth never purges it.",
+    "long r = com.snoworca.naruserve.utils.auth.jdbc.JdbcLoginThrottle.DEFAULT_RETENTION_MILLIS;",
+    "/** The shortest retention of the default throttle counters: 24 hours. */",
+    "/** One tick of the snapshot scheduler: {@link #snapshotRun()}, then the tick is counted. */",
+    "logger.error(\"auth: the cleanup of old login throttle rows failed; it runs again in 10 minutes\", e);",
+    "plainSecretItems(d);",
+    "* plain: each non-null password hash of a FileUserStore without an AuthFileKey, plus a raw key file. A count above",
+    "return store instanceof InMemoryUserStore || n.equals(\"com.snoworca.naruserve.utils.auth.user.FileUserStore\");",
+    "* default throttle and device trust, ...): it forwards to the builder's logger, or, when {@code .logger(...)} was",
+    "// a key request on an admin route is judged by the route's step-10 body bans and step-11 scope guard before",
+    "// answers Core's 415, so only a key that passes the guard learns the media type was wrong (SEC-APIKEY-008).",
+    "reject(req, res, AuthErrorCode.CSRF_FAILED, \"the CSRF token or the Origin does not match the session\");",
+    "/** SEC-FLOW-006/007: true unless {@code c} is a cookie write whose CSRF token or Origin does not match. */",
+    "* A public path: a principal only for a credential that verifies; anything else stays anonymous. A cookie write",
+    "if (c != null && csrfPasses(req, c)) {",
+    "} else if (err instanceof SQLException || err instanceof IOException) {",
+    "* A checked store failure: an {@link IOException}, or the {@code java.sql.SQLException} of an app-provided store",
+    "/** The self-service password change the POST /auth/password endpoint delivers. */",
+    "* {@link InMemoryUserStore}, {@code <name>-refresh-tokens.json} beside a {@link FileUserStore}'s file, memory",
+    "* {@code JdbcLoginThrottle} over a {@code JdbcUserStore}'s database, {@code <name>-login-throttle.json} beside a",
+    "* {@link FileUserStore}'s file, where an invalidation is written at once, otherwise in memory). MULTI_INSTANCE",
+    "ComponentLogger log = new ComponentLogger(logger != null ? logger : new ConsoleLogger());",
+    "plainKeyFile = keys instanceof KeySources.FileKey && ((KeySources.FileKey) keys).fileKey() == null;",
+    "if (mode == AuthMode.DEV && !unkeyed.isEmpty()) {",
+    "/** FR-IAM-015 AC-4: the one DEV WARN of a build naming each unencrypted file and the environment variable. */",
+    "com.snoworca.naruserve.utils.auth.internal.MiniJson.DEFAULT_FILE_BYTES, log);",
+    "return new com.snoworca.naruserve.utils.auth.jdbc.JdbcRefreshTokenStore(ju.getDataSource(),",
+    "time, log, com.snoworca.naruserve.utils.auth.internal.FileStoreKeys.keyOf(fu));",
+    "log, com.snoworca.naruserve.utils.auth.internal.FileStoreKeys.keyOf(fu));",
+    "boolean jdbcUsers = u instanceof com.snoworca.naruserve.utils.auth.jdbc.JdbcUserStore;",
+    "unset.add(\"refresh token store\");",
+    "unset.add(\"login throttle\");",
+    "unset.add(\"device trust store\");",
+    "local.add(\"the in-memory defaults of the unset \" + names + \" (set them, or use a JdbcUserStore \""
+   ],
+   "findings": [
+    "M1-F02",
+    "M1-F08",
+    "M1-F09"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthFileKey.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* The master key of the auth file stores (SEC-IAM-008): when one is given to {@code new FileUserStore(file, key)} and"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileDeviceTrust.java",
+   "hunks_total": 7,
+   "anchors": [
+    "import org.jspecify.annotations.Nullable;",
+    "/** The AuthFileKey of the FileUserStore beside it (FR-IAM-015 AC-2); token ids and counters are not secrets. */",
+    "FileDeviceTrust(File file, TimeSource time, Logger logger, @Nullable AuthFileKey fileKey) throws IOException {",
+    "Map<String, long[]> loaded = AtomicFiles.load(file, limits.maxTotalBytes(), this::tooLarge, this::parse,",
+    "/** The AuthFileKey this default store carries; null when none. */",
+    "return \"the device trust file has \" + length + \" bytes, above the limit of \" + limits.maxTotalBytes()",
+    "throw new IllegalArgumentException(\"the device trust file has \" + content.length + \" bytes, above the \""
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileLoginThrottle.java",
+   "hunks_total": 9,
+   "anchors": [
+    "import org.jspecify.annotations.Nullable;",
+    "/** The AuthFileKey of the FileUserStore beside it (FR-IAM-015 AC-2); throttle keys are hashes, not secrets. */",
+    "this(file, InMemoryLoginThrottle.builder().timeSource(time).logger(logger).build(), logger);",
+    "private FileLoginThrottle(File file, InMemoryLoginThrottle memory, Logger logger, @Nullable AuthFileKey fileKey)",
+    "this.fileKey = fileKey;",
+    "Map<String, long[]> loaded = AtomicFiles.load(file, limits.maxTotalBytes(), this::tooLarge, this::parse,",
+    "/** The AuthFileKey this default throttle carries; null when none. */",
+    "return \"the login throttle file has \" + length + \" bytes, above the limit of \" + limits.maxTotalBytes()",
+    "throw new IllegalArgumentException(\"the login throttle file has \" + content.length + \" bytes, above the \""
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java",
+   "hunks_total": 10,
+   "anchors": [
+    "import java.util.Collections;",
+    "* {@code AtomicFiles}) only when a record changes: a token issued, rotated or revoked, or expired records removed by the",
+    "/** How many used records of one family the file keeps for reuse detection (32 rotations, 8 h at 15 min). */",
+    "* The AuthFileKey of the FileUserStore this store is the default of (FR-IAM-015 AC-2); none of this file's values",
+    "FileRefreshTokenStore(File file, long maxFileBytes, Logger logger, @Nullable AuthFileKey fileKey)",
+    "Map<String, RefreshRecord> loaded = AtomicFiles.load(file, limits.maxTotalBytes(), this::tooLarge, this::parse,",
+    "return \"the refresh token file has \" + length + \" bytes, above the limit of \" + limits.maxTotalBytes()",
+    "throw new IllegalArgumentException(\"the refresh token file has \" + content.length + \" bytes, above the \"",
+    "pruneUsed(next, record.getFamilyId());",
+    "* {@link #USED_PER_FAMILY} most recently used ones stay (the predecessors of the record being saved, so presenting"
+   ],
+   "findings": [
+    "M1-F01"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/InMemoryDeviceTrust.java",
+   "hunks_total": 13,
+   "anchors": [
+    "import org.jspecify.annotations.Nullable;",
+    "/** Set under this entry's monitor when it leaves the map, so a failure that looked it up first retries. */",
+    "/** Test seam: runs once a cap eviction has chosen its victim, before it drops it; null in production. */",
+    "Entry fresh = new Entry(token.getExpiresAt(), now); // not the oldest window for a concurrent makeRoom",
+    "continue; // dropped between the lookup and the lock: count on the entry the map holds now",
+    "return e.invalidated;",
+    "/** Counts one failure on {@code e}, whose monitor the caller holds; true once it is invalidated. */",
+    "for (Iterator<Entry> it = entries.values().iterator(); it.hasNext();) {",
+    "x.removed = true;",
+    "// a concurrent failure invalidated the chosen token after the scan: keep it and choose again",
+    "/** Drops the entries with {@code expiresAt <= now}; the count dropped. */",
+    "if (it.next().expiresAt < now) {",
+    "return removed;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeySources.java",
+   "hunks_total": 20,
+   "anchors": [
+    "import com.snoworca.naruserve.utils.auth.internal.SecretBox;",
+    "import java.nio.channels.FileLock;",
+    "* (overwriting would log every user out). The file is read when auth is built. Exclude it from Android auto backup,",
+    "* {@link #fromFile(File)} whose key file holds the signing key as {@code enc(...)} under {@code key} (SEC-IAM-008);",
+    "/** The largest enc(...) key file read: the encrypted form of the largest raw key, with room to spare. */",
+    "private final @Nullable AuthFileKey fileKey;",
+    "FileKey(File file, @Nullable AuthFileKey fileKey) {",
+    "this.box = fileKey == null ? null : SecretBox.of(fileKey);",
+    "/** The AuthFileKey the key file is encrypted under; null: raw bytes. */",
+    "/** The enc(...) text of {@code content} (surrounding ASCII whitespace ignored); null for raw key bytes. */",
+    "throw new IOException(\"the key file \" + file + \" holds an encrypted value (enc(...)); an AuthFileKey \"",
+    "* FR-IAM-015 AC-5: replaces the raw key file by its enc(...) form under the creation locks, unless another",
+    "* {@code .<name>.lock} file span the re-check and the publish, because {@link File#renameTo} replaces an",
+    "* permissions are still being set, then moves it to its name: a new file only when {@code replace} is false,",
+    "byte[] key = new byte[GENERATED_KEY_BYTES];",
+    "out.write(content);",
+    "Arrays.fill(key, (byte) 0);",
+    "} else if (!file.exists() && !tmp.renameTo(file) && !file.exists()) {",
+    "* Moves {@code tmp} over the key file: a POSIX rename replaces it in one step; where rename does not replace",
+    "throw new IOException(\"the key file \" + file + \" is larger than \" + MAX_SEALED_FILE_BYTES + \" bytes\");"
+   ],
+   "findings": [
+    "M1-F06"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/PasswordChanges.java",
+   "hunks_total": 7,
+   "anchors": [
+    "import com.snoworca.naruserve.utils.auth.internal.Passwords;",
+    "import com.snoworca.naruserve.utils.auth.user.UserStore;",
+    "* The self-service password change behind {@code POST /auth/password} (00 R37 9th–10th editions): the token's version",
+    "/** One store call; any store exception other than the auth ones is a 503. */",
+    "* to {@code next}; returns the new pair. 401 {@code invalid_token} when the re-read user is missing, disabled or at",
+    "* The after-events of a self-service password change that applied, shared by both paths: onUserUpdated with",
+    "java.util.concurrent.locks.ReentrantLock lock = com.snoworca.naruserve.utils.auth.internal.UserLocks.of(userId);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenService.java",
+   "hunks_total": 2,
+   "anchors": [
+    "* revokes the family; a family revoked while the new record was being saved (a concurrent reuse or logout) is",
+    "// A concurrent reuse or logout that revoked the family between markUsed and save revoked only the records"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/GroupGraph.java",
+   "hunks_total": 3,
+   "anchors": [
+    "import org.jspecify.annotations.Nullable;",
+    "/** Runs between the edge check and the insert of {@link #addParent}; null in production, set by the tests. */",
+    "Runnable hook = checked;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/InMemoryGroupStore.java",
+   "hunks_total": 2,
+   "anchors": [
+    "import org.jspecify.annotations.Nullable;",
+    "/** Runs {@code hook} between the edge check and the insert of every later addParent (null: none); for the tests. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "hunks_total": 17,
+   "anchors": [
+    "import java.util.concurrent.ConcurrentHashMap;",
+    "* file system without those permissions keeps its default), so the store file, which holds password hashes and token",
+    "/** The refusal reason of a file above a store's size limit, from the file's length in bytes. */",
+    "private static final ConcurrentMap<String, Object> LOCKS = new ConcurrentHashMap<>();",
+    "* The process-wide monitor of {@code file}'s path: every write holds it, and a store that checks the file before",
+    "private static void writeLocked(File file, byte[] content, Steps steps) throws IOException {",
+    "ownerOnly(tmp);",
+    "* Restricts {@code f} to its owner (read and write), best effort: a file system that refuses (FAT, some Windows",
+    "* {@link #load(File, Parser, Logger)} within {@code maxBytes}: a file (or backup) longer than that fails with the",
+    "T value = parse(file, maxBytes, tooLarge, parser, bak.exists()",
+    "T value = parse(bak, parser, \" and no \" + file.getName() + \" exists; inspect the backup\");",
+    "throw new IOException(\"FAIL: auth store file \" + f + \" is unreadable (\" + tooLarge.reason(length) + \")\"",
+    "content = read(f, length, maxBytes);",
+    "private static byte[] read(File f, long length, long maxBytes) throws IOException {",
+    "ByteArrayOutputStream out = new ByteArrayOutputStream((int) Math.max(32L, Math.min(length, 1L << 26)));",
+    "long total = 0;",
+    "throw new IOException(\"the file grew above \" + maxBytes + \" bytes while it was read\");"
+   ],
+   "findings": [
+    "M1-F03",
+    "M1-F04",
+    "M1-F05"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Blowfish.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import java.util.concurrent.atomic.AtomicLong;",
+    "/** How many bcrypt key schedules have started in this class loader; for the tests. */",
+    "/** How many bcrypt key schedules have started so far (every thread, this class loader); for the tests. */",
+    "SCHEDULES.incrementAndGet();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/FileStoreKeys.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* count (FR-IAM-015), which live in another package than {@code FileUserStore}. The store records its key once, at"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/GrantRule.java",
+   "hunks_total": 5,
+   "anchors": [
+    "* disabled is refused with 403 {@code insufficient_scope} and a grant_denied event before any of them. Not applied to",
+    "public Set<String> actorScopes(@Nullable Request req, String actorId, @Nullable String targetId, String action)",
+    "Set<String> actor = actorScopes(req, actorId, targetId, action.name());",
+    "Set<String> actor = actorScopes(req, actorId, targetId, action);",
+    "* current effective scopes must be covered by {@code actorScopes}; the actor among the affected users is refused"
+   ],
+   "findings": [
+    "M1-F07"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/HashSlots.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* After {@link #shutdown()}: waits up to {@code timeout} for the hashes still running (and their callbacks, which"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/MiniJson.java",
+   "hunks_total": 2,
+   "anchors": [
+    "/** The value of an ASCII hex digit, -1 for anything else (Character.digit also takes fullwidth digits). */",
+    "int d = hexDigit(in.charAt(pos + i)); // ASCII HEXDIG only (RFC 8259)"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/RehashQueue.java",
+   "hunks_total": 3,
+   "anchors": [
+    "private final AtomicInteger accepted = new AtomicInteger();",
+    "accepted.incrementAndGet();",
+    "/** How many entries {@link #offer} accepted so far (queued, processed or not); for the tests. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/SecretBox.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* where payload is unpadded base64url of a format version byte (1), a random 96-bit IV from {@link SecureRandom}, the"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/ThrottleKeys.java",
+   "hunks_total": 5,
+   "anchors": [
+    "* IPv6 addresses of one {@code /64} share a key, an IPv4-mapped IPv6 address counts as its IPv4 address in every",
+    "* compression expanded), an IPv4-mapped IPv6 address (dotted or hex) as its dotted IPv4 address; anything",
+    "String hex = a.indexOf('.') < 0 ? a : dottedTailAsHex(a);",
+    "if (isIpv4Mapped(groups)) { // ::ffff:c000:201 and 0:0:0:0:0:ffff:1.2.3.4 count as 192.0.2.1 and 1.2.3.4",
+    "* The literal with its trailing dotted IPv4 part written as two hex groups ({@code ::ffff:1.2.3.4} becomes"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/DeviceTrust.java",
+   "hunks_total": 2,
+   "anchors": [
+    "* Set it with {@code Auth.builder(..).deviceTrust(trust)}; by default it follows the user store (in memory, or a file",
+    "// @req FR-IAM-013"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/RefreshTokenStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "* beside the JDBC user store once that store lands), and memory with a doctor WARN for any other store under {@code SINGLE_INSTANCE}"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/AuthTesting.java",
+   "hunks_total": 3,
+   "anchors": [
+    "import java.util.concurrent.Callable;",
+    "* password-hash round trip read back through the same instance (a store that caches rows and loses the hash when",
+    "* over the same storage (for a store that re-reads its backing storage on every call, {@code () -> store}), and the"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/UserStoreContract.java",
+   "hunks_total": 8,
+   "anchors": [
+    "import java.util.concurrent.Callable;",
+    "* hash round trip, {@code changePassword} (null hash and ver mismatch), the field-method results and, for a store",
+    "private final @Nullable Callable<? extends UserStore> reopen;",
+    "private UserStoreContract(UserStore store, @Nullable Callable<? extends UserStore> reopen) {",
+    "this.reopen = reopen;",
+    "/** {@link #verify(UserStore)}, and with {@code reopen} the hash round trip through a fresh instance too. */",
+    "check(clause, !id.equals(next.getId()), \"create() after delete(\" + id + \") returned the deleted id again: a \"",
+    "check(clause, again != null, \"findById(\" + u.getId() + \") on the reopened store returned null for a saved \""
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+   "hunks_total": 34,
+   "anchors": [
+    "import com.snoworca.naruserve.utils.auth.AuthFileKey;",
+    "import com.snoworca.naruserve.utils.auth.internal.FileStoreKeys;",
+    "import com.snoworca.naruserve.utils.auth.internal.SecretBox;",
+    "import java.io.FileInputStream;",
+    "import java.io.InputStream;",
+    "import java.util.zip.CRC32;",
+    "* that knows only version 1 refuses the file instead of reading an encrypted value as a hash). Constructed with a key",
+    "* process, wrote it) is refused with an {@link IOException} and one ERROR instead of rolling the other writer's change",
+    "// @req SEC-IAM-008",
+    "/** The format version of a file whose password hashes are enc(...) values. */",
+    "* With a key: the enc(...) form of each row's hash as last read or written, by user id ({plain hash, enc value}),",
+    "* A store over {@code file} whose password hashes are written as {@code enc(...)} under {@code key}; null writes",
+    "/** {@link #FileUserStore(File, long, Logger)} whose password hashes are encrypted under {@code key} (null: plain). */",
+    "State s = AtomicFiles.load(file, limits.maxTotalBytes(), this::tooLarge, this::parse, logger);",
+    "// FR-IAM-015 AC-5: the first load with a key rewrites every plain hash as enc(...) in one atomic write",
+    "FileStoreKeys.record(this, key);",
+    "return \"the users file has \" + length + \" bytes, above the limit of \" + limits.maxTotalBytes() + \" bytes; \"",
+    "throw new IllegalArgumentException(\"the users file has \" + content.length + \" bytes, above the limit of \"",
+    "seen = fingerprint(content);",
+    "boolean encrypted = Long.valueOf(ENCRYPTED_VERSION).equals(version);",
+    "throw new IllegalArgumentException(\"the file holds encrypted values (format version \" + ENCRYPTED_VERSION",
+    "s.plain = !encrypted;",
+    "AuthUser u = user((Map<String, Object>) o, encrypted ? opener : null);",
+    "if (encrypted && u.getPasswordHash() != null && stored instanceof String) {",
+    "/** One row; {@code opener} opens the enc(...) hash of a version-2 file, null reads it plain (version 1). */",
+    "AuthUser.Builder b = AuthUser.builder().id(text(m.get(\"id\"), \"id\")).username(text(m.get(\"username\"),",
+    "throw new IllegalArgumentException(\"the passwordHash of user id \" + id + \" \" + e.getMessage());",
+    "/** The file content of {@code rows}; with a key, the enc(...) form of every hash goes to {@code out}. */",
+    "doc.put(\"version\", sealer == null ? VERSION : ENCRYPTED_VERSION);",
+    ": sealer.seal(SecretBox.USERS_PASSWORD_HASH, id, hash.getBytes(StandardCharsets.UTF_8));",
+    "* Writes the given state, then makes it current; a failed write leaves memory unchanged. A file changed by another",
+    "Map<String, String[]> nextSealed = new LinkedHashMap<>();",
+    "String why = \"the users file \" + file + \" was changed by another writer since this FileUserStore read it; \"",
+    "if (needle == null || u.getUsername().toLowerCase(Locale.ROOT).contains(needle)) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/InMemoryUserStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "if (needle == null || u.getUsername().toLowerCase(Locale.ROOT).contains(needle)) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "build.gradle",
+   "hunks_total": 1,
+   "anchors": [
+    "// The auth JDBC stores run against SQLite in tests; the driver never reaches a main or published classpath."
+   ],
+   "findings": []
+  }
+ ],
+ "resolved_findings": [
+  "M1-F01",
+  "M1-F02",
+  "M1-F03",
+  "M2-F02",
+  "M2-F03",
+  "M2-F04",
+  "M2-F06",
+  "M2-F07",
+  "M3-F01",
+  "M3-F02",
+  "M3-F03",
+  "M3-F04",
+  "M3-F09",
+  "M4-F06",
+  "M4-F12",
+  "M5-F01",
+  "M5-F02",
+  "M5-F03",
+  "M5-F11",
+  "T2-F06",
+  "T2-F09",
+  "T3-F01",
+  "T3-F02"
+ ],
+ "not_resolved": [
+  {
+   "id": "M2-F01",
+   "why": "partially resolved: only used records of the saved family are capped; new families from logins and revoked records still live until expiresAt, so login/logout churn still fills the 8 MB file (new finding M1-F01)"
+  },
+  {
+   "id": "M3-F08",
+   "why": "partially resolved: FileGroupStore still uses the unbounded AtomicFiles.load overload (new finding M1-F04)"
+  }
+ ],
+ "summary": {
+  "total": 9,
+  "by_severity": {
+   "MEDIUM": 1,
+   "LOW": 8
+  }
+ }
+}

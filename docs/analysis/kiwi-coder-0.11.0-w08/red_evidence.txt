@@ -1,0 +1,16 @@
+kiwi-coder 0.11.0-w08 red evidence (TDD-order deviation recorded)
+
+The main-thread slice wrote the endpoint code and the Wave8*Test suites in one pass, as wave 7 did; the tests were
+not run red before the implementation existed. Red was re-established afterwards by removing the wiring under test:
+
+1. Auth constructor line `new AccountEndpoints(this).register(accountRoutes, b.register, b.apiKeys);` commented out,
+   `./gradlew :NaruServe-api:test --tests com.snoworca.naruserve.utils.auth.Wave8LoginTest`:
+   "21 tests completed, 18 failed" (first: FR_FLOW_004_AC1_loginIssuesAPairInANewFamily FAILED). The 3 survivors are
+   component-level checks (IR-TOKEN-001 AC-2 through the PasswordLogin seam, FR-FLOW-004 AC-7 is not among them).
+   The line was restored and the suite is green (21/21).
+2. Existing tests that went red on the new behaviour before their data was aligned (first full run after the main
+   change, 2152 tests, 22 failed): short passwords now refused by the default PasswordPolicy (AuthUsersTest,
+   PasswordConfirmLimitTest, CarriedAcceptanceTest, AuthBootstrapTest, AuthHashSettingsTest, AuthWave4KotlinTest),
+   the cookie-write Origin rule (Wave7CsrfTest sent Origin http://localhost without a Host header), the new spi
+   types (AuthSpiSnapshotTest record, CallbackMatrix CALLBACK_TYPES), the new getenv reader (StartApiTest
+   ENV_READERS) and the new account router records (AuthInstallTest registration order).

@@ -1,0 +1,129 @@
+{
+ "part": "round3",
+ "verdicts": [
+  {
+   "id": "N4-01",
+   "verdict": "drop",
+   "drop_reason": "already resolved: AtomicFiles.write and FileUserStore.commit now hold directoryLockFor(file), keyed on the parent directory's canonical path without the file name; the N4-01 harness (400 rounds, FileUserStore over dir/caf\\u00e9.json NFC vs NFD, fresh directory, barrier, reopen NFC) now gives lost=0 unreadable=0, and AtomicFilesTest.racingFirstCreatesThroughUnicodeNormalizationSpellingsLoseNothing passes (not skipped) on this APFS volume",
+   "evidence": {
+    "command": "temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/Tmp501R5Test.java (deleted); ./gradlew :NaruServe-api:test --offline --tests '*Tmp501R5Test*' --tests '*AtomicFilesTest*' -i | grep TMP501 ; AtomicFilesTest XML: tests=14 skipped=0 failures=0",
+    "output": "TMP501 N4-01 rerun NFC/NFD file name race lost=0 unreadable=0 zeroSuccess=0",
+    "intent_output": "0 lost / 0 unreadable (docs/api/auth.md:747, AtomicFiles class Javadoc)"
+   },
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "79-124, 163"
+   },
+   "title": "lockKey of a not-yet-existing file folds case but not Unicode normalization (NFC/NFD split monitors)",
+   "is_behavioral": true,
+   "tags": [
+    "concurrency",
+    "REL-IAM-004",
+    "recheck"
+   ]
+  },
+  {
+   "id": "N5-01",
+   "verdict": "keep",
+   "evidence": {
+    "command": "temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/Tmp501R5Test.java (deleted after the run); ./gradlew :NaruServe-api:test --offline --tests '*Tmp501R5Test.missingDir*' -i | grep TMP501 (300 rounds: fresh root, directory not yet created; FileUserStore A over root/store/users.json and B over root/<spellB>/users.json; A and B retry create(alice|bob) in a loop after one barrier while a third thread does root/store.mkdir() after ~2000 yields; reopen root/store/users.json and count creates that reported success but are missing, and unreadable files; spellB=STORE vs control spellB=store) on the default APFS volume (case-insensitive)",
+    "output": "TMP501 missingDirConcurrentMkdir spellB=STORE lost=219 unreadable=17\nTMP501 missingDirConcurrentMkdir spellB=store lost=0 unreadable=0\n(also: TMP501 missing dir: sameBefore=false beforeEqAfter(upper)=false lowerEqAfter=true -- directoryLockFor(root/Missing/u.json) and directoryLockFor(root/MISSING/u.json) are two monitors while the directory is missing, and the MISSING key changes when the directory is created)",
+    "intent_output": "AtomicFiles class Javadoc ('the key does not depend on how the file name is spelled, so \"users.json\", \"USERS.json\" ... never get two writers, whether the file exists yet or not') and docs/api/auth.md:747 / en/auth.md:747 (two spellings never have two writers at once; another writer's change is refused, the file stays readable): expected lost=0 unreadable=0 for the case spelling as for the identical-spelling control. Observed: directoryLockFor canonicalises a parent directory that does not exist yet textually (getCanonicalPath keeps the raw spelling of missing components) and, unlike the replaced lockKey, no longer case-folds, so two spellings of a not-yet-created directory get two monitors; a write whose key was taken before the directory appeared runs unserialised against the other spelling (shared .tmp), losing reported creates and leaving unreadable files. The replaced lockFor key lower-cased the whole path, so case spellings of a missing directory shared one monitor before this diff (regression for case; NFC/NFD of a missing directory was split before and still is)."
+   },
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "91-102"
+   },
+   "title": "directoryLockFor keys a parent directory that does not exist yet by its raw spelling: two spellings (case, NFC/NFD) of a directory created while writes are retried get two monitors, racing creates are lost and the file is left unreadable",
+   "is_behavioral": true,
+   "tags": [
+    "concurrency",
+    "data-loss",
+    "REL-IAM-004",
+    "regression"
+   ],
+   "suggested_fix": "Only hand out a directory monitor for a directory that exists when the key is computed: in directoryLockFor (or at the start of write/commit) check dir.isDirectory() before getCanonicalPath and, when it is missing, fail the write with an IOException before taking any monitor (the write would fail anyway with no directory), so every key that guards a write is a resolved canonical path; add a test that races two case spellings of a directory created mid-retry."
+  },
+  {
+   "id": "N5-02",
+   "verdict": "drop",
+   "drop_reason": "not a defect, proven by execution: directoryLockFor is a leaf monitor (inside it FileUserStore.commit only runs refuseForeignChange/AtomicFiles.write/fingerprint, which take no other monitor; every caller takes its store monitor or writeLock first, then the directory monitor), and 4 threads mixing FileUserStore.create and FileGroupStore.createGroup in one directory (400 writes) finished in 164 ms (TMP501 deadlockProbe finished ms=164); case and NFC/NFD spellings of an existing parent directory and a symlinked parent share one monitor (TMP501 dir case sameLock=true, dir NFC/NFD sameLock=true; races lost=0 unreadable=0)",
+   "evidence": null,
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "91-102, 163; FileUserStore.java 308"
+   },
+   "title": "Candidate: lock-ordering deadlock or spelling escape through the directory monitor for an existing parent directory",
+   "is_behavioral": true,
+   "tags": [
+    "concurrency",
+    "candidate"
+   ]
+  },
+  {
+   "id": "N5-03",
+   "verdict": "drop",
+   "drop_reason": "not a defect: the new tests can fail -- racingFirstCreatesThroughUnicodeNormalizationSpellingsLoseNothing runs (skipped=0) on APFS with the same harness that produced lost=249 unreadable=131 over 400 rounds against the previous key (N4-01 evidence), so 100 rounds would fail it; directoryLockForIsIndependentOfTheNameSpelling asserts assertSame/assertNotSame on monitors that a name-keyed or non-canonical key would break (NFD/upper-case names, ./, sub/.., symlink, other directory). The NFC/NFD race test only runs on a normalization-insensitive file system (Assume), which is intended",
+   "evidence": null,
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+    "line_range": "284-394"
+   },
+   "title": "Candidate: changed AtomicFilesTest race/lock tests can no longer fail",
+   "is_behavioral": false,
+   "tags": [
+    "test-quality",
+    "candidate"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "hunks_total": 6,
+   "anchors": [
+    "* file exists yet or not. The temp file is created owner-only inside an",
+    "private static final ConcurrentMap<String, Object> DIRECTORY_LOCKS = new ConcurrentHashMap<>();",
+    "key = dir.getCanonicalPath();",
+    "private static Object monitor(ConcurrentMap<String, Object> locks, String key) {",
+    "lock = locks.putIfAbsent(key, fresh);",
+    "synchronized (directoryLockFor(file)) {"
+   ],
+   "findings": [
+    "N4-01",
+    "N5-01",
+    "N5-02"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "synchronized (AtomicFiles.directoryLockFor(file)) {"
+   ],
+   "findings": [
+    "N5-01",
+    "N5-02"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "assertRacingFirstCreatesLoseNothing(\"users.json\", \"USERS.json\", 60);",
+    "File dir = tmp.newFolder(\"race-\" + rounds + \"-\" + nameB.hashCode() + \"-\" + round);",
+    "new com.snoworca.naruserve.utils.auth.user.FileUserStore(new File(dir, nameA));",
+    "new com.snoworca.naruserve.utils.auth.user.FileUserStore(new File(dir, nameB));",
+    "reopened = new com.snoworca.naruserve.utils.auth.user.FileUserStore(new File(dir, nameA));"
+   ],
+   "findings": [
+    "N5-03"
+   ]
+  }
+ ],
+ "summary": {
+  "keep": 1,
+  "drop": 3,
+  "residual": 0
+ }
+}

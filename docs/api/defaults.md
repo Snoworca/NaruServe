@@ -2,7 +2,7 @@
 
 [한국어](defaults.md) | [English](en/defaults.md)
 
-> **버전 범위:** 이 문서는 0.10.0 대상 체크아웃의 동작을 설명하며 Maven 배포 완료를 뜻하지 않습니다.
+> **버전 범위:** 이 문서는 0.11.0 대상 체크아웃의 동작을 설명하며 Maven 배포 완료를 뜻하지 않습니다.
 
 NaruServe는 저사양 Android 5.0 기기에서도 안전하게 돌도록 **모든 입력에 한도를 켠 채로** 시작합니다. 무제한을 기본값으로 쓰지 않고, 어떤 설정도 무제한 값을 받지 않습니다. 모든 설정에 최대값이 있고, 범위를 벗어난 값은 설정 이름과 범위를 담은 `IllegalArgumentException`으로 거부합니다. 무제한을 막은 이유는 설정 실수 하나로 저사양 기기의 메모리와 스레드가 바닥나지 않게 하려는 것입니다. 필요하면 최대값 안에서 명시적으로 올리세요.
 
@@ -77,7 +77,7 @@ Pong timeout은 Ping 주기와 같습니다. TinyHttpd의 `WebSocketListener`에
 
 위 기본값은 JVM 부하 테스트(WebSocket 60개와 SSE 60개를 함께 연 T26)로 확인한 값입니다. 저사양 Android 5.0 기기에 맞춘 `maxSseStreams`, `maxUpgradedConnections`, WebSocket과 SSE의 `sendQueueSize` 조정은 v1 이후 항목입니다. Android 기기 검증이 v1 범위 밖이므로 이 조정은 v1 릴리스의 수동 후속 작업이 아니며, 위 기본값은 자동 테스트가 JVM에서 확인한 값이며 기기에 맞춘 값이 아닙니다. 메모리가 작은 기기에서는 이 값들을 직접 낮춰 보세요.
 
-## 공통 HTTP 기본값 (0.10.0)
+## 공통 HTTP 기본값 (0.11.0)
 
 - 문자열 라우트는 대소문자를 구분하지 않고 끝의 슬래시 하나를 허용합니다. 반복 구분자는 그대로 구분합니다. Java `Pattern`은 Java 정규식 규칙을 유지합니다. [라우팅](routing.md)을 참고하세요.
 - 라우트·미들웨어·정적 서비스·오류 계층은 등록 위치에서 실행됩니다. 맞는 메서드·경로가 없으면 전역 `405`가 아니라 `404`입니다. 실제 정적 리소스와 별도 WS 네임스페이스의 메서드 응답은 유지됩니다.
@@ -113,7 +113,7 @@ Pong timeout은 Ping 주기와 같습니다. TinyHttpd의 `WebSocketListener`에
 
 TinyHttpd가 요청을 해석하기 전에 거부하는 `400`(요청 형식), `408`(헤더 시간 초과), `414`(요청 줄), `417`(`Expect`), `431`(헤더), `501`(`Transfer-Encoding`), `505`(HTTP 버전)와 소켓 용량 `503`은 짧은 평문입니다. 아직 앱 `Request`가 없어 `onError`·공통 HTML·접근 로그를 거치지 않습니다.
 
-0.10.0 TinyHttpd 어댑터는 TinyHttpd 3.1.1의 RAW request-target 정책을 사용합니다. 공통 HTTP는 원본 경로를 매칭한 뒤 참여한 캡처만 엄격 UTF-8로 한 번 디코딩합니다. 인코딩된 `/`·NUL·`.`/`..`를 코어가 전역 거부하지는 않습니다. 잘못된 캡처는 오류 경로의 `400`이고, 정적 파일 및 WebSocket의 엄격 경로 검사·전송 형식/Host/framing 검사는 유지됩니다. 컨테이너 고유 제한은 [Servlet 경로 표](servlet.md#경로-처리)를 참고하세요.
+0.11.0 TinyHttpd 어댑터는 TinyHttpd 3.1.1의 RAW request-target 정책을 사용합니다. 공통 HTTP는 원본 경로를 매칭한 뒤 참여한 캡처만 엄격 UTF-8로 한 번 디코딩합니다. 인코딩된 `/`·NUL·`.`/`..`를 코어가 전역 거부하지는 않습니다. 잘못된 캡처는 오류 경로의 `400`이고, 정적 파일 및 WebSocket의 엄격 경로 검사·전송 형식/Host/framing 검사는 유지됩니다. 컨테이너 고유 제한은 [Servlet 경로 표](servlet.md#경로-처리)를 참고하세요.
 
 본문 읽기의 복구 가능한 `400`·`408`·`413`은 출력이 가능한 동안 선언된 HTTP 오류로 응답할 수 있습니다. 처리하지 않은 공통 HTTP 오류는 아래 HTML을 사용하며, 오류를 매핑했다는 이유만으로 먼저 연결을 중단하지 않습니다. 실제 I/O 단절·비동기 수명 시간 초과·오류 응답 쓰기 실패는 중단을 알립니다. `Host` 허용 목록의 `421` 같은 어댑터 생성 오류는 기존 설정된 표준 JSON 렌더러를 유지합니다.
 
@@ -127,9 +127,9 @@ TinyHttpd가 요청을 해석하기 전에 거부하는 `400`(요청 형식), `4
 
 프레임워크가 대신하지 않는 것입니다.
 
-- **인증과 권한**: 미들웨어로 구현하세요. [미들웨어](middleware.md)
+- **인증과 권한**: 내장 [auth 모듈](auth.md)(`app.use(auth)`: 로그인·토큰·역할·그룹)을 쓰거나 [미들웨어](middleware.md)로 직접 구현하세요.
 - **CSRF**: 쿠키로 인증하는 API라면 미들웨어로 막으세요.
 - **WebSocket 인증**: 미들웨어로 구현하세요. 프레임워크는 Upgrade 전에 `Origin`을 검사하며, 기본값은 `Origin`이 없거나 같은 출처인 요청만 허용하고 나머지는 `403`으로 거부합니다. 다른 출처는 `app.webSocket(o -> o.allowedOrigins("https://app.example.com"))`로 허용하며, `allowedOrigins("*")`는 모든 `Origin`을 허용합니다. `Origin` 검사는 인증을 대신하지 않습니다. [WebSocket](websocket.md#인증과-origin)
 - **업로드 파일 이름·내용 검증**: [파일 업로드](multipart.md#보안)
-- **TLS**: 기본 TinyHttpd 어댑터(`NaruServe-tinyhttpd`)는 v1에서 TLS 리스너를 열지 않습니다. 인터넷에 노출하는 평문 서버는 안전하지 않으므로 TLS를 끝내는 리버스 프록시 뒤에 두고 `app.trustProxy(true)`를 켜세요. TinyHttpd 어댑터의 TLS/WSS는 v1 이후 항목이며, 이유는 둘입니다. v1 개발 범위를 정한 epic #20의 하위 이슈 어디에도 이 작업이 없고, `object.md` §14.3과 §20.3이 요구하는 API 21 TLS provider와 인증서 시험을 따로 해야 하는데 Android 기기 검증이 v1 범위 밖이라 v1은 이 시험을 하지 않습니다.
+- **TLS**: 기본 TinyHttpd 어댑터(`NaruServe-tinyhttpd`)는 v1에서 TLS 리스너를 열지 않습니다. 인터넷에 노출하는 평문 서버는 안전하지 않으므로 TLS를 끝내는 리버스 프록시 뒤에 두고 `app.trustProxyHops(1)`(프록시 한 대) 또는 `app.trustProxyCidrs(...)`를 켜세요. `app.trustProxy(true)`는 클라이언트가 보낸 `X-Forwarded-For`의 맨 왼쪽 값을 믿으므로 auth를 쓰면 PROD 시작 점검이 거부합니다. TinyHttpd 어댑터의 TLS/WSS는 v1 이후 항목이며, 이유는 둘입니다. v1 개발 범위를 정한 epic #20의 하위 이슈 어디에도 이 작업이 없고, `object.md` §14.3과 §20.3이 요구하는 API 21 TLS provider와 인증서 시험을 따로 해야 하는데 Android 기기 검증이 v1 범위 밖이라 v1은 이 시험을 하지 않습니다.
 - **서비스의 스레드 안전성**: [수명주기와 서비스](lifecycle.md#저장소-범위)

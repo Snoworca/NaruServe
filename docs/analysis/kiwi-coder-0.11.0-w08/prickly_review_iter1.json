@@ -1,0 +1,14 @@
+{"pass":"prickly-review","round":1,"reqs":"wave 8 set (18)","counts":{"CRITICAL":0,"HIGH":1,"MEDIUM":4,"LOW":7},
+"findings":[
+{"sev":"HIGH","where":"AccountEndpoints.storeCall","issue":"DuplicateUserException from UserStore.create became 503","fix":"rethrow auth answers; test FR_FLOW_007_AC3_storeDuplicateIs409","status":"fixed"},
+{"sev":"MEDIUM","where":"PasswordChanges.selfService","issue":"policy ran after the current-password verify","fix":"policy first; test now counts hashes+verifies","status":"fixed"},
+{"sev":"MEDIUM","where":"Wave8AccountTest FR_TOKEN_004","issue":"counted hashes only","fix":"counts hashes+verifies","status":"fixed"},
+{"sev":"MEDIUM","where":"AccountEndpoints.login","issue":"runtime failures before the hash became 500","fix":"wrapped as AuthUnavailableException 503","status":"fixed"},
+{"sev":"MEDIUM","where":"DefaultAuthUsers.checkPassword","issue":"unbounded stripe lock wait","fix":"tryLock 5 s; test SEC_IAM_002_AC3_sharedStripeWaitIsBounded","status":"fixed"},
+{"sev":"LOW","where":"setup order","issue":"Origin before closed 404","status":"fixed (404 first, test)"},
+{"sev":"LOW","where":"AccountEndpoints/PasswordLogin Javadoc","issue":"stale claims","status":"fixed"},
+{"sev":"LOW","where":"custom Authenticator result","issue":"returned object trusted","status":"fixed (re-read by id)"},
+{"sev":"LOW","where":"FR_APIKEY_007_AC4 test","issue":"store already synchronized","status":"fixed (also NonAtomic)"},
+{"sev":"LOW","where":"register pw wipe on store failure","status":"fixed"},
+{"sev":"LOW","where":"duplicated helpers Account/AdminEndpoints","status":"deferred to final review loop"},
+{"sev":"LOW","where":"apiKeyFailureLimit stored not enforced","status":"by design: enforcement is SEC-APIKEY-005 (W9)"}]}

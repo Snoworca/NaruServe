@@ -1,0 +1,1 @@
+{"pass":"prickly-review","round":2,"target":["SEC-IAM-008","FR-IAM-015"],"findings":{"MEDIUM":["Windows fallback crash leaves no key file -> new key (fixed: fixed sibling .<name>.bak restored in createOnce; test SEC_IAM_008_AC5_interruptedKeyMigrationRestoresTheOldKey; docs note)"]},"result":"CRITICAL=0 HIGH=0 after fix; final build 3346/0"}

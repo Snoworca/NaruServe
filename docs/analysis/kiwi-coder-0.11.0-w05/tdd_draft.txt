@@ -1,0 +1,15 @@
+kiwi-coder 0.11.0-w05 — test drafts (per requirement AC citations)
+JwtTest                     SEC-TOKEN-003 AC-1..AC-8
+RealJwtPathTest             SEC-AUTH-006 AC-1, AC-7; SEC-AUTH-001 AC-5, AC-6 (carry); real-JWT re-checks of SEC-FLOW-004 AC-2/AC-3, SEC-AUTH-005 AC-3, IR-AUTH-002 AC-1
+ProtectOnlyTest             SEC-AUTH-006 AC-2..AC-6, AC-8
+DescribeTest                OPS-AUTH-002 AC-1..AC-3
+FileUserStoreTest           FR-IAM-002 AC-2, AC-3, AC-5, AC-6; SEC-TOKEN-002 AC-6 (carry)
+UserLifecycleTest           FR-IAM-002 AC-1; FR-IAM-003 AC-3..AC-5; FR-IAM-008 AC-1..AC-3; REL-IAM-001 AC-1, AC-2, AC-5; FR-AUTH-009 AC-3, AC-4
+PasswordConfirmLimitTest    SEC-FLOW-015 AC-3..AC-5; SEC-AUTH-008 AC-3
+RefreshTokenStoreTest       FR-TOKEN-002 AC-1, AC-3, AC-5..AC-8
+JdbcRefreshTokenStoreTest   FR-IAM-012 AC-1..AC-3
+ApiKeyTypesTest             DR-APIKEY-001 AC-1..AC-4; SEC-AUTH-008 AC-2; IR-APIKEY-004 AC-1, AC-3, AC-4
+AuditEventTest              FR-AUTH-009 AC-1, AC-6, AC-7
+AuthWave5KotlinTest         DR-APIKEY-001 AC-6; IR-APIKEY-004 AC-7 (+ T11 Kotlin compile/run of the new API)
+Wave5ComponentsTest         SEC-FLOW-009 AC-2, AC-6 (+ uncited component tests: GrantRule, ThrottleKeys, LoginLimits, AuthCookies)
+AuthDocsTest (root)         FR-IAM-003 AC-7, REL-IAM-001 AC-6, SEC-FLOW-009 AC-8

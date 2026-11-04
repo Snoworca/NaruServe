@@ -4,7 +4,7 @@
 
 `RestApp`은 Express의 `app`에 해당합니다. 라우트·미들웨어·설정을 등록하고 서버를 시작하고 끕니다.
 
-이 페이지는 **NaruServe 0.10.0**의 일반 HTTP를 설명합니다. 소스/아티팩트 사용법은 [설치 안내](README.md)를 따르세요. TinyHttpd는 raw request-target 전달을 사용하는3.1.1, 기본 Gson은2.14.0입니다. 코어 API는 Java 8/API 21을 대상으로 하며 기기 성능 검증을 뜻하지 않습니다.
+이 페이지는 **NaruServe 0.11.0**의 일반 HTTP를 설명합니다. 소스/아티팩트 사용법은 [설치 안내](README.md)를 따르세요. TinyHttpd는 raw request-target 전달을 사용하는3.1.1, 기본 Gson은2.14.0입니다. 코어 API는 Java 8/API 21을 대상으로 하며 기기 성능 검증을 뜻하지 않습니다.
 
 ## 앱 만들기
 
@@ -16,7 +16,7 @@ RestApp app = RestApp.create();
 이 조립은 기본 bootstrap 모듈 `NaruServe`가 맡습니다. `create()`를 쓰려면 이 모듈을 의존성에 넣습니다. Kotlin은 `NaruServe-kotlin`, Android 앱은 `NaruServe-android`를 넣어도 이 모듈이 함께 들어옵니다. `NaruServe-android`에서는 `create()`가 Logcat 로거를 씁니다.
 
 ```groovy
-implementation 'com.snoworca.naruserve:naruserve:0.10.0'
+implementation 'com.snoworca.naruserve:naruserve:0.11.0'
 ```
 
 엔진을 직접 고를 때는 builder를 씁니다. `NaruServe-api`만 의존하는 경우에도 이 방법을 씁니다. 기본 JSON 구현을 코드에서 직접 넘기려면 `new GsonJsonCodec()`을 `jsonCodec(...)`에 넘깁니다. `GsonJsonCodec`은 `NaruServe`에 함께 들어 있고, `NaruServe-api`만 쓸 때는 Gson 모듈 `com.snoworca.naruserve:naruserve-gson`을 넣습니다([JSON](json.md#기본-gson-설정)).
@@ -85,11 +85,13 @@ public interface RouteHandler {
 
 | 메서드 | 설명 |
 |---|---|
-| `use(middleware)` | 모든 요청에 실행 |
+| `use(middleware)` | 모든 요청에 실행. 미들웨어가 `Installable`(예: auth)이면 미들웨어로 더하지 않고 `middleware.install(app)`을 불러 스스로 필요한 것을 등록하게 합니다 |
 | `use(prefix, middleware)` | `prefix` 경로와 그 하위 경로에만 실행 (`/api`, `/api/users`; `/apix`는 제외) |
 | `onError(handler)` | 처리되지 않은 예외를 받습니다. `(error, req, res) -> ...` |
 
 [미들웨어와 오류 처리](middleware.md)
+
+`Installable`은 메서드 하나 `void install(RestApp app)`의 인터페이스입니다. `app.use(x)`는 `x`가 `Middleware`이면서 `Installable`이면 `x.install(app)`을 한 번 부르고 앱을 돌려주며, 스스로는 등록 레코드를 남기지 않습니다(남는 것은 `install`이 등록한 것뿐). `Installable`은 앱 전체에 스스로 붙으므로 `use(prefix, x)`에 `""`·`"/"`가 아닌 경로를 주면 `IllegalArgumentException`을 던집니다. `use("/", x)`는 `use(x)`처럼 install하고(Express 습관 `app.use("/", mw)`), `use("", x)`와 라우터의 `use(x)`는 보통 미들웨어로 더합니다. Java와 Kotlin 모두 `app.use(auth)`처럼 씁니다(`auth.install(app)`과 같음, [auth](auth.md#install-순서)). Express 대응: `app.use(pkg)`가 자기 라우트까지 붙이는 패키지.
 
 ### 설정
 
@@ -101,7 +103,11 @@ public interface RouteHandler {
 | `cors(options -> ...)` | HTTP CORS 허용 출처·preflight 설정 | [HTTP CORS](middleware.md#http-cors) |
 | `group(prefix, configurer)` | 공통 접두사와 미들웨어로 라우트 묶기 | [라우트 그룹](middleware.md#라우트-그룹) |
 | `server(options -> ...)` | 바인딩 주소, 허용 Host, 크기·시간·연결 한도 | [서버 설정](#서버-설정) |
-| `trustProxy(boolean)` | `X-Forwarded-For`·`X-Forwarded-Proto` 신뢰(기본 `false`) | [서버 설정](#서버-설정) |
+| `trustProxy(boolean)` | `X-Forwarded-For`·`X-Forwarded-Proto` 신뢰(기본 `false`). 맨 왼쪽 값을 쓰므로 위조됩니다 | [서버 설정](#서버-설정) |
+| `trustProxyHops(n)` | 오른쪽에서 n번째 `X-Forwarded-For` 항목을 클라이언트 주소로 씁니다(홉 모드) | [프록시 신뢰](#프록시-신뢰) |
+| `trustProxyCidrs(cidr...)` | 신뢰 CIDR 안의 프록시만 믿고, 오른쪽부터 그 밖의 첫 주소를 씁니다(CIDR 모드) | [프록시 신뢰](#프록시-신뢰) |
+| `onRegistration(listener)` | 이후 등록마다 적용 전에 부르는 등록 감시자 | [등록 목록과 감시자](#등록-목록과-감시자) |
+| `registrations()` | 지금까지의 등록 목록(읽기 전용, 모든 상태에서 읽기 가능) | [등록 목록과 감시자](#등록-목록과-감시자) |
 | `multipart(config -> ...)` | 업로드 한도·임시 폴더 | [파일 업로드](multipart.md) |
 | `webSocket(options -> ...)` | WebSocket `Origin` 허용 목록, 메시지·송신 큐 크기, Ping 주기, idle timeout | [WebSocket](websocket.md#설정) |
 | `sse(options -> ...)` | SSE heartbeat·송신 큐 설정. 재접속 지연은 이벤트별 `SseEvent.retry(millis)`로 전송 | [SSE](sse.md) |
@@ -157,6 +163,8 @@ LAN에 열면 인증 여부와 상관없이 `listen()`이 보안 경고 로그�
 
 리버스 프록시 뒤에서는 `app.trustProxy(true)`로 첫 `X-Forwarded-For` 헤더의 맨 왼쪽 값을 `req.remoteAddress()`에, 첫 `X-Forwarded-Proto` 값(`https`이면 `true`)을 `req.isSecure()`에 씁니다. Express의 `app.set('trust proxy', true)`에 해당합니다. 기본은 `false`이고, 값은 검증하지 않고 그대로 쓰므로 그 헤더를 덮어쓰는 프록시 뒤에서만 켜세요. `Forwarded` 헤더는 읽지 않습니다.
 
+`trustProxy(true)`의 맨 왼쪽 값은 검증되지 않은, 클라이언트가 고를 수 있는 값이라 누구나 원하는 주소를 주장할 수 있습니다. 0.10.0 앱과의 호환을 위해 그대로 남겨 두었고, auth 모듈의 doctor는 `PROD`에서 이 설정을 FAIL로 보고합니다(R32). 프록시 뒤에서는 [`trustProxyHops`·`trustProxyCidrs`](#프록시-신뢰)를 쓰세요.
+
 ```java
 app.trustProxy(true);
 ```
@@ -166,6 +174,31 @@ Kotlin:
 ```kotlin
 app.trustProxy(true)
 ```
+
+### 프록시 신뢰
+
+프록시 뒤에서 클라이언트 주소를 안전하게 얻으려면 오른쪽부터 세는 두 모드 중 하나를 씁니다. 둘 다 `NEW`에서만 부를 수 있고, `trustProxy`·`trustProxyHops`·`trustProxyCidrs` 중 마지막 호출이 앞의 설정을 바꿉니다. `req.socketAddress()`는 어떤 설정에서도 실제 연결 주소입니다([Request](request.md#요청-정보)). WebSocket 업그레이드 요청도 일반 요청과 같은 설정을 씁니다.
+
+| Express | NaruServe | 뜻 |
+|---|---|---|
+| `app.set('trust proxy', 1)` | `app.trustProxyHops(1)` | 소켓 상대(로드 밸런서)를 믿고, `X-Forwarded-For`의 오른쪽에서 1번째 항목이 클라이언트 |
+| `app.set('trust proxy', 2)` | `app.trustProxyHops(2)` | 프록시 두 단계 뒤 |
+| `app.set('trust proxy', 'loopback, 10.0.0.0/8')` | `app.trustProxyCidrs("127.0.0.0/8", "::1", "10.0.0.0/8")` | 신뢰 CIDR 안의 소켓 상대만 믿고, 오른쪽부터 신뢰 CIDR 밖의 첫 항목이 클라이언트 |
+
+- **홉 모드** `trustProxyHops(n)`: `n`이 1 이상이면 소켓 상대를 믿고 `req.remoteAddress()`는 오른쪽에서 `n`번째 항목입니다. 항목이 `n`개보다 적으면 맨 왼쪽 항목입니다(Express와 같음). `0`은 아무것도 믿지 않아 어댑터 값을 그대로 씁니다. 음수는 `IllegalArgumentException`입니다. 이 노드에 로드 밸런서를 거쳐서만 접속할 수 있을 때만 쓰세요. 직접 접속한 클라이언트는 두 헤더를 모두 위조할 수 있습니다.
+- **CIDR 모드** `trustProxyCidrs(cidr...)`: 소켓 상대가 신뢰 CIDR 안일 때만 믿고, `req.remoteAddress()`는 오른쪽부터 신뢰 CIDR 밖의 첫 항목입니다. 모든 항목이 신뢰 CIDR 안이면 맨 왼쪽 항목, `X-Forwarded-For`가 없으면 소켓 상대입니다. 믿지 않는 소켓 상대의 전달 헤더는 모두 무시합니다. 로드 밸런서를 거치지 않는 접속을 막을 수 없는 여러 노드 배포에는 이 모드를 권합니다.
+- CIDR은 IPv4·IPv6 리터럴과 선택적 `/prefix`입니다(`10.0.0.0/8`, `fd00::/8`). 접두사가 없으면 그 주소 하나입니다. `null` 배열이나 원소는 `NullPointerException`, 그 밖의 값(`10.0.0.0/33`, `abc/8`, 호스트 이름)은 그 값을 담은 `IllegalArgumentException`이고, 이름을 DNS로 찾지 않습니다. 빈 배열은 아무것도 믿지 않습니다. `::ffff:10.0.0.1` 같은 IPv4 매핑 IPv6 주소는 IPv4 CIDR과 비교합니다.
+- 두 모드 모두 `X-Forwarded-For` 헤더 줄을 도착 순서대로 합치고, 빈 항목은 건너뜁니다. IP가 아닌 항목은 신뢰 CIDR 밖으로 보고 그대로 돌려줍니다. `Forwarded` 헤더는 읽지 않습니다.
+- `X-Forwarded-Proto`는 소켓 상대를 믿을 때만 읽습니다. 값이 하나면 그대로 쓰고(`https`는 대소문자 구분 없음), 여럿이면 클라이언트로 고른 `X-Forwarded-For` 항목과 오른쪽부터 같은 위치의 값을 씁니다. 값이 두 개 이상인데 개수가 `X-Forwarded-For`와 다르거나 그 위치가 없으면 `isSecure()`는 `false`입니다. 믿는 값은 어댑터의 TLS 여부를 양쪽으로 바꿉니다(TLS 연결이어도 `http`면 `false`). 헤더가 없으면 어댑터 값입니다.
+
+nginx는 두 헤더를 이렇게 넘기세요. 프록시가 `X-Forwarded-Proto`를 덮어쓰지 않고 그대로 넘기는 구성은 클라이언트 값과 구별할 수 없어 지원하지 않습니다.
+
+```nginx
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+```
+
+현재 설정은 `trustProxy()`(`boolean`), `trustProxyHops()`(`int`, 홉 모드가 아니면 `0`), `trustProxyCidrs()`(수정할 수 없는 `List<String>`, CIDR 모드가 아니면 빈 목록)로 읽습니다. 셋 다 `null`이 아니고 `listen` 뒤에도 읽을 수 있습니다. 아무 신뢰도 없으면 `false`·`0`·`[]`입니다.
 
 ### 라우터 정책
 
@@ -316,3 +349,58 @@ Android에서는 `start`도 메인 스레드에서 부르지 마세요. `listen`
 `use(path, router)`는 live Router 마운트, `param(name, ParamHandler)`는 캡처 전처리, 네 인자 `ErrorMiddleware`는 등록 위치의 오류 처리입니다. `getAsync`·`methodAsync`·`useAsync`는 세 인자 `AsyncRouteHandler`가 Deferred를 반환하는 API입니다. resolve가 next/end를 자동 호출하지 않으며 반환한 pending 결과가 조기 응답 뒤 요청 리소스를 보유합니다. [라우팅](routing.md), [요청 뷰](request.md#마운트와-경로-뷰), [Deferred](middleware.md#deferred와-늦은-작업)를 보세요.
 
 `send("text")`는 계속 text/plain이고 JSON 요청은 타입 지정·지연 파싱을 사용하며 정적 파일·WS·Host·프레이밍 보안은 유지합니다. 이 일반 HTTP 프로필이 Express 전체나 서드파티 미들웨어 API 전체를 뜻하지는 않습니다. RestApp을 직접 구현한 경우 확장된 등록 인터페이스를 반영해야 합니다. Request/Next/exchange의 추가 기본 메서드는 새 abstract 구현 의무를 만들지 않습니다.
+
+## 등록 목록과 감시자
+
+`registrations()`는 지금까지의 등록을 등록 순서대로 담은 읽기 전용 `List<Registration>`입니다. Express의 `app._router.stack`과 비슷하지만 레이어마다 종류가 붙어 있습니다. 부른 시점의 스냅샷이라 다른 스레드가 `listen` 뒤에 등록해도 순회 중에 `ConcurrentModificationException`이 나지 않고, 그 뒤의 등록은 다시 불러야 보입니다. 모든 상태에서 읽을 수 있고 `add`는 `UnsupportedOperationException`입니다.
+
+`onRegistration(listener)`는 등록 감시자를 붙입니다. Express에는 해당 기능이 없습니다. `NEW`에서만 부를 수 있고(`listen` 뒤에는 `IllegalStateException`), `null`은 `NullPointerException`입니다. 등록 한 건은 **검증 → 감시자 → 적용 → 기록** 순서입니다. 입력이 잘못된 등록은 0.10.0과 같은 예외를 던지고 감시자에 오지 않습니다. 감시자는 등록하는 스레드에서 적용 전에 동기로 불리며, 이때 그 등록은 아직 목록에 없고 요청에도 보이지 않습니다. 감시자가 예외를 던지면 그 등록은 적용되지 않고 기록되지 않으며, 예외는 그대로 `get`·`use` 같은 호출자에게 갑니다. 마운트된 Router에 나중에 더한 등록도 같습니다. 감시자가 여럿이면 붙인 순서로 부르고, 하나가 던지면 뒤의 감시자는 부르지 않습니다. 감시자 안에서 다시 등록하거나 `listen`·`shutdown`을 부르면 `IllegalStateException`입니다. 감시자는 모든 앱이 함께 쓰는 등록 잠금을 쥔 채 돌므로 다른 스레드를 기다리면 안 되고, 감시자 안에서 다른 앱의 메서드를 부르면 교착 대신 바로 `IllegalStateException`입니다. 여러 앱에 마운트된 Router의 등록을 뒤 앱의 감시자가 거부해도 앞 앱의 감시자는 이미 그 기록을 본 뒤이며 되돌리는 호출은 없습니다. 종료된(`TERMINATED`) 앱은 자기가 마운트했던 Router의 이후 등록을 더 보지 않습니다. `listen` 뒤에도 받는 등록(라우트, `use`, Router 마운트, `param`, `use(ErrorMiddleware)`)은 감시자를 거쳐 기록되고, `cors`·`ws`·`staticFiles`·`group`·`onError`·`trustProxy`는 여전히 `NEW`에서만 받습니다.
+
+| 종류 | 만드는 API |
+|---|---|
+| `ROUTE` | `get`·`post`·`put`·`patch`·`delete`·`head`·`options`(모든 오버로드), `route(Method, ...)`·`route(MethodSet, ...)`, `method(...)`, `methodAsync`, `getAsync`, `route(path)` 빌더의 메서드(`use(mw)` 포함) 하나마다 하나 |
+| `WEBSOCKET` | `ws(path, handler)` |
+| `STATIC` | `staticFiles(...)`. 안에서 미들웨어를 쓰지만 `MIDDLEWARE`로 따로 기록하지 않습니다 |
+| `ROUTER_MOUNT` | `use(path, router)`, `use(router)` |
+| `GROUP` | `group(prefix, configurer)`. 콜백이 정상으로 끝난 뒤 안의 라우트보다 먼저 기록합니다 |
+| `CORS` | `cors(...)`. `MIDDLEWARE`로 따로 기록하지 않습니다 |
+| `MIDDLEWARE` | 경로가 `""`·`"/"`인 미들웨어: `use(mw)`, `use("/", mw)`, `useAsync(handler)` |
+| `PATH_MIDDLEWARE` | 그 밖의 경로, `Pattern`, 배열을 가진 `use(path, mw)`·`useAsync(path, handler)` |
+| `ERROR_MIDDLEWARE` | `use(ErrorMiddleware)`, `use(path, ErrorMiddleware)`, `onError(handler)` |
+| `PARAM` | `param(name, handler)` |
+
+| 접근자 | 값 |
+|---|---|
+| `getKind()` | 위 표의 종류(`RegistrationKind`) |
+| `getMethod()` | `ROUTE`의 대문자 메서드 토큰(`"GET"`, `"PURGE"`). `route(MethodSet, ...)` 한 번은 `"GET,POST"`처럼 쉼표로 잇습니다. 빌더의 `use(mw)`와 다른 종류는 `null` |
+| `getPath()` | 마운트 경로를 앞에 붙인 전체 문자열 경로(`"/api/users"`). 경로 없는 등록(`use(mw)`, `cors`, `onError`, `param`)은 `""`이고 마운트 안이면 마운트 경로입니다. 이 경로나 감싼 마운트의 경로가 `Pattern`·배열이면 `null` |
+| `isStringPath()` | `getPath()`가 `null`이 아니면 `true` |
+| `getPathSource()` | 이 호출이 넘긴 경로 객체 그대로(문자열, `Pattern`, 배열). 넘기지 않았으면 `""` |
+| `getTarget()` | 호출자가 등록한 객체: 미들웨어, Router, `ErrorMiddleware`, `onError`의 핸들러 자체, `useAsync`의 `AsyncRouteHandler`, `ws`의 `WebSocketHandler`, `param`의 핸들러, `cors`·`group`의 configurer, `staticFiles`의 디렉터리. 라우트는 마지막 콜백(핸들러)입니다. 프레임워크가 만든 래퍼는 아닙니다 |
+| `getMount()` | 이 기록을 펼친 `ROUTER_MOUNT` 기록. 앱 수준이면 `null` |
+
+마운트된 Router와 `group` 안의 등록은 마운트 경로를 붙여 펼칩니다. `app.use("/api", r)`은 `ROUTER_MOUNT /api` 뒤에 `r`의 등록을 `r`의 순서대로 `/api/...`로 기록하고, 중첩된 Router는 두 접두사를 모두 붙입니다. 이미 등록을 가진 Router를 마운트하면 마운트 기록과 펼친 기록이 모두 감시자를 거친 뒤에야 마운트가 적용되므로, 하나라도 거부되면 그 Router의 어느 라우트도 열리지 않습니다. 마운트 뒤에(`listen` 뒤 포함) Router에 더한 등록은 목록 끝에 붙고 `getMount()`로 그 Router의 마운트 기록을 가리킵니다. 같은 Router를 두 번 마운트하면 마운트마다 한 번씩 펼칩니다. Router를 자기 안에 마운트하면 `IllegalArgumentException`입니다. `route(path)` 빌더의 `use(mw)`도 빌더 메서드라 `getMethod()`가 `null`인 `ROUTE` 하나로 기록합니다(그 라우트의 모든 메서드에 실행).
+
+```java
+app.onRegistration(r -> {
+    if (r.getKind() == RegistrationKind.ROUTE && !r.isStringPath()) {
+        throw new IllegalStateException("regex routes are not allowed: " + r.getPathSource());
+    }
+});
+app.get("/users", h);
+for (Registration r : app.registrations()) {
+    System.out.println(r.getKind() + " " + r.getMethod() + " " + r.getPath());
+}
+```
+
+Kotlin:
+
+```kotlin
+app.onRegistration { r ->
+    if (r.kind == RegistrationKind.ROUTE && !r.isStringPath) {
+        throw IllegalStateException("regex routes are not allowed: ${r.pathSource}")
+    }
+}
+app.get("/users") { _, res -> res.send("users") }
+for (r in app.registrations()) println("${r.kind} ${r.method} ${r.path}")
+```

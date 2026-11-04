@@ -1,0 +1,160 @@
+{
+ "cycles": [],
+ "cycle_note": "13 depends_on edges relabelled related_to on 2026-11-02 (cycle-cut-plan.json in kiwi-srs-feasibility-2026-11-01.naruserve.0110.v01); full graph now acyclic (518 depends_on edges)",
+ "reqs": {
+  "SEC-AUTH-003": {
+   "depends_on": [
+    "FR-AUTH-004",
+    "FR-AUTH-008",
+    "SEC-FLOW-001",
+    "SEC-FLOW-003",
+    "SEC-FLOW-007",
+    "FR-FLOW-002",
+    "FR-TOKEN-004",
+    "IR-AUTH-003"
+   ],
+   "draft_deps": [],
+   "dependants_count": 2
+  },
+  "SEC-AUTH-007": {
+   "depends_on": [
+    "IR-AUTH-001",
+    "FR-IAM-007",
+    "FR-IAM-006",
+    "FR-IAM-009",
+    "SEC-IAM-004"
+   ],
+   "draft_deps": [],
+   "dependants_count": 4
+  },
+  "SEC-AUTH-008": {
+   "depends_on": [
+    "FR-AUTH-004"
+   ],
+   "draft_deps": [],
+   "dependants_count": 5
+  },
+  "SEC-TOKEN-009": {
+   "depends_on": [
+    "REL-TOKEN-001",
+    "PERF-TOKEN-001",
+    "SEC-TOKEN-007",
+    "SEC-FLOW-011",
+    "SEC-FLOW-012"
+   ],
+   "draft_deps": [],
+   "dependants_count": 5
+  },
+  "IR-TOKEN-001": {
+   "depends_on": [
+    "SEC-TOKEN-009",
+    "FR-TOKEN-003",
+    "FR-TOKEN-001",
+    "SEC-FLOW-004",
+    "IR-FLOW-001"
+   ],
+   "draft_deps": [
+    "SEC-TOKEN-009"
+   ],
+   "dependants_count": 3
+  },
+  "FR-FLOW-006": {
+   "depends_on": [
+    "IR-FLOW-002",
+    "IR-IAM-003",
+    "SEC-IAM-001",
+    "FR-AUTH-008",
+    "FR-IAM-003",
+    "FR-AUTH-006"
+   ],
+   "draft_deps": [],
+   "dependants_count": 1
+  },
+  "FR-FLOW-009": {
+   "depends_on": [
+    "SEC-FLOW-011",
+    "IR-IAM-005",
+    "SEC-IAM-007",
+    "IR-AUTH-003"
+   ],
+   "draft_deps": [],
+   "dependants_count": 0
+  },
+  "SEC-FLOW-013": {
+   "depends_on": [
+    "REL-FLOW-001",
+    "SEC-TOKEN-004",
+    "SEC-TOKEN-005",
+    "SEC-FLOW-007",
+    "SEC-FLOW-011"
+   ],
+   "draft_deps": [
+    "REL-FLOW-001"
+   ],
+   "dependants_count": 2
+  },
+  "REL-FLOW-001": {
+   "depends_on": [
+    "IR-FLOW-003",
+    "REL-IAM-004",
+    "FR-AUTH-003",
+    "OPS-AUTH-001"
+   ],
+   "draft_deps": [],
+   "dependants_count": 2
+  },
+  "FR-IAM-013": {
+   "depends_on": [
+    "DR-IAM-003",
+    "IR-FLOW-003",
+    "SEC-FLOW-013",
+    "REL-FLOW-001"
+   ],
+   "draft_deps": [
+    "SEC-FLOW-013",
+    "REL-FLOW-001"
+   ],
+   "dependants_count": 0
+  },
+  "FR-IAM-014": {
+   "depends_on": [
+    "IR-IAM-005",
+    "SEC-IAM-007",
+    "SEC-IAM-004",
+    "FR-IAM-003",
+    "REL-IAM-002",
+    "SEC-IAM-001",
+    "SEC-IAM-003",
+    "FR-AUTH-008",
+    "FR-AUTH-009",
+    "IR-AUTH-003",
+    "REL-IAM-001",
+    "FR-AUTH-006"
+   ],
+   "draft_deps": [],
+   "dependants_count": 2
+  },
+  "SEC-APIKEY-008": {
+   "depends_on": [
+    "SEC-APIKEY-004",
+    "FR-FLOW-005",
+    "FR-FLOW-006",
+    "IR-IAM-005",
+    "FR-IAM-014",
+    "SEC-FLOW-003",
+    "FR-FLOW-001",
+    "SEC-FLOW-014",
+    "IR-FLOW-001",
+    "FR-APIKEY-004",
+    "SEC-FLOW-005"
+   ],
+   "draft_deps": [
+    "FR-FLOW-006",
+    "FR-IAM-014"
+   ],
+   "dependants_count": 0
+  }
+ },
+ "decisions_doc": "docs/analysis/kiwi-srs-feasibility-2026-11-01.naruserve.0110.v01/draft-open-questions.md",
+ "prior_judgements": "docs/analysis/kiwi-srs-feasibility-2026-11-01.naruserve.0110.v01/per-req-judgement-*.json"
+}

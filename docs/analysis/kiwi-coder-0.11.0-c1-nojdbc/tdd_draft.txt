@@ -1,0 +1,18 @@
+run 0.11.0-c1-nojdbc — CON-IAM-003 (auth persistence is SPI-only)
+New tests:
+  NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/SpiOnlyPersistenceTest.java
+    CON_IAM_003_AC1_noBuiltInDatabaseStoreInTheMainJar   (jar scan + constant-pool class refs + DDL constants)
+    CON_IAM_003_AC2_noJdbcDriverOnTheTestClasspath       (ServiceLoader<java.sql.Driver> + known driver classes)
+    CON_IAM_003_AC3_multiInstanceRunsOnAppProvidedStores (MULTI_INSTANCE over AppStores: doctor, login, refresh, API key)
+    CON_IAM_003_AC4_docsShowTheAppProvidedDatabaseStore  (ko + en section sentences, SQL skeleton, declarations)
+    REL_IAM_003_AC5_docsTellTheAtomicFieldWritesDeclaration
+  src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java
+    CON_IAM_003_AC2_noJdbcDriverInAnyApiConfiguration     (build.gradle notations, dependency report, POM/module.json)
+  NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/testing/VerifyApiKeyStoreTest.java
+    FR_APIKEY_009_AC6_twoAppStoreInstancesPassTwentyTimes
+Fixture: NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AppStores.java
+Red evidence (before the main-code change, against the baseline jar NaruServe-api-0.10.0.jar):
+  22 jar entries under com/snoworca/naruserve/utils/auth/jdbc/ (AC-1 fails),
+  Auth.class constant pool names java/sql/SQLException (AC-1 / CON-AUTH-003 AC-4 fail),
+  build.gradle declares testImplementation 'org.xerial:sqlite-jdbc:3.46.1.3' (AC-2 fails),
+  docs/api/auth.md has no '자체 데이터베이스 연결' section (AC-4 fails).
