@@ -103,11 +103,26 @@ public class Wave7DocsTest {
                 "only `csrfToken` present means cookie delivery", "never assumes one");
     }
 
-    // OPS-FLOW-001 AC-3 (last clause): a non-http(s) origin such as capacitor://localhost cannot be listed in
-    // CorsOptions.allowedOrigins
+    // OPS-FLOW-001 AC-3 (last clause): a custom-scheme origin such as capacitor://localhost can be listed in
+    // CorsOptions.allowedOrigins but not in trustedOrigins, and is always body delivery
     @Test
-    public void OPS_FLOW_001_AC3_capacitorCannotBeListed() throws IOException {
-        has("ko", ko(), "HTTP(S) 출처", "`capacitor://localhost`는 아직 목록에 넣을 수 없습니다");
-        has("en", en(), "accepts only HTTP(S) origins", "`capacitor://localhost` cannot be listed yet");
+    public void OPS_FLOW_001_AC3_customSchemeOriginsGoInAllowedOriginsOnly() throws IOException {
+        has("ko", ko(), "iOS Capacitor는 `capacitor://localhost`", "Android Capacitor는 기본이 `https://localhost`",
+                "`trustedOrigins`에는 넣을 수 없어", "앱의 신원이 아닙니다", "CapacitorHttp");
+        has("en", en(), "iOS Capacitor uses `capacitor://localhost`", "Android Capacitor defaults to `https://localhost`",
+                "cannot go in `trustedOrigins`", "not an app identity", "CapacitorHttp");
+        for (String gone : new String[] {"아직 목록에 넣을 수 없습니다", "Android Capacitor `http://localhost`"}) {
+            assertTrue(gone, !ko().contains(gone));
+        }
+        for (String gone : new String[] {"cannot be listed yet", "Android Capacitor `http://localhost`"}) {
+            assertTrue(gone, !en().contains(gone));
+        }
+    }
+
+    // FR-DX-010 AC-7: the middleware page states the origin form and that * covers it
+    @Test
+    public void FR_DX_010_AC7_middlewarePageStatesTheOriginForm() throws IOException {
+        has("ko", page("middleware.md"), "`scheme://host[:port]` 출처", "`capacitor://localhost`");
+        has("en", page("en/middleware.md"), "`scheme://host[:port]` origins", "`capacitor://localhost`");
     }
 }

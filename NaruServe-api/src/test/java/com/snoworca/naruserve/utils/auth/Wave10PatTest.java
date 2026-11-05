@@ -1385,16 +1385,18 @@ public class Wave10PatTest {
         }
         assertEquals(audit.toString(), 3, revoked.size());
         assertEquals(u1, revoked.get(0).getActorId());
+        assertEquals(u1, revoked.get(0).getTargetId());
         assertEquals(own.getKey().getId(), revoked.get(0).getDetails().get("revokedApiKeyId"));
         assertEquals(root, revoked.get(1).getActorId());
         assertEquals(u1, revoked.get(1).getTargetId());
         assertEquals(other.getKey().getId(), revoked.get(1).getDetails().get("revokedApiKeyId"));
+        assertEquals(u1, revoked.get(2).getTargetId());
         assertEquals(third.getKey().getId(), revoked.get(2).getDetails().get("revokedApiKeyId"));
         assertEquals(actorKey.getKey().getId(), revoked.get(2).getDetails().get("apiKeyId"));
     }
 
-    // FR-AUTH-009 AC-2: the app calls carry the key id too; issuedByUserId is on the issue event of a key endpoint only,
-    // so auth.apiKeys().issue (no issuer) and every revoke event leave it out
+    // FR-AUTH-009 AC-2: the app calls carry the key id too, and a revoke names the owner as target; a key with no
+    // recorded issuer (auth.apiKeys().issue) has no issuedByUserId on its issue event or on any revoke event
     @Test
     public void FR_AUTH_009_AC2_issueAndRevokeEventsCarryTheKeyId() throws Exception {
         start(b -> b);
@@ -1418,7 +1420,35 @@ public class Wave10PatTest {
         assertEquals(viaCall.getKey().getId(), revoked.get(0).getDetails().get("revokedApiKeyId"));
         assertEquals(viaEndpoint.getKey().getId(), revoked.get(1).getDetails().get("revokedApiKeyId"));
         for (AuditEvent e : revoked) {
+            assertEquals(u1, e.getTargetId());
             assertFalse(e.getDetails().containsKey("issuedByUserId"));
+        }
+    }
+
+    // FR-AUTH-009 AC-2 (00 R47 (3), (6)): a key with a recorded issuer carries it on the revoke event too, on all three
+    // revoke paths: DELETE /auth/me/apikeys/:id, DELETE /auth/admin/apikeys/:id and auth.apiKeys().revoke
+    @Test
+    public void FR_AUTH_009_AC2_revokeEventsCarryTheRecordedIssuer() throws Exception {
+        start(b -> b);
+        String viaMe = (String) W8.object(pat(u1, body(W8.PW, "posts:read"))).get("id");
+        String viaAdmin = (String) W8.object(pat(u1, body(W8.PW, "posts:read"))).get("id");
+        String viaCall = (String) W8.object(pat(u1, body(W8.PW, "posts:read"))).get("id");
+        audit.clear();
+        assertEquals(204, send("DELETE", "/auth/me/apikeys/" + viaMe, bearer(u1)).status());
+        assertEquals(204, send("DELETE", "/auth/admin/apikeys/" + viaAdmin, bearer(root)).status());
+        assertTrue(f.auth.apiKeys().revoke(viaCall));
+        List<AuditEvent> revoked = new ArrayList<>();
+        for (AuditEvent e : audit) {
+            if (AuditEvent.API_KEY_REVOKED.equals(e.getType())) {
+                revoked.add(e);
+            }
+        }
+        assertEquals(audit.toString(), 3, revoked.size());
+        String[] ids = {viaMe, viaAdmin, viaCall};
+        for (int i = 0; i < ids.length; i++) {
+            assertEquals(ids[i], revoked.get(i).getDetails().get("revokedApiKeyId"));
+            assertEquals(ids[i], u1, revoked.get(i).getTargetId());
+            assertEquals(ids[i], u1, revoked.get(i).getDetails().get("issuedByUserId"));
         }
     }
 }

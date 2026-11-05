@@ -75,6 +75,49 @@ public class AuthGuideRound6DocsTest {
         }
     }
 
+    // SEC-AUTH-002 AC-6: the AuthMode Javadoc and both guides state the one closed list of eight DEV relaxations
+    @Test
+    public void SEC_AUTH_002_AC6_javadocAndGuidesStateTheSameDevList() throws IOException {
+        String source = read("NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AuthMode.java");
+        String javadoc = source.substring(0, source.indexOf("public enum AuthMode")).replaceAll("\\s*\\n\\s*\\*\\s*", " ");
+        assertFalse(javadoc, javadoc.contains("exactly three"));
+        for (String item : new String[] {"exactly eight things", "a temporary key for a missing secret",
+            "the secure-transport check", "the hash-cost and key-strength failures", "a {@code .user(...)} password that breaks",
+            "a password-less admin {@code .user(...)}", "a file store without a file key", "legacy {@code trustProxy(true)}",
+            "no final auth error layer", "Authorization is never relaxed"}) {
+            has("AuthMode", javadoc, item);
+        }
+        String[][] rows = {
+            {"비밀키가 없으면 임시 키", "A missing secret becomes a temporary key"},
+            {"보안 연결 검사(", "The secure-transport check ("},
+            {"짧거나 예제인 키, 해시 비용 실패를 WARN으로", "Short or example keys and hash-cost failures become WARNs"},
+            {"비밀번호 정책을 어긴 `.user(...)` 비밀번호", "A `.user(...)` password that breaks the password policy"},
+            {"비밀번호 없는 관리자 `.user(...)`", "A password-less admin `.user(...)`"},
+            {"파일 키 없는 파일 저장소", "A file store without a file key"},
+            {"옛 `trustProxy(true)`", "Legacy `trustProxy(true)`"},
+            {"마지막 auth 오류 레이어가 없음", "No final auth error layer"}};
+        for (String f : GUIDES) {
+            String doc = read(f);
+            int at = doc.indexOf(en(f) ? "| What DEV relaxes (the whole list) | PROD |" : "| DEV가 완화하는 것(전부) | PROD |");
+            assertTrue(f, at >= 0);
+            String[] lines = doc.substring(at).split("\n");
+            int body = 0;
+            while (lines[2 + body].startsWith("|")) {
+                has(f, lines[2 + body], rows[body][en(f) ? 1 : 0]);
+                body++;
+            }
+            assertTrue(f + " has " + body + " DEV rows", body == rows.length);
+            String row = null;
+            for (String l : doc.split("\n")) {
+                if (l.startsWith("| `AuthMode.DEV` |")) {
+                    row = l;
+                }
+            }
+            has(f, row, en(f) ? "Relaxes exactly eight things" : "정해진 여덟 가지만");
+            assertFalse(f, doc.contains(en(f) ? "exactly four things" : "정해진 네 가지만"));
+        }
+    }
+
     // OPS-AUTH-017 AC-4: the Kotlin test-kit fragment is a class
     @Test
     public void OPS_AUTH_017_AC4_kotlinTestKitIsAClass() throws IOException {

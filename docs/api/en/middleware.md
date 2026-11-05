@@ -101,7 +101,7 @@ app.cors(cors -> cors
 app.use(checkAuth);
 ```
 
-- `allowedOrigins` contains exact HTTP(S) origins without paths/trailing slashes. Default: none. `*` allows every origin; the string `null` allows opaque origins.
+- `allowedOrigins` contains exact `scheme://host[:port]` origins without paths/trailing slashes (`https://app.example`, `capacitor://localhost`). Default: none. `*` allows every such origin; the string `null` allows opaque origins.
 - Default methods are GET, HEAD, POST. `allowedMethods` replaces the set; `allowedHeaders` replaces a case-insensitive allowlist, empty by default.
 - `credentials` defaults false. Combining `credentials(true)` and `*` fails registration. `maxAge` uses nonnegative seconds; default 0 omits caching metadata.
 - Allowed origins receive `Access-Control-Allow-Origin` and, when enabled, `Access-Control-Allow-Credentials: true`. Disallowed ordinary origins continue without grants. CORS does not authenticate.

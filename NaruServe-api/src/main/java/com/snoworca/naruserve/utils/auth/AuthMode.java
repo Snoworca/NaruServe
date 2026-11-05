@@ -4,9 +4,14 @@ import java.util.Locale;
 import org.jspecify.annotations.Nullable;
 
 /**
- * How strict auth runs. {@link #PROD} is the default. {@link #DEV} relaxes exactly three things: a temporary key for a
- * missing secret, the secure-transport check, and the hash-cost and key-strength failures, which become warnings.
- * Authorization is never relaxed. The app passes the mode in code, usually {@code .mode(AuthMode.fromEnv())}.
+ * How strict auth runs. {@link #PROD} is the default. {@link #DEV} relaxes exactly eight things: a temporary key for a
+ * missing secret; the secure-transport check; the hash-cost and key-strength failures, which become warnings; a
+ * {@code .user(...)} password that breaks the password policy, which creates the account with a warning; a
+ * password-less admin {@code .user(...)}, which gets a temporary password written to the log; a file store without a
+ * file key, which starts with a warning and stores plain data; legacy {@code trustProxy(true)}, which is no doctor
+ * failure; and no final auth error layer, so an app exception no earlier layer answered goes on to Core's page with its
+ * stack trace. Authorization is never relaxed. The app passes the mode in code, usually
+ * {@code .mode(AuthMode.fromEnv())}.
  */
 // @req SEC-AUTH-002
 public enum AuthMode {

@@ -11,6 +11,7 @@ import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore;
 import com.snoworca.naruserve.utils.auth.apikey.InMemoryApiKeyStore;
 import com.snoworca.naruserve.utils.auth.apikey.StoredApiKey;
+import com.snoworca.naruserve.utils.auth.audit.AuditEvent;
 import com.snoworca.naruserve.utils.auth.internal.ApiKeyFormat;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -233,6 +234,42 @@ public class Wave12ApiKeyTest {
         } finally {
             keys.failing.remove(method);
         }
+    }
+
+    // FR-AUTH-009 AC-2: the read before a revoke only fills the audit event, so its failure never stops the revoke: the
+    // key is gone and each path leaves one event with the key id and no issuer; the app call has no target either
+    @Test
+    public void FR_AUTH_009_AC2_anUnreadableKeyIsStillRevoked() throws Exception {
+        List<AuditEvent> audit = new java.util.concurrent.CopyOnWriteArrayList<>();
+        u1 = f.user("u1", W8.PW, "reader");
+        f.start(b -> b.apiKeys(keys).audit(audit::add).roles(Wave10PatTest.roles()));
+        String viaCall = idOf(issue(u1));
+        String viaMe = idOf(issue(u1));
+        String u1Bearer = bearer(u1);
+        audit.clear();
+        keys.failing.add("findById");
+        try {
+            assertTrue(f.auth.apiKeys().revoke(viaCall));
+            assertEquals(204, send("DELETE", "/auth/me/apikeys/" + viaMe, u1Bearer).status());
+        } finally {
+            keys.failing.remove("findById");
+        }
+        assertEquals(java.util.Arrays.asList("findById", "findById"), keys.failed);
+        assertNull(keys.d.findById(viaCall));
+        assertNull(keys.d.findById(viaMe));
+        List<AuditEvent> revoked = new java.util.ArrayList<>();
+        for (AuditEvent e : audit) {
+            if (AuditEvent.API_KEY_REVOKED.equals(e.getType())) {
+                revoked.add(e);
+            }
+        }
+        assertEquals(audit.toString(), 2, revoked.size());
+        assertEquals(viaCall, revoked.get(0).getDetails().get("revokedApiKeyId"));
+        assertEquals(viaMe, revoked.get(1).getDetails().get("revokedApiKeyId"));
+        assertNull(revoked.get(0).getTargetId());
+        assertEquals(u1, revoked.get(1).getTargetId()); // the endpoint knows the owner without the read
+        assertFalse(revoked.get(0).getDetails().containsKey("issuedByUserId"));
+        assertFalse(revoked.get(1).getDetails().containsKey("issuedByUserId"));
     }
 
     // IR-APIKEY-004 AC-6: on a protected request a store exception from a call the response depends on (findByPrefix,

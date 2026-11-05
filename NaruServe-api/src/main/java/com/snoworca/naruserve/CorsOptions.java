@@ -3,7 +3,7 @@ package com.snoworca.naruserve;
 /** HTTP CORS policy. Configure before authentication middleware; WebSocket origins are configured separately. */
 // @req FR-DX-010
 public interface CorsOptions {
-    /** Exact serialized HTTP(S) origins, literal null, or wildcard *. Default: no allowed origins. */
+    /** Exact serialized origins ({@code scheme://host[:port]}, any scheme), literal null, or wildcard *. Default: no allowed origins. */
     CorsOptions allowedOrigins(String... origins);
     /** Allowed preflight methods. Defaults to GET, HEAD and POST. */
     CorsOptions allowedMethods(Method... methods);

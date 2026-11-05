@@ -251,28 +251,51 @@ final class DefaultAuthApiKeys implements AuthApiKeys {
     public boolean revoke(final String keyId) {
         Objects.requireNonNull(keyId, "keyId");
         final ApiKeyStore keys = store();
+        StoredApiKey row = rowBeforeRevoke(keys, keyId);
         boolean deleted = call(() -> keys.deleteById(keyId));
         if (deleted) {
             ApiKeyUsage usage = auth.apiKeyUsage();
             if (usage != null) {
                 usage.forget(keyId);
             }
-            auth.audit().emit(auth.audit().event(AuditEvent.API_KEY_REVOKED, "auth.apiKeys().revoke", null, null,
-                    null, false).detail("revokedApiKeyId", keyId).build());
+            auth.audit().emit(revokedEvent(auth.audit().event(AuditEvent.API_KEY_REVOKED, "auth.apiKeys().revoke", null,
+                    null, null, false), keyId, row == null ? null : row.getOwnerUserId(),
+                    row == null ? null : row.getIssuedByUserId()));
             auth.keyRevoked(keyId);
         }
         return deleted;
     }
 
+    /** FR-AUTH-009 AC-2: the row a revoke audits, null when unreadable; this read only fills the event, so it never stops the revoke. */
+    // @req FR-AUTH-009
+    @Nullable StoredApiKey rowBeforeRevoke(ApiKeyStore keys, String keyId) {
+        try {
+            return keys.findById(keyId);
+        } catch (Exception unreadable) {
+            return null;
+        }
+    }
+
+    /** The {@code api_key_revoked} event: the deleted key, the owner as target and the issuer when the key has one. */
+    private static AuditEvent revokedEvent(AuditEvent.Builder event, String keyId, @Nullable String ownerId,
+            @Nullable String issuedBy) {
+        event.targetId(ownerId).detail("revokedApiKeyId", keyId);
+        if (issuedBy != null) {
+            event.detail("issuedByUserId", issuedBy);
+        }
+        return event.build();
+    }
+
     /**
      * After a key endpoint deleted {@code keyId} of {@code ownerId} for the request's {@code actorId} (00 R47, FR-AUTH-009
-     * AC-2): the usage record is forgotten, an {@code api_key_revoked} audit event names the actor, the owner as target
-     * and the deleted key as {@code revokedApiKeyId} (an API-key actor's own key id is its {@code apiKeyId}), and the
-     * connections opened with the key on this node close.
+     * AC-2): the usage record is forgotten, an {@code api_key_revoked} audit event names the actor, the owner as target,
+     * the deleted key as {@code revokedApiKeyId} and {@code issuedBy}, when known, as {@code issuedByUserId} (an API-key
+     * actor's own key id is its {@code apiKeyId}), and the connections opened with the key on this node close.
      */
     // @req SEC-APIKEY-011
     // @req FR-APIKEY-004
-    void revokedThrough(Request req, String action, String actorId, String keyId, String ownerId) {
+    void revokedThrough(Request req, String action, String actorId, String keyId, String ownerId,
+            @Nullable String issuedBy) {
         ApiKeyUsage usage = auth.apiKeyUsage();
         if (usage != null) {
             usage.forget(keyId);
@@ -284,8 +307,8 @@ final class DefaultAuthApiKeys implements AuthApiKeys {
         } catch (Exception e) {
             // the mark is best effort; the deletion already happened
         }
-        auth.audit().emit(auth.audit().event(AuditEvent.API_KEY_REVOKED, action, req, actorId, null, service)
-                .targetId(ownerId).detail("revokedApiKeyId", keyId).build());
+        auth.audit().emit(revokedEvent(auth.audit().event(AuditEvent.API_KEY_REVOKED, action, req, actorId, null, service),
+                keyId, ownerId, issuedBy));
         auth.keyRevoked(keyId);
     }
 

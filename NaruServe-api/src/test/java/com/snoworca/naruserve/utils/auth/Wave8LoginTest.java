@@ -1161,7 +1161,8 @@ public class Wave8LoginTest {
     public void FR_FLOW_002_AC5_trustedOriginBesideCors() throws Exception {
         f.user("alice", W8.PW);
         f.attach = (a, app) -> {
-            app.cors(c -> c.allowedOrigins("https://spa.example", "http://localhost").credentials(true));
+            app.cors(c -> c.allowedOrigins("https://spa.example", "http://localhost", "capacitor://localhost")
+                    .credentials(true));
             a.install(app);
         };
         f.start(b -> b.transport(TokenTransport.BOTH).trustedOrigins("https://spa.example"));
@@ -1182,21 +1183,39 @@ public class Wave8LoginTest {
         }
     }
 
-    // OPS-FLOW-001 AC-3 (what the page states is what Core does): capacitor://localhost cannot be listed in
-    // CorsOptions.allowedOrigins, which is why FR-FLOW-002 AC-5 keeps it out of the app.cors list
+    // OPS-FLOW-001 AC-3 (what the page states is what Core does), end to end: capacitor://localhost is listed in
+    // CorsOptions.allowedOrigins, its preflight passes, and the BOTH login behind it is body delivery the page can read
     @Test
-    public void OPS_FLOW_001_AC3_capacitorIsRefusedByAllowedOrigins() throws Exception {
+    public void OPS_FLOW_001_AC3_capacitorIsListedAndLogsInThroughPreflight() throws Exception {
         f.user("alice", W8.PW);
         f.attach = (a, app) -> {
-            try {
-                app.cors(c -> c.allowedOrigins("https://spa.example", "capacitor://localhost"));
-                org.junit.Assert.fail("capacitor://localhost was listed");
-            } catch (IllegalArgumentException expected) {
-                assertTrue(expected.getMessage(), expected.getMessage().contains("allowedOrigins"));
-            }
+            app.cors(c -> c.allowedOrigins("https://spa.example", "capacitor://localhost")
+                    .allowedMethods(com.snoworca.naruserve.Method.POST).allowedHeaders("Content-Type"));
             a.install(app);
         };
         f.start(b -> b.transport(TokenTransport.BOTH));
+        String origin = "capacitor://localhost";
+        ClientResponse preflight = f.adapter.send(com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest
+                .of("OPTIONS", "/auth/login").header("Host", W8.HOST).header("Origin", origin)
+                .header("Access-Control-Request-Method", "POST").header("Access-Control-Request-Headers", "content-type"));
+        assertEquals(preflight.text(), 204, preflight.status());
+        assertEquals(origin, preflight.header("Access-Control-Allow-Origin"));
+        ClientResponse login = f.post("/auth/login", W8.login("alice", W8.PW), "Host", W8.HOST, "Origin", origin);
+        assertEquals(login.text(), 200, login.status());
+        assertEquals(origin, login.header("Access-Control-Allow-Origin"));
+        assertNotNull(W8.object(login).get("accessToken"));
+        assertTrue(W8.setCookies(login).isEmpty());
+    }
+
+    // OPS-FLOW-001 AC-3: trustedOrigins stays http(s) only, so a custom-scheme origin can never turn into cookie delivery
+    @Test
+    public void OPS_FLOW_001_AC3_capacitorIsRefusedByTrustedOrigins() throws Exception {
+        try {
+            Auth.builder(AuthTestSupport.SECRET).trustedOrigins("capacitor://localhost").build();
+            org.junit.Assert.fail("capacitor://localhost was trusted");
+        } catch (AuthConfigException expected) {
+            assertTrue(expected.getMessage(), expected.getMessage().contains(".trustedOrigins needs absolute http(s) origins"));
+        }
     }
 
     // FR-FLOW-009 AC-2 (the answer itself): the refusal of a locked account has the same body and challenge as a wrong

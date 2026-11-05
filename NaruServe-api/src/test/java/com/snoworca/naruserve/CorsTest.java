@@ -104,6 +104,72 @@ public class CorsTest {
         assertFalse(called[0]);
     }
 
+    // FR-DX-010 AC-7 — an origin is scheme://host[:port] whatever its scheme: a listed custom scheme gets the same grant
+    // as an http(s) origin, on preflight, on the request and on an error response.
+    @Test public void listedCustomSchemeOriginsGetPreflightRequestAndErrorGrants() {
+        String[] listed = {"capacitor://localhost", "ionic://localhost"};
+        TestApp t = TestApp.create();
+        t.app().cors(o -> o.allowedOrigins(listed).allowedMethods(Method.GET, Method.POST).allowedHeaders("Content-Type"));
+        t.app().get("/x", (req, res) -> res.send("ok"));
+        t.app().get("/boom", (req, res) -> { throw new IllegalStateException("boom"); });
+        for (String origin : listed) {
+            ClientResponse preflight = t.send("OPTIONS", "/x", "Origin", origin,
+                    "Access-Control-Request-Method", "POST", "Access-Control-Request-Headers", "content-type");
+            assertEquals(origin, 204, preflight.status());
+            assertEquals(origin, preflight.header("Access-Control-Allow-Origin"));
+            assertEquals(origin, t.send("GET", "/x", "Origin", origin).header("Access-Control-Allow-Origin"));
+            ClientResponse failed = t.send("GET", "/boom", "Origin", origin);
+            assertEquals(500, failed.status());
+            assertEquals(origin, failed.header("Access-Control-Allow-Origin"));
+        }
+    }
+
+    // FR-DX-010 AC-2, AC-7 — the list stays an exact match: a custom scheme nobody listed is still denied.
+    @Test public void unlistedCustomSchemeOriginIsDenied() {
+        TestApp t = TestApp.create();
+        t.app().cors(o -> o.allowedOrigins("capacitor://localhost").allowedMethods(Method.POST));
+        t.app().get("/x", (req, res) -> res.send("ok"));
+        String[] preflight = {"Access-Control-Request-Method", "POST"};
+        for (String other : new String[]{"ionic://localhost", "capacitor://other", "capacitor://localhost:8080"}) {
+            ClientResponse denied = t.send("OPTIONS", "/x", "Origin", other, preflight[0], preflight[1]);
+            assertEquals(other, 403, denied.status());
+            assertNull(other, denied.header("Access-Control-Allow-Origin"));
+            assertNull(other, t.send("GET", "/x", "Origin", other).header("Access-Control-Allow-Origin"));
+        }
+    }
+
+    // FR-DX-010 AC-7 — * covers every origin of that form, which is what docs/api/middleware.md promises.
+    @Test public void wildcardGrantsCustomSchemeOrigins() {
+        TestApp t = TestApp.create();
+        t.app().cors(o -> o.allowedOrigins("*").allowedMethods(Method.POST));
+        t.app().get("/x", (req, res) -> res.send("ok"));
+        for (String origin : new String[]{"capacitor://localhost", "ionic://localhost", "chrome-extension://abcdef"}) {
+            ClientResponse preflight = t.send("OPTIONS", "/x", "Origin", origin, "Access-Control-Request-Method", "POST");
+            assertEquals(origin, 204, preflight.status());
+            assertEquals("*", preflight.header("Access-Control-Allow-Origin"));
+            assertEquals("*", t.send("GET", "/x", "Origin", origin).header("Access-Control-Allow-Origin"));
+        }
+    }
+
+    // FR-DX-010 AC-7 — a value that is not scheme://host[:port] is refused at configuration and gets no grant on a request.
+    @Test public void malformedCustomSchemeValuesAreRefusedAndGetNoGrant() {
+        String[] malformed = {"capacitor://localhost/", "capacitor://localhost/path", "capacitor://u@localhost",
+            "capacitor://localhost?q=1", "capacitor://localhost#f", "capacitor:x", "capacitor:/x", "file://", "file:///a"};
+        for (String value : malformed) {
+            TestApp refused = TestApp.create();
+            assertThrows(value, IllegalArgumentException.class, () -> refused.app().cors(o -> o.allowedOrigins(value)));
+        }
+        TestApp t = TestApp.create();
+        t.app().cors(o -> o.allowedOrigins("*").allowedMethods(Method.POST));
+        t.app().get("/x", (req, res) -> res.send("ok"));
+        for (String value : malformed) {
+            assertNull(value, t.send("GET", "/x", "Origin", value).header("Access-Control-Allow-Origin"));
+            ClientResponse preflight = t.send("OPTIONS", "/x", "Origin", value, "Access-Control-Request-Method", "POST");
+            assertEquals(value, 403, preflight.status());
+            assertNull(value, preflight.header("Access-Control-Allow-Origin"));
+        }
+    }
+
     // FR-DX-010 AC-5 — HTTP CORS cannot authorize a WebSocket origin.
     @Test public void corsAllowlistDoesNotBypassWebSocketOriginCheck() {
         InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();

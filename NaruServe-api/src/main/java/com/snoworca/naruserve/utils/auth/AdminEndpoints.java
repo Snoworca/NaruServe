@@ -1200,7 +1200,7 @@ final class AdminEndpoints {
             throw new HttpException(404);
         }
         ((DefaultAuthApiKeys) auth.apiKeys()).revokedThrough(req, "DELETE /auth/admin/apikeys/:id", actor(req), id,
-                k.getOwnerUserId());
+                k.getOwnerUserId(), k.getIssuedByUserId());
         res.sendStatus(204);
     }
 

@@ -101,7 +101,7 @@ app.cors(cors -> cors
 app.use(checkAuth);
 ```
 
-- `allowedOrigins`는 경로·끝 슬래시 없는 정확한 HTTP(S) origin 목록입니다. 기본은 없음이며 `*`는 모든 origin, 문자열 `null`은 opaque origin을 허용합니다.
+- `allowedOrigins`는 경로·끝 슬래시 없는 정확한 `scheme://host[:port]` 출처 목록입니다(`https://app.example`, `capacitor://localhost`). 기본은 없음이며 `*`는 그런 출처 모두, 문자열 `null`은 opaque origin을 허용합니다.
 - 기본 메서드는 GET, HEAD, POST입니다. `allowedMethods`는 집합을 바꾸고 `allowedHeaders`는 대소문자를 구분하지 않는 허용 목록(기본 빈 목록)을 바꿉니다.
 - `credentials` 기본은 false입니다. `credentials(true)`와 `*`를 함께 쓰면 등록 오류입니다. `maxAge`는 0 이상의 초이며 기본0은 캐시 헤더를 생략합니다.
 - 허용 origin에는 `Access-Control-Allow-Origin`을, credentials를 켰으면 `Access-Control-Allow-Credentials: true`를 붙입니다. 보통 요청의 비허용 origin은 grant 없이 계속합니다. CORS 자체가 인증은 아닙니다.

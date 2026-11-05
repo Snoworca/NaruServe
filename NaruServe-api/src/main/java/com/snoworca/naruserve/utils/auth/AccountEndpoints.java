@@ -9,6 +9,7 @@ import com.snoworca.naruserve.Request;
 import com.snoworca.naruserve.Response;
 import com.snoworca.naruserve.Router;
 import com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore;
+import com.snoworca.naruserve.utils.auth.apikey.StoredApiKey;
 import com.snoworca.naruserve.utils.auth.audit.AuditEvent;
 import com.snoworca.naruserve.utils.auth.internal.AuthCookies;
 import com.snoworca.naruserve.utils.auth.internal.ConstantTime;
@@ -1329,11 +1330,14 @@ final class AccountEndpoints {
         final ApiKeyStore keys = auth.apiKeyStore();
         final String id = req.param("id");
         final String owner = p.getId();
+        DefaultAuthApiKeys facade = (DefaultAuthApiKeys) auth.apiKeys();
+        StoredApiKey row = keys == null ? null : facade.rowBeforeRevoke(keys, id);
         if (keys == null || !storeCall(() -> keys.deleteByIdAndOwner(id, owner))) {
             throw new ShownError(404, "no API key with id " + id + (id.length() == 8 // OPS-AUTH-024 AC-9
                     ? "; use the id field of the key, not its prefix" : " among your keys"));
         }
-        ((DefaultAuthApiKeys) auth.apiKeys()).revokedThrough(req, "DELETE /auth/me/apikeys/:id", owner, id, owner);
+        facade.revokedThrough(req, "DELETE /auth/me/apikeys/:id", owner, id, owner,
+                row == null ? null : row.getIssuedByUserId());
         res.sendStatus(204);
     }
 }

@@ -24,7 +24,7 @@ final class DefaultCorsOptions implements CorsOptions {
         for (String value : values) {
             Objects.requireNonNull(value, "origin");
             if (!"*".equals(value) && !CorsValues.isOrigin(value)) {
-                throw new IllegalArgumentException("allowedOrigins requires serialized HTTP(S) origins, null or *");
+                throw new IllegalArgumentException("allowedOrigins requires serialized origins (scheme://host[:port]), null or *");
             }
             checked.add(value);
         }

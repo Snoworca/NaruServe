@@ -11,8 +11,7 @@ public final class CorsValues {
         if ("null".equals(value)) return true;
         try {
             URI uri = URI.create(value);
-            return ("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme()))
-                    && uri.getHost() != null && uri.getRawUserInfo() == null
+            return uri.getScheme() != null && uri.getHost() != null && uri.getRawUserInfo() == null
                     && (uri.getRawPath() == null || uri.getRawPath().isEmpty())
                     && uri.getRawQuery() == null && uri.getRawFragment() == null
                     && uri.getPort() <= 65535 && !value.endsWith(":");

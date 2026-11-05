@@ -347,7 +347,7 @@ Four more items: `registration` (a WARN in PROD when `.register(true)` opens sig
 | API | Meaning | Express equivalent |
 |---|---|---|
 | `AuthMode.PROD` | The default | `NODE_ENV=production` |
-| `AuthMode.DEV` | Relaxes exactly four things: a temporary key for a missing secret, the secure-transport check, hash-cost and key-strength failures downgraded to WARN, and a `.user(...)` password that breaks the password policy (created with a WARN). Authorization is never relaxed | `NODE_ENV=development` |
+| `AuthMode.DEV` | Relaxes exactly eight things: a temporary key for a missing secret, the secure-transport check, hash-cost and key-strength failures downgraded to WARN, a `.user(...)` password that breaks the password policy (created with a WARN), a password-less admin `.user(...)` (a temporary password goes to the log), a file store without a file key (plain storage with a WARN), legacy `trustProxy(true)` (no doctor FAIL), and no final auth error layer (an app exception goes on to Core). Authorization is never relaxed | `NODE_ENV=development` |
 
 The mode is passed in code. `AuthMode.fromEnv()` is `DEV` when the environment variable `NARU_ENV` is `dev` (any letter case) and `PROD` when it is unset, empty, `prod` or any other value. This explicit call by the app is the only environment read; the builder never reads the environment by itself. A builder without `.mode(...)` is `PROD`.
 
@@ -357,8 +357,12 @@ The mode is passed in code. `AuthMode.fromEnv()` is `DEV` when the environment v
 | The secure-transport check (plain-text non-local requests are served; one WARN on the first non-local request) | 403 `insecure_transport` |
 | Short or example keys and hash-cost failures become WARNs | `build()` refuses / doctor FAIL |
 | A `.user(...)` password that breaks the password policy becomes a WARN and the account is created | `build()` throws `AuthConfigException` |
+| A password-less admin `.user(...)` gets a temporary password written to the log | doctor FAIL (a one-time setup token when started with `.recovery(true)`) |
+| A file store without a file key becomes a WARN and stores plain data | `build()` throws `AuthConfigException` |
+| Legacy `trustProxy(true)` is no doctor FAIL | doctor FAIL |
+| No final auth error layer (an app exception no earlier layer answered reaches Core's page with its stack trace) | That exception also gets JSON in the Core shape |
 
-Default deny, the install order, the public path rules, authorization and JSON error bodies are the same in DEV as in PROD.
+Default deny, the install order, the public path rules, authorization and auth's own JSON error bodies are the same in DEV as in PROD.
 
 ```java
 AuthMode mode = AuthMode.fromEnv();                 // DEV when NARU_ENV=dev, otherwise PROD
@@ -1529,16 +1533,16 @@ When a web app on another origin, or an app such as Capacitor, calls auth, the b
 | `X-CSRF-Token` | a client that got cookie delivery sends cookie-authenticated writes (POST, PUT, PATCH, DELETE) and cookie refreshes |
 | `Naru-Device` | sending the device token by header (HEADER mode, or a device token received in the body under BOTH) |
 
-A cross-origin request carrying a header that `allowedHeaders` lacks (for example `Naru-Device`) is blocked at preflight and **never reaches the server**, so nothing shows in the auth log either. Register `app.cors(...)` before `auth.install(app)` (registering it later makes the doctor fail the start). In BOTH mode, origins that should get body delivery (other-site SPAs, Android Capacitor `http://localhost`) belong in `allowedOrigins` only, not in `trustedOrigins` (the builder's `.trustedOrigins(...)`, [Origin check](#origin-check-and-trustedorigins)). Adding them to `trustedOrigins` switches them to cookie delivery, yet SameSite=Strict cookies are not sent on cross-site requests, so such a client could never send the cookies back. `allowedOrigins` only lets the page read responses; `trustedOrigins` decides cookie delivery.
+A cross-origin request carrying a header that `allowedHeaders` lacks (for example `Naru-Device`) is blocked at preflight and **never reaches the server**, so nothing shows in the auth log either. Register `app.cors(...)` before `auth.install(app)` (registering it later makes the doctor fail the start). In BOTH mode, origins that should get body delivery (other-site SPAs, Capacitor apps) belong in `allowedOrigins` only, not in `trustedOrigins` (the builder's `.trustedOrigins(...)`, [Origin check](#origin-check-and-trustedorigins)). Adding them to `trustedOrigins` switches them to cookie delivery, yet SameSite=Strict cookies are not sent on cross-site requests, so such a client could never send the cookies back. `allowedOrigins` only lets the page read responses; `trustedOrigins` decides cookie delivery.
 
 A BOTH-mode client checks the body of every token-issuing response: `accessToken` present means body delivery (keep the tokens, send Bearer); only `csrfToken` present means cookie delivery (send `X-CSRF-Token`). The same client may receive either shape depending on Origin and `trustedOrigins`, so it never assumes one.
 
-Core's `allowedOrigins` accepts only HTTP(S) origins, `null` and `*` today, so iOS Capacitor's `capacitor://localhost` cannot be listed yet (Android Capacitor uses `http://localhost`). Express counterpart: `app.use(cors({origin: [...], allowedHeaders: [...], credentials: true}))` placed before the auth middleware.
+`allowedOrigins` accepts `scheme://host[:port]` origins, `null` and `*`. iOS Capacitor uses `capacitor://localhost` (the old Ionic WebView `ionic://localhost`); Android Capacitor defaults to `https://localhost`, and only an older app with `androidScheme: "http"` uses `http://localhost`. The comparison is an exact string match, so list the value the app really sends. This origin is not an app identity: every Capacitor app on its default settings sends the same value, so another Capacitor app's web view can read responses too, and without the user's token it gets only public responses. A custom-scheme origin cannot go in `trustedOrigins`, so it is always body delivery. A request sent through CapacitorHttp carries no `Origin`, so it is body delivery too and needs no CORS setting. Express counterpart: `app.use(cors({origin: [...], allowedHeaders: [...], credentials: true}))` placed before the auth middleware.
 
 ```java
 RestApp web = RestApp.create();
 web.cors(c -> c
-        .allowedOrigins("https://spa.example", "http://localhost")
+        .allowedOrigins("https://spa.example", "capacitor://localhost", "https://localhost")
         .allowedMethods(Method.GET, Method.POST, Method.PUT, Method.DELETE)
         .allowedHeaders("Authorization", "Content-Type", "X-CSRF-Token", "Naru-Device")
         .credentials(true));
@@ -1549,7 +1553,7 @@ auth.install(web); // after CORS
 ```kotlin
 val web = RestApp.create()
 web.cors { c ->
-    c.allowedOrigins("https://spa.example", "http://localhost")
+    c.allowedOrigins("https://spa.example", "capacitor://localhost", "https://localhost")
         .allowedHeaders("Authorization", "Content-Type", "X-CSRF-Token", "Naru-Device")
         .credentials(true)
 }
@@ -1991,7 +1995,7 @@ auth.install(app)
 //   body: JSON.stringify({ownerUserId: botId, name: "ci-bot", scopes: ["posts:read"], password: myPassword})})
 ```
 
-A delete through a key endpoint (`DELETE /auth/me/apikeys/:id`, `DELETE /auth/admin/apikeys/:id`) and `auth.apiKeys().revoke` leave an `api_key_revoked` audit event: the deleted key is `revokedApiKeyId`, the target is the owner, and when an API-key actor deleted it, that actor's key is `apiKeyId`.
+A delete through a key endpoint (`DELETE /auth/me/apikeys/:id`, `DELETE /auth/admin/apikeys/:id`) and `auth.apiKeys().revoke` leave an `api_key_revoked` audit event: the deleted key is `revokedApiKeyId`, the target is the owner, a key with a recorded issuer also leaves `issuedByUserId`, and when an API-key actor deleted it, that actor's key is `apiKeyId`. When the key cannot be read before the delete, the revoke still goes on and its event has no `issuedByUserId`; for `auth.apiKeys().revoke` it has no target either. The event of `auth.apiKeys().revoke` has no actor, request id or IP.
 
 Express counterpart: an issuance route that asks for the password again, like GitHub's "generate a personal access token".
 

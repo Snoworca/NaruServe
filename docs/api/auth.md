@@ -347,7 +347,7 @@ println(AuthConfig.KEYS)
 | API | 설명 | Express 대응 |
 |---|---|---|
 | `AuthMode.PROD` | 기본값 | `NODE_ENV=production` |
-| `AuthMode.DEV` | 정해진 네 가지만 완화합니다: 비밀키가 없을 때 임시 키, 보안 연결 검사, 해시 비용·키 강도 실패를 WARN으로, 비밀번호 정책을 어긴 `.user(...)` 비밀번호(WARN과 함께 계정 생성). 권한 검사는 절대 완화하지 않습니다 | `NODE_ENV=development` |
+| `AuthMode.DEV` | 정해진 여덟 가지만 완화합니다: 비밀키가 없을 때 임시 키, 보안 연결 검사, 해시 비용·키 강도 실패를 WARN으로, 비밀번호 정책을 어긴 `.user(...)` 비밀번호(WARN과 함께 계정 생성), 비밀번호 없는 관리자 `.user(...)`(임시 비밀번호를 로그에 남김), 파일 키 없는 파일 저장소(WARN과 함께 평문 저장), 옛 `trustProxy(true)`(doctor FAIL 없음), 마지막 auth 오류 레이어 없음(앱 예외가 Core로 넘어감). 권한 검사는 절대 완화하지 않습니다 | `NODE_ENV=development` |
 
 모드는 코드로 넘깁니다. `AuthMode.fromEnv()`는 환경 변수 `NARU_ENV`가 `dev`(대소문자 무시)면 `DEV`, 없거나 비었거나 `prod`이거나 그 밖의 값이면 `PROD`입니다. 환경을 읽는 것은 앱이 직접 하는 이 호출뿐이고, 빌더는 스스로 환경을 읽지 않습니다. `.mode(...)`를 부르지 않은 빌더는 `PROD`입니다.
 
@@ -357,8 +357,12 @@ println(AuthConfig.KEYS)
 | 보안 연결 검사(평문·비로컬 요청도 처리, 로컬이 아닌 첫 요청에서 WARN 한 번) | 403 `insecure_transport` |
 | 짧거나 예제인 키, 해시 비용 실패를 WARN으로 | `build()` 거부 / doctor FAIL |
 | 비밀번호 정책을 어긴 `.user(...)` 비밀번호를 WARN으로 하고 계정을 만듦 | `build()`가 `AuthConfigException` |
+| 비밀번호 없는 관리자 `.user(...)`에 임시 비밀번호를 만들어 로그에 남김 | doctor FAIL(`.recovery(true)`로 시작하면 일회용 설정 토큰) |
+| 파일 키 없는 파일 저장소를 WARN으로 하고 평문으로 저장 | `build()`가 `AuthConfigException` |
+| 옛 `trustProxy(true)`의 doctor FAIL 없음 | doctor FAIL |
+| 마지막 auth 오류 레이어가 없음(앞선 레이어가 답하지 않은 앱 예외는 Core 페이지와 스택 트레이스로) | 그 예외도 Core 모양의 JSON |
 
-기본 거부, install 순서, 공개 경로 규칙, 권한 검사, JSON 오류 본문은 DEV에서도 PROD와 똑같습니다.
+기본 거부, install 순서, 공개 경로 규칙, 권한 검사, auth 자신의 JSON 오류 본문은 DEV에서도 PROD와 똑같습니다.
 
 ```java
 AuthMode mode = AuthMode.fromEnv();                 // NARU_ENV=dev면 DEV, 그 밖은 PROD
@@ -1529,16 +1533,16 @@ val auth = Auth.builder(System.getenv("JWT_SECRET")).deviceTrust(LoggingTrust())
 | `X-CSRF-Token` | 쿠키 전달을 받은 클라이언트가 쿠키로 인증한 쓰기(POST·PUT·PATCH·DELETE)와 쿠키 refresh를 보낼 때 |
 | `Naru-Device` | 기기 토큰을 헤더로 보낼 때(HEADER 모드, 또는 BOTH에서 본문으로 받은 기기 토큰) |
 
-`allowedHeaders`에 없는 헤더(예: `Naru-Device`)를 실은 교차 출처 요청은 preflight에서 막혀 **서버에 닿지 않습니다**. 그래서 auth 로그에도 아무것도 남지 않습니다. `app.cors(...)`는 반드시 `auth.install(app)`보다 먼저 등록합니다(나중에 등록하면 doctor가 기동을 FAIL로 멈춥니다). BOTH 모드에서 본문 전달을 받을 출처(다른 사이트의 SPA, Android Capacitor `http://localhost`)는 `allowedOrigins`에만 넣고 `trustedOrigins`(빌더 `.trustedOrigins(...)`, [Origin 검사](#origin-검사와-trustedorigins))에는 넣지 마세요. `trustedOrigins`에 넣으면 그 출처는 쿠키 전달로 바뀌는데, SameSite=Strict 쿠키는 교차 사이트 요청에 실리지 않으므로 그 클라이언트는 쿠키를 다시 보내지 못합니다. `allowedOrigins`는 응답을 읽게 해 줄 뿐이고, 쿠키 전달 여부는 `trustedOrigins`가 정합니다.
+`allowedHeaders`에 없는 헤더(예: `Naru-Device`)를 실은 교차 출처 요청은 preflight에서 막혀 **서버에 닿지 않습니다**. 그래서 auth 로그에도 아무것도 남지 않습니다. `app.cors(...)`는 반드시 `auth.install(app)`보다 먼저 등록합니다(나중에 등록하면 doctor가 기동을 FAIL로 멈춥니다). BOTH 모드에서 본문 전달을 받을 출처(다른 사이트의 SPA, Capacitor 앱)는 `allowedOrigins`에만 넣고 `trustedOrigins`(빌더 `.trustedOrigins(...)`, [Origin 검사](#origin-검사와-trustedorigins))에는 넣지 마세요. `trustedOrigins`에 넣으면 그 출처는 쿠키 전달로 바뀌는데, SameSite=Strict 쿠키는 교차 사이트 요청에 실리지 않으므로 그 클라이언트는 쿠키를 다시 보내지 못합니다. `allowedOrigins`는 응답을 읽게 해 줄 뿐이고, 쿠키 전달 여부는 `trustedOrigins`가 정합니다.
 
 BOTH 모드 클라이언트는 토큰을 주는 응답마다 본문을 확인합니다. `accessToken`이 있으면 본문 전달입니다(토큰을 보관하고 Bearer로 보냄). `csrfToken`만 있으면 쿠키 전달입니다(`X-CSRF-Token`을 보냄). 같은 클라이언트도 Origin과 `trustedOrigins`에 따라 어느 쪽이든 받을 수 있으니 한 모양을 가정하지 마세요.
 
-Core의 `allowedOrigins`는 지금 HTTP(S) 출처·`null`·`*`만 받으므로 iOS Capacitor의 `capacitor://localhost`는 아직 목록에 넣을 수 없습니다(Android Capacitor는 `http://localhost`). Express 대응: `app.use(cors({origin: [...], allowedHeaders: [...], credentials: true}))`를 인증 미들웨어보다 먼저 둡니다.
+`allowedOrigins`는 `scheme://host[:port]` 출처·`null`·`*`를 받습니다. iOS Capacitor는 `capacitor://localhost`(옛 Ionic WebView는 `ionic://localhost`)이고, Android Capacitor는 기본이 `https://localhost`이며 `androidScheme: "http"`를 쓰는 옛 앱만 `http://localhost`입니다. 비교는 문자열 일치이므로 앱이 실제로 보내는 값을 넣으세요. 이 출처는 앱의 신원이 아닙니다. 기본 설정의 Capacitor 앱은 모두 같은 값을 보내므로 다른 Capacitor 앱의 웹뷰도 응답을 읽을 수 있고, 사용자의 토큰 없이 얻는 것은 공개 응답뿐입니다. 커스텀 스킴 출처는 `trustedOrigins`에는 넣을 수 없어 언제나 본문 전달입니다. CapacitorHttp로 보내는 요청은 `Origin`이 없어 같은 본문 전달이고 CORS 설정이 필요 없습니다. Express 대응: `app.use(cors({origin: [...], allowedHeaders: [...], credentials: true}))`를 인증 미들웨어보다 먼저 둡니다.
 
 ```java
 RestApp web = RestApp.create();
 web.cors(c -> c
-        .allowedOrigins("https://spa.example", "http://localhost")
+        .allowedOrigins("https://spa.example", "capacitor://localhost", "https://localhost")
         .allowedMethods(Method.GET, Method.POST, Method.PUT, Method.DELETE)
         .allowedHeaders("Authorization", "Content-Type", "X-CSRF-Token", "Naru-Device")
         .credentials(true));
@@ -1549,7 +1553,7 @@ auth.install(web); // CORS 다음
 ```kotlin
 val web = RestApp.create()
 web.cors { c ->
-    c.allowedOrigins("https://spa.example", "http://localhost")
+    c.allowedOrigins("https://spa.example", "capacitor://localhost", "https://localhost")
         .allowedHeaders("Authorization", "Content-Type", "X-CSRF-Token", "Naru-Device")
         .credentials(true)
 }
@@ -1991,7 +1995,7 @@ auth.install(app)
 //   body: JSON.stringify({ownerUserId: botId, name: "ci-bot", scopes: ["posts:read"], password: myPassword})})
 ```
 
-키 엔드포인트의 삭제(`DELETE /auth/me/apikeys/:id`, `DELETE /auth/admin/apikeys/:id`)와 `auth.apiKeys().revoke`는 `api_key_revoked` 감사 이벤트를 남깁니다. 지운 키는 `revokedApiKeyId`, 대상은 소유자이고, API 키 행위자가 지웠으면 그 행위자의 키가 `apiKeyId`입니다.
+키 엔드포인트의 삭제(`DELETE /auth/me/apikeys/:id`, `DELETE /auth/admin/apikeys/:id`)와 `auth.apiKeys().revoke`는 `api_key_revoked` 감사 이벤트를 남깁니다. 지운 키는 `revokedApiKeyId`, 대상은 소유자이고, 발급자가 기록된 키면 `issuedByUserId`도 남습니다. API 키 행위자가 지웠으면 그 행위자의 키가 `apiKeyId`입니다. 지우기 전에 키를 읽지 못해도 철회는 진행되고 그 이벤트에는 `issuedByUserId`가 없으며, `auth.apiKeys().revoke`는 대상도 없습니다. `auth.apiKeys().revoke`의 이벤트에는 행위자, 요청 id, IP가 없습니다.
 
 Express 대응: GitHub의 "개인 액세스 토큰 만들기"처럼 비밀번호를 다시 묻는 발급 라우트.
 
