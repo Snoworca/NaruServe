@@ -457,6 +457,24 @@ public class RegistrationListTest {
         assertEquals(Collections.emptyList(), failing.watched);
     }
 
+    // FR-APP-026 AC-2: GROUP is made after the configurer returns and recorded before its inner route reaches the
+    // watcher; the inner route runs its own cycle once, so it is not recorded again by expansion
+    @Test
+    public void FR_APP_026_AC2_groupIsRecordedBeforeItsInnerRouteIsWatched() throws Exception {
+        TestApp t = TestApp.create();
+        boolean[] configured = {false};
+        List<String> seen = new ArrayList<>();
+        t.app().onRegistration(reg -> seen.add(reg.getKind() + " configured=" + configured[0] + " listed="
+                + kinds(t.app().registrations())));
+        t.app().group("/v1", g -> {
+            g.get("/x", H);
+            assertEquals("nothing is made while the configurer runs", Collections.emptyList(), seen);
+            configured[0] = true;
+        });
+        assertEquals(Arrays.asList("GROUP configured=true listed=[]", "ROUTE configured=true listed=[GROUP]"), seen);
+        assertEquals(Arrays.asList(RegistrationKind.GROUP, RegistrationKind.ROUTE), kinds(t.app().registrations()));
+    }
+
     // FR-APP-026 AC-3: nested routers are expanded with both prefixes
     @Test
     public void FR_APP_026_AC3_nestedRoutersUseBothPrefixes() throws Exception {
@@ -691,6 +709,38 @@ public class RegistrationListTest {
             for (String marker : new String[] {"route", "use", "router", "param", "error"}) {
                 assertFalse(e.getKey() + " applied: " + answer, answer.equals(marker));
             }
+            t.app().shutdown(1, TimeUnit.SECONDS);
+        }
+    }
+
+    // SEC-APP-002 AC-3: after each vetoed registration the same exception instance reached the caller, the list is
+    // unchanged and a request to /w is answered 404
+    @Test
+    public void SEC_APP_002_AC3_vetoedRegistrationLeavesWAnswering404() throws Exception {
+        Router answering = Router.create();
+        answering.get("/", H);
+        Map<String, Registrar> calls = new LinkedHashMap<>();
+        calls.put("get", a -> a.get("/w", H));
+        calls.put("use", a -> a.use((Middleware) (req, res, next) -> res.send("use")));
+        calls.put("use(path, router)", a -> a.use("/w", answering));
+        calls.put("param", a -> a.param("id", PH));
+        calls.put("use(ErrorMiddleware)", a -> a.use(EMW));
+        for (Map.Entry<String, Registrar> e : calls.entrySet()) {
+            InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+            TestApp t = TestApp.create(adapter);
+            IllegalStateException veto = new IllegalStateException("veto " + e.getKey());
+            t.app().onRegistration(reg -> {
+                throw veto;
+            });
+            t.start();
+            try {
+                e.getValue().register(t.app());
+                fail(e.getKey() + " ignored the veto");
+            } catch (IllegalStateException thrown) {
+                assertSame(e.getKey(), veto, thrown);
+            }
+            assertEquals(e.getKey(), Collections.emptyList(), t.app().registrations());
+            assertEquals(e.getKey(), 404, adapter.send(ClientRequest.of("GET", "/w")).status());
             t.app().shutdown(1, TimeUnit.SECONDS);
         }
     }

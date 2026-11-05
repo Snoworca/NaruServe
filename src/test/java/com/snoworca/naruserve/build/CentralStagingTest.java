@@ -62,6 +62,26 @@ public class CentralStagingTest {
         }
     }
 
+    // OPS-REL-010 AC-1: the staged module metadata names the release version, and both examples depend on it
+    @Test
+    public void OPS_REL_010_AC1_moduleMetadataAndExamplesUseTheReleaseVersion() throws IOException {
+        for (String id : PublishedPomTest.artifactIds()) {
+            String module = new String(java.nio.file.Files.readAllBytes(staged(id, ".module").toPath()),
+                    java.nio.charset.StandardCharsets.UTF_8);
+            assertTrue(id + " module metadata", module.contains("\"module\": \"" + id + "\",\n    \"version\": \""
+                    + VERSION + "\""));
+        }
+        String root = System.getProperty("naruserve.rootDir");
+        assertNotNull("naruserve.rootDir system property", root);
+        String javaExample = new String(java.nio.file.Files.readAllBytes(new File(root, "examples/java/build.gradle").toPath()),
+                java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue(javaExample, javaExample.contains("'com.snoworca.naruserve:naruserve:" + VERSION + "'"));
+        String kotlin = new String(java.nio.file.Files.readAllBytes(new File(root, "examples/kotlin/build.gradle").toPath()),
+                java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue(kotlin, kotlin.contains("'com.snoworca.naruserve:naruserve:" + VERSION + "'"));
+        assertTrue(kotlin, kotlin.contains("'com.snoworca.naruserve:naruserve-kotlin:" + VERSION + "'"));
+    }
+
     // FR-REL-005 AC-6
     @Test
     public void fr_REL_005_AC6_sourcesAndJavadocJarsHoldTheirContent() throws IOException {

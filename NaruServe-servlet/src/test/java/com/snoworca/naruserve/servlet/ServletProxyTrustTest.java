@@ -131,7 +131,8 @@ public class ServletProxyTrustTest {
 
     // SEC-SVL-001 AC-5: for every setting and header combination the exchange takes getRemoteAddr and isSecure as
     // captured; getHeaders runs only inside the getHeaderNames snapshot loop (each name once), getHeader is never
-    // called for a forwarding header and getRemoteHost never at all
+    // called for a forwarding header and getRemoteHost never at all. This is the Servlet adapter's half of
+    // SEC-HTTP-001 AC-6, SEC-ENGINE-001 AC-6 and SEC-ENGINE-002 AC-6: CrossAdapterTest scans the TinyHttpd and in-memory classes
     @Test(timeout = 60000)
     public void SEC_SVL_001_AC5_exchangeReadsNoForwardingHeaderAndNoRemoteHost() throws Exception {
         for (String setting : SETTINGS) {

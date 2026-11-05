@@ -156,6 +156,24 @@ public class ReleaseEvidenceSnapshotsTest {
         rejected("current scan dependencies",()->call("current",types,local,Arrays.asList("g:a:1")));
         rejected("unsupported release version",()->call("current",types,fixture("0.12.0"),Collections.emptyList()));
     }
+    // OPS-REL-011 AC-1, AC-2: the gate passes on this repository's own 0.11.0 records against the current runtime graph
+    // (completed scan, equal dependency section, live method references, full-suite witness); the Java 8 run, which
+    // the gate does not read, is checked here with the same fields
+    @Test public void realRecords011PassTheGateAndHoldBothRuns()throws Exception {
+        List<String> graph=com.snoworca.naruserve.release.ReleaseMain.graphLines(new File(System.getProperty("naruserve.depReport")));
+        List<String> runtime=new ArrayList<>(com.snoworca.naruserve.release.DependencyList.runtime(graph));
+        assertEquals(true,call("current",new Class<?>[]{File.class,List.class},root(),runtime));
+        String results=ReadmeDocsTest.read("docs/release/0.11.0-test-results.md");
+        for(String run:new String[]{"full-suite","java8-full"}){
+            java.util.regex.Matcher m=java.util.regex.Pattern.compile("(?m)^- run "+run
+                    +": command=(.+?); date=\\d{4}-\\d{2}-\\d{2}; result=exit=0; commit=([0-9a-f]{40}); tests=([0-9]+); failures=0; errors=0; skipped=0$").matcher(results);
+            assertTrue(run+" run line",m.find());
+            assertTrue(m.group(1),m.group(1).startsWith("./gradlew ")&&m.group(1).contains(" build"));
+            assertTrue(m.group(3),Long.parseLong(m.group(3))>0);
+        }
+        assertTrue("java8 run uses the Java 8 init script",results.contains("-I gradle/java8-tests.gradle"));
+        assertTrue(ReadmeDocsTest.read("docs/release/0.11.0-vulnerability-scan.md").contains("\nStatus: completed\n"));
+    }
     // OPS-REL-011 AC-3: both 0.11.0 release notes name the auth module, the app.use(auth) install and the 0.10.0 upgrade
     @Test public void releaseNotes011DescribeAuthInstallAndUpgrade()throws Exception {
         String[][] files={{"docs/release/0.11.0-release-notes.md","Upgrading from 0.10.0"},

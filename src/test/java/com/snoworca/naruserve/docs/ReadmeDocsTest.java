@@ -232,4 +232,30 @@ public final class ReadmeDocsTest {
                     read(path).toLowerCase(Locale.ROOT).contains(FORBIDDEN_PHRASE.toLowerCase(Locale.ROOT)));
         }
     }
+
+    // OPS-REL-010 AC-2: every installation coordinate of the READMEs and both guide directories is the current version;
+    // 0.10.0 stays only as the previous release, never as a coordinate
+    @Test
+    public void OPS_REL_010_AC2_everyCurrentCoordinateIsTheReleaseVersion() throws IOException {
+        List<String> paths = new ArrayList<>(Arrays.asList("README.md", "README.ko.md"));
+        for (String dir : new String[] {"docs/api", "docs/api/en"}) {
+            File[] pages = new File(root(), dir).listFiles((d, n) -> n.endsWith(".md"));
+            assertNotNull(dir, pages);
+            for (File page : pages) {
+                paths.add(dir + "/" + page.getName());
+            }
+        }
+        Pattern coordinate = Pattern.compile("com\\.snoworca\\.naruserve:[a-z-]+:([0-9][^'\"\\s)`]*)");
+        int found = 0;
+        for (String path : paths) {
+            String text = read(path);
+            Matcher m = coordinate.matcher(text);
+            while (m.find()) {
+                assertEquals(path + " " + m.group(), "0.11.0", m.group(1));
+                found++;
+            }
+            assertFalse(path + " has a Maven version element of the old release", text.contains("<version>0.10.0</version>"));
+        }
+        assertTrue("coordinates found: " + found, found > 0);
+    }
 }

@@ -85,6 +85,45 @@ public class AuthCoreDocsTest {
         }
     }
 
+    // CON-ENGINE-001 AC-3: the warning calls the value unverified and left-most, not only client-controlled
+    @Test
+    public void CON_ENGINE_001_AC3_warningNamesTheUnverifiedLeftMostValue() throws IOException {
+        for (String page : TRUST_PAGES) {
+            contains(page, lineWith(page, doc(page), "클라이언트가 고를 수 있는"), "맨 왼쪽", "검증되지 않은");
+            contains("en/" + page, lineWith("en/" + page, doc("en/" + page), "client-controlled"), "left-most",
+                    "unverified");
+        }
+    }
+
+    // IR-ENGINE-003 AC-7: the Express CIDR list maps to trustProxyCidrs(...) on each of the three pages
+    @Test
+    public void IR_ENGINE_003_AC7_expressCidrListMappingOnEveryPage() throws IOException {
+        contains("app.md", lineWith("app.md", doc("app.md"), "app.set('trust proxy', 'loopback, 10.0.0.0/8')"),
+                "app.trustProxyCidrs(");
+        contains("en/app.md", lineWith("en/app.md", doc("en/app.md"), "app.set('trust proxy', 'loopback, 10.0.0.0/8')"),
+                "app.trustProxyCidrs(");
+        contains("request.md", lineWith("request.md", doc("request.md"), "Express의 CIDR 목록"), "app.trustProxyCidrs(");
+        contains("en/request.md", lineWith("en/request.md", doc("en/request.md"), "an Express CIDR list"),
+                "app.trustProxyCidrs(");
+        contains("express-migration.md", doc("express-migration.md"), "CIDR 목록은 `app.trustProxyCidrs(");
+        contains("en/express-migration.md", doc("en/express-migration.md"), "a CIDR list is `app.trustProxyCidrs(");
+    }
+
+    // IR-HTTP-010 AC-4: the pages contrast socketAddress() with remoteAddress(), which follows the trust setting
+    @Test
+    public void IR_HTTP_010_AC4_remoteAddressFollowsTheTrustSetting() throws IOException {
+        contains("request.md", doc("request.md"), "`remoteAddress()`는 프록시 신뢰 설정을 따릅니다");
+        contains("en/request.md", doc("en/request.md"), "`remoteAddress()` follows the proxy trust setting");
+    }
+
+    // IR-APP-008 AC-1: the call-time snapshot decision is documented on the app page in both languages
+    @Test
+    public void IR_APP_008_AC1_snapshotDecisionDocumented() throws IOException {
+        contains("app.md", lineWith("app.md", doc("app.md"), "부른 시점의 스냅샷"), "ConcurrentModificationException");
+        contains("en/app.md", lineWith("en/app.md", doc("en/app.md"), "call-time snapshot"),
+                "ConcurrentModificationException");
+    }
+
     // IR-ENGINE-003 AC-7: both methods, the Express mapping, the hop precondition, the nginx lines and the
     // unsupported X-Forwarded-Proto pass-through on the three pages in both languages
     @Test
