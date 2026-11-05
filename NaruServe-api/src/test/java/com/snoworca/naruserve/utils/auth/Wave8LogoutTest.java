@@ -603,4 +603,52 @@ public class Wave8LogoutTest {
             fail("the cookie token stayed usable");
         }
     }
+
+    // FR-FLOW-003 AC-4 (the call itself): a plain logout calls revokeFamily exactly once, with the token's family
+    @Test
+    public void FR_FLOW_003_AC4_revokeFamilyIsCalledOnceWithTheTokensFamily() throws Exception {
+        start(TokenTransport.HEADER);
+        String[] s = login("alice");
+        String fam = f.fam(s[0]);
+        assertEquals(204, logout("", null, "Authorization", "Bearer " + s[0]).status());
+        assertEquals(java.util.Collections.singletonList(fam), refresh.revoked);
+    }
+
+    // FR-FLOW-003 AC-5 (no other candidate): a valid refresh token with ?all=true next to a valid Bearer: a failing
+    // RefreshTokenStore.find or a failing UserStore ver read -> 503 SERVICE_UNAVAILABLE; the Bearer is not tried in its
+    // place, so nothing is revoked, ver stays and onLogout does not fire
+    @Test
+    public void FR_FLOW_003_AC5_aStoreErrorTriesNoOtherCandidate() throws Exception {
+        FlakyUsers flaky = new FlakyUsers(f.store);
+        f.users = flaky;
+        start(TokenTransport.HEADER);
+        String[] s = login("alice");
+        long v = ver(alice);
+        refresh.failFind.set(true);
+        ClientResponse a = logout("?all=true", rtBody(s[1]), "Authorization", "Bearer " + s[0]);
+        refresh.failFind.set(false);
+        assertEquals(a.text(), 503, a.status());
+        assertEquals("SERVICE_UNAVAILABLE", W8.code(a));
+        flaky.fail.set(true);
+        ClientResponse b = logout("?all=true", rtBody(s[1]), "Authorization", "Bearer " + s[0]);
+        flaky.fail.set(false);
+        assertEquals(b.text(), 503, b.status());
+        assertEquals("SERVICE_UNAVAILABLE", W8.code(b));
+        assertEquals(v, ver(alice));
+        assertTrue(refresh.revoked.isEmpty());
+        assertTrue(events.calls.isEmpty());
+    }
+
+    // FR-FLOW-003 AC-6 (BOTH with an identity): a 204 with an identity in BOTH mode clears the auth cookies too, and a
+    // repeated logout answers 204 again
+    @Test
+    public void FR_FLOW_003_AC6_bothModeClearsWithAnIdentity() throws Exception {
+        start(TokenTransport.BOTH);
+        String at = (String) W8.object(f.post("/auth/login", W8.login("alice", W8.PW))).get("accessToken");
+        for (int i = 0; i < 2; i++) {
+            ClientResponse r = logout("", null, "Authorization", "Bearer " + at);
+            assertEquals(204, r.status());
+            cleared(r);
+        }
+    }
 }

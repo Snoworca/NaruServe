@@ -274,4 +274,26 @@ public class Wave8EndpointClassesTest {
         assertTrue(store.listByOwner(alice).isEmpty());
         assertFalse(f.auth.toString().isEmpty());
     }
+
+    // SEC-FLOW-003 AC-8 (a)(b) with the CSRF token of the token's own sub and fam, as the criterion states it: an
+    // altered signature, then the same naru_at once expired -> 401 invalid_token and the handler does not run
+    @Test
+    public void SEC_FLOW_003_AC8_csrfOfTheTokensOwnFamily() throws Exception {
+        probe("127.0.0.1", true, b -> b.transport(TokenTransport.COOKIE), "/password");
+        String at = f.auth.accessToken(alice, 0, 60_000L);
+        String csrf = f.auth.csrfTokens().issue(alice, f.fam(at));
+        String forged = at.substring(0, at.length() - 2) + (at.endsWith("A") ? "BB" : "AA");
+        String body = "{\"currentPassword\":\"x\",\"newPassword\":\"y\"}";
+        ClientResponse altered = f.post("/auth/password", body, "Host", W8.HOST, "Origin", W8.SAME, "Cookie",
+                "naru_at=" + forged + "; naru_csrf=" + csrf, "X-CSRF-Token", csrf);
+        f.clock.addAndGet(60_000L + 120_000L); // past exp and the 60 s leeway
+        ClientResponse expired = f.post("/auth/password", body, "Host", W8.HOST, "Origin", W8.SAME, "Cookie",
+                "naru_at=" + at + "; naru_csrf=" + csrf, "X-CSRF-Token", csrf);
+        for (ClientResponse r : new ClientResponse[] {altered, expired}) {
+            assertEquals(r.text(), 401, r.status());
+            assertEquals("invalid_token", W8.code(r));
+            assertEquals("Bearer error=\"invalid_token\"", r.header("WWW-Authenticate"));
+        }
+        assertTrue(reached.toString(), reached.isEmpty());
+    }
 }

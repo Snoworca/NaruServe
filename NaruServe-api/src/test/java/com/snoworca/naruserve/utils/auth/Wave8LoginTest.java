@@ -1011,4 +1011,184 @@ public class Wave8LoginTest {
         assertEquals(401, r.status());
         assertEquals("invalid_credentials", W8.code(r));
     }
+
+    // ---------------------------------------------------------------------------------- 0.11.0 verification, batch 7
+
+    // FR-FLOW-004 AC-6 (the floor half): a request with a bad password field is not a login attempt, so its 400 is not
+    // held to the failure floor; a wrong password through the same floor is
+    @Test
+    public void FR_FLOW_004_AC6_badPasswordFieldsAreNotHeldToTheFloor() throws Exception {
+        f.user("alice", W8.PW);
+        f.start(b -> b);
+        Wave7LoginTest.RecordingScheduler sched = new Wave7LoginTest.RecordingScheduler();
+        try {
+            f.auth.failureFloor(new com.snoworca.naruserve.utils.auth.internal.FailureFloor(
+                    f.auth.passwords().timing(), sched));
+            for (String body : new String[] {"{\"username\":\"alice\"}", "{\"username\":\"alice\",\"password\":7}",
+                    "{\"username\":\"alice\",\"password\":\"\"}"}) {
+                assertEquals(body, 400, f.post("/auth/login", body).status());
+            }
+            assertTrue("the 400 is written without a scheduled delay: " + sched.delaysNanos,
+                    sched.delaysNanos.isEmpty());
+            assertEquals(401, f.post("/auth/login", W8.login("alice", "wrong-password")).status());
+            assertEquals("a wrong password is answered through the floor", 1, sched.delaysNanos.size());
+        } finally {
+            sched.shutdownNow();
+        }
+    }
+
+    // FR-FLOW-002 AC-5 (the trusted origin next to app.cors): BOTH with .trustedOrigins("https://spa.example") and
+    // app.cors allowedOrigins holding it: Origin https://spa.example, trusted but not the request's own origin -> 200
+    // cookie delivery (naru_at, naru_rt, naru_csrf; body csrfToken only). The CORS list does not decide the delivery: an
+    // Origin outside trustedOrigins -> 200 body delivery with accessToken and no Set-Cookie.
+    @Test
+    public void FR_FLOW_002_AC5_trustedOriginBesideCors() throws Exception {
+        f.user("alice", W8.PW);
+        f.attach = (a, app) -> {
+            app.cors(c -> c.allowedOrigins("https://spa.example", "http://localhost").credentials(true));
+            a.install(app);
+        };
+        f.start(b -> b.transport(TokenTransport.BOTH).trustedOrigins("https://spa.example"));
+        ClientResponse spa = f.post("/auth/login", W8.login("alice", W8.PW), "Host", W8.HOST, "Origin",
+                "https://spa.example");
+        assertEquals(spa.text(), 200, spa.status());
+        for (String n : new String[] {"naru_at", "naru_rt", "naru_csrf"}) {
+            assertNotNull(n, W8.cookieValue(spa, n));
+        }
+        assertNotNull(W8.object(spa).get("csrfToken"));
+        assertNull(W8.object(spa).get("accessToken"));
+        assertNull(W8.object(spa).get("refreshToken"));
+        for (String origin : new String[] {"http://localhost", "capacitor://localhost"}) {
+            ClientResponse body = f.post("/auth/login", W8.login("alice", W8.PW), "Host", W8.HOST, "Origin", origin);
+            assertEquals(origin + " " + body.text(), 200, body.status());
+            assertNotNull(origin, W8.object(body).get("accessToken"));
+            assertTrue(origin, W8.setCookies(body).isEmpty());
+        }
+    }
+
+    // OPS-FLOW-001 AC-3 (what the page states is what Core does): capacitor://localhost cannot be listed in
+    // CorsOptions.allowedOrigins, so the app.cors set-up FR-FLOW-002 AC-5 names cannot be built as written
+    @Test
+    public void OPS_FLOW_001_AC3_capacitorIsRefusedByAllowedOrigins() throws Exception {
+        f.user("alice", W8.PW);
+        f.attach = (a, app) -> {
+            try {
+                app.cors(c -> c.allowedOrigins("https://spa.example", "capacitor://localhost"));
+                org.junit.Assert.fail("capacitor://localhost was listed");
+            } catch (IllegalArgumentException expected) {
+                assertTrue(expected.getMessage(), expected.getMessage().contains("allowedOrigins"));
+            }
+            a.install(app);
+        };
+        f.start(b -> b.transport(TokenTransport.BOTH));
+    }
+
+    // FR-FLOW-009 AC-2 (the answer itself): the refusal of a locked account has the same body and challenge as a wrong
+    // password, and its hash step ran in one slot
+    @Test
+    public void FR_FLOW_009_AC2_lockedRefusalIsTheWrongPasswordAnswer() throws Exception {
+        f.user("alice", W8.PW);
+        f.proxied = true;
+        f.start(b -> b.lockout(Lockout.after(5).forMinutes(15)));
+        ClientResponse wrong = null;
+        for (int i = 1; i <= 5; i++) {
+            wrong = f.post("/auth/login", W8.login("alice", "guess-" + i), "X-Forwarded-For", "192.0.2." + i);
+            assertEquals(401, wrong.status());
+        }
+        long slots = f.auth.hashSlots().requested();
+        ClientResponse locked = f.post("/auth/login", W8.login("alice", W8.PW), "X-Forwarded-For", "192.0.2.6");
+        assertEquals(locked.text(), 401, locked.status());
+        assertEquals("the hash step ran in one slot", slots + 1, f.auth.hashSlots().requested());
+        assertEquals(wrong.text().replaceAll("\"requestId\":\"[^\"]*\"", ""),
+                locked.text().replaceAll("\"requestId\":\"[^\"]*\"", ""));
+        assertEquals(wrong.header("WWW-Authenticate"), locked.header("WWW-Authenticate"));
+    }
+
+    /** Records the keys a throttle is asked to reset. */
+    static final class ResetRecording extends com.snoworca.naruserve.utils.auth.spi.ForwardingLoginThrottle {
+        final List<String> resets = new CopyOnWriteArrayList<>();
+
+        ResetRecording(com.snoworca.naruserve.utils.auth.spi.LoginThrottle inner) {
+            super(inner);
+        }
+
+        @Override
+        public void reset(String key) throws Exception {
+            resets.add(key);
+            super.reset(key);
+        }
+    }
+
+    // FR-FLOW-009 AC-5 (what the release clears): the release clears the Lockout state and the user's user-only key,
+    // and resets no IP key and no (user, IP) key
+    @Test
+    public void FR_FLOW_009_AC5_releaseResetsOnlyTheUserOnlyKey() throws Exception {
+        String alice = f.user("alice", W8.PW);
+        f.user("root", W8.PW, "admin");
+        f.proxied = true;
+        ResetRecording throttle = new ResetRecording(new InMemoryLoginThrottle());
+        f.start(b -> b.loginThrottle(throttle).lockout(Lockout.after(5).forMinutes(15)));
+        String root = (String) f.loginBody("root", W8.PW, "X-Forwarded-For", "192.0.2.30").get("accessToken");
+        for (int i = 1; i <= 5; i++) {
+            f.post("/auth/login", W8.login("alice", "guess-" + i), "X-Forwarded-For", "192.0.2." + i);
+        }
+        assertTrue(f.auth.lockouts().isLocked(alice));
+        throttle.resets.clear();
+        ClientResponse release = f.adapter.send(com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest
+                .of("DELETE", "/auth/admin/users/" + alice + "/lockout").header("Authorization", "Bearer " + root));
+        assertEquals(release.text(), 204, release.status());
+        assertFalse(f.auth.lockouts().isLocked(alice));
+        assertEquals(java.util.Collections.singletonList(
+                com.snoworca.naruserve.utils.auth.internal.ThrottleKeys.loginUser("alice")), throttle.resets);
+    }
+
+    // SEC-FLOW-002 AC-4: COOKIE over plain text under the opt-in, a same-origin login whose cookies lack Secure logs a
+    // WARN stating so. It is counted around the login, because the start-up WARN of the opt-in also says "secure".
+    @Test
+    public void SEC_FLOW_002_AC4_cookieLoginWarnsThatTheCookiesLackSecure() throws Exception {
+        f.user("alice", W8.PW);
+        f.start("203.0.113.9", false, b -> b.allowInsecureTransport("TLS adapter pending")
+                .transport(TokenTransport.COOKIE));
+        String pattern = "WARN .*auth cookies.*without the Secure.*";
+        assertEquals(0, com.snoworca.naruserve.testing.RecordingLogger.countMatching(f.logger.lines, pattern));
+        ClientResponse r = f.post("/auth/login", W8.login("alice", W8.PW), "Host", W8.HOST, "Origin",
+                "http://app.test");
+        assertEquals(r.text(), 200, r.status());
+        for (String n : new String[] {"naru_at", "naru_rt", "naru_csrf"}) {
+            assertFalse(n, W8.setCookie(r, n).contains("Secure"));
+        }
+        assertEquals(f.logger.lines.toString(), 1,
+                com.snoworca.naruserve.testing.RecordingLogger.countMatching(f.logger.lines, pattern));
+    }
+
+    // SEC-FLOW-001 AC-3, AC-4, AC-7 through the real POST /auth/login with valid credentials (TransportRuleTest runs
+    // them on stand-in handlers): loopback plain text without proxy headers -> 200; PROD with trustProxyHops(1) and
+    // X-Forwarded-Proto: https on a plain socket -> 200; DEV, plain text from a remote peer -> 200
+    @Test
+    public void SEC_FLOW_001_AC3_AC4_AC7_theRealLoginPasses() throws Exception {
+        W8 local = new W8();
+        W8 proxy = new W8();
+        W8 dev = new W8();
+        try {
+            local.user("alice", W8.PW);
+            local.start("127.0.0.1", false, b -> b.mode(AuthMode.PROD));
+            assertEquals(200, local.post("/auth/login", W8.login("alice", W8.PW)).status());
+            ClientResponse forwarded = local.post("/auth/login", W8.login("alice", W8.PW), "X-Forwarded-For",
+                    "198.51.100.4");
+            assertEquals(403, forwarded.status());
+            assertEquals("insecure_transport", W8.code(forwarded));
+            proxy.user("alice", W8.PW);
+            proxy.proxied = true;
+            proxy.start("10.0.0.2", false, b -> b.mode(AuthMode.PROD));
+            assertEquals(200, proxy.post("/auth/login", W8.login("alice", W8.PW), "X-Forwarded-Proto", "https",
+                    "X-Forwarded-For", "198.51.100.4").status());
+            dev.user("alice", W8.PW);
+            dev.start("203.0.113.9", false, b -> b.mode(AuthMode.DEV));
+            assertEquals(200, dev.post("/auth/login", W8.login("alice", W8.PW)).status());
+        } finally {
+            local.stop();
+            proxy.stop();
+            dev.stop();
+        }
+    }
 }

@@ -999,4 +999,27 @@ public class Wave8ApiKeysTest {
             assertEquals(503, expected.getStatus());
         }
     }
+
+    // IR-FLOW-001 AC-2: keys off, an expired Bearer on a protected path is a 401 (the challenge test checks its code and
+    // header). AC-4: with .apiKeyScheme("ak") that response is a 401 too, with the ak challenge.
+    @Test
+    public void IR_FLOW_001_AC2_AC4_anExpiredJwtIsA401() throws Exception {
+        String id = f.user("plain", W8.PW);
+        f.start(b -> b);
+        ClientResponse off = get("Bearer " + f.expiredAccess(id));
+        assertEquals(off.text(), 401, off.status());
+        assertEquals("invalid_token", W8.code(off));
+        assertEquals("Bearer error=\"invalid_token\"", off.header("WWW-Authenticate"));
+        W8 ak = new W8();
+        try {
+            String bot = ak.user("bot", W8.PW, "reader");
+            ak.start(b -> b.apiKeys(new InMemoryApiKeyStore()).apiKeyScheme("ak"));
+            ClientResponse on = ak.get("/api/x", "Authorization", "Bearer " + ak.expiredAccess(bot));
+            assertEquals(on.text(), 401, on.status());
+            assertEquals("invalid_token", W8.code(on));
+            assertEquals("Bearer error=\"invalid_token\", ak", on.header("WWW-Authenticate"));
+        } finally {
+            ak.stop();
+        }
+    }
 }

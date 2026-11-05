@@ -102,4 +102,12 @@ public class Wave7DocsTest {
         has("en", en(), "`accessToken` present means body delivery", "send Bearer",
                 "only `csrfToken` present means cookie delivery", "never assumes one");
     }
+
+    // OPS-FLOW-001 AC-3 (last clause): a non-http(s) origin such as capacitor://localhost cannot be listed in
+    // CorsOptions.allowedOrigins
+    @Test
+    public void OPS_FLOW_001_AC3_capacitorCannotBeListed() throws IOException {
+        has("ko", ko(), "HTTP(S) 출처", "`capacitor://localhost`는 아직 목록에 넣을 수 없습니다");
+        has("en", en(), "accepts only HTTP(S) origins", "`capacitor://localhost` cannot be listed yet");
+    }
 }

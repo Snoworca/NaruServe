@@ -795,4 +795,55 @@ public class Wave8AccountTest {
         assertTrue(doc, doc.contains("String"));
         assertTrue(doc, doc.contains("toCharArray()"));
     }
+
+    // FR-FLOW-002 AC-8: register and setup are token-issuing responses too: Cache-Control: no-store, by body and by
+    // cookies (login, refresh and password assert it in their own tests)
+    @Test
+    public void FR_FLOW_002_AC8_registerAndSetupAreNoStore() throws Exception {
+        for (TokenTransport t : new TokenTransport[] {TokenTransport.HEADER, TokenTransport.COOKIE}) {
+            W8 w = new W8();
+            try {
+                w.start("127.0.0.1", false, b -> b.register(true).recovery(true).user("admin", null, "admin")
+                        .transport(t));
+                ClientResponse setup = w.post("/auth/setup", setup(w.auth.pendingSetupToken(), "admin", W8.PW), "Host",
+                        W8.HOST, "Origin", "http://app.test");
+                assertEquals(t + " " + setup.text(), 201, setup.status());
+                assertEquals(t.toString(), "no-store", setup.header("Cache-Control"));
+                ClientResponse reg = w.post("/auth/register", register("neo", W8.PW), "Host", W8.HOST, "Origin",
+                        "http://app.test");
+                assertEquals(t + " " + reg.text(), 201, reg.status());
+                assertEquals(t.toString(), "no-store", reg.header("Cache-Control"));
+            } finally {
+                w.stop();
+            }
+        }
+    }
+
+    // FR-FLOW-002 AC-9 (the response shapes): COOKIE same-origin -> Set-Cookie for naru_at, naru_rt and naru_csrf and a
+    // body of csrfToken only; HEADER -> body accessToken and refreshToken and no Set-Cookie
+    @Test
+    public void FR_FLOW_002_AC9_setupResponseShapes() throws Exception {
+        f.start("127.0.0.1", false, b -> b.recovery(true).user("admin", null, "admin")
+                .transport(TokenTransport.COOKIE));
+        ClientResponse cookie = f.post("/auth/setup", setup(f.auth.pendingSetupToken(), "admin", W8.PW), "Host",
+                W8.HOST, "Origin", "http://app.test");
+        assertEquals(cookie.text(), 201, cookie.status());
+        for (String n : new String[] {"naru_at", "naru_rt", "naru_csrf"}) {
+            assertNotNull(n, W8.cookieValue(cookie, n));
+        }
+        assertEquals(1, W8.object(cookie).size());
+        assertNotNull(W8.object(cookie).get("csrfToken"));
+        W8 w = new W8();
+        try {
+            w.start("127.0.0.1", false, b -> b.recovery(true).user("admin", null, "admin")
+                    .transport(TokenTransport.HEADER));
+            ClientResponse body = w.post("/auth/setup", setup(w.auth.pendingSetupToken(), "admin", W8.PW));
+            assertEquals(body.text(), 201, body.status());
+            assertNotNull(W8.object(body).get("accessToken"));
+            assertNotNull(W8.object(body).get("refreshToken"));
+            assertTrue(W8.setCookies(body).isEmpty());
+        } finally {
+            w.stop();
+        }
+    }
 }
