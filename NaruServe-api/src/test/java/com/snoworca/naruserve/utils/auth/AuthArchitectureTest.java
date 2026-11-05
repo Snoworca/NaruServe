@@ -282,6 +282,7 @@ public class AuthArchitectureTest {
     }
 
     // CON-AUTH-003 AC-3: every utils class is Java 8 bytecode (major 52)
+    // IR-IAM-002 AC-5 (the --release 8 half): ForwardingUserStore is one of those classes
     @Test
     public void CON_AUTH_003_AC3_majorVersion52() throws IOException {
         for (ClassInfo c : utilsClasses()) {

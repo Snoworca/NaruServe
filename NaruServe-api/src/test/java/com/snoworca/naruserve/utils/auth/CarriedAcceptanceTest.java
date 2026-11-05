@@ -306,6 +306,7 @@ public class CarriedAcceptanceTest {
 
     // IR-AUTH-003 AC-6: the default codes; the security field defaults throw security_write_conflict (setEnabled,
     // bumpTokenVersion and setRoles after 3 retries, changePassword after one try); the rehash is skipped silently
+    // REL-IAM-002 AC-7 (store half): the default changePassword throws on an unconfirmed write, not returns false
     @Test
     public void IR_AUTH_003_AC6_unconfirmedSecurityWrites() throws Exception {
         assertEquals("SERVICE_UNAVAILABLE", new AuthUnavailableException("x").getCode());

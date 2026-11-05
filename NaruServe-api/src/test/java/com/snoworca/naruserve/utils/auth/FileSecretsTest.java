@@ -495,6 +495,53 @@ public class FileSecretsTest {
         }
     }
 
+    /** Run in a child JVM by {@link #SEC_IAM_008_AC7_fromEnvReadsTheNamedVariable}: prints what fromEnv() answers. */
+    public static final class EnvProbe {
+        public static void main(String[] args) {
+            try {
+                System.out.print(AuthFileKey.fromEnv() == null ? "null" : "key");
+            } catch (IllegalArgumentException e) {
+                System.out.print(e.getMessage());
+            }
+        }
+    }
+
+    private static String location(Class<?> c) throws Exception {
+        return new File(c.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+    }
+
+    /** What fromEnv() answers in a child JVM whose NARU_AUTH_FILE_KEY is {@code value} (null: unset). */
+    private static String fromEnvIn(String value) throws Exception {
+        ProcessBuilder pb = new ProcessBuilder(new File(System.getProperty("java.home"), "bin/java").getPath(), "-cp",
+                location(AuthFileKey.class) + File.pathSeparator + location(EnvProbe.class), EnvProbe.class.getName());
+        pb.environment().remove(AuthFileKey.ENV_VARIABLE);
+        if (value != null) {
+            pb.environment().put(AuthFileKey.ENV_VARIABLE, value);
+        }
+        Process p = pb.start();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try (InputStream in = p.getInputStream()) {
+            byte[] buf = new byte[1024];
+            for (int n; (n = in.read(buf)) > 0; ) {
+                out.write(buf, 0, n);
+            }
+        }
+        assertEquals(0, p.waitFor());
+        return new String(out.toByteArray(), StandardCharsets.UTF_8);
+    }
+
+    // SEC-IAM-008 AC-7 (fromEnv itself): in a process with NARU_AUTH_FILE_KEY unset or empty fromEnv() is null, with a
+    // valid value it is a key, and with an invalid one it throws naming the variable but not its value
+    @Test(timeout = 60000)
+    public void SEC_IAM_008_AC7_fromEnvReadsTheNamedVariable() throws Exception {
+        assertEquals("null", fromEnvIn(null));
+        assertEquals("null", fromEnvIn(""));
+        assertEquals("key", fromEnvIn(Base64.getEncoder().encodeToString(master())));
+        String refused = fromEnvIn("c2VjcmV0LXZhbHVl");
+        assertTrue(refused, refused.contains("NARU_AUTH_FILE_KEY"));
+        assertFalse(refused, refused.contains("c2VjcmV0LXZhbHVl"));
+    }
+
     // SEC-IAM-008 AC-8: the master key is never disclosed: a fixed toString, not Serializable, and after creating users,
     // rewriting the files and triggering each AC-4 failure, no log line, exception message or data-directory file holds
     // the raw key bytes or their base64, base64url or hex forms, nor a derived key

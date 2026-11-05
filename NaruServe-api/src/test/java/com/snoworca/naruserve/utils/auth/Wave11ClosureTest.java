@@ -1168,6 +1168,30 @@ public class Wave11ClosureTest {
         }
     }
 
+    // REL-IAM-001 AC-2 (the real POST /auth/logout?all=true): over a five-method store whose update() silently does
+    // not apply, the answer is 503 security_write_conflict and auth emits exactly one security_write_conflict audit
+    // event to the builder's sink; ver stays
+    @Test
+    public void REL_IAM_001_AC2_logoutAllUnconfirmedIs503WithOneAudit() throws Exception {
+        SilentFive five = new SilentFive();
+        String alice = five.create(AuthUser.builder().username("alice").roles("reader").build()).getId();
+        final List<com.snoworca.naruserve.utils.auth.audit.AuditEvent> audited = new CopyOnWriteArrayList<>();
+        f.users = five;
+        f.start(b -> b.audit(audited::add));
+        five.silent = true;
+        ClientResponse r = f.post("/auth/logout?all=true", null, "Authorization",
+                "Bearer " + f.auth.accessToken(alice, 0, 900_000L));
+        assertEquals(r.text(), 503, r.status());
+        assertEquals("security_write_conflict", W8.code(r));
+        int conflicts = 0;
+        for (com.snoworca.naruserve.utils.auth.audit.AuditEvent e : audited) {
+            conflicts += com.snoworca.naruserve.utils.auth.audit.AuditEvent.SECURITY_WRITE_CONFLICT.equals(e.getType())
+                    ? 1 : 0;
+        }
+        assertEquals(audited.toString(), 1, conflicts);
+        assertEquals(0, five.findById(alice).getTokenVersion());
+    }
+
     /** Records, for every write reaching the store, the lock of the user and whether this thread holds it. */
     static final class LockProbe extends SilentFiveDelegate {
         final List<String> seen = new CopyOnWriteArrayList<>();

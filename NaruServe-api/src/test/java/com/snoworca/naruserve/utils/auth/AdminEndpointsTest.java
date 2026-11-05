@@ -908,6 +908,7 @@ public class AdminEndpointsTest {
     // FR-IAM-014 AC-6: password applied, then setRoles fails after its retries (security_write_conflict): 503 with that
     // code, applied ["password"], one security_write_conflict audit event, one onUserUpdated (PASSWORD) and one
     // onPasswordChanged
+    // REL-IAM-001 AC-2 (the A4 half): the answer is the A4 handler's own 503 security_write_conflict with one audit event
     @Test
     public void FR_IAM_014_AC6_securityWriteAfterPassword() throws Exception {
         AdminFixture f = new AdminFixture(unconfirmedSecurityWrites()).start();
@@ -1187,6 +1188,144 @@ public class AdminEndpointsTest {
         String hash = f.stored(bob).getPasswordHash();
         assertTrue(f.base.updatePasswordHash(bob, hash, f.auth.passwords().hash("rehashed-pw".toCharArray())));
         assertEquals(v, f.stored(bob).getTokenVersion());
+    }
+
+    // IR-IAM-004 AC-4 (the real route): G7 refuses a cycle and a self edge with 409 group_cycle and neither reaches
+    // addParent
+    @Test
+    public void IR_IAM_004_AC4_g7RefusesCycleAndSelfEdge() throws Exception {
+        AdminFixture f = fixture().start();
+        String root = f.user("root", "admin");
+        f.groups.confer("eng");
+        f.groups.confer("backend");
+        f.groups.addParent("backend", "eng");
+        f.groups.addParentCalls.set(0);
+        for (String path : new String[] {"/auth/admin/groups/eng/parents/backend",
+                "/auth/admin/groups/eng/parents/eng"}) {
+            ClientResponse r = f.call("PUT", path, root, null);
+            assertEquals(path + " " + r.text(), 409, r.status());
+            assertEquals("group_cycle", AuthTestSupport.code(r));
+        }
+        assertEquals(0, f.groups.addParentCalls.get());
+        assertTrue(f.groups.parentsOf(Collections.singleton("eng")).isEmpty());
+    }
+
+    // IR-IAM-004 AC-5 (the real route): G7 refuses an edge whose chain would pass depth 8 with 409 and no addParent
+    // call; the same chain at exactly 8 is added
+    @Test
+    public void IR_IAM_004_AC5_g7RefusesADepthAboveEight() throws Exception {
+        AdminFixture f = fixture().start();
+        String root = f.user("root", "admin");
+        for (int i = 0; i <= 9; i++) {
+            f.groups.confer("g" + i);
+        }
+        for (int i = 0; i < 8; i++) {
+            f.groups.addParent("g" + i, "g" + (i + 1));
+        }
+        f.groups.confer("h0");
+        f.groups.confer("h1");
+        f.groups.addParent("h0", "h1");
+        f.groups.addParentCalls.set(0);
+        // above g9: 0, below g8: 8 -> 9 edges; above g1: 7, below h1: 1 -> 9 edges
+        for (String path : new String[] {"/auth/admin/groups/g8/parents/g9", "/auth/admin/groups/h1/parents/g1"}) {
+            ClientResponse r = f.call("PUT", path, root, null);
+            assertEquals(path + " " + r.text(), 409, r.status());
+            assertEquals("group_cycle", AuthTestSupport.code(r));
+        }
+        assertEquals(0, f.groups.addParentCalls.get());
+        // above g2: 6, below h1: 1 -> 8 edges
+        assertEquals(204, f.call("PUT", "/auth/admin/groups/h1/parents/g2", root, null).status());
+        assertEquals(1, f.groups.addParentCalls.get());
+    }
+
+    // REL-IAM-002 AC-8 (order and the store): A4 {password, enabled:true} on a disabled user writes the hash while the
+    // user is still disabled and enables after it, with one ver++; the store-level changePassword has no enabled
+    // condition
+    @Test
+    public void REL_IAM_002_AC8_resetEnablesAfterTheHash() throws Exception {
+        final List<String> order = new java.util.concurrent.CopyOnWriteArrayList<>();
+        AdminFixture f = new AdminFixture(base -> new com.snoworca.naruserve.utils.auth.user.ForwardingUserStore(base) {
+            @Override
+            public boolean changePassword(String id, String expectedOldHash, long expectedVer, String newHash)
+                    throws Exception {
+                order.add("changePassword enabled=" + base.findById(id).isEnabled());
+                return super.changePassword(id, expectedOldHash, expectedVer, newHash);
+            }
+
+            @Override
+            public boolean setEnabled(String id, boolean enabled) throws Exception {
+                order.add("setEnabled " + enabled);
+                return super.setEnabled(id, enabled);
+            }
+        });
+        fixtures.add(f);
+        f.start();
+        String root = f.user("root", "admin");
+        String bob = f.user("bob", "reader");
+        f.base.setEnabled(bob, false);
+        long v = f.stored(bob).getTokenVersion();
+        ClientResponse r = f.call("PATCH", "/auth/admin/users/" + bob, root,
+                "{\"password\":\"new-password-1\",\"enabled\":true}");
+        assertEquals(r.text(), 200, r.status());
+        assertEquals(Arrays.asList("changePassword enabled=false", "setEnabled true"), order);
+        assertEquals(v + 1, f.stored(bob).getTokenVersion());
+        assertTrue(f.stored(bob).isEnabled());
+        String carol = f.user("carol", "reader");
+        f.base.setEnabled(carol, false);
+        AuthUser disabled = f.stored(carol);
+        assertTrue(f.base.changePassword(carol, disabled.getPasswordHash(), disabled.getTokenVersion(), "new-hash"));
+        assertEquals("new-hash", f.stored(carol).getPasswordHash());
+        assertFalse(f.stored(carol).isEnabled());
+    }
+
+    // SEC-IAM-004 AC-2 (the reset row): a refused password reset of an admin carries the code insufficient_scope too
+    @Test
+    public void SEC_IAM_004_AC2_refusedResetCarriesTheCode() throws Exception {
+        AdminFixture f = fixture().start();
+        String delegated = f.user("dee", "userswriter", "reader");
+        String admin = f.user("adm", "admin");
+        String hash = f.stored(admin).getPasswordHash();
+        ClientResponse r = f.call("PATCH", "/auth/admin/users/" + admin, delegated, "{\"password\":\"new-password-1\"}");
+        assertEquals(403, r.status());
+        assertEquals("insufficient_scope", AuthTestSupport.code(r));
+        assertEquals(hash, f.stored(admin).getPasswordHash());
+    }
+
+    // SEC-IAM-007 AC-3 (the users list): auth-groups:read on GET /auth/admin/users answers the code insufficient_scope
+    @Test
+    public void SEC_IAM_007_AC3_usersListRefusalCarriesTheCode() throws Exception {
+        AdminFixture f = fixture().start();
+        ClientResponse r = f.call("GET", "/auth/admin/users", f.user("gina", "groupsreader"), null);
+        assertEquals(403, r.status());
+        assertEquals("insufficient_scope", AuthTestSupport.code(r));
+    }
+
+    // SEC-IAM-007 AC-4 (keys on): the built-in admin also passes the guard of the three key routes
+    @Test
+    public void SEC_IAM_007_AC4_adminPassesTheKeyRouteGuards() throws Exception {
+        final AdminFixture.ListKeys keys = new AdminFixture.ListKeys();
+        AdminFixture f = fixture().start(b -> b.apiKeys(keys));
+        String root = f.user("root", "admin");
+        String u1 = f.user("u1");
+        keys.rows.add(StoredApiKey.builder().id("k1").prefix("aBcd1234").secretHash("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef").ownerUserId(u1)
+                .ownerVer(0).name("ci").scopes(Collections.singleton("posts:read")).createdAt(1L).build());
+        for (String[] c : new String[][] {{"GET", "/auth/admin/apikeys?ownerUserId=" + u1},
+                {"POST", "/auth/admin/apikeys"}, {"DELETE", "/auth/admin/apikeys/k1"}}) {
+            ClientResponse r = f.call(c[0], c[1], root, c[0].equals("POST") ? "{}" : null);
+            assertFalse(c[1] + " " + r.status() + " " + r.text(), r.status() == 401 || r.status() == 403);
+        }
+    }
+
+    // SEC-IAM-007 AC-8 (the reader's POST): auth-apikeys:read on POST /auth/admin/apikeys answers the code
+    // insufficient_scope
+    @Test
+    public void SEC_IAM_007_AC8_keyReaderPostCarriesTheCode() throws Exception {
+        final AdminFixture.ListKeys keys = new AdminFixture.ListKeys();
+        AdminFixture f = fixture().start(b -> b.apiKeys(keys));
+        ClientResponse r = f.call("POST", "/auth/admin/apikeys", f.user("kay", "keysreader"), "{}");
+        assertEquals(403, r.status());
+        assertEquals("insufficient_scope", AuthTestSupport.code(r));
+        assertEquals(0, keys.writes.get());
     }
 
     private static ClientResponse asKey(AdminFixture f, String method, String path, String owner, String scopes,

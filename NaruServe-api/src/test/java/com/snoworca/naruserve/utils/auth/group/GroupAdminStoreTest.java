@@ -244,6 +244,25 @@ public class GroupAdminStoreTest {
         assertTrue(again.groupsOfUser("user\twith\nodd\\chars").contains("company"));
     }
 
+    // IR-IAM-004 AC-6 (AtomicFiles): a write leaves only the main file, and the recovery at the next start is the
+    // AtomicFiles one: with only the .bak present the store loads it, renames it to the main name and logs one WARN
+    @Test
+    public void IR_IAM_004_AC6_fileStorePersistsThroughAtomicFiles() throws Exception {
+        File dir = tmp.newFolder();
+        File f = new File(dir, "groups.txt");
+        FileGroupStore first = new FileGroupStore(f);
+        fixture(first);
+        assertEquals(Collections.singletonList("groups.txt"), Arrays.asList(dir.list()));
+        assertTrue(f.renameTo(new File(dir, "groups.txt.bak")));
+        com.snoworca.naruserve.testing.RecordingLogger log = new com.snoworca.naruserve.testing.RecordingLogger();
+        FileGroupStore again = new FileGroupStore(f, GroupLimits.defaults(), log);
+        assertEquals(first.listGroups(), again.listGroups());
+        assertEquals(first.membersOf("backend"), again.membersOf("backend"));
+        assertEquals(first.childrenOf("eng"), again.childrenOf("eng"));
+        assertEquals(1, log.count("WARN"));
+        assertEquals(Collections.singletonList("groups.txt"), Arrays.asList(dir.list()));
+    }
+
     private static void edge(InMemoryGroupStore s, CountDownLatch go, String child, String parent,
             List<Throwable> refused) {
         try {

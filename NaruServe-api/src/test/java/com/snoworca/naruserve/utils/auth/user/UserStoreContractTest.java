@@ -142,6 +142,8 @@ public class UserStoreContractTest {
         assertFalse(s.updatePasswordHash(id, "wrong", "h2"));
         assertTrue(s.updatePasswordHash(id, "h1", "h2"));
         assertEquals(1, s.findById(id).getTokenVersion());
+        // REL-IAM-002 AC-2 (store half): a different expectedVer returns false and changes nothing: the swap below still
+        // expects the unchanged hash h2 and ver 1
         assertFalse(s.changePassword(id, "h2", 0, "h3"));
         assertTrue(s.changePassword(id, "h2", 1, "h3"));
         assertEquals(2, s.findById(id).getTokenVersion());

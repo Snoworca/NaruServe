@@ -235,6 +235,34 @@ public class AuthUsersTest {
         }
     }
 
+    // IR-IAM-003 AC-4 (503 through auth.errors()): each of the eight AuthUsers methods, the init overload of create
+    // included, over a store throwing SQLException answers 503 in an app route with auth.errors() as its error handler
+    @Test
+    public void IR_IAM_003_AC4_everyMethodIs503ThroughAuthErrors() {
+        Auth auth = AuthTestSupport.builder().users(new BrokenStore()).build(); // not installed: its doctor refuses the store
+        AuthUsers users = auth.users();
+        List<Call> calls = Arrays.<Call>asList(() -> users.findById("1"), () -> users.findByUsername("a"),
+                () -> users.create("a", "pw-pw-pw-pw".toCharArray()),
+                () -> users.create("a", "pw-pw-pw-pw".toCharArray(), u -> u),
+                () -> users.update("1", u -> u), () -> users.delete("1"), () -> users.rename("1", "b"),
+                () -> users.checkPassword("1", "pw-pw-pw-pw".toCharArray()));
+        TestApp t = TestApp.create();
+        for (int i = 0; i < calls.size(); i++) {
+            final Call call = calls.get(i);
+            t.app().get("/broken/" + i, (req, res) -> {
+                call.run();
+                res.send("not reached");
+            });
+        }
+        t.app().onError(auth.errors());
+        for (int i = 0; i < calls.size(); i++) {
+            assertEquals(AuthUnavailableException.class, thrown(calls.get(i)));
+            com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse r = t.send("GET", "/broken/" + i);
+            assertEquals(i + " " + r.text(), 503, r.status());
+            assertEquals("SERVICE_UNAVAILABLE", AuthTestSupport.code(r));
+        }
+    }
+
     // IR-IAM-003 AC-5: a refusing before-listener stops create, update, rename and delete and nothing is written
     @Test
     public void IR_IAM_003_AC5_refusingListenerWritesNothing() {
