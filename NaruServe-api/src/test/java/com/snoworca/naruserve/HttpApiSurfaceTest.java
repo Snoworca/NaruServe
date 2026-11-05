@@ -340,7 +340,7 @@ public class HttpApiSurfaceTest {
                 "options(String,RouteHandler)->RestApp",
                 "route(Method,String,RouteHandler)->RestApp", "route(MethodSet,String,RouteHandler)->RestApp",
                 "route(String)->RouteBuilder",
-                "group(String,Configurer)->RestApp", // FR-DX-009 AC-1
+                "group(String,Configurer)->RestApp", // FR-DX-009 AC-1; FR-ROUTE-020 AC-5
                 "cors(Configurer)->RestApp", // FR-DX-010 AC-1
                 "routerPolicy(RouterPolicy)->RestApp",
                 // wave 4: IR-APP-001, FR-APP-001

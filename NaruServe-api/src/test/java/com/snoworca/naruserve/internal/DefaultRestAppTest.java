@@ -117,7 +117,7 @@ public class DefaultRestAppTest {
     @Test
     public void sdsAc12_FR_HTTP_008_AC2_badPatternThrowsAtTheRegistrationCall() {
         DefaultRestApp app = new DefaultRestApp();
-        // CON-APP-010 AC-1 AC-5; FR-ROUTE-018: reject actual path-to-regexp grammar errors atomically.
+        // CON-APP-010 AC-1 AC-5; FR-ROUTE-018 AC-7: the public registration rejects actual path-to-regexp grammar errors.
         for (String bad : Arrays.asList("/a/:", "/a*", "/x/:id(\\d+)", "/a{/:id")) {
             try {
                 app.get(bad, h);
