@@ -1068,6 +1068,80 @@ public class AdminEndpointsTest {
         assertEquals(Arrays.asList("username", "password"), AdminFixture.object(three).get("applied"));
     }
 
+    // FR-IAM-014 AC-6 (the setEnabled branch): password applied, then setEnabled fails after its retries: 503
+    // security_write_conflict, applied ["password"], one audit event, one onUserUpdated (PASSWORD), one onPasswordChanged
+    @Test
+    public void FR_IAM_014_AC6_setEnabledAfterPassword() throws Exception {
+        AdminFixture f = new AdminFixture(unconfirmedSecurityWrites()).start();
+        String root = f.user("root", "admin");
+        String bob = f.user("bob", "reader");
+        String hash = f.stored(bob).getPasswordHash();
+        ClientResponse r = f.call("PATCH", "/auth/admin/users/" + bob, root,
+                "{\"password\":\"new-password-1\",\"enabled\":false}");
+        assertEquals(r.text(), 503, r.status());
+        assertEquals("security_write_conflict", AuthTestSupport.code(r));
+        assertEquals(Collections.singletonList("password"), AdminFixture.object(r).get("applied"));
+        assertFalse(hash.equals(f.stored(bob).getPasswordHash()));
+        assertTrue(f.stored(bob).isEnabled());
+        assertEquals(Collections.singletonList(AuditEvent.SECURITY_WRITE_CONFLICT), f.auditTypes());
+        assertEquals(Collections.singletonList(EnumSet.of(UserChange.PASSWORD)), f.events.updated);
+        assertEquals(Collections.singletonList(UserOrigin.ADMIN), f.events.origins);
+        assertEquals(1, f.events.passwordChanged.get());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void errorBesideApplied(ClientResponse r) {
+        Map<String, Object> body = AdminFixture.object(r);
+        assertEquals(r.text(), AdminFixture.set("error", "applied"), new HashSet<>(body.keySet()));
+        assertEquals(r.text(), AdminFixture.set("code", "message", "requestId"),
+                new HashSet<>(((Map<String, Object>) body.get("error")).keySet()));
+    }
+
+    // FR-IAM-014 AC-10: in a 409 and in a 503 of A4, applied is a top-level member beside the error object, which holds
+    // code, message and requestId
+    @Test
+    public void FR_IAM_014_AC10_appliedSitsBesideTheErrorObject() throws Exception {
+        AdminFixture lost = new AdminFixture(losingPassword()).start();
+        ClientResponse conflict = lost.call("PATCH", "/auth/admin/users/" + lost.user("alice", "reader"),
+                lost.user("root", "admin"), "{\"username\":\"alicia\",\"password\":\"new-password-1\"}");
+        assertEquals(409, conflict.status());
+        errorBesideApplied(conflict);
+        AdminFixture down = new AdminFixture(failingSetRoles(new IllegalStateException())).start();
+        ClientResponse failed = down.call("PATCH", "/auth/admin/users/" + down.user("bob", "reader"),
+                down.user("root", "admin"), "{\"password\":\"new-password-1\",\"roles\":[\"editor\"]}");
+        assertEquals(503, failed.status());
+        errorBesideApplied(failed);
+    }
+
+    // FR-IAM-009 AC-5 (the R31 side, with the four cases of AC-3 and AC-4): an API-key actor grants a role only when the
+    // key's scopes and the owner's scopes both cover what it confers, never by intersecting wildcard sets
+    @Test
+    public void FR_IAM_009_AC5_theGrantRuleUsesTheBothCoverPredicate() throws Exception {
+        AdminFixture f = fixture().start(b -> b.credentials(new AuthTestSupport.TestCredentials()));
+        String[][] cases = {
+            // owner role, key scope, the role both cover, the role only one covers
+            {"reader", "posts:*", "reader", "editor"},
+            {"admin", "posts:read", "reader", "editor"},
+            {"poster", "*", "editor", "docs"},
+        };
+        for (int i = 0; i < cases.length; i++) {
+            String[] c = cases[i];
+            String owner = f.user("owner" + i, "userswriter", c[0]);
+            String key = "auth-users:write," + c[1];
+            String allowed = f.user("allowed" + i);
+            ClientResponse ok = asKey(f, "PATCH", "/auth/admin/users/" + allowed, owner, key,
+                    "{\"roles\":[\"" + c[2] + "\"]}");
+            assertEquals(Arrays.toString(c) + " " + ok.text(), 200, ok.status());
+            assertEquals(AdminFixture.set(c[2]), f.stored(allowed).getRoles());
+            String refused = f.user("refused" + i);
+            ClientResponse no = asKey(f, "PATCH", "/auth/admin/users/" + refused, owner, key,
+                    "{\"roles\":[\"" + c[3] + "\"]}");
+            assertEquals(Arrays.toString(c) + " " + no.text(), 403, no.status());
+            assertEquals("insufficient_scope", AuthTestSupport.code(no));
+            assertTrue(f.stored(refused).getRoles().isEmpty());
+        }
+    }
+
     // FR-IAM-014 AC-11: setRoles throwing AuthRejection(422, role_policy) or an IllegalArgumentException after the
     // password: 503 SERVICE_UNAVAILABLE with applied ["password"] by A4, one user_update_failed audit event, the new
     // hash stored, the roles unchanged, one onUserUpdated (PASSWORD) and one onPasswordChanged

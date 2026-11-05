@@ -625,6 +625,21 @@ public class FileSecretsTest {
         assertNull(((FileRefreshTokenStore) plain.auth.refreshTokens()).fileKey());
     }
 
+    // FR-IAM-015 AC-2 (the third default file): the device-trust file beside a keyed FileUserStore keeps its fields and
+    // format version 1, with no enc(...) value
+    @Test
+    public void FR_IAM_015_AC2_theDeviceTrustFileKeepsItsFormat() throws Exception {
+        File dir = tmp.newFolder();
+        W8 w = node(new FileUserStore(new File(dir, "users.json"), key()), null, b -> b);
+        ((FileDeviceTrust) w.auth.deviceTrust()).recordFailure(new com.snoworca.naruserve.utils.auth.spi.DeviceToken(
+                "t1", "u1", 0, 4_102_444_800_000L), 5, 900_000L);
+        w.auth.snapshotRun();
+        String t = text(new File(dir, "users-device-trust.json"));
+        assertTrue(t, t.contains("\"format\":\"naru-device-trust\"") && t.contains("\"version\":1"));
+        assertTrue(t, t.contains("\"tokenId\":\"t1\""));
+        assertFalse(t, t.contains("enc("));
+    }
+
     // FR-IAM-015 AC-3: in PROD, a FileUserStore or a KeySources.fromFile source without a key makes build() throw an
     // AuthConfigException naming the missing options and NARU_AUTH_FILE_KEY; only the one that lacks a key is named;
     // with keys for both the build succeeds; an Auth with neither file store is not affected

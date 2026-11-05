@@ -49,6 +49,13 @@ public class AuthErrorsTest {
         assertEquals("slow down", retry.getMessage());
     }
 
+    // FR-IAM-001 AC-1: DuplicateUserException extends RuntimeException (its 409 is asserted in AuthErrorLayerTest)
+    @Test
+    public void FR_IAM_001_AC1_duplicateUserExceptionIsUnchecked() {
+        assertTrue(RuntimeException.class.isAssignableFrom(
+                com.snoworca.naruserve.utils.auth.user.DuplicateUserException.class));
+    }
+
     private static TestApp throwing(final RuntimeException error) {
         TestApp t = TestApp.create();
         t.app().get("/x", (req, res) -> {

@@ -65,6 +65,7 @@ public class AuthGuideRound2DocsTest {
     }
 
     // OPS-AUTH-009 AC-1: the group example's code names userCacheTtl and its 5-second default
+    // FR-IAM-016 AC-6: both pages show granting a role to a group with the built-in store (the grantRole Java block)
     @Test
     public void OPS_AUTH_009_AC1_groupExampleNamesTheCacheTtl() throws IOException {
         for (String f : GUIDES) {

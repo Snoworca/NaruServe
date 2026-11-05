@@ -201,6 +201,7 @@ public class AuthGuideDocsTest {
 
     // OPS-AUTH-007 AC-3: the group section says every direct store write (membership, parent edge, role) reaches a
     // signed-in user when the cached principal expires, and shows .userCacheTtl(0) for tests
+    // FR-IAM-016 AC-6: both pages say a grantRole made on the store after start reaches cached principals on expiry
     @Test
     public void OPS_AUTH_007_AC3_groupWritesReachSignedInUsers() throws IOException {
         for (String f : new String[] {KO, EN}) {

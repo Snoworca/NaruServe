@@ -127,6 +127,19 @@ public class GroupRolesTest {
         }
     }
 
+    // FR-IAM-016 AC-4: FileGroupStore writes each role as a line of the groups file
+    @Test
+    public void FR_IAM_016_AC4_eachRoleIsALineOfTheFile() throws Exception {
+        File f = new File(tmp.newFolder(), "groups.txt");
+        FileGroupStore s = new FileGroupStore(f);
+        s.createGroup("eng");
+        s.grantRole("eng", "editor");
+        s.grantRole("eng", "auditor");
+        java.util.List<String> lines = java.nio.file.Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
+        assertTrue(lines.toString(), lines.contains("r eng\teditor"));
+        assertTrue(lines.toString(), lines.contains("r eng\tauditor"));
+    }
+
     // FR-IAM-016 AC-4: the file keeps the roles across a restart; a write over the size limit leaves memory unchanged
     @Test
     public void FR_IAM_016_AC4_fileKeepsRolesAndAFailedWriteChangesNothing() throws Exception {

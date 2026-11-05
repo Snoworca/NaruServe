@@ -210,6 +210,14 @@ public class CarriedAcceptanceTest {
         assertEquals(200, guardedWithGroups(new Shaped(0, 256), null).status());
     }
 
+    // FR-IAM-007 AC-4: "the same way" as AC-3: the answer to 257 groups is a JSON error too
+    @Test
+    public void FR_IAM_007_AC4_tooManyGroupsAreAJsonError() {
+        ClientResponse wide = guardedWithGroups(new Shaped(0, 257), null);
+        assertEquals(503, wide.status());
+        assertTrue(wide.header("Content-Type").startsWith("application/json"));
+    }
+
     // FR-IAM-007 AC-5: defaults depth 8 and size 256; other limits go through the builder
     @Test
     public void FR_IAM_007_AC5_limitsThroughTheBuilder() {

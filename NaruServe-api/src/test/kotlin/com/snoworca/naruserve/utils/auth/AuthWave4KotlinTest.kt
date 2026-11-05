@@ -10,6 +10,7 @@ import com.snoworca.naruserve.utils.auth.rbac.RoleStore
 import com.snoworca.naruserve.utils.auth.spi.ForwardingLoginThrottle
 import com.snoworca.naruserve.utils.auth.spi.KeySource
 import com.snoworca.naruserve.utils.auth.spi.LoginThrottle
+import com.snoworca.naruserve.utils.auth.testing.AuthTesting
 import com.snoworca.naruserve.utils.auth.user.AuthUser
 import com.snoworca.naruserve.utils.auth.user.ForwardingUserStore
 import com.snoworca.naruserve.utils.auth.user.InMemoryUserStore
@@ -134,5 +135,13 @@ class AuthWave4KotlinTest {
         assertTrue(store.delete(id))
         assertEquals(null, store.findById(id))
         assertEquals(store.supportsAtomicFieldWrites(), InMemoryUserStore().supportsAtomicFieldWrites())
+    }
+
+    // CON-IAM-001 AC-3: the Kotlin class extending ForwardingUserStore passes the store contract check itself
+    @Test
+    fun `CON-IAM-001 AC-3 Kotlin ForwardingUserStore passes verifyUserStore`() {
+        val store = CountingStore(InMemoryUserStore())
+        AuthTesting.verifyUserStore(store)
+        assertTrue(store.reads > 0)
     }
 }

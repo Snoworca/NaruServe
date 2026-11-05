@@ -442,6 +442,71 @@ public class Wave10CarryTest {
         assertEquals(Arrays.asList("bob+ci@example.com"), lookups.names);
     }
 
+    // FR-IAM-003 AC-1 (every auth lookup, not only login): the facade's findByUsername and A2 reach the store with the
+    // NFKC, lower-cased name, and never with the raw input
+    @Test
+    public void FR_IAM_003_AC1_theOtherLookupsReachTheStoreNormalized() throws Exception {
+        Lookups lookups = new Lookups(f.store);
+        f.users = lookups;
+        String root = f.user("root", W8.PW, "admin");
+        String alice = f.user("alice", W8.PW, "reader");
+        f.start(b -> b);
+        lookups.names.clear();
+        assertEquals(alice, f.auth.users().findByUsername("ＡＬＩＣＥ").getId());
+        assertEquals(Arrays.asList("alice"), lookups.names);
+        lookups.names.clear();
+        ClientResponse created = f.post("/auth/admin/users", "{\"username\":\"ＣＡＲＯＬ\",\"password\":\"" + W8.PW + "\"}",
+                "Authorization", bearer(f, root));
+        assertEquals(created.text(), 201, created.status());
+        assertTrue(lookups.names.toString(), lookups.names.contains("carol"));
+        assertFalse(lookups.names.toString(), lookups.names.contains("ＣＡＲＯＬ"));
+    }
+
+    // FR-IAM-003 AC-2: the literal "bob@example.com" and names of digits, '@' and '+' reach an e-mail column unchanged
+    // and authenticate: auth applies no format check to the string
+    @Test
+    public void FR_IAM_003_AC2_noFormatCheckOnTheLoginName() throws Exception {
+        Lookups lookups = new Lookups(f.store);
+        f.users = lookups;
+        f.user("bob", W8.PW, "reader");
+        lookups.emailUser = "bob";
+        f.start(b -> b);
+        for (String input : new String[] {"bob@example.com", "0107+1@example.com", "12345"}) {
+            lookups.email = input;
+            lookups.names.clear();
+            ClientResponse r = f.post("/auth/login", W8.login(input, W8.PW));
+            assertEquals(input + " " + r.text(), 200, r.status());
+            assertEquals(Arrays.asList(input), lookups.names);
+        }
+    }
+
+    // IR-IAM-001 AC-5 (an auth endpoint): a UserStore exception under POST /auth/login is 503 JSON with the Core error
+    // shape and no stack trace
+    @Test
+    public void IR_IAM_001_AC5_storeExceptionOnAnAuthEndpointIs503() throws Exception {
+        f.user("alice", W8.PW, "reader");
+        final java.util.concurrent.atomic.AtomicBoolean failing = new java.util.concurrent.atomic.AtomicBoolean();
+        f.users = new ForwardingUserStore(f.store) {
+            @Override
+            public @Nullable AuthUser findByUsername(String username) throws Exception {
+                if (failing.get()) {
+                    throw new java.sql.SQLException("users table gone");
+                }
+                return super.findByUsername(username);
+            }
+        };
+        f.start(b -> b);
+        failing.set(true);
+        ClientResponse r = f.post("/auth/login", W8.login("alice", W8.PW));
+        assertEquals(r.text(), 503, r.status());
+        assertEquals("SERVICE_UNAVAILABLE", W8.code(r));
+        assertTrue(r.text(), r.text().startsWith("{\"error\":{\"code\":"));
+        assertTrue(r.header("Content-Type").startsWith("application/json"));
+        for (String leak : new String[] {"SQLException", "users table gone", "\tat ", "Exception"}) {
+            assertFalse(r.text(), r.text().contains(leak));
+        }
+    }
+
     // FR-IAM-008 AC-4: each step is idempotent: the full delete run twice on an already-deleted user answers the A5
     // unknown-user 404 NOT_FOUND on the second call with no store error
     // FR-IAM-008 AC-5: after a successful delete, a refresh with the user's refresh token answers 401 because findById
