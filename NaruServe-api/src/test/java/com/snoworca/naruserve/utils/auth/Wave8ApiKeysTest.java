@@ -839,6 +839,38 @@ public class Wave8ApiKeysTest {
         keys.blockLastUsed.countDown();
     }
 
+    // PERF-APIKEY-001 AC-2: through key requests, 59.999 s after the last update causes none and 60 s causes the second
+    @Test
+    public void PERF_APIKEY_001_AC2_theSecondUpdateComesAtSixtySeconds() throws Exception {
+        start(b -> b);
+        String k = key("posts:read");
+        assertEquals(200, get("ApiKey " + k).status());
+        Wave8LoginTest.waitFor(() -> keys.lastUsed.get() == 1);
+        f.clock.addAndGet(59_999L);
+        assertEquals(200, get("ApiKey " + k).status());
+        Thread.sleep(50);
+        assertEquals(1, keys.lastUsed.get());
+        f.clock.addAndGet(1L);
+        assertEquals(200, get("ApiKey " + k).status());
+        Wave8LoginTest.waitFor(() -> keys.lastUsed.get() == 2);
+    }
+
+    // PERF-APIKEY-001 AC-4: the response is complete while the update it caused has started and is still blocked
+    @Test
+    public void PERF_APIKEY_001_AC4_theResponseIsSentWhileTheUpdateIsBlocked() throws Exception {
+        start(b -> b);
+        String k = key("posts:read");
+        CountDownLatch blocked = new CountDownLatch(1);
+        keys.blockLastUsed = blocked;
+        try {
+            assertEquals(200, get("ApiKey " + k).status());
+            Wave8LoginTest.waitFor(() -> keys.lastUsed.get() == 1);
+            assertEquals("the update has not been released", 1L, blocked.getCount());
+        } finally {
+            blocked.countDown();
+        }
+    }
+
     private boolean logged(String word) {
         synchronized (f.logger.lines) {
             for (String l : f.logger.lines) {

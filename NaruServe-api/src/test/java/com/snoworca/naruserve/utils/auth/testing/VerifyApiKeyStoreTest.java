@@ -25,7 +25,8 @@ public class VerifyApiKeyStoreTest {
     enum Bug {
         NONE, DROPS_ISSUED_BY, CASE_INSENSITIVE_PREFIX, OVERWRITES_PREFIX, COUNTS_STALE, COUNTS_EXPIRED,
         DELETE_IGNORES_OWNER, DELETE_ALL_KEEPS_ONE, EXPIRED_STRICT, STALE_NOT_EQUAL, FUTURE_GREATER_EQUAL,
-        NOT_ATOMIC, THROWS_ON_INSERT
+        NOT_ATOMIC, THROWS_ON_INSERT, ABSENT_PREFIX_RETURNS_A_ROW, FILLS_NULL_EXPIRES_AT, FILLS_NULL_LAST_USED,
+        FILLS_NULL_ISSUED_BY
     }
 
     /** One storage shared by any number of {@link MemStore} instances. */
@@ -56,8 +57,28 @@ public class VerifyApiKeyStoreTest {
                         return k;
                     }
                 }
+                if (bug == Bug.ABSENT_PREFIX_RETURNS_A_ROW && !rows.byId.isEmpty()) {
+                    return rows.byId.values().iterator().next();
+                }
                 return null;
             }
+        }
+
+        /** The row this variant really stores for {@code key}. */
+        private StoredApiKey stored(StoredApiKey key) {
+            if (bug == Bug.DROPS_ISSUED_BY) {
+                return key.toBuilder().issuedByUserId(null).build();
+            }
+            if (bug == Bug.FILLS_NULL_EXPIRES_AT && key.getExpiresAt() == null) {
+                return key.toBuilder().expiresAt(Long.MAX_VALUE).build();
+            }
+            if (bug == Bug.FILLS_NULL_LAST_USED && key.getLastUsedAt() == null) {
+                return key.toBuilder().lastUsedAt(key.getCreatedAt()).build();
+            }
+            if (bug == Bug.FILLS_NULL_ISSUED_BY && key.getIssuedByUserId() == null) {
+                return key.toBuilder().issuedByUserId(key.getOwnerUserId()).build();
+            }
+            return key;
         }
 
         @Override
@@ -128,8 +149,7 @@ public class VerifyApiKeyStoreTest {
                 if (live(key, nowMillis) >= maxLiveKeys) {
                     return false;
                 }
-                StoredApiKey stored = bug == Bug.DROPS_ISSUED_BY ? key.toBuilder().issuedByUserId(null).build() : key;
-                rows.byId.put(key.getId(), stored);
+                rows.byId.put(key.getId(), stored(key));
                 return true;
             }
         }
@@ -265,6 +285,16 @@ public class VerifyApiKeyStoreTest {
         failsNaming(Bug.DROPS_ISSUED_BY, "issuedByUserId");
         failsNaming(Bug.OVERWRITES_PREFIX, "ApiKeyPrefixCollisionException");
         failsNaming(Bug.CASE_INSENSITIVE_PREFIX, "findByPrefix");
+    }
+
+    // FR-APIKEY-009 AC-1: a store that does not keep null expiresAt, lastUsedAt or issuedByUserId as null, or that answers
+    // an absent prefix with a row, fails with the broken rule named
+    @Test
+    public void FR_APIKEY_009_AC1_nullFieldsAndAnAbsentPrefix() {
+        failsNaming(Bug.FILLS_NULL_EXPIRES_AT, "round-trip expiresAt");
+        failsNaming(Bug.FILLS_NULL_LAST_USED, "round-trip lastUsedAt");
+        failsNaming(Bug.FILLS_NULL_ISSUED_BY, "round-trip issuedByUserId");
+        failsNaming(Bug.ABSENT_PREFIX_RETURNS_A_ROW, "findByPrefix of an absent prefix must return null");
     }
 
     // FR-APIKEY-009 AC-2: limit counting excludes expired and lower-ownerVer keys, deleteByIdAndOwner with another

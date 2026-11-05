@@ -851,6 +851,34 @@ public class Wave9KeyAuthTest {
         assertEquals("invalid_api_key", W8.code(late));
     }
 
+    // REL-APIKEY-001 AC-2: the 401 right after revoke returned true carries the body code invalid_api_key
+    @Test
+    public void REL_APIKEY_001_AC2_aRevokedKeyIsInvalidAtOnce() throws Exception {
+        start(b -> b);
+        IssuedApiKey k = f.auth.apiKeys().issue(owner, "k", null, "posts:read");
+        assertEquals(200, withKey("/api/x", k.getPlainKey()).status());
+        assertTrue(f.auth.apiKeys().revoke(k.getKey().getId()));
+        ClientResponse r = withKey("/api/x", k.getPlainKey());
+        assertEquals(401, r.status());
+        assertEquals("invalid_api_key", W8.code(r));
+    }
+
+    // REL-APIKEY-001 AC-4 (acting node): the 401 on node A right after the disable carries the code invalid_api_key
+    @Test
+    public void REL_APIKEY_001_AC4_theActingNodeAnswersInvalidApiKey() throws Exception {
+        f.user("root", W8.PW, "admin");
+        start(b -> b);
+        String k = key("posts:read");
+        assertEquals(200, withKey("/api/x", k).status());
+        String rootToken = (String) f.loginBody("root", W8.PW).get("accessToken");
+        ClientResponse off = f.adapter.send(ClientRequest.json("PATCH", "/auth/admin/users/" + owner,
+                "{\"enabled\":false}").header("Authorization", "Bearer " + rootToken));
+        assertEquals(off.text(), 200, off.status());
+        ClientResponse r = withKey("/api/x", k);
+        assertEquals(401, r.status());
+        assertEquals("invalid_api_key", W8.code(r));
+    }
+
     // ---------------------------------------------------------------------------------------------- FR-APIKEY-002
 
     // FR-APIKEY-002 AC-1: nowMillis() equal to expiresAt -> 401 invalid_api_key
@@ -1009,6 +1037,33 @@ public class Wave9KeyAuthTest {
         assertTrue(text, text.contains("\"status\":\"active\""));
         assertTrue(text, text.contains("\"status\":\"stale\""));
         assertFalse(text.contains("ACTIVE"));
+    }
+
+    // IR-APIKEY-003 AC-1: node B cache ver 5, store ver 6: the ownerVer 6 key itself is active and the ownerVer 5 key
+    // itself is stale (matched by key id, not only both words somewhere in the body)
+    @Test
+    public void IR_APIKEY_003_AC1_eachKeyGetsItsOwnStatus() throws Exception {
+        start(b -> b);
+        W8 b = nodeB(x -> x);
+        for (int i = 0; i < 5; i++) {
+            f.store.bumpTokenVersion(owner);
+        }
+        IssuedApiKey k5 = f.auth.apiKeys().issue(owner, "five", null, "posts:read");
+        assertEquals(200, withKey(b, "/api/x", k5.getPlainKey()).status()); // B caches the owner at ver 5
+        f.store.bumpTokenVersion(owner);
+        IssuedApiKey k6 = f.auth.apiKeys().issue(owner, "six", null, "posts:read");
+        assertEquals(5L, k5.getKey().getOwnerVer());
+        assertEquals(6L, k6.getKey().getOwnerVer());
+        ClientResponse list = b.get("/auth/me/apikeys", "Authorization", "Bearer " + b.auth.accessToken(owner, 5L,
+                900_000L));
+        assertEquals(list.text(), 200, list.status());
+        assertEquals("node B's cache still holds ver 5", 5L, b.auth.principalCache().get(owner).getTokenVersion());
+        java.util.Map<Object, Object> status = new java.util.HashMap<>();
+        for (Object o : Wave10PatTest.array(list)) {
+            status.put(((java.util.Map<?, ?>) o).get("id"), ((java.util.Map<?, ?>) o).get("status"));
+        }
+        assertEquals("active", status.get(k6.getKey().getId()));
+        assertEquals("stale", status.get(k5.getKey().getId()));
     }
 
     // IR-APIKEY-003 AC-2: a key whose ownerVer exceeds the store ver is shown as "status":"stale"

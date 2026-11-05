@@ -309,6 +309,54 @@ public class Wave10PatTest {
         }
     }
 
+    /** A hasher recording the stored string of every verify. */
+    static final class Recording implements com.snoworca.naruserve.utils.auth.password.PasswordHasher {
+        final Pbkdf2PasswordHasher inner = new Pbkdf2PasswordHasher(1000);
+        final List<String> verified = new CopyOnWriteArrayList<>();
+
+        @Override
+        public boolean accepts(String stored) {
+            return inner.accepts(stored);
+        }
+
+        @Override
+        public String hash(char[] password) {
+            return inner.hash(password);
+        }
+
+        @Override
+        public boolean verify(char[] password, String stored) {
+            verified.add(stored);
+            return inner.verify(password, stored);
+        }
+
+        @Override
+        public boolean needsRehash(String stored) {
+            return inner.needsRehash(stored);
+        }
+    }
+
+    // FR-APIKEY-003 AC-8: the one verify of a wrong password and of a null-hash caller (the dummy) runs at the target
+    // iteration count, on both issuers
+    @Test
+    public void FR_APIKEY_003_AC8_theOneVerifyRunsAtTheTargetCount() throws Exception {
+        Recording hasher = new Recording();
+        start(b -> b.passwordHasher(hasher));
+        String ssoAdmin = f.user("ssoadmin", null, "admin");
+        String ssoUser = f.user("ssouser", null, "reader");
+        f.auth.passwords().prepare();
+        String[][] cases = {{"pat", u1, "not the password"}, {"pat", ssoUser, W8.PW},
+            {"admin", root, "not the password"}, {"admin", ssoAdmin, W8.PW}};
+        for (String[] c : cases) {
+            hasher.verified.clear();
+            ClientResponse r = c[0].equals("pat") ? pat(c[1], body(c[2], "posts:read"))
+                    : adminIssue(c[1], admin(u1, c[2], "posts:read"));
+            assertEquals(r.text(), 401, r.status());
+            assertEquals(c[0], 1, hasher.verified.size());
+            assertTrue(hasher.verified.get(0), hasher.verified.get(0).startsWith(Pbkdf2PasswordHasher.PREFIX + "1000$"));
+        }
+    }
+
     // FR-APIKEY-003 AC-9: a PAT issued by u1 is stored with issuedByUserId u1 (owner and issuer u1) and the issue
     // audit event names u1 as the issuer
     @Test
@@ -530,6 +578,31 @@ public class Wave10PatTest {
         assertEquals("no password hash", work, counting.verifies.get() + counting.hashes.get());
         assertTrue(rows(root).isEmpty());
         assertTrue(rows(u1).isEmpty());
+    }
+
+    // FR-APIKEY-005 AC-5: the PAT body errors are thrown as a Core HttpException(400), not as an AuthRejection (the body
+    // check both issuers run; the 400 BAD_REQUEST answers over HTTP are asserted by the _bodyChecks test)
+    // FR-APIKEY-005 AC-7: so are the R46 grammar refusals, on both issuers
+    @Test
+    @SuppressWarnings("unchecked")
+    public void FR_APIKEY_005_AC5_AC7_refusalsAreCoreHttpExceptions() throws Exception {
+        start(b -> b);
+        KeyIssuance issuance = new KeyIssuance(f.auth);
+        String pw = "\"password\":\"" + W8.PW + "\"}";
+        for (String json : new String[] {"{\"name\":\"ci\",\"scopes\":[]," + pw, "{\"scopes\":[\"posts:read\"]," + pw,
+            "{\"name\":null,\"scopes\":[\"posts:read\"]," + pw, "{\"name\":7,\"scopes\":[\"posts:read\"]," + pw,
+            body(W8.PW, "Posts:Read"), body(W8.PW, "po*"), admin("ghost", W8.PW, "Posts:Read"),
+            admin("ghost", W8.PW, "po*")}) {
+            Map<String, Object> parsed = (Map<String, Object>) com.snoworca.naruserve.utils.auth.internal.MiniJson
+                    .parse(json, com.snoworca.naruserve.utils.auth.internal.MiniJson.Limits.file());
+            try {
+                issuance.spec(parsed, parsed.containsKey("ownerUserId"));
+                fail("accepted " + json);
+            } catch (com.snoworca.naruserve.HttpException e) {
+                assertFalse(json, e instanceof AuthRejection);
+                assertEquals(json, 400, e.status());
+            }
+        }
     }
 
     // ---------------------------------------------------------------------------------------------- SEC-APIKEY-009
@@ -934,6 +1007,19 @@ public class Wave10PatTest {
         ClientResponse unknown = list(root, "?ownerUserId=ghost");
         assertEquals(404, unknown.status());
         assertEquals("NOT_FOUND", W8.code(unknown));
+    }
+
+    // FR-APIKEY-004 AC-1 (disabled owner): the keys of a disabled owner are listed with a status too
+    @Test
+    public void FR_APIKEY_004_AC1_aDisabledOwnersKeysKeepAStatus() throws Exception {
+        start(b -> b);
+        IssuedApiKey k = f.auth.apiKeys().issue(u1, "ci", null, "posts:read");
+        f.store.setEnabled(u1, false);
+        List<Object> items = array(list(root, "?ownerUserId=" + u1));
+        assertEquals(1, items.size());
+        Map<?, ?> item = (Map<?, ?>) items.get(0);
+        assertEquals(k.getKey().getId(), item.get("id"));
+        assertTrue(String.valueOf(item), Arrays.asList("active", "expired", "stale").contains(item.get("status")));
     }
 
     // FR-APIKEY-004 AC-2: POST with an unknown ownerUserId -> 404 NOT_FOUND; with a disabled owner that passes the grant
