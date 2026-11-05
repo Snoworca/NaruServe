@@ -380,6 +380,29 @@ public class RefreshTokenStoreTest {
         assertTrue(new FileRefreshTokenStore(f).find("t1").isRevoked());
     }
 
+    // FR-TOKEN-002 AC-7: at token level: a refresh token issued before the restart refreshes on a new Auth over a new
+    // store opened on the same file
+    @Test
+    public void FR_TOKEN_002_AC7_tokenIssuedBeforeARestartStillRefreshes() throws Exception {
+        File f = new File(tmp.getRoot(), "refresh-tokens.json");
+        InMemoryUserStore users = new InMemoryUserStore();
+        AuthUser alice = users.create(AuthUser.builder().username("alice").passwordHash("x").build());
+        Auth before = Auth.builder(AuthTestSupport.SECRET).hashIterations(1000).logger(new RecordingLogger())
+                .users(users).refreshTokens(new FileRefreshTokenStore(f)).build();
+        TokenPair issued = before.tokens().issue(alice);
+        Auth after = Auth.builder(AuthTestSupport.SECRET).hashIterations(1000).logger(new RecordingLogger())
+                .users(users).refreshTokens(new FileRefreshTokenStore(f)).build();
+        assertNotNull(after.tokens().refresh(issued.getRefreshToken()).getRefreshToken());
+    }
+
+    // FR-TOKEN-002 AC-5: an Auth built without the test-only interval override runs its cleanup every 10 minutes
+    @Test
+    public void FR_TOKEN_002_AC5_defaultIntervalIsTenMinutes() throws Exception {
+        java.lang.reflect.Field interval = Auth.class.getDeclaredField("cleanupIntervalMillis");
+        interval.setAccessible(true);
+        assertEquals(600_000L, interval.getLong(Auth.builder(AuthTestSupport.SECRET).hashIterations(1000).build()));
+    }
+
     // FR-TOKEN-002 AC-8: the file carries a format version; an unknown version fails start with a message naming it
     // and the file is not overwritten
     @Test

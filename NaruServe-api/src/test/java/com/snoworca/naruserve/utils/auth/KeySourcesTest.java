@@ -102,6 +102,59 @@ public class KeySourcesTest {
         assertNull(System.getenv("NARU_TEST_KEY_SURELY_UNSET_51B2"));
     }
 
+    /** Runs in a child JVM holding the variable set and empty; exits non-zero unless build() refuses it by name. */
+    public static class EmptyEnvProbe {
+        static final String NAME = "NARU_TEST_KEY_EMPTY_51B2";
+
+        public static void main(String[] args) {
+            if (!"".equals(System.getenv(NAME))) {
+                throw new AssertionError("the variable is not set and empty");
+            }
+            try {
+                Auth.builder(KeySources.fromEnv(NAME)).build();
+            } catch (AuthConfigException e) {
+                if (!e.getMessage().contains(NAME)) {
+                    throw new AssertionError(e.getMessage());
+                }
+                return;
+            }
+            throw new AssertionError("built with an empty variable");
+        }
+    }
+
+    // SEC-TOKEN-004 AC-4: fromEnv(name) with the variable set but empty fails at build() naming the variable (a child
+    // process holds the empty variable, as a JVM cannot change its own environment)
+    @Test(timeout = 60_000)
+    public void SEC_TOKEN_004_AC4_emptyEnvironmentVariableIsNamed() throws Exception {
+        String cp = System.getProperty("java.class.path") + File.pathSeparator
+                + new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getPath()
+                + File.pathSeparator
+                + new File(Auth.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+        File output = tmp.newFile("empty-env.log");
+        ProcessBuilder builder = new ProcessBuilder(new File(System.getProperty("java.home"), "bin/java").getPath(),
+                "-cp", cp, EmptyEnvProbe.class.getName()).redirectErrorStream(true).redirectOutput(output);
+        builder.environment().put(EmptyEnvProbe.NAME, "");
+        Process child = builder.start();
+        boolean done = child.waitFor(40, java.util.concurrent.TimeUnit.SECONDS);
+        if (!done) {
+            child.destroyForcibly();
+        }
+        String log = new String(Files.readAllBytes(output.toPath()), StandardCharsets.UTF_8);
+        assertTrue("the probe did not finish: " + log, done);
+        assertEquals(log, 0, child.exitValue());
+    }
+
+    // SEC-TOKEN-004 AC-5: two missing files get different keys, so the 32 bytes are generated, not fixed (their source
+    // SecureRandom is asserted on the class file in AuthArchitectureTest)
+    @Test
+    public void SEC_TOKEN_004_AC5_freshFilesGetDifferentKeys() throws Exception {
+        byte[] a = KeySources.fromFile(new File(tmp.getRoot(), "a.key")).signingKey();
+        byte[] b = KeySources.fromFile(new File(tmp.getRoot(), "b.key")).signingKey();
+        assertEquals(32, a.length);
+        assertEquals(32, b.length);
+        assertTrue(!Arrays.equals(a, b));
+    }
+
     // SEC-TOKEN-004 AC-5: fromFile creates a missing file with 32 random bytes, owner-only, returns the same key next
     // time, and never overwrites an existing file
     @Test

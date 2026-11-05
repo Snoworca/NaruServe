@@ -171,6 +171,18 @@ public class AuthArchitectureTest {
         }
     }
 
+    // SEC-TOKEN-004 AC-5 and SEC-TOKEN-007 AC-2: the generated key file bytes and the password salt come from
+    // SecureRandom, and neither class references the predictable java.util.Random
+    @Test
+    public void SEC_TOKEN_004_AC5_SEC_TOKEN_007_AC2_keyAndSaltBytesComeFromSecureRandom() throws IOException {
+        for (String name : new String[] {"com/snoworca/naruserve/utils/auth/KeySources",
+            "com/snoworca/naruserve/utils/auth/password/Pbkdf2PasswordHasher"}) {
+            ClassInfo c = utilsClass(name);
+            assertTrue(name, c.refs.contains("java/security/SecureRandom"));
+            assertFalse(name, c.refs.contains("java/util/Random"));
+        }
+    }
+
     // SEC-TOKEN-002 AC-7: no utils.auth class references Gson or the app JsonCodec; JWT parts and auth files go
     // through MiniJson
     @Test

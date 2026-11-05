@@ -15,10 +15,12 @@ import com.snoworca.naruserve.utils.auth.internal.Base64Url;
 import com.snoworca.naruserve.utils.auth.internal.Passwords;
 import com.snoworca.naruserve.utils.auth.internal.RehashQueue;
 import com.snoworca.naruserve.utils.auth.jwt.JwtClaims;
+import com.snoworca.naruserve.utils.auth.password.BcryptPasswordHasher;
 import com.snoworca.naruserve.utils.auth.password.DigestEncoding;
 import com.snoworca.naruserve.utils.auth.password.PasswordHasher;
 import com.snoworca.naruserve.utils.auth.password.PasswordHashers;
 import com.snoworca.naruserve.utils.auth.password.Pbkdf2PasswordHasher;
+import com.snoworca.naruserve.utils.auth.password.SaltOrder;
 import com.snoworca.naruserve.utils.auth.spi.TokenCodec;
 import com.snoworca.naruserve.utils.auth.user.AuthUser;
 import com.snoworca.naruserve.utils.auth.user.ForwardingUserStore;
@@ -321,6 +323,47 @@ public class Wave8LoginTest {
         assertEquals(200, f.post("/auth/login", W8.login("legacy", W8.PW)).status());
     }
 
+    private static String hexDigest(String algorithm, String text) throws Exception {
+        StringBuilder b = new StringBuilder();
+        for (byte x : java.security.MessageDigest.getInstance(algorithm).digest(text.getBytes(StandardCharsets.UTF_8))) {
+            b.append(String.format("%02x", x));
+        }
+        return b.toString();
+    }
+
+    // FR-TOKEN-003 AC-3: a successful POST /auth/login against an MD5, SHA-1, SHA-256, salted SHA-256 or bcrypt hash
+    // schedules a rehash, after which the stored hash is accepted by Pbkdf2PasswordHasher
+    @Test
+    public void FR_TOKEN_003_AC3_everyLegacyFormatRehashesToPbkdf2() throws Exception {
+        String salt = "Xy7q";
+        String[][] rows = {
+            {"md5user", "legacy-md5$" + hexDigest("MD5", W8.PW)},
+            {"sha1user", "legacy-sha1$" + hexDigest("SHA-1", W8.PW)},
+            {"sha256user", "legacy-sha256$" + hexDigest("SHA-256", W8.PW)},
+            {"salteduser", "legacy-ssha$" + salt + "$" + hexDigest("SHA-256", salt + W8.PW)},
+            {"bcryptuser", BcryptPasswordHasher.builder().cost(4).build().hash(W8.PW.toCharArray())},
+        };
+        List<String> ids = new ArrayList<>();
+        for (String[] row : rows) {
+            ids.add(f.store.create(AuthUser.builder().username(row[0]).passwordHash(row[1]).build()).getId());
+        }
+        Pbkdf2PasswordHasher pbkdf2 = new Pbkdf2PasswordHasher(1000);
+        f.start(b -> b.passwordHasher(PasswordHashers.chain(pbkdf2, PasswordHashers.bcrypt(),
+                PasswordHashers.digest("legacy-md5", "MD5", DigestEncoding.HEX),
+                PasswordHashers.digest("legacy-sha1", "SHA-1", DigestEncoding.HEX),
+                PasswordHashers.digest("legacy-sha256", "SHA-256", DigestEncoding.HEX),
+                PasswordHashers.saltedDigest("legacy-ssha", "SHA-256", DigestEncoding.HEX,
+                        SaltOrder.SALT_THEN_PASSWORD))));
+        for (int i = 0; i < rows.length; i++) {
+            final String id = ids.get(i);
+            assertFalse(rows[i][0], pbkdf2.accepts(f.stored(id).getPasswordHash()));
+            ClientResponse r = f.post("/auth/login", W8.login(rows[i][0], W8.PW));
+            assertEquals(rows[i][0] + " " + r.text(), 200, r.status());
+            waitFor(() -> pbkdf2.accepts(f.stored(id).getPasswordHash()));
+            assertTrue(rows[i][0], pbkdf2.verify(W8.PW.toCharArray(), f.stored(id).getPasswordHash()));
+        }
+    }
+
     /** A legacy hasher of {@code legacy-x$<reversed password>}, written against the public PasswordHasher. */
     static final class ReversedHasher implements PasswordHasher {
         @Override
@@ -402,6 +445,7 @@ public class Wave8LoginTest {
         final AtomicBoolean armed = new AtomicBoolean();
         final CountDownLatch release = new CountDownLatch(1);
         final AtomicInteger hashes = new AtomicInteger();
+        final AtomicInteger verifies = new AtomicInteger();
 
         @Override
         public boolean accepts(String stored) {
@@ -423,6 +467,7 @@ public class Wave8LoginTest {
 
         @Override
         public boolean verify(char[] password, String stored) {
+            verifies.incrementAndGet();
             return inner.verify(password, stored);
         }
 
@@ -430,6 +475,49 @@ public class Wave8LoginTest {
         public boolean needsRehash(String stored) {
             return inner.needsRehash(stored) || stored.contains("$500$");
         }
+    }
+
+    // PERF-TOKEN-002 AC-1: with the rehash blocked on the test's latch, a PBKDF2 user below the rehash threshold gets
+    // its 200 after exactly one PBKDF2 verify at the stored count in one slot, and a legacy (MD5) user gets its 200
+    // after the legacy verify plus one dummy PBKDF2 in one slot; neither response waits for its rehash
+    @Test
+    public void PERF_TOKEN_002_AC1_oneVerifyInTheSlotAndTheLegacyLoginDoesNotWait() throws Exception {
+        final String low = f.store.create(AuthUser.builder().username("low")
+                .passwordHash(new Pbkdf2PasswordHasher(500).hash(W8.PW.toCharArray())).build()).getId();
+        final String legacy = f.store.create(AuthUser.builder().username("legacy")
+                .passwordHash("legacy-md5$" + md5Hex(W8.PW)).build()).getId();
+        LatchedHasher primary = new LatchedHasher();
+        Wave7LoginTest.Counting md5 = new Wave7LoginTest.Counting(
+                PasswordHashers.digest("legacy-md5", "MD5", DigestEncoding.HEX));
+        f.start(b -> b.passwordHasher(PasswordHashers.chain(primary, md5)).hashConcurrency(2));
+        f.auth.passwords().prepare();
+        primary.armed.set(true);
+        try {
+            int verifies = primary.verifies.get();
+            long slots = f.auth.hashSlots().requested();
+            assertEquals(200, f.post("/auth/login", W8.login("low", W8.PW)).status());
+            waitFor(() -> primary.hashes.get() == 1); // the worker took low's rehash and waits on the latch
+            assertEquals("one PBKDF2 verify", verifies + 1, primary.verifies.get());
+            assertEquals("the login's one slot and the rehash's own", slots + 2, f.auth.hashSlots().requested());
+            assertTrue(f.stored(low).getPasswordHash().contains("$500$"));
+
+            verifies = primary.verifies.get();
+            int legacyVerifies = md5.computations.get();
+            slots = f.auth.hashSlots().requested();
+            assertEquals(200, f.post("/auth/login", W8.login("legacy", W8.PW)).status());
+            assertEquals("the legacy verify", legacyVerifies + 1, md5.computations.get());
+            assertEquals("one dummy PBKDF2", verifies + 1, primary.verifies.get());
+            assertEquals("the login's one slot; its rehash is still queued", slots + 1,
+                    f.auth.hashSlots().requested());
+            assertEquals(1, f.auth.rehashQueue().size());
+            assertTrue(f.stored(legacy).getPasswordHash().startsWith("legacy-md5$"));
+        } finally {
+            primary.armed.set(false);
+            primary.release.countDown();
+        }
+        waitFor(() -> f.stored(low).getPasswordHash().startsWith(Passwords.PREFIX)
+                && !f.stored(low).getPasswordHash().contains("$500$"));
+        waitFor(() -> f.stored(legacy).getPasswordHash().startsWith(Passwords.PREFIX));
     }
 
     // PERF-TOKEN-002 AC-1: a successful login of a user whose stored count is below the target does one verify in its
@@ -534,6 +622,20 @@ public class Wave8LoginTest {
         assertEquals(401, bad.status());
         assertEquals("invalid_token", W8.code(bad));
         assertFalse(bad.text().contains("not ours"));
+    }
+
+    // IR-TOKEN-002 AC-2: the reason a custom codec's decode gives is logged and never reaches the response
+    @Test
+    public void IR_TOKEN_002_AC2_decodeFailureReasonIsLoggedAndNotSent() throws Exception {
+        f.user("alice", W8.PW, "reader");
+        f.start(b -> b.tokenCodec(new CountingCodec(f.builder().build().tokenCodec())));
+        String at = (String) f.loginBody("alice", W8.PW).get("accessToken");
+        ClientResponse bad = f.get("/api/x", "Authorization", "Bearer " + at.substring(1));
+        assertEquals(401, bad.status());
+        assertEquals("invalid_token", W8.code(bad));
+        assertFalse(bad.text(), bad.text().contains("not ours"));
+        assertTrue(f.logger.lines.toString(), com.snoworca.naruserve.testing.RecordingLogger.countMatching(
+                f.logger.lines, "(?s).*not ours: the reason stays in the log.*") > 0);
     }
 
     // ---------------------------------------------------------------------------------------------- SEC-FLOW-007

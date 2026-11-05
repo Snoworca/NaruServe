@@ -68,6 +68,15 @@ public class TokenPrimitivesTest {
         assertArrayEquals("AB".getBytes(StandardCharsets.US_ASCII), Base64Url.decode("QUI"));
     }
 
+    // SEC-TOKEN-001 AC-2: '+' and '/' are each refused on their own, in any position of otherwise valid text
+    @Test
+    public void SEC_TOKEN_001_AC2_plusAndSlashAreEachRefused() {
+        for (String bad : Arrays.asList("+bcd", "a+cd", "abc+", "/bcd", "a/cd", "abc/")) {
+            refused(bad);
+        }
+        assertEquals(3, Base64Url.decode("abcd").length);
+    }
+
     // SEC-TOKEN-001 AC-3: 16 threads over one key equal a single-threaded javax.crypto.Mac result
     @Test
     public void SEC_TOKEN_001_AC3_threadSafeHmac() throws Exception {

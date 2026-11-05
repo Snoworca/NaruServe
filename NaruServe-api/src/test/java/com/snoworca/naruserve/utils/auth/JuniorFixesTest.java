@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import java.util.ArrayList;
@@ -107,6 +108,47 @@ public class JuniorFixesTest {
         assertEquals(create.text(), 422, create.status());
         assertTrue(create.text(), create.text().contains(rule));
         assertFalse(create.text(), create.text().contains("xyzzy"));
+    }
+
+    private static void saysWhy(String path, ClientResponse r, String rule, String password) {
+        assertEquals(path + " " + r.text(), 422, r.status());
+        assertEquals(path, "UNPROCESSABLE_ENTITY", W8.code(r));
+        assertTrue(path + " " + r.text(), r.text().contains(rule));
+        assertFalse(path + " " + r.text(), r.text().contains(password));
+    }
+
+    // FR-TOKEN-004 AC-8: each HTTP set-password path answers 422 UNPROCESSABLE_ENTITY with the rule and never the
+    // password: POST /auth/setup and admin A4 for a policy refusal, and all five (register, setup, A2, A4,
+    // POST /auth/password) for a breach-check refusal
+    @Test
+    public void FR_TOKEN_004_AC8_everyHttpPathSaysWhy() throws Exception {
+        String shortRule = "the password must have at least 8 characters";
+        String breachRule = "the password appears in a list of breached passwords; choose another";
+        String breached = "Password123!";
+        W8 f = new W8();
+        fixtures.add(f);
+        f.user("root", W8.PW, "admin");
+        String target = f.user("target", W8.PW, "reader");
+        f.start("127.0.0.1", true, b -> b.register(true)
+                .breachedPasswordChecker(pw -> breached.equals(new String(pw))));
+        String root = "Bearer " + f.loginBody("root", W8.PW).get("accessToken");
+        String own = "Bearer " + f.loginBody("target", W8.PW).get("accessToken");
+        saysWhy("A4", f.adapter.send(ClientRequest.json("PATCH", "/auth/admin/users/" + target,
+                "{\"password\":\"xyzzy\"}").header("Authorization", root)), shortRule, "xyzzy");
+        saysWhy("A4", f.adapter.send(ClientRequest.json("PATCH", "/auth/admin/users/" + target,
+                "{\"password\":\"" + breached + "\"}").header("Authorization", root)), breachRule, breached);
+        saysWhy("A2", f.post("/auth/admin/users", "{\"username\":\"made\",\"password\":\"" + breached + "\"}",
+                "Authorization", root), breachRule, breached);
+        saysWhy("register", f.post("/auth/register", W8.login("neo", breached)), breachRule, breached);
+        saysWhy("password", f.post("/auth/password", "{\"currentPassword\":\"" + W8.PW + "\",\"newPassword\":\""
+                + breached + "\"}", "Authorization", own), breachRule, breached);
+
+        W8 s = started("127.0.0.1", false, b -> b.recovery(true).user("admin", null, "admin")
+                .breachedPasswordChecker(pw -> breached.equals(new String(pw))));
+        for (String[] c : new String[][] {{"xyzzy", shortRule}, {breached, breachRule}}) {
+            saysWhy("setup", s.post("/auth/setup", "{\"token\":\"" + s.auth.pendingSetupToken()
+                    + "\",\"username\":\"admin\",\"password\":\"" + c[0] + "\"}"), c[1], c[0]);
+        }
     }
 
     // FR-AUTH-004 AC-7: PROD refuses a .user password that breaks the policy (naming the .user and the rule, not the

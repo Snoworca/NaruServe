@@ -151,6 +151,40 @@ public class JwtTest {
                 + sameBytes));
     }
 
+    // SEC-TOKEN-003 AC-3: '=', '+' and '/' are refused in each of the three parts of a correctly signed token
+    @Test
+    public void SEC_TOKEN_003_AC3_forbiddenCharactersInEveryPart() {
+        String[] p = token(HEADER, PAYLOAD).split("\\.");
+        for (int part = 0; part < 3; part++) {
+            for (char c : new char[] {'=', '+', '/'}) {
+                String[] q = p.clone();
+                q[part] = q[part].substring(0, 4) + c + q[part].substring(5);
+                assertEquals("part " + part + " with " + c, JwtException.Reason.MALFORMED,
+                        refused(q[0] + "." + q[1] + "." + q[2]));
+            }
+        }
+    }
+
+    private static String brackets(char c, int n) {
+        char[] a = new char[n];
+        Arrays.fill(a, c);
+        return new String(a);
+    }
+
+    // SEC-TOKEN-002 AC-4: a correctly signed JWT whose header or payload holds a 100-level nested array is refused by
+    // the CLAIMS limit; the content past the limit is not JSON, so the refusal shows it was never parsed (06 AUTH-T07)
+    @Test
+    public void SEC_TOKEN_002_AC4_deepArrayInAJwtHeaderOrPayloadIsRefused() {
+        String deep = brackets('[', 100) + brackets(']', 100);
+        String hostile = brackets('[', 100) + "this is not json";
+        for (String nested : new String[] {deep, hostile}) {
+            assertEquals(JwtException.Reason.MALFORMED, refused(token(
+                    "{\"alg\":\"HS256\",\"typ\":\"JWT\",\"kid\":\"k1\",\"x\":" + nested + "}", PAYLOAD)));
+            assertEquals(JwtException.Reason.MALFORMED, refused(token(HEADER,
+                    "{\"sub\":\"u1\",\"exp\":" + (NOW / 1000 + 600) + ",\"x\":" + nested + "}")));
+        }
+    }
+
     // SEC-TOKEN-003 AC-4: exp missing, a string, a fraction or 1e300 is refused with JwtException only (06 AUTH-T05)
     @Test
     public void SEC_TOKEN_003_AC4_expMustBeAnIntegerNumericDate() {
