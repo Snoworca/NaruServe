@@ -60,7 +60,8 @@ public class JuniorRound2Test {
                 .role("editor", "docs:*").build()));
         List<String> warns = scopeWarns(f);
         assertEquals(f.logger.lines.toString(), 1, warns.size());
-        assertTrue(warns.get(0), warns.get(0).contains("'post:write'") && warns.get(0).contains("403"));
+        assertTrue(warns.get(0), warns.get(0).contains("'post:write'") && warns.get(0).contains("403")
+                && warns.get(0).contains("typo"));
 
         W8 custom = fixture();
         RoleStore db = role -> Collections.<String>emptySet();

@@ -66,6 +66,21 @@ public class JuniorRound6Test {
         assertEquals("currentPassword must be a non-empty JSON string", message(r));
     }
 
+    // OPS-AUTH-016 AC-2: an empty or non-string currentPassword gets the same message
+    @Test
+    public void OPS_AUTH_016_AC2_emptyOrNonStringCurrentPasswordIsNamed() throws Exception {
+        W8 f = fixture();
+        f.user("bob", W8.PW, "reader");
+        f.start(b -> b);
+        String token = String.valueOf(f.loginBody("bob", W8.PW).get("accessToken"));
+        for (String value : new String[] {"\"\"", "1"}) {
+            ClientResponse r = f.post("/auth/password", "{\"currentPassword\":" + value
+                    + ",\"newPassword\":\"another-pass-1\"}", "Authorization", "Bearer " + token);
+            assertEquals(r.text(), 400, r.status());
+            assertEquals("currentPassword must be a non-empty JSON string", message(r));
+        }
+    }
+
     // OPS-AUTH-016 AC-3: a bodiless POST to an auth endpoint that reads a body gets the auth 415 message
     @Test
     public void OPS_AUTH_016_AC3_bodilessLoginGetsTheAuth415() {

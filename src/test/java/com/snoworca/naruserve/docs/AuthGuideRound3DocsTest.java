@@ -198,4 +198,86 @@ public class AuthGuideRound3DocsTest {
             has(f + " roles", roles, en(f) ? "case-sensitive" : "대소문자를 구분");
         }
     }
+
+    /** The one line of {@code text} starting with {@code prefix}. */
+    private static String lineStarting(String f, String text, String prefix) {
+        for (String l : text.split("\n")) {
+            if (l.startsWith(prefix)) {
+                return l;
+            }
+        }
+        throw new AssertionError(f + ": no line starts with " + prefix);
+    }
+
+    // OPS-AUTH-011 AC-1: the refresh-token section's FileUserStore example and the KeySources.fromFile example pass
+    // AuthFileKey.fromEnv() itself
+    @Test
+    public void OPS_AUTH_011_AC1_namedExamplesPassFromEnv() throws IOException {
+        for (String f : GUIDES) {
+            String doc = read(f);
+            has(f + " refresh section", section(f, doc, "## Refresh-token storage: RefreshTokenStore",
+                    "## refresh 토큰 저장소: RefreshTokenStore"),
+                    "new FileUserStore(new File(\"data/users.json\"), AuthFileKey.fromEnv())");
+            has(f, doc, "KeySources.fromFile(new File(\"/var/lib/app/naru-auth.key\"), AuthFileKey.fromEnv())");
+        }
+    }
+
+    // OPS-AUTH-011 AC-5: the logout note itself says the access token stays valid for its 15 minutes
+    @Test
+    public void OPS_AUTH_011_AC5_logoutNoteStatesTheAccessToken() throws IOException {
+        for (String f : GUIDES) {
+            String quick = section(f, read(f), "## Quick start", "## 빠른 시작");
+            String note = lineStarting(f, quick, en(f) ? "> **Logout:**" : "> **로그아웃:**");
+            has(f + " logout note", note, en(f) ? "stays valid until it expires (15 minutes by default)"
+                    : "만료될 때까지(기본 15분) 유효");
+            has(f + " logout note", note, "?all=true");
+        }
+    }
+
+    // OPS-AUTH-011 AC-6: the one answer that is not JSON is Core HTML, for a handler added after start
+    @Test
+    public void OPS_AUTH_011_AC6_coreHtmlOnlyForAHandlerAddedAfterStart() throws IOException {
+        for (String f : GUIDES) {
+            String errors = section(f, read(f), "## Error responses and AuthResponses", "## 오류 응답과 AuthResponses");
+            has(f + " error section", errors, "HTML");
+            has(f + " error section", errors, en(f) ? "a handler added after start without `auth.errorMiddleware()`"
+                    : "`auth.errorMiddleware()` 없이 기동 뒤에 더한 핸들러");
+        }
+    }
+
+    // OPS-AUTH-011 AC-7: the public-paths note says only GET and HEAD of exactly that path
+    @Test
+    public void OPS_AUTH_011_AC7_permitNoteNamesGetAndHead() throws IOException {
+        for (String f : GUIDES) {
+            String quick = section(f, read(f), "## Quick start", "## 빠른 시작");
+            String note = lineStarting(f, quick, en(f) ? "> **Public paths:**" : "> **공개 경로:**");
+            has(f + " public paths note", note, en(f) ? "only GET and HEAD of exactly `/health`"
+                    : "정확히 `/health`의 GET·HEAD만 공개");
+        }
+    }
+
+    // OPS-AUTH-011 AC-8: the group example creates the user first and adds it by its id
+    @Test
+    public void OPS_AUTH_011_AC8_groupExampleCreatesTheUserFirst() throws IOException {
+        for (String f : GUIDES) {
+            String groups = section(f, read(f), "## Groups: GroupStore and GroupLimits", "## 그룹: GroupStore와 GroupLimits");
+            for (String marker : new String[] {"groups.addMember(\"eng\", bob.getId())", "groups.addMember(\"eng\", bob.id!!)"}) {
+                for (String b : holding(f, groups, marker)) {
+                    int created = b.indexOf("auth.users().create(\"bob\"");
+                    assertTrue(f + ": the user is not created before it is added:\n" + b,
+                            created >= 0 && created < b.indexOf(marker));
+                }
+            }
+        }
+    }
+
+    // OPS-AUTH-011 AC-11: the recipe states the HttpURLConnection limit in so many words
+    @Test
+    public void OPS_AUTH_011_AC11_recipeSaysHttpUrlConnectionCannotPatch() throws IOException {
+        for (String f : GUIDES) {
+            String recipe = section(f, read(f), "### HTTP test recipe", "### HTTP 테스트 레시피");
+            has(f + " recipe", recipe, en(f) ? "`HttpURLConnection` cannot send `PATCH`"
+                    : "`HttpURLConnection`은 `PATCH`를 보낼 수 없습니다");
+        }
+    }
 }

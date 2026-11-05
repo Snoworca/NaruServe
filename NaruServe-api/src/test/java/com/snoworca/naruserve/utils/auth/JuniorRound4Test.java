@@ -138,4 +138,31 @@ public class JuniorRound4Test {
         ClientResponse created = on.post("/auth/register", W8.login("zed", W8.PW));
         assertEquals(created.text(), 201, created.status());
     }
+
+    // OPS-AUTH-012 AC-1: an app with auth.errorMiddleware() after its routes gets no second one at start
+    @Test
+    public void OPS_AUTH_012_AC1_placedErrorMiddlewareGetsNoSecond() {
+        Auth placed = AuthTestSupport.builder(new AuthTestSupport.TestCredentials(), new RecordingLogger()).build();
+        TestApp p = TestApp.create();
+        placed.install(p.app());
+        p.app().get("/x", (req, res) -> res.send("x"));
+        p.app().use(placed.errorMiddleware());
+        int before = p.app().registrations().size();
+        p.start();
+        List<Registration> after = p.app().registrations();
+        for (Registration r : after.subList(before, after.size())) {
+            assertFalse(after.toString(), r.getTarget() == placed.errorMiddleware());
+        }
+    }
+
+    // OPS-AUTH-012 AC-2: under BOTH, as under HEADER, the message names the refreshToken JSON field
+    @Test
+    public void OPS_AUTH_012_AC2_bothTransportNamesTheField() {
+        W8 both = fixture();
+        both.start(b -> b.transport(TokenTransport.BOTH));
+        ClientResponse r = both.post("/auth/refresh", "{}");
+        assertEquals(r.text(), 401, r.status());
+        assertEquals("invalid_refresh_token", W8.code(r));
+        assertTrue(r.text(), message(r).contains("\"refreshToken\""));
+    }
 }

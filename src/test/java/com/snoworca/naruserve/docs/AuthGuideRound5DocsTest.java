@@ -44,6 +44,9 @@ public class AuthGuideRound5DocsTest {
                     "405 `METHOD_NOT_ALLOWED`", "the request body must be a JSON object"}) { // AC-1 amended by OPS-AUTH-033
                 has(f + " error section", errors, needle);
             }
+            has(f + " error section", errors, "401 `unauthenticated`");
+            has(f + " error section", errors, "authentication is required; this endpoint takes POST /auth/logout");
+            has(f + " error section", errors, en(f) ? "default deny runs before routing" : "기본 거부가 라우팅보다 먼저");
             assertFalse(f, errors.contains("the request body is not valid JSON"));
             assertFalse(f, errors.contains("a JSON object is required"));
         }

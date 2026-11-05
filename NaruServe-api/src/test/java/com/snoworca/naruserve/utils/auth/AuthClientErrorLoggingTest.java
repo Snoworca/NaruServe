@@ -42,7 +42,14 @@ public class AuthClientErrorLoggingTest {
         assertEquals(Long.valueOf(30L), r.getRetryAfterSeconds());
         DuplicateUserException d = new DuplicateUserException("the username is taken");
         assertTrue(d instanceof HttpException);
+        assertTrue(d instanceof RuntimeException);
         assertEquals(409, d.status());
+        AuthRejection two = new AuthRejection(422, "domain_not_allowed");
+        assertTrue(two instanceof HttpException);
+        assertEquals(422, two.status());
+        assertEquals(422, two.getStatus());
+        assertEquals("domain_not_allowed", two.getCode());
+        assertEquals(null, two.getRetryAfterSeconds());
     }
 
     private void noError(String what, ClientResponse r, int status, String code, RecordingLogger log) {
@@ -72,6 +79,7 @@ public class AuthClientErrorLoggingTest {
         ClientResponse pw = f.post("/auth/password",
                 "{\"currentPassword\":\"wrong password!\",\"newPassword\":\"another good one\"}", "Authorization", bearer);
         assertEquals(pw.text(), 401, pw.status());
+        assertEquals("invalid_credentials", W8.code(pw));
         assertEquals(f.logger.lines.toString(), 0, f.logger.count("ERROR"));
         noError("auth router", f.post("/auth/ops/reject", null, "Authorization", bearer), 422, "domain_not_allowed",
                 f.logger);

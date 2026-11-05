@@ -55,6 +55,7 @@ public class AuthGuideRound7DocsTest {
         for (String f : GUIDES) {
             has(f, ReadmeDocsTest.read(f), en(f) ? "`POST /auth/login` without a body is 415"
                     : "본문 없는 `POST /auth/login`은 415");
+            has(f, ReadmeDocsTest.read(f), "`auth endpoints accept only application/json bodies`");
         }
     }
 

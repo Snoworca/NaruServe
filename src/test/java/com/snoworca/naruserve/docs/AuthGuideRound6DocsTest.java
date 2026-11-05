@@ -39,6 +39,8 @@ public class AuthGuideRound6DocsTest {
         for (String f : GUIDES) {
             String doc = read(f);
             has(f, doc, "Jwt.DEFAULT_LEEWAY_MILLIS");
+            has(f, doc, en(f) ? "60-second clock leeway" : "60초의 시계 오차 허용");
+            has(f, doc, en(f) ? "not configurable on `Auth`" : "`Auth`에서 바꿀 수 없음");
             has(f, doc, en(f) ? "past `accessTtl` plus 60 seconds" : "`accessTtl`에 60초를 더한 시각 뒤로");
         }
     }
@@ -51,6 +53,8 @@ public class AuthGuideRound6DocsTest {
                     en(f) ? "## Error responses and AuthResponses" : "## 오류 응답과 AuthResponses");
             has(f, errors, "`[]`");
             has(f, errors, "Gson");
+            has(f, errors, en(f) ? "read as an empty object by the Gson codec" : "Gson 코덱이 빈 객체로 읽으므로");
+            has(f, errors, en(f) ? "missing-field answer" : "필드 누락 응답");
         }
     }
 
@@ -60,6 +64,8 @@ public class AuthGuideRound6DocsTest {
         for (String f : GUIDES) {
             String doc = read(f);
             has(f, doc, en(f) ? "| A `.user(...)` password that breaks the password policy" : "| 비밀번호 정책을 어긴 `.user(...)` 비밀번호");
+            has(f, doc, en(f) ? "becomes a WARN and the account is created | `build()` throws `AuthConfigException` |"
+                    : "WARN으로 하고 계정을 만듦 | `build()`가 `AuthConfigException` |");
             for (String l : doc.split("\n")) {
                 if (l.contains(".user(\"alice\", \"alice-password-1\", \"editor\")") && l.contains("//")) {
                     assertTrue(f + ": " + l, l.contains("PROD") && l.contains("DEV"));
@@ -105,6 +111,8 @@ public class AuthGuideRound6DocsTest {
     public void OPS_AUTH_017_AC6_neverInstalledLogIsNamed() throws IOException {
         for (String f : GUIDES) {
             has(f, read(f), en(f) ? "not to `app.logger()`" : "`app.logger()`가 아니라");
+            has(f, read(f), en(f) ? "goes to the auth logger (`.logger(...)`, the console logger by default)"
+                    : "auth 로거(`.logger(...)`, 기본은 콘솔 로거)로 갑니다");
         }
     }
 
@@ -114,6 +122,9 @@ public class AuthGuideRound6DocsTest {
         for (String f : GUIDES) {
             String recipe = ReleaseNotesDocsTest.section(read(f), en(f) ? "### HTTP test recipe" : "### HTTP 테스트 레시피");
             has(f, recipe, ".loginFailureLimits(");
+            has(f, recipe, en(f) ? "Five failed logins of one name from one IP within 15 minutes answer 429"
+                    : "한 이름이 한 IP에서 15분 안에 로그인에 다섯 번 실패하면");
+            has(f, recipe, en(f) ? "a fresh app per test" : "테스트마다 새 앱");
             has(f, recipe, "429");
         }
     }
@@ -162,6 +173,7 @@ public class AuthGuideRound6DocsTest {
         for (String f : new String[] {"docs/api/express-migration.md", "docs/api/en/express-migration.md"}) {
             String doc = read(f);
             assertFalse(f, doc.contains("is127.0.0.1") || doc.contains("은127.0.0.1"));
+            has(f, doc, en(f) ? "Default binding is 127.0.0.1" : "기본은 127.0.0.1");
         }
     }
 }

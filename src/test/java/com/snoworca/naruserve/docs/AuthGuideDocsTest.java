@@ -102,6 +102,7 @@ public class AuthGuideDocsTest {
         return null;
     }
 
+    // OPS-AUTH-007 AC-8: the OPS_AUTH_007_AC1 to AC6 tests of this class are the docs test that asserts AC-1 to AC-6
     // OPS-AUTH-007 AC-1: right after the status note both guides have a task guide table of at least 10 rows, one for
     // each common task, whose links all resolve to headings of the same file
     @Test

@@ -49,6 +49,7 @@ public class DescribeTest {
         assertTrue(dp, dp.contains("mode: DEV"));
         assertTrue(dp, dp.contains("protected: /api, /admin-ui, /api/auth"));
         assertTrue(dp, dp.contains("mount: /api/auth"));
+        assertTrue(dp, dp.contains("admin: /api/auth/admin"));
     }
 
     // OPS-AUTH-002 AC-2: describe() and the startup log carry no secret, key or password; the one-time setup token and

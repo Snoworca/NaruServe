@@ -63,7 +63,7 @@ public class JuniorRound10Test {
         for (String h : new String[] {KEY, "Api-Key " + KEY}) {
             ClientResponse r = f.get("/api/x", "Authorization", h);
             assertEquals(h, 401, r.status());
-            assertTrue(message(r), message(r).contains("Authorization header as ApiKey <key>"));
+            assertTrue(message(r), message(r).contains("an API key goes in the Authorization header as ApiKey <key>"));
         }
     }
 
@@ -145,6 +145,19 @@ public class JuniorRound10Test {
             fail("opened a directory");
         } catch (IOException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("is a directory"));
+        }
+    }
+
+    // OPS-AUTH-022 AC-1 (partial): with API keys off, a bare nk_ value or one under another scheme says so too; a Bearer
+    // nk_ value does not, so it is not asserted here (docs/analysis/verify-0.11.0/batch-10.md, PRODUCT-GAP)
+    @Test
+    public void OPS_AUTH_022_AC1_nkFormWithKeysOffIsNamed() {
+        W8 f = fixture();
+        f.start(b -> b);
+        for (String h : new String[] {KEY, "Token " + KEY}) {
+            ClientResponse r = f.get("/api/x", "Authorization", h);
+            assertEquals(h, 401, r.status());
+            assertTrue(h + ": " + message(r), message(r).contains("API keys are off") && message(r).contains(".apiKeys(store)"));
         }
     }
 }

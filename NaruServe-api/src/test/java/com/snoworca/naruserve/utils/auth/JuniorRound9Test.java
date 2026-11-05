@@ -174,6 +174,8 @@ public class JuniorRound9Test {
         f.start(b -> b);
         assertTrue(message(f.get("/api/x?access_token=abc")).contains("?access_token"));
         assertTrue(message(f.get("/api/x", "X-API-Key", "nk_x")).contains("X-API-Key"));
+        assertTrue(message(f.get("/api/x?api_key=abc")).contains("?api_key"));
+        assertTrue(message(f.get("/api/x", "X-Access-Token", "abc")).contains("X-Access-Token"));
         String cookie = message(f.get("/api/x", "Cookie", "naru_at=abc"));
         assertTrue(cookie, cookie.contains("naru_at") && cookie.contains("TokenTransport.HEADER"));
     }
@@ -224,6 +226,8 @@ public class JuniorRound9Test {
         } catch (AuthConfigException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("must be a reference"));
             assertFalse(e.getMessage(), e.getMessage().contains("is null or empty"));
+            assertEquals(e.getMessage(), e.getMessage().indexOf("must be a reference"),
+                    e.getMessage().lastIndexOf("must be a reference"));
         }
     }
 
@@ -250,5 +254,52 @@ public class JuniorRound9Test {
                 .roles(RolePolicy.builder().role("viewer", "posts:read").build()).build();
         List<String> warns = RecordingLogger.matching(log.lines, "(?s)WARN .*\\.roles\\(.*replaces.*");
         assertEquals(log.lines.toString(), 1, warns.size());
+    }
+
+    // OPS-AUTH-021 AC-1: nothing is revoked: the refresh token sent with a refused logout still renews
+    @Test
+    public void OPS_AUTH_021_AC1_refusedLogoutKeepsTheRefreshToken() throws Exception {
+        W8 f = fixture();
+        f.start(b -> b);
+        f.user("bob", W8.PW, "reader");
+        Map<String, Object> pair = f.loginBody("bob", W8.PW);
+        String rt = String.valueOf(pair.get("refreshToken"));
+        String bearer = "Bearer " + pair.get("accessToken");
+        String body = "{\"refreshToken\":\"" + rt + "\"}";
+        assertEquals(400, f.post("/auth/logout?all=1", body, "Authorization", bearer).status());
+        assertEquals(400, f.post("/auth/logout", "{\"all\":true,\"refreshToken\":\"" + rt + "\"}",
+                "Authorization", bearer).status());
+        ClientResponse renewed = f.post("/auth/refresh", body);
+        assertEquals(renewed.text(), 200, renewed.status());
+    }
+
+    // OPS-AUTH-021 AC-3: .permitPrefix refuses a route pattern at build as .permit does
+    @Test
+    public void OPS_AUTH_021_AC3_permitPrefixPatternIsRefused() {
+        for (String p : new String[] {"/users/:id", "/public/*"}) {
+            try {
+                Auth.builder(AuthTestSupport.SECRET).permitPrefix(p).build();
+                fail(p + " accepted");
+            } catch (AuthConfigException e) {
+                assertTrue(e.getMessage(), e.getMessage().contains("not a route pattern") && e.getMessage().contains(".permitPrefix"));
+            }
+        }
+    }
+
+    // OPS-AUTH-021 AC-4: every login-like last segment names its endpoint; an app route at the path and a GET do not
+    @Test
+    public void OPS_AUTH_021_AC4_everyLoginLikeSegmentAndTheExceptions() {
+        W8 f = fixture();
+        f.routes = w -> w.app.post("/v1/login", (req, res) -> res.send("own"));
+        f.start(b -> b.register(true));
+        String[][] cases = {{"/signin", "login"}, {"/sign-in", "login"}, {"/v2/login", "login"}, {"/signup", "register"},
+            {"/sign-up", "register"}, {"/register", "register"}, {"/logout", "logout"}, {"/refresh", "refresh"}};
+        for (String[] c : cases) {
+            ClientResponse r = f.post(c[0], "{}");
+            assertEquals(c[0] + " " + r.text(), 401, r.status());
+            assertEquals("authentication is required; auth's " + c[1] + " endpoint is POST /auth/" + c[1], message(r));
+        }
+        assertEquals("authentication is required", message(f.post("/v1/login", "{}")));
+        assertEquals("authentication is required", message(f.get("/login")));
     }
 }

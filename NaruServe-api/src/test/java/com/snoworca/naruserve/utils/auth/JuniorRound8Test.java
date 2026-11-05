@@ -50,7 +50,9 @@ public class JuniorRound8Test {
         }));
         String root = a.user("root", "admin");
         for (String[] c : new String[][] {{"POST", "/auth/admin/groups", "{\"id\":\"eng\"}"}, {"GET", "/auth/admin/groups/eng", null},
-                {"PUT", "/auth/admin/groups/eng/members/x", null}}) {
+                {"PUT", "/auth/admin/groups/eng/members/x", null}, {"DELETE", "/auth/admin/groups/eng", null},
+                {"DELETE", "/auth/admin/groups/eng/members/x", null}, {"PUT", "/auth/admin/groups/eng/parents/p", null},
+                {"DELETE", "/auth/admin/groups/eng/parents/p", null}}) {
             ClientResponse r = a.call(c[0], c[1], root, c[2]);
             assertEquals(c[1] + " " + r.text(), 404, r.status());
             assertEquals("NOT_FOUND", W8.code(r));
@@ -81,5 +83,26 @@ public class JuniorRound8Test {
                 "{\"ownerUserId\":\"" + u1 + "\",\"name\":\"\",\"scopes\":[\"posts:read\"]}");
         assertEquals(r.text(), 400, r.status());
         assertTrue(r.text(), message(r).startsWith("name must be a JSON string of 1 to "));
+    }
+
+    // OPS-AUTH-020 AC-3: the owner, scopes, expiresInDays and password refusals of issuance keep their message too
+    @Test
+    public void OPS_AUTH_020_AC3_everyKeyIssuanceShapeRefusalIsNamed() throws Exception {
+        AdminFixture a = admin(b -> b.apiKeys(new AdminFixture.ListKeys()));
+        String root = a.user("root", "admin", "keyswriter");
+        String owner = "\"ownerUserId\":\"" + a.user("u1") + "\",";
+        String named = "\"name\":\"bot\",\"scopes\":[\"posts:read\"]";
+        String[][] cases = {
+            {"{" + named + ",\"password\":\"x\"}", "ownerUserId must be a JSON string"},
+            {"{" + owner + "\"name\":\"bot\",\"scopes\":[],\"password\":\"x\"}",
+                "scopes must be a non-empty JSON array of strings"},
+            {"{" + owner + named + ",\"expiresInDays\":0,\"password\":\"x\"}",
+                "expiresInDays must be a JSON integer from 1 to 365"},
+            {"{" + owner + named + "}", "password must be a non-empty JSON string"}};
+        for (String[] c : cases) {
+            ClientResponse r = a.call("POST", "/auth/admin/apikeys", root, c[0]);
+            assertEquals(c[0] + " " + r.text(), 400, r.status());
+            assertEquals(c[1], message(r));
+        }
     }
 }

@@ -60,6 +60,23 @@ public class JuniorRound5Test {
         assertEquals("authentication is required", message(f.get("/api/nope")));
     }
 
+    // OPS-AUTH-014 AC-2: /register and /setup name POST as well, and so does a method other than GET
+    @Test
+    public void OPS_AUTH_014_AC2_registerAndSetupNamePost() {
+        W8 f = fixture();
+        f.start(b -> b);
+        for (String path : new String[] {"/auth/register", "/auth/setup"}) {
+            ClientResponse r = f.get(path);
+            assertEquals(path + ": " + r.text(), 401, r.status());
+            assertEquals("unauthenticated", W8.code(r));
+            assertTrue(r.text(), message(r).contains("POST " + path));
+        }
+        ClientResponse put = f.adapter.send(
+                com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest.of("PUT", "/auth/login"));
+        assertEquals(put.text(), 401, put.status());
+        assertTrue(put.text(), message(put).contains("POST /auth/login"));
+    }
+
     // OPS-AUTH-014 AC-3: the insecure_transport refusal points to the server log
     @Test
     public void OPS_AUTH_014_AC3_insecureTransportPointsToTheLog() {
@@ -69,6 +86,9 @@ public class JuniorRound5Test {
         assertEquals(r.text(), 403, r.status());
         assertEquals("insecure_transport", W8.code(r));
         assertTrue(r.text(), message(r).contains("server log"));
+        assertTrue(r.text(), message(r).contains("the server log names the ways to serve this request"));
+        assertEquals(f.logger.lines.toString(), 1, RecordingLogger.matching(f.logger.lines,
+                "(?s)WARN .*trustProxyHops.*\\.allowInsecureTransport\\(.*AuthMode\\.DEV.*").size());
     }
 
     // OPS-AUTH-014 AC-4: the appended error layer logs one ERROR line for auth.user(req) on a public path

@@ -117,4 +117,31 @@ public class AuthGuideRound4DocsTest {
             assertFalse(f + ": the register 404 is still described as HTML", errors.contains("Cannot POST /auth/register"));
         }
     }
+
+    // OPS-AUTH-013 AC-2: the import is shown before the Logger interface
+    @Test
+    public void OPS_AUTH_013_AC2_importComesBeforeTheInterface() throws IOException {
+        for (String f : new String[] {"docs/api/logging.md", "docs/api/en/logging.md"}) {
+            String doc = read(f);
+            int shown = doc.indexOf("import com.snoworca.naruserve.Logger;");
+            assertTrue(f, shown >= 0 && shown < doc.indexOf("public interface Logger"));
+        }
+    }
+
+    // OPS-AUTH-013 AC-3: the device-trust file appears when its state first changes
+    @Test
+    public void OPS_AUTH_013_AC3_deviceTrustFileAppearsAtItsFirstChange() throws IOException {
+        for (String f : GUIDES) {
+            String p = line(f, read(f), en(f) ? "**File defaults**" : "**파일 기본값**");
+            has(f + " file defaults", p, en(f) ? "the device-trust file at its first invalidation" : "신뢰 기기 파일은 첫 무효 표시");
+        }
+    }
+
+    // OPS-AUTH-013 AC-4: publishToMavenLocal comes with mavenLocal() for a consumer
+    @Test
+    public void OPS_AUTH_013_AC4_readmeNamesMavenLocal() throws IOException {
+        for (String f : new String[] {"README.md", "README.ko.md"}) {
+            has(f, read(f), "mavenLocal()");
+        }
+    }
 }

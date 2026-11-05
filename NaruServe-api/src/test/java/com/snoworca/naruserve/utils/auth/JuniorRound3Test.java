@@ -60,6 +60,20 @@ public class JuniorRound3Test {
         assertEquals(f.logger.lines.toString(), 0, permitWarns(f).size());
     }
 
+    // OPS-AUTH-010 AC-1: a route outside the .protectOnly range is public, so only the one inside the range is warned
+    @Test
+    public void OPS_AUTH_010_AC1_protectOnlyPublicRouteIsNotWarned() {
+        W8 f = fixture();
+        f.routes = w -> {
+            w.app.post("/site/form", (req, res) -> res.send("form"));
+            w.app.post("/api/form", (req, res) -> res.send("form"));
+        };
+        f.start(b -> b.permit("/site/form").permit("/api/form").protectOnly("/api"));
+        List<String> warns = permitWarns(f);
+        assertEquals(f.logger.lines.toString(), 1, warns.size());
+        assertTrue(warns.get(0), warns.get(0).contains("POST /api/form"));
+    }
+
     // OPS-AUTH-010 AC-2: the errors placement WARN says what the missing auth error layer looks like at runtime
     @Test
     public void OPS_AUTH_010_AC2_errorsPlacementNamesTheHtmlStackTrace() {
@@ -73,7 +87,8 @@ public class JuniorRound3Test {
             List<String> warns = RecordingLogger.matching(log.lines, "(?s)WARN auth doctor WARN errors placement.*");
             assertEquals(log.lines.toString(), 1, warns.size());
             assertTrue(warns.get(0), warns.get(0).contains("HTML") && warns.get(0).contains("stack trace")
-                && warns.get(0).contains("appends auth.errorMiddleware()"));
+                && warns.get(0).contains("appends auth.errorMiddleware()")
+                && warns.get(0).contains("To place it yourself, add app.onError(auth.errors()) after the routes"));
         }
     }
 }

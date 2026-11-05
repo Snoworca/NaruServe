@@ -114,7 +114,7 @@ public class JuniorMessagesTest {
         assertEquals(f.logger.lines.toString(), 2, warns.size());
         String all = warns.toString();
         assertTrue(all, all.contains("'editr'") && all.contains("'reviewer'"));
-        assertTrue(all, all.contains("403"));
+        assertTrue(all, all.contains("403") && all.contains("typo"));
         assertFalse(all, all.contains("'reader'") || all.contains("'admin'"));
 
         W8 custom = new W8();
@@ -159,5 +159,39 @@ public class JuniorMessagesTest {
         } catch (AuthConfigException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("3 distinct byte values;"));
         }
+    }
+
+    // OPS-AUTH-006 AC-1 (partial): setup names the field as login does; the missing-password text still differs from
+    // login's, so this test does not assert it (docs/analysis/verify-0.11.0/batch-10.md, PRODUCT-GAP)
+    @Test
+    public void OPS_AUTH_006_AC1_setupBodyErrorsNameTheField() {
+        W8 f = new W8();
+        fixtures.add(f);
+        f.start("127.0.0.1", false, b -> b.recovery(true).user("admin", null, "admin"));
+        String token = f.auth.pendingSetupToken();
+        ClientResponse noName = f.post("/auth/setup", "{\"token\":\"" + token + "\",\"password\":\"long-enough-pw\"}");
+        assertEquals(noName.text(), 400, noName.status());
+        assertEquals("BAD_REQUEST", W8.code(noName));
+        assertEquals("username must be a JSON string", message(noName));
+        ClientResponse noPassword = f.post("/auth/setup", "{\"token\":\"" + token + "\",\"username\":\"admin\"}");
+        assertEquals(noPassword.text(), 400, noPassword.status());
+        assertTrue(noPassword.text(), message(noPassword).startsWith("password must be a "));
+    }
+
+    // OPS-AUTH-006 AC-1: any other HttpException in the auth routers answers without its message
+    @Test
+    public void OPS_AUTH_006_AC1_otherHttpExceptionHidesItsMessage() throws Exception {
+        W8 f = new W8();
+        fixtures.add(f);
+        f.user("alice", W8.PW, "reader");
+        f.routes = w -> w.auth.routes().post("/ops/http", (req, res) -> {
+            throw new com.snoworca.naruserve.HttpException(400, "HIDDEN-DETAIL");
+        });
+        f.start(b -> b);
+        String bearer = "Bearer " + f.loginBody("alice", W8.PW).get("accessToken");
+        ClientResponse r = f.post("/auth/ops/http", null, "Authorization", bearer);
+        assertEquals(r.text(), 400, r.status());
+        assertEquals("BAD_REQUEST", W8.code(r));
+        assertFalse(r.text(), r.text().contains("HIDDEN-DETAIL"));
     }
 }

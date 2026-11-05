@@ -19,12 +19,14 @@ public class AuthOnboardingDocsTest {
         assertTrue(file + " lacks: " + needle, text.contains(needle));
     }
 
+    // OPS-AUTH-005 AC-6: the OPS_AUTH_005_AC1 to AC5 tests of this class are the docs test that asserts AC-1 to AC-5
     // OPS-AUTH-005 AC-1: README.md and README.ko.md introduce auth, link the guide, show app.use(auth) and say where a
     // build with auth comes from before 0.11.0 is published
     @Test
     public void OPS_AUTH_005_AC1_readmeIntroducesAuth() throws IOException {
         for (String f : new String[] {"README.md", "README.ko.md"}) {
             String s = read(f);
+            has(f, s, f.equals("README.md") ? "The auth module" : "인증 모듈");
             has(f, s, "app.use(auth)");
             has(f, s, "auth.md)");
             has(f, s, "0.11.0");
@@ -47,6 +49,9 @@ public class AuthOnboardingDocsTest {
             assertFalse(f + ": " + row, row.contains("In progress") || row.contains("만드는 중") || row.contains("진행"));
             has(f, row, "/auth/login");
             has(f, row, "UserStore");
+            has(f, row, "SPI");
+            has(f, row, "auth.require");
+            has(f, row, f.contains("/en/") ? "groups and roles" : "그룹과 역할");
         }
     }
 
@@ -112,6 +117,32 @@ public class AuthOnboardingDocsTest {
             String s = read(f);
             has(f, s, "auth: POST /auth/login was refused with 403 insecure_transport");
             has(f, s, ".allowInsecureTransport(\"");
+            has(f, s, "trustProxyHops(1)");
+        }
+    }
+
+    // OPS-AUTH-005 AC-3: the quick-start .user password meets the default policy (8 to 128 characters)
+    @Test
+    public void OPS_AUTH_005_AC3_quickStartPasswordMeetsThePolicy() throws IOException {
+        java.util.regex.Pattern user = java.util.regex.Pattern.compile("\\.user\\(\"alice\", \"([^\"]+)\"");
+        for (String f : new String[] {"docs/api/auth.md", "docs/api/en/auth.md"}) {
+            String start = ReleaseNotesDocsTest.section(read(f), f.contains("/en/") ? "## Quick start" : "## 빠른 시작");
+            for (String lang : new String[] {"java", "kotlin"}) {
+                java.util.regex.Matcher m = user.matcher(ReadmeDocsTest.blocks(start, lang).get(0));
+                assertTrue(f + " " + lang + " has the .user account", m.find());
+                assertTrue(f + " " + lang + ": " + m.group(1), m.group(1).length() >= 8 && m.group(1).length() <= 128);
+            }
+        }
+    }
+
+    // OPS-AUTH-004 AC-3: the paragraph sits in the secure-transport section itself, not elsewhere in the guide
+    @Test
+    public void OPS_AUTH_004_AC3_lanParagraphIsInTheSecureTransportSection() throws IOException {
+        for (String f : new String[] {"docs/api/auth.md", "docs/api/en/auth.md"}) {
+            String s = ReleaseNotesDocsTest.section(read(f),
+                    f.contains("/en/") ? "## The secure-transport rule" : "## 보안 연결 규칙");
+            has(f, s, "auth: POST /auth/login was refused with 403 insecure_transport");
+            has(f, s, ".allowInsecureTransport(");
             has(f, s, "trustProxyHops(1)");
         }
     }
