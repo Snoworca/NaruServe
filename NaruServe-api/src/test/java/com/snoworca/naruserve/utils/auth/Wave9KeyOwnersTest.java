@@ -201,6 +201,17 @@ public class Wave9KeyOwnersTest {
         assertEquals(401, withKey(k.getPlainKey()).status());
     }
 
+    // REL-APIKEY-003 AC-7: after the A4 reset K gets 401 with body code invalid_api_key
+    @Test
+    public void REL_APIKEY_003_AC7_theKeyThenAnswersInvalidApiKey() throws Exception {
+        start(b -> b);
+        IssuedApiKey k = futureKey();
+        assertEquals(200, patch(owner, "{\"password\":\"an admin reset password\"}").status());
+        ClientResponse r = withKey(k.getPlainKey());
+        assertEquals(401, r.status());
+        assertEquals("invalid_api_key", W8.code(r));
+    }
+
     // The lock order of REL-APIKEY-003 over the five ver++ paths and the app issue: the key owner lock is taken only
     // while the same thread holds the user write lock, and the app issue never takes the user lock inside the key lock
     @Test
@@ -390,6 +401,67 @@ public class Wave9KeyOwnersTest {
         assertTrue(keys.d.listByOwner(owner).isEmpty());
     }
 
+    // REL-APIKEY-004 AC-8: every successful retry passes the marker's oldVer: (a) one cleanup run and (b) the re-delete a
+    // request scheduled each call deleteFutureByOwner(u, 5); (c) a later ?all=true calls it first, while ver is still 6
+    @Test
+    public void REL_APIKEY_004_AC8_theRetriesPassTheMarkersVer() throws Exception {
+        for (int way = 0; way < 3; way++) {
+            final W8 w = new W8();
+            others.add(w);
+            Wave9KeyAuthTest.Keys ks = new Wave9KeyAuthTest.Keys();
+            Wave9KeyAuthTest.Held h = new Wave9KeyAuthTest.Held();
+            String u = w.user("bot", W8.PW, "reader");
+            w.start(b -> b.apiKeys(ks));
+            w.auth.apiKeyOwners().deletions(h);
+            w.store.update(w.stored(u).toBuilder().tokenVersion(6).build());
+            IssuedApiKey k = w.auth.apiKeys().issue(u, "future", null, "posts:read");
+            w.store.update(w.stored(u).toBuilder().tokenVersion(5).build());
+            ks.failFuture = 1;
+            assertEquals(204, w.post("/auth/logout?all=true", null, "Authorization",
+                    "Bearer " + w.auth.accessToken(u, 5, 900_000L)).status());
+            ks.deletes.clear();
+            final List<Long> verAtCall = new CopyOnWriteArrayList<>();
+            ks.futureCheck = id -> {
+                try {
+                    verAtCall.add(w.stored(id).getTokenVersion());
+                } catch (Exception e) {
+                    throw new AssertionError(e);
+                }
+            };
+            if (way == 0) {
+                w.auth.cleanupRun();
+            } else if (way == 1) {
+                assertEquals(401, w.get("/api/x", "Authorization", "ApiKey " + k.getPlainKey()).status());
+                h.runAll();
+            } else {
+                assertEquals(204, w.post("/auth/logout?all=true", null, "Authorization",
+                        "Bearer " + w.auth.accessToken(u, 6, 900_000L)).status());
+                assertEquals(7, w.stored(u).getTokenVersion());
+            }
+            assertEquals("way " + way, "deleteFutureByOwner " + u + " 5", ks.deletes.get(0));
+            assertEquals("way " + way, Long.valueOf(6), verAtCall.get(0));
+        }
+    }
+
+    // REL-APIKEY-004 AC-6: A5 deletes all keys and then clears the marker under the owner lock: one lock acquisition
+    // covers the key deletion (marker still there) and the row deletion (marker gone)
+    @Test
+    public void REL_APIKEY_004_AC6_theMarkerIsClearedInsideTheOwnerLock() throws Exception {
+        final List<String> order = new CopyOnWriteArrayList<>();
+        start(b -> b);
+        f.auth.apiKeys().issue(owner, "k", null, "posts:read");
+        f.auth.apiKeyOwners().mark(owner, 5);
+        keys.deleteCheck = id -> order.add("keys lock=" + ApiKeyOwners.heldByCurrentThread(id) + " marker="
+                + f.auth.apiKeyOwners().marker(id));
+        ((LockSpy) f.users).onDelete = id -> order.add("row lock=" + ApiKeyOwners.heldByCurrentThread(id) + " marker="
+                + f.auth.apiKeyOwners().marker(id));
+        lockLog.clear();
+        assertEquals(204, f.adapter.send(ClientRequest.of("DELETE", "/auth/admin/users/" + owner)
+                .header("Authorization", bearer(root))).status());
+        assertEquals(Arrays.asList("keys lock=true marker=5", "row lock=true marker=null"), order);
+        assertEquals(lockLog.toString(), Collections.singletonList("keyLock " + owner + " user=true"), lockLog);
+    }
+
     // ---------------------------------------------------------------------------------------------- FR-APIKEY-008
 
     // FR-APIKEY-008 AC-1: SINGLE_INSTANCE with marker (u, 5): deleting u removes all keys, then clears the marker, then
@@ -460,6 +532,29 @@ public class Wave9KeyOwnersTest {
         ClientResponse r = off.get("/auth/admin/users", "Authorization", "ApiKey " + k.getPlainKey());
         assertEquals(403, r.status());
         assertEquals("insufficient_scope", W8.code(r));
+        assertEquals(200, off.get("/api/x", "Authorization", "ApiKey " + k.getPlainKey()).status());
+        assertNotNull(keys.d.findById(k.getKey().getId()));
+    }
+
+    // SEC-APIKEY-009 AC-4: the scope the criterion names: a key issued with auth-users:write under the opt-in writes
+    // through A4 there; on a restart without the opt-in the same write gets 403, its other scopes keep working and the
+    // key row stays
+    @Test
+    public void SEC_APIKEY_009_AC4_aStoredWriteScopeIsIgnoredToo() throws Exception {
+        owner = f.user("bot", W8.PW);
+        root = f.user("root", W8.PW, "admin");
+        f.start(b -> b.apiKeys(keys).allowAdminScopesOnApiKeys(true).roles(RolePolicy.builtin()));
+        IssuedApiKey k = f.auth.apiKeys().issue(root, "admin", null, "auth-users:write", "posts:read");
+        String path = "/auth/admin/users/" + owner;
+        ClientResponse on = f.adapter.send(ClientRequest.json("PATCH", path, "{\"attributes\":{\"team\":\"blue\"}}")
+                .header("Authorization", "ApiKey " + k.getPlainKey()));
+        assertEquals(on.text(), 200, on.status());
+        W8 off = node(b -> b);
+        ClientResponse r = off.adapter.send(ClientRequest.json("PATCH", path, "{\"attributes\":{\"team\":\"red\"}}")
+                .header("Authorization", "ApiKey " + k.getPlainKey()));
+        assertEquals(r.text(), 403, r.status());
+        assertEquals("insufficient_scope", W8.code(r));
+        assertEquals("blue", f.stored(owner).getAttributes().get("team"));
         assertEquals(200, off.get("/api/x", "Authorization", "ApiKey " + k.getPlainKey()).status());
         assertNotNull(keys.d.findById(k.getKey().getId()));
     }

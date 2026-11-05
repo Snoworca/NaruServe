@@ -422,6 +422,30 @@ public class Wave9KeyAuthTest {
         assertEquals(before, keys.d.listByOwner(owner).size());
     }
 
+    // SEC-APIKEY-004 AC-10: the admin-issue handler does not run for the step-10 refusal: no read of the body's
+    // ownerUserId (the owner of K is cached first, so any read is that one), no password hash and no insert
+    @Test
+    public void SEC_APIKEY_004_AC10_theAdminIssueHandlerDoesNotRun() throws Exception {
+        OwnerReads reads = new OwnerReads(f.store);
+        f.users = reads;
+        Wave8AccountTest.Counting counting = new Wave8AccountTest.Counting();
+        owner = f.user("root", W8.PW, "admin");
+        String target = f.user("target", W8.PW);
+        f.start(b -> b.apiKeys(keys).roles(RolePolicy.builtin()).passwordHasher(counting));
+        String k = f.auth.apiKeys().issue(owner, "ci", null, "posts:read").getPlainKey();
+        assertEquals(200, withKey("/api/x", k).status());
+        int work = counting.hashes.get() + counting.verifies.get();
+        int ownerReads = reads.reads.get();
+        ClientResponse r = f.post("/auth/admin/apikeys", Wave10PatTest.admin(target, W8.PW, "posts:read"),
+                "Authorization", "ApiKey " + k);
+        assertEquals(r.text(), 403, r.status());
+        assertEquals("api_key_not_allowed", W8.code(r));
+        assertNull(r.header("WWW-Authenticate"));
+        assertEquals("no read of ownerUserId", ownerReads, reads.reads.get());
+        assertEquals("no password hash", work, counting.hashes.get() + counting.verifies.get());
+        assertTrue(keys.d.listByOwner(target).isEmpty());
+    }
+
     // ---------------------------------------------------------------------------------------------- SEC-APIKEY-005
 
     private void startProxied(java.util.function.UnaryOperator<Auth.Builder> config) throws Exception {
@@ -470,6 +494,33 @@ public class Wave9KeyAuthTest {
                 assertEquals(lookups, keys.lookups.get());
             }
         }
+    }
+
+    // SEC-APIKEY-005 AC-2: the body codes: expired keys 1-100 get invalid_api_key, from 101 on too_many_attempts
+    // SEC-APIKEY-005 AC-3: from an IP over the limit, ApiKey abc gets too_many_attempts
+    // SEC-APIKEY-005 AC-10: after 100 wrong keys on the public path, request 101 to a protected path gets
+    // too_many_attempts
+    @Test
+    public void SEC_APIKEY_005_AC2_AC3_AC10_theBodyCodesOfTheLimit() throws Exception {
+        startProxied(b -> b.permit("/health"));
+        String good = key("posts:read");
+        String expired = f.auth.apiKeys().issue(owner, "old", f.clock.get() + 1000L, "posts:read").getPlainKey();
+        f.clock.addAndGet(2000L);
+        for (int i = 1; i <= 100; i++) {
+            assertEquals("request " + i, "invalid_api_key", W8.code(fromIp("198.51.100.13", "/api/x", expired)));
+        }
+        for (int i = 101; i <= 103; i++) {
+            assertEquals("request " + i, "too_many_attempts", W8.code(fromIp("198.51.100.13", "/api/x", expired)));
+        }
+        ClientResponse junk = fromIp("198.51.100.13", "/api/x", "abc");
+        assertEquals(429, junk.status());
+        assertEquals("too_many_attempts", W8.code(junk));
+        for (int i = 0; i < 100; i++) {
+            fromIp("198.51.100.14", "/health", wrongSecret(good));
+        }
+        ClientResponse prot = fromIp("198.51.100.14", "/api/x", good);
+        assertEquals(429, prot.status());
+        assertEquals("too_many_attempts", W8.code(prot));
     }
 
     // SEC-APIKEY-005 AC-4: 50 wrong keys then a valid key from the same IP: the valid key authenticates and the counter
@@ -992,6 +1043,62 @@ public class Wave9KeyAuthTest {
             fromIp("198.51.100.12", "/api/x", "abc");
         }
         assertEquals("the malformed keys were counted", 429, fromIp("198.51.100.12", "/api/x", plain).status());
+    }
+
+    /** Fails when the value of a public no-argument getter of {@code o} holds one of {@code forbidden}. */
+    private static void assertNoGetterHolds(Object o, String... forbidden) throws Exception {
+        int getters = 0;
+        for (java.lang.reflect.Method m : o.getClass().getMethods()) {
+            if (m.getName().startsWith("get") && m.getParameterTypes().length == 0
+                    && !"getClass".equals(m.getName())) {
+                getters++;
+                String value = String.valueOf(m.invoke(o));
+                for (String f : forbidden) {
+                    assertFalse(m.getName(), value.contains(f));
+                }
+            }
+        }
+        assertTrue("the getters were read", getters > 5);
+    }
+
+    // SEC-APIKEY-003 AC-2: every field of the stored row is read, not its redacted toString: none holds the plaintext
+    // secret, and the hash equals a SHA-256 computed here, independent of ApiKeyFormat
+    // SEC-APIKEY-003 AC-3: every field of ApiKey from list(ownerUserId) and every field of both list endpoints (me and
+    // admin) is free of the secret and the hash, and no field name there is a secret or hash field
+    @Test
+    public void SEC_APIKEY_003_AC2_AC3_noFieldHoldsTheSecret() throws Exception {
+        f.user("root", W8.PW, "admin");
+        start(b -> b);
+        IssuedApiKey issued = f.auth.apiKeys().issue(owner, "ci", null, "posts:read");
+        String secret = issued.getPlainKey().substring(12);
+        StoredApiKey row = keys.d.findById(issued.getKey().getId());
+        assertNoGetterHolds(row, secret);
+        StringBuilder hex = new StringBuilder();
+        for (byte x : java.security.MessageDigest.getInstance("SHA-256").digest(secret.getBytes(StandardCharsets.US_ASCII))) {
+            hex.append(String.format("%02x", x & 0xff));
+        }
+        assertEquals(hex.toString(), row.getSecretHash());
+        String hash = row.getSecretHash();
+        assertNoGetterHolds(f.auth.apiKeys().list(owner).get(0), secret, hash);
+        for (java.lang.reflect.Method m : com.snoworca.naruserve.utils.auth.apikey.ApiKey.class.getMethods()) {
+            assertFalse(m.getName(), m.getName().toLowerCase(java.util.Locale.ROOT).contains("secret"));
+            assertFalse(m.getName(), m.getName().toLowerCase(java.util.Locale.ROOT).contains("hash")
+                    && !"hashCode".equals(m.getName()));
+        }
+        String mine = (String) f.loginBody("bot", W8.PW).get("accessToken");
+        String admin = (String) f.loginBody("root", W8.PW).get("accessToken");
+        for (ClientResponse list : new ClientResponse[] {f.get("/auth/me/apikeys", "Authorization", "Bearer " + mine),
+            f.get("/auth/admin/apikeys?ownerUserId=" + owner, "Authorization", "Bearer " + admin)}) {
+            assertEquals(list.text(), 200, list.status());
+            assertFalse(list.text(), list.text().contains(secret));
+            assertFalse(list.text(), list.text().contains(hash));
+            List<Object> items = Wave10PatTest.array(list);
+            assertEquals(1, items.size());
+            for (Object name : ((java.util.Map<?, ?>) items.get(0)).keySet()) {
+                String n = String.valueOf(name).toLowerCase(java.util.Locale.ROOT);
+                assertFalse(n, n.contains("secret") || n.contains("hash"));
+            }
+        }
     }
 
     // ---------------------------------------------------------------------------------------------- IR-APIKEY-005

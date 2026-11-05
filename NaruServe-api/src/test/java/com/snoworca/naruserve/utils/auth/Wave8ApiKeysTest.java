@@ -231,6 +231,7 @@ public class Wave8ApiKeysTest {
                     issue.call();
                     return true;
                 } catch (AuthRejection limit) {
+                    assertEquals(409, limit.getStatus());
                     assertEquals("api_key_limit", limit.getCode());
                     return false;
                 }
@@ -687,7 +688,50 @@ public class Wave8ApiKeysTest {
         }
     }
 
+    // SEC-APIKEY-001 AC-5: COOKIE or BOTH, ApiKey with a cookie access token on a public path proceeds anonymously: no
+    // principal is attached, though the same key alone on the same path attaches one
+    @Test
+    public void SEC_APIKEY_001_AC5_thePublicPathStaysAnonymous() throws Exception {
+        for (TokenTransport t : new TokenTransport[] {TokenTransport.COOKIE, TokenTransport.BOTH}) {
+            W8 w = new W8();
+            try {
+                final String id = w.user("bot", W8.PW, "reader");
+                w.start(b -> b.apiKeys(new Counting()).transport(t).permit("/health"));
+                String k = AuthTesting.apiKeyFor(w.auth, id, "posts:read");
+                assertEquals(t.toString(), "user", w.get("/health", "Authorization", "ApiKey " + k).text());
+                String at = w.auth.accessToken(id, 0, 60_000L);
+                ClientResponse pub = w.get("/health", "Authorization", "ApiKey " + k, "Cookie", "naru_at=" + at);
+                assertEquals(t.toString(), 200, pub.status());
+                assertEquals(t.toString(), "anon", pub.text());
+            } finally {
+                w.stop();
+            }
+        }
+    }
+
     // ---------------------------------------------------------------------------------------------- SEC-APIKEY-002
+
+    // SEC-APIKEY-002 AC-3: two Authorization headers on POST /auth/login -> 400 with body code invalid_request, with
+    // and without a .permit of that endpoint
+    @Test
+    public void SEC_APIKEY_002_AC3_theLoginAnswerIsInvalidRequest() throws Exception {
+        for (int way = 0; way < 2; way++) {
+            final boolean permitted = way == 1;
+            W8 w = new W8();
+            try {
+                w.user("bot", W8.PW, "reader");
+                w.start(b -> permitted ? b.apiKeys(new Counting()).permit(Method.POST, "/auth/login")
+                        : b.apiKeys(new Counting()));
+                ClientResponse r = w.adapter.send(ClientRequest.json("POST", "/auth/login", W8.login("bot", W8.PW))
+                        .header("Authorization", "Bearer a.b.c")
+                        .header("Authorization", "ApiKey nk_AAAAAAAA_BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"));
+                assertEquals(r.text(), 400, r.status());
+                assertEquals("invalid_request", W8.code(r));
+            } finally {
+                w.stop();
+            }
+        }
+    }
 
     // SEC-APIKEY-002 AC-1: Bearer and ApiKey as two headers on a protected path -> 400 invalid_request
     // SEC-APIKEY-002 AC-2: two Authorization headers on the public GET /health -> 200 anonymous
