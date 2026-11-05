@@ -374,6 +374,7 @@ public class Wave9RefreshTest {
             assertEquals("csrf_failed", W8.code(r));
             assertFalse(W8.plantsAuthCookie(r));
             assertNull(W8.object(r).get("accessToken"));
+            assertNull(W8.object(r).get("refreshToken"));
         }
         assertEquals(marks, refresh.marks.get());
         ClientResponse ok = cookieRefresh(s, "X-CSRF-Token", s[2]);
@@ -391,6 +392,7 @@ public class Wave9RefreshTest {
                 "naru_rt=" + s[1] + "; naru_csrf=" + s[2], "X-CSRF-Token", s[2]);
         assertEquals(403, evil.status());
         assertEquals("csrf_failed", W8.code(evil));
+        assertFalse("SEC-FLOW-007 AC-7: no auth cookie without the Origin check", W8.plantsAuthCookie(evil));
         assertEquals(marks, refresh.marks.get());
         assertEquals(200, cookieRefresh(s, "X-CSRF-Token", s[2]).status());
     }

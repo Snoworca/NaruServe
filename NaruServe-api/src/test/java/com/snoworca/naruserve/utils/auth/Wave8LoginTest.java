@@ -718,6 +718,54 @@ public class Wave8LoginTest {
         }
     }
 
+    // SEC-FLOW-007 AC-8 (the route does not run): BOTH, no Authorization, naru_at of family F with F's CSRF and Origin
+    // https://evil.example -> 403 csrf_failed and the handler is not entered; the same request same-origin enters it
+    @Test
+    public void SEC_FLOW_007_AC8_theRouteDoesNotRunOnAForeignOrigin() throws Exception {
+        AtomicInteger ran = new AtomicInteger();
+        String alice = f.user("alice", W8.PW, "reader");
+        f.routes = w -> w.app.post("/api/counted", w.auth.require("posts:read"), (req, res) -> {
+            ran.incrementAndGet();
+            res.status(201).send("ran");
+        });
+        f.start(b -> b.transport(TokenTransport.BOTH));
+        String at = f.auth.accessToken(alice, 0, 60_000L);
+        String csrf = f.auth.csrfTokens().issue(alice, f.fam(at));
+        String cookie = "naru_at=" + at + "; naru_csrf=" + csrf;
+        ClientResponse evil = f.post("/api/counted", "{}", "Host", W8.HOST, "Origin", W8.EVIL, "Cookie", cookie,
+                "X-CSRF-Token", csrf);
+        assertEquals(evil.text(), 403, evil.status());
+        assertEquals("csrf_failed", W8.code(evil));
+        assertEquals(0, ran.get());
+        ClientResponse same = f.post("/api/counted", "{}", "Host", W8.HOST, "Origin", W8.SAME, "Cookie", cookie,
+                "X-CSRF-Token", csrf);
+        assertEquals(same.text(), 201, same.status());
+        assertEquals(1, ran.get());
+    }
+
+    // SEC-FLOW-006 AC-7: the naru_csrf value and body csrfToken of a same-origin COOKIE login are base64url(random16)
+    // "." HMAC over sub "." fam "." random16 with the sub and fam of the access token issued with it, recomputed here
+    // with the JDK Mac over the CSRF key instead of through CsrfTokens
+    @Test
+    public void SEC_FLOW_006_AC7_theCsrfValueIsTheHmacOfSubFamRandom() throws Exception {
+        f.user("alice", W8.PW);
+        f.start(b -> b.transport(TokenTransport.COOKIE));
+        ClientResponse r = f.post("/auth/login", W8.login("alice", W8.PW), "Host", W8.HOST, "Origin", W8.SAME);
+        assertEquals(r.text(), 200, r.status());
+        String csrf = (String) W8.object(r).get("csrfToken");
+        assertEquals(csrf, W8.cookieValue(r, "naru_csrf"));
+        JwtClaims claims = f.auth.tokens().verifyAccess(W8.cookieValue(r, "naru_at"));
+        String[] parts = csrf.split("\\.");
+        assertEquals(2, parts.length);
+        assertEquals(16, Base64Url.decode(parts[0]).length);
+        byte[] key = com.snoworca.naruserve.utils.auth.internal.TokenKeys.keyFor(f.auth.keySet(),
+                f.auth.keySet().getSigningKid(), com.snoworca.naruserve.utils.auth.internal.TokenKeys.CSRF);
+        javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+        mac.init(new javax.crypto.spec.SecretKeySpec(key, "HmacSHA256"));
+        String input = claims.getSubject() + "." + claims.getString("fam") + "." + parts[0];
+        assertEquals(Base64Url.encode(mac.doFinal(input.getBytes(StandardCharsets.UTF_8))), parts[1]);
+    }
+
     // ---------------------------------------------------------------------------------------------- FR-FLOW-002
 
     // FR-FLOW-002 AC-5: BOTH login: no Origin and no Referer -> body; same-origin -> cookies with body csrfToken
@@ -766,6 +814,72 @@ public class Wave8LoginTest {
         assertEquals(cookieOnly.text(), 429, cookieOnly.status());
         ClientResponse header = f.post("/auth/login", W8.login("alice", W8.PW), "Naru-Device", device);
         assertEquals(header.text(), 200, header.status());
+    }
+
+    /** Starts {@code w} in {@code t} behind one proxy hop; a same-origin login's naru_device; fills the user-only key. */
+    private static String deviceThenAttack(W8 w, TokenTransport t) throws Exception {
+        w.user("alice", W8.PW);
+        w.proxied = true;
+        w.start(b -> b.transport(t).trustedOrigins("https://admin.example.com"));
+        String device = W8.cookieValue(w.post("/auth/login", W8.login("alice", W8.PW), "Host", W8.HOST, "Origin",
+                W8.SAME), "naru_device");
+        assertNotNull(device);
+        for (int i = 0; i < 10; i++) {
+            assertEquals(401, w.post("/auth/login", W8.login("alice", "guess-" + i), "Host", W8.HOST, "Origin", W8.SAME,
+                    "X-Forwarded-For", "198.51.100." + i).status());
+        }
+        return device;
+    }
+
+    private static ClientResponse sameOriginLogin(W8 w, String... more) {
+        String[] h = new String[4 + more.length];
+        h[0] = "Host";
+        h[1] = W8.HOST;
+        h[2] = "Origin";
+        h[3] = W8.SAME;
+        System.arraycopy(more, 0, h, 4, more.length);
+        return w.post("/auth/login", W8.login("alice", W8.PW), h);
+    }
+
+    // SEC-FLOW-013 AC-7 (COOKIE): the naru_device cookie is what a login reads (a Naru-Device header alone earns no
+    // exemption from the user-only key), and it is set by a login that passed the Origin check by its Origin, its
+    // Referer or trustedOrigins, never by one that failed it
+    @Test
+    public void SEC_FLOW_013_AC7_cookieModeUsesTheNaruDeviceCookie() throws Exception {
+        String device = deviceThenAttack(f, TokenTransport.COOKIE);
+        assertEquals(429, sameOriginLogin(f).status());
+        assertEquals(429, sameOriginLogin(f, "Naru-Device", device).status());
+        ClientResponse cookie = sameOriginLogin(f, "Cookie", "naru_device=" + device);
+        assertEquals(cookie.text(), 200, cookie.status());
+        assertNotNull(W8.cookieValue(cookie, "naru_device"));
+        assertNull(W8.object(cookie).get("deviceToken"));
+        f.stop();
+        W8 w = new W8();
+        try {
+            w.user("alice", W8.PW);
+            w.start(b -> b.transport(TokenTransport.COOKIE).trustedOrigins("https://admin.example.com"));
+            assertNotNull(W8.cookieValue(w.post("/auth/login", W8.login("alice", W8.PW), "Host", W8.HOST, "Referer",
+                    "https://app.test/login"), "naru_device"));
+            assertNotNull(W8.cookieValue(w.post("/auth/login", W8.login("alice", W8.PW), "Host", W8.HOST, "Origin",
+                    "https://admin.example.com"), "naru_device"));
+            assertNull(W8.setCookie(w.post("/auth/login", W8.login("alice", W8.PW), "Host", W8.HOST, "Origin", W8.EVIL),
+                    "naru_device"));
+        } finally {
+            w.stop();
+        }
+    }
+
+    // SEC-FLOW-013 AC-7 (BOTH): a login prefers the Naru-Device header, else the naru_device cookie: a valid header
+    // beside a junk cookie is trusted, a valid cookie alone is trusted, and a junk header beside a valid cookie is not
+    @Test
+    public void SEC_FLOW_013_AC7_bothModePrefersTheHeader() throws Exception {
+        String device = deviceThenAttack(f, TokenTransport.BOTH);
+        assertEquals(429, sameOriginLogin(f).status());
+        ClientResponse header = sameOriginLogin(f, "Naru-Device", device, "Cookie", "naru_device=junk");
+        assertEquals(header.text(), 200, header.status());
+        ClientResponse cookie = sameOriginLogin(f, "Cookie", "naru_device=" + device);
+        assertEquals(cookie.text(), 200, cookie.status());
+        assertEquals(429, sameOriginLogin(f, "Naru-Device", "junk", "Cookie", "naru_device=" + device).status());
     }
 
     // ---------------------------------------------------------------------------------------------- SEC-FLOW-002

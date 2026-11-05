@@ -161,6 +161,7 @@ public class Wave8AccountTest {
         ClientResponse evil = f.post("/auth/register", register("trinity", W8.PW), "Host", W8.HOST, "Origin", W8.EVIL);
         assertEquals(403, evil.status());
         assertEquals("csrf_failed", W8.code(evil));
+        assertTrue("SEC-FLOW-007 AC-7: no Set-Cookie without the Origin check", W8.setCookies(evil).isEmpty());
         assertNull(f.store.findByUsername("trinity"));
     }
 

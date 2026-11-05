@@ -174,6 +174,30 @@ public class Wave12TransportTest {
         assertTrue("no cookie is set", W8.setCookies(r).isEmpty());
     }
 
+    // SEC-FLOW-005 AC-1 (the real login, not a stand-in handler): any mode, a cross-origin form POST /auth/login with
+    // valid credentials -> 415, not 403; the login never ran (no hash) and no Set-Cookie is sent
+    @Test
+    public void SEC_FLOW_005_AC1_theRealLoginRefusesACrossOriginForm() throws Exception {
+        for (TokenTransport t : TokenTransport.values()) {
+            W8 w = other();
+            start(w, t, b -> b);
+            long slots = w.auth.hashSlots().requested();
+            unsupported(w.adapter.send(raw("POST", "/auth/login", "application/x-www-form-urlencoded",
+                    "username=alice&password=correct", "Host", W8.HOST, "Origin", W8.EVIL)));
+            assertEquals(t.toString(), slots, w.auth.hashSlots().requested());
+        }
+    }
+
+    // SEC-FLOW-005 AC-4 (the real endpoints): POST /auth/logout with Content-Length 5 and text/plain -> 415; POST
+    // /auth/login with Transfer-Encoding: chunked and text/plain -> 415
+    @Test
+    public void SEC_FLOW_005_AC4_theRealEndpointsCheckLengthAndChunked() throws Exception {
+        start(f, TokenTransport.HEADER, b -> b);
+        unsupported(f.adapter.send(raw("POST", "/auth/logout", "text/plain", "hello")));
+        unsupported(f.adapter.send(ClientRequest.of("POST", "/auth/login").header("Content-Type", "text/plain")
+                .header("Transfer-Encoding", "chunked").body("hello".getBytes(StandardCharsets.UTF_8))));
+    }
+
     // SEC-FLOW-005 AC-2: HEADER or BOTH, POST /auth/refresh with text/plain and a body holding a refresh token -> 415;
     // the token is not used (a later JSON refresh with it succeeds) and no cookie is set
     @Test
@@ -329,6 +353,44 @@ public class Wave12TransportTest {
                         && csrf.contains("Path=/;") && csrf.contains("Max-Age=" + refresh));
                 for (String c : new String[] {at, rt, csrf}) {
                     assertEquals(where + c, secure, c.contains("; Secure"));
+                }
+            }
+        }
+    }
+
+    // SEC-FLOW-013 AC-10: COOKIE or BOTH (cookie delivery), a same-origin login sets naru_device HttpOnly,
+    // SameSite=Strict, Path = mount + /login, Secure exactly when req.isSecure() and Max-Age 7776000; a password change
+    // with cookie delivery sets it with the same attributes
+    @Test
+    public void SEC_FLOW_013_AC10_deviceCookieOnLoginAndPasswordChange() throws Exception {
+        for (TokenTransport t : new TokenTransport[] {TokenTransport.COOKIE, TokenTransport.BOTH}) {
+            for (String mount : new String[] {"/auth", "/api/auth"}) {
+                for (boolean secure : new boolean[] {true, false}) {
+                    W8 w = other();
+                    w.user("alice", W8.PW, "reader");
+                    w.start("127.0.0.1", secure, b -> {
+                        Auth.Builder x = b.transport(t).mountPath(mount);
+                        return secure ? x : x.allowInsecureTransport("plain-text test");
+                    });
+                    String origin = secure ? W8.SAME : "http://" + W8.HOST;
+                    String where = t + " " + mount + (secure ? " https: " : " http: ");
+                    ClientResponse login = w.post(mount + "/login", W8.login("alice", W8.PW), "Host", W8.HOST,
+                            "Origin", origin);
+                    assertEquals(where + login.text(), 200, login.status());
+                    String set = W8.setCookie(login, "naru_device");
+                    assertNotNull(where, set);
+                    assertTrue(where + set, set.contains("HttpOnly") && set.contains("SameSite=Strict")
+                            && set.contains("Path=" + mount + "/login") && set.contains("Max-Age=7776000"));
+                    assertEquals(where + set, secure, set.contains("; Secure"));
+                    String csrf = (String) W8.object(login).get("csrfToken");
+                    ClientResponse change = w.post(mount + "/password",
+                            Wave9PasswordTest.change(W8.PW, "a brand new passphrase"), "Host", W8.HOST, "Origin", origin,
+                            "Cookie", "naru_at=" + W8.cookieValue(login, "naru_at") + "; naru_csrf=" + csrf,
+                            "X-CSRF-Token", csrf);
+                    assertEquals(where + change.text(), 200, change.status());
+                    String again = W8.setCookie(change, "naru_device");
+                    assertNotNull(where, again);
+                    assertEquals(where, set.substring(set.indexOf(';')), again.substring(again.indexOf(';')));
                 }
             }
         }

@@ -87,6 +87,17 @@ public class Wave8EndpointClassesTest {
         assertEquals(Arrays.asList("/login:none", "/register:none", "/setup:none", "/refresh:none"), reached);
     }
 
+    // SEC-FLOW-007 AC-1 (no principal is attached): COOKIE, a browser holding a valid naru_at, POST /auth/login with a
+    // same-origin Origin and no X-CSRF-Token -> the handler runs and sees no principal
+    @Test
+    public void SEC_FLOW_007_AC1_aHeldAccessCookieAttachesNoPrincipalOnLogin() throws Exception {
+        probe("127.0.0.1", true, b -> b.transport(TokenTransport.COOKIE), "/login");
+        String at = f.auth.accessToken(alice, 0, 60_000L);
+        ClientResponse r = f.post("/auth/login", "{}", "Host", W8.HOST, "Origin", W8.SAME, "Cookie", "naru_at=" + at);
+        assertEquals(r.text(), 200, r.status());
+        assertEquals(Arrays.asList("/login:none"), reached);
+    }
+
     // SEC-FLOW-003 AC-4: POST /auth/password with an expired Bearer -> 401 invalid_token with Bearer
     // error="invalid_token", the handler does not run; with keys on, POST /auth/me/apikeys with the same token and POST
     // /auth/admin/apikeys with a bad-signature Bearer -> the same 401 with ", ApiKey" appended

@@ -2,6 +2,7 @@ package com.snoworca.naruserve.utils.auth;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -249,6 +250,30 @@ public class Wave7LoginTest {
         Outcome gone = attempt(auth, "alice", PW, "203.0.113.9", d3);
         assertEquals("user gone: the deferred IP key", Kind.THROTTLED, gone.kind);
         assertFalse(gone.trustedDevice);
+    }
+
+    // SEC-FLOW-012 AC-4 (the user id differs): after alice is renamed and another user takes the name alice, the old
+    // token passes signature, expiry, fingerprint and ver but names another id: the deferred IP key and the user-only
+    // key are checked
+    @Test
+    public void SEC_FLOW_012_AC4_anotherUsersIdFallsBackToAllKeys() throws Exception {
+        AuthUser alice = user("alice", PW);
+        Auth auth = builder().build();
+        String d = deviceOf(auth, "alice", "10.0.0.1");
+        mem.update(mem.findById(alice.getId()).toBuilder().username("alice2").build());
+        AuthUser taken = user("alice", PW);
+        assertNotEquals(alice.getId(), taken.getId());
+        assertEquals(alice.getTokenVersion(), taken.getTokenVersion());
+        for (int i = 0; i < 20; i++) {
+            attempt(auth, "other" + (i % 5), "x", "203.0.113.9", null); // exhaust the IP key of .9
+        }
+        Outcome ipKey = attempt(auth, "alice", PW, "203.0.113.9", d);
+        assertEquals("the id differs: the deferred IP key", Kind.THROTTLED, ipKey.kind);
+        assertFalse(ipKey.trustedDevice);
+        for (int i = 0; i < 10; i++) {
+            attempt(auth, "alice", "wrong", "192.0.2." + i, null); // fills the user-only key
+        }
+        assertEquals("the id differs: the user-only key", Kind.THROTTLED, attempt(auth, "alice", PW, "10.1.1.2", d).kind);
     }
 
     // SEC-FLOW-012 AC-5: an attacker attaching the device token of their own account while guessing another name ->

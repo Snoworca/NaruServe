@@ -148,6 +148,12 @@ public class Wave8LogoutTest {
         }
     }
 
+    /** The 403 of a failed cookie-identity check: the code is csrf_failed, not another 403 such as insecure_transport. */
+    private static void csrfFailed(ClientResponse r) {
+        assertEquals(r.text(), 403, r.status());
+        assertEquals("csrf_failed", W8.code(r));
+    }
+
     private static void cleared(ClientResponse r) {
         for (String n : new String[] {"naru_at", "naru_rt", "naru_csrf"}) {
             String c = W8.setCookie(r, n);
@@ -233,7 +239,7 @@ public class Wave8LogoutTest {
         assertEquals(403, noCsrf.status());
         assertEquals("csrf_failed", W8.code(noCsrf));
         ClientResponse allNoCsrf = logout("?all=true", null, "Host", W8.HOST, "Origin", W8.SAME, "Cookie", cookie);
-        assertEquals(403, allNoCsrf.status());
+        csrfFailed(allNoCsrf);
         assertEquals(v, ver(alice));
         assertTrue(refresh.revoked.isEmpty());
         ClientResponse ok = logout("", null, "Host", W8.HOST, "Origin", W8.SAME, "Cookie", cookie,
@@ -252,7 +258,7 @@ public class Wave8LogoutTest {
         start(TokenTransport.COOKIE);
         String[] s = login("alice");
         String cookie = "naru_at=" + s[0] + "; naru_csrf=" + s[2];
-        assertEquals(403, logout("", null, "Host", W8.HOST, "Origin", W8.SAME, "Cookie", cookie).status());
+        csrfFailed(logout("", null, "Host", W8.HOST, "Origin", W8.SAME, "Cookie", cookie));
         assertTrue(refresh.revoked.isEmpty());
         assertEquals(204, logout("", null, "Host", W8.HOST, "Origin", W8.SAME, "Cookie", cookie, "X-CSRF-Token",
                 s[2]).status());
@@ -356,7 +362,7 @@ public class Wave8LogoutTest {
         }
         ClientResponse at = logout("", null, "Host", W8.HOST, "Origin", W8.EVIL, "Cookie", "naru_at=" + s[0]
                 + "; naru_csrf=" + s[2], "X-CSRF-Token", s[2]);
-        assertEquals(403, at.status());
+        csrfFailed(at);
         assertTrue(refresh.revoked.isEmpty());
         assertEquals(v, ver(alice));
     }
@@ -368,12 +374,10 @@ public class Wave8LogoutTest {
         start(TokenTransport.BOTH);
         String[] s = login("alice");
         String rt = "naru_rt=" + s[1] + "; naru_csrf=" + s[2];
-        assertEquals(403, logout("", null, "Host", W8.HOST, "Origin", W8.SAME, "Cookie", rt).status());
-        assertEquals(403, logout("", null, "Host", W8.HOST, "Origin", W8.EVIL, "Cookie", rt, "X-CSRF-Token", s[2])
-                .status());
+        csrfFailed(logout("", null, "Host", W8.HOST, "Origin", W8.SAME, "Cookie", rt));
+        csrfFailed(logout("", null, "Host", W8.HOST, "Origin", W8.EVIL, "Cookie", rt, "X-CSRF-Token", s[2]));
         String at = "naru_at=" + s[0] + "; naru_csrf=" + s[2];
-        assertEquals(403, logout("", null, "Host", W8.HOST, "Origin", W8.EVIL, "Cookie", at, "X-CSRF-Token", s[2])
-                .status());
+        csrfFailed(logout("", null, "Host", W8.HOST, "Origin", W8.EVIL, "Cookie", at, "X-CSRF-Token", s[2]));
         assertTrue(refresh.revoked.isEmpty());
         assertEquals(204, logout("", null, "Host", W8.HOST, "Origin", W8.SAME, "Cookie", at, "X-CSRF-Token", s[2])
                 .status());
@@ -401,6 +405,7 @@ public class Wave8LogoutTest {
             assertEquals(kind[0], 204, logout("", json, h).status());
             ClientResponse all = logout("?all=true", json, h);
             assertEquals(kind[0], 401, all.status());
+            assertEquals(kind[0], "invalid_token", W8.code(all));
             assertEquals("Bearer error=\"invalid_token\"", all.header("WWW-Authenticate"));
         }
         assertTrue(refresh.revoked.isEmpty());
@@ -426,6 +431,7 @@ public class Wave8LogoutTest {
             cleared(r);
             ClientResponse all = logout("?all=true", null, "Host", W8.HOST, "Origin", W8.SAME, "Cookie", cookie);
             assertEquals(cookie, 401, all.status());
+            assertEquals(cookie, "invalid_token", W8.code(all));
             assertEquals("Bearer error=\"invalid_token\"", all.header("WWW-Authenticate"));
         }
         assertEquals(v, ver(alice));
@@ -444,13 +450,29 @@ public class Wave8LogoutTest {
             refresh.revoked.clear();
             ClientResponse wrong = logout("", null, "Host", W8.HOST, "Origin", W8.SAME, "Cookie", cookie,
                     "X-CSRF-Token", g);
-            assertEquals(source, 403, wrong.status());
+            csrfFailed(wrong);
             assertTrue(refresh.revoked.isEmpty());
             ClientResponse right = logout("", null, "Host", W8.HOST, "Origin", W8.SAME, "Cookie", cookie,
                     "X-CSRF-Token", s[2]);
             assertEquals(source, 204, right.status());
             assertEquals(java.util.Collections.singletonList(f.fam(s[0])), refresh.revoked);
         }
+    }
+
+    // SEC-FLOW-013 AC-3 (the logout half): after POST /auth/logout?all=true (ver + 1) the old device token is no longer
+    // trusted by the login sequence
+    @Test
+    public void SEC_FLOW_013_AC3_logoutOfAllDevicesEndsTheDeviceToken() throws Exception {
+        start(TokenTransport.HEADER);
+        Map<String, Object> login = f.loginBody("alice", W8.PW);
+        String device = (String) login.get("deviceToken");
+        assertTrue(Wave7LoginTest.attempt(f.auth.passwordLogin(), "alice", W8.PW, "10.9.0.1", device).trustedDevice);
+        long v = ver(alice);
+        assertEquals(204, logout("?all=true", null, "Authorization", "Bearer " + login.get("accessToken")).status());
+        assertEquals(v + 1, ver(alice));
+        PasswordLogin.Outcome after = Wave7LoginTest.attempt(f.auth.passwordLogin(), "alice", W8.PW, "10.9.0.1", device);
+        assertEquals(PasswordLogin.Kind.SUCCESS, after.kind);
+        assertFalse(after.trustedDevice);
     }
 
     // ---------------------------------------------------------------------------------------------- FR-FLOW-003
