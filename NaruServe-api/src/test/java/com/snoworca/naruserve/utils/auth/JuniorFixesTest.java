@@ -10,6 +10,7 @@ import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.UnaryOperator;
 import org.junit.After;
 import org.junit.Test;
@@ -177,5 +178,31 @@ public class JuniorFixesTest {
         assertEquals(log.lines.toString(), 1, warns.size());
         assertTrue(warns.get(0), warns.get(0).contains(".user(\"hank\")"));
         assertFalse(warns.get(0), warns.get(0).contains("xyzzy"));
+    }
+
+    // FR-AUTH-004 AC-7: a .user password PROD refuses is not hashed
+    @Test
+    public void FR_AUTH_004_AC7_aRefusedSeedPasswordIsNotHashed() {
+        AuthBootstrapTest.CountingHasher hasher = new AuthBootstrapTest.CountingHasher();
+        try {
+            AuthTestSupport.builder().passwordHasher(hasher).passwordPolicy(PasswordPolicy.length(20, 128))
+                    .user("ivy", "first-password-1", "reader").build();
+            fail("PROD accepted a .user password below the policy");
+        } catch (AuthConfigException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains(".user(\"ivy\") password: "));
+        }
+        assertEquals(0, hasher.hashes.get());
+    }
+
+    // FR-AUTH-004 AC-7: the BreachedPasswordChecker is not consulted for .user passwords, in build() or at start
+    @Test
+    public void FR_AUTH_004_AC7_seedPasswordsSkipTheBreachChecker() {
+        final AtomicInteger consulted = new AtomicInteger();
+        W8 f = started("127.0.0.1", true, b -> b.breachedPasswordChecker(pw -> {
+            consulted.incrementAndGet();
+            return true;
+        }).user("hank", "long-enough-password", "reader"));
+        assertTrue(f.auth.users().toString(), f.store.findByUsername("hank") != null);
+        assertEquals(0, consulted.get());
     }
 }

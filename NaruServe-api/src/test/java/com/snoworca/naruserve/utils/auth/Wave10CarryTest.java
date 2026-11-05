@@ -198,6 +198,34 @@ public class Wave10CarryTest {
         assertTrue(rec.hashes.isEmpty() && rr.hashes.isEmpty() && rm.hashes.isEmpty());
     }
 
+    /** Recovers {@code name} on a fresh node and returns the events of that recovery. */
+    private List<String> recovered(String name, boolean enabled, String... roles) throws Exception {
+        W8 w = new W8();
+        others.add(w);
+        String id = w.user(name, W8.PW, roles);
+        if (!enabled) {
+            w.store.setEnabled(id, false);
+        }
+        Wave10AccountTest.Recorder rec = new Wave10AccountTest.Recorder();
+        w.start("127.0.0.1", false, b -> b.recovery(true).events(rec));
+        rec.calls.clear();
+        assertEquals(200, w.post("/auth/setup", "{\"token\":\"" + w.auth.pendingSetupToken() + "\",\"username\":\""
+                + name + "\",\"password\":\"a recovered passphrase\"}").status());
+        return new ArrayList<>(rec.calls);
+    }
+
+    // FR-AUTH-008 AC-3: recovery of an existing user reports only the changed subset of ENABLED, PASSWORD, ROLES: an
+    // enabled admin changes the password alone, a disabled admin adds ENABLED, an enabled reader adds ROLES
+    @Test
+    public void FR_AUTH_008_AC3_recoveryReportsTheChangedSubset() throws Exception {
+        assertEquals(Arrays.asList("onUserUpdated[PASSWORD]:RECOVERY", "onPasswordChanged:RECOVERY"),
+                recovered("ann", true, "admin"));
+        assertEquals(Arrays.asList("onUserUpdated[ENABLED, PASSWORD]:RECOVERY", "onPasswordChanged:RECOVERY"),
+                recovered("ben", false, "admin"));
+        assertEquals(Arrays.asList("onUserUpdated[PASSWORD, ROLES]:RECOVERY", "onPasswordChanged:RECOVERY"),
+                recovered("cid", true, "reader"));
+    }
+
     /** Refuses creation unless the origin is not REGISTER, like an app policy for self-registration only. */
     static final class RegisterPolicy implements AuthEvents {
         final List<Object> origins = new CopyOnWriteArrayList<>();

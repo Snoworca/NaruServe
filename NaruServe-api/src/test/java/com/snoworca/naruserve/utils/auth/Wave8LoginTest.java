@@ -1048,6 +1048,7 @@ public class Wave8LoginTest {
 
     // review regression (FR-FLOW-004 statement, PasswordLogin.attempt contract): a throttle failure before the hash
     // step is a 503, not a 500, and its message stays out of the body
+    // IR-AUTH-003 AC-4: a throttle 503 uses code SERVICE_UNAVAILABLE
     @Test
     public void throttleFailureBeforeTheHashIs503() throws Exception {
         f.user("alice", W8.PW);
@@ -1060,6 +1061,7 @@ public class Wave8LoginTest {
         }));
         ClientResponse r = f.post("/auth/login", W8.login("alice", W8.PW));
         assertEquals(r.text(), 503, r.status());
+        assertEquals("SERVICE_UNAVAILABLE", W8.code(r));
         assertFalse(r.text().contains("throttle table gone"));
     }
 

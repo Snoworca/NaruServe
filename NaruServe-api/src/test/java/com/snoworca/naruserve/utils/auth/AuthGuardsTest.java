@@ -138,6 +138,31 @@ public class AuthGuardsTest {
         assertEquals("true 0", t2.send("GET", "/me", AuthTestSupport.HEADER, cred(alice)).text());
     }
 
+    // IR-AUTH-004 AC-2: loadUser logs the store error it swallows, and a principal a guard already promoted comes back
+    // as that same principal with no further store call
+    @Test
+    public void IR_AUTH_004_AC2_storeErrorsAreLoggedAndAGuardPromotionIsKept() throws Exception {
+        CountingStore store = new CountingStore();
+        AuthUser alice = user(store, "alice", "editor");
+        com.snoworca.naruserve.testing.RecordingLogger log = new com.snoworca.naruserve.testing.RecordingLogger();
+        Auth auth = AuthTestSupport.builder(new AuthTestSupport.TestCredentials(), log).users(store).roles(POLICY)
+                .statelessAccess(true).userCacheTtl(0).build();
+        TestApp t = TestApp.create();
+        auth.install(t.app());
+        t.app().get("/open", (req, res) -> res.send(String.valueOf(auth.loadUser(req))));
+        t.app().get("/guarded", auth.authenticated(), (req, res) -> {
+            AuthPrincipal p = auth.user(req);
+            int before = store.finds.get();
+            AuthPrincipal again = auth.loadUser(req);
+            res.send(p.isLoaded() + " " + (again == p) + " " + (store.finds.get() - before));
+        });
+        assertEquals("true true 0", t.send("GET", "/guarded", AuthTestSupport.HEADER, cred(alice)).text());
+        store.failing = true;
+        assertEquals("null", t.send("GET", "/open", AuthTestSupport.HEADER, cred(alice)).text());
+        assertEquals(log.lines.toString(), 1, com.snoworca.naruserve.testing.RecordingLogger.countMatching(log.lines,
+                "ERROR auth: loadUser could not read the user store.*"));
+    }
+
     // IR-AUTH-004 AC-3: auth.require("posts:write") as a route middleware; 403 insufficient_scope; posts:* or * pass
     @Test
     public void IR_AUTH_004_AC3_requireScope() {

@@ -138,6 +138,22 @@ public class AuthDoctorTest {
                 ".*WARN.*deployment\\(MULTI_INSTANCE\\).*"));
     }
 
+    // FR-AUTH-003 AC-4: X-Forwarded-For alone is enough: the first such request logs the one WARN, later ones none
+    @Test
+    public void FR_AUTH_003_AC4_aForwardedForHeaderAloneWarnsOnce() {
+        RecordingLogger log = new RecordingLogger();
+        TestApp t = TestApp.create();
+        t.app().trustProxyHops(1);
+        AuthTestSupport.builder(new AuthTestSupport.TestCredentials(), log).permit("/x").build().install(t.app());
+        t.app().get("/x", (req, res) -> res.send("x"));
+        t.send("GET", "/x", "X-Forwarded-For", "198.51.100.1");
+        assertEquals(log.lines.toString(), 1, RecordingLogger.countMatching(log.lines,
+                ".*WARN.*deployment\\(MULTI_INSTANCE\\).*"));
+        t.send("GET", "/x", "X-Forwarded-For", "198.51.100.2");
+        assertEquals(log.lines.toString(), 1, RecordingLogger.countMatching(log.lines,
+                ".*WARN.*deployment\\(MULTI_INSTANCE\\).*"));
+    }
+
     // OPS-AUTH-001 component (restart logout): a custom UserStore under SINGLE_INSTANCE gets exactly one restart-logout WARN;
     // InMemoryUserStore gets none (setting the three shared stores comes with those stores)
     @Test

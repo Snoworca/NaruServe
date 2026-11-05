@@ -5,6 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.snoworca.naruserve.utils.auth.user.AuthUser;
+import com.snoworca.naruserve.utils.auth.user.InMemoryUserStore;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -72,6 +74,55 @@ public class AuthConfigTest {
         }
         assertTrue(refused(Auth.builder((String) null).config(AuthConfig.load(config("naru.auth.secret=file:"
                 + weak.getPath())))).getMessage().contains("4 bytes"));
+    }
+
+    /** A token signed by {@code viaConfig} verifies under an Auth built from {@code literal}, and under no other key. */
+    private static void signsWith(Auth.Builder viaConfig, InMemoryUserStore store, String literal) throws Exception {
+        AuthUser alice = store.findByUsername("alice");
+        String token = viaConfig.users(store).hashIterations(1000).build().tokens().issue(alice).getAccessToken();
+        Auth same = Auth.builder(literal).hashIterations(1000).users(store).build();
+        assertEquals(alice.getId(), same.tokens().verifyAccess(token).getSubject());
+        Auth other = Auth.builder("Hn4-another-key-of-enough-length-7Qz2Rt").hashIterations(1000).users(store).build();
+        try {
+            other.tokens().verifyAccess(token);
+            fail("another key verified the token");
+        } catch (AuthRejection expected) {
+            assertEquals("invalid_token", expected.getCode());
+        }
+    }
+
+    // FR-AUTH-002 AC-1: env:NAME resolves to the value of the variable: that value is the signing key
+    @Test
+    public void FR_AUTH_002_AC1_theEnvValueIsTheSigningKey() throws Exception {
+        InMemoryUserStore store = new InMemoryUserStore();
+        store.create(AuthUser.builder().username("alice").build());
+        signsWith(Auth.builder((String) null).config(AuthConfig.load(config("naru.auth.secret=env:NARU_TEST_AUTH_SECRET"))),
+                store, System.getenv("NARU_TEST_AUTH_SECRET"));
+    }
+
+    // FR-AUTH-002 AC-2: file:/path resolves to the content of the file (its surrounding whitespace removed): that
+    // content is the signing key
+    @Test
+    public void FR_AUTH_002_AC2_theFileContentIsTheSigningKey() throws Exception {
+        String content = "Zr8+Lq3/Vn6=Kt1Xw9Hb4Mc7Pd2Fs5Gy0Jq";
+        File secret = tmp.newFile("signing");
+        try (OutputStream out = new FileOutputStream(secret)) {
+            out.write((content + "\n").getBytes(StandardCharsets.UTF_8));
+        }
+        InMemoryUserStore store = new InMemoryUserStore();
+        store.create(AuthUser.builder().username("alice").build());
+        signsWith(Auth.builder((String) null).config(AuthConfig.load(config("naru.auth.secret=file:" + secret.getPath()))),
+                store, content);
+    }
+
+    // FR-AUTH-002 AC-2: an unreadable file (here a directory, which no user can read as a file) makes build() throw
+    // AuthConfigException naming the path
+    @Test
+    public void FR_AUTH_002_AC2_anUnreadableFileIsNamed() throws Exception {
+        File directory = tmp.newFolder("secrets");
+        AuthConfigException e = refused(Auth.builder((String) null)
+                .config(AuthConfig.load(config("naru.auth.secret=file:" + directory.getPath()))));
+        assertTrue(e.getMessage(), e.getMessage().contains(directory.getPath()));
     }
 
     // FR-AUTH-002 AC-3: an unknown key is named and never ignored

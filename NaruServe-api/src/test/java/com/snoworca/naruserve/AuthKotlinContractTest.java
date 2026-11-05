@@ -108,6 +108,11 @@ public class AuthKotlinContractTest {
         assertEquals(Collections.emptyList(), KotlinContractChecks.nonNullFailures(types));
         assertTrue(nullableReturn(jar("com.snoworca.naruserve.utils.auth.AuthEventContext"), "getOrigin"));
         assertTrue(nullableReturn(jar("com.snoworca.naruserve.utils.auth.AuthRejection"), "getRetryAfterSeconds"));
+        Class<?> auth = jar("com.snoworca.naruserve.utils.auth.Auth");
+        assertTrue(nullableReturn(auth, "userOrNull", jar("com.snoworca.naruserve.Request")));
+        assertTrue(nullableReturn(auth, "loadUser", jar("com.snoworca.naruserve.Request")));
+        assertFalse(nullableReturn(auth, "user", jar("com.snoworca.naruserve.Request")));
+        assertTrue(nullableReturn(jar("com.snoworca.naruserve.utils.auth.AuthPrincipal"), "getApiKeyId"));
         Class<?> user = jar("com.snoworca.naruserve.utils.auth.user.AuthUser");
         assertTrue(nullableReturn(user, "getPasswordHash"));
         assertTrue(nullableReturn(user, "getId"));

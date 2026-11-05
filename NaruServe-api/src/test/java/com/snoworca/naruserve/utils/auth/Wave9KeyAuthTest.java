@@ -820,6 +820,17 @@ public class Wave9KeyAuthTest {
         assertEquals(issued.getKey().getId(), e.getDetails().get("apiKeyId"));
     }
 
+    // FR-AUTH-009 AC-2: an ordinary API-key request that triggers no audited action produces no audit event
+    @Test
+    public void FR_AUTH_009_AC2_anOrdinaryKeyRequestIsNotAudited() throws Exception {
+        f.routes = w -> w.app.get("/api/who", w.auth.authenticated(), (req, res) -> res.send("ok"));
+        start(b -> b);
+        IssuedApiKey issued = f.auth.apiKeys().issue(owner, "ci", null, "posts:read");
+        audit.clear();
+        assertEquals(200, withKey("/api/who", issued.getPlainKey()).status());
+        assertEquals(audit.toString(), 0, audit.size());
+    }
+
     // SEC-APIKEY-007 AC-6: after the owner is demoted on node A, the key's effective scopes shrink on node A at once
     // and on another node within 5 seconds
     // SEC-IAM-003 AC-4: a demoted user (role removed, ver unchanged) loses the removed scopes on the acting node at once

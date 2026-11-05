@@ -418,6 +418,24 @@ public class AuthDocsTest {
                         + "only; `getUsername()` is empty). Apps use only `getId()` there | — |");
     }
 
+    // FR-AUTH-010 AC-6: both auth pages show app.use(auth) as the way to attach auth with install(app) as its equivalent,
+    // and both app pages document Installable under use(mw)
+    @Test
+    public void FR_AUTH_010_AC6_useAuthIsTheDocumentedWayToAttach() throws IOException {
+        contains("auth.md", read("docs/api/auth.md"),
+                "app.use(auth);                                        // auth.install(app)과 같음",
+                "**`app.use(auth)`는 `auth.install(app)`과 같습니다.**");
+        contains("en/auth.md", read("docs/api/en/auth.md"),
+                "app.use(auth);                                        // same as auth.install(app)",
+                "**`app.use(auth)` is the same as `auth.install(app)`.**");
+        contains("app.md", read("docs/api/app.md"),
+                "| `use(middleware)` | 모든 요청에 실행. 미들웨어가 `Installable`(예: auth)이면",
+                "`Installable`은 메서드 하나 `void install(RestApp app)`의 인터페이스입니다.");
+        contains("en/app.md", read("docs/api/en/app.md"),
+                "| `use(middleware)` | Every request. A middleware that is an `Installable` (such as auth)",
+                "`Installable` is an interface with one method, `void install(RestApp app)`.");
+    }
+
     // FR-AUTH-003 AC-6 (docs half): the profile table of both pages lists the policy defaults of BASELINE, STANDARD and
     // STRICT, token lifetimes and the new-password minimum included, and names STANDARD as the default profile
     @Test

@@ -120,6 +120,15 @@ public class UseAuthTest {
             });
             app.use("/api", r);
         });
+        failsLoudly("router without a prefix", (app, auth, reached) -> {
+            Router r = Router.create();
+            r.use(auth);
+            r.get("/api/x", (req, res) -> {
+                reached.set(true);
+                res.send("x");
+            });
+            app.use(r);
+        });
         failsLoudly("route", (app, auth, reached) -> app.get("/api/x", auth, (req, res) -> {
             reached.set(true);
             res.send("x");
