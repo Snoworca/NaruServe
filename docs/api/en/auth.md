@@ -1995,7 +1995,7 @@ auth.install(app)
 //   body: JSON.stringify({ownerUserId: botId, name: "ci-bot", scopes: ["posts:read"], password: myPassword})})
 ```
 
-A delete through a key endpoint (`DELETE /auth/me/apikeys/:id`, `DELETE /auth/admin/apikeys/:id`) and `auth.apiKeys().revoke` leave an `api_key_revoked` audit event: the deleted key is `revokedApiKeyId`, the target is the owner, a key with a recorded issuer also leaves `issuedByUserId`, and when an API-key actor deleted it, that actor's key is `apiKeyId`. When the key cannot be read before the delete, the revoke still goes on and its event has no `issuedByUserId`; for `auth.apiKeys().revoke` it has no target either. The event of `auth.apiKeys().revoke` has no actor, request id or IP.
+A delete through a key endpoint (`DELETE /auth/me/apikeys/:id`, `DELETE /auth/admin/apikeys/:id`) and `auth.apiKeys().revoke` leave an `api_key_revoked` audit event: the deleted key is `revokedApiKeyId`, the target is the owner, a key with a recorded issuer also leaves `issuedByUserId`, and when an API-key actor deleted it, that actor's key is `apiKeyId`. When the key cannot be read before the delete, the revoke still goes on and its event has no `issuedByUserId`; for `auth.apiKeys().revoke` it has no target either. The event of `auth.apiKeys().revoke` has no actor, request id or IP. The call takes no request, so this holds inside a route too, and the `apiKeyId` of the key that authenticated the request is not recorded either.
 
 Express counterpart: an issuance route that asks for the password again, like GitHub's "generate a personal access token".
 

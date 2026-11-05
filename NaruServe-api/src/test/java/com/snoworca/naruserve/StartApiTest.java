@@ -55,6 +55,8 @@ public class StartApiTest {
                 for (String banned : new String[] {"run", "startAsync", "await", "close"}) {
                     assertFalse(type.getSimpleName() + "." + banned, m.getName().equals(banned));
                 }
+                // getMethods also sees what RestApp inherits, so an instance start from a parent type is caught
+                assertTrue(type.getSimpleName() + ": " + m, !m.getName().equals("start") || m.equals(start));
             }
         }
         assertFalse(AutoCloseable.class.isAssignableFrom(ServerHandle.class));

@@ -122,10 +122,10 @@ supersede는 쓰지 않았습니다. 세 요구 모두 ID와 AC 번호를 유지
 ## 하지 않은 것과 남은 일
 
 - **WebSocket `OriginCheck`는 이 후속 수정에서 고치지 않았습니다**(지시대로). 당시 `OriginCheck.tuple`은 http(s)만 받아서 `webSocket(o -> o.allowedOrigins("capacitor://localhost"))`는 기동 경고만 내고 일치하지 않았습니다. **2026-11-06 사용자 지시로 해결했습니다**: FR-WS-003 AC-8을 더했고, 이제 `allowedOrigins`에 나열한 사용자 정의 스킴 origin이 일치합니다. 사용자 정의 스킴은 기본 포트가 없고 same-origin이 되지 않습니다.
-- **릴리스 기록을 다시 찍어야 합니다.** `docs/release/0.11.0-test-results.md`는 이전 커밋과 3775건을 적고 있습니다. 코드가 바뀌었으므로 태그 전에 새 커밋으로 다시 남겨야 합니다. 게이트는 이를 막지 않습니다.
-- **FR-AUTH-009 VE-13의 Notes가 낡았습니다.** "issuedByUserId is on no revoke event"는 그 테스트의 키(발급자 없음)에만 맞습니다. 해당 행은 `verified`에서 고칠 수 없어 같은 테스트를 가리키는 VE-16을 더했고 "supersedes VE-13's note"라고 적었습니다. 고치려면 다시 내려야 합니다.
+- **릴리스 기록은 다시 찍었습니다.** 코드가 바뀔 때마다 `docs/release/0.11.0-test-results.md`를 새 커밋으로 갱신합니다. 게이트는 이를 막지 않으므로 태그 전에 커밋이 맞는지 확인해야 합니다.
+- **FR-AUTH-009 VE-13의 Notes는 2026-11-06에 고쳤습니다.** "issuedByUserId is on no revoke event"는 그 테스트의 키(발급자 없음)에만 맞는 문장이었습니다.
 - **FR-DX-010 VE-1은 파일 단위 참조로 남겼습니다**(`covers: all`, 2026-10-21 기록). VE-2~VE-11은 전부 `path#method`입니다.
 - **IR-APIKEY-004 AC-6 문구:** `findById`를 "응답이 의존하는 호출"로 나열합니다. `/me` 삭제의 새 읽기는 응답이 의존하지 않고 삼키므로 그 AC의 뜻과 맞고, 해당 테스트도 통과했습니다. 문구는 고치지 않았습니다.
 - **FR-AUTH-005 Research 메모:** "whether adminRoutes moves ... is open"이라는 2026-10-30 기록은 당시 기록으로 두었습니다.
-- **평가 문서의 "범위 밖" 발견은 처리하지 않았습니다:** 요청 안에서 파사드를 부르는 경우의 `apiKeyId`(항목 2), AC-7 과장과 오진 메시지(항목 3).
+- **평가 문서의 "범위 밖" 발견은 2026-11-06에 처리했습니다.** AC-7 과장과 오진 메시지(항목 3)는 `Auth.install`이 다른 Auth를 마운트 경로가 아니라 등록된 객체로 찾게 고쳤습니다. 요청 안에서 파사드를 부르는 경우(항목 2)는 파사드가 요청을 받지 않으므로 코드를 바꾸지 않고, FR-AUTH-009 AC-2와 AC-3에 예외로 적고 테스트로 고정했습니다.
 - **실기기 확인은 없습니다.** WKWebView가 실제로 `Origin: capacitor://localhost`를 보내는지는 문서 근거이고, 평가가 권한 기기 확인 한 번은 아직 하지 않았습니다.

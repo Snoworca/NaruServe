@@ -1425,6 +1425,36 @@ public class Wave10PatTest {
         }
     }
 
+    // FR-AUTH-009 AC-2, AC-3: auth.apiKeys() takes no request, so its event has no request context even inside a route
+    @Test
+    public void FR_AUTH_009_AC2_AC3_facadeEventInsideARouteHasNoRequestContext() throws Exception {
+        f.attach = (a, app) -> {
+            a.install(app);
+            app.get("/facade/:id", (req, res) -> res.send(String.valueOf(a.apiKeys().revoke(req.param("id")))));
+        };
+        start(b -> b);
+        IssuedApiKey actor = f.auth.apiKeys().issue(u1, "actor", null, "posts:read");
+        IssuedApiKey victim = f.auth.apiKeys().issue(u1, "victim", null, "posts:read");
+        audit.clear();
+        ClientResponse r = f.get("/facade/" + victim.getKey().getId(), "Authorization", "ApiKey " + actor.getPlainKey());
+        assertEquals(r.text(), 200, r.status());
+        assertEquals("true", r.text());
+        List<AuditEvent> revoked = new ArrayList<>();
+        for (AuditEvent e : audit) {
+            if (AuditEvent.API_KEY_REVOKED.equals(e.getType())) {
+                revoked.add(e);
+            }
+        }
+        assertEquals(audit.toString(), 1, revoked.size());
+        AuditEvent event = revoked.get(0);
+        assertEquals(victim.getKey().getId(), event.getDetails().get("revokedApiKeyId"));
+        assertEquals(u1, event.getTargetId());
+        assertEquals(null, event.getActorId());
+        assertEquals(null, event.getRequestId());
+        assertEquals(null, event.getSourceIp());
+        assertFalse(event.getDetails().containsKey("apiKeyId"));
+    }
+
     // FR-AUTH-009 AC-2 (00 R47 (3), (6)): a key with a recorded issuer carries it on the revoke event too, on all three
     // revoke paths: DELETE /auth/me/apikeys/:id, DELETE /auth/admin/apikeys/:id and auth.apiKeys().revoke
     @Test

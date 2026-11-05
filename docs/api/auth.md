@@ -1995,7 +1995,7 @@ auth.install(app)
 //   body: JSON.stringify({ownerUserId: botId, name: "ci-bot", scopes: ["posts:read"], password: myPassword})})
 ```
 
-키 엔드포인트의 삭제(`DELETE /auth/me/apikeys/:id`, `DELETE /auth/admin/apikeys/:id`)와 `auth.apiKeys().revoke`는 `api_key_revoked` 감사 이벤트를 남깁니다. 지운 키는 `revokedApiKeyId`, 대상은 소유자이고, 발급자가 기록된 키면 `issuedByUserId`도 남습니다. API 키 행위자가 지웠으면 그 행위자의 키가 `apiKeyId`입니다. 지우기 전에 키를 읽지 못해도 철회는 진행되고 그 이벤트에는 `issuedByUserId`가 없으며, `auth.apiKeys().revoke`는 대상도 없습니다. `auth.apiKeys().revoke`의 이벤트에는 행위자, 요청 id, IP가 없습니다.
+키 엔드포인트의 삭제(`DELETE /auth/me/apikeys/:id`, `DELETE /auth/admin/apikeys/:id`)와 `auth.apiKeys().revoke`는 `api_key_revoked` 감사 이벤트를 남깁니다. 지운 키는 `revokedApiKeyId`, 대상은 소유자이고, 발급자가 기록된 키면 `issuedByUserId`도 남습니다. API 키 행위자가 지웠으면 그 행위자의 키가 `apiKeyId`입니다. 지우기 전에 키를 읽지 못해도 철회는 진행되고 그 이벤트에는 `issuedByUserId`가 없으며, `auth.apiKeys().revoke`는 대상도 없습니다. `auth.apiKeys().revoke`의 이벤트에는 행위자, 요청 id, IP가 없습니다. 이 호출은 요청을 받지 않으므로 라우트 안에서 불러도 같고, 요청을 인증한 키의 `apiKeyId`도 남지 않습니다.
 
 Express 대응: GitHub의 "개인 액세스 토큰 만들기"처럼 비밀번호를 다시 묻는 발급 라우트.
 

@@ -173,6 +173,41 @@ public class AuthInstallTest {
         }
     }
 
+    // FR-AUTH-005 AC-7: the first Auth is found by what it is, so a second one with another mount path is named too
+    @Test
+    public void FR_AUTH_005_AC7_secondAuthWithAnotherMountPathIsNamed() {
+        TestApp t = TestApp.create();
+        AuthTestSupport.builder().build().install(t.app());
+        try {
+            AuthTestSupport.builder().mountPath("/api/auth").build().install(t.app());
+            fail("another Auth installed on the same app");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("another Auth is already installed on this app"));
+            assertTrue(e.getMessage(), e.getMessage().contains("mounted at /auth)"));
+        }
+    }
+
+    // FR-AUTH-005 AC-7: an app route under the first Auth's mount path is an app route, so the order message stays
+    @Test
+    public void FR_AUTH_005_AC7_appRouteUnderTheFirstMountKeepsTheOrderMessage() {
+        TestApp t = TestApp.create();
+        AuthTestSupport.builder().build().install(t.app());
+        t.app().get("/auth/extra", (req, res) -> res.send("x"));
+        try {
+            AuthTestSupport.builder().build().install(t.app());
+            fail("installed after a route");
+        } catch (IllegalStateException e) {
+            assertEquals("auth.install(app) must come before routes; found GET /auth/extra registered before it",
+                    e.getMessage());
+        }
+    }
+
+    // FR-AUTH-005 AC-1: the app's own router at the mount path is that registration, not another Auth
+    @Test
+    public void FR_AUTH_005_AC1_appRouterAtTheMountPathIsNamedAsThatRegistration() throws Exception {
+        refusedAfter(app -> app.use("/auth", Router.create()), "ROUTER_MOUNT /auth");
+    }
+
     // FR-AUTH-005 component (mount path): .mountPath("/api/auth") mounts the account router there, and /auth/login is then
     // an ordinary protected path (the login endpoint itself comes with the login requirement)
     @Test

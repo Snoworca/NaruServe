@@ -567,6 +567,15 @@ public final class Auth implements Middleware, com.snoworca.naruserve.Installabl
 
     // ---------------------------------------------------------------------------------------------- install
 
+    /** True when {@code r} is one of this auth's two router mounts or was expanded under one. */
+    private boolean ownsMount(Registration r) {
+        Registration top = r;
+        while (top.getMount() != null) {
+            top = top.getMount();
+        }
+        return top.getTarget() == mountedRoutes || top.getTarget() == mountedAdminRoutes;
+    }
+
     /**
      * Attaches auth to {@code app}; call it before any route. Throws {@link IllegalStateException} when the app
      * already holds a route, WebSocket route, static mount, router mount or group (a second install is one of those).
@@ -587,16 +596,15 @@ public final class Auth implements Middleware, com.snoworca.naruserve.Installabl
             throw new IllegalStateException("auth is already installed" + (this.app == app ? " on this app" : " on "
                     + "another app") + "; call app.use(auth) or auth.install(app) once, and build one Auth per app");
         }
-        boolean otherAuth = false;
+        Auth otherAuth = null;
         for (Registration r : app.registrations()) {
-            if (r.getKind() == RegistrationKind.ROUTER_MOUNT && mountPath.equals(r.getPath())) {
-                otherAuth = true; // OPS-AUTH-024 AC-7: named below unless an app route is in the way too
+            if (r.getTarget() instanceof Auth && ((Auth) r.getTarget()).app == app) {
+                otherAuth = (Auth) r.getTarget(); // OPS-AUTH-024 AC-7: named below unless an app route is in the way too
             }
         }
         for (Registration r : app.registrations()) {
             RegistrationKind k = r.getKind();
-            String at = r.getPath();
-            if (otherAuth && at != null && (at.equals(mountPath) || at.startsWith(mountPath + "/"))) {
+            if (otherAuth != null && otherAuth.ownsMount(r)) {
                 continue; // the other Auth's own endpoints
             }
             if (k == RegistrationKind.ROUTE || k == RegistrationKind.WEBSOCKET || k == RegistrationKind.STATIC
@@ -605,9 +613,9 @@ public final class Auth implements Middleware, com.snoworca.naruserve.Installabl
                         + " registered before it");
             }
         }
-        if (otherAuth) {
+        if (otherAuth != null) {
             throw new IllegalStateException("another Auth is already installed on this app (its endpoints are mounted "
-                    + "at " + mountPath + "); build one Auth per app and install it once");
+                    + "at " + otherAuth.mountPath + "); build one Auth per app and install it once");
         }
         if (app.state() != AppState.NEW) { // OPS-AUTH-021 AC-5
             throw new IllegalStateException("auth.install(app) must run before app.listen(...); the app is "
