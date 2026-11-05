@@ -60,7 +60,7 @@ public class JuniorRound10Test {
     public void OPS_AUTH_022_AC2_keyWithoutSchemeNamesTheScheme() {
         W8 f = fixture();
         f.start(b -> b.apiKeys(new AdminFixture.ListKeys()));
-        for (String h : new String[] {KEY, "Api-Key " + KEY}) {
+        for (String h : new String[] {KEY, "Token " + KEY, "Api-Key " + KEY}) {
             ClientResponse r = f.get("/api/x", "Authorization", h);
             assertEquals(h, 401, r.status());
             assertTrue(message(r), message(r).contains("an API key goes in the Authorization header as ApiKey <key>"));
@@ -148,16 +148,34 @@ public class JuniorRound10Test {
         }
     }
 
-    // OPS-AUTH-022 AC-1 (partial): with API keys off, a bare nk_ value or one under another scheme says so too; a Bearer
-    // nk_ value does not, so it is not asserted here (docs/analysis/verify-0.11.0/batch-10.md, PRODUCT-GAP)
+    // OPS-AUTH-022 AC-1: with API keys off, a bare nk_ value or one under another scheme says so too
     @Test
     public void OPS_AUTH_022_AC1_nkFormWithKeysOffIsNamed() {
         W8 f = fixture();
         f.start(b -> b);
-        for (String h : new String[] {KEY, "Token " + KEY}) {
+        for (String h : new String[] {KEY, "Token " + KEY, "Api-Key " + KEY}) {
             ClientResponse r = f.get("/api/x", "Authorization", h);
             assertEquals(h, 401, r.status());
             assertTrue(h + ": " + message(r), message(r).contains("API keys are off") && message(r).contains(".apiKeys(store)"));
+        }
+    }
+
+    // OPS-AUTH-022 AC-1, AC-2: Authorization: Bearer nk_... stays with OPS-AUTH-021 AC-8, with API keys off and on,
+    // wherever auth reads Bearer tokens
+    @Test
+    public void OPS_AUTH_022_AC1_AC2_bearerKeyAnswersPerOpsAuth021Ac8() {
+        for (TokenTransport transport : new TokenTransport[] {TokenTransport.HEADER, TokenTransport.BOTH}) {
+            W8 off = fixture();
+            off.start(b -> b.transport(transport));
+            W8 on = fixture();
+            on.start(b -> b.transport(transport).apiKeys(new AdminFixture.ListKeys()));
+            for (W8 f : new W8[] {off, on}) {
+                ClientResponse r = f.get("/api/x", "Authorization", "Bearer " + KEY);
+                assertEquals(r.text(), 401, r.status());
+                assertEquals("invalid_token", W8.code(r));
+                assertTrue(message(r), message(r).startsWith("the token is an API key, not an access token")
+                        && message(r).contains("Authorization: ApiKey <key>"));
+            }
         }
     }
 }

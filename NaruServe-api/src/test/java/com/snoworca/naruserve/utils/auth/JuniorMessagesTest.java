@@ -60,6 +60,12 @@ public class JuniorMessagesTest {
         ClientResponse register = f.post("/auth/register", "{\"name\":\"neo\",\"password\":\"long-enough-pw\"}");
         assertEquals(register.text(), 400, register.status());
         assertEquals("username must be a JSON string", message(register));
+        for (String body : new String[] {"{\"username\":\"neo\"}", "{\"username\":\"neo\",\"password\":5}"}) {
+            ClientResponse noPw = f.post("/auth/register", body);
+            assertEquals(noPw.text(), 400, noPw.status());
+            assertEquals("BAD_REQUEST", W8.code(noPw));
+            assertEquals("password must be a non-empty JSON string", message(noPw));
+        }
     }
 
     // OPS-AUTH-006 AC-2 (amended by OPS-AUTH-021 AC-8): an expired access token mentions expiry and refresh; a
@@ -161,8 +167,7 @@ public class JuniorMessagesTest {
         }
     }
 
-    // OPS-AUTH-006 AC-1 (partial): setup names the field as login does; the missing-password text still differs from
-    // login's, so this test does not assert it (docs/analysis/verify-0.11.0/batch-10.md, PRODUCT-GAP)
+    // OPS-AUTH-006 AC-1: setup carries login's field messages
     @Test
     public void OPS_AUTH_006_AC1_setupBodyErrorsNameTheField() {
         W8 f = new W8();
@@ -175,7 +180,7 @@ public class JuniorMessagesTest {
         assertEquals("username must be a JSON string", message(noName));
         ClientResponse noPassword = f.post("/auth/setup", "{\"token\":\"" + token + "\",\"username\":\"admin\"}");
         assertEquals(noPassword.text(), 400, noPassword.status());
-        assertTrue(noPassword.text(), message(noPassword).startsWith("password must be a "));
+        assertEquals("password must be a non-empty JSON string", message(noPassword));
     }
 
     // OPS-AUTH-006 AC-1: any other HttpException in the auth routers answers without its message

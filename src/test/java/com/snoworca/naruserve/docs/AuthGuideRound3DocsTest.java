@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.Test;
 
@@ -175,6 +176,22 @@ public class AuthGuideRound3DocsTest {
         for (String f : GUIDES) {
             for (String b : holding(f, read(f), "tokens().issue(")) {
                 assertFalse(f + ": undefined id in\n" + b, b.contains("findById(id)"));
+            }
+        }
+    }
+
+    // OPS-AUTH-011 AC-10: every token-issue example passes the value auth.users().create(...) returned in that block
+    @Test
+    public void OPS_AUTH_011_AC10_tokenExampleIssuesTheCreatedUser() throws IOException {
+        Pattern issue = Pattern.compile("tokens\\(\\)\\.issue\\((\\w+)");
+        for (String f : GUIDES) {
+            for (String b : holding(f, read(f), "tokens().issue(")) {
+                Matcher m = issue.matcher(b);
+                assertTrue(f + ": no issue argument in\n" + b, m.find());
+                do {
+                    assertTrue(f + ": " + m.group(1) + " is not the created user in\n" + b,
+                            b.contains(m.group(1) + " = auth.users().create(\""));
+                } while (m.find());
             }
         }
     }

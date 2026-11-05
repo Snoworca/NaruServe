@@ -22,6 +22,8 @@ import com.snoworca.naruserve.utils.auth.user.ForwardingUserStore;
 import com.snoworca.naruserve.utils.auth.user.InMemoryUserStore;
 import com.snoworca.naruserve.utils.auth.user.UserStore;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1089,6 +1091,19 @@ public class Wave9KeyOwnersTest {
             assertNull(back.getPasswordHash());
             assertTrue(s.findByUsername("svc").isServiceAccount());
         }
+    }
+
+    // FR-APIKEY-006 AC-6: the UserStore Javadoc tells an app-provided store to persist the service-account flag
+    @Test
+    public void FR_APIKEY_006_AC6_userStoreJavadocRequiresTheFlag() throws Exception {
+        File dir = new File("").getAbsoluteFile();
+        File source = new File(dir, "src/main/java/com/snoworca/naruserve/utils/auth/user/UserStore.java");
+        if (!source.isFile()) {
+            source = new File(dir, "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/UserStore.java");
+        }
+        String text = new String(Files.readAllBytes(source.toPath()), StandardCharsets.UTF_8);
+        String typeJavadoc = text.substring(0, text.indexOf("public interface UserStore"));
+        assertTrue(typeJavadoc, typeJavadoc.contains("An app-provided store must persist the service-account flag"));
     }
 
     // FR-APIKEY-006 AC-7: audit events for actions by a service account mark the actor as a service account

@@ -262,6 +262,7 @@ public class AuthBuilderTest {
     public void SEC_AUTH_002_AC1_fromEnvAndDefaultMode() {
         assertEquals(AuthMode.DEV, AuthMode.fromEnvValue("dev"));
         assertEquals(AuthMode.DEV, AuthMode.fromEnvValue("DEV"));
+        assertEquals(AuthMode.DEV, AuthMode.fromEnvValue("Dev"));
         for (String other : Arrays.asList(null, "", "prod", "production", "develop", " dev")) {
             assertEquals(String.valueOf(other), AuthMode.PROD, AuthMode.fromEnvValue(other));
         }

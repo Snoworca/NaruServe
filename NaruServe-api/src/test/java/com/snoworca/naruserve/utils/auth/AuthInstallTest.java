@@ -168,8 +168,8 @@ public class AuthInstallTest {
         try {
             AuthTestSupport.builder().build().install(t.app());
             fail("another Auth installed on the same app");
-        } catch (IllegalStateException expected) {
-            // the same rule for a different instance
+        } catch (IllegalStateException e) { // OPS-AUTH-024 AC-7 replaced the before-routes message for this case
+            assertTrue(e.getMessage(), e.getMessage().contains("another Auth is already installed on this app"));
         }
     }
 

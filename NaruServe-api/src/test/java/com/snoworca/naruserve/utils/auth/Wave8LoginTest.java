@@ -1183,7 +1183,7 @@ public class Wave8LoginTest {
     }
 
     // OPS-FLOW-001 AC-3 (what the page states is what Core does): capacitor://localhost cannot be listed in
-    // CorsOptions.allowedOrigins, so the app.cors set-up FR-FLOW-002 AC-5 names cannot be built as written
+    // CorsOptions.allowedOrigins, which is why FR-FLOW-002 AC-5 keeps it out of the app.cors list
     @Test
     public void OPS_FLOW_001_AC3_capacitorIsRefusedByAllowedOrigins() throws Exception {
         f.user("alice", W8.PW);

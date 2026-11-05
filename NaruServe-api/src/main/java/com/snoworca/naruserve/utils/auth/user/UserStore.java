@@ -17,6 +17,8 @@ import org.jspecify.annotations.Nullable;
  *   <li>ver should be read-after-write consistent; this is recommended under MULTI_INSTANCE.</li>
  *   <li>{@link #findByUsername(String)} receives the already-normalized username (NFKC, lower case); which column it
  *   matches (name, e-mail, employee number) is the store's choice.</li>
+ *   <li>An app-provided store must persist the service-account flag ({@link AuthUser#isServiceAccount()}): a row that
+ *   loses it becomes an ordinary user.</li>
  * </ul>
  *
  * <p>The five field methods are defaults that auth runs under a per-user lock: they read the row with

@@ -193,6 +193,15 @@ final class AccountEndpoints {
         return (String) v;
     }
 
+    /** OPS-AUTH-006 AC-1: register and setup answer a missing password with login's text. */
+    private static String passwordField(Map<String, Object> body) {
+        Object v = body.get("password");
+        if (!(v instanceof String)) {
+            throw new ShownError(400, "password must be a non-empty JSON string");
+        }
+        return (String) v;
+    }
+
     private static String normalized(String username) {
         try {
             return Usernames.normalize(username);
@@ -955,7 +964,7 @@ final class AccountEndpoints {
         final boolean cookies = cookieDelivery(req);
         Map<String, Object> body = body(req);
         final String name = normalized(string(body, "username"));
-        final char[] pw = string(body, "password").toCharArray();
+        final char[] pw = passwordField(body).toCharArray();
         checkNewPassword(pw);
         final UserStore store = auth.userStore();
         AuthUser taken;
@@ -1026,7 +1035,7 @@ final class AccountEndpoints {
             throw new ShownError(400, "token must be a JSON string");
         }
         final String username = string(body, "username");
-        final String password = string(body, "password");
+        final String password = passwordField(body);
         if (!ConstantTime.equals(((String) token).getBytes(StandardCharsets.UTF_8),
                 open.token.getBytes(StandardCharsets.UTF_8))) {
             throw new AuthRejection(AuthErrorCode.INVALID_SETUP_TOKEN.getStatus(),

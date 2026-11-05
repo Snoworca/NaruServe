@@ -1392,4 +1392,33 @@ public class Wave10PatTest {
         assertEquals(third.getKey().getId(), revoked.get(2).getDetails().get("revokedApiKeyId"));
         assertEquals(actorKey.getKey().getId(), revoked.get(2).getDetails().get("apiKeyId"));
     }
+
+    // FR-AUTH-009 AC-2: the app calls carry the key id too; issuedByUserId is on the issue event of a key endpoint only,
+    // so auth.apiKeys().issue (no issuer) and every revoke event leave it out
+    @Test
+    public void FR_AUTH_009_AC2_issueAndRevokeEventsCarryTheKeyId() throws Exception {
+        start(b -> b);
+        IssuedApiKey viaCall = f.auth.apiKeys().issue(u1, "call", null, "posts:read");
+        IssuedApiKey viaEndpoint = f.auth.apiKeys().issue(u1, "endpoint", null, "posts:read");
+        assertTrue(f.auth.apiKeys().revoke(viaCall.getKey().getId()));
+        assertEquals(204, send("DELETE", "/auth/me/apikeys/" + viaEndpoint.getKey().getId(), bearer(u1)).status());
+        List<AuditEvent> issued = new ArrayList<>();
+        List<AuditEvent> revoked = new ArrayList<>();
+        for (AuditEvent e : audit) {
+            if (AuditEvent.API_KEY_ISSUED.equals(e.getType())) {
+                issued.add(e);
+            } else if (AuditEvent.API_KEY_REVOKED.equals(e.getType())) {
+                revoked.add(e);
+            }
+        }
+        assertEquals(audit.toString(), 2, issued.size());
+        assertEquals(viaCall.getKey().getId(), issued.get(0).getDetails().get("apiKeyId"));
+        assertFalse(issued.get(0).getDetails().containsKey("issuedByUserId"));
+        assertEquals(audit.toString(), 2, revoked.size());
+        assertEquals(viaCall.getKey().getId(), revoked.get(0).getDetails().get("revokedApiKeyId"));
+        assertEquals(viaEndpoint.getKey().getId(), revoked.get(1).getDetails().get("revokedApiKeyId"));
+        for (AuditEvent e : revoked) {
+            assertFalse(e.getDetails().containsKey("issuedByUserId"));
+        }
+    }
 }
