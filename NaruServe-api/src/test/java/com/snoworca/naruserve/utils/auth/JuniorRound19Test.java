@@ -72,4 +72,27 @@ public class JuniorRound19Test {
             assertTrue(e.getMessage(), e.getMessage().contains("not base64"));
         }
     }
+
+    // OPS-AUTH-031 AC-2: the empty Bearer answer is 401 invalid_token
+    @Test
+    public void OPS_AUTH_031_AC2_emptyBearerIs401InvalidToken() {
+        W8 f = fixture();
+        f.start(b -> b);
+        ClientResponse r = f.get("/api/x", "Authorization", "Bearer ");
+        assertEquals(r.text(), 401, r.status());
+        assertEquals("invalid_token", W8.code(r));
+    }
+
+    // OPS-AUTH-031 AC-3: neither refusal echoes the value it got
+    @Test
+    public void OPS_AUTH_031_AC3_fileKeyRefusalsDoNotEchoTheValue() {
+        for (String value : new String[] {"q6Cz0bT4mW9xN2rE7kJ5vH8sL1pF3dG6aY0u", "not base64 !!"}) {
+            try {
+                AuthFileKey.of(value);
+                fail("accepted");
+            } catch (IllegalArgumentException e) {
+                assertTrue(e.getMessage(), !e.getMessage().contains(value));
+            }
+        }
+    }
 }

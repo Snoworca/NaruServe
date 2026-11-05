@@ -163,6 +163,93 @@ public class JuniorFinalItemsTest {
         assertTrue(log.lines.toString(), RecordingLogger.matching(log.lines, "(?s)ERROR .*never installed.*").isEmpty());
     }
 
+    // OPS-AUTH-033 AC-1: the final layer comes after the app's error layers: an app handler answers first, and an error
+    // middleware that passes the exception on still ends in the JSON answer
+    @Test
+    public void OPS_AUTH_033_AC1_appErrorLayersAnswerFirst() {
+        W8 own = fixture();
+        own.errors = null;
+        own.routes = w -> {
+            appRoutes(w);
+            w.app.onError((err, req, res) -> res.status(418).send("mine"));
+        };
+        own.start(b -> b.permit("/boom"));
+        ClientResponse mine = own.get("/boom");
+        assertEquals(mine.text(), 418, mine.status());
+        assertEquals("mine", mine.text());
+
+        java.util.concurrent.atomic.AtomicInteger seen = new java.util.concurrent.atomic.AtomicInteger();
+        W8 passing = fixture();
+        passing.errors = null;
+        passing.routes = w -> {
+            appRoutes(w);
+            w.app.use((com.snoworca.naruserve.ErrorMiddleware) (err, req, res, next) -> {
+                seen.incrementAndGet();
+                next.error(err);
+            });
+        };
+        passing.start(b -> b.permit("/boom"));
+        ClientResponse boom = passing.get("/boom");
+        assertEquals(1, seen.get());
+        assertEquals(boom.text(), 500, boom.status());
+        assertEquals("INTERNAL_ERROR", W8.code(boom));
+        assertFalse(boom.text(), boom.text().contains("IllegalStateException"));
+    }
+
+    // OPS-AUTH-033 AC-1: a Core HttpException keeps its status; below 500 its message, from 500 no message
+    @Test
+    public void OPS_AUTH_033_AC1_httpExceptionKeepsStatusAndHidesMessageFrom500() {
+        W8 f = fixture();
+        f.errors = null;
+        f.routes = w -> {
+            w.app.get("/teapot", (req, res) -> {
+                throw new HttpException(418, "short and stout");
+            });
+            w.app.get("/down", (req, res) -> {
+                throw new HttpException(503, "db password=hunter2 failed");
+            });
+        };
+        f.start(b -> b.permit("/teapot").permit("/down"));
+        ClientResponse teapot = f.get("/teapot");
+        assertEquals(teapot.text(), 418, teapot.status());
+        assertTrue(teapot.header("Content-Type"), teapot.header("Content-Type").startsWith("application/json"));
+        assertEquals("short and stout", message(teapot));
+        ClientResponse down = f.get("/down");
+        assertEquals(down.text(), 503, down.status());
+        assertTrue(down.header("Content-Type"), down.header("Content-Type").startsWith("application/json"));
+        assertFalse(down.text(), down.text().contains("hunter2"));
+    }
+
+    // OPS-AUTH-033 AC-2: OPTIONS passes the final layer on: neither its 405 nor its 404 answers it
+    @Test
+    public void OPS_AUTH_033_AC2_optionsPassesOn() throws Exception {
+        W8 f = fixture();
+        f.start(b -> b);
+        String t = token(f);
+        for (String path : new String[] {"/auth/logout", "/auth/nothing"}) {
+            ClientResponse r = f.adapter.send(ClientRequest.of("OPTIONS", path).header("Authorization", "Bearer " + t));
+            assertFalse(r.text(), r.text().contains("this endpoint takes") || r.text().contains("no auth endpoint serves"));
+        }
+    }
+
+    // OPS-AUTH-033 AC-3: username points at A4 and auth.users().rename, and a refused body changes nothing
+    @Test
+    public void OPS_AUTH_033_AC3_patchMeNamesRenameAndChangesNothing() throws Exception {
+        W8 f = fixture();
+        f.start(b -> b.allowedAttributes("displayName"));
+        String t = token(f);
+        String id = f.store.findByUsername("bob").getId();
+        ClientResponse name = f.adapter.send(ClientRequest.json("PATCH", "/auth/me", "{\"username\":\"robert\"}")
+                .header("Authorization", "Bearer " + t));
+        assertEquals(name.text(), 400, name.status());
+        assertTrue(message(name), message(name).contains("admin A4") && message(name).contains("auth.users().rename"));
+        ClientResponse mixed = f.adapter.send(ClientRequest.json("PATCH", "/auth/me",
+                "{\"attributes\":{\"displayName\":\"Al\"},\"nick\":\"x\"}").header("Authorization", "Bearer " + t));
+        assertEquals(mixed.text(), 400, mixed.status());
+        assertEquals("bob", f.stored(id).getUsername());
+        assertTrue(f.stored(id).getAttributes().toString(), f.stored(id).getAttributes().isEmpty());
+    }
+
     static {
         HttpException.class.getName();
     }

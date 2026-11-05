@@ -177,6 +177,116 @@ public class JuniorRound12Test {
         }
     }
 
+    // OPS-AUTH-024 AC-1: the failing listener's ERROR is the only ERROR auth logs for it (Core's own "ERROR request <id>
+    // failed" line of a 5xx is not auth's)
+    @Test
+    public void OPS_AUTH_024_AC1_beforeEventFailureLogsOneError() {
+        W8 f = fixture();
+        f.start(b -> b.register(true).events(new AuthEvents() {
+            @Override
+            public void beforeUserCreate(AuthUser user, AuthEventContext ctx) {
+                throw new IllegalStateException("user is banned");
+            }
+        }));
+        assertEquals(503, f.post("/auth/register", W8.login("zed", "long-password-1")).status());
+        assertEquals(f.logger.lines.toString(), 1, RecordingLogger.matching(f.logger.lines, "(?s)ERROR auth.*").size());
+    }
+
+    // OPS-AUTH-024 AC-2: .permitPrefix and .permitWebSocket refuse a query or fragment too
+    @Test
+    public void OPS_AUTH_024_AC2_prefixAndWebSocketPermitsWithQueryAreRefused() {
+        for (String p : new String[] {"/health2?x=1", "/health#top"}) {
+            String prefix = refused(Auth.builder(AuthTestSupport.SECRET).permitPrefix(p)).getMessage();
+            assertTrue(prefix, prefix.contains("no query or fragment"));
+            String ws = refused(Auth.builder(AuthTestSupport.SECRET).permitWebSocket(p)).getMessage();
+            assertTrue(ws, ws.contains("no query or fragment"));
+        }
+    }
+
+    // OPS-AUTH-024 AC-3: the suggested prefix is the part before the first pattern segment, not the last slash
+    @Test
+    public void OPS_AUTH_024_AC3_patternRefusalStopsAtTheFirstPatternSegment() {
+        String m = refused(Auth.builder(AuthTestSupport.SECRET).permit("/files/:id/raw")).getMessage();
+        assertTrue(m, m.contains(".permitPrefix(\"/files\")"));
+    }
+
+    // OPS-AUTH-024 AC-4: the Bearer refresh token answer is 401 invalid_token
+    @Test
+    public void OPS_AUTH_024_AC4_bearerRefreshTokenIs401InvalidToken() throws Exception {
+        W8 f = fixture();
+        f.start(b -> b);
+        f.user("bob", W8.PW, "reader");
+        String rt = String.valueOf(f.loginBody("bob", W8.PW).get("refreshToken"));
+        ClientResponse r = f.get("/api/x", "Authorization", "Bearer " + rt);
+        assertEquals(r.text(), 401, r.status());
+        assertEquals("invalid_token", W8.code(r));
+    }
+
+    // OPS-AUTH-024 AC-5: a permit of other methods names those methods in the hint
+    @Test
+    public void OPS_AUTH_024_AC5_nearMissNamesThePermittedMethods() {
+        W8 f = fixture();
+        f.start(b -> b.permit(com.snoworca.naruserve.Method.POST, "/hook"));
+        assertEquals("authentication is required; .permit(\"/hook\") makes only POST of exactly /hook public",
+                message(f.get("/hook")));
+    }
+
+    // OPS-AUTH-024 AC-7: with an app route before the second install the route-order message stays
+    @Test
+    public void OPS_AUTH_024_AC7_routeBeforeSecondAuthKeepsTheOrderMessage() {
+        TestApp t = TestApp.create();
+        Auth.builder(AuthTestSupport.SECRET).logger(new RecordingLogger()).build().install(t.app());
+        t.app().get("/x", (req, res) -> res.send("x"));
+        try {
+            Auth.builder(AuthTestSupport.SECRET).logger(new RecordingLogger()).build().install(t.app());
+            fail("installed after a route");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("must come before routes"));
+            assertTrue(e.getMessage(), !e.getMessage().contains("another Auth is already installed"));
+        }
+    }
+
+    // OPS-AUTH-024 AC-9: a stale and an expired key both answer 401 invalid_api_key, the expired one naming `expired`
+    @Test
+    public void OPS_AUTH_024_AC9_staleAndExpiredKeysAre401InvalidApiKey() throws Exception {
+        W8 f = fixture();
+        f.start(b -> b.apiKeys(new AdminFixture.ListKeys()));
+        String id = f.user("bob", W8.PW, "reader");
+        String stale = f.auth.apiKeys().issue(id, "stale", null, "posts:read").getPlainKey();
+        String expiring = f.auth.apiKeys().issue(id, "soon", f.clock.get() + 1_000L, "posts:read").getPlainKey();
+        assertEquals(200, f.get("/api/x", "Authorization", "ApiKey " + expiring).status());
+        f.clock.addAndGet(2_000L);
+        ClientResponse expired = f.get("/api/x", "Authorization", "ApiKey " + expiring);
+        assertEquals(expired.text(), 401, expired.status());
+        assertEquals("invalid_api_key", W8.code(expired));
+        assertTrue(message(expired), message(expired).contains("expired"));
+        f.auth.userStore().bumpTokenVersion(id);
+        f.auth.principalCache().invalidate(id);
+        ClientResponse r = f.get("/api/x", "Authorization", "ApiKey " + stale);
+        assertEquals(r.text(), 401, r.status());
+        assertEquals("invalid_api_key", W8.code(r));
+    }
+
+    // OPS-AUTH-024 AC-10: a changed enabled flag or token version is refused with the same A4 pointer as roles
+    @Test
+    public void OPS_AUTH_024_AC10_enabledAndTokenVersionRefusalsNameA4() throws Exception {
+        W8 f = fixture();
+        f.start(b -> b);
+        String id = f.user("bob", W8.PW, "reader");
+        try {
+            f.auth.users().update(id, u -> u.toBuilder().enabled(false).build());
+            fail("enabled changed");
+        } catch (AuthArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("PATCH /auth/admin/users/:id"));
+        }
+        try {
+            f.auth.users().update(id, u -> u.toBuilder().tokenVersion(u.getTokenVersion() + 1).build());
+            fail("token version changed");
+        } catch (AuthArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("PATCH /auth/admin/users/:id"));
+        }
+    }
+
     /** The id and the full key of an issued key. */
     private static final class IssuedApiKeyHolder {
         final String id;

@@ -104,6 +104,24 @@ public class AuthBuilderTest {
         }
     }
 
+    // SEC-AUTH-001 AC-8: the short, example and low-variety cases do not stop start in DEV: the app serves
+    @Test
+    public void SEC_AUTH_001_AC8_devStartContinuesWithWeakKeys() {
+        for (String weak : Arrays.asList("short", "changeme", repeat('a', 40))) {
+            com.snoworca.naruserve.testing.TestApp t = com.snoworca.naruserve.testing.TestApp.create();
+            Auth auth = Auth.builder(weak).mode(AuthMode.DEV).hashIterations(1000).logger(new RecordingLogger())
+                    .permit("/x").build();
+            auth.install(t.app());
+            t.app().get("/x", (req, res) -> res.send("x"));
+            try {
+                t.start();
+                assertEquals(weak, 200, t.send("GET", "/x").status());
+            } finally {
+                t.app().shutdown(5, java.util.concurrent.TimeUnit.SECONDS);
+            }
+        }
+    }
+
     // SEC-AUTH-001 statement (DEV temporary key): a null secret in DEV builds and logs one WARN about restarts
     @Test
     public void devTemporaryKeyIsOneWarning() {

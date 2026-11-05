@@ -94,4 +94,52 @@ public class JuniorRound14Test {
         String all = String.valueOf(auth.doctor(t.app()).findings());
         assertTrue(all, all.contains("is the environment variable that holds its password set?"));
     }
+
+    // OPS-AUTH-026 AC-1: the never-installed refusal replaces the userOrNull advice
+    @Test
+    public void OPS_AUTH_026_AC1_uninstalledUserDropsTheUserOrNullAdvice() {
+        Auth auth = Auth.builder(AuthTestSupport.SECRET).logger(new RecordingLogger()).build();
+        TestApp t = TestApp.create();
+        t.app().get("/me", (req, res) -> {
+            try {
+                res.send(auth.user(req).getId());
+            } catch (AuthStateException e) {
+                res.send(String.valueOf(e.getMessage()));
+            }
+        });
+        t.start();
+        String m = t.send("GET", "/me").text();
+        assertTrue(m, m.contains("auth is not installed on this app") && !m.contains("userOrNull"));
+    }
+
+    // OPS-AUTH-026 AC-3: the Bearer device token answer is 401 invalid_token
+    @Test
+    public void OPS_AUTH_026_AC3_bearerDeviceTokenIs401InvalidToken() throws Exception {
+        W8 f = fixture();
+        f.start(b -> b);
+        f.user("bob", W8.PW, "reader");
+        assertEquals(401, f.post("/auth/login", W8.login("bob", "wrong-password-x")).status());
+        Object device = f.loginBody("bob", W8.PW).get("deviceToken");
+        ClientResponse r = f.get("/api/x", "Authorization", "Bearer " + device);
+        assertEquals(r.text(), 401, r.status());
+        assertEquals("invalid_token", W8.code(r));
+    }
+
+    // OPS-AUTH-026 AC-4: the question sits in the FAIL `null-password user` itself
+    @Test
+    public void OPS_AUTH_026_AC4_questionIsInTheNullPasswordFail() {
+        Auth auth = Auth.builder(AuthTestSupport.SECRET).logger(new RecordingLogger())
+                .user("bob", null, "reader").build();
+        TestApp t = TestApp.create();
+        auth.install(t.app());
+        int fails = 0;
+        for (com.snoworca.naruserve.utils.auth.internal.Doctor.Finding x : auth.doctor(t.app()).findings()) {
+            if (x.getLevel() == com.snoworca.naruserve.utils.auth.internal.Doctor.Level.FAIL
+                    && x.getItem().equals("null-password user")) {
+                fails++;
+                assertTrue(x.getMessage(), x.getMessage().contains("is the environment variable that holds its password set?"));
+            }
+        }
+        assertEquals(1, fails);
+    }
 }

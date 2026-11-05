@@ -112,4 +112,45 @@ public class JuniorRound15Test {
             assertTrue(e.getMessage(), e.getMessage().contains("blank"));
         }
     }
+
+    // OPS-AUTH-027 AC-1: the 403 of an API-key request is insufficient_scope
+    @Test
+    public void OPS_AUTH_027_AC1_keyBeyondOwnerScopesIsInsufficientScope() {
+        W8 f = fixture();
+        f.start(b -> b.apiKeys(new AdminFixture.ListKeys()));
+        String bot = f.auth.users().create("ci-bot", null, u -> u.toBuilder().serviceAccount(true).build()).getId();
+        String key = f.auth.apiKeys().issue(bot, "ci", null, "posts:read").getPlainKey();
+        ClientResponse r = f.get("/api/x", "Authorization", "ApiKey " + key);
+        assertEquals(r.text(), 403, r.status());
+        assertEquals("insufficient_scope", W8.code(r));
+    }
+
+    // OPS-AUTH-027 AC-2: an unknown field on POST /auth/admin/apikeys is refused too
+    @Test
+    public void OPS_AUTH_027_AC2_unknownAdminKeyFieldIsRefused() throws Exception {
+        AdminFixture a = new AdminFixture();
+        try {
+            a.start(b -> b.apiKeys(new AdminFixture.ListKeys()));
+            String root = a.user("root", "admin", "keyswriter");
+            String u1 = a.user("u1", "reader");
+            ClientResponse r = a.call("POST", "/auth/admin/apikeys", root, "{\"ownerUserId\":\"" + u1 + "\",\"name\":\"ci\","
+                    + "\"scopes\":[\"posts:read\"],\"password\":\"pw-root\",\"owner\":\"x\"}");
+            assertEquals(r.text(), 400, r.status());
+            assertTrue(message(r), message(r).startsWith("unknown field owner; the fields are "));
+        } finally {
+            a.stop();
+        }
+    }
+
+    // OPS-AUTH-027 AC-6: the refusal names the blank name it got
+    @Test
+    public void OPS_AUTH_027_AC6_blankRoleRefusalQuotesTheName() {
+        Auth auth = Auth.builder(AuthTestSupport.SECRET).logger(new RecordingLogger()).build();
+        try {
+            auth.requireRole("reader", "  ");
+            fail("accepted");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("blank role name \"  \""));
+        }
+    }
 }

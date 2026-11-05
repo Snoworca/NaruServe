@@ -52,6 +52,32 @@ public class AuthGuideFinalItemsDocsTest {
         }
     }
 
+    // OPS-AUTH-033 AC-5: the guides describe the PROD final error layer and the 405, and promise no Core HTML for them
+    @Test
+    public void OPS_AUTH_033_AC5_guidesDescribeTheFinalErrorLayer() throws IOException {
+        for (String f : GUIDES) {
+            String g = ReadmeDocsTest.read(f);
+            has(f, g, en(f) ? "In PROD auth also appends, at start and after every layer registered by then"
+                    : "PROD에서는 기동할 때 그때까지 등록된 모든 층 뒤에");
+            has(f, g, en(f) ? "in PROD so is the answer to every exception an app route throws before start"
+                    : "PROD에서는 기동 전에 등록한 앱 라우트가 던진 예외의 응답도 모두 JSON입니다");
+            has(f, g, "`METHOD_NOT_ALLOWED`");
+            lacks(f, g, "HTML 404");
+        }
+    }
+
+    // OPS-AUTH-033 AC-6: both rows say the roles are the user's own, in words and not only by naming getRoles()
+    @Test
+    public void OPS_AUTH_033_AC6_rowsSayOwnRolesInWords() throws IOException {
+        for (String f : GUIDES) {
+            String g = ReadmeDocsTest.read(f);
+            has(f + " /auth/me row", line(f, g, "| `GET /auth/me` |"),
+                    en(f) ? "`roles` is the user's own roles only" : "`roles`는 사용자 자신의 역할뿐");
+            has(f + " A3 row", line(f, g, "| A3 |"),
+                    en(f) ? "`roles` is the user's own roles" : "`roles`는 사용자 자신의 역할이고");
+        }
+    }
+
     // OPS-AUTH-033 AC-6: the GET /auth/me and A3 rows say roles are the user's own roles only
     @Test
     public void OPS_AUTH_033_AC6_meAndA3RowsNameOwnRoles() throws IOException {

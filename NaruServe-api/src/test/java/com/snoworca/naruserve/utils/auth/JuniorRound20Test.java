@@ -82,4 +82,42 @@ public class JuniorRound20Test {
         }
         AuthUser.builder(); // keeps the import used
     }
+
+    // OPS-AUTH-032 AC-1: the combined error starts with the count, and one failure keeps its own message
+    @Test
+    public void OPS_AUTH_032_AC1_kitMessageShapes() {
+        try {
+            AuthTesting.verifyUserStore(new TwoBroken());
+            fail("passed");
+        } catch (AssertionError e) {
+            assertTrue(e.getMessage(), e.getMessage().startsWith("UserStore contract: 2 clauses failed"));
+        }
+        try {
+            AuthTesting.verifyUserStore(new ForwardingUserStore(new InMemoryUserStore()) {
+                @Override
+                public com.snoworca.naruserve.utils.auth.user.UserPage list(int offset, int limit,
+                        @org.jspecify.annotations.Nullable String search) {
+                    return null;
+                }
+            });
+            fail("passed");
+        } catch (AssertionError e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("list") && !e.getMessage().contains("clauses failed"));
+        }
+    }
+
+    // OPS-AUTH-032 AC-3: the refusal also names an ordinary exception, and a status below 400 is refused like one above
+    @Test
+    public void OPS_AUTH_032_AC3_rejectionNamesOrdinaryExceptionBelow400Too() {
+        for (int status : new int[] {302, 500}) {
+            try {
+                new AuthRejection(status, "oops");
+                fail("built");
+            } catch (IllegalArgumentException e) {
+                assertTrue(e.getMessage(), e.getMessage().startsWith("AuthRejection status must be 4xx: " + status)
+                        && e.getMessage().contains("AuthUnavailableException")
+                        && e.getMessage().contains("an ordinary exception"));
+            }
+        }
+    }
 }

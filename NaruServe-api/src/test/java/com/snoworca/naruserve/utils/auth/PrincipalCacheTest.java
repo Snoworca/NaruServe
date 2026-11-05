@@ -98,6 +98,23 @@ public class PrincipalCacheTest {
         }
     }
 
+    // SEC-AUTH-007 AC-2: a role change of one user through auth clears the whole cache: another cached user, whose row
+    // changed straight in the store, is reloaded too (no clock advance)
+    @Test
+    public void SEC_AUTH_007_AC2_roleChangeClearsTheWholeCache() throws Exception {
+        AdminFixture f = new AdminFixture().start();
+        f.app.get("/api/w", f.auth.require("posts:write"), (req, res) -> res.send("w"));
+        String root = f.user("root", "admin");
+        String bob = f.user("bob", "reader");
+        String carol = f.user("carol", "reader");
+        String tc = f.token(carol);
+        assertEquals(403, f.adapter.send(req("/api/w", tc)).status());
+        f.base.setRoles(carol, AdminFixture.set("editor"));
+        assertEquals(403, f.adapter.send(req("/api/w", tc)).status()); // still the cached carol
+        assertEquals(200, f.call("PATCH", "/auth/admin/users/" + bob, root, "{\"roles\":[\"editor\"]}").status());
+        assertEquals(200, f.adapter.send(req("/api/w", tc)).status());
+    }
+
     private static com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest req(String path, String token) {
         return com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest.of("GET", path).header("Authorization",
                 "Bearer " + token);

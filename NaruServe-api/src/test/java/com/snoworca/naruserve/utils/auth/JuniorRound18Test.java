@@ -132,4 +132,93 @@ public class JuniorRound18Test {
         assertEquals(r.text(), 403, r.status());
         assertEquals("you cannot put billing:read on your own key because you do not hold it", message(r));
     }
+
+    // OPS-AUTH-030 AC-1: all four guard kinds answer 401 on a permitted path and say .permit opens default deny only
+    @Test
+    public void OPS_AUTH_030_AC1_everyGuardKindOnPermittedPathIsNamed() {
+        for (int kind = 0; kind < 4; kind++) {
+            final int k = kind;
+            W8 f = fixture();
+            f.routes = w -> w.app.get("/open", k == 0 ? w.auth.require("posts:read") : k == 1 ? w.auth.requireRole("reader")
+                    : k == 2 ? w.auth.check((p, req) -> true) : w.auth.authenticated(), (req, res) -> res.send("o"));
+            f.start(b -> b.permit("/open"));
+            ClientResponse r = f.get("/open");
+            assertEquals(r.text(), 401, r.status());
+            assertTrue(message(r), message(r).contains("a guard on this route")
+                    && message(r).contains(".permit opens default deny only, not the guards"));
+        }
+    }
+
+    // OPS-AUTH-030 AC-2: the answer is 401 invalid_token and names the password change and the disabled account too
+    @Test
+    public void OPS_AUTH_030_AC2_noLongerValidIs401AndNamesEveryCause() throws Exception {
+        W8 f = fixture();
+        f.start(b -> b);
+        String t = token(f);
+        assertEquals(204, f.post("/auth/logout?all=true", null, "Authorization", "Bearer " + t).status());
+        ClientResponse r = f.get("/api/x", "Authorization", "Bearer " + t);
+        assertEquals(r.text(), 401, r.status());
+        assertEquals("invalid_token", W8.code(r));
+        assertTrue(message(r), message(r).contains("changed the password") && message(r).contains("was disabled"));
+    }
+
+    // OPS-AUTH-030 AC-3: a HEAD of a literal route gets the WARN like a GET
+    @Test
+    public void OPS_AUTH_030_AC3_devHeadOfProtectedRouteIsWarned() {
+        W8 f = fixture();
+        f.start(b -> b.mode(AuthMode.DEV));
+        assertEquals(401, f.adapter.send(ClientRequest.of("HEAD", "/health")).status());
+        assertEquals(f.logger.lines.toString(), 1, RecordingLogger.matching(f.logger.lines,
+                "(?s)WARN .*HEAD /health.*\\.permit\\(\"/health\"\\).*").size());
+    }
+
+    // OPS-AUTH-030 AC-5: the lock WARN names the user id, the lock end and the full release route
+    @Test
+    public void OPS_AUTH_030_AC5_lockWarnNamesIdEndAndRoute() throws Exception {
+        W8 f = fixture();
+        f.start(b -> b.lockout(Lockout.after(2).forMinutes(15)));
+        String id = f.user("bob", W8.PW, "reader");
+        for (int i = 0; i < 3; i++) {
+            f.post("/auth/login", W8.login("bob", "wrong-password-x"));
+        }
+        List<String> warns = RecordingLogger.matching(f.logger.lines, "(?s)WARN .*locked out until .*");
+        assertEquals(f.logger.lines.toString(), 1, warns.size());
+        assertTrue(warns.get(0), warns.get(0).contains("user id " + id)
+                && warns.get(0).contains("DELETE /auth/admin/users/" + id + "/lockout"));
+    }
+
+    // OPS-AUTH-030 AC-6: auth.apiKeys().issue itself says to pass the id
+    @Test
+    public void OPS_AUTH_030_AC6_issueNamesTheId() throws Exception {
+        W8 f = fixture();
+        f.start(b -> b.apiKeys(new AdminFixture.ListKeys()));
+        f.user("alice", W8.PW, "reader");
+        try {
+            f.auth.apiKeys().issue("alice", "ci", null, "posts:read");
+            fail("issued");
+        } catch (AuthArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("not the username"));
+        }
+    }
+
+    // OPS-AUTH-030 AC-7: a case variant of false is named like one of true
+    @Test
+    public void OPS_AUTH_030_AC7_mixedCaseFalseIsNamed() throws Exception {
+        W8 f = fixture();
+        f.start(b -> b);
+        String t = token(f);
+        String m = message(f.post("/auth/logout?all=False", null, "Authorization", "Bearer " + t));
+        assertTrue(m, m.contains("lower-case true or false") && m.contains("False"));
+    }
+
+    // OPS-AUTH-030 AC-8: the personal key refusal has the code insufficient_scope
+    @Test
+    public void OPS_AUTH_030_AC8_personalKeyScopeIsInsufficientScope() throws Exception {
+        W8 f = fixture();
+        f.start(b -> b.apiKeys(new AdminFixture.ListKeys()));
+        String t = token(f);
+        ClientResponse r = f.adapter.send(ClientRequest.json("POST", "/auth/me/apikeys", "{\"name\":\"ci\",\"scopes\":"
+                + "[\"billing:read\"],\"password\":\"" + W8.PW + "\"}").header("Authorization", "Bearer " + t));
+        assertEquals("insufficient_scope", W8.code(r));
+    }
 }

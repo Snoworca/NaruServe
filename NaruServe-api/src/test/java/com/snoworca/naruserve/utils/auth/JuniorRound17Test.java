@@ -139,4 +139,27 @@ public class JuniorRound17Test {
         String m = message(f.get("/c", "Authorization", "Bearer " + t));
         assertTrue(m, m.contains("auth.check rule"));
     }
+
+    // OPS-AUTH-029 AC-4: a list() that throws UnsupportedOperationException passes the kit
+    @Test
+    public void OPS_AUTH_029_AC4_kitAcceptsUnsupportedList() {
+        AuthTesting.verifyUserStore(new ForwardingUserStore(new InMemoryUserStore()) {
+            @Override
+            public UserPage list(int offset, int limit, @org.jspecify.annotations.Nullable String search) {
+                throw new UnsupportedOperationException("this store does not page");
+            }
+        });
+    }
+
+    // OPS-AUTH-029 AC-7: the answer of a false auth.check rule is 403
+    @Test
+    public void OPS_AUTH_029_AC7_checkRefusalIs403() throws Exception {
+        W8 f = fixture();
+        f.routes = w -> w.app.get("/c", w.auth.check((p, req) -> false), (req, res) -> res.send("c"));
+        f.start(b -> b);
+        f.user("bob", W8.PW, "reader");
+        String t = String.valueOf(f.loginBody("bob", W8.PW).get("accessToken"));
+        ClientResponse r = f.get("/c", "Authorization", "Bearer " + t);
+        assertEquals(r.text(), 403, r.status());
+    }
 }

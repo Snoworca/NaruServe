@@ -134,4 +134,51 @@ public class JuniorRound13Test {
         assertEquals(r.text(), 413, r.status());
         assertTrue(message(r), message(r).contains("app.jsonLimit("));
     }
+
+    // OPS-AUTH-025 AC-1: the 401 and the WARN both say to register app.cors(...) before app.use(auth)
+    @Test
+    public void OPS_AUTH_025_AC1_preflightHintAndWarnNameTheOrder() {
+        W8 f = fixture();
+        f.start(b -> b);
+        ClientResponse r = f.adapter.send(ClientRequest.of("OPTIONS", "/api/x").header("Origin", W8.SAME)
+                .header("Access-Control-Request-Method", "GET"));
+        assertTrue(message(r), message(r).contains("register app.cors(...) before app.use(auth)"));
+        List<String> warns = RecordingLogger.matching(f.logger.lines, "(?s)WARN .*CORS preflight.*");
+        assertEquals(f.logger.lines.toString(), 1, warns.size());
+        assertTrue(warns.get(0), warns.get(0).contains("register app.cors(...) before app.use(auth)"));
+    }
+
+    // OPS-AUTH-025 AC-4: admin A2 and A4 refuse an invalid username with the same rule text as register
+    @Test
+    public void OPS_AUTH_025_AC4_adminEndpointsNameTheUsernameRule() throws Exception {
+        StringBuilder longName = new StringBuilder();
+        for (int i = 0; i < 300; i++) {
+            longName.append('a');
+        }
+        AdminFixture a = new AdminFixture();
+        try {
+            a.start();
+            String root = a.user("root", "admin");
+            String bob = a.user("bob");
+            ClientResponse create = a.call("POST", "/auth/admin/users", root, W8.login(longName.toString(), "long-password-1"));
+            assertEquals(create.text(), 400, create.status());
+            assertTrue(message(create), message(create).startsWith("invalid username: "));
+            ClientResponse rename = a.call("PATCH", "/auth/admin/users/" + bob, root, "{\"username\":\"" + longName + "\"}");
+            assertEquals(rename.text(), 400, rename.status());
+            assertTrue(message(rename), message(rename).startsWith("invalid username: "));
+        } finally {
+            a.stop();
+        }
+    }
+
+    // OPS-AUTH-025 AC-6: .refreshTtl below one second names the unit like .accessTtl
+    @Test
+    public void OPS_AUTH_025_AC6_refreshTtlUnitIsNamed() {
+        try {
+            Auth.builder(AuthTestSupport.SECRET).refreshTtl(15).build();
+            throw new AssertionError("built");
+        } catch (AuthConfigException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("milliseconds") && e.getMessage().contains("900000"));
+        }
+    }
 }

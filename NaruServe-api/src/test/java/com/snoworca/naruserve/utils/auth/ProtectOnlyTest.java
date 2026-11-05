@@ -253,6 +253,18 @@ public class ProtectOnlyTest {
         assertEquals("unauthenticated", AuthTestSupport.code(h2c));
     }
 
+    // SEC-AUTH-006 AC-5: the same two upgrades are protected on a path opened by .permit, without any protectOnly
+    @Test
+    public void SEC_AUTH_006_AC5_upgradesOnPermittedPathsAreProtected() throws Exception {
+        TestApp t = app(builder().permit("/page"));
+        t.app().get("/page", (req, res) -> res.send("page"));
+        t.start();
+        assertEquals(200, get("/page", "Connection", "keep-alive").status());
+        assertEquals(401, get("/page", "Connection", "keep-alive", "Connection", "Upgrade", "Upgrade", "websocket").status());
+        assertEquals(401, get("/page", "Connection", "Upgrade, HTTP2-Settings", "Upgrade", "h2c",
+                "HTTP2-Settings", "AAMAAABkAARAAAAAAAIAAAAA").status());
+    }
+
     // SEC-AUTH-006 AC-6: a WebSocket upgrade outside the range gets 401 before 101; .permitWebSocket("/chat") opens it
     @Test(timeout = 20000)
     public void SEC_AUTH_006_AC6_websocketUpgradesNeedPermitWebSocket() throws Exception {
