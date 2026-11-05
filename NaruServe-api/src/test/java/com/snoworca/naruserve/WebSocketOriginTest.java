@@ -118,4 +118,12 @@ public class WebSocketOriginTest {
         refused("Origin", "http://evil.test", "Host", "example.test");
         assertEquals(Arrays.asList("recorded /ws/private", "recorded /ws"), calls);
     }
+
+    // FR-WS-003 AC-8: a listed capacitor://localhost upgrades; an unlisted custom scheme gets the 403
+    @Test(timeout = 20000)
+    public void FR_WS_003_AC8_listedCustomSchemeOriginUpgrades() throws Exception {
+        start("capacitor://localhost");
+        admitted("Origin", "capacitor://localhost", "Host", "api.example.com");
+        refused("Origin", "ionic://localhost", "Host", "api.example.com");
+    }
 }

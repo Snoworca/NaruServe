@@ -15,7 +15,8 @@ public interface WebSocketOptions {
 
     /**
      * Replaces the Origin allowlist, as the {@code origin} option of Express {@code cors}; with no argument it resets
-     * to the default, which allows only the same origin.
+     * to the default, which allows only the same origin. Entries are {@code scheme://host[:port]}, custom schemes such
+     * as {@code capacitor://localhost} included, or {@code *}.
      */
     WebSocketOptions allowedOrigins(String... origins);
 

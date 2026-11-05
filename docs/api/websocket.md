@@ -165,7 +165,7 @@ app.ws("/session") { req, ws ->
 브라우저 WebSocket은 **CORS로 보호되지 않습니다.** 다른 사이트의 페이지도 쿠키를 실어 연결할 수 있습니다.
 
 - `app.use("/ws", auth)` 미들웨어는 Upgrade 요청에 실행됩니다. 실패하면 Upgrade 전에 응답으로 거부합니다.
-- 프레임워크가 Upgrade 전에 `Origin`을 검사합니다. 기본값은 `Origin`이 없거나 같은 출처인 요청만 허용하고 나머지는 `403`으로 거부합니다. 다른 출처를 허용하려면 `app.webSocket(o -> o.allowedOrigins("https://app.example.com"))`처럼 목록을 정합니다. 목록은 `scheme://host[:port]` 형식이며, 목록을 정해도 `Origin`이 없는 요청과 같은 출처 요청은 계속 허용됩니다. `allowedOrigins("*")`는 모든 `Origin`을 허용합니다. 같은 출처는 요청의 `Host`와 `req.isSecure()`로 정하므로, TLS를 끝내는 리버스 프록시 뒤에서는 `app.trustProxy(true)`를 켜고 프록시가 `Host`와 `X-Forwarded-Proto`를 넘겨야 브라우저의 `https://` `Origin`이 같은 출처로 맞습니다. 인자 없이 `allowedOrigins()`를 부르면 기본값으로 돌아갑니다.
+- 프레임워크가 Upgrade 전에 `Origin`을 검사합니다. 기본값은 `Origin`이 없거나 같은 출처인 요청만 허용하고 나머지는 `403`으로 거부합니다. 다른 출처를 허용하려면 `app.webSocket(o -> o.allowedOrigins("https://app.example.com"))`처럼 목록을 정합니다. 목록은 `scheme://host[:port]` 형식이고 iOS Capacitor의 `capacitor://localhost` 같은 커스텀 스킴도 넣을 수 있습니다(커스텀 스킴은 기본 포트가 없어 포트까지 정확히 같아야 하고, 같은 출처로는 치지 않습니다). 목록을 정해도 `Origin`이 없는 요청과 같은 출처 요청은 계속 허용됩니다. `allowedOrigins("*")`는 모든 `Origin`을 허용합니다. 같은 출처는 요청의 `Host`와 `req.isSecure()`로 정하므로, TLS를 끝내는 리버스 프록시 뒤에서는 `app.trustProxy(true)`를 켜고 프록시가 `Host`와 `X-Forwarded-Proto`를 넘겨야 브라우저의 `https://` `Origin`이 같은 출처로 맞습니다. 인자 없이 `allowedOrigins()`를 부르면 기본값으로 돌아갑니다.
 - 단, 브라우저가 아닌 클라이언트는 `Origin`을 마음대로 보낼 수 있으므로 `Origin` 검사는 인증을 대신하지 않습니다.
 - 연결된 뒤의 메시지에는 HTTP 미들웨어가 실행되지 않습니다.
 

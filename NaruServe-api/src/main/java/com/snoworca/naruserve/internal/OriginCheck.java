@@ -9,7 +9,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * The upgrade's Origin rule, built once at freeze: no Origin, a same-origin Origin, a listed origin, or any origin
  * when {@code *} is listed. Origins compare as {@code scheme://host:port} with lowercase scheme and host and the
- * default port of http (80) or https (443) filled in; an entry or Origin that does not parse never matches.
+ * default port of http (80) or https (443) filled in; a custom scheme such as {@code capacitor} has no default port,
+ * so it matches a listed entry exactly and is never same-origin. An entry or Origin that does not parse never matches.
  */
 // @req FR-WS-003
 final class OriginCheck {
@@ -62,10 +63,10 @@ final class OriginCheck {
     /** {@code scheme://host:port} from {@code host[:port]} (IPv6 in brackets), or null when it does not parse. */
     // @req FR-WS-003
     private static @Nullable String tuple(String scheme, String authority) {
-        int defaultPort = "http".equals(scheme) ? 80 : "https".equals(scheme) ? 443 : -1;
-        if (defaultPort < 0) {
+        if (!validScheme(scheme)) {
             return null;
         }
+        int defaultPort = "http".equals(scheme) ? 80 : "https".equals(scheme) ? 443 : -1;
         String host;
         String port;
         if (authority.startsWith("[")) {
@@ -98,7 +99,19 @@ final class OriginCheck {
             }
             p = (int) digits;
         }
-        return scheme + "://" + host.toLowerCase(Locale.ROOT) + ":" + p;
+        return scheme + "://" + host.toLowerCase(Locale.ROOT) + (p < 0 ? "" : ":" + p);
+    }
+
+    /** RFC 3986 scheme, already lowercase: a letter, then letters, digits, {@code +}, {@code -} or {@code .}. */
+    private static boolean validScheme(String scheme) {
+        for (int i = 0; i < scheme.length(); i++) {
+            char c = scheme.charAt(i);
+            boolean letter = c >= 'a' && c <= 'z';
+            if (!letter && (i == 0 || !(c >= '0' && c <= '9' || c == '+' || c == '-' || c == '.'))) {
+                return false;
+            }
+        }
+        return !scheme.isEmpty();
     }
 
     /** No path, query, fragment, userinfo, whitespace or second colon outside brackets. */

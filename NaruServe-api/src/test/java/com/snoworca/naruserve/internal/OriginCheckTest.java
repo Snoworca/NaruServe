@@ -1,6 +1,8 @@
 package com.snoworca.naruserve.internal;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -64,5 +66,32 @@ public class OriginCheckTest {
         OriginCheck star = new OriginCheck(Arrays.asList("https://app.example.com", "*"));
         assertTrue(star.admits("http://evil.test", "example.test", false));
         assertTrue(star.admits("garbage", "example.test", false));
+    }
+
+    // FR-WS-003 AC-8: a custom-scheme origin matches only when listed, exactly by scheme, host and port
+    @Test
+    public void FR_WS_003_AC8_customSchemeOriginsMatchOnlyWhenListed() {
+        OriginCheck listed = new OriginCheck(Arrays.asList("capacitor://localhost", "ionic://localhost:8100"));
+        assertTrue(listed.admits("capacitor://localhost", "api.example.com", true));
+        assertTrue(listed.admits("CAPACITOR://LocalHost", "api.example.com", true));
+        assertTrue(listed.admits("ionic://localhost:8100", "api.example.com", true));
+        assertFalse(listed.admits("ionic://localhost", "api.example.com", true));
+        assertFalse(listed.admits("capacitor://localhost:8100", "api.example.com", true));
+        assertFalse(listed.admits("capacitor://evil.test", "api.example.com", true));
+        assertFalse(listed.admits("https://localhost", "api.example.com", true));
+        assertFalse(listed.admits("capacitor://localhost/path", "api.example.com", true));
+    }
+
+    // FR-WS-003 AC-8: a custom scheme is never same-origin, and a malformed scheme does not parse
+    @Test
+    public void FR_WS_003_AC8_customSchemeIsNeverSameOriginAndBadSchemesDoNotParse() {
+        assertFalse(sameOnly.admits("capacitor://localhost", "localhost", true));
+        assertFalse(sameOnly.admits("capacitor://localhost", "localhost", false));
+        assertNotNull(OriginCheck.normalise("capacitor://localhost"));
+        assertNotNull(OriginCheck.normalise("my-app+v1.2://localhost"));
+        assertNull(OriginCheck.normalise("://localhost"));
+        assertNull(OriginCheck.normalise("1app://localhost"));
+        assertNull(OriginCheck.normalise("ca pacitor://localhost"));
+        assertNull(OriginCheck.normalise("cap_acitor://localhost"));
     }
 }
