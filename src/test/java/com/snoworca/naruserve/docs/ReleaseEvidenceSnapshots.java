@@ -33,8 +33,9 @@ final class ReleaseEvidenceSnapshots {
         return new String(bytes.toByteArray(),StandardCharsets.UTF_8);
     }
     private static boolean historical(String path,String commit,boolean scan) {
-        String old=scan?HISTORICAL_SCAN:HISTORICAL, current=scan?CURRENT_SCAN:CURRENT;
-        assertTrue("record path is not an approved versioned record: "+path,path.equals(old)||path.equals(current));
+        String old=scan?HISTORICAL_SCAN:HISTORICAL, current=scan?CURRENT_SCAN:CURRENT, next=scan?NEXT_SCAN:NEXT;
+        assertTrue("record path is not an approved versioned record: "+path,path.equals(old)||path.equals(current)
+                ||path.equals(next));
         if(path.equals(old)) {assertEquals("historical commit",PIN,commit);return true;}
         assertNull("current record cannot use historical commit",commit);return false;
     }
@@ -93,22 +94,21 @@ final class ReleaseEvidenceSnapshots {
         assertFalse("version declaration ambiguous",version.find());
         assertTrue("unsupported release version: "+actualVersion,actualVersion.equals("0.9.0")||actualVersion.equals("0.10.0")
                 ||actualVersion.equals("0.11.0"));
-        // OPS-REL-010 AC-3: 0.11.0 is prepared ahead of its release run; once the run writes a 0.11.0 record, the gate must
-        // be pointed at the 0.11.0 records (CURRENT/CURRENT_SCAN) before it passes again
+        // OPS-REL-011 AC-4: after the 0.11.0 release run, version 0.11.0 is checked against its own records only; the
+        // 0.10.0 records stay as historical files
         boolean next=actualVersion.equals("0.11.0");
-        assertFalse("0.11.0 release records exist: point CURRENT and CURRENT_SCAN at docs/release/0.11.0-*",next
-                &&(new File(root,NEXT).isFile()||new File(root,NEXT_SCAN).isFile()));
-        boolean results=new File(root,CURRENT).isFile(),report=new File(root,CURRENT_SCAN).isFile();
+        String resultsPath=next?NEXT:CURRENT, scanPath=next?NEXT_SCAN:CURRENT_SCAN;
+        boolean results=new File(root,resultsPath).isFile(),report=new File(root,scanPath).isFile();
         if(!results&&!report&&actualVersion.equals("0.9.0"))return false;
-        assertTrue("current evidence requires result record and scan",results&&report);
-        String body=record(root,CURRENT,null,false);int references=0;
+        assertTrue("current evidence requires result record and scan: "+resultsPath+", "+scanPath,results&&report);
+        String body=record(root,resultsPath,null,false);int references=0;
         for(String[] row:ReleaseResultsDocsTest.rows(body))if("automated".equals(row[2]))
-            for(String ref:row[3].split(", ")){method(root,CURRENT,null,ref);references++;}
+            for(String ref:row[3].split(", ")){method(root,resultsPath,null,ref);references++;}
         assertTrue("current evidence needs automated method references",references>0);
         successfulRun(body);
-        String scan=record(root,CURRENT_SCAN,null,true);
+        String scan=record(root,scanPath,null,true);
         assertTrue("current scan must be completed",Pattern.compile("(?m)^Status: completed$").matcher(scan).find());
-        scan(root,CURRENT_SCAN,null,runtime);
-        return !next; // 0.11.0: the 0.10.0 records still hold; the 0.11.0 ones are pending
+        scan(root,scanPath,null,runtime);
+        return true;
     }
 }

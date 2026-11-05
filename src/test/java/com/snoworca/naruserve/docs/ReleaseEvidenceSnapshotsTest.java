@@ -139,21 +139,32 @@ public class ReleaseEvidenceSnapshotsTest {
         }
     }
 
-    // OPS-REL-010 AC-3: 0.11.0 is pending only while none of its records exist; the 0.10.0 records are still checked,
-    // a 0.11.0 record fails until the gate points at it, and an unknown version is refused
-    @Test public void version011IsPendingOnlyWithoutItsRecordsAndStillChecks010()throws Exception {
+    // OPS-REL-011 AC-4 (replaces the OPS-REL-010 AC-3 pending rule after the 0.11.0 release run): version 0.11.0 is
+    // checked against its own records only, the 0.10.0 records no longer stand in for it, and an unknown version is
+    // refused
+    @Test public void version011IsCheckedAgainstItsOwnRecords()throws Exception {
         Class<?>[] types=new Class<?>[]{File.class,List.class};
-        File bare=fixture("0.11.0");
-        rejected("current evidence",()->call("current",types,bare,Collections.emptyList()));
+        String next="docs/release/0.11.0-test-results.md", nextScan="docs/release/0.11.0-vulnerability-scan.md";
+        rejected("current evidence",()->call("current",types,fixture("0.11.0"),Collections.emptyList()));
+        File old=fixture("0.11.0");write(old,PATH,"class Example { void currentOnly() {} }\n");
+        write(old,CURRENT,currentResults());write(old,CURRENT_SCAN,report("g:a:1"));
+        rejected("current evidence",()->call("current",types,old,Arrays.asList("g:a:1")));
         File local=fixture("0.11.0");write(local,PATH,"class Example { void currentOnly() {} }\n");
-        write(local,CURRENT,currentResults());write(local,CURRENT_SCAN,report("g:a:1"));
-        assertEquals(false,call("current",types,local,Arrays.asList("g:a:1")));
-        write(local,"docs/release/0.11.0-test-results.md","# Current\n");
-        rejected("0.11.0",()->call("current",types,local,Arrays.asList("g:a:1")));
-        File scanOnly=fixture("0.11.0");write(scanOnly,PATH,"class Example { void currentOnly() {} }\n");
-        write(scanOnly,CURRENT,currentResults());write(scanOnly,CURRENT_SCAN,report("g:a:1"));
-        write(scanOnly,"docs/release/0.11.0-vulnerability-scan.md",report("g:a:1"));
-        rejected("0.11.0",()->call("current",types,scanOnly,Arrays.asList("g:a:1")));
+        write(local,next,currentResults());write(local,nextScan,report("g:a:1"));
+        assertEquals(true,call("current",types,local,Arrays.asList("g:a:1")));
+        write(local,nextScan,report("g:b:2"));
+        rejected("current scan dependencies",()->call("current",types,local,Arrays.asList("g:a:1")));
         rejected("unsupported release version",()->call("current",types,fixture("0.12.0"),Collections.emptyList()));
+    }
+    // OPS-REL-011 AC-3: both 0.11.0 release notes name the auth module, the app.use(auth) install and the 0.10.0 upgrade
+    @Test public void releaseNotes011DescribeAuthInstallAndUpgrade()throws Exception {
+        String[][] files={{"docs/release/0.11.0-release-notes.md","Upgrading from 0.10.0"},
+                {"docs/release/0.11.0-release-notes.ko.md","0.10.0에서 올리기"}};
+        for(String[] f:files){
+            String body=new String(Files.readAllBytes(new File(f[0]).toPath()),StandardCharsets.UTF_8);
+            assertTrue(f[0]+" names the auth module",body.contains("com.snoworca.naruserve.utils.auth"));
+            assertTrue(f[0]+" names app.use(auth)",body.contains("app.use(auth)"));
+            assertTrue(f[0]+" has the upgrade section",body.contains("## "+f[1]));
+        }
     }
 }
