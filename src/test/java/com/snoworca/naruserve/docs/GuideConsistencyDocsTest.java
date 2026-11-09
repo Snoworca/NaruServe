@@ -188,4 +188,25 @@ public class GuideConsistencyDocsTest {
         has("servlet.md", ko("servlet.md"), "설계값 451");
         has("en/servlet.md", en("servlet.md"), "design 451");
     }
+
+    // OPS-DX-005 AC-6: auth.md states the transport lifetimes and error messages as the code does
+    @Test
+    public void OPS_DX_005_AC6_authGuideMatchesTheCodeAndTheRelease() throws IOException {
+        String k = ko("auth.md");
+        String e = en("auth.md");
+        has("auth.md", k, "수명이 고정됩니다(access 5분, refresh 24시간)", "토큰 수명을 고정합니다",
+                "메시지는 4xx `HttpException`(`AuthRejection` 포함)의 것만 보이고",
+                "Express 대응: `app.set('trust proxy', 1)` 뒤에 `req.secure`");
+        has("en/auth.md", e, "get fixed lifetimes (access 5 minutes, refresh 24 hours)", "it fixes the token lifetimes",
+                "Only a 4xx `HttpException` (`AuthRejection` included) shows its message",
+                "Express counterpart: `app.set('trust proxy', 1)` plus a middleware that refuses when `req.secure`");
+        for (String stale : new String[] {"수명이 짧아집니다", "강제로 줄입니다", "던진 예외의 메시지가 들어가지 않습니다", "첫 공개",
+                "다음 버전", "앞으로 들어갈"}) {
+            assertFalse("auth.md still says " + stale, k.contains(stale));
+        }
+        for (String stale : new String[] {"live shorter", "forces short token lifetimes", "the message of the thrown exception",
+                "first public release", "before the first release", "every file store will use"}) {
+            assertFalse("en/auth.md still says " + stale, e.contains(stale));
+        }
+    }
 }
