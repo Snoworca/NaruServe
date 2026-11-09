@@ -143,7 +143,7 @@ public final class KotlinDocsMarkersTest {
         assertTrue(failures.get(0), failures.get(0).startsWith("en/t.md#3"));
     }
 
-    // SDS-AC-1; FR-KT-004 AC-1: real docs and the three Kotlin source dirs give no failure
+    // SDS-AC-1; FR-KT-004 AC-1; OPS-DX-007 AC-5: real docs and the three Kotlin source dirs give no failure
     @Test
     public void sdsAc1_FR_KT_004_AC_1_real_docs_and_three_source_dirs_give_no_failure() throws IOException {
         Map<String, String> sources = kotlinSources();

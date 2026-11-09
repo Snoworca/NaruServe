@@ -435,7 +435,7 @@ public final class DocsExamplesCompileTest {
         return f;
     }
 
-    // OPS-REL-008 AC-3; OPS-DX-003 AC-3: no guide/fence may disappear from compiler accounting.
+    // OPS-REL-008 AC-3; OPS-DX-003 AC-3; OPS-DX-007 AC-5: no guide/fence may disappear from compiler accounting.
     @Test
     public void OPS_REL_008_AC3_bothLanguageJavaCorporaAreDiscoveredAndCompiled() throws IOException {
         Map<String, List<String>> expected = new TreeMap<>();
