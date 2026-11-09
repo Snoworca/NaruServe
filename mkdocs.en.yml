@@ -1,0 +1,66 @@
+# GitHub Pages site for the user guides (OPS-DX-005): English sub-site.
+# Inherits mkdocs.yml (lists are replaced, mappings merged) and is built
+# after it, into build/docs-site/en/. See mkdocs.yml for the layout.
+INHERIT: mkdocs.yml
+
+site_url: https://snoworca.github.io/NaruServe/en/
+site_description: User guide for NaruServe, a lightweight Express-style HTTP server library for Java 8 and Kotlin
+docs_dir: docs/api/en
+site_dir: build/docs-site/en
+exclude_docs: ""
+
+theme:
+  language: en
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+plugins:
+  - search:
+      lang:
+        - en
+
+extra:
+  guide_site:
+    lang: en
+  alternate:
+    - name: 한국어
+      lang: ko
+      prefix: ../
+    - name: English
+      lang: en
+      prefix: ""
+
+nav:
+  - Getting started: README.md
+  - express-migration.md
+  - app.md
+  - routing.md
+  - request.md
+  - response.md
+  - middleware.md
+  - json.md
+  - multipart.md
+  - static.md
+  - cookie.md
+  - websocket.md
+  - sse.md
+  - lifecycle.md
+  - logging.md
+  - defaults.md
+  - auth.md
+  - kotlin.md
+  - servlet.md
+  - API reference (Javadoc): https://javadoc.io/doc/com.snoworca.naruserve/naruserve-api

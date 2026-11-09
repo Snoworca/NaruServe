@@ -1,0 +1,134 @@
+# GitHub Pages site for the user guides (OPS-DX-005): Korean sub-site.
+#
+# The site is two MkDocs builds that share this file:
+#   mkdocs.yml     docs/api     -> build/docs-site/      (Korean, site root)
+#   mkdocs.en.yml  docs/api/en  -> build/docs-site/en/   (English, INHERITs this file)
+# Build the Korean site first: each build cleans its own site_dir, and the
+# English one lives inside the Korean one. Nothing else under docs/ is read.
+# Toolchain and local commands: tools/docs-site/requirements.txt.
+# Deployment: .github/workflows/docs-pages.yml. The Gradle build never reads
+# these files.
+
+site_name: NaruServe
+site_url: https://snoworca.github.io/NaruServe/
+site_description: Express 스타일의 Java 8 / Kotlin 경량 HTTP 서버 라이브러리 NaruServe 사용자 가이드
+site_author: Snoworca
+repo_url: https://github.com/Snoworca/NaruServe
+repo_name: Snoworca/NaruServe
+edit_uri: ""
+copyright: Copyright &copy; 2026 Snoworca. BSD 3-Clause License.
+
+docs_dir: docs/api
+site_dir: build/docs-site
+# The English guides are their own sub-site (mkdocs.en.yml).
+exclude_docs: |
+  /en/
+strict: true
+use_directory_urls: true
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  # Cross-language links the hook writes are relative site URLs, which MkDocs
+  # reports as "unrecognized"; tools/docs-site/check_site.py checks that every
+  # relative link of every built page resolves inside the site instead.
+  unrecognized_links: info
+  anchors: warn
+  not_found: warn
+
+hooks:
+  - tools/docs-site/hooks/guide_links.py
+
+theme:
+  name: material
+  custom_dir: tools/docs-site/overrides
+  language: ko
+  font: false
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.top
+    - navigation.footer
+    - navigation.indexes
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: 어두운 테마로 전환
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: 밝은 테마로 전환
+
+plugins:
+  - search:
+      lang:
+        - ko
+        - en
+
+markdown_extensions:
+  - toc:
+      permalink: true
+      # GitHub-style heading ids, so the guides' anchors (#설치, #api-키-인증)
+      # work the same on the site as on GitHub.
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - admonition
+  - attr_list
+  - tables
+  - pymdownx.highlight:
+      anchor_linenums: false
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.details
+
+extra:
+  guide_site:
+    lang: ko
+    repo_blob: https://github.com/Snoworca/NaruServe/blob/main
+    repo_tree: https://github.com/Snoworca/NaruServe/tree/main
+  # Language selector entries; "prefix" leads from this site root to the
+  # other one (see tools/docs-site/overrides/partials/alternate.html).
+  alternate:
+    - name: 한국어
+      lang: ko
+      prefix: ""
+    - name: English
+      lang: en
+      prefix: en/
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Snoworca/NaruServe
+
+nav:
+  - 시작하기: README.md
+  - express-migration.md
+  - app.md
+  - routing.md
+  - request.md
+  - response.md
+  - middleware.md
+  - json.md
+  - multipart.md
+  - static.md
+  - cookie.md
+  - websocket.md
+  - sse.md
+  - lifecycle.md
+  - logging.md
+  - defaults.md
+  - auth.md
+  - kotlin.md
+  - servlet.md
+  - API 레퍼런스 (Javadoc): https://javadoc.io/doc/com.snoworca.naruserve/naruserve-api

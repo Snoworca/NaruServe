@@ -1,0 +1,43 @@
+# Docs site toolchain (OPS-DX-005). Every package is pinned, including the
+# transitive ones, so a CI build matches a local build. This file is used only
+# by .github/workflows/docs-pages.yml and local site builds; the Gradle build
+# never reads it.
+#
+# Local build (from the repository root, Python 3.11, outside the repo or in
+# a gitignored folder such as build/):
+#   python3.11 -m venv build/docs-venv
+#   build/docs-venv/bin/pip install -r tools/docs-site/requirements.txt
+#   build/docs-venv/bin/mkdocs build --strict
+#   build/docs-venv/bin/mkdocs build --strict -f mkdocs.en.yml
+#   build/docs-venv/bin/python tools/docs-site/check_site.py
+mkdocs==1.6.1
+mkdocs-material==9.7.7
+
+babel==2.18.0
+backrefs==6.2
+certifi==2026.10.23
+charset-normalizer==3.5.2
+click==8.1.8
+colorama==0.4.6
+ghp-import==2.1.0
+idna==3.20
+Jinja2==3.1.6
+Markdown==3.9
+MarkupSafe==3.0.4
+mergedeep==1.3.4
+mkdocs-get-deps==0.2.2
+mkdocs-material-extensions==1.3.1
+packaging==26.3
+paginate==0.5.7
+pathspec==1.1.1
+platformdirs==4.4.0
+Pygments==2.21.0
+pymdown-extensions==10.21.3
+python-dateutil==3.0.0
+PyYAML==6.0.3
+pyyaml_env_tag==1.1
+requests==2.32.5
+six==1.17.0
+tzdata==2026.6
+urllib3==2.6.3
+watchdog==6.0.0

@@ -1,0 +1,99 @@
+# Builds the user guide site from docs/api (Korean) and docs/api/en (English)
+# and deploys it to GitHub Pages (OPS-DX-005). This job is independent of the
+# library build: it installs only the pinned docs toolchain and never runs the
+# JVM build. Every action is pinned to a commit SHA (tag in the comment).
+#
+# One-time repository setting: Settings -> Pages -> Source: GitHub Actions.
+# Site: https://snoworca.github.io/NaruServe/
+name: Docs site
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/api/**"
+      - "mkdocs.yml"
+      - "mkdocs.en.yml"
+      - "tools/docs-site/**"
+      - ".github/workflows/docs-pages.yml"
+  pull_request:
+    paths:
+      - "docs/api/**"
+      - "mkdocs.yml"
+      - "mkdocs.en.yml"
+      - "tools/docs-site/**"
+      - ".github/workflows/docs-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: tools/docs-site/requirements.txt
+
+      - name: Install the pinned docs toolchain
+        run: python -m pip install --disable-pip-version-check -r tools/docs-site/requirements.txt
+
+      - name: Test the link hook
+        run: python -m unittest discover -s tools/docs-site -p "test_*.py"
+
+      - name: Build the Korean site (root)
+        env:
+          NO_MKDOCS_2_WARNING: "1"
+        run: mkdocs build --strict
+
+      - name: Build the English site (/en/)
+        env:
+          NO_MKDOCS_2_WARNING: "1"
+        run: mkdocs build --strict -f mkdocs.en.yml
+
+      - name: Check the site holds only the guides
+        run: python tools/docs-site/check_site.py --site build/docs-site
+
+      - name: Configure Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Upload the site
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: build/docs-site
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

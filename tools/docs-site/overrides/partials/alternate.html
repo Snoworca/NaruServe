@@ -1,0 +1,30 @@
+{#-
+  Language selector (OPS-DX-005). Replaces Material's partial so that each
+  entry links to the same page in the other language sub-site instead of to
+  its home page. Each entry of extra.alternate carries "prefix", the path from
+  this build's site root to the other build's site root ("en/" from the
+  Korean root, "../" from the English one). Every guide exists in both
+  languages under the same file name, so page.url maps one to one. The href
+  is built from base_url (the path from this page to its site root) because
+  the url filter resolves a leading "../" against the site root, not the page.
+-#}
+<div class="md-header__option">
+  <div class="md-select">
+    {% set icon = config.theme.icon.alternate or "material/translate" %}
+    <button class="md-header__button md-icon" aria-label="{{ lang.t('select.language') }}">
+      {% include ".icons/" ~ icon ~ ".svg" %}
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        {% set here = page.url if page and page.url else "" %}
+        {% for alt in config.extra.alternate %}
+          <li class="md-select__item">
+            <a href="{{ base_url.rstrip('/') }}/{{ alt.prefix }}{{ here }}" hreflang="{{ alt.lang }}" class="md-select__link">
+              {{ alt.name }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
