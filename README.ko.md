@@ -5,16 +5,17 @@
 [English](README.md) | 한국어
 
 NaruServe는 Express.js처럼 사용하는 Java 8·Kotlin용 경량 HTTP 서버 라이브러리입니다.
-
-> 이 안내는 NaruServe 0.11.0 공통 HTTP 프로파일과 기존 확장 API를 설명합니다.
 Android 5.0(API 21) 이상과 Java 8 이상 JVM에서 같은 API를 사용합니다.
 
 [한국어 API 문서](docs/api/README.md)와 [English API guide](docs/api/en/README.md)를 제공합니다.
 아래 설치 방법과 실행 가능한 예제부터 시작하고, 메서드 시그니처·기본값·오류 계약은 API 가이드에서 확인하세요.
 
+> 이 안내는 NaruServe 0.11.0 공통 HTTP 프로파일과 기존 확장 API를 설명합니다.
+
 ## 설치
 
-NaruServe 0.11.0은 아래 Maven Central 좌표와 `mavenCentral()` 저장소를 사용합니다. 저장소에서 0.11.0을 받을 수 없다면(0.11.0은 아직 Maven Central에 없습니다) 릴리스가 제공될 때까지 [소스 체크아웃 빌드](#소스-체크아웃-빌드)를 사용하세요. 이 빌드는 체크아웃을 0.11.0으로 로컬 Maven 저장소에 게시합니다.
+NaruServe 0.11.0은 Maven Central에 게시되어 있으므로 아래 Maven Central 좌표를 `mavenCentral()` 저장소로 바로 받을 수 있습니다.
+[v0.11.0 GitHub 릴리스](https://github.com/Snoworca/NaruServe/releases/tag/v0.11.0)에는 Maven Central과 같은 열 개의 주요 아티팩트(JAR와 AAR)와 서명, `SHA256SUMS`, `LICENSE`가 있고, [게시 검증 기록](docs/release/verification/central-0.11.0.md)에서 게시된 파일을 어떻게 확인했는지 볼 수 있습니다. 아직 릴리스되지 않은 변경을 써 보려면 [소스 체크아웃 빌드](#소스-체크아웃-빌드)를 참고하세요.
 
 - Central 페이지: [central.sonatype.com/artifact/com.snoworca.naruserve/naruserve](https://central.sonatype.com/artifact/com.snoworca.naruserve/naruserve)
   (전체 모듈: [namespace com.snoworca.naruserve](https://central.sonatype.com/namespace/com.snoworca.naruserve))
@@ -86,6 +87,7 @@ artifactId는 모듈 이름을 소문자로 쓴 값입니다(`NaruServe-api` →
 
 ### 소스 체크아웃 빌드
 
+NaruServe 자체를 고치거나 아직 릴리스되지 않은 변경을 써 볼 때만 소스에서 빌드합니다. 릴리스된 0.11.0은 위처럼 Maven Central에서 받습니다.
 **JDK 17**과 저장소의 **Gradle 8.14.3** wrapper로 빌드합니다. 라이브러리 바이트코드 대상은 Java 8이며, 빌드 JDK와 실행 환경의 최소 버전은 다릅니다. `java -version`과 `./gradlew --version`으로 확인하세요.
 
 아래 명령은 배포된 TinyHttpd JAR를 사용하므로 TinyHttpd 체크아웃이 필요 없습니다.
@@ -95,7 +97,7 @@ artifactId는 모듈 이름을 소문자로 쓴 값입니다(`NaruServe-api` →
 ./gradlew -PtinyHttpdFromMaven=true publishToMavenLocal
 ```
 
-`publishToMavenLocal`은 이 체크아웃을 위 좌표와 같은 버전 0.11.0으로 게시하며, auth 모듈이 들어 있습니다. 이 로컬 빌드를 별도 소비자 프로젝트에서 사용하려면 `mavenCentral()` 앞에 `mavenLocal()`을 추가하세요.
+`publishToMavenLocal`은 이 체크아웃을 릴리스와 같은 버전 0.11.0의 위 좌표로 게시합니다. 이 로컬 빌드를 별도 소비자 프로젝트에서 사용하려면 `mavenCentral()` 앞에 `mavenLocal()`을 추가하세요.
 
 ```groovy
 repositories {
@@ -103,6 +105,8 @@ repositories {
     mavenCentral()
 }
 ```
+
+`mavenLocal()`이 앞에 있는 동안에는 이 로컬 빌드가 그 소비자에서 Maven Central의 0.11.0을 가립니다. 릴리스된 아티팩트로 돌아가려면 `mavenLocal()`을 빼거나 `~/.m2/repository/com/snoworca/naruserve`를 지우세요.
 
 Android AAR는 `local.properties`의 `sdk.dir`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` 순으로 SDK 디렉터리를 찾아 포함합니다. Android Gradle Plugin 8.13.2, `compileSdk 36`, `minSdk 21`을 사용합니다. SDK가 없어도 아홉 JAR 모듈을 빌드합니다.
 
@@ -144,11 +148,11 @@ JDK 17로 이 체크아웃에서 예제 하나를 실행합니다.
 
 다른 터미널에서 `curl http://127.0.0.1:3000/hello`로 확인하세요. `RestApp.start`는 `127.0.0.1`에서만 요청을 받고(현재 기기 전용), `Listening on ...` 로그 한 줄을 남기며 Ctrl+C로 종료합니다. LAN에 공개하려면 설정 람다 안에서 `app.server(o -> o.bindAddress("0.0.0.0"))`를 호출하세요. `RestApp.create()`와 `app.listen(...)`을 사용하는 하위 수준 경로도 제공합니다.
 예제는 이 체크아웃을 Gradle composite build로 사용하며, 로컬 Maven 게시가 필요 없습니다.
-별도 소비자 프로젝트는 [설치](#설치)의 좌표를 사용합니다. 저장소에서 릴리스를 찾지 못하면 소스 체크아웃 설치 방법을 사용하세요.
+별도 소비자 프로젝트는 [설치](#설치)의 Maven Central 좌표를 사용합니다.
 
 ## 로그인과 역할 (auth, 0.11.0)
 
-인증 모듈은 `app.use(auth)` 한 줄로 앱에 JWT 로그인, 사용자, 그룹, 스코프 기반 역할을 붙입니다. 내장 `POST /auth/login`·refresh·logout·계정 엔드포인트, 관리 엔드포인트, `auth.require("posts:write")` 같은 가드가 함께 들어옵니다. 사용자는 기본으로 메모리나 파일에 저장하고, 자체 데이터베이스를 쓰려면 `UserStore` 인터페이스를 구현합니다. **0.11.0**에 들어갑니다. 0.11.0이 배포되기 전에는 [소스 체크아웃 빌드](#소스-체크아웃-빌드)대로 로컬 빌드해서 씁니다. 바로 실행되는 빠른 시작은 [인증 가이드](docs/api/auth.md)에 있습니다.
+인증 모듈은 `app.use(auth)` 한 줄로 앱에 JWT 로그인, 사용자, 그룹, 스코프 기반 역할을 붙입니다. 내장 `POST /auth/login`·refresh·logout·계정 엔드포인트, 관리 엔드포인트, `auth.require("posts:write")` 같은 가드가 함께 들어옵니다. 사용자는 기본으로 메모리나 파일에 저장하고, 자체 데이터베이스를 쓰려면 `UserStore` 인터페이스를 구현합니다. Maven Central의 **0.11.0** 아티팩트에 들어 있으므로 [설치](#설치)의 의존성만으로 바로 쓸 수 있습니다. 바로 실행되는 빠른 시작은 [인증 가이드](docs/api/auth.md)에 있습니다.
 
 ## Express와 비교
 
@@ -264,10 +268,18 @@ settings.gradle        모듈 포함과 선택적 TinyHttpd composite
 | 증상 | 원인과 조치 |
 |---|---|
 | `tinyHttpdDir: TinyHttpd checkout not found` | `-PtinyHttpdFromMaven=true`로 배포된 엔진 JAR를 선택하거나 유효한 `-PtinyHttpdDir` 경로를 넘기세요. |
-| `Could not find com.snoworca.naruserve:...:0.11.0` | 릴리스 가용성을 확인하고, 이 체크아웃을 로컬에 게시한 뒤 소비자에 `mavenLocal()`을 추가하세요. |
+| `Could not find com.snoworca.naruserve:...:0.11.0` | 소비자의 `repositories`에 `mavenCentral()`을 추가하고(Android 프로젝트는 `settings.gradle`의 `dependencyResolutionManagement`에 있습니다) 좌표를 [설치](#설치)와 비교하세요. 사내 미러나 프록시를 쓴다면 그 저장소도 Maven Central을 제공해야 합니다. |
 | `No com.snoworca.naruserve.spi.AppFactory provider found` | `naruserve`(또는 `naruserve-kotlin` / `naruserve-android`)를 추가하거나 `RestApp.builder()`에 `httpAdapter`와 `jsonCodec`을 명시하세요. `naruserve-api`만으로는 인터페이스와 구현 기반 요소만 제공합니다. |
 | 다른 기기에서 연결할 수 없음 | 기본 바인딩은 `127.0.0.1`입니다. 설정 람다에서 `bindAddress("0.0.0.0")`를 지정하고 기기 네트워크·방화벽을 확인하세요. |
 | Android 리소스 병합에서 TinyHttpd 고지가 중복됨 | 설치 절의 `packaging.resources.pickFirsts` 설정을 적용하세요. |
+
+## 릴리스
+
+| 릴리스 | 문서 |
+|---|---|
+| 0.11.0(현재) | [GitHub 릴리스 v0.11.0](https://github.com/Snoworca/NaruServe/releases/tag/v0.11.0), [릴리스 노트](docs/release/0.11.0-release-notes.ko.md), [테스트 결과](docs/release/0.11.0-test-results.md), [Maven Central 검증](docs/release/verification/central-0.11.0.md) |
+| 0.10.0(이전) | [릴리스 노트](docs/release/0.10.0-release-notes.ko.md), [테스트 결과](docs/release/0.10.0-test-results.md), [Maven Central 검증](docs/release/verification/central-0.10.0.md) |
+| v1·0.9.0(과거 기록) | [릴리스 노트](docs/release/release-notes.md), [테스트 결과](docs/release/test-results.md) |
 
 ## v1 범위
 
@@ -278,19 +290,12 @@ API 21 호환성의 근거는 `--release 8` 컴파일과, API 문서에서 Andro
 2026-10-20 사용자 결정에 따라 Android 샘플 빌드, AGP·R8 빌드, StrictMode, 기기에서의 Logcat, API 21 기기·에뮬레이터 실행은 v1 범위 밖입니다. 이 결정으로 이슈 #17을 닫았으며(2026-10-20) 남은 산출물이 없습니다.
 API 21 근거의 세 번째 부분은 D-385 규칙입니다. 어떤 모듈도 컴파일 시점의 `android.*` 참조를 갖지 않으며, 빌드의 `checkClassReferences` 검사는 `NaruServe-api`와 `NaruServe-logcat`의 `android/` 클래스 참조를 거부합니다. 어떤 모듈의 컴파일 클래스패스에도 Android 아티팩트를 넣지 않습니다.
 
-- [API 문서](docs/api/README.md)
-- [0.10.0 릴리스 노트](docs/release/0.10.0-release-notes.ko.md)
-- [0.10.0 검증 결과](docs/release/0.10.0-test-results.md)
-- [릴리스 노트](docs/release/release-notes.md)
-- [테스트 결과](docs/release/test-results.md)
-- [서드파티 라이선스](THIRD-PARTY-LICENSES.md)
-
 ## TinyHttpd
 
 이 저장소는 TinyHttpd를 게시하지 않습니다. 어댑터는 Maven Central의 `com.snoworca:tinyhttpd-core:3.1.1`과 `com.snoworca:tinyhttpd-websocket:3.1.1`으로 버전을 고정합니다.
 이 어댑터는 TinyHttpd 3.1.1에 추가된 `RequestTargetPolicy.RAW` API를 사용합니다. 두 아티팩트 모두 3.1.1을 사용하세요. 3.1.0에는 이 정책이 없습니다.
 
-로컬에 게시한 NaruServe 모듈을 별도 소비자에서 쓰려면 `mavenLocal()`과 `mavenCentral()`을 함께 설정하세요. TinyHttpd 소스 체크아웃은 필요 없습니다. 배포된 JAR로 이 저장소를 빌드하는 명령은 다음과 같습니다.
+Maven Central의 NaruServe 모듈을 쓰는 소비자는 TinyHttpd 3.1.1도 Maven Central에서 함께 받고, 로컬에 게시한 NaruServe 모듈을 쓰는 소비자는 `mavenLocal()`과 `mavenCentral()`을 함께 설정합니다. TinyHttpd 소스 체크아웃은 필요 없습니다. 배포된 JAR로 이 저장소를 빌드하는 명령은 다음과 같습니다.
 
 ```bash
 ./gradlew -PtinyHttpdFromMaven=true build

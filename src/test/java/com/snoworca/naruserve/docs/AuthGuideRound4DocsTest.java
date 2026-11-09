@@ -91,13 +91,28 @@ public class AuthGuideRound4DocsTest {
         }
     }
 
-    // OPS-AUTH-013 AC-4: the READMEs say plainly where 0.11.0 is and which module holds auth
+    /** The "Build from a source checkout" subsection of a README, up to the next level-2 heading. */
+    private static String sourceSection(String f, String doc) {
+        String heading = f.endsWith(".ko.md") ? "\n### 소스 체크아웃 빌드\n" : "\n### Build from a source checkout\n";
+        int start = doc.indexOf(heading);
+        assertTrue(f + " has" + heading, start >= 0);
+        int end = doc.indexOf("\n## ", start + 1);
+        return doc.substring(start, end < 0 ? doc.length() : end);
+    }
+
+    // OPS-AUTH-013 AC-4: the READMEs say plainly that 0.11.0 is on Maven Central (amended 2026-11-09 after the
+    // publication), keep the local publication for unreleased changes only, and name the module that holds auth
     @Test
     public void OPS_AUTH_013_AC4_readmeStatesAvailability() throws IOException {
         for (String f : new String[] {"README.md", "README.ko.md"}) {
             String doc = read(f);
-            has(f, doc, f.endsWith(".ko.md") ? "0.11.0은 아직 Maven Central에 없습니다" : "0.11.0 is not yet on Maven Central");
-            has(f, doc, "publishToMavenLocal");
+            boolean ko = f.endsWith(".ko.md");
+            has(f, doc, ko ? "NaruServe 0.11.0은 Maven Central에 게시되어 있" : "NaruServe 0.11.0 is on Maven Central");
+            assertFalse(f + " still says 0.11.0 is not on Maven Central",
+                    doc.contains(ko ? "아직 Maven Central에 없습니다" : "not yet on Maven Central"));
+            String source = sourceSection(f, doc);
+            has(f + " source section", source, "publishToMavenLocal");
+            has(f + " source section", source, ko ? "아직 릴리스되지 않은 변경" : "changes that are not released yet");
             has(f + " naruserve-api row", line(f, doc, "| `NaruServe-api` |"), "utils.auth");
         }
     }
@@ -137,11 +152,17 @@ public class AuthGuideRound4DocsTest {
         }
     }
 
-    // OPS-AUTH-013 AC-4: publishToMavenLocal comes with mavenLocal() for a consumer
+    // OPS-AUTH-013 AC-4: publishToMavenLocal comes with mavenLocal() for a consumer, only in the source-checkout section
     @Test
     public void OPS_AUTH_013_AC4_readmeNamesMavenLocal() throws IOException {
         for (String f : new String[] {"README.md", "README.ko.md"}) {
-            has(f, read(f), "mavenLocal()");
+            String doc = read(f);
+            String source = sourceSection(f, doc);
+            has(f + " source section", source, "mavenLocal()");
+            int install = doc.indexOf(f.endsWith(".ko.md") ? "\n## 설치\n" : "\n## Install\n");
+            assertTrue(f + " has its Install heading", install >= 0);
+            assertTrue(f + ": mavenLocal() before the source-checkout section",
+                    doc.indexOf("mavenLocal()") >= doc.indexOf(source));
         }
     }
 }

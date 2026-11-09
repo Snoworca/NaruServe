@@ -14,8 +14,8 @@ Start with installation and the runnable example below; use the API guides for s
 
 ## Install
 
-NaruServe 0.11.0 uses the Maven Central coordinates below with `mavenCentral()` as the repository.
-If 0.11.0 is unavailable from the repository (0.11.0 is not yet on Maven Central), use [Build from a source checkout](#build-from-a-source-checkout) until the release is available; it publishes this checkout as 0.11.0 to your local Maven repository.
+NaruServe 0.11.0 is on Maven Central, so the Maven Central coordinates below resolve with `mavenCentral()` as the repository.
+The [v0.11.0 GitHub release](https://github.com/Snoworca/NaruServe/releases/tag/v0.11.0) carries the same ten main artifacts as Maven Central (JARs and the AAR) with their signatures, `SHA256SUMS` and `LICENSE`, and the [publication record](docs/release/verification/central-0.11.0.md) shows how the published files were checked. To try changes that are not released yet, see [Build from a source checkout](#build-from-a-source-checkout).
 
 - Central page: [central.sonatype.com/artifact/com.snoworca.naruserve/naruserve](https://central.sonatype.com/artifact/com.snoworca.naruserve/naruserve)
   (all modules: [namespace com.snoworca.naruserve](https://central.sonatype.com/namespace/com.snoworca.naruserve))
@@ -90,6 +90,7 @@ Each artifactId is the module name in lower case (`NaruServe-api` is published a
 
 ### Build from a source checkout
 
+Build from source only to work on NaruServe itself or to try changes that are not released yet; the released 0.11.0 comes from Maven Central as shown above.
 Build with **JDK 17** and the supplied **Gradle 8.14.3** wrapper. Library bytecode targets Java 8; the build JDK and runtime minimum differ. Check `java -version` and `./gradlew --version`.
 
 The following commands use released TinyHttpd JARs, so no TinyHttpd checkout is needed:
@@ -99,7 +100,7 @@ The following commands use released TinyHttpd JARs, so no TinyHttpd checkout is 
 ./gradlew -PtinyHttpdFromMaven=true publishToMavenLocal
 ```
 
-`publishToMavenLocal` publishes this checkout as version 0.11.0, the coordinates above, which include the auth module. For a separate consumer of this local build, add `mavenLocal()` before `mavenCentral()`:
+`publishToMavenLocal` publishes this checkout under the coordinates above, with the same version 0.11.0 as the release. For a separate consumer of this local build, add `mavenLocal()` before `mavenCentral()`:
 
 ```groovy
 repositories {
@@ -107,6 +108,8 @@ repositories {
     mavenCentral()
 }
 ```
+
+While `mavenLocal()` comes first, this local build shadows the Maven Central 0.11.0 for that consumer. To return to the released artifacts, remove `mavenLocal()` or delete `~/.m2/repository/com/snoworca/naruserve`.
 
 The Android AAR is included only when an SDK directory is found in `local.properties` (`sdk.dir`), `ANDROID_HOME`, or `ANDROID_SDK_ROOT`, in that order. It uses Android Gradle Plugin 8.13.2, `compileSdk 36` and `minSdk 21`. Without an SDK, the nine JAR modules still build.
 
@@ -148,11 +151,11 @@ Run one source example from this checkout with JDK 17:
 
 In another terminal: `curl http://127.0.0.1:3000/hello`. `RestApp.start` listens on `127.0.0.1` only (this device), writes one `Listening on ...` line and stops on Ctrl+C; open the LAN inside the lambda with `app.server(o -> o.bindAddress("0.0.0.0"))`. `RestApp.create()` plus `app.listen(...)` remains the lower-level path.
 The examples use a Gradle composite build of this source checkout; they do not require local Maven publication.
-A separate consumer project uses the coordinates in [Install](#install); use the source-checkout installation if the release is not available in your repository.
+A separate consumer project uses the Maven Central coordinates in [Install](#install).
 
 ## Login and roles (auth, 0.11.0)
 
-The auth module adds JWT login, users, groups and scope-based roles to an app with one line, `app.use(auth)`: the built-in `POST /auth/login`, refresh, logout and account endpoints, admin endpoints, and guards such as `auth.require("posts:write")`. Users live in memory or a file by default; to use your own database, implement the `UserStore` interface. It ships with **0.11.0**. Until 0.11.0 is published, get it from a local build: follow [Build from a source checkout](#build-from-a-source-checkout). Start with the runnable quick start in the [auth guide](docs/api/en/auth.md).
+The auth module adds JWT login, users, groups and scope-based roles to an app with one line, `app.use(auth)`: the built-in `POST /auth/login`, refresh, logout and account endpoints, admin endpoints, and guards such as `auth.require("posts:write")`. Users live in memory or a file by default; to use your own database, implement the `UserStore` interface. It ships in the **0.11.0** artifacts on Maven Central, so the dependency from [Install](#install) already includes it. Start with the runnable quick start in the [auth guide](docs/api/en/auth.md).
 
 ## Coming from Express
 
@@ -268,10 +271,18 @@ settings.gradle        Module inclusion and optional TinyHttpd composite
 | Symptom | Cause and action |
 |---|---|
 | `tinyHttpdDir: TinyHttpd checkout not found` | Select published engine JARs with `-PtinyHttpdFromMaven=true`, or pass a valid `-PtinyHttpdDir` path. |
-| `Could not find com.snoworca.naruserve:...:0.11.0` | Check release availability; publish this checkout locally and add `mavenLocal()` to the consumer. |
+| `Could not find com.snoworca.naruserve:...:0.11.0` | Add `mavenCentral()` to the consumer's `repositories` (an Android project lists it in `dependencyResolutionManagement` of `settings.gradle`) and compare the coordinates with [Install](#install). A company mirror or proxy must also serve Maven Central. |
 | `No com.snoworca.naruserve.spi.AppFactory provider found` | Add `naruserve` (or `naruserve-kotlin` / `naruserve-android`), or use `RestApp.builder()` with explicit `httpAdapter` and `jsonCodec`. `naruserve-api` alone supplies interfaces and implementation primitives. |
 | Other devices cannot connect | The default bind is `127.0.0.1`. Set `bindAddress("0.0.0.0")` inside the configuration lambda and check device network/firewall settings. |
 | Android resource merge reports duplicate TinyHttpd notices | Apply the `packaging.resources.pickFirsts` configuration from Install. |
+
+## Releases
+
+| Release | Documents |
+|---|---|
+| 0.11.0 (current) | [GitHub release v0.11.0](https://github.com/Snoworca/NaruServe/releases/tag/v0.11.0), [release notes](docs/release/0.11.0-release-notes.md), [test results](docs/release/0.11.0-test-results.md), [Maven Central verification](docs/release/verification/central-0.11.0.md) |
+| 0.10.0 (previous) | [release notes](docs/release/0.10.0-release-notes.md), [test results](docs/release/0.10.0-test-results.md), [Maven Central verification](docs/release/verification/central-0.10.0.md) |
+| v1 and 0.9.0 (historical) | [release notes](docs/release/release-notes.md), [test results](docs/release/test-results.md) |
 
 ## Scope of v1
 
@@ -282,21 +293,15 @@ API 21 compatibility rests on compiling with `--release 8` and on the animal-sni
 The Android sample build, the AGP and R8 builds, StrictMode, Logcat on a device and any API 21 device or emulator run are not part of v1 by the user decision of 2026-10-20; issue #17 is closed by that decision (2026-10-20) and has no remaining deliverable.
 The third part of the API 21 basis is the D-385 rule: no module has a compile-time `android.*` reference; the build's `checkClassReferences` check fails on an `android/` class reference in `NaruServe-api` and `NaruServe-logcat`, and no module has an Android artifact on its compile classpath.
 
-- [API documentation](docs/api/README.md)
-- [0.10.0 release notes](docs/release/0.10.0-release-notes.md)
-- [0.10.0 verification](docs/release/0.10.0-test-results.md)
-- [Release notes](docs/release/release-notes.md)
-- [Test results](docs/release/test-results.md)
-- [Third-party licenses](THIRD-PARTY-LICENSES.md)
-
 ## TinyHttpd
 
 TinyHttpd is not published by this repository. The adapter pins
 `com.snoworca:tinyhttpd-core:3.1.1` and `com.snoworca:tinyhttpd-websocket:3.1.1` from Maven Central.
 TinyHttpd 3.1.1 adds the `RequestTargetPolicy.RAW` API used by this adapter. Use both 3.1.1 artifacts; 3.1.0 lacks this policy.
 
-For a separate consumer of the locally published NaruServe modules, configure both `mavenLocal()` and
-`mavenCentral()`. No TinyHttpd source checkout is required. To build this repository using the published JARs:
+A consumer of the NaruServe modules on Maven Central resolves TinyHttpd 3.1.1 from Maven Central with them, and a
+consumer of locally published NaruServe modules configures both `mavenLocal()` and `mavenCentral()`. No TinyHttpd
+source checkout is required. To build this repository using the published JARs:
 
 ```bash
 ./gradlew -PtinyHttpdFromMaven=true build

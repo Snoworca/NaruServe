@@ -5,7 +5,7 @@
 NaruServe는 Express.js처럼 쓰는 Java 8 / Kotlin용 경량 HTTP 서버 라이브러리입니다.
 Android 5.0(API 21)부터 최신 Android, 그리고 일반 JVM에서 같은 API로 동작합니다.
 
-> **문서 상태:** 0.11.0 공통 HTTP 프로파일과 기존 확장 API를 설명합니다. 설치 좌표와 저장소 가용성에 따른 소스 빌드는 [설치 안내](../../README.ko.md#설치)를 따르세요. 라우팅·오류·비동기 계약과 Java Pattern 경계는 [Express에서 오신 분께](express-migration.md)를 참고하세요.
+> **문서 상태:** 0.11.0 공통 HTTP 프로파일과 기존 확장 API를 설명합니다. 0.11.0은 Maven Central에 있으며, 설치 좌표와 아직 릴리스되지 않은 변경을 쓰는 소스 빌드는 [설치 안내](../../README.ko.md#설치)를 따르세요. 라우팅·오류·비동기 계약과 Java Pattern 경계는 [Express에서 오신 분께](express-migration.md)를 참고하세요.
 
 Express를 써 봤다면 [Express에서 오신 분께](express-migration.md)부터 읽으세요.
 
@@ -46,7 +46,7 @@ fun main() {
 
 위 코드는 import와 실행 진입점을 포함한 최소 서버입니다. `curl http://127.0.0.1:3000/hello`로 확인하세요. `RestApp.start`는 `127.0.0.1`에서만 받고(이 기기 전용) 시작 로그를 한 줄 남기며 Ctrl+C로 종료합니다. 다른 기기에 열려면 람다 안에서 `app.server(o -> o.bindAddress("0.0.0.0"))`를 호출하세요. 자세한 차이는 [start](app.md#start)에 있고, `RestApp.create()`와 `app.listen(...)`을 따로 쓰는 방법도 그대로 있습니다.
 
-DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답까지 포함한 [Java 예제](../../examples/java)와 [Kotlin 예제](../../examples/kotlin)는 [실행 안내](../../examples/README.ko.md)를 따라 실행할 수 있습니다. 예제는 이 소스 체크아웃을 Gradle composite build로 사용합니다. 별도 소비자 프로젝트의 설치 좌표와 소스 빌드 대안은 [한국어 README](../../README.ko.md#설치)를 참고하세요. Maven Central에서 버전이 조회되지 않으면 소스 체크아웃을 로컬에 게시해 사용하세요.
+DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답까지 포함한 [Java 예제](../../examples/java)와 [Kotlin 예제](../../examples/kotlin)는 [실행 안내](../../examples/README.ko.md)를 따라 실행할 수 있습니다. 예제는 이 소스 체크아웃을 Gradle composite build로 사용합니다. 별도 소비자 프로젝트는 [한국어 README](../../README.ko.md#설치)의 Maven Central 좌표를 사용합니다. 소스 체크아웃을 로컬에 게시하는 방법은 아직 릴리스되지 않은 변경을 써 볼 때만 필요합니다.
 
 ## 문서 목록
 
