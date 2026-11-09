@@ -196,7 +196,7 @@ def check_language_scripts(url, lang, html, parser, failures):
     if MEMORY_SCRIPT not in html:
         failures.append("%s: language choice memory script missing" % page_file(url))
     ko_url = url if lang == "ko" else counterpart(url, lang)
-    want = {"ko": SITE_URL + ko_url, "en": SITE_URL + "en/" + ko_url, "x-default": SITE_URL + ko_url}
+    want = {"ko": SITE_URL + ko_url, "en": SITE_URL + "en/" + ko_url, "x-default": SITE_URL + "en/" + ko_url}
     for code, target in want.items():
         got = parser.head_alternates.get(code)
         if got != target:
