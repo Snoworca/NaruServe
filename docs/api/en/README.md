@@ -5,7 +5,7 @@ English | [한국어](../README.md)
 NaruServe is a lightweight HTTP server library for Java 8 and Kotlin with an Express.js-style API.
 Use the same API on Android 5.0 (API 21) and later and on a regular JVM.
 
-> **Documentation status:** These guides describe the 0.11.0 common HTTP profile and retained extensions. Follow the [installation guide](../../../README.md#install) for coordinates and the source-build fallback when that version is unavailable. See [Coming from Express](express-migration.md) for routing, errors, asynchronous ownership and the Java Pattern boundary.
+> **Documentation status:** These guides describe the 0.11.0 common HTTP profile and retained extensions. 0.11.0 is on Maven Central; follow the [installation guide](../../../README.md#install) for its coordinates and for the source build of changes that are not released yet. See [Coming from Express](express-migration.md) for routing, errors, asynchronous ownership and the Java Pattern boundary.
 
 If you have used Express, start with [Coming from Express](express-migration.md).
 
@@ -46,7 +46,7 @@ fun main() {
 
 These minimal servers include imports and executable entrypoints. Check the response with `curl http://127.0.0.1:3000/hello`. `RestApp.start` listens only on `127.0.0.1` (this device), writes one startup log line and stops on Ctrl+C. To accept connections from other devices, call `app.server(o -> o.bindAddress("0.0.0.0"))` inside the configuration lambda. See [start](app.md#start) for the differences; separate calls to `RestApp.create()` and `app.listen(...)` remain available.
 
-The complete [Java example](../../../examples/java) and [Kotlin example](../../../examples/kotlin) cover DTO validation, a thread-safe user service, uploads and stream responses. Follow the [run instructions](../../../examples/README.md). These examples use this source checkout as a Gradle composite build. See the [root README](../../../README.md#install) for consumer coordinates and source-build alternatives. If the version does not resolve from Maven Central, publish the source checkout locally.
+The complete [Java example](../../../examples/java) and [Kotlin example](../../../examples/kotlin) cover DTO validation, a thread-safe user service, uploads and stream responses. Follow the [run instructions](../../../examples/README.md). These examples use this source checkout as a Gradle composite build. A separate consumer project uses the Maven Central coordinates in the [root README](../../../README.md#install). Publishing the source checkout locally is needed only to try changes that are not released yet.
 
 ## Guides
 
