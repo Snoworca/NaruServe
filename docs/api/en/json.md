@@ -20,7 +20,7 @@ The two request body calls above illustrate alternatives, not successive reads o
 - Kotlin `object : TypeRef<List<String>>() {}` records a covariance wildcard. With kotlin.Metadata retained, TypeRef normalizes extends wildcards to match Java's List<String>. If R8 removes the annotation, the wildcard remains, but default Gson decodes both equally.
 - res.json writes objects, arrays, maps, strings, numbers and null as valid JSON.
 
-These typed request readers and explicit `res.json` writes remain available in the 0.11.0 common HTTP checkout. A parse/limit failure enters downstream ordered error handlers; unhandled common HTTP errors are HTML with escaped Java exception details, not an automatic JSON envelope. Use error middleware and `res.status(...).json(...)` for an explicitly JSON API.
+These typed request readers and explicit `res.json` writes remain available in 0.11.0 common HTTP. A parse/limit failure enters downstream ordered error handlers; unhandled common HTTP errors are HTML with escaped Java exception details, not an automatic JSON envelope. Use error middleware and `res.status(...).json(...)` for an explicitly JSON API.
 
 A returned pending `Deferred` from an async route can retain the same cached body or unread input beyond response completion. Complete the result after the producer's last access, and never reuse cancelled input. See [request ownership](lifecycle.md#deferred-callbacks-and-request-resources).
 

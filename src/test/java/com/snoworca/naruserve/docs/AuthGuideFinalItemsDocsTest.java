@@ -59,7 +59,7 @@ public class AuthGuideFinalItemsDocsTest {
             String g = ReadmeDocsTest.read(f);
             has(f, g, en(f) ? "In PROD auth also appends, at start and after every layer registered by then"
                     : "PROD에서는 기동할 때 그때까지 등록된 모든 층 뒤에");
-            has(f, g, en(f) ? "in PROD so is the answer to every exception an app route throws before start"
+            has(f, g, en(f) ? "in PROD so is the answer to every exception thrown by an app route registered before start"
                     : "PROD에서는 기동 전에 등록한 앱 라우트가 던진 예외의 응답도 모두 JSON입니다");
             has(f, g, "`METHOD_NOT_ALLOWED`");
             lacks(f, g, "HTML 404");

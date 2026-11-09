@@ -2,9 +2,9 @@
 
 [English](en/app.md) | [문서 목록](README.md)
 
-`RestApp`은 Express의 `app`에 해당합니다. 라우트·미들웨어·설정을 등록하고 서버를 시작하고 끕니다.
+`RestApp`은 Express의 `app`에 해당합니다. 라우트·미들웨어·설정을 등록하고 서버를 시작하고 끕니다. 아래 예제는 API 조각입니다. import와 실행할 수 있는 진입점은 [5분 시작](README.md#5분-시작)을 보세요. `Database`, `UserService` 같은 타입은 앱이 만드는 것입니다.
 
-이 페이지는 **NaruServe 0.11.0**의 일반 HTTP를 설명합니다. 소스/아티팩트 사용법은 [설치 안내](README.md)를 따르세요. TinyHttpd는 raw request-target 전달을 사용하는3.1.1, 기본 Gson은2.14.0입니다. 코어 API는 Java 8/API 21을 대상으로 하며 기기 성능 검증을 뜻하지 않습니다.
+이 페이지는 **NaruServe 0.11.0**의 일반 HTTP를 설명합니다. 설치는 [설치 안내](README.md)를 따르세요. TinyHttpd는 raw request-target을 그대로 넘기는 3.1.1이고, 기본 Gson은 2.14.0입니다. 코어 API는 Java 8/API 21을 대상으로 하며 기기 성능 검증을 뜻하지 않습니다.
 
 ## 앱 만들기
 
@@ -122,7 +122,7 @@ public interface RouteHandler {
 
 ### 서버 설정
 
-`server(options -> ...)`는 `ServerOptions`를 받는 람다를 바로 실행하고 `RestApp`을 돌려줍니다. 여러 번 부르면 차례로 적용됩니다. Express에서 `app.listen(port, host)`와 `http.Server`의 `headersTimeout` 같은 속성으로 흩어져 있던 설정을 한곳에 모은 것입니다. 각 설정 메서드는 `ServerOptions`를 돌려주므로 이어서 부릅니다. 람다가 중간에 예외를 던지면 그 전까지 부른 설정은 이미 적용된 채 남습니다. `server`와 `accessLog`는 `multipart`·`webSocket`·`sse`와 달리 복사본이 아니라 앱의 옵션 객체 하나에 바로 적용하기 때문입니다(`accessLog`도 같습니다). 값 범위를 먼저 확인한 뒤 부르세요.
+`server(options -> ...)`는 `ServerOptions`를 받는 람다를 바로 실행하고 `RestApp`을 돌려줍니다. 여러 번 부르면 차례로 적용됩니다. Express에서 `app.listen(port, host)`와 `http.Server`의 `headersTimeout` 같은 속성으로 흩어져 있던 설정을 한곳에 모은 것입니다. 각 설정 메서드는 `ServerOptions`를 돌려주므로 이어서 부릅니다. 람다가 중간에 예외를 던지면 그 전까지 부른 설정은 이미 적용된 채 남습니다. `server`와 `accessLog`는 `multipart`·`webSocket`·`sse`와 달리 복사본이 아니라 앱의 옵션 객체 하나에 바로 적용하기 때문입니다. 값 범위를 먼저 확인한 뒤 부르세요.
 
 | 설정 | 기본값 | 범위 |
 |---|---|---|
@@ -159,7 +159,7 @@ app.server { options -> options.bindAddress("0.0.0.0").allowedHosts("myphone.loc
 app.server { options -> options.headerTimeout(5, TimeUnit.SECONDS).maxWorkers(16) }
 ```
 
-LAN에 열면 인증 여부와 상관없이 `listen()`이 보안 경고 로그를 남깁니다. 인증은 미들웨어로 직접 붙이세요([미들웨어](middleware.md)).
+LAN에 열면 인증 여부와 상관없이 `listen()`이 보안 경고 로그를 남깁니다. 로그인·토큰·역할은 [auth](auth.md)를 `app.use(auth)`로 붙이세요.
 
 리버스 프록시 뒤에서는 `app.trustProxy(true)`로 첫 `X-Forwarded-For` 헤더의 맨 왼쪽 값을 `req.remoteAddress()`에, 첫 `X-Forwarded-Proto` 값(`https`이면 `true`)을 `req.isSecure()`에 씁니다. Express의 `app.set('trust proxy', true)`에 해당합니다. 기본은 `false`이고, 값은 검증하지 않고 그대로 쓰므로 그 헤더를 덮어쓰는 프록시 뒤에서만 켜세요. `Forwarded` 헤더는 읽지 않습니다.
 

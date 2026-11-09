@@ -68,7 +68,7 @@ public class AuthDocsTest {
             contains(page, read(page), "`invalid_credentials` | 401", "`duplicate_user` | 409", "`write_conflict` | 409",
                     "`group_cycle` | 409", "`group_too_large` | 409", "`invalid_setup_token` | 401",
                     "`setup_not_local` | 403", "`insufficient_scope` | 403", "`security_write_conflict` | 503",
-                    "`SERVICE_UNAVAILABLE` | 503");
+                    "| `SERVICE_UNAVAILABLE` | 503 |");
         }
         contains("auth.md", read("docs/api/auth.md"), "**현재 비밀번호가 틀린 경우도 이 코드입니다**",
                 "`auth.requireRole`의 거부, 거짓인 `auth.check` 규칙, 자기 자신에 대한 부여 규칙 거부도 이 코드입니다");

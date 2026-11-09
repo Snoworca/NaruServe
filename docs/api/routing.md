@@ -2,7 +2,7 @@
 
 [English](en/routing.md) | [문서 목록](README.md)
 
-이 문서는 **0.11.0 체크아웃의 일반 HTTP 프로필**을 설명합니다. 기존 `routing.Router`와 WebSocket 업그레이드의 엄격 규칙은 [별도 프로필](#기존-라우터와-websocket)로 유지합니다. 배포 좌표의 공개 여부는 [설치 안내](README.md)에서 확인하세요.
+이 문서는 **0.11.0의 일반 HTTP 프로필**을 설명합니다. 기존 `routing.Router`와 WebSocket 업그레이드의 엄격 규칙은 [별도 프로필](#기존-라우터와-websocket)로 유지합니다. 설치는 [설치 안내](README.md)를 보세요.
 
 ## 라우트 등록
 
@@ -119,7 +119,7 @@ val n = set.size()                             // 1
 
 ```java
 app.get("/users/:id", getUser);
-app.get("/users/me", getMe);     // reached only if the earlier route continues
+app.get("/users/me", getMe);     // 앞 라우트가 계속할 때만 도달
 ```
 
 위 코드는 `getUser`를 먼저 시도합니다. `getUser`가 계속하지 않으면 `getMe`는 실행되지 않습니다.
@@ -128,13 +128,13 @@ app.get("/users/me", getMe);     // reached only if the earlier route continues
 
 `Object path`에는 문자열, `java.util.regex.Pattern`, `RegexPathPattern`, 이 값들의 중첩 `Object[]`·`List<?>`를 넘길 수 있습니다. 대안은 왼쪽부터 첫 매칭을 선택합니다. 모든 대안과 콜백을 검증한 뒤 등록하므로 잘못된 중첩 원소나 null 때문에 일부만 등록되지 않습니다. 문자열에 `"/a|/b"`를 써서 대안을 표현하지 않습니다.
 
-정규식은 **Java Pattern**입니다. ECMAScript 정규식, 플래그, `lastIndex`를 에뮬레이션하지 않습니다. 원래 raw 경로에서 `Matcher.find()`로 검색하므로 전체 매칭이 필요하면 `^`·`$`를 명시하세요. 문자열의 case/strict 정책은 Pattern 플래그를 덮어쓰지 않습니다. use/마운트에서는 검색된 정규식도 위치0에서 시작해 세그먼트 경계에서 끝나는 실제 접두사여야 하며 그렇지 않으면 건너뜁니다. 이름 있는 그룹은 Java 이름을, 이름 없는 그룹은 이름 없는 그룹끼리의 0부터 시작하는 번호(`"0"`, `"1"`)를 키로 씁니다. 비참여 그룹은 생략하고 참여한 빈 그룹은 `""`로 남깁니다.
+정규식은 **Java Pattern**입니다. ECMAScript 정규식, 플래그, `lastIndex`를 에뮬레이션하지 않습니다. 원래 raw 경로에서 `Matcher.find()`로 검색하므로 전체 매칭이 필요하면 `^`·`$`를 명시하세요. 문자열의 case/strict 정책은 Pattern 플래그를 덮어쓰지 않습니다. use/마운트에서는 검색된 정규식도 위치 0에서 시작해 세그먼트 경계에서 끝나는 실제 접두사여야 하며 그렇지 않으면 건너뜁니다. 이름 있는 그룹은 Java 이름을, 이름 없는 그룹은 이름 없는 그룹끼리의 0부터 시작하는 번호(`"0"`, `"1"`)를 키로 씁니다. 비참여 그룹은 생략하고 참여한 빈 그룹은 `""`로 남깁니다.
 
 `RegexPathPattern.compile(Pattern)`은 보통의 Pattern을 그대로 지원합니다. 일부 내장 플래그 조합은 `Pattern.flags()`가 최초 COMMENTS/UNIX_LINES 설정을 잃어 캡처 이름 메타데이터가 모호할 수 있습니다. 이때 등록을 명확한 오류로 거부하며 `com.snoworca.naruserve.routing.RegexPathPattern.compile(source, originalFlags)`로 최초 소스와 플래그를 넘기세요. 리플렉션·JNI나 JavaScript 엔진은 필요 없습니다.
 
 ## 독립 Router, 마운트와 param 훅
 
-`com.snoworca.naruserve.Router.create()`는 독립된 HTTP 스택입니다. 기존 `com.snoworca.naruserve.routing.Router`와 패키지가 다르므로 import를 명시하세요. `create()`는 `mergeParams=false`, `caseSensitive=false`, `strict=false`이고 `create(true)`는 부모 캡처를 자식에 합칩니다. 충돌한 이름은 자식 값이 이기며 연속된 이름 없는 숫자 키 묶음은 병합 시 이동합니다. 부모0/1·자식0/1이면 자식 값은2/3이 됩니다. 이동량은0부터 이어진 숫자 키를 세며01 같은 비정규 키는 보통 이름입니다. 같은 Router를 여러 위치에 마운트해도 요청의 마운트 문맥은 분리됩니다. 라이브러리가 만든 Router를 쓰세요. 임의의 사용자 구현을 내부 Router로 간주하지 않습니다.
+`com.snoworca.naruserve.Router.create()`는 독립된 HTTP 스택입니다. 기존 `com.snoworca.naruserve.routing.Router`와 패키지가 다르므로 import를 명시하세요. `create()`는 `mergeParams=false`, `caseSensitive=false`, `strict=false`이고 `create(true)`는 부모 캡처를 자식에 합칩니다. 충돌한 이름은 자식 값이 이기며 연속된 이름 없는 숫자 키 묶음은 병합 시 이동합니다. 부모 0/1·자식 0/1이면 자식 값은 2/3이 됩니다. 이동량은 0부터 이어진 숫자 키를 세며 01 같은 비정규 키는 보통 이름입니다. 같은 Router를 여러 위치에 마운트해도 요청의 마운트 문맥은 분리됩니다. 라이브러리가 만든 Router를 쓰세요. 임의의 사용자 구현을 내부 Router로 간주하지 않습니다.
 
 `app.use(prefix, router)` 안에서는 `path()`·`url()`에서 실제 매칭 접두사가 빠지고 `baseUrl()`에 누적됩니다. `originalUrl()`·`rawPath()`는 원래 값입니다. 자식이 나가면 부모 뷰를 복원합니다. `use(prefix, middleware)`도 현재 콜백 안에서 접두사를 제거하며, 같은 Request·본문 캐시·속성·서비스를 공유합니다. 자세한 값은 [Request](request.md#마운트와-경로-뷰)를 보세요.
 

@@ -4,7 +4,7 @@
 
 `RestApp` corresponds to Express's `app`. Use it to register routes, middleware and configuration, then start and stop a server. Examples below are API fragments; use the [quick start](README.md#quick-start) for imports and an executable entry point. Application-specific types such as `Database` and `UserService` stand for your own implementations.
 
-This page describes common HTTP in **NaruServe 0.11.0**. Follow the [installation guide](README.md) for source/artifact setup. TinyHttpd is pinned to 3.1.1 with raw request-target delivery; default Gson remains 2.14.0. Core APIs target Java 8/API 21; this is not a device performance claim.
+This page describes common HTTP in **NaruServe 0.11.0**. Follow the [installation guide](README.md) to add the dependency. TinyHttpd is pinned to 3.1.1 with raw request-target delivery; default Gson remains 2.14.0. Core APIs target Java 8/API 21; this is not a device performance claim.
 
 ## Create an app
 
@@ -153,7 +153,7 @@ app.server { options -> options.bindAddress("0.0.0.0").allowedHosts("myphone.loc
 app.server { options -> options.headerTimeout(5, TimeUnit.SECONDS).maxWorkers(16) }
 ```
 
-Non-loopback binding logs a warning regardless of authentication. Add authentication through [middleware](middleware.md).
+Non-loopback binding logs a warning regardless of authentication. Attach login, tokens and roles with [auth](auth.md) through `app.use(auth)`.
 
 Behind a proxy, `trustProxy(true)` replaces `remoteAddress()` with the trimmed leftmost entry of the first X-Forwarded-For header, and `isSecure()` with the first X-Forwarded-Proto entry (`https`, case-insensitive, means true). Missing or blank entries keep transport values. Default false; `Forwarded` is never read. Enable this only behind a proxy that overwrites these unvalidated headers, as with Express's `app.set('trust proxy', true)`.
 

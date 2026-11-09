@@ -365,6 +365,6 @@ public class AppDocsTest {
         assertFalse(prefix, prefix.contains(MARKER));
         assertTrue(prefix, prefix.contains("제거된 뷰"));
         assertTrue(d.contains("표준 JSON 확장") && d.contains("일반 HTTP 기본"));
-        assertTrue(d.contains("##") && d.contains("일반 최종 응답은404"));
+        assertTrue(d.contains("##") && d.contains("일반 최종 응답은 404"));
     }
 }

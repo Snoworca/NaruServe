@@ -17,9 +17,12 @@
 | 자체 데이터베이스에 사용자 두기 | [자체 데이터베이스 연결](#자체-데이터베이스-연결) |
 | PROD 파일과 키 준비하기 | [AuthMode](#authmode), [설정 파일](#설정-파일-authconfig), [키 세트와 회전](#키-세트와-회전-keysource-jwtkeys-keysources), [파일 비밀 값 암호화](#파일-비밀-값-암호화-authfilekey) |
 | LAN이나 기기에서 부르기 | [보안 연결 규칙](#보안-연결-규칙), [평문 전송 허용](#평문-전송-허용-allowinsecuretransport) |
+| 브라우저·SPA에서 쿠키로 쓰기 | [auth 쿠키](#auth-쿠키), [CSRF](#csrf-쿠키-모드의-쓰기), [교차 출처 클라이언트와 CORS](#교차-출처-클라이언트와-cors), [Origin 검사](#origin-검사와-trustedorigins) |
+| 토큰 수명 바꾸기·로그아웃 | [토큰](#토큰-tokenservice와-tokenpair), [계정 엔드포인트](#계정-엔드포인트-authroutes) |
 | 테스트 쓰기 | [테스트 킷](#테스트-킷-authtesting), [HTTP 테스트 레시피](#http-테스트-레시피) |
 | 관리 API 쓰기 | [관리 엔드포인트](#관리-엔드포인트-authadminroutes) |
 | API 키 발급하고 쓰기 | [API 키 발급](#api-키-발급-authapikeys), [API 키 인증](#api-키-인증) |
+| 예제 더 보기(각 절이 코드 없이 설명한 API) | [더 많은 예제](#더-많은-예제) |
 | 낯선 용어 찾기 | [용어](#용어) |
 
 Express에는 내장 인증이 없어서 보통 `passport`나 `express-jwt` 같은 미들웨어를 고릅니다. NaruServe는 같은 일을 하는 모듈을 `NaruServe-api` 안의 `com.snoworca.naruserve.utils.auth` 패키지로 줍니다. 새 Gradle 모듈도, 새 의존성도 없습니다. Core 공개 API만 쓰고, Java 8 바이트코드와 Android 5.0(API 21)에서 그대로 돕니다.
@@ -43,7 +46,7 @@ Express에는 내장 인증이 없어서 보통 `passport`나 `express-jwt` 같�
 
 Express 대응: `app.use(cors())` → `app.use(expressjwt({ secret, algorithms: ['HS256'] }).unless({ path: ['/health'] }))` → 라우트의 `expressJwtAuthz(['posts:write'])` → 맨 끝 오류 핸들러.
 
-아래는 그대로 실행되는 전체 프로그램입니다(의존성은 `com.snoworca.naruserve:naruserve`, [설치](../../README.ko.md)).
+아래는 그대로 실행되는 전체 프로그램입니다(의존성은 `com.snoworca.naruserve:naruserve`, [설치](../../README.ko.md#설치)).
 
 ```java
 import com.snoworca.naruserve.RestApp;
@@ -147,12 +150,20 @@ curl -X POST http://localhost:8080/posts -H "Authorization: Bearer eyJ..."   # 2
 | `.apiKeyScheme(name)` | API 키 스킴 이름. 기본 `ApiKey`. `Bearer`·`Basic`·`Digest`·`DPoP`·`Negotiate`(대소문자 무시)와 토큰 문자가 아닌 이름은 거부 | — |
 | `.maxKeysPerUser(int)`, `.maxApiKeyDays(int)`, `.allowAdminScopesOnApiKeys(boolean)`, `.apiKeyFailureLimit(int max, long windowMillis)` | 사용자당 살아 있는 키 수(기본 20) / 키 엔드포인트로 발급하는 키의 최대 수명 일수(기본 365, `auth.apiKeys().issue`는 제한 없음) / 키에 관리 스코프 `auth-*` 허용(기본 false) / IP당 키 인증 실패 한도(기본 15분 900000 ms에 100회). [API 키 인증](#api-키-인증) | — |
 | `.register(boolean)` | `POST /auth/register` 자가 가입. 기본 false(라우트 없음). [계정 엔드포인트](#계정-엔드포인트-authroutes) | 가입 라우트 |
-| `.allowedAttributes(String... names)` | 사용자가 `PATCH /auth/me`로 스스로 바꿀 수 있는 속성 이름(예: `"displayName"`). 부르지 않으면 없음(모든 속성이 400). 여러 번 부르면 더해지고, 보안 필드 이름(`passwordHash`, `ver`, `enabled`, `roles`)은 `IllegalArgumentException` | `req.body`의 허용 목록(`_.pick`) |
+| `.allowedAttributes(String... names)` | 사용자가 `PATCH /auth/me`로 스스로 바꿀 수 있는 속성 이름(예: `"displayName"`). 부르지 않으면 없음(모든 속성이 400). 여러 번 부르면 더해지고, 보안 필드 이름(`passwordHash`, `ver`, `enabled`, `roles`)은 `IllegalArgumentException` ([예제](#allowedattributes와-patch-authme)) | `req.body`의 허용 목록(`_.pick`과 비슷하지만 목록에 없는 이름은 버리지 않고 400으로 거부) |
 | `.passwordPolicy(PasswordPolicy)`, `.breachedPasswordChecker(BreachedPasswordChecker)` | 새 비밀번호 규칙(기본 `PasswordPolicy.of(profile)`) / 유출 비밀번호 검사(기본 없음). [새 비밀번호 정책](#새-비밀번호-정책-passwordpolicy와-breachedpasswordchecker) | `express-validator` 길이 검사 |
 | `.authenticator(Authenticator)` | 로그인의 비밀번호 확인을 바꿉니다(예: 디렉터리). [비밀번호 인증기](#비밀번호-인증기-spiauthenticator) | passport `LocalStrategy` verify |
 | `.trustedOrigins(origin...)` | 요청 자신의 출처 말고 auth 쿠키를 받고 쓸 수 있는 출처. [Origin 검사](#origin-검사와-trustedorigins) | `cors({origin})`와 다름 |
 | `.recoveryFromEnv()` | 환경 변수 `NARU_AUTH_RECOVERY`가 `1`이나 `true`면 `.recovery(true)`. 앱이 부를 때만 환경을 읽습니다 | — |
 | `.statelessAccess(true)` | 가드 없는 라우트는 store를 읽지 않은 최소 주체(`getId()`만, `getUsername()`은 빈 문자열)를 봅니다. 앱은 `getId()`만 씁니다 | — |
+| `.userCacheTtl(ms)` | 읽어 온 주체(사용자, 역할, 스코프)를 다시 쓰는 시간. 기본 5000 ms, 0이면 요청마다 store를 읽습니다. [주체 캐시](#주체-캐시-usercachettl) | `deserializeUser` 앞의 `lru-cache` |
+| `.accessTtl(ms)`, `.refreshTtl(ms)` | 토큰 수명(밀리초, 1초 이상). 부르지 않으면 프로필 값이고 `STANDARD`는 access 15분, refresh 1일입니다(아래 AuthProfile 표). `.allowInsecureTransport`는 둘을 5분과 24시간으로 바꿉니다. [토큰](#토큰-tokenservice와-tokenpair) | `jwt.sign`의 `expiresIn` |
+| `.reuseGrace(ms)` | 한 번 쓴 refresh 토큰이 다시 와도 재사용으로 치지 않는 시간. 기본 0(두 번째 사용은 늘 family를 폐기). [refresh 재사용 감지](#refresh-재사용-감지와-tokencodec) | — |
+| `.tokenCodec(TokenCodec)` | access·refresh 토큰 형식. 기본은 키 출처 위의 내장 HS256 코덱. [TokenCodec](#refresh-재사용-감지와-tokencodec) | `jsonwebtoken`의 `sign` / `verify` 쌍(`express-jwt`는 그 verify 쪽을 감쌉니다) |
+| `.loginThrottle(LoginThrottle)` | 로그인 실패 횟수 저장소. 부르지 않으면 사용자 저장소를 따릅니다(`FileUserStore` 옆의 스냅숏 파일 `<name>-login-throttle.json`, 그 밖에는 메모리). [로그인 제한 저장소](#로그인-제한-저장소-loginthrottle) | `rate-limiter-flexible`의 store |
+| `.loginFailureLimits(perUserAndIp, perIp, perUser, windowMillis)` | 비밀번호 로그인 한도 세 개. 기본 15분에 5, 20, 10회(900000 ms). [로그인 한도](#로그인-제한-저장소-loginthrottle) | `rate-limiter-flexible`의 limiter |
+| `.lockout(Lockout)` | 선택 사항인 강한 잠금(예: `Lockout.after(5).forMinutes(15)`). 부르지 않으면 꺼짐. [계정 잠금](#계정-잠금-lockout) | — |
+| `.deviceTrust(DeviceTrust)` | 신뢰 기기 상태. 부르지 않으면 사용자 저장소를 따릅니다(`FileUserStore` 옆의 `<name>-device-trust.json`, 그 밖에는 메모리). [신뢰 기기](#신뢰-기기-devicetrust) | — |
 | `.timeSource(TimeSource)`, `.logger(Logger)`, `.responses(AuthResponses)`, `.config(AuthConfig)` | 시계 / 로그(기본: install 뒤 앱 로거) / 오류 본문 / 설정 파일 | — |
 | `.hashCost(HashCost)`, `.hashConcurrency(int)`, `.passwordHasher(PasswordHasher)` | 새 해시의 PBKDF2 비용(기본 `HashCost.defaults()`, 500 ms로 보정) / 동시에 도는 해시 수(기본 `max(1, 코어/2)`) / 해시기(기본 그 비용의 `Pbkdf2PasswordHasher`). [비밀번호 해시](#비밀번호-해시-passwordhasher-hashcost) | `bcrypt.hash(pw, rounds)` |
 | `.user(name, @Nullable password, roles...)`, `.recovery(boolean)` | 기동할 때 없으면 만드는 계정 / 비밀번호 없는 관리자 `.user`의 일회용 setup 토큰을 엽니다(기본 false). [첫 계정](#첫-계정-user) | 시드 스크립트 |
@@ -164,7 +175,7 @@ curl -X POST http://localhost:8080/posts -H "Authorization: Bearer eyJ..."   # 2
 
 - PROD에서 비밀키가 없음(`JWT_SECRET is not set. Generate one with: openssl rand -base64 32 — or, for a temporary key, build with .mode(AuthMode.DEV), or with .mode(AuthMode.fromEnv()) with NARU_ENV=dev.`), 32 UTF-8 바이트 미만(실제 바이트 수와 최소값을 적음), 서로 다른 바이트 값이 8개 미만, 알려진 예제(`secret`, `changeme`, `change-me-now`, `your-256-bit-secret`, 문서 예제 상수 `naru-docs-sample-secret-do-not-use-in-production`, 앞뒤 채움 문자 포함). **DEV**에서는 비밀키가 없으면 임시 키를 만들고 "재시작하면 모든 토큰이 무효"라는 WARN을 한 번 남기며, 짧거나 예제인 키는 WARN으로 바뀝니다.
 - `.permitPrefix("/")`, `.permit("")`/`.permitPrefix("")`, ASCII가 아닌 `.permit`·`.permitPrefix`·`.protectOnly` 경로.
-- `MULTI_INSTANCE`에서 노드끼리 공유하지 않는 저장소: `InMemoryUserStore`, `FileUserStore`, `InMemoryGroupStore`, `FileGroupStore`, `.refreshTokens(...)`에 준 `InMemoryRefreshTokenStore`·`FileRefreshTokenStore`, 그리고 설정하지 않아 메모리 기본값이 되는 refresh 토큰·로그인 제한·기기 신뢰 저장소(그 배포에서는 앱이 만든 사용자 저장소도 메모리 refresh 저장소로 물러나지 않습니다). `MULTI_INSTANCE`는 앱이 노드끼리 공유하는 저장소(`.refreshTokens(...)`, `.loginThrottle(...)`, `.deviceTrust(...)`, 사용자·그룹 저장소)를 줄 때만 통과합니다.
+- `MULTI_INSTANCE`에서 노드끼리 공유하지 않는 저장소: `InMemoryUserStore`, `FileUserStore`, `InMemoryGroupStore`, `FileGroupStore`, `.refreshTokens(...)`에 준 `InMemoryRefreshTokenStore`·`FileRefreshTokenStore`, 직접 준 `InMemoryLoginThrottle`·`InMemoryApiKeyStore`, 그리고 설정하지 않아 메모리 기본값이 되는 refresh 토큰·로그인 제한·기기 신뢰 저장소(그 배포에서는 앱이 만든 사용자 저장소도 메모리 refresh 저장소로 물러나지 않습니다). `MULTI_INSTANCE`는 앱이 노드끼리 공유하는 저장소(`.refreshTokens(...)`, `.loginThrottle(...)`, `.deviceTrust(...)`, 사용자·그룹 저장소)를 줄 때만 통과합니다.
 - `.mountPath("/")`와 `COOKIE`·`BOTH` 전송, 잘못된 `.apiKeyScheme`, `AuthConfig`의 위반.
 
 `RolePolicy`의 예약 `auth-*` 스코프는 이 목록에 들지 않습니다. `RolePolicy.Builder.role()`이 `Auth`를 만들기 전에 `IllegalArgumentException`으로 거부합니다.
@@ -232,12 +243,12 @@ RestApp.start(8080) { app ->
 |---|---|---|
 | `auth.require(scope...)` | 모든 스코프를 가진 주체만. 아니면 403 `insufficient_scope`, 주체가 없으면 401. 스코프에 `*`가 있으면 선언할 때 `IllegalArgumentException` | `express-jwt-authz(['posts:write'])` |
 | `auth.requireRole(role...)` | 나열한 역할 중 **하나라도** 가진 주체만. 아니면 403 `insufficient_scope`. API 키 요청은 403 `api_key_not_allowed`(키는 스코프를 좁힐 뿐 역할을 좁히지 않으므로) | `requireRole('editor')` 미들웨어 |
-| `auth.authenticated()` | 주체를 store에서 다시 읽어 확인만. 비활성·토큰 버전 불일치 401, store 실패 503 | `passport.authenticate()` |
+| `auth.authenticated()` | 주체를 store에서 다시 읽어 확인만. 비활성·토큰 버전 불일치 401, store 실패 503 ([예제](#authauthenticated)) | `passport.authenticate('jwt', { session: false })` |
 | `auth.check(AccessRule)` | 앱 규칙. 참이면 통과, 거짓이면 403 `insufficient_scope`, 주체 없으면 401. 규칙이 던지면 500 JSON | 손으로 짠 `(req, res, next)` 검사 |
 | `AccessRule` (`@FunctionalInterface`, `boolean allows(AuthPrincipal, Request) throws Exception`) | Kotlin `auth.check { p, req -> p.hasScope("x") }` | — |
 | `auth.user(req)` | 보호 경로의 주체(non-null). 주체가 없으면 `AuthStateException`(`IllegalStateException` 하위) | `req.user` |
 | `@Nullable auth.userOrNull(req)` | 공개 경로에서 씁니다 | `req.user` (없으면 undefined) |
-| `@Nullable auth.loadUser(req)` | 던지지 않습니다. 최소 주체를 승격하고, 사용자 없음·비활성·버전 불일치·store 실패(로그)면 null. 이미 읽은 주체면 store를 다시 부르지 않습니다 | — |
+| `@Nullable auth.loadUser(req)` | 던지지 않습니다. 최소 주체를 승격하고, 사용자 없음·비활성·버전 불일치·store 실패(로그)면 null. 이미 읽은 주체면 store를 다시 부르지 않습니다 ([예제](#authloaduserreq)) | 핸들러 안에서 부르는 `User.findById(req.auth.sub)` |
 | `AuthPrincipal` | `getId()`, `getUsername()`, `getRoles()`(자기 역할 + 그룹 역할), `getScopes()`, `getAttributes()`, `isLoaded()`, `hasScope(scope)`, `hasRole(role)`, `@Nullable getApiKeyId()`(JWT 로그인이면 null). 게터는 예외를 던지지 않습니다 | `req.auth` |
 | `auth.users()`, `auth.userStore()` | 앱용 사용자 파사드 / 원래 store | — |
 
@@ -265,7 +276,9 @@ app.patch("/users/:id", auth.check { p, r -> p.id == r.param("id") || p.hasScope
 
 PROD에서 auth 미들웨어는 토큰을 읽기 **전에** 연결을 봅니다. `req.isSecure()`가 참이거나 **로컬 요청**(소켓 주소가 루프백 `127.0.0.0/8`·`::1`이고 `X-Forwarded-*`·`Forwarded` 헤더가 하나도 없음)일 때만 보호 경로와 자격 증명 엔드포인트 여덟(`POST /auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/register`, `/auth/setup`, `/auth/password`, `/auth/me/apikeys`, `/auth/admin/apikeys`)을 처리하고, 아니면 403 `insecure_transport`입니다. 자격 증명 엔드포인트와 관리 엔드포인트(`/auth/admin` 아래)는 `.permitPrefix("/auth")`로도 공개되지 않습니다. 보호 범위·마운트·자격 증명 엔드포인트 판정은 기본 라우터처럼 대소문자를 무시하고 끝 슬래시·겹친 슬래시를 정리한 경로로 하고, `.permit`·`.permitPrefix`의 공개 판정은 정확히 일치할 때만이라 그 변형(예: `/HEALTH`)은 보호됩니다. 공개 경로는 이 검사를 받지 않고, 검사에 떨어지는 요청이면 토큰을 읽지 않고 익명으로 처리합니다. DEV는 이 검사를 끕니다(로컬이 아닌 첫 요청에서 WARN 한 번).
 
-**LAN이나 기기에서 부를 때:** 기본 TinyHttpd 엔진에는 HTTPS가 없어서, PROD 서버를 같은 네트워크의 다른 기기(휴대폰, 다른 PC)에서 평문으로 부르면 로그인과 보호 경로가 403 `insecure_transport`입니다. 그 첫 거절에 auth가 WARN을 한 번 남깁니다: `auth: POST /auth/login was refused with 403 insecure_transport: PROD serves protected paths and credential endpoints only over HTTPS or to local requests. Serve HTTPS through a TLS reverse proxy and set app.trustProxyHops(1) or app.trustProxyCidrs(...); for a LAN or device server without TLS, build with .allowInsecureTransport("reason"); for local testing, build with .mode(AuthMode.DEV). Logged once`. 방법은 셋입니다. ① TLS를 끝내는 리버스 프록시(nginx 등)를 앞에 두고 `app.trustProxyHops(1)`(또는 `app.trustProxyCidrs(...)`)을 켭니다(권장). ② TLS가 없는 LAN·기기 서버라면 빌더에 `.allowInsecureTransport("사내 LAN 데모, TLS 없음")`을 줍니다. 토큰이 평문으로 오가고 수명이 짧아집니다(access 5분, refresh 24시간). ③ 내 PC에서만 시험한다면 `.mode(AuthMode.DEV)`.
+Express 대응: `app.set('trust proxy', 1)` 뒤에 `req.secure`가 거짓이면 거절하는 미들웨어.
+
+**LAN이나 기기에서 부를 때:** 기본 TinyHttpd 엔진에는 HTTPS가 없어서, PROD 서버를 같은 네트워크의 다른 기기(휴대폰, 다른 PC)에서 평문으로 부르면 로그인과 보호 경로가 403 `insecure_transport`입니다. 그 첫 거절에 auth가 WARN을 한 번 남깁니다: `auth: POST /auth/login was refused with 403 insecure_transport: PROD serves protected paths and credential endpoints only over HTTPS or to local requests. Serve HTTPS through a TLS reverse proxy and set app.trustProxyHops(1) or app.trustProxyCidrs(...); for a LAN or device server without TLS, build with .allowInsecureTransport("reason"); for local testing, build with .mode(AuthMode.DEV). Logged once`. 방법은 셋입니다. ① TLS를 끝내는 리버스 프록시(nginx 등)를 앞에 두고 `app.trustProxyHops(1)`(또는 `app.trustProxyCidrs(...)`)을 켭니다(권장). ② TLS가 없는 LAN·기기 서버라면 빌더에 `.allowInsecureTransport("사내 LAN 데모, TLS 없음")`을 줍니다. 토큰이 평문으로 오가고 수명이 고정됩니다(access 5분, refresh 24시간). ③ 내 PC에서만 시험한다면 `.mode(AuthMode.DEV)`.
 
 **Core의 LAN 경고:** 바인딩 주소가 루프백이 아니면(예: `app.server(o -> o.bindAddress("0.0.0.0"))`) `listen()`이 Core WARN `listening on <address>, reachable beyond this device: the app must add its own authentication`을 남깁니다(`<address>`는 바인딩 주소). Core는 auth가 있는지 보지 않으므로 auth를 설치해도 이 WARN은 나옵니다. 이 줄을 보면 두 가지를 확인합니다. ① 라우트보다 먼저 `app.use(auth)`로 auth를 설치했는지(`auth.describe()`의 `protected: ...` 줄로 보호 범위를 봅니다). ② PROD라면 위 보안 연결 규칙이 적용된다는 것: 다른 기기에서 온 평문 요청은 403 `insecure_transport`이므로 TLS 프록시나 `.allowInsecureTransport(...)` 가운데 하나를 고릅니다. 둘 다 맞으면 이 WARN은 그대로 두어도 됩니다.
 
@@ -282,7 +295,7 @@ Core는 `Forwarded` 헤더를 읽지 않습니다. 그래서 `Forwarded`만 보�
 
 ## 오류 응답과 AuthResponses
 
-auth 미들웨어, 가드, auth 라우터가 내는 응답은 모두 JSON이고, PROD에서는 기동 전에 등록한 앱 라우트가 던진 예외의 응답도 모두 JSON입니다(아래 참고. auth 마운트 밖에서 어떤 라우트도 받지 않는 경로는 여전히 Core의 404입니다). 기본 본문은 Core 모양 `{"error":{"code":…,"message":…,"requestId":…}}`이고 `requestId`는 그 요청의 `req.requestId()`입니다. 본문에는 스택 트레이스, 예외 클래스 이름, 던진 예외의 메시지가 들어가지 않습니다. 미들웨어나 가드의 store 실패는 503 `SERVICE_UNAVAILABLE`입니다.
+auth 미들웨어, 가드, auth 라우터가 내는 응답은 모두 JSON이고, PROD에서는 기동 전에 등록한 앱 라우트가 던진 예외의 응답도 모두 JSON입니다(아래 참고. auth 마운트 밖에서 어떤 라우트도 받지 않는 경로는 인증을 통과한 뒤 여전히 Core의 404입니다). 기본 본문은 Core 모양 `{"error":{"code":…,"message":…,"requestId":…}}`이고 `requestId`는 그 요청의 `req.requestId()`입니다. 본문에는 스택 트레이스와 예외 클래스 이름이 들어가지 않습니다. 메시지는 4xx `HttpException`(`AuthRejection` 포함)의 것만 보이고, 그 밖의 예외 메시지는 넣지 않습니다. 미들웨어나 가드의 store 실패는 503 `SERVICE_UNAVAILABLE`입니다.
 
 auth는 오류 레이어를 빠뜨려도 자기 예외를 JSON으로 답합니다. 기동할 때 라우트 뒤에 `auth.errors()`나 `auth.errorMiddleware()`가 없으면 auth가 라우트 뒤에 `auth.errorMiddleware()`를 덧붙입니다(doctor가 `errors placement` WARN을 냅니다). 그래서 Java 스택 트레이스가 든 Core의 HTML 오류 페이지는 `auth.errorMiddleware()` 없이 기동 뒤에 더한 핸들러에서만 나옵니다. PROD에서는 기동할 때 그때까지 등록된 모든 층 뒤에(앱의 오류 층이 먼저 답합니다) 나머지 모든 예외를 받는 마지막 오류 층도 덧붙입니다. Core `HttpException`은 그 상태와, 500 미만이면 그 메시지를 유지하고(예: `?page=abc`에 `req.queryInt("page", 1)`은 400 `page must be a 32-bit integer`), 앱의 `IllegalStateException` 같은 나머지는 메시지·예외 클래스·스택 트레이스 없이 500 `INTERNAL_ERROR`입니다(500은 Core가 로그에 남깁니다). DEV는 이 층을 붙이지 않아 개발 중에는 스택 페이지를 그대로 볼 수 있습니다. 토큰 없이 auth 엔드포인트를 다른 메서드로 부르면 기본 거부가 라우팅보다 먼저 돌아 401 `unauthenticated`이고, 메시지가 메서드를 알려 줍니다. 예를 들어 `GET /auth/logout`은 `authentication is required; this endpoint takes POST /auth/logout`입니다. 토큰이 있으면 라우팅까지 가고, auth 마운트 아래에서 어떤 라우트도 받지 않은 요청은 auth가 기동할 때 덧붙이는 마지막 층이 JSON으로 답합니다. 그 경로의 라우트가 다른 메서드를 받으면 405 `METHOD_NOT_ALLOWED`와 `Allow` 헤더이고(`GET /auth/logout`은 `this endpoint takes POST /auth/logout`, `PUT /auth/admin/users/1`은 `this endpoint takes GET, PATCH, DELETE /auth/admin/users/:id`), 아니면 404 `NOT_FOUND` `no auth endpoint serves <method> <path>`입니다. `.apiKeys(...)` 없이 키 경로를 부르면 `API keys are off: build auth with .apiKeys(store)`가, `/auth/admin/groups/:id/roles`에는 `grantRole`이 붙습니다(0.11.0에서 그룹 역할은 코드로 줍니다). 기동 뒤에 앱이 auth 마운트 아래에 더한 라우트는 그 층 뒤에 놓여 닿지 않습니다. `.register(true)` 없이 부른 `POST /auth/register`는 앱이 그 경로를 직접 받지 않는 한 auth JSON의 404 `NOT_FOUND`이고 메시지는 `sign-up is off: POST /auth/register is served only when auth is built with .register(true)`입니다. 토큰 없는 refresh는 401 `invalid_refresh_token`과 `no refresh token: send it as the "refreshToken" field of a JSON body`(COOKIE는 `no refresh token: COOKIE mode reads it from the naru_rt cookie set at login`)이고, auth 라우터에서 해석되지 않거나 JSON 배열·문자열인 본문은 400 `BAD_REQUEST`와 `the request body must be a JSON object`입니다. 본문 없는 `POST /auth/login`은 415와 `auth endpoints accept only application/json bodies`입니다. 빈 배열 `[]`은 Gson 코덱이 빈 객체로 읽으므로 그 엔드포인트의 필드 누락 응답(예: `username must be a JSON string`)을 받습니다.
 
@@ -347,7 +360,7 @@ println(AuthConfig.KEYS)
 | API | 설명 | Express 대응 |
 |---|---|---|
 | `AuthMode.PROD` | 기본값 | `NODE_ENV=production` |
-| `AuthMode.DEV` | 정해진 여덟 가지만 완화합니다: 비밀키가 없을 때 임시 키, 보안 연결 검사, 해시 비용·키 강도 실패를 WARN으로, 비밀번호 정책을 어긴 `.user(...)` 비밀번호(WARN과 함께 계정 생성), 비밀번호 없는 관리자 `.user(...)`(임시 비밀번호를 로그에 남김), 파일 키 없는 파일 저장소(WARN과 함께 평문 저장), 옛 `trustProxy(true)`(doctor FAIL 없음), 마지막 auth 오류 레이어 없음(앱 예외가 Core로 넘어감). 권한 검사는 절대 완화하지 않습니다 | `NODE_ENV=development` |
+| `AuthMode.DEV` | 정해진 여덟 가지만 완화합니다: 비밀키가 없을 때 임시 키, 보안 연결 검사, 해시 비용·키 강도 실패를 WARN으로, 비밀번호 정책을 어긴 `.user(...)` 비밀번호(WARN과 함께 계정 생성), 비밀번호 없는 관리자 `.user(...)`(임시 비밀번호를 로그에 남김), 파일 키 없는 파일 저장소(WARN과 함께 평문 저장), 옛 `trustProxy(true)`(doctor FAIL 없음), 마지막 오류 층 없음(앱 예외가 Core로 넘어감). 권한 검사는 절대 완화하지 않습니다 | `NODE_ENV=development` |
 
 모드는 코드로 넘깁니다. `AuthMode.fromEnv()`는 환경 변수 `NARU_ENV`가 `dev`(대소문자 무시)면 `DEV`, 없거나 비었거나 `prod`이거나 그 밖의 값이면 `PROD`입니다. 환경을 읽는 것은 앱이 직접 하는 이 호출뿐이고, 빌더는 스스로 환경을 읽지 않습니다. `.mode(...)`를 부르지 않은 빌더는 `PROD`입니다.
 
@@ -360,7 +373,7 @@ println(AuthConfig.KEYS)
 | 비밀번호 없는 관리자 `.user(...)`에 임시 비밀번호를 만들어 로그에 남김 | doctor FAIL(`.recovery(true)`로 시작하면 일회용 설정 토큰) |
 | 파일 키 없는 파일 저장소를 WARN으로 하고 평문으로 저장 | `build()`가 `AuthConfigException` |
 | 옛 `trustProxy(true)`의 doctor FAIL 없음 | doctor FAIL |
-| 마지막 auth 오류 레이어가 없음(앞선 레이어가 답하지 않은 앱 예외는 Core 페이지와 스택 트레이스로) | 그 예외도 Core 모양의 JSON |
+| 마지막 오류 층이 없음(앞선 층이 답하지 않은 앱 예외는 Core 페이지와 스택 트레이스로) | 그 예외도 Core 모양의 JSON |
 
 기본 거부, install 순서, 공개 경로 규칙, 권한 검사, auth 자신의 JSON 오류 본문은 DEV에서도 PROD와 똑같습니다.
 
@@ -381,7 +394,7 @@ auth가 만드는 오류 응답은 모두 Core와 같은 JSON 모양입니다: `
 
 - `new AuthRejection(int status, String code)`, `(status, code, @Nullable String message)`, `(status, code, message, @Nullable Long retryAfterSeconds)` — Core `HttpException`을 상속한 unchecked 예외라(`status()`가 그 상태) Core는 이것을 클라이언트 오류로 보고 로그를 남기지 않으며, auth 오류 레이어가 없어도 그 상태로 답합니다. `DuplicateUserException`도 상태 409인 `HttpException`입니다. `status`는 400–499, `code`는 `[a-z][a-z0-9_]{0,63}`만 받고 그 밖에는 `IllegalArgumentException`입니다. 메시지가 null이면 상태의 기본 문구(예: `Unprocessable Content`)로 답하고, `retryAfterSeconds`가 있으면 `Retry-After` 헤더를 붙입니다. `getStatus()`, `getCode()`, `@Nullable getRetryAfterSeconds()`.
 - `new AuthUnavailableException(@Nullable String message)`, `(message, @Nullable Throwable cause)`, `(String code, message, cause)`, `(code, message, @Nullable Long retryAfterSeconds, cause)` — store·리스너·해시 슬롯 실패를 뜻하는 503입니다. 해시 슬롯이 모자라면 `Retry-After` 1초를 싣습니다. 코드를 주지 않으면 Core 표기 `SERVICE_UNAVAILABLE`, 확인되지 않은 보안 쓰기는 `security_write_conflict`입니다. `getCode()`, `@Nullable getRetryAfterSeconds()`, `getStatus()`(항상 503).
-- `AuthErrorCode` — auth가 쓰는 코드와 상태의 고정 목록입니다(`getCode()`, `getStatus()`). 400 `BAD_REQUEST`, 404 `NOT_FOUND`, 415 `UNSUPPORTED_MEDIA_TYPE`, 503 `SERVICE_UNAVAILABLE`은 Core 코드라 이 목록에 없습니다. 입력 검사의 400은 Core `HttpException`으로 내고, JSON이 아닌 auth 본문의 415는 전역 auth 미들웨어가 같은 JSON 모양(코드 `UNSUPPORTED_MEDIA_TYPE`)으로 직접 답하며(그래서 앱의 `onError`에는 가지 않고 `AuthResponses`가 모양을 정합니다), 503 `SERVICE_UNAVAILABLE`은 `AuthUnavailableException`의 기본 코드입니다.
+- `AuthErrorCode` — auth가 쓰는 코드와 상태의 고정 목록입니다(`getCode()`, `getStatus()`). 아래 첫 표는 `AuthErrorCode`의 코드만 담고, 그 코드를 쓰는 답을 적습니다. 둘째 표는 auth가 이 목록 밖에서 보내는 코드와 보내는 때입니다.
 
 | code | 상태 | 쓰는 답 |
 |---|---|---|
@@ -406,7 +419,23 @@ auth가 만드는 오류 응답은 모두 Core와 같은 JSON 모양입니다: `
 | `group_too_large` | 409 | 사용자 1,000명을 넘게 건드리는 그룹 삭제 |
 | `too_many_attempts` | 429 | 로그인·비밀번호 확인·API 키 실패 한도 |
 | `security_write_conflict` | 503 | 다시 읽어도 확인되지 않은 보안 쓰기 |
-| `SERVICE_UNAVAILABLE` | 503 | store·throttle·해시 슬롯·그룹 확장 한도 실패(Core 표기, `AuthUnavailableException` 기본값) |
+
+아래 표에서 `CONFLICT`를 뺀 코드는 Core가 그 상태에 보내는 코드와 같습니다. `CONFLICT`는 auth만 쓰는 코드이고, Core는 409를 `HTTP_409`로 보냅니다.
+
+| code | 상태 | 보내는 때 |
+|---|---|---|
+| `BAD_REQUEST` | 400 | JSON으로 해석되지 않거나 JSON 객체가 아닌 auth 본문; 실패한 입력 검사; 앱 라우트에서 `auth.users()`·`auth.apiKeys()`·내장 그룹 저장소(`InMemoryGroupStore`, `FileGroupStore`) 호출이 던진 auth `IllegalArgumentException`(`auth.errors()`·`auth.errorMiddleware()`·PROD의 마지막 오류 층이 답함) |
+| `NOT_FOUND` | 404 | auth 마운트 아래에서 어떤 라우트도 받지 않는 경로; `.register(true)` 없이 부른 `POST /auth/register`; 꺼진 엔드포인트(API 키나 그룹 관리를 설정하지 않음, setup이 열리지 않음); 관리·키 엔드포인트에 준 없는 사용자·그룹·API 키 id(앱 라우트에서는 `auth.users()`와 `auth.apiKeys().revoke`가 null이나 false를 돌려주고, 없는 키 소유자나 내장 그룹 저장소(`InMemoryGroupStore`, `FileGroupStore`)의 없는 그룹에 멤버·부모·역할을 더하는 호출은 위 400) |
+| `METHOD_NOT_ALLOWED` | 405 | auth 마운트 아래 경로를 그 라우트가 받지 않는 메서드로 부름(`Allow` 헤더를 붙임). 토큰 없이 부르면 여기서도, 위의 받지 않는 경로에서도 기본 거부가 먼저 401로 답합니다 |
+| `CONFLICT` | 409 | 관리 그룹 만들기(`POST /auth/admin/groups`)에 이미 있는 그룹 id. auth가 `CONFLICT`를 보내는 곳은 여기뿐입니다 |
+| `PAYLOAD_TOO_LARGE` | 413 | 앱의 JSON 본문 한도를 넘는 auth 본문 |
+| `UNSUPPORTED_MEDIA_TYPE` | 415 | JSON이 아닌 auth 본문. auth가 직접 답하므로(관리 라우트로 가는 API 키 요청을 뺀 POST 본문은 전역 auth 미들웨어, 그 밖에는 auth 라우터의 오류 층) 앱의 `onError`에는 가지 않고, `AuthResponses`가 모양을 정합니다 |
+| `UNPROCESSABLE_ENTITY` | 422 | auth 엔드포인트(가입 `POST /auth/register`, `POST /auth/setup`, 비밀번호 변경 `POST /auth/password`, 관리 사용자 만들기·수정 `POST /auth/admin/users`·`PATCH /auth/admin/users/:id`)에서 비밀번호 정책이나 유출 검사가 거부한 새 비밀번호. 앱 라우트에서 `auth.users().create`가 같은 이유로 던지는 `IllegalArgumentException`은 400 `BAD_REQUEST`입니다 |
+| `INTERNAL_ERROR` | 500 | auth 라우터의 그 밖의 예외, 예외를 던진 접근 규칙, 잘못된 상태에서 쓴 auth |
+| `NOT_IMPLEMENTED` | 501 | `UserStore`가 `list`를 구현하지 않을 때의 `GET /auth/admin/users`(DEV와 PROD 모두) |
+| `SERVICE_UNAVAILABLE` | 503 | store·throttle·리스너·유출 검사·해시 슬롯·그룹 확장 한도 실패(해시 슬롯이 모자라면 `Retry-After: 1`을 붙임). `AuthUnavailableException`의 기본 코드입니다 |
+
+PROD의 마지막 오류 층([오류 응답](#오류-응답과-authresponses))에서 auth 예외(`AuthRejection`, `DuplicateUserException`, …)는 제 코드를 지킵니다. 앱의 그 밖의 `HttpException`은 상태가 이 표에 있으면 그 코드로, 409이거나 표에 없으면 `HTTP_<status>`로 답합니다. 그래서 그런 409는 `CONFLICT`가 아니라 `HTTP_409`입니다. Core는 426을 `UPGRADE_REQUIRED`라고 부르지만 auth에는 그 철자가 없어 `HTTP_426`이 됩니다. 400–599 밖의 상태는 500이 됩니다. 그 밖의 예외는 500 `INTERNAL_ERROR`가 됩니다.
 
 Express 대응: `http-errors`의 `throw createError(422, ...)`를 맨 끝 오류 핸들러가 JSON으로 바꾸는 것.
 
@@ -618,7 +647,7 @@ val auth = Auth.builder(System.getenv("JWT_SECRET")).users(store).build()
 | `create(name, char[] password, roles...)` | 해시·정규화·이벤트 뒤 id가 있는 사용자 |
 | `create(name, @Nullable char[] password, @Nullable UserMutator init, roles...)` | `init`이 속성과 서비스 계정 표시를 정합니다. 서비스 계정만 비밀번호가 null |
 | `@Nullable update(id, UserMutator)` | 속성만 바꿉니다. id·이름·해시·ver·enabled·역할·서비스 계정을 바꾸면 `IllegalArgumentException` |
-| `@Nullable rename(id, newName)` | `newName`을 정규화(NFKC, `Locale.ROOT` 소문자)해 저장하고 `UserChange.USERNAME`, 출처 `APP`으로 `beforeUserUpdate`/`onUserUpdated`를 냅니다. 지금 이름과 같으면 쓰기도 이벤트도 없이 돌아오고, 다른 사용자가 가진 이름이면 `DuplicateUserException`(409)이며 행은 그대로입니다 |
+| `@Nullable rename(id, newName)` | `newName`을 정규화(NFKC, `Locale.ROOT` 소문자)해 저장하고 `UserChange.USERNAME`, 출처 `APP`으로 `beforeUserUpdate`/`onUserUpdated`를 냅니다. 지금 이름과 같으면 쓰기도 이벤트도 없이 돌아오고, 다른 사용자가 가진 이름이면 `DuplicateUserException`(409)이며 행은 그대로입니다 ([예제](#authusersrename)) |
 | `boolean delete(id)` | 그룹 소속을 먼저 지우고, (`.apiKeys(store)`가 있으면) 그 사용자의 키를 모두 지운 뒤 행을 지웁니다. 한 단계가 실패하면 503이고 행은 남으므로, 다시 부르면 멈춘 곳부터 이어 갑니다 |
 | `boolean checkPassword(id, char[] password)` | 현재 비밀번호 확인. 없는 사용자나 null 해시는 더미 해시 뒤 false. 한 사용자 id의 현재 비밀번호 확인은 모두 하나의 한도(15분에 5번 실패)를 함께 씁니다. 넘으면 해시를 계산하지 않고 `getRetryAfterSeconds()`가 있는 `AuthRejection(429, "too_many_attempts")`을 던지고, `auth.errors()`는 `Retry-After`와 함께 429로 답합니다. 같은 사용자의 다른 확인(엔드포인트 포함)이 돌고 있으면 최대 5초 기다리고, 그래도 끝나지 않으면 `AuthUnavailableException`(503)입니다. 성공해도 횟수는 초기화되지 않습니다 |
 
@@ -652,6 +681,8 @@ auth.users().update(alice.id!!) { it.toBuilder().attribute("nickname", "Al").bui
 - `default rolesOfGroups(groupIds)` — 그룹이 주는 역할. 인터페이스 기본은 빈 집합이고, 내장 `InMemoryGroupStore`·`FileGroupStore`는 `grantRole`로 준 역할의 합집합을 돌려줍니다.
 - `GroupLimits.defaults()`(깊이 8, 크기 256), `GroupLimits.of(maxDepth, maxSize)`, `getMaxDepth()`, `getMaxSize()`.
 
+Express 대응: Express에는 그룹이 없습니다. 가장 가까운 것은 `accesscontrol`의 역할 상속(`ac.grant('admin').extend('editor')`)과 앱이 passport `deserializeUser`에서 조인하는 `user_groups` 테이블입니다.
+
 ### 그룹 쓰기: GroupAdminStore, InMemoryGroupStore, FileGroupStore
 
 `GroupAdminStore extends GroupStore`는 관리 그룹 엔드포인트용 쓰기입니다. LDAP처럼 읽기만 하는 출처는 `GroupStore`만 구현합니다.
@@ -664,7 +695,7 @@ auth.users().update(alice.id!!) { it.toBuilder().attribute("nickname", "Al").bui
 | `addMember`, `removeMember`, `addParent(child, parent)`, `removeParent` | 멱등. 같은 호출을 두 번 해도 한 번과 같고 오류가 없습니다 |
 | default `removeUser(userId)` | 사용자 삭제 때 모든 직접 소속을 지웁니다. DB store는 `DELETE` 한 번으로 재정의 |
 
-내장 두 store는 그룹에 역할을 주는 메서드를 더 가집니다(관리 HTTP 경로는 v2).
+내장 두 store는 그룹에 역할을 주는 메서드를 더 가집니다(관리 HTTP 경로는 0.11.0에 없고 다음 auth 계약인 v2에서 다룹니다).
 
 | 메서드 | 설명 |
 |---|---|
@@ -893,7 +924,7 @@ val fixed = TimeSource { 1_000L }
 | `.replaceBuiltinRoles()` | 내장 역할을 버립니다(`admin`은 직접 준 것만 가짐) | — |
 | `.logger(Logger)` | `build()`의 경고를 받을 곳. 기본은 새 `ConsoleLogger` | — |
 | `RolePolicy.builtin()`, `scopesOf(role)`, `roles()`, `grantedScopes()` | 내장 정책 / 역할의 스코프 / 역할 이름 / 모든 부여 스코프 | — |
-| `RoleStore` (`@FunctionalInterface`, `scopesOf(role) throws Exception`) | DB 역할. 예약되었거나 틀린 행은 역할마다 WARN 한 번과 함께 버리고, 예외는 503으로 닫힙니다 | — |
+| `RoleStore` (`@FunctionalInterface`, `scopesOf(role) throws Exception`) | DB 역할. 예약되었거나 틀린 행은 역할마다 WARN 한 번과 함께 버리고, 예외는 보호 경로에서 503으로 닫힙니다(공개 경로는 익명, `.statelessAccess(true)`에서는 가드와 `auth.loadUser(req)`만 주체를(그래서 `RoleStore`를) 읽으므로 가드 없는 보호 경로는 그대로 답함, [데이터베이스 예제](#데이터베이스-rolestore)) | `accesscontrol`의 grant를 데이터베이스 테이블에서 읽어 오기 |
 | `Scopes.covers(grant, other)` | 부여가 덮는지. 둘 다 올바른 부여여야 하고 아니면 `IllegalArgumentException` | — |
 | `Scopes.isValidGrant/isValidRequired`, `validateGrant/validateRequired` | 문법 검사. 요구 스코프에는 `*`가 올 수 없습니다 | — |
 
@@ -922,20 +953,20 @@ println("${user.username} enabled=${user.isEnabled} canWrite=$canWrite")
 
 ## 저장 파일의 내구성
 
-auth의 파일 저장(앞으로 들어갈 파일 store가 모두 쓰는 내부 `AtomicFiles` 규약)은 임시 파일에 쓰고 `FileDescriptor.sync()`를 한 뒤, 기존 파일을 `.bak`로, 임시 파일을 본 이름으로 바꾸고 `.bak`를 지웁니다. 기동할 때 `.bak`만 있으면 그것을 되살리고 WARN을 남기며, 둘 다 있고 본 파일을 읽을 수 있으면 본 파일을 쓰고 `.bak`를 지웁니다. 본 파일을 읽을 수 없으면 아무것도 덮어쓰지 않고 기동을 멈춥니다(`.bak`를 확인하라는 FAIL 메시지). API 21에는 디렉터리 fsync가 없어서 이름 바꾸기의 내구성은 파일 시스템에 달려 있고, 전원이 꺼지면 `ver`(토큰 버전)가 한 단계 되돌아갈 수 있습니다. 임시 파일은 소유자만 들어갈 수 있는 임시 디렉터리(`.<이름>.tmp.new-<16진수>`) 안에서 소유자 전용으로 만든 뒤 제 이름으로 옮기고 나서 내용을 쓰므로, 쓰는 도중에도 umask 권한으로 보이는 순간이 없고, 비밀번호 해시와 토큰 버전이 든 저장 파일을 umask와 관계없이 다른 로컬 사용자가 읽지 못합니다(그런 권한이 없는 파일 시스템은 기본 권한을 그대로 씁니다). 저장소마다의 크기 한도는 읽기 전에 파일 길이와 비교하므로, 아주 크거나 망가진 파일은 힙을 다 쓰지 않고 `FAIL ... above the limit` 메시지로 기동이 실패합니다. 한 디렉터리 안의 쓰기는 프로세스 안에서 차례로 일어나고, 디렉터리는 정규 경로(canonical path)로 비교하며 파일 이름은 비교에 쓰지 않으므로, `dir/users.json`과 `dir/./users.json`, 심볼릭 링크를 거친 경로, `dir/USERS.json`(macOS·Windows처럼 대소문자를 가리지 않는 파일 시스템), 같은 이름의 NFC와 NFD 표기(APFS·HFS+처럼 유니코드 정규화를 가리지 않는 파일 시스템)도 파일이나 디렉터리가 아직 없든 있든 쓰는 쪽이 한 번에 하나뿐입니다. 아직 없는 디렉터리는 표기와 관계없이 프로세스 전체의 잠금 하나를 함께 쓰고, 그 디렉터리로의 쓰기는 아무것도 쓰지 않고 `IOException`으로 실패하며, 디렉터리가 없을 때 준비하던 쓰기가 그사이 디렉터리가 만들어져 있으면 역시 아무것도 쓰지 않고 실패하므로 다시 시도하면 디렉터리 잠금 아래에서 파일을 다시 확인합니다. 한 디렉터리의 서로 다른 파일은 쓰기 차례만 함께 기다리고 파일은 따로입니다. `FileUserStore`는 마지막으로 읽거나 쓴 파일 상태를 기억해 두고, 그 뒤 다른 쓰는 쪽(같은 파일 위의 다른 `FileUserStore`나 다른 프로세스)이 파일을 바꿨으면 그 변경(`ver`, 비밀번호 해시)을 되돌리지 않도록 쓰기를 `IOException`(auth 경로에서는 503)과 ERROR 한 번으로 거부합니다. 파일 하나에는 `FileUserStore` 하나를 쓰고, 파일을 다시 읽으려면 재시작합니다.
+auth의 파일 저장(모든 auth 파일 store가 쓰는 내부 `AtomicFiles` 규약)은 임시 파일에 쓰고 `FileDescriptor.sync()`를 한 뒤, 기존 파일을 `.bak`로, 임시 파일을 본 이름으로 바꾸고 `.bak`를 지웁니다. 기동할 때 `.bak`만 있으면 그것을 되살리고 WARN을 남기며, 둘 다 있고 본 파일을 읽을 수 있으면 본 파일을 쓰고 `.bak`를 지웁니다. 본 파일을 읽을 수 없으면 아무것도 덮어쓰지 않고 기동을 멈춥니다(`.bak`를 확인하라는 FAIL 메시지). API 21에는 디렉터리 fsync가 없어서 이름 바꾸기의 내구성은 파일 시스템에 달려 있고, 전원이 꺼지면 `ver`(토큰 버전)가 한 단계 되돌아갈 수 있습니다. 임시 파일은 소유자만 들어갈 수 있는 임시 디렉터리(`.<이름>.tmp.new-<16진수>`) 안에서 소유자 전용으로 만든 뒤 제 이름으로 옮기고 나서 내용을 쓰므로, 쓰는 도중에도 umask 권한으로 보이는 순간이 없고, 비밀번호 해시와 토큰 버전이 든 저장 파일을 umask와 관계없이 다른 로컬 사용자가 읽지 못합니다(그런 권한이 없는 파일 시스템은 기본 권한을 그대로 씁니다). 저장소마다의 크기 한도는 읽기 전에 파일 길이와 비교하므로, 아주 크거나 망가진 파일은 힙을 다 쓰지 않고 `FAIL ... above the limit` 메시지로 기동이 실패합니다. 한 디렉터리 안의 쓰기는 프로세스 안에서 차례로 일어나고, 디렉터리는 정규 경로(canonical path)로 비교하며 파일 이름은 비교에 쓰지 않으므로, `dir/users.json`과 `dir/./users.json`, 심볼릭 링크를 거친 경로, `dir/USERS.json`(macOS·Windows처럼 대소문자를 가리지 않는 파일 시스템), 같은 이름의 NFC와 NFD 표기(APFS·HFS+처럼 유니코드 정규화를 가리지 않는 파일 시스템)도 파일이나 디렉터리가 아직 없든 있든 쓰는 쪽이 한 번에 하나뿐입니다. 아직 없는 디렉터리는 표기와 관계없이 프로세스 전체의 잠금 하나를 함께 쓰고, 그 디렉터리로의 쓰기는 아무것도 쓰지 않고 `IOException`으로 실패하며, 디렉터리가 없을 때 준비하던 쓰기가 그사이 디렉터리가 만들어져 있으면 역시 아무것도 쓰지 않고 실패하므로 다시 시도하면 디렉터리 잠금 아래에서 파일을 다시 확인합니다. 한 디렉터리의 서로 다른 파일은 쓰기 차례만 함께 기다리고 파일은 따로입니다. `FileUserStore`는 마지막으로 읽거나 쓴 파일 상태를 기억해 두고, 그 뒤 다른 쓰는 쪽(같은 파일 위의 다른 `FileUserStore`나 다른 프로세스)이 파일을 바꿨으면 그 변경(`ver`, 비밀번호 해시)을 되돌리지 않도록 쓰기를 `IOException`(auth 경로에서는 503)과 ERROR 한 번으로 거부합니다. 파일 하나에는 `FileUserStore` 하나를 쓰고, 파일을 다시 읽으려면 재시작합니다.
 
 ## 비밀번호 해시: PasswordHasher, HashCost
 
 | API | 설명 | Express 대응 |
 |---|---|---|
-| `password.PasswordHasher` | `boolean accepts(String stored)`, `String hash(char[] password)`, `boolean verify(char[] password, String stored)`, default `boolean needsRehash(String stored)`(false). 앱이 구현할 수 있는 SPI이고, 첫 공개 뒤에는 default 메서드만 더합니다. 저장 문자열의 접두사가 알고리즘을 정합니다. auth는 설정한 해시기 **하나**를 쓰고, 그 해시기가 `accepts`하지 않는 저장 문자열은 더미 해시와 비교한 뒤 false입니다. 여러 형식을 읽으려면(bcrypt 계정을 PBKDF2로 옮기기) `PasswordHashers.chain(...)`을 `.passwordHasher(...)`로 줍니다 | `bcrypt` 객체 |
+| `password.PasswordHasher` | `boolean accepts(String stored)`, `String hash(char[] password)`, `boolean verify(char[] password, String stored)`, default `boolean needsRehash(String stored)`(false). 앱이 구현할 수 있는 SPI이고, 0.11.0부터는 default 메서드만 더합니다. 저장 문자열의 접두사가 알고리즘을 정합니다. auth는 설정한 해시기 **하나**를 쓰고, 그 해시기가 `accepts`하지 않는 저장 문자열은 더미 해시와 비교한 뒤 false입니다. 여러 형식을 읽으려면(bcrypt 계정을 PBKDF2로 옮기기) `PasswordHashers.chain(...)`을 `.passwordHasher(...)`로 줍니다 | `bcrypt` 객체 |
 | `new Pbkdf2PasswordHasher(iterations)` | 기본 해시기. `javax.crypto.Mac` 위에 직접 쓴 PBKDF2-HMAC-SHA256(Android 5.0에는 `PBKDF2WithHmacSHA256`이 없음). 형식 `pbkdf2-sha256$<반복 수>$<솔트>$<해시>`(16바이트 솔트, 32바이트 키, 패딩 없는 base64url). 빈 비밀번호는 `IllegalArgumentException`. HMAC 키는 해시마다 한 번만 설정하므로 긴 비밀번호도 비용이 같습니다. `needsRehash`는 저장 반복 수가 이 해시기 반복 수의 80% 미만이거나 125% 초과일 때 참. 저장 반복 수가 2,000,000을 넘으면 해시하지 않고 false(`MAX_STORED_ITERATIONS`). auth의 로그인과 비밀번호 확인에서는 형식이 깨졌거나 반복 수가 한도를 넘는 `pbkdf2-sha256$` 저장 문자열도 없는 사용자처럼 목표 비용의 더미 PBKDF2를 한 번 돌린 뒤 false이므로, 시간으로 구별되지 않습니다. `getIterations()` | `bcrypt.hashSync` / `compareSync` |
 | `PasswordHashers.bcrypt()`, `BcryptPasswordHasher.builder().maxCost(n).cost(n).logger(logger).build()` | 레거시 bcrypt 검증기(라이브러리 없이 직접 구현). `$2a$`·`$2b$`·`$2y$`를 읽고 `$2x$`는 받지 않습니다. 저장 cost가 상한(기본 14)을 넘으면 키 스케줄을 돌리지 않고 false, ERROR 한 번. 비밀번호는 UTF-8 앞 72바이트만 셉니다. 솔트 22자·해시 31자·알파벳 `./A-Za-z0-9`가 아니면 false. `needsRehash`는 늘 참(다음 성공 로그인에서 PBKDF2로). `hash()`도 되지만(`$2b$`, 기본 cost 10) 기본 해시기는 PBKDF2입니다 | `bcrypt.compare` |
 | `PasswordHashers.chain(primary, legacy...)`, `PasswordHashers.chain(logger, primary, legacy...)` | 여러 저장 형식을 해시기 하나로 읽습니다. 저장 문자열마다 `primary`, 이어서 `legacy`를 순서대로 보고 `accepts`가 처음 참인 해시기가 `verify`합니다. `hash`는 늘 `primary`입니다. `needsRehash`는 받아들인 해시기가 `primary`가 아니거나 `primary.needsRehash`가 참일 때 참이라, 다음 성공 로그인에서 `primary` 형식으로 옮겨집니다. 어느 해시기도 받지 않는 저장 문자열은 false이고, 접두사(앞 최대 4자, 문자열 전체는 절대 아님)마다 ERROR를 한 번 남깁니다(`accepts`와 `verify` 어느 쪽에서 만나도 한 번). 로거를 주지 않으면 `ConsoleLogger`입니다(`app.logger()`를 쓰려면 `chain(app.logger(), ...)`). 직접 구현한 `PasswordHasher`(Java, Kotlin)도 멤버가 됩니다 | 형식마다 `bcrypt.compare` 등을 고르는 코드 |
 | `PasswordHashers.digest(prefix, algorithm, encoding)` | 솔트 없는 레거시 MD5, SHA-1, SHA-256 검증기. 저장 형식 `<prefix>$<digest>`(예: `digest("legacy-md5", "MD5", DigestEncoding.HEX)`는 `legacy-md5$5f4dcc3b...`를 읽음). `algorithm`은 `MessageDigest` 이름(`"MD5"`, `"SHA-1"`, `"SHA-256"`)이고 없는 이름은 만들 때 `IllegalArgumentException`. 비밀번호는 UTF-8로 다이제스트하고 `ConstantTime`으로 비교합니다. `prefix`는 `$` 없는 이름이고 끝에 `$` 하나를 붙여 줘도 겹치지 않습니다. 빈 접두사는 거부합니다. 컬럼에 접두사가 없으면 저장소가 읽을 때 붙입니다(`"legacy-md5$" + column`). `hash()`는 `UnsupportedOperationException`(약한 해시를 새로 만들지 않음), `needsRehash`는 늘 참 | `crypto.createHash('md5').update(pw).digest('hex')` 비교 |
 | `PasswordHashers.saltedDigest(prefix, algorithm, encoding, order)` | 솔트 있는 레거시 다이제스트 검증기. 저장 형식 `<prefix>$<salt>$<digest>`(예: `legacy-sha256$Xy7q$9f86d0...`). 솔트는 접두사 뒤부터 **마지막** `$` 앞까지의 글자 그대로이고(그래서 솔트에 `$`가 있어도 됨), UTF-8로 비밀번호와 이어 붙입니다. `order`는 `SaltOrder.SALT_THEN_PASSWORD`(`sha256(salt + pw)`) 또는 `SaltOrder.PASSWORD_THEN_SALT`(`sha256(pw + salt)`)이고 옛 코드를 보고 고릅니다. 솔트 컬럼이 따로 있으면 저장소가 읽을 때 합칩니다. 나머지는 `digest`와 같습니다 | `crypto.createHash('sha256').update(salt + pw)` 비교 |
 | `DigestEncoding.HEX`, `DigestEncoding.BASE64` | `digest`와 `saltedDigest`의 다이제스트 표기. `HEX`는 대소문자 모두, `BASE64`는 표준 알파벳(`+`, `/`)이고 `=` 패딩은 있어도 없어도 됩니다 | `digest('hex')` / `digest('base64')` |
-| `HashCost.calibrate(targetMillis)`, `HashCost.fixed(iterations)`, `HashCost.defaults()` | 이 기기를 한 번 재서(짧은 예열과 측정 한 번) 한 해시가 목표 시간쯤 걸리는 반복 수를 고릅니다(10,000 단위 내림, 50,000–600,000) / 보정 없이 고정 반복 수 / `calibrate(500)`. `isFixed()`, `getTargetMillis()`(고정이면 0), `getIterations()`(보정이면 0) | `bcrypt.hash(pw, rounds)`의 rounds |
+| `HashCost.calibrate(targetMillis)`, `HashCost.fixed(iterations)`, `HashCost.defaults()` | 이 기기를 한 번 재서(짧은 예열과 측정 한 번) 한 해시가 목표 시간쯤 걸리는 반복 수를 고릅니다(10,000 단위 내림, 50,000–600,000) / 보정 없이 고정 반복 수 / `calibrate(500)`. `isFixed()`, `getTargetMillis()`(고정이면 0), `getIterations()`(보정이면 0) ([`fixed` 예제](#hashcostfixed)) | `bcrypt.hash(pw, rounds)`의 rounds |
 
 auth는 모든 `hash`·`verify`를 해시 슬롯(`.hashConcurrency(n)`, 기본 `max(1, 코어/2)`, 대기열은 슬롯의 4배) 안에서 돌립니다. 설정한 해시기가 bcrypt와 PBKDF2를 함께 다뤄도 모두 같은 슬롯을 나눠 씁니다. 슬롯을 5초 안에 얻지 못하면 `AuthUnavailableException`(503, `Retry-After: 1`)입니다. 비용은 처음 쓸 때(보통 기동 doctor, `.user` 비밀번호가 있으면 `build()`) 한 번 잽니다. 보정 목표 시간은 로그인 응답 시간 기준 T로도 쓰고, `fixed(n)`이면 기동 때 n 반복 해시를 한 번 잰 시간이 T입니다(n은 바뀌지 않음). 정한 것: 기본 보정 목표는 500 ms(권장 범위 250–500 ms의 위쪽 끝. 요즘 서버에서 OWASP 권장 600,000회에 닿고, 느린 기기는 `HashCost.calibrate(250)`을 씁니다). 250–500 ms 밖의 보정 목표는 잘라 맞추지 않고 `build()`가 `AuthConfigException`으로 거부합니다(DEV 포함). `HashCost.fixed(n)`이 50,000회 미만이면 doctor가 PROD에서 FAIL, DEV에서 WARN입니다(AuthMode 표의 "해시 비용 실패").
 
@@ -1015,7 +1046,7 @@ val vault = KeySource { "a-key-read-from-the-vault-32-bytes!!".toByteArray() }
 
 | API | 설명 | Express 대응 |
 |---|---|---|
-| `auth.errors()` | Core `ErrorHandler`. 라우트 뒤 **마지막**에 `app.onError(auth.errors())`. 앱 핸들러가 던진 `DuplicateUserException` 409 `duplicate_user`, `AuthUnavailableException` 503(그 코드, 예: `security_write_conflict`), auth의 `IllegalArgumentException` 하위 클래스 400 `BAD_REQUEST`, `AuthRejection` 그 상태·코드(+ `Retry-After`), `AuthStateException` 500 `INTERNAL_ERROR`(메시지는 본문에 넣지 않고 로그에만. Core가 `request <id> failed` ERROR로 한 번 남기고 그 스택 트레이스에 `AuthStateException` 메시지가 실리며 auth는 따로 줄을 남기지 않으므로, 공개 경로의 `auth.user(req)`는 `auth.userOrNull(req)`를 적은 ERROR 하나)를 auth JSON으로 바꿉니다. 그 밖의 예외(앱의 `RuntimeException`, auth가 아닌 `IllegalArgumentException`)는 응답하지 않고 같은 인스턴스 그대로 다음 오류 층에 넘깁니다. PROD에서는 auth가 기동할 때 덧붙이는 마지막 층이 그것을 JSON으로 답합니다([오류 응답](#오류-응답과-authresponses) 참고). `Auth`마다 같은 인스턴스 | 맨 끝의 `app.use((err, req, res, next) => ...)` |
+| `auth.errors()` | Core `ErrorHandler`. 라우트 뒤 **마지막**에 `app.onError(auth.errors())`. 앱 핸들러가 던진 `DuplicateUserException` 409 `duplicate_user`, `AuthUnavailableException` 503(그 코드, 예: `security_write_conflict`), auth의 `IllegalArgumentException` 하위 클래스 400 `BAD_REQUEST`, `AuthRejection` 그 상태·코드(+ `Retry-After`), `AuthStateException` 500 `INTERNAL_ERROR`(메시지는 본문에 넣지 않고 로그에만. Core가 `request <id> failed` ERROR로 한 번 남기고 그 스택 트레이스에 `AuthStateException` 메시지가 실리며 auth는 따로 줄을 남기지 않으므로, 공개 경로의 `auth.user(req)`는 `auth.userOrNull(req)`를 적은 ERROR 하나)를 auth JSON으로 바꿉니다. 그 밖의 예외(앱의 `RuntimeException`, auth가 아닌 `IllegalArgumentException`)는 응답하지 않고 같은 인스턴스 그대로 다음 오류 층에 넘깁니다. PROD에서는 auth가 기동할 때 덧붙이는 마지막 오류 층이 그것을 JSON으로 답합니다([오류 응답](#오류-응답과-authresponses) 참고). `Auth`마다 같은 인스턴스 | 맨 끝의 `app.use((err, req, res, next) => ...)` |
 | `auth.errorMiddleware()` | 같은 변환을 하는 `ErrorMiddleware`. Core가 기동 뒤에도 받는 `app.use(...)`로 붙입니다(기동 뒤 `onError`는 Core가 거부). 기동 뒤에 라우트 묶음을 더할 때마다 그 뒤에 다시 붙입니다. 다른 예외는 `next.error(err)`. 같은 인스턴스 | 같음 |
 
 마지막 ROUTE 뒤에 이 둘 중 하나(바로 그 객체)가 없으면 doctor WARN이고(앱 자신의 `onError`가 그 자리에 있어도 WARN), auth가 기동할 때 라우트 뒤, 앱 자신의 오류 처리기 다음에 `auth.errorMiddleware()`를 덧붙입니다. 기동 뒤에 더한 라우트는 요청 때 확인하며, 이때도 WARN을 남깁니다: 등록이 바뀐 뒤 첫 요청에서 다시 확인하고, 1분에 한 번까지만 남깁니다. 이미 마운트한 Router에 나중에 더한 라우트는 그 마운트 위치에 있는 것으로 셉니다. auth 라우터(`auth.routes()`, `auth.adminRoutes()`)는 자기 오류 미들웨어가 있어 세지 않습니다.
@@ -1089,7 +1120,7 @@ val auth = Auth.builder(System.getenv("JWT_SECRET")).transport(TokenTransport.BO
 
 | API | 설명 | Express 대응 |
 |---|---|---|
-| `spi.LoginThrottle` | `long retryAfter(key)`(0이면 허용, 양수면 남은 차단 밀리초), `long recordFailure(key)`(새 차단 밀리초, 아직이면 0), `void reset(key)`. default `retryAfter(key, max, windowMillis)`·`recordFailure(key, max, windowMillis)`는 한 인자 메서드로 넘기고(구현 자신의 한도), default `boolean usesLimitArguments()`는 false입니다. 모두 동기·`throws Exception`. 첫 공개 뒤에는 default 메서드만 더합니다 | `rate-limiter-flexible`의 store |
+| `spi.LoginThrottle` | `long retryAfter(key)`(0이면 허용, 양수면 남은 차단 밀리초), `long recordFailure(key)`(새 차단 밀리초, 아직이면 0), `void reset(key)`. default `retryAfter(key, max, windowMillis)`·`recordFailure(key, max, windowMillis)`는 한 인자 메서드로 넘기고(구현 자신의 한도), default `boolean usesLimitArguments()`는 false입니다. 모두 동기·`throws Exception`. 0.11.0부터는 default 메서드만 더합니다 | `rate-limiter-flexible`의 store |
 | `spi.ForwardingLoginThrottle` | 데코레이터의 기반 공개 추상 클래스. default와 `usesLimitArguments()`까지 모든 메서드를 감싼 throttle로 넘기므로, 일부만 재정의해도 선언이 거짓이 되지 않습니다 | — |
 | `InMemoryLoginThrottle` | 메모리 구현(재시작하면 사라짐). 한도 인자를 지키고(`usesLimitArguments()` 참), 한 인자 메서드는 15분 5회(`builder().limits(max, windowMillis)`). 키 수 상한은 JVM 100,000·Android 10,000(`builder().maxKeys(n)`)이고, 차면 가장 오래 실패한 키를 버리며 처음 한 번만 WARN. `builder().timeSource(...)`, `builder().logger(...)` | `express-rate-limit`의 MemoryStore |
 
@@ -1252,7 +1283,7 @@ val auth = Auth.builder(System.getenv("JWT_SECRET")).refreshTokens(InMemoryRefre
 
 ## API 키 저장소: ApiKeyStore와 키 타입
 
-`apikey.ApiKeyStore`(사용자 구현, 동기 `throws Exception`, 인자는 null이 아님)는 첫 공개 전에 고정합니다: `@Nullable findByPrefix(prefix)`, `@Nullable findById(keyId)`, `listByOwner(ownerUserId)`(죽은 키 포함), `insertIfUnderLimit(StoredApiKey, int maxLiveKeys, long nowMillis)`(소유자의 살아 있는 키, 즉 만료 전이고 ownerVer가 새 키 이상인 키가 한도 미만일 때만. 이미 있는 prefix는 `ApiKeyPrefixCollisionException`), `deleteByIdAndOwner`, `deleteById`, `deleteAllByOwner`, `deleteStaleByOwner(owner, v)`(ownerVer < v), `deleteExpired(nowMillis)`, 그리고 default `deleteFutureByOwner(owner, v)`(ownerVer > v, `listByOwner`와 `deleteById`로), `updateLastUsed(keyId, lastUsedAtMillis)`(아무것도 안 함), `supportsAtomicLimitInsert()`(false), `countKeysWithAdminScopes()`(-1: 셀 수 없음).
+`apikey.ApiKeyStore`(사용자 구현, 동기 `throws Exception`, 인자는 null이 아님)는 0.11.0부터 고정되어 있습니다: `@Nullable findByPrefix(prefix)`, `@Nullable findById(keyId)`, `listByOwner(ownerUserId)`(죽은 키 포함), `insertIfUnderLimit(StoredApiKey, int maxLiveKeys, long nowMillis)`(소유자의 살아 있는 키, 즉 만료 전이고 ownerVer가 새 키 이상인 키가 한도 미만일 때만. 이미 있는 prefix는 `ApiKeyPrefixCollisionException`), `deleteByIdAndOwner`, `deleteById`, `deleteAllByOwner`, `deleteStaleByOwner(owner, v)`(ownerVer < v), `deleteExpired(nowMillis)`, 그리고 default `deleteFutureByOwner(owner, v)`(ownerVer > v, `listByOwner`와 `deleteById`로), `updateLastUsed(keyId, lastUsedAtMillis)`(아무것도 안 함), `supportsAtomicLimitInsert()`(false), `countKeysWithAdminScopes()`(-1: 셀 수 없음).
 
 | 타입 | 뜻 |
 |---|---|
@@ -1312,7 +1343,7 @@ val auth = Auth.builder(System.getenv("JWT_SECRET"))
 | refresh | `typ` `rt+jwt` | `sub`, `ver`, `fam`, `jti`, `iat`, `exp` | HMAC(그 kid의 비밀, `"naru-refresh"`) |
 | 기기 토큰 / 기기 이름 지문 | — | — | HMAC(비밀, `"naru-device"`) / HMAC(비밀, `"naru-device-fp"`) |
 
-목적마다 키가 달라서 `typ`을 위조해도 한 목적의 토큰이 다른 목적으로 검증되지 않습니다. 키는 키 세트의 모든 kid(검증 전용 kid 포함)에서 파생하므로 회전 전에 서명한 토큰도 옛 kid로 검증됩니다. `TokenPair`: `getAccessToken()`, `getExpiresIn()`(초), `getRefreshToken()`, `getRefreshExpiresIn()`(초), `getTokenType()`(`"Bearer"`). JSON 필드 이름은 OAuth 2.0 토큰 응답의 camelCase(`accessToken`, `expiresIn`, `refreshToken`, `refreshExpiresIn`, `tokenType`)이고 `toString()`에는 토큰이 없습니다. 수명은 빌더 `.accessTtl(millis)`, `.refreshTtl(millis)`(1초 이상)로 정하고, 부르지 않으면 위 AuthProfile 표의 값입니다. 액세스 토큰은 60초의 시계 오차 허용(leeway, `Jwt.DEFAULT_LEEWAY_MILLIS`, `Auth`에서 바꿀 수 없음)으로 검증하므로 만료 뒤에도 60초까지 200으로 답할 수 있습니다. 만료를 시험하려면 시계를 `accessTtl`에 60초를 더한 시각 뒤로 옮기세요.
+목적마다 키가 달라서 `typ`을 위조해도 한 목적의 토큰이 다른 목적으로 검증되지 않습니다. 키는 키 세트의 모든 kid(검증 전용 kid 포함)에서 파생하므로 회전 전에 서명한 토큰도 옛 kid로 검증됩니다. `TokenPair`: `getAccessToken()`, `getExpiresIn()`(초), `getRefreshToken()`, `getRefreshExpiresIn()`(초), `getTokenType()`(`"Bearer"`). JSON 필드 이름은 OAuth 2.0 토큰 응답의 camelCase(`accessToken`, `expiresIn`, `refreshToken`, `refreshExpiresIn`, `tokenType`)이고 `toString()`에는 토큰이 없습니다. 수명은 빌더 `.accessTtl(millis)`, `.refreshTtl(millis)`(1초 이상)로 정하고, 부르지 않으면 위 AuthProfile 표의 값입니다. `auth.tokens()`의 `getAccessTtl()`과 `getRefreshTtl()`은 실제로 적용되는 수명을 밀리초로 돌려줍니다. 빌더 값, 프로필 값, 또는 `.allowInsecureTransport`가 고정한 5분과 24시간입니다. 액세스 토큰은 60초의 시계 오차 허용(leeway, `Jwt.DEFAULT_LEEWAY_MILLIS`, `Auth`에서 바꿀 수 없음)으로 검증하므로 만료 뒤에도 60초까지 200으로 답할 수 있습니다. 만료를 시험하려면 시계를 `accessTtl`에 60초를 더한 시각 뒤로 옮기세요.
 
 refresh 재사용 감지와 토큰 형식 교체(`TokenCodec`)는 아래 [refresh 재사용 감지와 TokenCodec](#refresh-재사용-감지와-tokencodec) 절에 있습니다.
 
@@ -1441,7 +1472,7 @@ app.ws("/ws", auth.webSocket { req, ws -> ws.sendText("hi " + auth.user(req).id)
 
 **refresh 재사용 감지:** 이미 쓴 refresh 토큰이 재사용 유예 창(`.reuseGrace(millis)`, 기본 0) 밖에서 다시 오면 `TokenService`가 `RefreshTokenStore.revokeFamily`로 그 계열 전체를 폐기하고 `AuthEvents.onRefreshTokenReused(userId, familyId, ctx)`를 한 번 부른 뒤, 다른 무효 refresh 토큰과 똑같은 401 `invalid_refresh_token`으로 답합니다(감지했다는 사실이 응답에 드러나지 않습니다). 유예 0이면 1ms 뒤의 두 번째 사용도 재사용입니다. 유예 창 안의 반복(예: 탭 둘이 동시에 refresh)은 401로만 거부하고 아무것도 폐기하지 않습니다. 같은 사용자의 다른 계열은 영향을 받지 않습니다. 로그아웃이 토큰의 신원을 볼 때는 토큰을 소비하지 않으므로 사용된·폐기된 토큰은 신원을 주지 않고 재사용 감지도 일으키지 않습니다. 재사용 처리 중의 store 오류는 성공도 무효 토큰도 아닌 `AuthUnavailableException`(503)입니다. Express 대응: refresh 토큰 회전 라이브러리의 "reuse detection" 옵션.
 
-**토큰 형식: `TokenCodec`.** `spi.TokenCodec`는 `String encode(JwtClaims claims)`와 `JwtClaims decode(String token, String expectedType)`(둘 다 `throws Exception`, null 없음)를 가진 토큰 형식 교체 지점입니다. auth는 access·refresh 토큰을 모두 설정된 codec으로만 만들고 읽으며, 빌더 `.tokenCodec(codec)`으로 바꿉니다. 기본은 키 소스 위의 HS256 codec(헤더 `kid`, `typ` `at+jwt`/`rt+jwt`, 목적별 파생 키)이고, `expectedType`(`TokenCodec.ACCESS` 또는 `TokenCodec.REFRESH`)이 다른 토큰은 거부합니다. `decode`가 던지면 서명이 틀린 토큰과 같은 401 `invalid_token`이고 이유는 DEBUG 로그에만 남습니다. 0.11.0에는 다른 codec이 없습니다(RS256·ES256·JWKS는 다음 버전). 첫 공개 뒤에는 default 메서드만 더합니다. Express 대응: `express-jwt`에 넘기는 `sign`/`verify` 쌍.
+**토큰 형식: `TokenCodec`.** `spi.TokenCodec`는 `String encode(JwtClaims claims)`와 `JwtClaims decode(String token, String expectedType)`(둘 다 `throws Exception`, null 없음)를 가진 토큰 형식 교체 지점입니다. auth는 access·refresh 토큰을 모두 설정된 codec으로만 만들고 읽으며, 빌더 `.tokenCodec(codec)`으로 바꿉니다. 기본은 키 소스 위의 HS256 codec(헤더 `kid`, `typ` `at+jwt`/`rt+jwt`, 목적별 파생 키)이고, `expectedType`(`TokenCodec.ACCESS` 또는 `TokenCodec.REFRESH`)이 다른 토큰은 거부합니다. `decode`가 던지면 서명이 틀린 토큰과 같은 401 `invalid_token`이고 이유는 DEBUG 로그에만 남습니다. 0.11.0에는 다른 codec이 없습니다(RS256·ES256·JWKS는 이후 버전). 0.11.0부터는 default 메서드만 더합니다. Express 대응: `jsonwebtoken`의 `sign`/`verify` 쌍(`express-jwt`는 그 verify 쪽을 감쌉니다).
 
 ```java
 TokenCodec wrapped = new TokenCodec() {
@@ -1490,7 +1521,7 @@ app.post("/api/posts", auth.require("posts:write")) { _, rs -> rs.status(201).se
 
 비밀번호 로그인에 성공하면 auth는 기기 토큰을 발급합니다. HS256 토큰(헤더 `kid`, `typ` `dt+jwt`)이며 사용자 id(`sub`), 발급 때의 `ver`, 정규화한 로그인 이름의 지문 `fp` = base64url(HMAC(지문 키, 이름)), 무작위 `jti`, 90일 뒤의 `exp`를 담고 로그인 이름 자체는 담지 않습니다. 서명 키는 HMAC(비밀, `"naru-device"`), 지문 키는 HMAC(비밀, `"naru-device-fp"`)로 토큰 헤더의 kid에서 파생합니다. 다음 로그인에서 서명·만료(유예 없음)·지문·사용자 id·`ver`가 모두 맞고 실패 한도로 무효가 되지 않았을 때만 신뢰합니다. 그래서 모든 기기 로그아웃이나 비밀번호 변경(`ver++`), 이름 변경, 다른 사용자가 같은 이름을 가져간 경우, 같은 사용자를 다른 이름(예: 이메일)으로 찾은 경우에는 신뢰하지 않습니다. 키를 회전해도 옛 kid가 검증 목록에 있는 동안은 신뢰가 이어집니다. 신뢰한 기기 토큰을 들고 실패한 로그인은 그 토큰에 대해 15분 고정 창에 5회까지 세고, 5번째 실패에서 토큰을 무효로 합니다(훔친 토큰으로 IP를 바꿔 가며 시도하는 것을 막습니다).
 
-`spi.DeviceTrust`는 그 상태 저장소입니다. auth가 서명·검증·지문을 직접 하고(키는 이 인터페이스로 가지 않습니다) 로그인의 세 지점에서 부릅니다: 성공한 로그인이 토큰을 발급한 뒤 `default void issued(DeviceToken token)`, 검사 순서 ③에서 신뢰를 정할 때 `boolean isInvalidated(DeviceToken token)`, 신뢰한 토큰을 든 실패마다 `boolean recordFailure(DeviceToken token, int max, long windowMillis)`(auth는 5회/15분을 넘기고, 이 호출 뒤 무효면 true), 그리고 10분 정리 작업이 부르는 `default int purgeExpired(long nowMillis)`(만료한 토큰의 상태를 지움, 기본은 아무것도 지우지 않음). 모두 동기·`throws Exception`이며 실패는 503입니다. `spi.DeviceToken`은 검증된 토큰의 값 객체(`getTokenId()`, `getUserId()`, `getTokenVersion()`, `getExpiresAt()`)입니다. 빌더 `.deviceTrust(trust)`로 바꾸고, 부르지 않으면 사용자 저장소를 따릅니다(메모리, `FileUserStore`면 그 옆의 `<이름>-device-trust.json`. 무효 표시는 곧바로 파일에 씁니다). 첫 공개 뒤에는 default 메서드만 더합니다. Express 대응: OWASP "device cookie" 패턴의 기기 쿠키 표.
+`spi.DeviceTrust`는 그 상태 저장소입니다. auth가 서명·검증·지문을 직접 하고(키는 이 인터페이스로 가지 않습니다) 로그인의 세 지점에서 부릅니다: 성공한 로그인이 토큰을 발급한 뒤 `default void issued(DeviceToken token)`, 검사 순서 ③에서 신뢰를 정할 때 `boolean isInvalidated(DeviceToken token)`, 신뢰한 토큰을 든 실패마다 `boolean recordFailure(DeviceToken token, int max, long windowMillis)`(auth는 5회/15분을 넘기고, 이 호출 뒤 무효면 true), 그리고 10분 정리 작업이 부르는 `default int purgeExpired(long nowMillis)`(만료한 토큰의 상태를 지움, 기본은 아무것도 지우지 않음). 모두 동기·`throws Exception`이며 실패는 503입니다. `spi.DeviceToken`은 검증된 토큰의 값 객체(`getTokenId()`, `getUserId()`, `getTokenVersion()`, `getExpiresAt()`)입니다. 빌더 `.deviceTrust(trust)`로 바꾸고, 부르지 않으면 사용자 저장소를 따릅니다(메모리, `FileUserStore`면 그 옆의 `<이름>-device-trust.json`. 무효 표시는 곧바로 파일에 씁니다). 0.11.0부터는 default 메서드만 더합니다. Express 대응: OWASP "device cookie" 패턴의 기기 쿠키 표.
 
 `naru_device` 쿠키(쿠키 전달일 때): HttpOnly, SameSite=Strict, Path = 마운트 경로 + `/login`(기본 `/auth/login`, `.mountPath("/api/auth")`면 `/api/auth/login`), `req.isSecure()`일 때만 Secure, Max-Age = 기기 토큰 수명 90일(7776000초). HEADER 모드는 본문 `deviceToken`으로 주고 `Naru-Device` 요청 헤더만 읽습니다. 로그인 엔드포인트(`POST /auth/login`)는 이 순서로 동작합니다: ① 서명·만료·지문이 맞는 기기 토큰이면 IP 키 검사를 미루고, 아니면 IP 키를 먼저 봅니다 ② `(사용자, IP)` 키 ③ `findByUsername` 후 id·`ver`·`isInvalidated`로 신뢰를 정하고, 신뢰하면 사용자 키와 IP 키를 면제, 아니면 미룬 IP 키와 사용자 키를 봅니다 ④ 해시. ①–③에서 한도에 걸리면 해시 없이 즉시 429입니다. 해시 단계에 닿은 시도는 계정 종류와 상관없이 해시 슬롯 하나에서 PBKDF2를 정확히 한 번 돌리고(레거시 해시는 레거시 검증 + 목표 비용의 더미 PBKDF2, 형식이 깨진 PBKDF2 저장 해시는 목표 비용의 더미 PBKDF2), 실패 응답(슬롯 큐가 찬 503 포함)은 요청 시작 뒤 max(1.25T, 경과) + 0–50ms 무작위 지연 전에는 나가지 않습니다(T는 기동 때 정한 로그인 시간 기준). 기다리는 동안 작업 스레드를 붙잡지 않습니다.
 
@@ -1569,7 +1600,7 @@ Auth.builder(System.getenv("JWT_SECRET")).transport(TokenTransport.BOTH).build()
 | `AuthTesting.tokenFor(auth, name, roles...)` | `InMemoryUserStore`에 그 이름의 사용자를 만들거나 역할을 덮어쓰고, 지금 `ver`의 access 토큰을 줍니다(refresh 기록 없음, 합성 `fam`). 역할은 `RolePolicy`에 선언돼야 하고(아니면 `IllegalArgumentException`), 다른 저장소면 `IllegalStateException`입니다. `tokenFor(auth, "alice")`는 역할 없는 토큰입니다 |
 | `AuthTesting.tokenForUserId(auth, id)` | 어떤 저장소든 그 사용자의 지금 `ver`로 토큰을 주고 사용자를 바꾸지 않습니다. 없는 id면 `IllegalArgumentException("no user with id …")` |
 | `AuthTesting.csrfTokenFor(auth, accessToken)` | 그 토큰의 `sub`·`fam`에 묶인 CSRF 값. 쿠키 모드 쓰기 테스트에서 `naru_csrf` 쿠키와 `X-CSRF-Token` 헤더에 넣습니다 |
-| `AuthTesting.apiKeyFor(auth, ownerUserId, scopes...)` | 만료 없는 실제 API 키를 `.apiKeys(store)`에 저장하고 평문 키를 줍니다. 정상 발급 경로 `auth.apiKeys().issue`를 거치므로 어떤 `ApiKeyStore`든 되고 `.maxKeysPerUser` 한도(넘으면 `AuthRejection(409, "api_key_limit")`)도 같습니다. 없는 소유자는 `IllegalArgumentException`, 키 저장소가 없으면 `AuthStateException`. `Authorization: <스킴> <키>`로 보냅니다 |
+| `AuthTesting.apiKeyFor(auth, ownerUserId, scopes...)` | 만료 없는 실제 API 키를 `.apiKeys(store)`에 저장하고 평문 키를 줍니다. 정상 발급 경로 `auth.apiKeys().issue`를 거치므로 어떤 `ApiKeyStore`든 되고 `.maxKeysPerUser` 한도(넘으면 `AuthRejection(409, "api_key_limit")`)도 같습니다. 없는 소유자는 `IllegalArgumentException`, 키 저장소가 없으면 `AuthStateException`. `Authorization: <스킴> <키>`로 보냅니다 ([예제](#authtestingapikeyfor)) |
 | `AuthTesting.verifyUserStore(store)` | 직접 만든 `UserStore`를 계약에 맞춰 검사합니다. CRUD(지운 id를 다음 사용자에게 다시 주지 않는지 포함, `MAX(id)+1`이나 SQLite rowid 저장소는 실패), 같은 이름의 `DuplicateUserException`, 같은 인스턴스로 저장·재조회한 비밀번호 해시 왕복(행을 메모리에 캐시하고 저장할 때 해시를 잃는 저장소도 통과하므로 아래 `reopen` 형태를 쓰세요), `changePassword`(해시가 null인 사용자, ver 불일치), 필드 메서드 결과, 그리고 `supportsAtomicFieldWrites()`가 true인 저장소는 `update()`가 passwordHash·ver·enabled·roles를 덮어쓰지 않는지 봅니다. 깨진 항목은 `AssertionError`(메시지는 `UserStore contract (<항목>)`)입니다. 호출마다 `contract-`로 시작하는 임의 이름을 쓰고 만든 사용자를 지우므로 같은 저장소를 여러 번 검사해도 됩니다 |
 | `AuthTesting.verifyUserStore(store, reopen)` | 위 검사에 재시작 뒤 해시 왕복을 더합니다. `reopen`(`Callable<? extends UserStore>`, Java·Kotlin 람다)은 같은 저장소 위에 새 인스턴스를 열고, `create()`로 쓰고 `update()`를 거친 해시가 그 인스턴스에서 id와 이름으로 그대로 읽혀야 합니다. 파일 저장소는 `() -> new FileUserStore(file)`, 호출마다 저장소를 읽는 저장소(JDBC)는 `() -> store`를 넘깁니다. 예외를 던지거나 null을 돌려주는 `reopen`은 계약 실패이고, `store`가 아닌 새 인스턴스가 `AutoCloseable`이면 닫습니다. Express 대응: jest 계약 스위트 안에서 앱을 다시 시작하기 |
 | `AuthTesting.verifyApiKeyStore(store)` / `verifyApiKeyStore(a, b)` | `ApiKeyStore` 메서드 표를 검사합니다(필드 왕복과 null `expiresAt`·`lastUsedAt`·`issuedByUserId`, 없는 prefix는 null, 기존 prefix는 `ApiKeyPrefixCollisionException`, `aB…`와 `Ab…`는 다른 행, 만료·지난 `ownerVer` 키를 빼고 세는 한도, 다른 소유자의 `deleteByIdAndOwner`는 false, `deleteAllByOwner`, `deleteExpired`, `deleteStaleByOwner`·`deleteFutureByOwner`). 인자 둘은 같은 저장소 위의 두 인스턴스로 8 스레드 동시 한도 삽입에서 정확히 하나만 이기는지도 봅니다. 깨진 규칙은 `AssertionError`(메시지는 `ApiKeyStore contract:`로 시작하고 메서드 이름을 담음)입니다 |
@@ -1621,6 +1652,8 @@ class MyStoreTest {
 ### HTTP 테스트 레시피
 
 앱 전체를 실제 HTTP로 시험하는 JUnit 4 테스트입니다. DEV 모드와 `.user(...)`로 계정을 만들고, `.userCacheTtl(0)`으로 캐시 기다림을 없애고, `app.listen(0)`으로 빈 포트에 띄웁니다. `HttpURLConnection`으로 `POST /auth/login`을 불러 토큰을 받고, `Authorization: Bearer <토큰>`으로 보호 경로를 부른 뒤, `@After`에서 `app.shutdown(...)`으로 끕니다. 의존성은 `com.snoworca.naruserve:naruserve`와 JUnit 4이고, 다른 HTTP 클라이언트(OkHttp 등)를 써도 됩니다. 토큰만 필요하고 로그인 경로를 시험하지 않는다면 위의 `AuthTesting.tokenFor`가 더 빠릅니다. `call` 도우미는 `json`이 null이 아닐 때만 본문을 씁니다. 본문이 있으면 `HttpURLConnection`이 GET을 POST로 바꾸기 때문이며, GET은 `null`을 넘깁니다. `HttpURLConnection`은 `PATCH`를 보낼 수 없습니다(`setRequestMethod("PATCH")`가 `ProtocolException`). `PATCH /auth/me`나 관리 A4 수정을 시험하려면 `java.net.http.HttpClient`(Java 11 이상)나 OkHttp를 쓰세요. `java.net.http.HttpClient`는 Java 11 이상이 필요하므로 Java 8이나 Android 대상 테스트는 OkHttp(`com.squareup.okhttp3:okhttp`)를 씁니다. 한 이름이 한 IP에서 15분 안에 로그인에 다섯 번 실패하면 맞는 비밀번호도 429 `too_many_attempts`가 되므로, 틀린 비밀번호를 시험하는 테스트는 테스트마다 새 앱을 만들거나 `.loginFailureLimits(100, 100, 100, 60_000L)`을 설정합니다.
+
+Express 대응: jest나 mocha 테스트의 `supertest(app).post('/auth/login').send({ username, password })`, 그다음 새 요청 `supertest(app).get('/me').set('Authorization', 'Bearer ' + token)`. supertest는 앱을 임시 포트에 알아서 띄우고, 이 레시피는 그 일을 `app.listen(0)`으로 합니다.
 
 ```java
 import com.snoworca.naruserve.RestApp;
@@ -1768,7 +1801,7 @@ class PostsApiTest {
 
 ## 평문 전송 허용: allowInsecureTransport
 
-`.allowInsecureTransport(reason)`은 PROD의 보안 연결 검사를 끄는 유일한 스위치입니다(DEV는 이것 없이도 끕니다). 대신 토큰 수명을 강제로 줄입니다. access 토큰 5분, refresh 토큰 24시간이며 `.accessTtl`·`.refreshTtl`·프로필 값을 덮어씁니다. 기동할 때마다 이유 문자열을 담은 WARN을 한 줄 남기고, 쿠키 전달이 평문으로 나가 auth 쿠키에 Secure가 빠지면 그 사실을 WARN으로 남깁니다. 이유가 비었으면 `build()`가 거부합니다. TLS 어댑터가 생기면 지우세요.
+`.allowInsecureTransport(reason)`은 PROD의 보안 연결 검사를 끄는 유일한 스위치입니다(DEV는 이것 없이도 끕니다). 대신 토큰 수명을 고정합니다. access 토큰 5분, refresh 토큰 24시간이며 `.accessTtl`·`.refreshTtl`·프로필 값을 덮어씁니다. 기동할 때마다 이유 문자열을 담은 WARN을 한 줄 남기고, 쿠키 전달이 평문으로 나가 auth 쿠키에 Secure가 빠지면 그 사실을 WARN으로 남깁니다. 이유가 비었으면 `build()`가 거부합니다. TLS 어댑터가 생기면 지우세요.
 
 Express 대응: `https` 없이 `http.createServer(app)`로 띄운 사내 기기 서버. Express는 평문을 막지 않으므로 이런 스위치가 따로 없습니다.
 
@@ -2074,7 +2107,7 @@ val auth = Auth.builder(KeySources.fromFile(File(dataDir, "naru-auth.key"), key)
 | **CIDR** | `10.0.0.0/8`처럼 주소 범위를 적는 표기. `app.trustProxyCidrs(...)`는 이 범위의 프록시를 믿습니다 | `app.set('trust proxy', '10.0.0.0/8')` |
 | **hop(홉)** | 요청이 거친 프록시 한 단계. `app.trustProxyHops(1)`은 바로 앞의 프록시 하나를 믿습니다 | `app.set('trust proxy', 1)` |
 | **PBKDF2** | 기본 비밀번호 해시 방식. 반복 횟수(비용)를 기기 속도에 맞춰 정합니다([비밀번호 해시](#비밀번호-해시-passwordhasher-hashcost)) | `crypto.pbkdf2` |
-| **A1–A6, G1–G9** | 관리 엔드포인트의 짧은 이름. A는 사용자, G는 그룹 엔드포인트입니다([관리 엔드포인트](#관리-엔드포인트-authadminroutes)) | 관리용 `express.Router()`의 라우트 |
+| **A1–A6, G1–G9** | 관리 엔드포인트의 짧은 이름. A는 사용자, G는 그룹 엔드포인트입니다. G9는 v2용으로 남겨 두어 등록하지 않습니다([관리 엔드포인트](#관리-엔드포인트-authadminroutes)) | 관리용 `express.Router()`의 라우트 |
 
 Express 대응: 위 표의 마지막 열입니다. 아래는 같은 용어를 코드에서 본 모습입니다.
 
@@ -2098,4 +2131,231 @@ app.get("/me") { req, res ->
     val p = auth.user(req)
     res.send(p.username + " " + p.hasRole("editor") + " " + p.hasScope("posts:write"))
 }
+```
+
+## 더 많은 예제
+
+위 절들이 코드 없이 설명한 API의 짧은 예제입니다. 각 절에서 이곳으로 링크합니다. 예제는 `com.snoworca.naruserve.utils.auth`(`Auth`, `AuthPrincipal`)와 그 하위 패키지 `.user`(`AuthUser`, `DuplicateUserException`), `.password`(`HashCost`), `.rbac`(`RoleStore`, `RolePolicy`), `.apikey`(`InMemoryApiKeyStore`), `.testing`(`AuthTesting`)의 import를 가정합니다.
+
+### auth.authenticated()
+
+`.statelessAccess(true)`이면 가드 없는 라우트는 최소 주체를 보고 store를 읽지 않으므로, 지운 사용자의 토큰도 만료될 때까지 그곳을 통과합니다. `auth.authenticated()`는 스코프를 묻지 않고 그 라우트에서만 사용자를 다시 읽습니다. Express 대응: 그 라우트 하나에 붙인 `passport.authenticate('jwt', { session: false })`.
+
+```java
+Auth auth = Auth.builder(System.getenv("JWT_SECRET")).statelessAccess(true).build();
+app.use(auth);
+// 가드 없음: 최소 주체, store를 읽지 않음
+app.get("/feed", (req, res) -> res.send("feed for " + auth.user(req).getId()));
+// authenticated(): 사용자를 읽으므로 지운 사용자는 여기서 401
+app.post("/orders", auth.authenticated(), (req, res) -> res.status(201).send("order by " + auth.user(req).getUsername()));
+```
+
+```kotlin
+val auth = Auth.builder(System.getenv("JWT_SECRET")).statelessAccess(true).build()
+app.use(auth)
+app.get("/feed") { req, res -> res.send("feed for " + auth.user(req).id) }
+app.post("/orders", auth.authenticated()) { req, res -> res.status(201).send("order by " + auth.user(req).username) }
+```
+
+### auth.loadUser(req)
+
+`auth.loadUser(req)`는 가드 대신 핸들러 안에서 사용자를 읽고 예외를 던지지 않습니다. 사용자가 없거나 비활성이면 null을 돌려주므로 핸들러가 대체 응답을 고릅니다. Express 대응: 핸들러 안에서 부르는 `User.findById(req.auth.sub)`.
+
+```java
+Auth auth = Auth.builder(System.getenv("JWT_SECRET")).statelessAccess(true).build();
+app.use(auth);
+app.get("/greeting", (req, res) -> {
+    AuthPrincipal p = auth.loadUser(req);   // 여기서만 store를 읽음. 지웠거나 비활성인 사용자는 null
+    res.send(p == null ? "hello" : "hello " + p.getUsername());
+});
+```
+
+```kotlin
+val auth = Auth.builder(System.getenv("JWT_SECRET")).statelessAccess(true).build()
+app.use(auth)
+app.get("/greeting") { req, res ->
+    val p = auth.loadUser(req)
+    res.send(if (p == null) "hello" else "hello " + p.username)
+}
+```
+
+### 데이터베이스 RoleStore
+
+앱의 마이그레이션이 만드는 `role_scopes(role, scope)` 테이블 위의 `RoleStore`입니다. auth가 주는 클래스가 아니라 앱 코드이며, 드라이버 없이 컴파일됩니다. 모르는 역할은 빈 집합을 돌려줍니다. auth는 캐시에 없는 주체를 읽을 때 `scopesOf`를 부르고, 읽은 주체를 `userCacheTtl` 동안 캐시합니다. `scopesOf`가 예외를 던지면 보호 경로에서 주체를 읽는 요청은 가드가 있든 없든 503으로 답합니다. 공개 경로에서는 요청이 익명으로 남습니다. `.statelessAccess(true)`에서는 가드와 `auth.loadUser(req)`만 주체를 읽습니다. 그래서 가드가 붙은 라우트는 503으로 답하고, 가드 없는 라우트는 그대로 돌며, `auth.loadUser(req)`는 null을 돌려줍니다. Express 대응: `accesscontrol`의 grant를 데이터베이스 테이블에서 읽어 오기.
+
+```java
+import com.snoworca.naruserve.utils.auth.rbac.RoleStore;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.HashSet;
+import java.util.Set;
+import javax.sql.DataSource;
+
+public final class SqlRoles implements RoleStore {
+    private final DataSource ds;
+
+    public SqlRoles(DataSource ds) {
+        this.ds = ds;
+    }
+
+    @Override
+    public Set<String> scopesOf(String role) throws Exception {
+        Set<String> scopes = new HashSet<>();
+        try (Connection c = ds.getConnection();
+             PreparedStatement s = c.prepareStatement("SELECT scope FROM role_scopes WHERE role = ?")) {
+            s.setString(1, role);
+            try (ResultSet r = s.executeQuery()) {
+                while (r.next()) {
+                    scopes.add(r.getString(1));
+                }
+            }
+        }
+        return scopes;   // 모르는 역할은 빈 집합
+    }
+}
+// Auth.builder(System.getenv("JWT_SECRET")).roles(new SqlRoles(dataSource)).build()
+```
+
+```kotlin
+import com.snoworca.naruserve.utils.auth.Auth
+import com.snoworca.naruserve.utils.auth.rbac.RoleStore
+import javax.sql.DataSource
+
+class SqlRoles(private val ds: DataSource) : RoleStore {
+    override fun scopesOf(role: String): Set<String> {
+        val scopes = HashSet<String>()
+        ds.connection.use { c ->
+            c.prepareStatement("SELECT scope FROM role_scopes WHERE role = ?").use { s ->
+                s.setString(1, role)
+                s.executeQuery().use { r ->
+                    while (r.next()) scopes.add(r.getString(1))
+                }
+            }
+        }
+        return scopes
+    }
+}
+
+val auth = Auth.builder(System.getenv("JWT_SECRET")).roles(SqlRoles(dataSource)).build()
+```
+
+### auth.users().rename
+
+`rename`은 새 이름을 정규화하고 id를 그대로 두므로 그룹 멤버십이 남습니다. 다른 사용자가 가진 이름이면 `DuplicateUserException`을 던지고 행은 그대로입니다. Express 대응: 고유 인덱스가 걸린 `UPDATE users SET username = ?`.
+
+```java
+Auth auth = Auth.builder(System.getenv("JWT_SECRET")).build();
+AuthUser ann = auth.users().create("ann", "ann-password-1".toCharArray());
+auth.users().create("bob", "bob-password-1".toCharArray());
+AuthUser renamed = auth.users().rename(ann.getId(), "Annie");   // "annie"로 저장, id는 같음
+try {
+    auth.users().rename(ann.getId(), "bob");
+} catch (DuplicateUserException e) {
+    // "bob"은 이미 있어 ann은 "annie"로 남음. 라우트에서 던지면 auth.errors()가 409 duplicate_user로 답함
+}
+```
+
+```kotlin
+val auth = Auth.builder(System.getenv("JWT_SECRET")).build()
+val ann = auth.users().create("ann", "ann-password-1".toCharArray())
+auth.users().create("bob", "bob-password-1".toCharArray())
+val renamed = auth.users().rename(ann.id!!, "Annie")
+println(renamed?.username)
+try {
+    auth.users().rename(ann.id!!, "bob")
+} catch (e: DuplicateUserException) {
+    println("taken: " + e.message)
+}
+```
+
+### .allowedAttributes와 PATCH /auth/me
+
+사용자가 `PATCH /auth/me`로 바꿀 수 있는 속성은 `.allowedAttributes(...)`에 준 이름뿐입니다. 문자열은 속성을 정하고 `null`은 지웁니다. 다른 이름이 하나라도 있으면 요청 전체가 400이고 아무것도 바뀌지 않습니다. Express 대응: 프로필 라우트의 `_.pick(req.body, ['displayName', 'locale'])`(`_.pick`과 달리 목록에 없는 이름은 버리지 않고 400으로 거부).
+
+```java
+Auth auth = Auth.builder(System.getenv("JWT_SECRET"))
+    .allowedAttributes("displayName", "locale")   // PATCH /auth/me가 바꿀 수 있는 속성은 이것뿐
+    .build();
+app.use(auth);
+app.get("/hello", (req, res) -> {
+    AuthPrincipal p = auth.user(req);
+    String name = p.getAttributes().get("displayName");
+    res.send("hello " + (name != null ? name : p.getUsername()));
+});
+// PATCH /auth/me {"attributes":{"displayName":"Al","locale":null}} -> 200, displayName 설정, locale 삭제
+// PATCH /auth/me {"attributes":{"plan":"pro"}} -> 400 BAD_REQUEST, 바뀌는 것 없음
+```
+
+```kotlin
+val auth = Auth.builder(System.getenv("JWT_SECRET"))
+    .allowedAttributes("displayName", "locale")
+    .build()
+app.use(auth)
+app.get("/hello") { req, res ->
+    val p = auth.user(req)
+    res.send("hello " + (p.attributes["displayName"] ?: p.username))
+}
+// PATCH /auth/me {"attributes":{"displayName":"Al","locale":null}} -> 200
+// PATCH /auth/me {"attributes":{"plan":"pro"}} -> 400 BAD_REQUEST
+```
+
+### AuthTesting.apiKeyFor
+
+테스트가 키 엔드포인트 없이 진짜 API 키를 받습니다. 키 저장소가 켜져 있어야 합니다(`.apiKeys(store)`). Express 대응: jest `beforeEach`에서 키 행을 넣고 supertest로 보내기.
+
+```java
+import com.snoworca.naruserve.utils.auth.Auth;
+import com.snoworca.naruserve.utils.auth.apikey.InMemoryApiKeyStore;
+import com.snoworca.naruserve.utils.auth.rbac.RolePolicy;
+import com.snoworca.naruserve.utils.auth.testing.AuthTesting;
+import com.snoworca.naruserve.utils.auth.user.AuthUser;
+
+Auth auth = Auth.builder(System.getenv("JWT_SECRET"))
+    .roles(RolePolicy.builder().role("reporter", "reports:read").build())
+    .apiKeys(new InMemoryApiKeyStore())   // 키가 켜져 있어야 함
+    .build();
+app.use(auth);
+app.get("/reports", auth.require("reports:read"), (req, res) -> res.send("reports"));
+AuthUser bot = auth.users().create("report-bot", "bot-password-1".toCharArray(), "reporter");
+String key = AuthTesting.apiKeyFor(auth, bot.getId(), "reports:read");
+// "Authorization: ApiKey " + key 헤더로 GET /reports -> 200
+```
+
+```kotlin
+import com.snoworca.naruserve.utils.auth.Auth
+import com.snoworca.naruserve.utils.auth.apikey.InMemoryApiKeyStore
+import com.snoworca.naruserve.utils.auth.rbac.RolePolicy
+import com.snoworca.naruserve.utils.auth.testing.AuthTesting
+
+val auth = Auth.builder(System.getenv("JWT_SECRET"))
+    .roles(RolePolicy.builder().role("reporter", "reports:read").build())
+    .apiKeys(InMemoryApiKeyStore())
+    .build()
+app.use(auth)
+app.get("/reports", auth.require("reports:read")) { _, res -> res.send("reports") }
+val bot = auth.users().create("report-bot", "bot-password-1".toCharArray(), "reporter")
+val key = AuthTesting.apiKeyFor(auth, bot.id!!, "reports:read")
+// "Authorization: ApiKey $key" 헤더로 GET /reports -> 200
+```
+
+### HashCost.fixed
+
+`HashCost.fixed(n)`은 보정 없이 새 비밀번호를 정확히 n회 반복으로 해시하므로, 모든 노드가 같은 비용을 씁니다(보정은 기기마다 잽니다). 50,000 미만이면 PROD에서 doctor FAIL입니다. Express 대응: `bcrypt.hash(pw, rounds)`의 고정된 `rounds` 값.
+
+```java
+Auth auth = Auth.builder(System.getenv("JWT_SECRET"))
+    .hashCost(HashCost.fixed(600_000))   // 모든 노드에서 같은 횟수, 보정 없음
+    .build();
+AuthUser ann = auth.users().create("ann", "ann-password-1".toCharArray());
+AuthUser stored = auth.userStore().findById(ann.getId());
+// stored.getPasswordHash()는 "pbkdf2-sha256$600000$"로 시작
+```
+
+```kotlin
+val cost = HashCost.fixed(600_000)
+val auth = Auth.builder(System.getenv("JWT_SECRET")).hashCost(cost).build()
+val ann = auth.users().create("ann", "ann-password-1".toCharArray())
+val stored = auth.userStore().findById(ann.id!!)?.passwordHash
+println("fixed=${cost.isFixed} iterations=${cost.iterations} " + stored?.startsWith("pbkdf2-sha256\$600000\$"))
 ```

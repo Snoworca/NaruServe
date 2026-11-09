@@ -1,6 +1,6 @@
 # Kotlin
 
-[한국어](../kotlin.md) | [English](kotlin.md)
+[한국어](../kotlin.md) | [API index](README.md)
 
 NaruServe is written in Java. Use it from Kotlin without a separate DSL: all callbacks are Java functional interfaces (`@FunctionalInterface`), so Kotlin lambdas work directly.
 

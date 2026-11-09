@@ -17,9 +17,12 @@
 | Keep users in my own database | [Connecting your own database](#connecting-your-own-database) |
 | Prepare PROD files and keys | [AuthMode](#authmode), [Configuration file](#configuration-file-authconfig), [Key sets and rotation](#key-sets-and-rotation-keysource-jwtkeys-keysources), [Encrypting file secrets](#encrypting-file-secrets-authfilekey) |
 | Call the server from a LAN or a device | [The secure-transport rule](#the-secure-transport-rule), [Plain-text transport](#plain-text-transport-allowinsecuretransport) |
+| Use cookies from a browser or SPA | [Auth cookies](#auth-cookies), [CSRF](#csrf-cookie-mode-writes), [Cross-origin clients and CORS](#cross-origin-clients-and-cors), [Origin check](#origin-check-and-trustedorigins) |
+| Change token lifetimes or log out | [Tokens](#tokens-tokenservice-and-tokenpair), [Account endpoints](#account-endpoints-authroutes) |
 | Write tests | [Test kit](#test-kit-authtesting), [HTTP test recipe](#http-test-recipe) |
 | Use the admin API | [Admin endpoints](#admin-endpoints-authadminroutes) |
 | Issue and use API keys | [Issuing API keys](#issuing-api-keys-authapikeys), [API key authentication](#api-key-authentication) |
+| See more examples (APIs the sections describe without code) | [More examples](#more-examples) |
 | Look up a term | [Glossary](#glossary) |
 
 Express has no built-in authentication, so apps usually pick middleware such as `passport` or `express-jwt`. NaruServe ships the same job as the package `com.snoworca.naruserve.utils.auth` inside `NaruServe-api`: no new Gradle module and no new dependency. It uses the Core public API only and runs as Java 8 bytecode on Android 5.0 (API 21).
@@ -147,12 +150,20 @@ curl -X POST http://localhost:8080/posts -H "Authorization: Bearer eyJ..."   # 2
 | `.apiKeyScheme(name)` | The API key scheme name, default `ApiKey`. `Bearer`, `Basic`, `Digest`, `DPoP`, `Negotiate` (any case) and names that are not HTTP tokens are refused | — |
 | `.maxKeysPerUser(int)`, `.maxApiKeyDays(int)`, `.allowAdminScopesOnApiKeys(boolean)`, `.apiKeyFailureLimit(int max, long windowMillis)` | Live keys per user (default 20) / longest lifetime in days of a key issued through the key endpoints (default 365; `auth.apiKeys().issue` is not limited) / admin scopes `auth-*` on keys (default false) / failed key authentications per IP (default 100 per 15 minutes, 900000 ms). [API key authentication](#api-key-authentication) | — |
 | `.register(boolean)` | Self-registration `POST /auth/register`. Default false (no route). [Account endpoints](#account-endpoints-authroutes) | a signup route |
-| `.allowedAttributes(String... names)` | The attribute names a user may change on itself with `PATCH /auth/me` (for example `"displayName"`). None when not called (every attribute is 400). Repeated calls add names; the security field names (`passwordHash`, `ver`, `enabled`, `roles`) throw `IllegalArgumentException` | an allow-list over `req.body` (`_.pick`) |
+| `.allowedAttributes(String... names)` | The attribute names a user may change on itself with `PATCH /auth/me` (for example `"displayName"`). None when not called (every attribute is 400). Repeated calls add names; the security field names (`passwordHash`, `ver`, `enabled`, `roles`) throw `IllegalArgumentException` ([example](#allowedattributes-and-patch-authme)) | an allow-list over `req.body` (like `_.pick`, but an unlisted name is refused with 400, not dropped) |
 | `.passwordPolicy(PasswordPolicy)`, `.breachedPasswordChecker(BreachedPasswordChecker)` | The rule of new passwords (default `PasswordPolicy.of(profile)`) / a breached-password check (none by default). [New-password policy](#new-password-policy-passwordpolicy-and-breachedpasswordchecker) | an `express-validator` length check |
 | `.authenticator(Authenticator)` | Replaces the password check of login (for example with a directory). [Password authenticator](#password-authenticator-spiauthenticator) | the passport `LocalStrategy` verify |
 | `.trustedOrigins(origin...)` | Origins besides the request's own that may receive and use auth cookies. [Origin check](#origin-check-and-trustedorigins) | not `cors({origin})` |
 | `.recoveryFromEnv()` | `.recovery(true)` when the environment variable `NARU_AUTH_RECOVERY` is `1` or `true`; reads the environment only when the app calls it | — |
 | `.statelessAccess(true)` | Unguarded routes see a minimal principal without a store read (`getId()` only; `getUsername()` is empty). Apps use only `getId()` there | — |
+| `.userCacheTtl(ms)` | How long a loaded principal (user, roles, scopes) is reused; default 5000 ms, 0 reads the stores on every request. [Principal cache](#principal-cache-usercachettl) | an `lru-cache` around `deserializeUser` |
+| `.accessTtl(ms)`, `.refreshTtl(ms)` | The token lifetimes in milliseconds (at least one second). Unset: the profile's, under `STANDARD` access 15 minutes and refresh 1 day (the AuthProfile table below). `.allowInsecureTransport` replaces both with 5 minutes and 24 hours. [Tokens](#tokens-tokenservice-and-tokenpair) | `expiresIn` of `jwt.sign` |
+| `.reuseGrace(ms)` | How long a used refresh token may come back without counting as reuse; default 0 (every second use revokes the family). [Refresh reuse detection](#refresh-reuse-detection-and-tokencodec) | — |
+| `.tokenCodec(TokenCodec)` | The access and refresh token format; default the built-in HS256 codec over the key source. [TokenCodec](#refresh-reuse-detection-and-tokencodec) | the `sign` / `verify` pair of `jsonwebtoken` (`express-jwt` wraps the verify side) |
+| `.loginThrottle(LoginThrottle)` | The counter store of failed logins; when not called it follows the user store (a snapshot file `<name>-login-throttle.json` beside a `FileUserStore`, otherwise in memory). [Login throttling store](#login-throttling-store-loginthrottle) | the store of `rate-limiter-flexible` |
+| `.loginFailureLimits(perUserAndIp, perIp, perUser, windowMillis)` | The three password-login limits; default 5, 20 and 10 per 15 minutes (900000 ms). [Login limits](#login-throttling-store-loginthrottle) | the limiters of `rate-limiter-flexible` |
+| `.lockout(Lockout)` | The optional hard lockout, for example `Lockout.after(5).forMinutes(15)`; off when not called. [Account lockout](#account-lockout-lockout) | — |
+| `.deviceTrust(DeviceTrust)` | The trusted-device state; when not called it follows the user store (`<name>-device-trust.json` beside a `FileUserStore`, otherwise in memory). [Trusted devices](#trusted-devices-devicetrust) | — |
 | `.timeSource(TimeSource)`, `.logger(Logger)`, `.responses(AuthResponses)`, `.config(AuthConfig)` | The clock / the log (default: the app's logger after install) / the error bodies / a configuration file | — |
 | `.hashCost(HashCost)`, `.hashConcurrency(int)`, `.passwordHasher(PasswordHasher)` | The PBKDF2 cost of new hashes (default `HashCost.defaults()`, calibrated to 500 ms) / how many hashes run at once (default `max(1, cores / 2)`) / the hasher (default a `Pbkdf2PasswordHasher` at that cost). See [Password hashing](#password-hashing-passwordhasher-hashcost) | `bcrypt.hash(pw, rounds)` |
 | `.user(name, @Nullable password, roles...)`, `.recovery(boolean)` | An account created on start when missing / opens the one-time setup token of a password-less admin `.user` (default false). See [The first account](#the-first-account-user) | a seed script |
@@ -164,7 +175,7 @@ curl -X POST http://localhost:8080/posts -H "Authorization: Bearer eyJ..."   # 2
 
 - In PROD a missing secret (`JWT_SECRET is not set. Generate one with: openssl rand -base64 32 — or, for a temporary key, build with .mode(AuthMode.DEV), or with .mode(AuthMode.fromEnv()) with NARU_ENV=dev.`), fewer than 32 UTF-8 bytes (the message states the byte count and the minimum), fewer than 8 distinct byte values, and known examples (`secret`, `changeme`, `change-me-now`, `your-256-bit-secret` and the docs sample constant `naru-docs-sample-secret-do-not-use-in-production`, padded or not). In **DEV** a missing secret becomes a temporary key with one WARN saying that a restart invalidates all tokens, and a short or example key becomes a WARN.
 - `.permitPrefix("/")`, `.permit("")` or `.permitPrefix("")`, and non-ASCII `.permit`, `.permitPrefix` or `.protectOnly` paths.
-- Under `MULTI_INSTANCE`, stores not shared between nodes: `InMemoryUserStore`, `FileUserStore`, `InMemoryGroupStore`, `FileGroupStore`, an `InMemoryRefreshTokenStore` or `FileRefreshTokenStore` given to `.refreshTokens(...)`, and the in-memory defaults of the unset refresh token, login throttle and device trust stores (a custom user store never falls back to an in-memory refresh store there). `MULTI_INSTANCE` passes only when the app gives stores shared between nodes (`.refreshTokens(...)`, `.loginThrottle(...)`, `.deviceTrust(...)` and the user and group stores).
+- Under `MULTI_INSTANCE`, stores not shared between nodes: `InMemoryUserStore`, `FileUserStore`, `InMemoryGroupStore`, `FileGroupStore`, an `InMemoryRefreshTokenStore` or `FileRefreshTokenStore` given to `.refreshTokens(...)`, an explicitly given `InMemoryLoginThrottle` or `InMemoryApiKeyStore`, and the in-memory defaults of the unset refresh token, login throttle and device trust stores (a custom user store never falls back to an in-memory refresh store there). `MULTI_INSTANCE` passes only when the app gives stores shared between nodes (`.refreshTokens(...)`, `.loginThrottle(...)`, `.deviceTrust(...)` and the user and group stores).
 - `.mountPath("/")` with transport `COOKIE` or `BOTH`, an invalid `.apiKeyScheme`, and the violations of an `AuthConfig`.
 
 A reserved `auth-*` scope in a `RolePolicy` is not in this list: `RolePolicy.Builder.role()` refuses it with `IllegalArgumentException` before the `Auth` is built.
@@ -232,12 +243,12 @@ A guard answers 403 when the principal lacks the scope or role. A 403 you did no
 |---|---|---|
 | `auth.require(scope...)` | Principals holding every scope; otherwise 403 `insufficient_scope`, and 401 without a principal. A scope with `*` throws `IllegalArgumentException` when declared | `express-jwt-authz(['posts:write'])` |
 | `auth.requireRole(role...)` | Principals holding **at least one** of the roles; otherwise 403 `insufficient_scope`. An API-key request gets 403 `api_key_not_allowed` (a key narrows scopes, not roles) | a `requireRole('editor')` middleware |
-| `auth.authenticated()` | Only re-reads the principal from the store: 401 when disabled or at another token version, 503 when the store fails | `passport.authenticate()` |
+| `auth.authenticated()` | Only re-reads the principal from the store: 401 when disabled or at another token version, 503 when the store fails ([example](#authauthenticated)) | `passport.authenticate('jwt', { session: false })` |
 | `auth.check(AccessRule)` | An app rule: true passes, false is 403 `insufficient_scope`, 401 without a principal; a throwing rule is 500 JSON | a hand-written `(req, res, next)` check |
 | `AccessRule` (`@FunctionalInterface`, `boolean allows(AuthPrincipal, Request) throws Exception`) | Kotlin `auth.check { p, req -> p.hasScope("x") }` | — |
 | `auth.user(req)` | The principal on a protected path (non-null); `AuthStateException` (a subclass of `IllegalStateException`) without one | `req.user` |
 | `@Nullable auth.userOrNull(req)` | For public paths | `req.user` (undefined when absent) |
-| `@Nullable auth.loadUser(req)` | Never throws. Promotes a minimal principal and returns null for a missing or disabled user, another version, or a store failure (logged); an already loaded principal is returned without a store call | — |
+| `@Nullable auth.loadUser(req)` | Never throws. Promotes a minimal principal and returns null for a missing or disabled user, another version, or a store failure (logged); an already loaded principal is returned without a store call ([example](#authloaduserreq)) | `User.findById(req.auth.sub)` called inside the handler |
 | `AuthPrincipal` | `getId()`, `getUsername()`, `getRoles()` (own roles plus group roles), `getScopes()`, `getAttributes()`, `isLoaded()`, `hasScope(scope)`, `hasRole(role)`, `@Nullable getApiKeyId()` (null for a JWT login). Getters never throw | `req.auth` |
 | `auth.users()`, `auth.userStore()` | The app user facade / the original store | — |
 
@@ -265,7 +276,9 @@ app.patch("/users/:id", auth.check { p, r -> p.id == r.param("id") || p.hasScope
 
 In PROD the auth middleware looks at the connection **before** it reads any token. It handles protected paths and the eight credential endpoints (`POST /auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/register`, `/auth/setup`, `/auth/password`, `/auth/me/apikeys`, `/auth/admin/apikeys`) only when `req.isSecure()` is true or the request is **local** (the socket address is loopback, `127.0.0.0/8` or `::1`, and no `X-Forwarded-*` or `Forwarded` header is present); otherwise it answers 403 `insecure_transport`. `.permitPrefix("/auth")` makes neither the credential endpoints nor the admin endpoints (below `/auth/admin`) public. The protected-range, mount and credential-endpoint decisions use the path as the default router compares it (case ignored, trailing and repeated slashes folded), while the public decisions of `.permit` and `.permitPrefix` match exactly, so a variant such as `/HEALTH` is protected. Public paths skip the check, and a request that fails it is handled as anonymous without reading its token. DEV turns the check off (with one WARN on the first non-local request).
 
-**Calling it from a LAN or a device:** the default TinyHttpd engine has no HTTPS, so a PROD server called in plain text from another device on your network (a phone, another PC) answers login and protected paths with 403 `insecure_transport`. On that first refusal auth logs one WARN: `auth: POST /auth/login was refused with 403 insecure_transport: PROD serves protected paths and credential endpoints only over HTTPS or to local requests. Serve HTTPS through a TLS reverse proxy and set app.trustProxyHops(1) or app.trustProxyCidrs(...); for a LAN or device server without TLS, build with .allowInsecureTransport("reason"); for local testing, build with .mode(AuthMode.DEV). Logged once`. There are three ways out. 1. Put a TLS-terminating reverse proxy (nginx or similar) in front and call `app.trustProxyHops(1)` (or `app.trustProxyCidrs(...)`); recommended. 2. For a LAN or device server without TLS, give the builder `.allowInsecureTransport("office LAN demo, no TLS")`; tokens then travel in clear text and live shorter (access 5 minutes, refresh 24 hours). 3. For tests on your own machine, `.mode(AuthMode.DEV)`.
+Express counterpart: `app.set('trust proxy', 1)` plus a middleware that refuses when `req.secure` is false.
+
+**Calling it from a LAN or a device:** the default TinyHttpd engine has no HTTPS, so a PROD server called in plain text from another device on your network (a phone, another PC) answers login and protected paths with 403 `insecure_transport`. On that first refusal auth logs one WARN: `auth: POST /auth/login was refused with 403 insecure_transport: PROD serves protected paths and credential endpoints only over HTTPS or to local requests. Serve HTTPS through a TLS reverse proxy and set app.trustProxyHops(1) or app.trustProxyCidrs(...); for a LAN or device server without TLS, build with .allowInsecureTransport("reason"); for local testing, build with .mode(AuthMode.DEV). Logged once`. There are three ways out. 1. Put a TLS-terminating reverse proxy (nginx or similar) in front and call `app.trustProxyHops(1)` (or `app.trustProxyCidrs(...)`); recommended. 2. For a LAN or device server without TLS, give the builder `.allowInsecureTransport("office LAN demo, no TLS")`; tokens then travel in clear text and get fixed lifetimes (access 5 minutes, refresh 24 hours). 3. For tests on your own machine, `.mode(AuthMode.DEV)`.
 
 **The Core LAN warning:** when the bind address is not loopback (for example `app.server(o -> o.bindAddress("0.0.0.0"))`), `listen()` logs the Core WARN `listening on <address>, reachable beyond this device: the app must add its own authentication` (`<address>` is the bind address). Core does not look for auth, so the WARN appears even when auth is installed. When you see the line, check two things. 1. Auth is installed with `app.use(auth)` before the routes (the `protected: ...` line of `auth.describe()` shows the protected range). 2. In PROD the secure-transport rule above applies: a plain-text request from another device is 403 `insecure_transport`, so choose a TLS proxy or `.allowInsecureTransport(...)`. When both hold, the WARN can stay.
 
@@ -282,7 +295,7 @@ With no proxy trust configured, the first request carrying `X-Forwarded-For` log
 
 ## Error responses and AuthResponses
 
-Every response of the auth middleware, the guards and the auth routers is JSON, and in PROD so is the answer to every exception an app route throws before start (see below; a path no route serves outside the auth mounts still gets Core's 404). The default body has the Core shape `{"error":{"code":…,"message":…,"requestId":…}}`, with `requestId` from that request's `req.requestId()`. No body carries a stack trace, an exception class name or the message of the thrown exception. A store failure in the middleware or a guard is 503 `SERVICE_UNAVAILABLE`.
+Every response of the auth middleware, the guards and the auth routers is JSON, and in PROD so is the answer to every exception thrown by an app route registered before start (see below; a path no route serves outside the auth mounts still gets Core's 404 once authentication passes). The default body has the Core shape `{"error":{"code":…,"message":…,"requestId":…}}`, with `requestId` from that request's `req.requestId()`. No body carries a stack trace or an exception class name. Only a 4xx `HttpException` (`AuthRejection` included) shows its message; other exception messages are left out. A store failure in the middleware or a guard is 503 `SERVICE_UNAVAILABLE`.
 
 Auth answers its own exceptions as JSON even when you forget the error layer: when no `auth.errors()` or `auth.errorMiddleware()` follows the routes at start, auth appends `auth.errorMiddleware()` after them (the doctor WARNs `errors placement`), so only a handler added after start without `auth.errorMiddleware()` gets Core's HTML error page with a Java stack trace. In PROD auth also appends, at start and after every layer registered by then (your own error layers answer first), a final error layer for every other exception: a Core `HttpException` keeps its status and, below 500, its message (for example `req.queryInt("page", 1)` with `?page=abc` is 400 `page must be a 32-bit integer`), and anything else, such as an app's `IllegalStateException`, is 500 `INTERNAL_ERROR` with no message, exception class or stack trace (Core logs the 500). DEV appends no such layer, so the stack page still helps while developing. A wrong method on an auth endpoint without a token is 401 `unauthenticated` first, because default deny runs before routing; its message names the method, for example `GET /auth/logout` gets `authentication is required; this endpoint takes POST /auth/logout`. With a token it reaches routing, and a request under the auth mounts that no route served gets JSON from a final layer auth appends at start: 405 `METHOD_NOT_ALLOWED` with an `Allow` header when a route of that path takes other methods (`GET /auth/logout` gets `this endpoint takes POST /auth/logout`, `PUT /auth/admin/users/1` gets `this endpoint takes GET, PATCH, DELETE /auth/admin/users/:id`), otherwise 404 `NOT_FOUND` `no auth endpoint serves <method> <path>`, which adds `API keys are off: build auth with .apiKeys(store)` for the key paths without `.apiKeys(...)` and names `grantRole` for `/auth/admin/groups/:id/roles` (a group gets a role in code in 0.11.0). A route the app adds under the auth mount after start comes after that layer and is not reached. `POST /auth/register` without `.register(true)` is 404 `NOT_FOUND` in auth JSON with the message `sign-up is off: POST /auth/register is served only when auth is built with .register(true)`, unless the app serves that path itself. A refresh without a token is 401 `invalid_refresh_token` with `no refresh token: send it as the "refreshToken" field of a JSON body` (COOKIE: `no refresh token: COOKIE mode reads it from the naru_rt cookie set at login`), and an auth-router body that does not parse, or is a JSON array or string, is 400 `BAD_REQUEST` with `the request body must be a JSON object`. A `POST /auth/login` without a body is 415 with `auth endpoints accept only application/json bodies`. An empty array `[]` is read as an empty object by the Gson codec, so it gets the endpoint's missing-field answer (for example `username must be a JSON string`).
 
@@ -347,7 +360,7 @@ Four more items: `registration` (a WARN in PROD when `.register(true)` opens sig
 | API | Meaning | Express equivalent |
 |---|---|---|
 | `AuthMode.PROD` | The default | `NODE_ENV=production` |
-| `AuthMode.DEV` | Relaxes exactly eight things: a temporary key for a missing secret, the secure-transport check, hash-cost and key-strength failures downgraded to WARN, a `.user(...)` password that breaks the password policy (created with a WARN), a password-less admin `.user(...)` (a temporary password goes to the log), a file store without a file key (plain storage with a WARN), legacy `trustProxy(true)` (no doctor FAIL), and no final auth error layer (an app exception goes on to Core). Authorization is never relaxed | `NODE_ENV=development` |
+| `AuthMode.DEV` | Relaxes exactly eight things: a temporary key for a missing secret, the secure-transport check, hash-cost and key-strength failures downgraded to WARN, a `.user(...)` password that breaks the password policy (created with a WARN), a password-less admin `.user(...)` (a temporary password goes to the log), a file store without a file key (plain storage with a WARN), legacy `trustProxy(true)` (no doctor FAIL), and no final error layer (an app exception goes on to Core). Authorization is never relaxed | `NODE_ENV=development` |
 
 The mode is passed in code. `AuthMode.fromEnv()` is `DEV` when the environment variable `NARU_ENV` is `dev` (any letter case) and `PROD` when it is unset, empty, `prod` or any other value. This explicit call by the app is the only environment read; the builder never reads the environment by itself. A builder without `.mode(...)` is `PROD`.
 
@@ -360,7 +373,7 @@ The mode is passed in code. `AuthMode.fromEnv()` is `DEV` when the environment v
 | A password-less admin `.user(...)` gets a temporary password written to the log | doctor FAIL (a one-time setup token when started with `.recovery(true)`) |
 | A file store without a file key becomes a WARN and stores plain data | `build()` throws `AuthConfigException` |
 | Legacy `trustProxy(true)` is no doctor FAIL | doctor FAIL |
-| No final auth error layer (an app exception no earlier layer answered reaches Core's page with its stack trace) | That exception also gets JSON in the Core shape |
+| No final error layer (an app exception no earlier layer answered reaches Core's page with its stack trace) | That exception also gets JSON in the Core shape |
 
 Default deny, the install order, the public path rules, authorization and auth's own JSON error bodies are the same in DEV as in PROD.
 
@@ -381,7 +394,7 @@ Every auth error response has the Core JSON shape: `{"error":{"code":…,"messag
 
 - `new AuthRejection(int status, String code)`, `(status, code, @Nullable String message)`, `(status, code, message, @Nullable Long retryAfterSeconds)` — an unchecked exception that extends the Core `HttpException` (`status()` is its status), so Core treats it as a client error: it is not logged, and without an auth error layer Core still answers that status. `DuplicateUserException` is an `HttpException` with status 409 too. `status` must be 400–499 and `code` must match `[a-z][a-z0-9_]{0,63}`, otherwise `IllegalArgumentException`. A null message is answered with the status's default text (for example `Unprocessable Content`), and `retryAfterSeconds` adds a `Retry-After` header. `getStatus()`, `getCode()`, `@Nullable getRetryAfterSeconds()`.
 - `new AuthUnavailableException(@Nullable String message)`, `(message, @Nullable Throwable cause)`, `(String code, message, cause)`, `(code, message, @Nullable Long retryAfterSeconds, cause)` — a 503 for a store, listener or hash-slot failure. A busy hash-slot pool carries `Retry-After` 1 second. Without a code it is the Core spelling `SERVICE_UNAVAILABLE`; an unconfirmed security write uses `security_write_conflict`. `getCode()`, `@Nullable getRetryAfterSeconds()`, `getStatus()` (always 503).
-- `AuthErrorCode` — the fixed list of auth codes and statuses (`getCode()`, `getStatus()`). 400 `BAD_REQUEST`, 404 `NOT_FOUND`, 415 `UNSUPPORTED_MEDIA_TYPE` and 503 `SERVICE_UNAVAILABLE` are Core codes and not in this list. The input-validation 400 is raised as a Core `HttpException`; the 415 for a non-JSON auth body is answered directly by the global auth middleware in the same JSON shape (code `UNSUPPORTED_MEDIA_TYPE`), so it never reaches the app's `onError` and `AuthResponses` shapes it; 503 `SERVICE_UNAVAILABLE` is the default code of `AuthUnavailableException`.
+- `AuthErrorCode` — the fixed list of auth codes and statuses (`getCode()`, `getStatus()`). The first table below holds only the `AuthErrorCode` codes, with the answers that use them. The second holds the codes auth sends outside this list, with when it sends each.
 
 | code | Status | Answer |
 |---|---|---|
@@ -406,7 +419,23 @@ Every auth error response has the Core JSON shape: `{"error":{"code":…,"messag
 | `group_too_large` | 409 | A group delete that would touch more than 1,000 users |
 | `too_many_attempts` | 429 | Login, password-check or API key failures over their limit |
 | `security_write_conflict` | 503 | A security write that a re-read does not confirm |
-| `SERVICE_UNAVAILABLE` | 503 | A store, throttle, hash-slot or group-expansion-limit failure (Core spelling, the `AuthUnavailableException` default) |
+
+In the table below, every code except `CONFLICT` is the one Core sends for that status; `CONFLICT` is auth's own (Core sends `HTTP_409`).
+
+| code | Status | When auth sends it |
+|---|---|---|
+| `BAD_REQUEST` | 400 | An auth body that is not valid JSON or not a JSON object; a failed input check; an auth `IllegalArgumentException` thrown by `auth.users()`, `auth.apiKeys()` or a built-in group store call (`InMemoryGroupStore`, `FileGroupStore`) in an app route (answered by `auth.errors()`, `auth.errorMiddleware()` or the PROD final error layer) |
+| `NOT_FOUND` | 404 | A path under the auth mounts that no route serves; `POST /auth/register` without `.register(true)`; an endpoint that is off (API keys or group admin not configured, setup not open); a user, group or API key id that does not exist, on the admin and key endpoints (in an app route `auth.users()` and `auth.apiKeys().revoke` return null or false, while an unknown key owner, or adding a member, parent or role to a group that does not exist in a built-in group store (`InMemoryGroupStore`, `FileGroupStore`), throws the 400 above) |
+| `METHOD_NOT_ALLOWED` | 405 | A path under the auth mounts called with a method its route does not take (with an `Allow` header). Without a token, default deny answers 401 first, here and for the unserved path above |
+| `CONFLICT` | 409 | An admin group create (`POST /auth/admin/groups`) with an existing group id. This is the only place auth sends `CONFLICT` |
+| `PAYLOAD_TOO_LARGE` | 413 | An auth body over the app's JSON body limit |
+| `UNSUPPORTED_MEDIA_TYPE` | 415 | A non-JSON auth body. Auth answers it itself (the global auth middleware for a POST body other than an API-key request to an admin route, the auth router's error layer otherwise), so it never reaches the app's `onError`, and `AuthResponses` shapes it |
+| `UNPROCESSABLE_ENTITY` | 422 | A new password that the password policy or the breach check refuses on an auth endpoint (register `POST /auth/register`, `POST /auth/setup`, password change `POST /auth/password`, admin user create and update `POST /auth/admin/users` and `PATCH /auth/admin/users/:id`). The same refusal from `auth.users().create` in an app route is an `IllegalArgumentException`, answered 400 `BAD_REQUEST` |
+| `INTERNAL_ERROR` | 500 | Any other exception in the auth routers, an access rule that throws, or auth used in a wrong state |
+| `NOT_IMPLEMENTED` | 501 | `GET /auth/admin/users` when the `UserStore` does not implement `list` (in DEV and PROD) |
+| `SERVICE_UNAVAILABLE` | 503 | A store, throttle, listener, breach-check, hash-slot or group-expansion-limit failure (a busy hash slot adds `Retry-After: 1`). It is the default code of `AuthUnavailableException` |
+
+In PROD the final error layer ([Error responses](#error-responses-and-authresponses)) leaves auth exceptions (`AuthRejection`, `DuplicateUserException`, …) their own code. It answers an app's other `HttpException` with this table's code when its status is in the table, and with `HTTP_<status>` when it is 409 or not in the table. So such a 409 is `HTTP_409`, not `CONFLICT`. Core names 426 `UPGRADE_REQUIRED`, but auth has no spelling for it, so it becomes `HTTP_426`. A status outside 400–599 becomes 500. Any other exception becomes 500 `INTERNAL_ERROR`.
 
 Express equivalent: `throw createError(422, ...)` from `http-errors`, turned into JSON by the error handler placed last.
 
@@ -618,7 +647,7 @@ val auth = Auth.builder(System.getenv("JWT_SECRET")).users(store).build()
 | `create(name, char[] password, roles...)` | The user with its id, after hashing, normalizing and the events |
 | `create(name, @Nullable char[] password, @Nullable UserMutator init, roles...)` | `init` sets attributes and the service-account flag; only a service account has a null password |
 | `@Nullable update(id, UserMutator)` | Changes attributes only; changing the id, name, hash, ver, enabled flag, roles or service-account flag is an `IllegalArgumentException` |
-| `@Nullable rename(id, newName)` | Normalizes `newName` (NFKC, `Locale.ROOT` lower case), stores it and emits `beforeUserUpdate`/`onUserUpdated` with `UserChange.USERNAME` and origin `APP`; a name equal to the current one returns without a write or an event; a name another user holds is a `DuplicateUserException` (409) and the row stays |
+| `@Nullable rename(id, newName)` | Normalizes `newName` (NFKC, `Locale.ROOT` lower case), stores it and emits `beforeUserUpdate`/`onUserUpdated` with `UserChange.USERNAME` and origin `APP`; a name equal to the current one returns without a write or an event; a name another user holds is a `DuplicateUserException` (409) and the row stays ([example](#authusersrename)) |
 | `boolean delete(id)` | Removes the group memberships, then (with `.apiKeys(store)`) every key of the user, then the row. A failing step answers 503 and keeps the row, so a retry continues where it stopped |
 | `boolean checkPassword(id, char[] password)` | Checks the current password; a missing user or a null hash is false after a dummy hash. Every current-password confirmation of one user id shares one limit of 5 failures per 15 minutes; over it the call throws `AuthRejection(429, "too_many_attempts")` with `getRetryAfterSeconds()` and computes no hash, and `auth.errors()` answers 429 with `Retry-After`. While another confirmation of the same user (an endpoint's included) runs, the call waits up to 5 seconds and then throws `AuthUnavailableException` (503). A success does not reset the count |
 
@@ -652,6 +681,8 @@ Groups form a DAG (a group may have several parents). Group ids are lower case `
 - `default rolesOfGroups(groupIds)` — the roles groups confer; the interface default is none, and the built-in `InMemoryGroupStore` and `FileGroupStore` return the union of the roles given with `grantRole`.
 - `GroupLimits.defaults()` (depth 8, size 256), `GroupLimits.of(maxDepth, maxSize)`, `getMaxDepth()`, `getMaxSize()`.
 
+Express counterpart: Express has no groups. The nearest are the role inheritance of `accesscontrol` (`ac.grant('admin').extend('editor')`) and a `user_groups` table the app joins in passport's `deserializeUser`.
+
 ### Group writes: GroupAdminStore, InMemoryGroupStore, FileGroupStore
 
 `GroupAdminStore extends GroupStore` holds the writes of the admin group endpoints. A read-only source such as LDAP implements only `GroupStore`.
@@ -664,7 +695,7 @@ Groups form a DAG (a group may have several parents). Group ids are lower case `
 | `addMember`, `removeMember`, `addParent(child, parent)`, `removeParent` | Idempotent: the same call twice equals once, without an error |
 | default `removeUser(userId)` | Removes every direct membership when the user is deleted; a database store overrides it with one `DELETE` |
 
-The two built-in stores also give roles to groups (the admin HTTP route for this is v2).
+The two built-in stores also give roles to groups (the admin HTTP route for this is not in 0.11.0; it belongs to v2, the next auth contract).
 
 | Method | Meaning |
 |---|---|
@@ -893,7 +924,7 @@ A scope is `resource:action`, each part `[a-z0-9-]{1,32}`. Wildcards appear only
 | `.replaceBuiltinRoles()` | Drops the built-in roles (`admin` holds only what you grant) | — |
 | `.logger(Logger)` | Where `build()` writes its warnings; a new `ConsoleLogger` by default | — |
 | `RolePolicy.builtin()`, `scopesOf(role)`, `roles()`, `grantedScopes()` | The built-in policy / a role's scopes / role names / every granted scope | — |
-| `RoleStore` (`@FunctionalInterface`, `scopesOf(role) throws Exception`) | Database roles. Reserved or malformed rows are dropped with one WARN per role; an exception fails closed with 503 | — |
+| `RoleStore` (`@FunctionalInterface`, `scopesOf(role) throws Exception`) | Database roles. Reserved or malformed rows are dropped with one WARN per role; an exception fails closed: 503 on a protected path, anonymous on a public one (with `.statelessAccess(true)` only guards and `auth.loadUser(req)` load the principal (and so read the `RoleStore`), so an unguarded protected route keeps answering; [database example](#a-database-rolestore)) | the grants of `accesscontrol` loaded from a database table |
 | `Scopes.covers(grant, other)` | Whether the grant covers the other; both must be valid grants, otherwise `IllegalArgumentException` | — |
 | `Scopes.isValidGrant/isValidRequired`, `validateGrant/validateRequired` | Grammar checks; a required scope cannot contain `*` | — |
 
@@ -922,20 +953,20 @@ println("${user.username} enabled=${user.isEnabled} canWrite=$canWrite")
 
 ## Durability of the store files
 
-Auth file storage (the internal `AtomicFiles` protocol every file store will use) writes a temporary file, call `FileDescriptor.sync()`, rename the existing file to `.bak`, rename the temporary file to the main name and delete `.bak`. At start, a lone `.bak` is restored with a WARN; when both exist and the main file is readable, the main file is used and `.bak` deleted. An unreadable main file stops start without overwriting anything (a FAIL message says to inspect `.bak`). API 21 has no directory fsync, so rename durability depends on the file system and `ver` (the token version) may regress after power loss. The temporary file is created owner-only (read and write) inside an owner-only staging directory (`.<name>.tmp.new-<hex>`) and moved to its name before the content is written, so it is never visible with the umask permissions, not even while it is written, and a store file, which holds password hashes and token versions, is not readable by other local users whatever the umask (best effort: a file system without those permissions keeps its default). Each store's size limit is compared with the file length before anything is read, so a huge or corrupt file fails start with its `FAIL ... above the limit` message instead of exhausting the heap. Writes into one directory are serialized within the process, comparing the directory's canonical path and not the file name, so `dir/users.json`, `dir/./users.json`, a path through a symbolic link, `dir/USERS.json` (one file on a case-insensitive file system such as macOS or Windows) and the NFC and NFD spellings of one name (one file on a normalization-insensitive file system such as APFS or HFS+) never have two writers at once, whether the file or its directory exists yet or not. A directory that does not exist yet shares one process-wide lock whatever its spelling, a write into it fails with an `IOException` without writing anything, and a write prepared while the directory was missing that finds it created by then fails the same way, so a retry checks the file again under the directory's lock. Different files of one directory share that serialization but stay separate files. A `FileUserStore` remembers the file as it last read or wrote it: when another writer (a second `FileUserStore` over the same file, or another process) changed it since, the write is refused with an `IOException` (503 on an auth path) and one ERROR instead of rolling that change (a `ver`, a password hash) back; use one `FileUserStore` per file and restart to read the file again.
+Auth file storage (the internal `AtomicFiles` protocol every auth file store uses) writes a temporary file, call `FileDescriptor.sync()`, rename the existing file to `.bak`, rename the temporary file to the main name and delete `.bak`. At start, a lone `.bak` is restored with a WARN; when both exist and the main file is readable, the main file is used and `.bak` deleted. An unreadable main file stops start without overwriting anything (a FAIL message says to inspect `.bak`). API 21 has no directory fsync, so rename durability depends on the file system and `ver` (the token version) may regress after power loss. The temporary file is created owner-only (read and write) inside an owner-only staging directory (`.<name>.tmp.new-<hex>`) and moved to its name before the content is written, so it is never visible with the umask permissions, not even while it is written, and a store file, which holds password hashes and token versions, is not readable by other local users whatever the umask (best effort: a file system without those permissions keeps its default). Each store's size limit is compared with the file length before anything is read, so a huge or corrupt file fails start with its `FAIL ... above the limit` message instead of exhausting the heap. Writes into one directory are serialized within the process, comparing the directory's canonical path and not the file name, so `dir/users.json`, `dir/./users.json`, a path through a symbolic link, `dir/USERS.json` (one file on a case-insensitive file system such as macOS or Windows) and the NFC and NFD spellings of one name (one file on a normalization-insensitive file system such as APFS or HFS+) never have two writers at once, whether the file or its directory exists yet or not. A directory that does not exist yet shares one process-wide lock whatever its spelling, a write into it fails with an `IOException` without writing anything, and a write prepared while the directory was missing that finds it created by then fails the same way, so a retry checks the file again under the directory's lock. Different files of one directory share that serialization but stay separate files. A `FileUserStore` remembers the file as it last read or wrote it: when another writer (a second `FileUserStore` over the same file, or another process) changed it since, the write is refused with an `IOException` (503 on an auth path) and one ERROR instead of rolling that change (a `ver`, a password hash) back; use one `FileUserStore` per file and restart to read the file again.
 
 ## Password hashing: PasswordHasher, HashCost
 
 | API | Description | Express counterpart |
 |---|---|---|
-| `password.PasswordHasher` | `boolean accepts(String stored)`, `String hash(char[] password)`, `boolean verify(char[] password, String stored)`, default `boolean needsRehash(String stored)` (false). An SPI apps may implement; after the first public release it gains default methods only. The prefix of a stored string names its algorithm. Auth uses **one** configured hasher; a stored string it does not `accept` is checked against a dummy hash and fails. To read several formats (moving bcrypt accounts to PBKDF2), give `.passwordHasher(...)` a `PasswordHashers.chain(...)` | a `bcrypt` object |
+| `password.PasswordHasher` | `boolean accepts(String stored)`, `String hash(char[] password)`, `boolean verify(char[] password, String stored)`, default `boolean needsRehash(String stored)` (false). An SPI apps may implement; since 0.11.0 it gains default methods only. The prefix of a stored string names its algorithm. Auth uses **one** configured hasher; a stored string it does not `accept` is checked against a dummy hash and fails. To read several formats (moving bcrypt accounts to PBKDF2), give `.passwordHasher(...)` a `PasswordHashers.chain(...)` | a `bcrypt` object |
 | `new Pbkdf2PasswordHasher(iterations)` | The default hasher: PBKDF2-HMAC-SHA256 written over `javax.crypto.Mac` (Android 5.0 has no `PBKDF2WithHmacSHA256`). Format `pbkdf2-sha256$<iterations>$<salt>$<hash>` (16-byte salt, 32-byte key, unpadded base64url). An empty password is an `IllegalArgumentException`. The HMAC key is set once per hash, so a long password costs the same. `needsRehash` is true when the stored count is below 80 % or above 125 % of this hasher's count. A stored count above 2,000,000 is false without hashing (`MAX_STORED_ITERATIONS`). In auth's logins and password checks, a `pbkdf2-sha256$` stored string that is malformed or above that count runs one target-cost dummy PBKDF2 like an unknown user before it fails, so timing does not tell it apart. `getIterations()` | `bcrypt.hashSync` / `compareSync` |
 | `PasswordHashers.bcrypt()`, `BcryptPasswordHasher.builder().maxCost(n).cost(n).logger(logger).build()` | The legacy bcrypt verifier, written in-house without a library. It reads `$2a$`, `$2b$` and `$2y$` and does not take `$2x$`. A stored cost above the limit (default 14) is false without running the key schedule, with one ERROR. Only the first 72 UTF-8 bytes of a password count. A salt that is not 22 characters, a hash part that is not 31, or a character outside `./A-Za-z0-9` is false. `needsRehash` is always true (PBKDF2 on the next successful login). `hash()` works too (`$2b$`, default cost 10), but PBKDF2 stays the default | `bcrypt.compare` |
 | `PasswordHashers.chain(primary, legacy...)`, `PasswordHashers.chain(logger, primary, legacy...)` | One hasher over several stored formats. For each stored string the first of `primary`, then `legacy` in order, whose `accepts` is true runs `verify`. `hash` always uses `primary`. `needsRehash` is true when the accepting hasher is not `primary` or `primary.needsRehash` is true, so the next successful login moves the account to the `primary` format. A stored string no member accepts is false and logs one ERROR per prefix (at most its first 4 characters, never the whole string; once, whether `accepts` or `verify` meets it). Without a logger it logs to a `ConsoleLogger` (`chain(app.logger(), ...)` uses the app's). A `PasswordHasher` of your own (Java or Kotlin) is a member like any other | code that picks `bcrypt.compare` or another check per format |
 | `PasswordHashers.digest(prefix, algorithm, encoding)` | A verifier of unsalted legacy MD5, SHA-1 and SHA-256. Stored format `<prefix>$<digest>` (for example `digest("legacy-md5", "MD5", DigestEncoding.HEX)` reads `legacy-md5$5f4dcc3b...`). `algorithm` is a `MessageDigest` name (`"MD5"`, `"SHA-1"`, `"SHA-256"`); an unknown one is an `IllegalArgumentException` when built. The password is digested as UTF-8 and compared through `ConstantTime`. `prefix` is a name without `$`; one trailing `$` is not doubled; an empty prefix is refused. A column without the prefix gets it from the store when read (`"legacy-md5$" + column`). `hash()` throws `UnsupportedOperationException` (no new weak hashes); `needsRehash` is always true | comparing `crypto.createHash('md5').update(pw).digest('hex')` |
 | `PasswordHashers.saltedDigest(prefix, algorithm, encoding, order)` | A verifier of salted legacy digests. Stored format `<prefix>$<salt>$<digest>` (for example `legacy-sha256$Xy7q$9f86d0...`). The salt is the text from after the prefix to the **last** `$`, used as written (so a salt may hold `$`), joined to the password as UTF-8. `order` is `SaltOrder.SALT_THEN_PASSWORD` (`sha256(salt + pw)`) or `SaltOrder.PASSWORD_THEN_SALT` (`sha256(pw + salt)`); read it off the old code. A separate salt column is joined by the store when read. Otherwise as `digest` | comparing `crypto.createHash('sha256').update(salt + pw)` |
 | `DigestEncoding.HEX`, `DigestEncoding.BASE64` | How `digest` and `saltedDigest` read the digest. `HEX` takes either case; `BASE64` is the standard alphabet (`+`, `/`), with or without `=` padding | `digest('hex')` / `digest('base64')` |
-| `HashCost.calibrate(targetMillis)`, `HashCost.fixed(iterations)`, `HashCost.defaults()` | Measures this device once (a short warm-up and one timed run) and picks the iteration count of a hash taking about the target time (rounded down to 10,000, within 50,000..600,000) / a fixed count without calibration / `calibrate(500)`. `isFixed()`, `getTargetMillis()` (0 when fixed), `getIterations()` (0 when calibrated) | the rounds of `bcrypt.hash(pw, rounds)` |
+| `HashCost.calibrate(targetMillis)`, `HashCost.fixed(iterations)`, `HashCost.defaults()` | Measures this device once (a short warm-up and one timed run) and picks the iteration count of a hash taking about the target time (rounded down to 10,000, within 50,000..600,000) / a fixed count without calibration / `calibrate(500)`. `isFixed()`, `getTargetMillis()` (0 when fixed), `getIterations()` (0 when calibrated) ([`fixed` example](#hashcostfixed)) | the rounds of `bcrypt.hash(pw, rounds)` |
 
 Auth runs every `hash` and `verify` inside its hash slots (`.hashConcurrency(n)`, default `max(1, cores / 2)`, a wait queue of four times the slots); a configured hasher that handles both bcrypt and PBKDF2 shares the same slots for both. A slot not obtained within 5 seconds is an `AuthUnavailableException` (503, `Retry-After: 1`). The cost is measured once, on first use (usually the start-time doctor, or `build()` when a `.user` has a password). The calibration target is also the login timing base T; under `fixed(n)`, T is one timing of a hash at n iterations taken at start (n never changes). Decided: the default calibration target is 500 ms (the top of the recommended 250..500 ms range; it reaches the OWASP 600,000 iterations on current servers, and slow devices use `HashCost.calibrate(250)`). A calibration target outside 250..500 ms is not clamped: `build()` refuses it with `AuthConfigException` (DEV included). `HashCost.fixed(n)` below 50,000 iterations is a doctor FAIL in PROD and a WARN in DEV (the "hash-cost failures" of the AuthMode table).
 
@@ -1015,7 +1046,7 @@ val vault = KeySource { "a-key-read-from-the-vault-32-bytes!!".toByteArray() }
 
 | API | Description | Express counterpart |
 |---|---|---|
-| `auth.errors()` | A Core `ErrorHandler`: `app.onError(auth.errors())` **last**, after the routes. It turns the auth exceptions an app handler throws into the auth JSON: `DuplicateUserException` 409 `duplicate_user`, `AuthUnavailableException` 503 with its code (for example `security_write_conflict`), the auth `IllegalArgumentException` subclass 400 `BAD_REQUEST`, `AuthRejection` with its status and code (plus `Retry-After`), `AuthStateException` 500 `INTERNAL_ERROR` (its message goes to the log, never the body: Core logs the failure once, as its `request <id> failed` ERROR whose stack trace carries the `AuthStateException` message, and auth adds no line of its own, so `auth.user(req)` on a public path gives one ERROR naming `auth.userOrNull(req)`). Any other exception (the app's own `RuntimeException`, an `IllegalArgumentException` not from auth) gets no answer and goes, as the same instance, to the next error layer; in PROD the final layer auth appends at start answers it as JSON (see [Error responses](#error-responses-and-authresponses)). The same instance per `Auth` | an `app.use((err, req, res, next) => ...)` placed last |
+| `auth.errors()` | A Core `ErrorHandler`: `app.onError(auth.errors())` **last**, after the routes. It turns the auth exceptions an app handler throws into the auth JSON: `DuplicateUserException` 409 `duplicate_user`, `AuthUnavailableException` 503 with its code (for example `security_write_conflict`), the auth `IllegalArgumentException` subclass 400 `BAD_REQUEST`, `AuthRejection` with its status and code (plus `Retry-After`), `AuthStateException` 500 `INTERNAL_ERROR` (its message goes to the log, never the body: Core logs the failure once, as its `request <id> failed` ERROR whose stack trace carries the `AuthStateException` message, and auth adds no line of its own, so `auth.user(req)` on a public path gives one ERROR naming `auth.userOrNull(req)`). Any other exception (the app's own `RuntimeException`, an `IllegalArgumentException` not from auth) gets no answer and goes, as the same instance, to the next error layer; in PROD the final error layer auth appends at start answers it as JSON (see [Error responses](#error-responses-and-authresponses)). The same instance per `Auth` | an `app.use((err, req, res, next) => ...)` placed last |
 | `auth.errorMiddleware()` | An `ErrorMiddleware` doing the same conversion, attached with `app.use(...)`, which Core also accepts after start (Core refuses `onError` after start). Attach it again after every batch of routes added after start. Other exceptions go to `next.error(err)`. The same instance | the same |
 
 When the very object of one of these two does not follow the last ROUTE, the doctor WARNs (even when the app's own `onError` sits there) and auth appends `auth.errorMiddleware()` after the routes at start, after the app's own error handlers. Routes added after start are checked at request time, which WARNs too: the first request after a registration change checks again, logging at most once a minute. A route added later to a router that is already mounted counts at its mount position. The auth routers (`auth.routes()`, `auth.adminRoutes()`) have their own error middleware and are not counted.
@@ -1089,7 +1120,7 @@ val auth = Auth.builder(System.getenv("JWT_SECRET")).transport(TokenTransport.BO
 
 | API | Description | Express counterpart |
 |---|---|---|
-| `spi.LoginThrottle` | `long retryAfter(key)` (0 allows; a positive value is the remaining block in milliseconds), `long recordFailure(key)` (the new block in milliseconds, 0 while not blocked), `void reset(key)`. The defaults `retryAfter(key, max, windowMillis)` and `recordFailure(key, max, windowMillis)` go to the one-argument methods (the implementation's own limits), and the default `boolean usesLimitArguments()` is false. All synchronous and `throws Exception`. After the first public release it gains default methods only | the store of `rate-limiter-flexible` |
+| `spi.LoginThrottle` | `long retryAfter(key)` (0 allows; a positive value is the remaining block in milliseconds), `long recordFailure(key)` (the new block in milliseconds, 0 while not blocked), `void reset(key)`. The defaults `retryAfter(key, max, windowMillis)` and `recordFailure(key, max, windowMillis)` go to the one-argument methods (the implementation's own limits), and the default `boolean usesLimitArguments()` is false. All synchronous and `throws Exception`. Since 0.11.0 it gains default methods only | the store of `rate-limiter-flexible` |
 | `spi.ForwardingLoginThrottle` | The public abstract base class of decorators: every method, the defaults and `usesLimitArguments()` included, goes to the wrapped throttle, so overriding a few never makes the declaration lie | — |
 | `InMemoryLoginThrottle` | The in-memory throttle (lost on restart). It honours the limit arguments (`usesLimitArguments()` is true); the one-argument methods allow 5 failures per 15 minutes (`builder().limits(max, windowMillis)`). The key cap is 100,000 on a JVM and 10,000 on Android (`builder().maxKeys(n)`); at the cap the key that failed longest ago is dropped, with one WARN the first time. `builder().timeSource(...)`, `builder().logger(...)` | the MemoryStore of `express-rate-limit` |
 
@@ -1252,7 +1283,7 @@ val auth = Auth.builder(System.getenv("JWT_SECRET")).refreshTokens(InMemoryRefre
 
 ## API key storage: ApiKeyStore and the key types
 
-`apikey.ApiKeyStore` (user-implementable, synchronous `throws Exception`, arguments never null) is fixed before the first release: `@Nullable findByPrefix(prefix)`, `@Nullable findById(keyId)`, `listByOwner(ownerUserId)` (dead keys too), `insertIfUnderLimit(StoredApiKey, int maxLiveKeys, long nowMillis)` (only while the owner has fewer live keys, that is unexpired and with ownerVer at least the new key's; an existing prefix throws `ApiKeyPrefixCollisionException`), `deleteByIdAndOwner`, `deleteById`, `deleteAllByOwner`, `deleteStaleByOwner(owner, v)` (ownerVer < v), `deleteExpired(nowMillis)`, and the defaults `deleteFutureByOwner(owner, v)` (ownerVer > v, through `listByOwner` and `deleteById`), `updateLastUsed(keyId, lastUsedAtMillis)` (no-op), `supportsAtomicLimitInsert()` (false) and `countKeysWithAdminScopes()` (-1: cannot count).
+`apikey.ApiKeyStore` (user-implementable, synchronous `throws Exception`, arguments never null) is fixed since 0.11.0: `@Nullable findByPrefix(prefix)`, `@Nullable findById(keyId)`, `listByOwner(ownerUserId)` (dead keys too), `insertIfUnderLimit(StoredApiKey, int maxLiveKeys, long nowMillis)` (only while the owner has fewer live keys, that is unexpired and with ownerVer at least the new key's; an existing prefix throws `ApiKeyPrefixCollisionException`), `deleteByIdAndOwner`, `deleteById`, `deleteAllByOwner`, `deleteStaleByOwner(owner, v)` (ownerVer < v), `deleteExpired(nowMillis)`, and the defaults `deleteFutureByOwner(owner, v)` (ownerVer > v, through `listByOwner` and `deleteById`), `updateLastUsed(keyId, lastUsedAtMillis)` (no-op), `supportsAtomicLimitInsert()` (false) and `countKeysWithAdminScopes()` (-1: cannot count).
 
 | Type | Meaning |
 |---|---|
@@ -1312,7 +1343,7 @@ Every admin write re-reads the actor and the target from the store and allows th
 | refresh | `typ` `rt+jwt` | `sub`, `ver`, `fam`, `jti`, `iat`, `exp` | HMAC(secret of the kid, `"naru-refresh"`) |
 | device token / device-name fingerprint | — | — | HMAC(secret, `"naru-device"`) / HMAC(secret, `"naru-device-fp"`) |
 
-Each purpose has its own key, so a token of one purpose never verifies as another, even with a forged `typ`. Keys are derived for every kid of the key set (verification-only kids included), so tokens signed before a rotation still verify under their old kid. `TokenPair`: `getAccessToken()`, `getExpiresIn()` (seconds), `getRefreshToken()`, `getRefreshExpiresIn()` (seconds), `getTokenType()` (`"Bearer"`). The JSON field names are those of the OAuth 2.0 token response in camel case (`accessToken`, `expiresIn`, `refreshToken`, `refreshExpiresIn`, `tokenType`), and `toString()` holds no token. Set the lifetimes with the builder's `.accessTtl(millis)` and `.refreshTtl(millis)` (at least one second); unset, they are the values in the AuthProfile table above. Access tokens are verified with a 60-second clock leeway (`Jwt.DEFAULT_LEEWAY_MILLIS`, not configurable on `Auth`), so a token still answers 200 for up to 60 seconds after its expiry; a test of expiry moves its clock past `accessTtl` plus 60 seconds.
+Each purpose has its own key, so a token of one purpose never verifies as another, even with a forged `typ`. Keys are derived for every kid of the key set (verification-only kids included), so tokens signed before a rotation still verify under their old kid. `TokenPair`: `getAccessToken()`, `getExpiresIn()` (seconds), `getRefreshToken()`, `getRefreshExpiresIn()` (seconds), `getTokenType()` (`"Bearer"`). The JSON field names are those of the OAuth 2.0 token response in camel case (`accessToken`, `expiresIn`, `refreshToken`, `refreshExpiresIn`, `tokenType`), and `toString()` holds no token. Set the lifetimes with the builder's `.accessTtl(millis)` and `.refreshTtl(millis)` (at least one second); unset, they are the values in the AuthProfile table above. `getAccessTtl()` and `getRefreshTtl()` of `auth.tokens()` return the lifetimes in effect, in milliseconds: the builder's, the profile's, or the fixed 5 minutes and 24 hours of `.allowInsecureTransport`. Access tokens are verified with a 60-second clock leeway (`Jwt.DEFAULT_LEEWAY_MILLIS`, not configurable on `Auth`), so a token still answers 200 for up to 60 seconds after its expiry; a test of expiry moves its clock past `accessTtl` plus 60 seconds.
 
 Refresh reuse detection and the token-format seam (`TokenCodec`) are in [Refresh reuse detection and TokenCodec](#refresh-reuse-detection-and-tokencodec) below.
 
@@ -1441,7 +1472,7 @@ app.ws("/ws", auth.webSocket { req, ws -> ws.sendText("hi " + auth.user(req).id)
 
 **Refresh reuse detection:** when a refresh token that was already used arrives again outside the reuse grace window (`.reuseGrace(millis)`, default 0), `TokenService` revokes its whole family through `RefreshTokenStore.revokeFamily`, calls `AuthEvents.onRefreshTokenReused(userId, familyId, ctx)` once, and answers with the same 401 `invalid_refresh_token` as any other invalid refresh token (the response never shows that detection fired). With a grace of 0 a second use 1 ms later is already reuse. A repeat inside the grace window (for example two tabs refreshing at once) is refused with 401 and revokes nothing. Other families of the same user are not touched. Reading a token's identity for logout does not consume it, so used or revoked tokens give no identity and never count as reuse. A store error while handling reuse is an `AuthUnavailableException` (503), neither a success nor an invalid-token answer. Express counterpart: the "reuse detection" option of a refresh-token rotation library.
 
-**Token format: `TokenCodec`.** `spi.TokenCodec` is the token-format seam with `String encode(JwtClaims claims)` and `JwtClaims decode(String token, String expectedType)` (both `throws Exception`, nothing null). auth issues and reads every access and refresh token only through the configured codec; replace it with the builder's `.tokenCodec(codec)`. The default is the HS256 codec over the key source (header `kid`, `typ` `at+jwt` / `rt+jwt`, purpose-derived keys), which refuses a token of another `expectedType` (`TokenCodec.ACCESS` or `TokenCodec.REFRESH`). A throwing `decode` answers the same 401 `invalid_token` as a bad signature, and the reason goes to the DEBUG log only. 0.11.0 ships no other codec (RS256, ES256 and JWKS come later). After the first public release the interface gains default methods only. Express counterpart: the `sign` / `verify` pair handed to `express-jwt`.
+**Token format: `TokenCodec`.** `spi.TokenCodec` is the token-format seam with `String encode(JwtClaims claims)` and `JwtClaims decode(String token, String expectedType)` (both `throws Exception`, nothing null). auth issues and reads every access and refresh token only through the configured codec; replace it with the builder's `.tokenCodec(codec)`. The default is the HS256 codec over the key source (header `kid`, `typ` `at+jwt` / `rt+jwt`, purpose-derived keys), which refuses a token of another `expectedType` (`TokenCodec.ACCESS` or `TokenCodec.REFRESH`). A throwing `decode` answers the same 401 `invalid_token` as a bad signature, and the reason goes to the DEBUG log only. 0.11.0 ships no other codec (RS256, ES256 and JWKS come later). Since 0.11.0 the interface gains default methods only. Express counterpart: the `sign` / `verify` pair of `jsonwebtoken` (`express-jwt` wraps the verify side).
 
 ```java
 TokenCodec wrapped = new TokenCodec() {
@@ -1490,7 +1521,7 @@ app.post("/api/posts", auth.require("posts:write")) { _, rs -> rs.status(201).se
 
 A successful password login issues a device token: an HS256 token (header `kid`, `typ` `dt+jwt`) holding the user id (`sub`), the `ver` at issue, the fingerprint `fp` = base64url(HMAC(fingerprint key, normalized login name)), a random `jti` and an `exp` 90 days later, and never the login name itself. The signing key is HMAC(secret, `"naru-device"`) and the fingerprint key HMAC(secret, `"naru-device-fp"`), both derived for the kid in the token header. A later login trusts it only when signature, expiry (no leeway), fingerprint, user id and `ver` all match and its failure limit has not invalidated it. So a logout of all devices or a password change (`ver++`), a rename, another user taking the name, or finding the same user by another name (an email, say) all end the trust. A key rotation keeps the trust while the old kid stays in the verification list. Failed logins carrying a trusted device token count against that token in a fixed window of 15 minutes, and the 5th failure invalidates it (a thief cannot rotate IPs with a stolen token).
 
-`spi.DeviceTrust` is the state behind it. auth signs, verifies and fingerprints itself (no key reaches this interface) and calls it at three points of a login: `default void issued(DeviceToken token)` after a successful login issued a token, `boolean isInvalidated(DeviceToken token)` when step 3 of the check order decides trust, and `boolean recordFailure(DeviceToken token, int max, long windowMillis)` for every failure carrying a trusted token (auth passes 5 per 15 minutes; true when the token is invalidated after the call), plus `default int purgeExpired(long nowMillis)`, which the 10-minute cleanup calls to forget expired tokens (the default removes nothing). All are synchronous and `throws Exception`; a failure answers 503. `spi.DeviceToken` is the value of a verified token (`getTokenId()`, `getUserId()`, `getTokenVersion()`, `getExpiresAt()`). Replace it with the builder's `.deviceTrust(trust)`; without it the default follows the user store (in memory, or `<name>-device-trust.json` beside a `FileUserStore`, where an invalidation is written at once). After the first public release it gains default methods only. Express counterpart: the device-cookie table of the OWASP "device cookies" pattern.
+`spi.DeviceTrust` is the state behind it. auth signs, verifies and fingerprints itself (no key reaches this interface) and calls it at three points of a login: `default void issued(DeviceToken token)` after a successful login issued a token, `boolean isInvalidated(DeviceToken token)` when step 3 of the check order decides trust, and `boolean recordFailure(DeviceToken token, int max, long windowMillis)` for every failure carrying a trusted token (auth passes 5 per 15 minutes; true when the token is invalidated after the call), plus `default int purgeExpired(long nowMillis)`, which the 10-minute cleanup calls to forget expired tokens (the default removes nothing). All are synchronous and `throws Exception`; a failure answers 503. `spi.DeviceToken` is the value of a verified token (`getTokenId()`, `getUserId()`, `getTokenVersion()`, `getExpiresAt()`). Replace it with the builder's `.deviceTrust(trust)`; without it the default follows the user store (in memory, or `<name>-device-trust.json` beside a `FileUserStore`, where an invalidation is written at once). Since 0.11.0 it gains default methods only. Express counterpart: the device-cookie table of the OWASP "device cookies" pattern.
 
 The `naru_device` cookie (cookie delivery): HttpOnly, SameSite=Strict, Path = the mount path plus `/login` (`/auth/login` by default, `/api/auth/login` with `.mountPath("/api/auth")`), Secure exactly when `req.isSecure()`, Max-Age the 90-day device-token lifetime (7776000 seconds). HEADER mode returns it as body `deviceToken` and reads only the `Naru-Device` request header. The login endpoint (`POST /auth/login`) runs this order: 1) a device token passing signature, expiry and fingerprint defers the IP key, otherwise the IP key is checked first; 2) the `(user, IP)` key; 3) `findByUsername`, then trust from the id, `ver` and `isInvalidated`, exempting a trusted device from the user-only and IP keys and checking the deferred IP key and the user-only key otherwise; 4) the hash. A limit hit in steps 1 to 3 answers 429 at once without hashing. An attempt that reaches the hash runs exactly one PBKDF2 computation in one hash slot whatever the account (a legacy hash: the legacy verify plus a target-cost dummy PBKDF2; a malformed PBKDF2 stored hash: a target-cost dummy PBKDF2), and its failure response (the 503 of a full slot queue included) is never sent earlier than max(1.25T, elapsed) plus 0–50 ms random jitter after the request started (T is the login timing base fixed at start). The wait holds no worker thread.
 
@@ -1569,7 +1600,7 @@ Auth.builder(System.getenv("JWT_SECRET")).transport(TokenTransport.BOTH).build()
 | `AuthTesting.tokenFor(auth, name, roles...)` | Creates the user in the `InMemoryUserStore`, or overwrites its roles, and returns an access token at its current `ver` (no refresh record, a synthetic `fam`). Every role must be declared in the `RolePolicy` (`IllegalArgumentException` otherwise); another store throws `IllegalStateException`. `tokenFor(auth, "alice")` is a token without roles |
 | `AuthTesting.tokenForUserId(auth, id)` | A token at the user's current `ver` for any store; the user is not modified. An unknown id throws `IllegalArgumentException("no user with id …")` |
 | `AuthTesting.csrfTokenFor(auth, accessToken)` | The CSRF value bound to that token's `sub` and `fam`; send it as the `naru_csrf` cookie and the `X-CSRF-Token` header in cookie-mode write tests |
-| `AuthTesting.apiKeyFor(auth, ownerUserId, scopes...)` | Stores a real non-expiring API key in `.apiKeys(store)` and returns the plaintext key. It goes through the normal `auth.apiKeys().issue` path, so any `ApiKeyStore` works and the same `.maxKeysPerUser` limit applies (`AuthRejection(409, "api_key_limit")` over it). An unknown owner throws `IllegalArgumentException`, no key store `AuthStateException`. Send it as `Authorization: <scheme> <key>` |
+| `AuthTesting.apiKeyFor(auth, ownerUserId, scopes...)` | Stores a real non-expiring API key in `.apiKeys(store)` and returns the plaintext key. It goes through the normal `auth.apiKeys().issue` path, so any `ApiKeyStore` works and the same `.maxKeysPerUser` limit applies (`AuthRejection(409, "api_key_limit")` over it). An unknown owner throws `IllegalArgumentException`, no key store `AuthStateException`. Send it as `Authorization: <scheme> <key>` ([example](#authtestingapikeyfor)) |
 | `AuthTesting.verifyUserStore(store)` | Checks a custom `UserStore` against the contract: CRUD (including that a deleted id is never handed to the next user, so a `MAX(id)+1` or SQLite rowid store fails), `DuplicateUserException` for an existing username, the password-hash round trip after save and reload through the same instance (a store that caches rows in memory and loses the hash when it saves them still passes; use the `reopen` form below), `changePassword` with a null stored hash and with a ver mismatch, the field-method results, and for a store returning true from `supportsAtomicFieldWrites()` that `update()` never overwrites passwordHash, ver, enabled or roles. A broken clause throws `AssertionError` (message `UserStore contract (<clause>)`). Each call uses random `contract-` names and deletes the users it created, so one store can be verified repeatedly |
 | `AuthTesting.verifyUserStore(store, reopen)` | The checks above, plus the hash round trip after a restart: `reopen` (a `Callable<? extends UserStore>`, a lambda in Java and Kotlin) opens a fresh instance over the same storage, and the hash written by `create()` and kept through `update()` must read back from it by id and by name. Pass `() -> new FileUserStore(file)` for a file store, `() -> store` for a store that reads its storage on every call (JDBC). A `reopen` that throws or returns null fails the contract; a reopened instance other than `store` is closed when it is `AutoCloseable`. Express counterpart: restarting the app inside a jest contract suite |
 | `AuthTesting.verifyApiKeyStore(store)` / `verifyApiKeyStore(a, b)` | Checks the `ApiKeyStore` method table (field round trip with null `expiresAt`, `lastUsedAt` and `issuedByUserId`; null for an absent prefix; `ApiKeyPrefixCollisionException` for an existing one; `aB…` and `Ab…` as separate rows; the limit count without expired keys and keys of an older `ownerVer`; `deleteByIdAndOwner` false for another owner; `deleteAllByOwner`; `deleteExpired`; `deleteStaleByOwner` and `deleteFutureByOwner`). The two-argument form also checks, over two instances of one storage, that exactly one of 8 concurrent limited inserts wins. A broken rule throws `AssertionError` (message starting `ApiKeyStore contract:` and naming the method) |
@@ -1621,6 +1652,8 @@ class MyStoreTest {
 ### HTTP test recipe
 
 A JUnit 4 test of the whole app over real HTTP. It creates the account with DEV mode and `.user(...)`, removes the cache wait with `.userCacheTtl(0)` and starts on a free port with `app.listen(0)`. It calls `POST /auth/login` with `HttpURLConnection` to get a token, calls a protected route with `Authorization: Bearer <token>`, and stops the app with `app.shutdown(...)` in `@After`. The dependencies are `com.snoworca.naruserve:naruserve` and JUnit 4; any other HTTP client (OkHttp, say) works too. When a test needs only a token and does not test the login path, `AuthTesting.tokenFor` above is faster. The `call` helper writes a body only when `json` is not null, because a body turns `HttpURLConnection`'s GET into POST: a GET passes `null`. `HttpURLConnection` cannot send `PATCH` (`setRequestMethod("PATCH")` throws `ProtocolException`); to test `PATCH /auth/me` or the admin A4 update, use `java.net.http.HttpClient` (Java 11+) or OkHttp. `java.net.http.HttpClient` needs Java 11, so a test compiled for Java 8 or Android uses OkHttp (`com.squareup.okhttp3:okhttp`). Five failed logins of one name from one IP within 15 minutes answer 429 `too_many_attempts`, the right password included, so a test that tries wrong passwords builds a fresh app per test or sets `.loginFailureLimits(100, 100, 100, 60_000L)`.
+
+Express counterpart: `supertest(app).post('/auth/login').send({ username, password })` in a jest or mocha test, then a new request `supertest(app).get('/me').set('Authorization', 'Bearer ' + token)`; supertest binds the app to an ephemeral port for you, which this recipe does with `app.listen(0)`.
 
 ```java
 import com.snoworca.naruserve.RestApp;
@@ -1768,7 +1801,7 @@ class PostsApiTest {
 
 ## Plain-text transport: allowInsecureTransport
 
-`.allowInsecureTransport(reason)` is the only switch that turns the PROD secure-transport check off (DEV turns it off by itself). In exchange it forces short token lifetimes: access tokens 5 minutes and refresh tokens 24 hours, overriding `.accessTtl`, `.refreshTtl` and the profile. Every start logs one WARN line holding the reason, and a cookie delivery over plain text, whose auth cookies lack Secure, is logged as a WARN. An empty reason is refused by `build()`. Remove it once a TLS adapter exists.
+`.allowInsecureTransport(reason)` is the only switch that turns the PROD secure-transport check off (DEV turns it off by itself). In exchange it fixes the token lifetimes: access tokens 5 minutes and refresh tokens 24 hours, overriding `.accessTtl`, `.refreshTtl` and the profile. Every start logs one WARN line holding the reason, and a cookie delivery over plain text, whose auth cookies lack Secure, is logged as a WARN. An empty reason is refused by `build()`. Remove it once a TLS adapter exists.
 
 Express equivalent: an in-house device server started with `http.createServer(app)` and no `https`; Express does not block plain text, so it has no such switch.
 
@@ -2074,7 +2107,7 @@ The auth terms this page uses. The last column names what Express and passport c
 | **CIDR** | The notation for an address range such as `10.0.0.0/8`; `app.trustProxyCidrs(...)` trusts proxies in the range | `app.set('trust proxy', '10.0.0.0/8')` |
 | **hop** | One proxy a request passed through; `app.trustProxyHops(1)` trusts the one proxy right in front | `app.set('trust proxy', 1)` |
 | **PBKDF2** | The default password hash; its iteration count (the cost) is fitted to the device speed ([Password hashing](#password-hashing-passwordhasher-hashcost)) | `crypto.pbkdf2` |
-| **A1–A6, G1–G9** | The short names of the admin endpoints: A for user and G for group endpoints ([Admin endpoints](#admin-endpoints-authadminroutes)) | the routes of an admin `express.Router()` |
+| **A1–A6, G1–G9** | The short names of the admin endpoints: A for user and G for group endpoints. G9 is reserved for v2 and not registered ([Admin endpoints](#admin-endpoints-authadminroutes)) | the routes of an admin `express.Router()` |
 
 Express equivalent: the last column of the table. The code below shows the same terms in use.
 
@@ -2098,4 +2131,231 @@ app.get("/me") { req, res ->
     val p = auth.user(req)
     res.send(p.username + " " + p.hasRole("editor") + " " + p.hasScope("posts:write"))
 }
+```
+
+## More examples
+
+Short examples for APIs the sections above describe without code. Each section links here. The snippets assume imports from `com.snoworca.naruserve.utils.auth` (`Auth`, `AuthPrincipal`) and its subpackages `.user` (`AuthUser`, `DuplicateUserException`), `.password` (`HashCost`), `.rbac` (`RoleStore`, `RolePolicy`), `.apikey` (`InMemoryApiKeyStore`) and `.testing` (`AuthTesting`).
+
+### auth.authenticated()
+
+With `.statelessAccess(true)` an unguarded route sees a minimal principal and reads no store, so a deleted user's token still passes there until it expires. `auth.authenticated()` re-reads the user for one route without asking for a scope. Express counterpart: `passport.authenticate('jwt', { session: false })` on that one route.
+
+```java
+Auth auth = Auth.builder(System.getenv("JWT_SECRET")).statelessAccess(true).build();
+app.use(auth);
+// unguarded: a minimal principal, no store read
+app.get("/feed", (req, res) -> res.send("feed for " + auth.user(req).getId()));
+// authenticated(): reads the user, so a deleted user is 401 here
+app.post("/orders", auth.authenticated(), (req, res) -> res.status(201).send("order by " + auth.user(req).getUsername()));
+```
+
+```kotlin
+val auth = Auth.builder(System.getenv("JWT_SECRET")).statelessAccess(true).build()
+app.use(auth)
+app.get("/feed") { req, res -> res.send("feed for " + auth.user(req).id) }
+app.post("/orders", auth.authenticated()) { req, res -> res.status(201).send("order by " + auth.user(req).username) }
+```
+
+### auth.loadUser(req)
+
+`auth.loadUser(req)` loads the user inside a handler instead of a guard and never throws: it returns null when the user is gone or disabled, so the handler picks the fallback. Express counterpart: calling `User.findById(req.auth.sub)` inside the handler.
+
+```java
+Auth auth = Auth.builder(System.getenv("JWT_SECRET")).statelessAccess(true).build();
+app.use(auth);
+app.get("/greeting", (req, res) -> {
+    AuthPrincipal p = auth.loadUser(req);   // reads the store only here; null for a deleted or disabled user
+    res.send(p == null ? "hello" : "hello " + p.getUsername());
+});
+```
+
+```kotlin
+val auth = Auth.builder(System.getenv("JWT_SECRET")).statelessAccess(true).build()
+app.use(auth)
+app.get("/greeting") { req, res ->
+    val p = auth.loadUser(req)
+    res.send(if (p == null) "hello" else "hello " + p.username)
+}
+```
+
+### A database RoleStore
+
+A `RoleStore` over a table `role_scopes(role, scope)` that the app's migration creates. It is app code, not a class auth ships, and it compiles without a driver. An unknown role returns an empty set. auth calls `scopesOf` when it loads a principal that is not cached, and keeps the loaded principal for `userCacheTtl`. When `scopesOf` throws, a request that loads the principal on a protected path answers 503, guard or not; on a public path the request stays anonymous. With `.statelessAccess(true)` only guards and `auth.loadUser(req)` load the principal: a guarded route answers 503, an unguarded route keeps working, and `auth.loadUser(req)` returns null. Express counterpart: loading the grants of `accesscontrol` from a database table.
+
+```java
+import com.snoworca.naruserve.utils.auth.rbac.RoleStore;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.HashSet;
+import java.util.Set;
+import javax.sql.DataSource;
+
+public final class SqlRoles implements RoleStore {
+    private final DataSource ds;
+
+    public SqlRoles(DataSource ds) {
+        this.ds = ds;
+    }
+
+    @Override
+    public Set<String> scopesOf(String role) throws Exception {
+        Set<String> scopes = new HashSet<>();
+        try (Connection c = ds.getConnection();
+             PreparedStatement s = c.prepareStatement("SELECT scope FROM role_scopes WHERE role = ?")) {
+            s.setString(1, role);
+            try (ResultSet r = s.executeQuery()) {
+                while (r.next()) {
+                    scopes.add(r.getString(1));
+                }
+            }
+        }
+        return scopes;   // empty for an unknown role
+    }
+}
+// Auth.builder(System.getenv("JWT_SECRET")).roles(new SqlRoles(dataSource)).build()
+```
+
+```kotlin
+import com.snoworca.naruserve.utils.auth.Auth
+import com.snoworca.naruserve.utils.auth.rbac.RoleStore
+import javax.sql.DataSource
+
+class SqlRoles(private val ds: DataSource) : RoleStore {
+    override fun scopesOf(role: String): Set<String> {
+        val scopes = HashSet<String>()
+        ds.connection.use { c ->
+            c.prepareStatement("SELECT scope FROM role_scopes WHERE role = ?").use { s ->
+                s.setString(1, role)
+                s.executeQuery().use { r ->
+                    while (r.next()) scopes.add(r.getString(1))
+                }
+            }
+        }
+        return scopes
+    }
+}
+
+val auth = Auth.builder(System.getenv("JWT_SECRET")).roles(SqlRoles(dataSource)).build()
+```
+
+### auth.users().rename
+
+`rename` normalizes the new name and keeps the id, so group memberships stay. A name another user holds throws `DuplicateUserException` and the row stays. Express counterpart: an `UPDATE users SET username = ?` behind a unique index.
+
+```java
+Auth auth = Auth.builder(System.getenv("JWT_SECRET")).build();
+AuthUser ann = auth.users().create("ann", "ann-password-1".toCharArray());
+auth.users().create("bob", "bob-password-1".toCharArray());
+AuthUser renamed = auth.users().rename(ann.getId(), "Annie");   // stored as "annie", same id
+try {
+    auth.users().rename(ann.getId(), "bob");
+} catch (DuplicateUserException e) {
+    // "bob" is taken and ann keeps "annie"; thrown from a route, auth.errors() answers 409 duplicate_user
+}
+```
+
+```kotlin
+val auth = Auth.builder(System.getenv("JWT_SECRET")).build()
+val ann = auth.users().create("ann", "ann-password-1".toCharArray())
+auth.users().create("bob", "bob-password-1".toCharArray())
+val renamed = auth.users().rename(ann.id!!, "Annie")
+println(renamed?.username)
+try {
+    auth.users().rename(ann.id!!, "bob")
+} catch (e: DuplicateUserException) {
+    println("taken: " + e.message)
+}
+```
+
+### .allowedAttributes and PATCH /auth/me
+
+Only the names given to `.allowedAttributes(...)` may be changed by a user through `PATCH /auth/me`; a string sets an attribute and `null` removes it. Any other name makes the whole request 400 and changes nothing. Express counterpart: `_.pick(req.body, ['displayName', 'locale'])` in a profile route (unlike `_.pick`, an unlisted name is refused with 400, not dropped).
+
+```java
+Auth auth = Auth.builder(System.getenv("JWT_SECRET"))
+    .allowedAttributes("displayName", "locale")   // the only attributes PATCH /auth/me may change
+    .build();
+app.use(auth);
+app.get("/hello", (req, res) -> {
+    AuthPrincipal p = auth.user(req);
+    String name = p.getAttributes().get("displayName");
+    res.send("hello " + (name != null ? name : p.getUsername()));
+});
+// PATCH /auth/me {"attributes":{"displayName":"Al","locale":null}} -> 200, displayName set, locale removed
+// PATCH /auth/me {"attributes":{"plan":"pro"}} -> 400 BAD_REQUEST, nothing changes
+```
+
+```kotlin
+val auth = Auth.builder(System.getenv("JWT_SECRET"))
+    .allowedAttributes("displayName", "locale")
+    .build()
+app.use(auth)
+app.get("/hello") { req, res ->
+    val p = auth.user(req)
+    res.send("hello " + (p.attributes["displayName"] ?: p.username))
+}
+// PATCH /auth/me {"attributes":{"displayName":"Al","locale":null}} -> 200
+// PATCH /auth/me {"attributes":{"plan":"pro"}} -> 400 BAD_REQUEST
+```
+
+### AuthTesting.apiKeyFor
+
+A test gets a real API key without the key endpoints. The key store must be on (`.apiKeys(store)`). Express counterpart: inserting a key row in a jest `beforeEach` and sending it with supertest.
+
+```java
+import com.snoworca.naruserve.utils.auth.Auth;
+import com.snoworca.naruserve.utils.auth.apikey.InMemoryApiKeyStore;
+import com.snoworca.naruserve.utils.auth.rbac.RolePolicy;
+import com.snoworca.naruserve.utils.auth.testing.AuthTesting;
+import com.snoworca.naruserve.utils.auth.user.AuthUser;
+
+Auth auth = Auth.builder(System.getenv("JWT_SECRET"))
+    .roles(RolePolicy.builder().role("reporter", "reports:read").build())
+    .apiKeys(new InMemoryApiKeyStore())   // keys must be on
+    .build();
+app.use(auth);
+app.get("/reports", auth.require("reports:read"), (req, res) -> res.send("reports"));
+AuthUser bot = auth.users().create("report-bot", "bot-password-1".toCharArray(), "reporter");
+String key = AuthTesting.apiKeyFor(auth, bot.getId(), "reports:read");
+// GET /reports with "Authorization: ApiKey " + key -> 200
+```
+
+```kotlin
+import com.snoworca.naruserve.utils.auth.Auth
+import com.snoworca.naruserve.utils.auth.apikey.InMemoryApiKeyStore
+import com.snoworca.naruserve.utils.auth.rbac.RolePolicy
+import com.snoworca.naruserve.utils.auth.testing.AuthTesting
+
+val auth = Auth.builder(System.getenv("JWT_SECRET"))
+    .roles(RolePolicy.builder().role("reporter", "reports:read").build())
+    .apiKeys(InMemoryApiKeyStore())
+    .build()
+app.use(auth)
+app.get("/reports", auth.require("reports:read")) { _, res -> res.send("reports") }
+val bot = auth.users().create("report-bot", "bot-password-1".toCharArray(), "reporter")
+val key = AuthTesting.apiKeyFor(auth, bot.id!!, "reports:read")
+// GET /reports with "Authorization: ApiKey $key" -> 200
+```
+
+### HashCost.fixed
+
+`HashCost.fixed(n)` hashes new passwords at exactly n iterations without calibrating, so every node writes the same cost (calibration measures each device). Below 50,000 it is a doctor FAIL in PROD. Express counterpart: a fixed `rounds` value in `bcrypt.hash(pw, rounds)`.
+
+```java
+Auth auth = Auth.builder(System.getenv("JWT_SECRET"))
+    .hashCost(HashCost.fixed(600_000))   // the same count on every node, no calibration
+    .build();
+AuthUser ann = auth.users().create("ann", "ann-password-1".toCharArray());
+AuthUser stored = auth.userStore().findById(ann.getId());
+// stored.getPasswordHash() starts with "pbkdf2-sha256$600000$"
+```
+
+```kotlin
+val cost = HashCost.fixed(600_000)
+val auth = Auth.builder(System.getenv("JWT_SECRET")).hashCost(cost).build()
+val ann = auth.users().create("ann", "ann-password-1".toCharArray())
+val stored = auth.userStore().findById(ann.id!!)?.passwordHash
+println("fixed=${cost.isFixed} iterations=${cost.iterations} " + stored?.startsWith("pbkdf2-sha256\$600000\$"))
 ```

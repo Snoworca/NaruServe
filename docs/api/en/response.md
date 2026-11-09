@@ -40,6 +40,8 @@ Header values use ISO-8859-1, one byte per character. Names must be HTTP tokens:
 | `file(File)` | File extension | res.sendFile | Range/conditional requests; no Content-Disposition |
 | `download(File, filename)` | File extension | res.download | Content-Disposition: attachment |
 | `end()` | — | res.end | No body |
+| `redirect([status,] url)` | — | `res.redirect([status,] url)` | Default `302` with `Location`; only 301, 302, 303, 307 and 308 |
+| `sendStatus(code)` | text/plain; charset=UTF-8 | `res.sendStatus(code)` | Status with its reason text; empty body for 204, 304 and HEAD |
 | `sse()` | text/event-stream | — | Return SseClient; see [SSE](sse.md) |
 | `abort(error)` | — | res.destroy | Abort connection; harmless after completion/abort |
 
@@ -150,18 +152,3 @@ app.get("/video") { req, res ->
 ```
 
 Express equivalent: fs.createReadStream(path).pipe(res).
-
-## Status only
-
-```java
-res.sendStatus(204);   // empty body
-res.sendStatus(404);   // Not Found
-```
-
-## Redirect
-
-res.redirect(url) defaults to 302. res.redirect(status, url) selects the status.
-
-```java
-res.redirect("/login");
-```

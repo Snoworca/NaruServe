@@ -1,8 +1,8 @@
 # Defaults and security
 
-[한국어](../defaults.md) | [English](defaults.md)
+[한국어](../defaults.md) | [API index](README.md)
 
-> **Version scope:** This page describes the 0.11.0 target checkout, not a Maven publication announcement.
+> **Version scope:** This page describes NaruServe 0.11.0, published on Maven Central (see [installation](README.md)).
 
 NaruServe starts with bounded inputs to control memory and thread use, including on low-memory Android 5.0 devices. No numeric limit accepts an unlimited value. Each setting has an upper bound; invalid values throw `IllegalArgumentException` with the setting name and allowed range. Increase limits explicitly within those bounds.
 
@@ -24,6 +24,7 @@ These are design defaults checked by JVM automated tests. They have not been val
 | `UploadFile.bytes()` | 8 MiB | Fixed | `IllegalStateException` | Use `inputStream()`, `transferTo` or `save` for larger parts |
 | Total HTTP headers | 16 KiB | 1 MiB | `431` | `maxHeaderSize` |
 | One HTTP header line | 8190 B | Buffer-dependent | `431` | TinyHttpd input buffer minus two bytes; the adapter sets the buffer to `max(8192, maxRequestLineLength + 2)`, so only increasing `maxRequestLineLength` above 8190 increases this limit. `maxHeaderSize` does not change it |
+| Header count | 100 | 10000 | `431` | `maxHeaderCount` |
 | Request line | 8190 B | 65534 B | `414` | `maxRequestLineLength` |
 | WebSocket message | 1 MiB | 16 MiB | Close `1009` | `app.webSocket(o -> o.maxMessageSize(bytes))`; applies to each frame and the assembled fragmented message |
 | WebSocket send queue per connection | 1 MiB | 64 MiB | Close `1008` | `app.webSocket(o -> o.sendQueueSize(bytes))`; drops the overflowing message and queued messages, closes with reason `send queue overflow`, and returns normally |
