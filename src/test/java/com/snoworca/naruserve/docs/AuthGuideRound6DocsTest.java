@@ -95,7 +95,7 @@ public class AuthGuideRound6DocsTest {
             {"비밀번호 없는 관리자 `.user(...)`", "A password-less admin `.user(...)`"},
             {"파일 키 없는 파일 저장소", "A file store without a file key"},
             {"옛 `trustProxy(true)`", "Legacy `trustProxy(true)`"},
-            {"마지막 auth 오류 레이어가 없음", "No final auth error layer"}};
+            {"마지막 오류 층이 없음(앞선 층이", "No final error layer (an app exception no earlier layer"}};
         for (String f : GUIDES) {
             String doc = read(f);
             int at = doc.indexOf(en(f) ? "| What DEV relaxes (the whole list) | PROD |" : "| DEV가 완화하는 것(전부) | PROD |");
@@ -104,6 +104,8 @@ public class AuthGuideRound6DocsTest {
             int body = 0;
             while (lines[2 + body].startsWith("|")) {
                 has(f, lines[2 + body], rows[body][en(f) ? 1 : 0]);
+                // the Korean rows say "층" for a layer, never "레이어"
+                assertFalse(f + ": mixed layer term in " + lines[2 + body], !en(f) && lines[2 + body].contains("레이어"));
                 body++;
             }
             assertTrue(f + " has " + body + " DEV rows", body == rows.length);
