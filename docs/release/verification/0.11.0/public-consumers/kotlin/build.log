@@ -1,0 +1,33 @@
+Downloading https://services.gradle.org/distributions/gradle-8.14.3-bin.zip
+.............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%..............100%
+
+Welcome to Gradle 8.14.3!
+
+Here are the highlights of this release:
+ - Java 24 support
+ - GraalVM Native Image toolchain selection
+ - Enhancements to test reporting
+ - Build Authoring improvements
+
+For more details see https://docs.gradle.org/8.14.3/release-notes.html
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :clean
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :processResources NO-SOURCE
+> Task :consumerArtifactReport
+> Task :compileKotlin
+> Task :compileJava NO-SOURCE
+> Task :classes UP-TO-DATE
+
+> Task :run
+2026-11-09T14:09:44.428+0900 INFO GET /API/files/a%2Fb/c 200 20ms in=0 out=11 rid=3107cd0b3e35cc6d
+2026-11-09T14:09:44.432+0900 INFO GET /api/files 200 0ms in=0 out=2 rid=c17fbc4022096fa8
+2026-11-09T14:09:44.439+0900 INFO POST /typed 200 6ms in=26 out=14 rid=fe6b430b2ea2ce30
+2026-11-09T14:09:44.440+0900 INFO GET /later 200 0ms in=0 out=5 rid=49bd0807fb955ede
+2026-11-09T14:09:44.441+0900 INFO POST /retained 202 0ms in=0 out=3 rid=90d8cccf2ddfed42
+{"javaVersion":"1.8.0_504","javaHome":"/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/jre","kotlinVersion":"2.2.0","checks":["published Kotlin reified body metadata","mounted Router named wildcard and decoded segment list","typed List\u003cString\u003e and nullable String? absent capture","three-argument Middleware","getAsync returned Deferred and late HTTP response","typed generic Gson List\u003cPayload\u003e","first typed body read after wire202 with pending Deferred and cache identity"],"passed":true}
+
+BUILD SUCCESSFUL in 17s
+4 actionable tasks: 4 executed

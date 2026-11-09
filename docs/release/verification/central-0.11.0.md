@@ -15,6 +15,14 @@ Status: **PUBLISHED_AND_PUBLICLY_VERIFIED**. Central published deployment `2557e
 
 The signing key is the one of 0.10.0 (fingerprint ending `F5B75792328DC16B`). No private key, passphrase or credential is part of this record.
 
-Not done for this release: fresh public consumer builds (Java, Kotlin, Android) like those of 0.10.0, an independent publication review, and any Android device or emulator run.
+## After publication
+
+| Check | Evidence and result |
+|---|---|
+| Fresh public consumers | [Java 8, Kotlin and Android minSdk 21 consumers](0.11.0/public-consumers/) built with separate empty Gradle homes, `-PpublicConsumer=true --refresh-dependencies`, Maven Central only for NaruServe. Java and Kotlin ran on actual Java 8u504 (6 and 7 runtime checks passed); the Android release APK passed the manifest, service-provider, R8 and notice inspection. All 15 resolved NaruServe artifacts (4, 5 and 6) equal the signed manifest. |
+| Independent publication review | One reviewer, read-only, round 1: PASS on all eight items. It downloaded the 50 primaries again (0 mismatches), checked their published `.sha1` and `.md5`, matched the bundle, verified all 50 signatures against the [0.10.0 public certificate](0.10.0/public-signing-key.asc) with a tampered byte rejected, and checked the tag, the POM edges, the consumer proofs and the absence of key material. It noted that the `naruserve-android` sources and javadoc JARs are the same placeholder JAR. |
+| GitHub release | [v0.11.0](https://github.com/Snoworca/NaruServe/releases/tag/v0.11.0) on the pushed tag, with the ten main artifacts, their signatures, `SHA256SUMS` and `LICENSE`; every artifact equals the signed manifest. |
+
+Not done: any Android device or emulator run, and rendered Kotlin or Android API documentation.
 
 Public coordinates: `com.snoworca.naruserve:naruserve:0.11.0`; [POM](https://repo.maven.apache.org/maven2/com/snoworca/naruserve/naruserve/0.11.0/naruserve-0.11.0.pom).
