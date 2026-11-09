@@ -28,9 +28,16 @@ public final class WaveSevenDocsTest {
 
     private static final String MARKER = "(미확정)";
 
-    /** The 426 answer over TinyHttpd carries both headers since TinyHttpd FR-HTTP-002 (FR-WS-004 AC-3). */
+    /**
+     * The 426 answer over TinyHttpd carries both headers since TinyHttpd FR-HTTP-002 (FR-WS-004 AC-3), stated in
+     * Korean in websocket.md (OPS-DX-005 AC-4) and in English in en/websocket.md.
+     */
     static final String TINYHTTPD_426_PHRASE =
-            "over the TinyHttpd adapter the `426` answer carries `Upgrade: websocket` and `Connection: Upgrade`";
+            "코어와 TinyHttpd 어댑터 모두 `Upgrade: websocket`과 `Connection: Upgrade` 헤더";
+
+    /** The English statement of {@link #TINYHTTPD_426_PHRASE} in en/websocket.md. */
+    static final String TINYHTTPD_426_PHRASE_EN =
+            "The core and TinyHttpd adapter send `Upgrade: websocket`, `Connection: Upgrade`";
 
     /** The retired limitation wording of the 426 answer; it must not come back. */
     static final String TINYHTTPD_426_OLD_PHRASE = "but not `Connection: Upgrade`";
@@ -122,6 +129,7 @@ public final class WaveSevenDocsTest {
     public void sdsAc12_FR_WS_004_AC3_websocketMdStatesBothHeadersOfTheTinyHttpd426() throws IOException {
         String ws = doc("websocket.md");
         contains("websocket.md", ws, TINYHTTPD_426_PHRASE);
+        contains("en/websocket.md", doc("en/websocket.md"), TINYHTTPD_426_PHRASE_EN);
         assertFalse("websocket.md still names the retired 426 limitation", ws.contains(TINYHTTPD_426_OLD_PHRASE));
         assertFalse("the TinyHttpd limits list still holds the 426 item", ws.contains("`426` 응답에 `Connection: Upgrade`가 실리지 않습니다"));
     }

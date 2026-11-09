@@ -110,7 +110,7 @@ public final class DocsExamplesCompileTest {
             skip("request.md", "User user = req.body(User.class);   // 한 번 읽고",
                     "app-defined type `User` (the block also calls the app's `service`)"),
             skip("request.md", "app.use((req, res, next) -> {",
-                    "app-defined type `User` (the block also calls the app's `authenticate`)"),
+                    "app-defined type `User` and app-defined variable `sessions`"),
             skip("request.md", "app.get(\"/users\", (req, res) -> {", "app-defined type `UserService`"),
             skip("response.md", "res.status(201).header(\"X-Request-ID\", id).json(created);",
                     "app-defined variables `id` and `created` (the block sends the app's `created` value)"),

@@ -2,7 +2,7 @@
 
 [한국어](../request.md) | [API index](README.md)
 
-Request corresponds to Express's req. Use methods such as `req.param("id")` rather than properties such as req.params.id. Keep Request within its owned request lifetime. Saved callbacks may resume later; work using it after an early response needs a returned pending Deferred lease. Response completion alone does not guarantee such ownership. Examples are API fragments with application-defined DTOs and services.
+Request corresponds to Express's req. Use methods such as `req.param("id")` rather than properties such as req.params.id. Use Request only while the request is alive. To read the body or uploads after an early response, return an unsettled `Deferred` from `getAsync`, `methodAsync` or `useAsync`. A finished response alone does not keep the request alive (see [Deferred ownership](#deferred-ownership)). Examples are API fragments with application-defined DTOs and services.
 
 ## Request information
 
@@ -173,7 +173,7 @@ Browsers send only cookie names and values. HttpOnly, Secure, SameSite and other
 
 ## Request attributes
 
-Use attributes to pass middleware data, instead of Express's req.user or res.locals.user.
+Use attributes to pass middleware data, instead of Express's req.user or res.locals.user. With [auth](auth.md) attached, read the signed-in user with `auth.user(req)`.
 
 | Method | Purpose |
 |---|---|
@@ -183,7 +183,7 @@ Use attributes to pass middleware data, instead of Express's req.user or res.loc
 
 ```java
 app.use((req, res, next) -> {
-    req.attribute("user", auth.authenticate(req.header("Authorization")));
+    req.attribute("user", sessions.userFor(req.header("Authorization")));   // sessions: an app service
     next.run();
 });
 

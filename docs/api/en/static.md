@@ -2,7 +2,7 @@
 
 [한국어](../static.md) | [API index](README.md)
 
-> **Version scope:** This page describes the 0.11.0 target checkout, not a Maven publication announcement.
+> **Version scope:** This page describes NaruServe 0.11.0, published on Maven Central (see [installation](README.md)).
 
 ## staticFiles
 

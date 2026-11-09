@@ -1,8 +1,8 @@
 # Servlet 모듈 (`NaruServe-servlet`)
 
-[한국어](servlet.md) | [English](en/servlet.md)
+[English](en/servlet.md) | [문서 목록](README.md)
 
-> **문서 버전:** NaruServe 0.11.0 기준입니다. 좌표와 저장소 가용성에 따른 소스 빌드는 [설치 안내](README.md)를 참고하세요.
+> **문서 버전:** NaruServe 0.11.0 기준입니다. 좌표는 [설치 안내](README.md)를 참고하세요.
 
 `NaruServe-servlet`은 NaruServe 앱을 Tomcat, Jetty 같은 Servlet 컨테이너(WAS) 위에서 실행하는 어댑터입니다. 내장 HTTP 엔진 대신 컨테이너가 연결을 받고, 라우트·미들웨어·`req`/`res` 코드는 **그대로** 씁니다.
 
@@ -99,7 +99,7 @@ Express에는 서블릿 컨테이너에 앱을 끼워 넣는 기능이 없고, �
 | SSE 강제 종료 | 종료 기한에 소켓을 닫음 | 종료 기한에 `AsyncContext.complete()`. 막힌 쓰기가 풀리는 시점은 컨테이너가 정함 |
 | WebSocket | 내장 | 이 어댑터에서는 지원하지 않음. `app.ws` 라우트는 `501` |
 | 응답 헤더 순서 | 쓴 순서 | 컨테이너가 정함 |
-| 스레드 총량 | 452개(D-416의 451에 keeper 1) | 적용하지 않음 |
+| 스레드 총량 | 452개(설계값 451에 keeper 1) | 적용하지 않음 |
 | 확인한 컨테이너 | — | Jetty 9.4.58 / Servlet 3.1만 |
 
 ## 포트와 시작·종료
@@ -136,7 +136,7 @@ Express에는 서블릿 컨테이너에 앱을 끼워 넣는 기능이 없고, �
 
 ## 스레드
 
-내장 엔진의 스레드 총량 452개(D-416의 451에 `naruserve-keeper` 1)는 Servlet 어댑터에 적용되지 않습니다. 이 어댑터의 스레드는 컨테이너의 스레드에 SSE 스레드 최대 `maxSseStreams`개를 더한 것입니다.
+내장 엔진의 스레드 총량 452개(설계값 451에 `naruserve-keeper` 1)는 Servlet 어댑터에 적용되지 않습니다. 이 어댑터의 스레드는 컨테이너의 스레드에 SSE 스레드 최대 `maxSseStreams`개를 더한 것입니다.
 
 ## 경로 처리
 

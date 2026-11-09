@@ -38,6 +38,8 @@ res.status(201).header("X-Request-ID", id).json(created);
 | `file(File)` | 확장자로 결정 | `res.sendFile(path)` | 파일. Range·조건부 요청 지원. Express `res.sendFile`처럼 `Content-Disposition`을 보내지 않습니다 |
 | `download(File, filename)` | 확장자로 결정 | `res.download(path, name)` | `Content-Disposition: attachment` |
 | `end()` | — | `res.end()` | 본문 없이 끝냅니다. |
+| `redirect([status,] url)` | — | `res.redirect([status,] url)` | 기본 `302`와 `Location`. 301·302·303·307·308만 허용 |
+| `sendStatus(code)` | `text/plain; charset=UTF-8` | `res.sendStatus(code)` | 상태와 그 설명 텍스트. 204·304·HEAD는 빈 본문 |
 | `sse()` | `text/event-stream` | — | SSE 스트림 시작. `SseClient` 반환. [SSE](sse.md) |
 | `abort(error)` | — | `res.destroy()` | 응답을 비정상 종료합니다(연결 끊기). 이미 끝났거나 끊긴 응답에서는 아무것도 하지 않습니다. |
 
@@ -149,18 +151,3 @@ app.get("/video") { req, res ->
 ```
 
 Express: `fs.createReadStream(path).pipe(res)`.
-
-## 상태 코드만 보내기
-
-```java
-res.sendStatus(204);   // empty body
-res.sendStatus(404);   // Not Found
-```
-
-## 리다이렉트
-
-`res.redirect(url)`은 기본 302 응답이며, `res.redirect(status, url)`로 상태를 지정합니다.
-
-```java
-res.redirect("/login");
-```

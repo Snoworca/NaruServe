@@ -82,7 +82,7 @@ Ordered error handlers do not suppress the original failure record. An error who
 
 Access logging and request cleanup are separate. A returned pending `Deferred` can keep input/uploads alive after the response's one access line has been written; settlement does not add another line. Existing access-log privacy exclusions remain unchanged. Exception messages and Java stack details in application logs/default error HTML are not an automatic scrubber for application-supplied secrets.
 
-The module coordinates and common HTTP behavior below target NaruServe 0.11.0. See [installation](README.md) for availability and source builds.
+The module coordinates and common HTTP behavior below target NaruServe 0.11.0. See [installation](README.md) to add a module.
 
 ## Application logger
 

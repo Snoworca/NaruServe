@@ -1,6 +1,6 @@
 # Kotlin
 
-[한국어](kotlin.md) | [English](en/kotlin.md)
+[English](en/kotlin.md) | [문서 목록](README.md)
 
 NaruServe는 Java로 작성되었지만 Kotlin에서 별도 DSL 없이 씁니다. 콜백이 모두 Java 함수형 인터페이스(`@FunctionalInterface`)라서 Kotlin 람다가 그대로 들어갑니다.
 
@@ -187,7 +187,7 @@ app.post("/users") { req, res ->
 
 새 Java 함수형 인터페이스도 Kotlin SAM 변환을 지원합니다. `AsyncRouteHandler(req, res, next) -> Deferred`, `ErrorMiddleware(error, req, res, next)`, `ParamHandler(req, res, next, values, name)`, `Deferred.FailureHandler(error)`입니다. 세 인자 HTTP 라우트 콜백은 후행 람다용 고정 인자 오버로드를 가지며 기존 두 인자 콜백과 명시 콜백 배열도 유지합니다. 기존 `routing.Router`와 이름이 겹치지 않도록 공개 Router를 명시하거나 import하세요.
 
-아래 구성은 선택 `:tab`이 있는 Router를 마운트하고 **첫 JSON 본문 읽기보다 먼저202를 보내는** 작업을 보여 줍니다. POST `/work`에 JSON `"hello"`를 보내면 반환한 pending 결과가 요청을 보유하는 동안 타입 지정 String으로 읽습니다. 마지막 요청 접근 뒤 resolve하며 다른 응답이나 next를 자동 실행하지 않습니다. Thread는 작은 설명용 예제입니다. 실제 부하에는 앱이 관리하는 제한된 executor와 명시 취소 정책을 사용하세요.
+아래 구성은 선택 `:tab`이 있는 Router를 마운트하고 **첫 JSON 본문 읽기보다 먼저 202를 보내는** 작업을 보여 줍니다. POST `/work`에 JSON `"hello"`를 보내면 반환한 pending 결과가 요청을 보유하는 동안 타입 지정 String으로 읽습니다. 마지막 요청 접근 뒤 resolve하며 다른 응답이나 next를 자동 실행하지 않습니다. Thread는 작은 설명용 예제입니다. 실제 부하에는 앱이 관리하는 제한된 executor와 명시 취소 정책을 사용하세요.
 
 ```kotlin
 val api = com.snoworca.naruserve.Router.create(true)

@@ -2,7 +2,7 @@
 
 [한국어](../express-migration.md) | [API index](README.md)
 
-The **common HTTP routing profile in the 0.11.0 checkout** provides common Express5 string paths, ordering, Router, param, next and error flow through Java APIs. It does not claim all of Express, the Node runtime, every middleware package or JavaScript regex compatibility. Typed bodies, text/plain string responses and retained WS/SSE/file/security extensions remain NaruServe contracts. See [installation](README.md) for current artifacts.
+The **common HTTP routing profile of 0.11.0** provides common Express 5 string paths, ordering, Router, param, next and error flow through Java APIs. It does not claim all of Express, the Node runtime, every middleware package or JavaScript regex compatibility. Typed bodies, text/plain string responses and retained WS/SSE/file/security extensions remain NaruServe contracts. See [installation](README.md) to add the dependency.
 
 ## API mapping
 
@@ -12,6 +12,7 @@ The **common HTTP routing profile in the 0.11.0 checkout** provides common Expre
 |---|---|---|
 | `express()` | `RestApp.create()` | Default TinyHttpd 3.1.1 RAW, Gson 2.14.0 and console logger |
 | `app.listen(port, callback)` | `app.listen(port)` / `RestApp.start(port, routes)` | Returns after binding, failure throws; default 127.0.0.1 |
+| `passport`, `express-jwt`, `express-session` login | `Auth.builder(secret)...build()`, then `app.use(auth)` | Built-in login, refresh, roles and API keys; attach without a path. See [auth](auth.md) |
 | `server.close()` | `app.shutdown(timeout, unit)` | Active work/resource cleanup and deadline |
 | `app.get/post/...` | Same-named two-argument handler or three-argument Middleware callbacks | Vararg callbacks and Kotlin fixed-arity overloads |
 | `app.route(path)` | `app.route(path)` | One Route identity/position created at the call |
@@ -20,7 +21,7 @@ The **common HTTP routing profile in the 0.11.0 checkout** provides common Expre
 | `app.param(name, callback)` | `app.param(name, ParamHandler)` / `router.param` | Original decoded captures arrive as List<String> |
 | `app.all`/extended-method registration | Register tokens with `app.method("COPY", path, callbacks...)` | `Method.any()` is the retained seven-method set, not every method |
 | Path array | Nested Object[]/List of strings, Pattern and RegexPathPattern | Validate the whole tree, then select first match |
-| Express5 `/:id`, `/*parts`, `{/:id}` | Same string forms | Raw match followed by one decode of participating captures |
+| Express 5 `/:id`, `/*parts`, `{/:id}` | Same string forms | Raw match followed by one decode of participating captures |
 | JavaScript RegExp | Java Pattern / RegexPathPattern | Search matching and Java flags; no ECMAScript/lastIndex emulation |
 | `app.use('/api', mw)` | `app.use("/api", mw)` | path/url trimmed inside callback |
 | `next()`, `next(err)` | `next.run()`, `next.error(err)` | Java rejects null errors |
@@ -45,7 +46,7 @@ The **common HTTP routing profile in the 0.11.0 checkout** provides common Expre
 | `res.send('<p>hi</p>')` | `res.html("<p>hi</p>")` | HTML is explicit |
 | Object/list/number/boolean send | `send(Object)` / `json(Object)` | Null send is empty; json(null) sends JSON null |
 | `status`, `end`, `set`, `headersSent` | `status`, `end`, `header`, `isCommitted` | Retained CR/LF/framing safety |
-| `sendStatus`, `redirect`, `type`, `location` | Same-named conveniences | Default redirect302; choose explicit status |
+| `sendStatus`, `redirect`, `type`, `location` | Same-named conveniences | Default redirect `302`; choose explicit status |
 | `cookie`, `clearCookie` | Same names | Deletion must match original Path/Domain |
 | `sendFile`, `download`, stream pipe | `file`, `download`, `stream` | java.io.File/InputStream ownership/safety rules |
 
@@ -133,7 +134,7 @@ app.use(auth);           // Second. No path: a path prefix throws IllegalArgumen
 
 ## Example: migrating an Express app
 
-These are configuration fragments. The application supplies Todo, TodoService, todos, auth and imports. [Runnable examples](../../../examples/README.md) provide full entry points and real services. Also note Java/Kotlin body-null handling differences.
+These are configuration fragments. The application supplies Todo, TodoService, todos and imports. [Runnable examples](../../../examples/README.md) provide full entry points and real services. Also note Java/Kotlin body-null handling differences.
 
 ```javascript
 const express = require('express');

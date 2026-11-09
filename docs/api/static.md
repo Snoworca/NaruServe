@@ -2,7 +2,7 @@
 
 [English](en/static.md) | [문서 목록](README.md)
 
-> **버전 범위:** 이 문서는 0.11.0 대상 체크아웃의 동작을 설명하며 Maven 배포 완료를 뜻하지 않습니다.
+> **버전 범위:** NaruServe 0.11.0 기준입니다. 0.11.0은 Maven Central에 공개되어 있습니다([설치 안내](README.md)).
 
 ## staticFiles
 

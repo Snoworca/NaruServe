@@ -2,7 +2,7 @@
 
 [한국어](../middleware.md) | [API index](README.md)
 
-This is the common HTTP stack in the 0.11.0 checkout. Callbacks, responses and errors work on Java 8/API 21 without a mandatory Promise or coroutine library.
+This is the common HTTP stack of 0.11.0. Callbacks, responses and errors work on Java 8/API 21 without a mandatory Promise or coroutine library.
 
 ## Middleware
 
@@ -33,7 +33,7 @@ public interface Next {
 `get(path, Middleware...)` and fixed-arity overloads also support Kotlin trailing lambdas. Null/empty callback arrays are rejected before registration. A Route's `use` applies across its methods but keeps its registration position. It does not automatically run after an earlier handler ends the request.
 
 ```java
-Middleware adminOnly = (req, res, next) -> next.run();   // placeholder adminOnly middleware for this example
+Middleware adminOnly = (req, res, next) -> next.run();   // the real check is the adminOnly of "Request ID and authentication" below
 
 app.route("/api/admin")
    .use(checkAuth)

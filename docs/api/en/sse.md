@@ -91,7 +91,7 @@ app.get("/api/ticks") { req, res ->
 
 ### Late start and request ownership
 
-In the 0.11.0 common HTTP checkout, a handler may return with an unfinished response and start `res.sse()` in a later callback. No empty response is sent at the initial return. Late startup still obeys single commit and `maxSseStreams`. A capacity refusal before admission throws `HttpException(503)` without starting the adapter response. During initial dispatch it follows the ordered error path with default HTML unless handled. If startup fails after the initial callback chain returned, the response can instead abort; a late SSE start does not guarantee a fresh 503 body.
+In 0.11.0 common HTTP, a handler may return with an unfinished response and start `res.sse()` in a later callback. No empty response is sent at the initial return. Late startup still obeys single commit and `maxSseStreams`. A capacity refusal before admission throws `HttpException(503)` without starting the adapter response. During initial dispatch it follows the ordered error path with default HTML unless handled. If startup fails after the initial callback chain returned, the response can instead abort; a late SSE start does not guarantee a fresh 503 body.
 
 Keep a returned pending `Deferred` if a producer must use request input/uploads after response completion. Resolving it does not close the SSE client or continue routing; call `client.close()` when the stream should end, and settle only after the last request-resource access. Cancellation/timeout/shutdown cannot reopen a client or input. A running drain keeps its slot until the callback actually exits, even after forced cancellation. The first SSE termination cause remains unchanged; see [logging](logging.md).
 

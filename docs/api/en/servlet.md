@@ -1,8 +1,8 @@
 # Servlet module (`NaruServe-servlet`)
 
-[한국어](../servlet.md) | [English](servlet.md)
+[한국어](../servlet.md) | [API index](README.md)
 
-> **Documentation version:** This page targets NaruServe 0.11.0. See [installation](README.md) for coordinates and the source-build fallback when that version is unavailable.
+> **Documentation version:** This page targets NaruServe 0.11.0. See [installation](README.md) for coordinates.
 
 `NaruServe-servlet` runs a NaruServe application inside a Servlet container such as Tomcat or Jetty. The container accepts connections instead of the embedded engine; route, middleware and `req`/`res` code remain the same.
 

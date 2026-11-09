@@ -2,7 +2,7 @@
 
 [English](en/middleware.md) | [문서 목록](README.md)
 
-0.11.0 체크아웃의 일반 HTTP 스택입니다. 콜백·응답·오류를 Java 8/API 21에서 사용하며 Promise·Coroutine 라이브러리를 필수로 요구하지 않습니다.
+0.11.0의 일반 HTTP 스택입니다. 콜백·응답·오류를 Java 8/API 21에서 사용하며 Promise·Coroutine 라이브러리를 필수로 요구하지 않습니다.
 
 ## 미들웨어
 
@@ -33,7 +33,7 @@ public interface Next {
 `get(path, Middleware...)`와 고정 인자 오버로드는 Kotlin 후행 람다도 받습니다. null·빈 콜백 배열은 등록 전에 거부합니다. Route 안의 `use`는 모든 메서드에 적용되는 콜백이지만 등록 순서는 그대로입니다. 앞 핸들러가 끝내면 뒤에 붙인 `use`가 자동으로 실행되지 않습니다.
 
 ```java
-Middleware adminOnly = (req, res, next) -> next.run();   // 위 예제의 adminOnly 자리
+Middleware adminOnly = (req, res, next) -> next.run();   // 실제 검사는 아래 "요청 ID와 인증"의 adminOnly
 
 app.route("/api/admin")
    .use(checkAuth)
@@ -103,9 +103,9 @@ app.use(checkAuth);
 
 - `allowedOrigins`는 경로·끝 슬래시 없는 정확한 `scheme://host[:port]` 출처 목록입니다(`https://app.example`, `capacitor://localhost`). 기본은 없음이며 `*`는 그런 출처 모두, 문자열 `null`은 opaque origin을 허용합니다.
 - 기본 메서드는 GET, HEAD, POST입니다. `allowedMethods`는 집합을 바꾸고 `allowedHeaders`는 대소문자를 구분하지 않는 허용 목록(기본 빈 목록)을 바꿉니다.
-- `credentials` 기본은 false입니다. `credentials(true)`와 `*`를 함께 쓰면 등록 오류입니다. `maxAge`는 0 이상의 초이며 기본0은 캐시 헤더를 생략합니다.
+- `credentials` 기본은 false입니다. `credentials(true)`와 `*`를 함께 쓰면 등록 오류입니다. `maxAge`는 0 이상의 초이며 기본 0은 캐시 헤더를 생략합니다.
 - 허용 origin에는 `Access-Control-Allow-Origin`을, credentials를 켰으면 `Access-Control-Allow-Credentials: true`를 붙입니다. 보통 요청의 비허용 origin은 grant 없이 계속합니다. CORS 자체가 인증은 아닙니다.
-- `Origin`과 `Access-Control-Request-Method`가 있는 OPTIONS는 preflight입니다. 허용 메서드·헤더이면 본문 없는204로 종료하고 인증 콜백은 실행하지 않습니다. 잘못되거나 비허용이면403입니다. 일반 자동 OPTIONS200과 구분하세요.
+- `Origin`과 `Access-Control-Request-Method`가 있는 OPTIONS는 preflight입니다. 허용 메서드·헤더이면 본문 없는 204로 종료하고 인증 콜백은 실행하지 않습니다. 잘못되거나 비허용이면 403입니다. 일반 자동 OPTIONS `200`과 구분하세요.
 - Origin이 없는 요청도 `Vary: Origin`을 설정합니다. 보통 응답의 기존 Vary(`*` 포함)는 합치며 preflight는 메서드·요청 헤더 차원도 더합니다.
 - **이 명시적 CORS 확장의 오류 응답**은 앱의 일반 헤더를 지우고 프레임워크가 추적한 CORS grant·Vary만 복원합니다. credentials도 유지하며 앱/`HttpException`의 헤더가 grant를 덮어쓰지 못합니다. CORS를 설치하지 않은 일반 HTTP 오류는 보통 앱 헤더를 유지합니다.
 - 옵션은 복사하며 `cors`는 listen 전에 설정합니다. WS Upgrade에는 이 정책 대신 `app.webSocket(o -> o.allowedOrigins(...))`를 씁니다.
@@ -142,7 +142,7 @@ app.group("/api", api -> {
 
 ### 실행 순서
 
-일반 HTTP의 전역/prefix `use`, Route, 마운트 Router, 정적 파일, 오류 레이어는 **하나의 등록 순서**를 따릅니다. 뒤에 등록한 전역 미들웨어를 앞으로 옮기지 않습니다. 앞 레이어가 계속할 때만 다음으로 갑니다. 정적 파일 미스와 전체 스택 종료의404도 이 순서를 따릅니다.
+일반 HTTP의 전역/prefix `use`, Route, 마운트 Router, 정적 파일, 오류 레이어는 **하나의 등록 순서**를 따릅니다. 뒤에 등록한 전역 미들웨어를 앞으로 옮기지 않습니다. 앞 레이어가 계속할 때만 다음으로 갑니다. 정적 파일 미스와 전체 스택 종료의 404도 이 순서를 따릅니다.
 
 ```java
 Middleware requestId = (req, res, next) -> next.run();   // 요청마다 ID를 붙이는 전역 미들웨어라고 합시다
@@ -174,7 +174,7 @@ app.use((req, res, next) -> {
 
 같은 라우터에서 다음으로 진행한 뒤의 캡처를 무조건 옛 값으로 되돌리지 않습니다. 자식 마운트를 나갈 때는 부모의 path/url/baseUrl/params 뷰를 복원합니다. `next.route()`는 경로를 바꾸거나 특정 라우트를 이름으로 선택하는 API가 아닙니다.
 
-응답도 next도 없이 반환하면 **경고 후 자동 empty200으로 끝내지 않고 대기**합니다. 저장한 콜백에서 나중에 next·send·stream·SSE를 시작할 수 있습니다. 앱이 완결·시간 제한·취소 경로를 책임지세요.
+응답도 next도 없이 반환하면 **경고 후 자동 빈 `200`으로 끝내지 않고 대기**합니다. 저장한 콜백에서 나중에 next·send·stream·SSE를 시작할 수 있습니다. 앱이 완결·시간 제한·취소 경로를 책임지세요.
 
 ### WebSocket과 미들웨어
 
@@ -221,13 +221,13 @@ app.onError((error, req, res) -> {
 });
 ```
 
-`onError`는 listen 전에 설정하며 **등록된 위치**의 오류 레이어로 작동합니다. 이미 응답했으면 뒤 오류 핸들러를 자동 실행하지 않고, 응답하지 않으면 같은 오류를 계속 전달합니다. 콜백이 새 예외를 던지면 뒤의 오류 레이어로 그 예외가 갑니다. 위 예제의 앱 로깅은 앱이 추가한 로깅이며 프레임워크의 한 번500 로깅과 별개입니다.
+`onError`는 listen 전에 설정하며 **등록된 위치**의 오류 레이어로 작동합니다. 이미 응답했으면 뒤 오류 핸들러를 자동 실행하지 않고, 응답하지 않으면 같은 오류를 계속 전달합니다. 콜백이 새 예외를 던지면 뒤의 오류 레이어로 그 예외가 갑니다. 위 예제의 앱 로깅은 앱이 추가한 로깅이며 프레임워크의 한 번 500 로깅과 별개입니다.
 
 세 인자 `onError` 대신 네 인자 `ErrorMiddleware`를 `app.use((error, req, res, next) -> ...)` 또는 `app.use(path, errorMiddleware)`로 등록할 수 있습니다. `next.error(e)`는 전파/교체, `next.run()`은 정상 흐름 재개입니다. 이미 보낸 응답에 다른 오류 본문을 덧쓰지 않습니다. 늦은 오류는 로그·중단 경로로 가고 두 번째 commit을 하지 않습니다.
 
 ### 거부 응답 헤더
 
-`HttpException.status()`는400..599이고 `code()`는 기존 표준 코드 편의 값입니다. `UnsupportedMediaTypeException`은415 하위 타입입니다. 상태를 구분하지 않고 모두500으로 바꾸지 마세요. `withHeader(name, value)`는 같은 예외에 헤더를 추가하고 `headers()`는 순서 있는 읽기 전용 목록입니다.
+`HttpException.status()`는 400..599이고 `code()`는 기존 표준 코드 편의 값입니다. `UnsupportedMediaTypeException`은 415 하위 타입입니다. 상태를 구분하지 않고 모두 500으로 바꾸지 마세요. `withHeader(name, value)`는 같은 예외에 헤더를 추가하고 `headers()`는 순서 있는 읽기 전용 목록입니다.
 
 ```java
 app.get("/api/busy", (req, res) -> {
@@ -245,7 +245,7 @@ app.get("/api/busy") { req, res ->
 
 ### 표준 오류 형식
 
-일반 HTTP 기본은 **HTML**입니다. 404는 `Cannot METHOD /raw/path`, 오류는 `HttpException` 상태를, 그 외에는 이미 선택된 유효한400..599 응답 상태를, 모두 아니면500을 사용하고 Java 예외/stack trace를 HTML 이스케이프합니다. `Content-Type: text/html; charset=utf-8`, `Content-Security-Policy: default-src 'none'`, `X-Content-Type-Options: nosniff`와 UTF-8 바이트 길이를 보냅니다. HEAD는 같은 길이를 유지하고 본문을 보내지 않습니다. 기본 오류가 stack trace를 클라이언트에 노출할 수 있으므로 공개 서비스에서 내부 오류를 감추려면 앱 오류 핸들러로 안전한 응답을 직접 보내세요.
+일반 HTTP 기본은 **HTML**입니다. 404는 `Cannot METHOD /raw/path`, 오류는 `HttpException` 상태를, 그 외에는 이미 선택된 유효한 400..599 응답 상태를, 모두 아니면 500을 사용하고 Java 예외/stack trace를 HTML 이스케이프합니다. `Content-Type: text/html; charset=utf-8`, `Content-Security-Policy: default-src 'none'`, `X-Content-Type-Options: nosniff`와 UTF-8 바이트 길이를 보냅니다. HEAD는 같은 길이를 유지하고 본문을 보내지 않습니다. 기본 오류가 stack trace를 클라이언트에 노출할 수 있으므로 공개 서비스에서 내부 오류를 감추려면 앱 오류 핸들러로 안전한 응답을 직접 보내세요.
 
 다음 JSON은 **기존 표준 오류 확장 형식의 예**이며 일반 HTTP의 기본 응답 예가 아닙니다. pre-request 검증·수명주기 거부·보존된 WS/legacy 경로에서 이 형식이 남을 수 있습니다. `HttpException.code()`도 이 기본 HTML을 JSON으로 바꾸지 않습니다. 임의의 공개 표준 JSON 렌더러 API가 있다고 가정하지 말고 앱의 `onError`/`ErrorMiddleware`에서 `res.json(...)`을 명시하세요.
 
@@ -262,7 +262,7 @@ app.get("/api/busy") { req, res ->
 | 미처리 서버 예외 | 500 |
 | 앱 수명주기 거부 | 503 + `Connection: close`, 기존 오류 프로필 |
 
-전송 계층이 앱에 도달하기 전에 거부한 Host·프레이밍·과부하는 별도 평문/연결 종료 결과일 수 있습니다. 모든400을 위 HTML이나 앱 `onError`가 만들지는 않습니다. [기본값과 보안](defaults.md)
+전송 계층이 앱에 도달하기 전에 거부한 Host·프레이밍·과부하는 별도 평문/연결 종료 결과일 수 있습니다. 모든 400을 위 HTML이나 앱 `onError`가 만들지는 않습니다. [기본값과 보안](defaults.md)
 
 ## Deferred와 늦은 작업
 
@@ -283,7 +283,7 @@ resolve는 **next나 응답 종료를 자동 호출하지 않습니다**. produc
 
 ## 조기 응답 뒤 첫 본문 읽기
 
-POST /work에 JSON 문자열 "hello"를 보냅니다. 설명용 Thread는 조기202 뒤 본문을 처음 읽고 마지막 요청 접근 후 결정합니다. 실제 부하에서는 제한된 앱 관리 executor와 취소 정책을 쓰세요. 이미 보낸 응답의 rejection은 뒤 오류 처리로 넘기고 두 번째 JSON을 쓰지 않습니다.
+POST /work에 JSON 문자열 "hello"를 보냅니다. 설명용 Thread는 조기 202 뒤 본문을 처음 읽고 마지막 요청 접근 후 결정합니다. 실제 부하에서는 제한된 앱 관리 executor와 취소 정책을 쓰세요. 이미 보낸 응답의 rejection은 뒤 오류 처리로 넘기고 두 번째 JSON을 쓰지 않습니다.
 
 ```java
 app.methodAsync("POST", "/work", (request, response, next) -> {

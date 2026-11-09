@@ -4,7 +4,7 @@
 
 `Request`는 Express의 `req`에 해당합니다. Express는 `req.params.id`처럼 속성으로 읽지만, NaruServe는 `req.param("id")`처럼 메서드로 읽습니다.
 
-`Request`는 보유 중인 요청 수명 안에서만 씁니다. 저장한 콜백으로 나중에 재개할 수 있지만 조기 응답 뒤에도 요청을 쓰는 작업은 반환한 pending Deferred lease가 필요합니다. 응답 완료만으로 그런 보유가 보장되지는 않습니다.
+`Request`는 요청이 살아 있는 동안만 쓰세요. 응답을 먼저 보낸 뒤에도 본문이나 업로드를 읽어야 하면 `getAsync`·`methodAsync`·`useAsync`에서 아직 결정하지 않은 `Deferred`를 돌려주세요. 응답을 다 보냈다고 요청이 계속 살아 있다는 보장은 없습니다([Deferred의 요청 보유](#deferred의-요청-보유)).
 
 ## 요청 정보
 
@@ -184,16 +184,17 @@ if (session != null) {
 
 ## 요청 속성
 
-Express에서 `req.user = user`나 `res.locals.user = user`로 미들웨어끼리 값을 넘기던 것을 `attribute`로 합니다.
+Express에서 `req.user = user`나 `res.locals.user = user`로 미들웨어끼리 값을 넘기던 것을 `attribute`로 합니다. 로그인한 사용자는 [auth](auth.md)를 붙이면 `auth.user(req)`로 읽습니다.
 
 | 메서드 | 설명 |
 |---|---|
 | `attribute(key, value)` | 값 저장. `value`가 `null`이면 지웁니다 |
 | `attributeAs(key, Class<T> type)` | 값 읽기. 없으면 `null` |
+| `removeAttribute(key)` | 명시적으로 지웁니다. 없는 키도 괜찮습니다 |
 
 ```java
 app.use((req, res, next) -> {
-    req.attribute("user", auth.authenticate(req.header("Authorization")));
+    req.attribute("user", sessions.userFor(req.header("Authorization")));   // sessions: 앱의 서비스
     next.run();
 });
 
@@ -260,7 +261,7 @@ String version = req.application().attributeAs("appVersion", String.class);
 
 `/api/users/a%2Fb?x=%2B`를 `/api`에 마운트한 안에서는 path가 `/users/a%2Fb`, url이 `/users/a%2Fb?x=%2B`, baseUrl이 `/api`, originalUrl이 `/api/users/a%2Fb?x=%2B`입니다. 매칭한 `:id`는 `a/b`이고 원래 rawPath는 `/api/users/a%2Fb`입니다. 접두사 미들웨어도 콜백 안에서 제거된 뷰를 보고 자식에서 나가면 부모 뷰를 복원합니다. 본문 캐시·속성·쿠키·서비스는 모두 같은 요청 객체입니다. 같은 라우터에서 계속한 뒤의 뷰를 일괄 옛 상태로 되돌리지 않습니다.
 
-캡처만 디코딩하므로 리터럴 `%ZZ`는 리터럴 경로와 맞을 수 있지만 `%ZZ`를 캡처하면400입니다. 경로 캡처는 +를 유지하고 쿼리 디코딩은 +를 공백으로 봅니다. 일반 HTTP 캡처에 인코딩된 슬래시가 들어갈 수 있습니다. 정적 파일 containment·WS 업그레이드 경로 제한·전송 Host/프레이밍 검증은 별도의 엄격한 경계입니다.
+캡처만 디코딩하므로 리터럴 `%ZZ`는 리터럴 경로와 맞을 수 있지만 `%ZZ`를 캡처하면 400입니다. 경로 캡처는 +를 유지하고 쿼리 디코딩은 +를 공백으로 봅니다. 일반 HTTP 캡처에 인코딩된 슬래시가 들어갈 수 있습니다. 정적 파일 containment·WS 업그레이드 경로 제한·전송 Host/프레이밍 검증은 별도의 엄격한 경계입니다.
 
 ## 파라미터 형태와 전처리
 
