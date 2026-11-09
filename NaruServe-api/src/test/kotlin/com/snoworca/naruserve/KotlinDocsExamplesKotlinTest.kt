@@ -495,6 +495,25 @@ class KotlinDocsExamplesKotlinTest {
         assertEquals("1", response.header("Retry-After"))
     }
 
+    // docs-example: middleware.md#4
+    @Test
+    fun `OPS-DX-004 AC-2 middleware md Capacitor origins get a preflight grant`() {
+        app.cors { cors ->
+            cors.allowedOrigins("capacitor://localhost", "https://localhost")
+                .allowedHeaders("Content-Type", "Authorization")
+                .credentials(true)
+        }
+        app.webSocket { ws -> ws.allowedOrigins("capacitor://localhost", "https://localhost") }
+
+        for (origin in listOf("capacitor://localhost", "https://localhost")) {
+            val r = send("OPTIONS", "/api/me", "Origin", origin, "Access-Control-Request-Method", "GET")
+            assertEquals(origin, 204, r.status())
+            assertEquals(origin, r.header("Access-Control-Allow-Origin"))
+        }
+        val other = send("OPTIONS", "/api/me", "Origin", "capacitor://localhost:8100", "Access-Control-Request-Method", "GET")
+        assertNull(other.header("Access-Control-Allow-Origin"))
+    }
+
     // docs-example: multipart.md#1
     // adapted: uploadDir is a temporary folder instead of File("./uploads"), so the test writes nothing to the module
     @Test

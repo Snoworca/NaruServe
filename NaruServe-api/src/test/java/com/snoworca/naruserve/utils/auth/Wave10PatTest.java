@@ -15,6 +15,7 @@ import com.snoworca.naruserve.spi.HttpAdapter;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.utils.auth.apikey.ApiKey;
 import com.snoworca.naruserve.utils.auth.apikey.ApiKeyPrefixCollisionException;
 import com.snoworca.naruserve.utils.auth.apikey.IssuedApiKey;
 import com.snoworca.naruserve.utils.auth.apikey.StoredApiKey;
@@ -1453,6 +1454,89 @@ public class Wave10PatTest {
         assertEquals(null, event.getRequestId());
         assertEquals(null, event.getSourceIp());
         assertFalse(event.getDetails().containsKey("apiKeyId"));
+    }
+
+    // IR-APIKEY-002 AC-9; FR-AUTH-009 AC-2, AC-3: revoke(req, keyId) audits the request's actor, id, IP and key
+    @Test
+    public void IR_APIKEY_002_AC9_revokeWithTheRequestAuditsItsContext() throws Exception {
+        f.attach = (a, app) -> {
+            a.install(app);
+            app.get("/facade/:id", (req, res) -> {
+                a.apiKeys().revoke(req, req.param("id"));
+                res.send(req.requestId());
+            });
+        };
+        start(b -> b);
+        IssuedApiKey actor = f.auth.apiKeys().issue(u1, "actor", null, "posts:read");
+        IssuedApiKey victim = f.auth.apiKeys().issue(u1, "victim", null, "posts:read");
+        audit.clear();
+        ClientResponse r = f.get("/facade/" + victim.getKey().getId(), "Authorization", "ApiKey " + actor.getPlainKey());
+        assertEquals(r.text(), 200, r.status());
+        AuditEvent event = only(AuditEvent.API_KEY_REVOKED);
+        assertEquals(victim.getKey().getId(), event.getDetails().get("revokedApiKeyId"));
+        assertEquals(u1, event.getTargetId());
+        assertEquals(u1, event.getActorId());
+        assertEquals(r.text(), event.getRequestId());
+        assertTrue(event.getSourceIp() != null);
+        assertEquals(actor.getKey().getId(), event.getDetails().get("apiKeyId"));
+        assertTrue(f.auth.apiKeys().list(u1).size() == 1);
+    }
+
+    // IR-APIKEY-002 AC-9; FR-AUTH-009 AC-2, AC-3: issue(req, ...) records the request's user as the issuer
+    @Test
+    public void IR_APIKEY_002_AC9_issueWithTheRequestRecordsTheIssuer() throws Exception {
+        f.attach = (a, app) -> {
+            a.install(app);
+            app.get("/issue", (req, res) -> {
+                a.apiKeys().issue(req, u1, "by-root", null, "posts:read");
+                res.send(req.requestId());
+            });
+        };
+        start(b -> b);
+        audit.clear();
+        ClientResponse r = f.get("/issue", "Authorization", bearer(root));
+        assertEquals(r.text(), 200, r.status());
+        AuditEvent event = only(AuditEvent.API_KEY_ISSUED);
+        assertEquals(u1, event.getTargetId());
+        assertEquals(root, event.getActorId());
+        assertEquals(r.text(), event.getRequestId());
+        assertEquals(root, event.getDetails().get("issuedByUserId"));
+        List<ApiKey> owned = f.auth.apiKeys().list(u1);
+        assertEquals(1, owned.size());
+        assertEquals(event.getDetails().get("apiKeyId"), owned.get(0).getId());
+        assertEquals(root, owned.get(0).getIssuedByUserId());
+    }
+
+    // IR-APIKEY-002 AC-9: an anonymous request gives no actor and no issuer, but still the request id
+    @Test
+    public void IR_APIKEY_002_AC9_anAnonymousRequestHasNoActorAndNoIssuer() throws Exception {
+        f.attach = (a, app) -> {
+            a.install(app);
+            app.get("/open-issue", (req, res) -> {
+                a.apiKeys().issue(req, u1, "anon", null, "posts:read");
+                res.send(req.requestId());
+            });
+        };
+        start(b -> b.permit("/open-issue"));
+        audit.clear();
+        ClientResponse r = f.get("/open-issue");
+        assertEquals(r.text(), 200, r.status());
+        AuditEvent event = only(AuditEvent.API_KEY_ISSUED);
+        assertEquals(null, event.getActorId());
+        assertEquals(r.text(), event.getRequestId());
+        assertFalse(event.getDetails().containsKey("issuedByUserId"));
+        assertEquals(null, f.auth.apiKeys().list(u1).get(0).getIssuedByUserId());
+    }
+
+    private AuditEvent only(String type) {
+        List<AuditEvent> found = new ArrayList<>();
+        for (AuditEvent e : audit) {
+            if (type.equals(e.getType())) {
+                found.add(e);
+            }
+        }
+        assertEquals(audit.toString(), 1, found.size());
+        return found.get(0);
     }
 
     // FR-AUTH-009 AC-2 (00 R47 (3), (6)): a key with a recorded issuer carries it on the revoke event too, on all three

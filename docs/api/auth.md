@@ -1902,8 +1902,10 @@ app.get("/reports", auth.require("reports:read")) { req, res -> res.send(auth.us
 | `IssuedApiKey issue(String ownerUserId, String name, @Nullable Long expiresAt, String... scopes)` | 새 키. 평문은 결과에 이번 한 번만 있습니다. 키는 store에서 읽은 소유자의 지금 `ver`에 묶이고(그 뒤 `ver`가 오르면 낡은 키), `issuedByUserId`는 null. 소유자마다 노드 안 잠금 아래에서 `insertIfUnderLimit`을 부르고, prefix가 겹치면 새 키로 세 번까지 다시 시도한 뒤 `AuthUnavailableException`(503). 없는·비활성 소유자, 스코프 문법([역할과 스코프](#역할과-스코프-rolepolicy-rolestore-scopes))에 어긋나는 스코프, 옵트인 없는 `auth-*` 스코프, 지금 이하의 `expiresAt`은 `IllegalArgumentException`. 한도(`.maxKeysPerUser`)를 넘으면 `AuthRejection(409, "api_key_limit")` |
 | `List<ApiKey> list(String ownerUserId)` | 소유자의 모든 키와 상태(`ACTIVE`, `EXPIRED`, `STALE`). 비밀도 해시도 없음. 없는 소유자는 `IllegalArgumentException` |
 | `boolean revoke(String keyId)` | 지움. 없으면 예외 없이 false |
+| `IssuedApiKey issue(Request req, String ownerUserId, String name, @Nullable Long expiresAt, String... scopes)` | 라우트에서 부르는 `issue`. 동작은 같고, 요청 사용자가 키의 `issuedByUserId`로 기록되며 감사 이벤트에 행위자·요청 id·IP와, 키로 인증한 요청이면 그 키의 `apiKeyId`가 남습니다. 행위자 검사는 이 형태도 하지 않습니다 |
+| `boolean revoke(Request req, String keyId)` | 라우트에서 부르는 `revoke`. 동작은 같고, 감사 이벤트에 행위자·요청 id·IP와, 키로 인증한 요청이면 그 키의 `apiKeyId`가 남습니다 |
 
-`.apiKeys(store)` 없이 부르면 모두 `AuthStateException`입니다. 예외는 `auth.users()`와 같은 집합이고 `auth.errors()`가 JSON으로 바꿉니다. `apikey.InMemoryApiKeyStore`는 단일 인스턴스와 테스트용 메모리 저장소입니다(스레드 안전, prefix는 대소문자를 가리는 유일 키, `AuthTesting.verifyApiKeyStore`를 통과). `MULTI_INSTANCE`는 이것을 `build()`에서 거부합니다. Express 대응: 개인 액세스 토큰 페이지 뒤의 서비스 계층.
+라우트 안에서는 요청을 받는 형태를 쓰십시오. 예: `app.delete("/my-keys/:id", (req, res) -> res.send(String.valueOf(auth.apiKeys().revoke(req, req.param("id")))))`. `.apiKeys(store)` 없이 부르면 모두 `AuthStateException`입니다. 예외는 `auth.users()`와 같은 집합이고 `auth.errors()`가 JSON으로 바꿉니다. `apikey.InMemoryApiKeyStore`는 단일 인스턴스와 테스트용 메모리 저장소입니다(스레드 안전, prefix는 대소문자를 가리는 유일 키, `AuthTesting.verifyApiKeyStore`를 통과). `MULTI_INSTANCE`는 이것을 `build()`에서 거부합니다. Express 대응: 개인 액세스 토큰 페이지 뒤의 서비스 계층.
 
 ```java
 Auth keyed = Auth.builder(System.getenv("JWT_SECRET")).apiKeys(new InMemoryApiKeyStore()).build();
@@ -1995,7 +1997,7 @@ auth.install(app)
 //   body: JSON.stringify({ownerUserId: botId, name: "ci-bot", scopes: ["posts:read"], password: myPassword})})
 ```
 
-키 엔드포인트의 삭제(`DELETE /auth/me/apikeys/:id`, `DELETE /auth/admin/apikeys/:id`)와 `auth.apiKeys().revoke`는 `api_key_revoked` 감사 이벤트를 남깁니다. 지운 키는 `revokedApiKeyId`, 대상은 소유자이고, 발급자가 기록된 키면 `issuedByUserId`도 남습니다. API 키 행위자가 지웠으면 그 행위자의 키가 `apiKeyId`입니다. 지우기 전에 키를 읽지 못해도 철회는 진행되고 그 이벤트에는 `issuedByUserId`가 없으며, `auth.apiKeys().revoke`는 대상도 없습니다. `auth.apiKeys().revoke`의 이벤트에는 행위자, 요청 id, IP가 없습니다. 이 호출은 요청을 받지 않으므로 라우트 안에서 불러도 같고, 요청을 인증한 키의 `apiKeyId`도 남지 않습니다.
+키 엔드포인트의 삭제(`DELETE /auth/me/apikeys/:id`, `DELETE /auth/admin/apikeys/:id`)와 `auth.apiKeys().revoke`는 `api_key_revoked` 감사 이벤트를 남깁니다. 지운 키는 `revokedApiKeyId`, 대상은 소유자이고, 발급자가 기록된 키면 `issuedByUserId`도 남습니다. API 키 행위자가 지웠으면 그 행위자의 키가 `apiKeyId`입니다. 지우기 전에 키를 읽지 못해도 철회는 진행되고 그 이벤트에는 `issuedByUserId`가 없으며, `auth.apiKeys().revoke`는 대상도 없습니다. 요청을 받지 않는 `auth.apiKeys().revoke(keyId)`의 이벤트에는 행위자, 요청 id, IP, `apiKeyId`가 없고 라우트 안에서 불러도 같습니다. 이것들을 남기려면 `auth.apiKeys().revoke(req, keyId)`를 쓰십시오(`issue`도 같음).
 
 Express 대응: GitHub의 "개인 액세스 토큰 만들기"처럼 비밀번호를 다시 묻는 발급 라우트.
 

@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.utils.auth.apikey;
 
+import com.snoworca.naruserve.Request;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 
@@ -30,9 +31,23 @@ public interface AuthApiKeys {
      */
     IssuedApiKey issue(String ownerUserId, String name, @Nullable Long expiresAt, String... scopes);
 
+    /**
+     * {@link #issue(String, String, Long, String...)} called from a route: the audit event also names the request's
+     * user as actor, carries the request id, the client address and, for a request authenticated by an API key, that
+     * key's {@code apiKeyId}, and the request's user is recorded as the key's {@code issuedByUserId}. It runs no actor
+     * check either.
+     */
+    IssuedApiKey issue(Request req, String ownerUserId, String name, @Nullable Long expiresAt, String... scopes);
+
     /** Every key of {@code ownerUserId} with its status ({@code ACTIVE}, {@code EXPIRED}, {@code STALE}), no secret. */
     List<ApiKey> list(String ownerUserId);
 
     /** Deletes the key; false (no exception) when there is no such key. */
     boolean revoke(String keyId);
+
+    /**
+     * {@link #revoke(String)} called from a route: the audit event also names the request's user as actor and carries
+     * the request id, the client address and, for a request authenticated by an API key, that key's {@code apiKeyId}.
+     */
+    boolean revoke(Request req, String keyId);
 }

@@ -84,6 +84,18 @@ final class DefaultAuthApiKeys implements AuthApiKeys {
     // @req IR-APIKEY-002
     @Override
     public IssuedApiKey issue(final String ownerUserId, String name, @Nullable Long expiresAt, String... scopes) {
+        return issueAs(null, ownerUserId, name, expiresAt, scopes);
+    }
+
+    // @req IR-APIKEY-002
+    @Override
+    public IssuedApiKey issue(Request req, String ownerUserId, String name, @Nullable Long expiresAt,
+            String... scopes) {
+        return issueAs(Objects.requireNonNull(req, "req"), ownerUserId, name, expiresAt, scopes);
+    }
+
+    private IssuedApiKey issueAs(@Nullable Request req, final String ownerUserId, String name, @Nullable Long expiresAt,
+            String[] scopes) {
         Objects.requireNonNull(ownerUserId, "ownerUserId");
         Objects.requireNonNull(name, "name");
         final ApiKeyStore keys = store();
@@ -104,10 +116,34 @@ final class DefaultAuthApiKeys implements AuthApiKeys {
         if (!owner.isEnabled()) {
             throw new AuthArgumentException("the user " + ownerUserId + " is disabled");
         }
-        IssuedApiKey issued = issueFor(keys, owner, name, expiresAt, granted, null);
-        auth.audit().emit(auth.audit().event(AuditEvent.API_KEY_ISSUED, "auth.apiKeys().issue", null, null, null,
-                false).targetId(ownerUserId).detail("apiKeyId", issued.getKey().getId()).build());
+        String actorId = actorId(req);
+        IssuedApiKey issued = issueFor(keys, owner, name, expiresAt, granted, actorId);
+        AuditEvent.Builder event = auth.audit().event(AuditEvent.API_KEY_ISSUED, "auth.apiKeys().issue", req, actorId,
+                null, serviceAccount(actorId)).targetId(ownerUserId).detail("apiKeyId", issued.getKey().getId());
+        if (actorId != null) {
+            event.detail("issuedByUserId", actorId);
+        }
+        auth.audit().emit(event.build());
         return issued;
+    }
+
+    /** IR-APIKEY-002 AC-9: the request's user, null without a request or for an anonymous one. */
+    private @Nullable String actorId(@Nullable Request req) {
+        AuthPrincipal p = req == null ? null : auth.userOrNull(req);
+        return p == null ? null : p.getId();
+    }
+
+    /** Whether {@code actorId} is a service account; best effort, so a store failure only drops the mark. */
+    private boolean serviceAccount(@Nullable String actorId) {
+        if (actorId == null) {
+            return false;
+        }
+        try {
+            AuthUser actor = auth.userStore().findById(actorId);
+            return actor != null && actor.isServiceAccount();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /** OPS-AUTH-027 AC-1: a key scope the owner does not hold grants nothing; say so when the key is issued. */
@@ -249,6 +285,16 @@ final class DefaultAuthApiKeys implements AuthApiKeys {
     // @req IR-APIKEY-002
     @Override
     public boolean revoke(final String keyId) {
+        return revokeAs(null, keyId);
+    }
+
+    // @req IR-APIKEY-002
+    @Override
+    public boolean revoke(Request req, String keyId) {
+        return revokeAs(Objects.requireNonNull(req, "req"), keyId);
+    }
+
+    private boolean revokeAs(@Nullable Request req, final String keyId) {
         Objects.requireNonNull(keyId, "keyId");
         final ApiKeyStore keys = store();
         StoredApiKey row = rowBeforeRevoke(keys, keyId);
@@ -258,8 +304,9 @@ final class DefaultAuthApiKeys implements AuthApiKeys {
             if (usage != null) {
                 usage.forget(keyId);
             }
-            auth.audit().emit(revokedEvent(auth.audit().event(AuditEvent.API_KEY_REVOKED, "auth.apiKeys().revoke", null,
-                    null, null, false), keyId, row == null ? null : row.getOwnerUserId(),
+            String actorId = actorId(req);
+            auth.audit().emit(revokedEvent(auth.audit().event(AuditEvent.API_KEY_REVOKED, "auth.apiKeys().revoke", req,
+                    actorId, null, serviceAccount(actorId)), keyId, row == null ? null : row.getOwnerUserId(),
                     row == null ? null : row.getIssuedByUserId()));
             auth.keyRevoked(keyId);
         }
@@ -300,15 +347,8 @@ final class DefaultAuthApiKeys implements AuthApiKeys {
         if (usage != null) {
             usage.forget(keyId);
         }
-        boolean service = false;
-        try {
-            AuthUser actor = auth.userStore().findById(actorId);
-            service = actor != null && actor.isServiceAccount();
-        } catch (Exception e) {
-            // the mark is best effort; the deletion already happened
-        }
-        auth.audit().emit(revokedEvent(auth.audit().event(AuditEvent.API_KEY_REVOKED, action, req, actorId, null, service),
-                keyId, ownerId, issuedBy));
+        auth.audit().emit(revokedEvent(auth.audit().event(AuditEvent.API_KEY_REVOKED, action, req, actorId, null,
+                serviceAccount(actorId)), keyId, ownerId, issuedBy));
         auth.keyRevoked(keyId);
     }
 

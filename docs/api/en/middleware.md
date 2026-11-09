@@ -308,3 +308,30 @@ app.use((error, request, response, next) -> {
     response.status(500).json(Collections.singletonMap("error", "Request failed"));
 });
 ```
+
+## Capacitor and WebView apps
+
+A [Capacitor](https://capacitorjs.com/) app runs its web code in a WebView inside the app, so the request `Origin` is not a real domain. The Capacitor defaults are `capacitor://localhost` on iOS and `https://localhost` on Android, and changing `server.iosScheme`, `server.androidScheme` or `server.hostname` in `capacitor.config` changes them. List the origins the app sends both in `app.cors(...)` for HTTP and in `app.webSocket(...)` for WebSocket. CORS does not apply to a WebSocket upgrade, so the two are set separately.
+
+```java
+app.cors(cors -> cors
+    .allowedOrigins("capacitor://localhost", "https://localhost")
+    .allowedHeaders("Content-Type", "Authorization")
+    .credentials(true));
+app.webSocket(ws -> ws.allowedOrigins("capacitor://localhost", "https://localhost"));
+```
+
+```kotlin
+app.cors { cors ->
+    cors.allowedOrigins("capacitor://localhost", "https://localhost")
+        .allowedHeaders("Content-Type", "Authorization")
+        .credentials(true)
+}
+app.webSocket { ws -> ws.allowedOrigins("capacitor://localhost", "https://localhost") }
+```
+
+- A custom scheme (`capacitor://`, `ionic://` and so on) has no default port. The port must match exactly, so `capacitor://localhost:8100` does not match `capacitor://localhost`. Scheme and host are compared case-insensitively.
+- A custom scheme is never same-origin. Unless it is listed, an HTTP response gets no CORS grant and a WebSocket upgrade gets 403.
+- A value with a path, a trailing slash or user info (`capacitor://localhost/`) is a configuration error in `app.cors`; in `app.webSocket` it logs a warning at startup and never matches.
+- When a development server serves the app, for example `npx cap run --livereload`, the origin is that server's `http://<IP>:<port>`, so list it too.
+- Express counterpart: `app.use(cors({ origin: ["capacitor://localhost", "https://localhost"], credentials: true }))`, and checking the Origin in the `verifyClient` of `ws`.

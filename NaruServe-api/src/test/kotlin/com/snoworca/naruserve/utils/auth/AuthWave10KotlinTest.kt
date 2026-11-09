@@ -64,4 +64,28 @@ class AuthWave10KotlinTest {
             app.shutdown(5, TimeUnit.SECONDS)
         }
     }
+
+    // IR-APIKEY-002 AC-9: the request forms of issue and revoke compile and run from a Kotlin trailing-lambda route
+    @Test
+    fun `IR-APIKEY-002 AC-9 request forms from Kotlin`() {
+        val store = InMemoryUserStore()
+        val admin = store.create(AuthUser.builder().username("root").roles("admin").build())
+        val adapter = InMemoryHttpAdapter("127.0.0.1", true)
+        val app = RestApp.builder().httpAdapter(adapter).jsonCodec(AuthTestAccess.json()).build()
+        val auth = Auth.builder(AuthTestSupport.SECRET).hashIterations(1000).users(store).apiKeys(InMemoryApiKeyStore()).build()
+        auth.install(app)
+        app.get("/rotate") { req, res ->
+            val issued = auth.apiKeys().issue(req, admin.id!!, "rotated", null, "posts:read")
+            res.send(auth.apiKeys().revoke(req, issued.key.id).toString())
+        }
+        app.listen(0)
+        try {
+            val token = auth.tokens().issue(store.findById(admin.id!!)!!).accessToken
+            val r = adapter.send(ClientRequest.of("GET", "/rotate").header("Authorization", "Bearer $token"))
+            assertEquals(r.text(), 200, r.status())
+            assertEquals("true", r.text())
+        } finally {
+            app.shutdown(5, TimeUnit.SECONDS)
+        }
+    }
 }

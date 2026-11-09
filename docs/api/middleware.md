@@ -308,3 +308,30 @@ app.use((error, request, response, next) -> {
     response.status(500).json(Collections.singletonMap("error", "Request failed"));
 });
 ```
+
+## Capacitor·WebView 앱
+
+[Capacitor](https://capacitorjs.com/) 앱은 웹 코드를 앱 안의 WebView에서 실행하므로, 요청의 `Origin`이 실제 도메인이 아닙니다. Capacitor 기본값은 iOS `capacitor://localhost`, Android `https://localhost`이고, `capacitor.config`의 `server.iosScheme`, `server.androidScheme`, `server.hostname`을 바꾸면 그 값도 바뀝니다. 앱이 보내는 출처를 HTTP용 `app.cors(...)`와 WebSocket용 `app.webSocket(...)` 양쪽에 나열합니다. CORS는 WebSocket upgrade에 적용되지 않으므로 둘은 따로 설정합니다.
+
+```java
+app.cors(cors -> cors
+    .allowedOrigins("capacitor://localhost", "https://localhost")
+    .allowedHeaders("Content-Type", "Authorization")
+    .credentials(true));
+app.webSocket(ws -> ws.allowedOrigins("capacitor://localhost", "https://localhost"));
+```
+
+```kotlin
+app.cors { cors ->
+    cors.allowedOrigins("capacitor://localhost", "https://localhost")
+        .allowedHeaders("Content-Type", "Authorization")
+        .credentials(true)
+}
+app.webSocket { ws -> ws.allowedOrigins("capacitor://localhost", "https://localhost") }
+```
+
+- 사용자 정의 스킴(`capacitor://`, `ionic://` 등)에는 기본 포트가 없습니다. 포트까지 정확히 같아야 하므로 `capacitor://localhost:8100`은 `capacitor://localhost`와 일치하지 않습니다. 스킴과 호스트는 대소문자를 가리지 않습니다.
+- 사용자 정의 스킴은 same-origin이 되지 않습니다. 목록에 넣지 않으면 HTTP 응답에는 CORS 허용 헤더가 붙지 않고, WebSocket upgrade는 403입니다.
+- 경로·끝 슬래시·사용자 정보가 있는 값(`capacitor://localhost/`)은 `app.cors`에서 등록 오류이고, `app.webSocket`에서는 기동 때 경고를 남기고 어떤 요청과도 일치하지 않습니다.
+- 개발 중 `npx cap run --livereload`처럼 개발 서버를 띄우면 출처가 그 서버의 `http://<IP>:<port>`가 되므로, 그 값도 함께 나열합니다.
+- Express 대응: `app.use(cors({ origin: ["capacitor://localhost", "https://localhost"], credentials: true }))`와 `ws`의 `verifyClient`에서 Origin을 확인하는 것.
