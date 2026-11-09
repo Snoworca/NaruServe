@@ -2,13 +2,13 @@
   Site template additions (OPS-DX-005 AC-6), on top of Material's base.html.
 
   site_meta: Material's block, except that the hreflang alternates are
-  absolute URLs of the same page in each language (ko, en, x-default = ko)
+  absolute URLs of the same page in each language (ko, en, x-default = en)
   instead of one fixed link per language, which extra.alternate does not carry.
 
   extrahead:
-  * naruserve-lang-redirect, on the Korean home page only: a visitor whose
-    browser does not list Korean before English goes to the English home page,
-    unless a language was chosen in the selector before.
+  * naruserve-lang-redirect, on the Korean home page only: every visitor goes
+    to the English home page, whatever the browser languages, unless 한국어 was
+    chosen in the selector before.
   * naruserve-lang-memory, on every page of both sites: remembers the language
     picked in the selector (localStorage "naruserve.lang").
   Both scripts are tested by tools/docs-site/test_language_redirect.mjs.
@@ -41,7 +41,7 @@
     {% set root = config.extra.guide_site.root_url %}
     <link rel="alternate" href="{{ root }}{{ page.url }}" hreflang="ko">
     <link rel="alternate" href="{{ root }}en/{{ page.url }}" hreflang="en">
-    <link rel="alternate" href="{{ root }}{{ page.url }}" hreflang="x-default">
+    <link rel="alternate" href="{{ root }}en/{{ page.url }}" hreflang="x-default">
   {% endif %}
   <link rel="icon" href="{{ config.theme.favicon | url }}">
   <meta name="generator" content="mkdocs-{{ mkdocs_version }}, mkdocs-material-9.7.7">
@@ -53,20 +53,7 @@
 (function () {
   var chosen = null;
   try { chosen = localStorage.getItem("naruserve.lang"); } catch (e) {}
-  var english;
-  if (chosen === "ko" || chosen === "en") {
-    english = chosen === "en";
-  } else {
-    var list = navigator.languages && navigator.languages.length
-      ? navigator.languages : [navigator.language || ""];
-    english = true;
-    for (var i = 0; i < list.length; i++) {
-      var primary = String(list[i] || "").toLowerCase().split("-")[0];
-      if (primary === "ko") { english = false; break; }
-      if (primary === "en") { break; }
-    }
-  }
-  if (english) {
+  if (chosen !== "ko") {
     location.replace("{{ base_url.rstrip('/') }}/en/" + (location.search || "") + (location.hash || ""));
   }
 })();

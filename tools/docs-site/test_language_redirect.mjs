@@ -52,40 +52,32 @@ test("an English browser is sent to the English home page", () => {
   assert.equal(runRedirect({ languages: ["en-US", "en"] }), "./en/");
 });
 
-test("a Korean browser stays on the Korean home page", () => {
-  assert.equal(runRedirect({ languages: ["ko-KR", "ko", "en-US"] }), null);
+test("a Korean browser is also sent to the English home page", () => {
+  assert.equal(runRedirect({ languages: ["ko-KR", "ko", "en-US"] }), "./en/");
+  assert.equal(runRedirect({ languages: ["ko-KR"] }), "./en/");
 });
 
 test("a browser with neither language gets English", () => {
   assert.equal(runRedirect({ languages: ["ja-JP", "ja"] }), "./en/");
-});
-
-test("Korean listed before English keeps Korean", () => {
-  assert.equal(runRedirect({ languages: ["ja", "ko"] }), null);
-  assert.equal(runRedirect({ languages: ["ja", "ko", "en"] }), null);
-});
-
-test("English listed before Korean gets English", () => {
-  assert.equal(runRedirect({ languages: ["en-GB", "ko-KR"] }), "./en/");
-});
-
-test("only navigator.language is used when navigator.languages is missing", () => {
-  assert.equal(runRedirect({ languages: undefined, language: "ko-KR" }), null);
   assert.equal(runRedirect({ languages: undefined, language: "fr-FR" }), "./en/");
 });
 
-test("a remembered choice wins over the browser languages", () => {
+test("choosing 한국어 in the selector keeps the Korean home page", () => {
   assert.equal(runRedirect({ languages: ["en-US"], stored: "ko" }), null);
+  assert.equal(runRedirect({ languages: ["ko-KR"], stored: "ko" }), null);
+});
+
+test("a remembered English choice goes to English", () => {
   assert.equal(runRedirect({ languages: ["ko-KR"], stored: "en" }), "./en/");
 });
 
 test("an unknown remembered value is ignored", () => {
-  assert.equal(runRedirect({ languages: ["ko-KR"], stored: "fr" }), null);
+  assert.equal(runRedirect({ languages: ["ko-KR"], stored: "fr" }), "./en/");
 });
 
-test("throwing storage falls back to the browser languages", () => {
+test("throwing storage still sends the visitor to English", () => {
   assert.equal(runRedirect({ languages: ["en-US"], throws: true }), "./en/");
-  assert.equal(runRedirect({ languages: ["ko-KR"], throws: true }), null);
+  assert.equal(runRedirect({ languages: ["ko-KR"], throws: true }), "./en/");
 });
 
 test("the query and hash are kept", () => {
