@@ -37,6 +37,9 @@ DOCS_DIR = os.path.join(REPO_ROOT, "docs", "api")
 WORKFLOW = os.path.join(REPO_ROOT, ".github", "workflows", "docs-pages.yml")
 REQUIREMENTS = os.path.join(REPO_ROOT, "tools", "docs-site", "requirements.txt")
 JAVADOC_URL = "https://javadoc.io/doc/com.snoworca.naruserve/naruserve-api"
+SITE_URL = "https://snoworca.github.io/NaruServe/"
+REDIRECT_SCRIPT = '<script id="naruserve-lang-redirect">'
+MEMORY_SCRIPT = '<script id="naruserve-lang-memory">'
 LANGUAGES = {"ko": "", "en": "en/"}
 # Pages the theme adds on its own, not guides.
 THEME_PAGES = {"404.html", "en/404.html"}
@@ -78,6 +81,7 @@ class LinkParser(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.hrefs = []
         self.alternates = {}
+        self.head_alternates = {}
         self.nav_hrefs = []
         self._nav_depth = 0
         self._stack = []
@@ -95,6 +99,8 @@ class LinkParser(HTMLParser):
             return
         if tag == "a" and "md-select__link" in classes and attrs.get("hreflang"):
             self.alternates[attrs["hreflang"]] = href
+        if tag == "link" and attrs.get("rel") == "alternate" and attrs.get("hreflang"):
+            self.head_alternates[attrs["hreflang"]] = href
         if tag in ("a", "link"):
             self.hrefs.append((tag, attrs.get("rel"), href))
             if tag == "a" and self._nav_depth and "md-nav__link" in classes:
@@ -158,7 +164,9 @@ def check_site(site, failures):
             continue
         parser = LinkParser()
         with open(path, encoding="utf-8") as handle:
-            parser.feed(handle.read())
+            html = handle.read()
+        parser.feed(html)
+        check_language_scripts(url, lang, html, parser, failures)
         check_language_selector(url, lang, parser, failures)
         check_navigation(url, lang, expected, parser, failures)
         check_links(site, url, parser, failures)
@@ -177,6 +185,23 @@ def check_language_selector(url, lang, parser, failures):
         elif resolve(url, href) != target:
             failures.append("%s: %s selector points at %r, expected %r"
                             % (page_file(url), code, resolve(url, href), target))
+
+
+def check_language_scripts(url, lang, html, parser, failures):
+    """AC-6: home-page redirect, choice memory and hreflang alternates."""
+    is_korean_home = url == ""
+    if (REDIRECT_SCRIPT in html) != is_korean_home:
+        failures.append("%s: the English-first redirect script belongs on the Korean home page only"
+                        % page_file(url))
+    if MEMORY_SCRIPT not in html:
+        failures.append("%s: language choice memory script missing" % page_file(url))
+    ko_url = url if lang == "ko" else counterpart(url, lang)
+    want = {"ko": SITE_URL + ko_url, "en": SITE_URL + "en/" + ko_url, "x-default": SITE_URL + ko_url}
+    for code, target in want.items():
+        got = parser.head_alternates.get(code)
+        if got != target:
+            failures.append("%s: <link rel=alternate hreflang=%s> is %r, expected %r"
+                            % (page_file(url), code, got, target))
 
 
 def check_navigation(url, lang, expected, parser, failures):
@@ -257,6 +282,8 @@ def check_workflow(failures):
             failures.append("workflow does not use " + action)
     if "mkdocs build --strict" not in text:
         failures.append("workflow does not run mkdocs build --strict")
+    if "node --test tools/docs-site/test_language_redirect.mjs" not in text:
+        failures.append("workflow does not run tools/docs-site/test_language_redirect.mjs")
     if "tools/docs-site/check_site.py" not in text:
         failures.append("workflow does not run tools/docs-site/check_site.py")
     if "-r tools/docs-site/requirements.txt" not in text:

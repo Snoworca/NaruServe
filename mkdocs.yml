@@ -96,6 +96,9 @@ markdown_extensions:
 extra:
   guide_site:
     lang: ko
+    # Root of the published site, for the absolute hreflang alternates
+    # (tools/docs-site/overrides/main.html); the English site inherits it.
+    root_url: https://snoworca.github.io/NaruServe/
     repo_blob: https://github.com/Snoworca/NaruServe/blob/main
     repo_tree: https://github.com/Snoworca/NaruServe/tree/main
   # Language selector entries; "prefix" leads from this site root to the

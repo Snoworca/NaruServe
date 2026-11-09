@@ -66,6 +66,14 @@ jobs:
           NO_MKDOCS_2_WARNING: "1"
         run: mkdocs build --strict -f mkdocs.en.yml
 
+      - name: Set up Node.js for the language script tests
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+
+      - name: Test the language redirect and choice memory scripts
+        run: node --test tools/docs-site/test_language_redirect.mjs
+
       - name: Check the site holds only the guides
         run: python tools/docs-site/check_site.py --site build/docs-site
 
