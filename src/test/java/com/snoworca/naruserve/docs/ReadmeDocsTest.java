@@ -87,10 +87,15 @@ public final class ReadmeDocsTest {
         String block = before.substring(repos);
         assertTrue(block, block.contains("mavenCentral()"));
         assertFalse(block, block.contains("mavenLocal()"));
-        // OPS-REL-008 AC-2; OPS-REL-009 AC-1: coordinates do not assert an unverified publication.
+        // OPS-REL-008 AC-2; OPS-REL-009 AC-1: coordinates assert only a verified publication; OPS-REL-012 AC-1 AC-2:
+        // 0.11.0 is published (docs/release/verification/central-0.11.0.md), so the README says so and links that record.
         assertTrue("README.md states the Maven Central coordinates", readme.contains("Maven Central coordinates"));
-        assertTrue("README.md retains a source fallback if the release is unavailable",
-                readme.contains("If 0.11.0 is unavailable"));
+        String installSection = ReleaseNotesDocsTest.section(readme, "## Install");
+        assertTrue("README.md states that 0.11.0 is on Maven Central",
+                installSection.contains("NaruServe 0.11.0 is on Maven Central"));
+        assertTrue("README.md links the publication record from Install",
+                installSection.contains("](docs/release/verification/central-0.11.0.md)"));
+        assertFalse("README.md no longer treats 0.11.0 as unavailable", readme.contains("If 0.11.0 is unavailable"));
         int source = readme.indexOf("### Build from a source checkout");
         assertTrue("README.md has '### Build from a source checkout'", source >= 0);
         assertTrue("publishToMavenLocal only under the source-checkout heading",

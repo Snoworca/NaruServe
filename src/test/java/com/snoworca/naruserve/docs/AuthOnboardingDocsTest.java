@@ -20,17 +20,24 @@ public class AuthOnboardingDocsTest {
     }
 
     // OPS-AUTH-005 AC-6: the OPS_AUTH_005_AC1 to AC5 tests of this class are the docs test that asserts AC-1 to AC-5
-    // OPS-AUTH-005 AC-1: README.md and README.ko.md introduce auth, link the guide, show app.use(auth) and say where a
-    // build with auth comes from before 0.11.0 is published
+    // OPS-AUTH-005 AC-1: README.md and README.ko.md introduce auth, link the guide, show app.use(auth) and say that the
+    // 0.11.0 artifacts on Maven Central contain it (amended 2026-11-09 after the publication)
     @Test
     public void OPS_AUTH_005_AC1_readmeIntroducesAuth() throws IOException {
         for (String f : new String[] {"README.md", "README.ko.md"}) {
-            String s = read(f);
-            has(f, s, f.equals("README.md") ? "The auth module" : "인증 모듈");
+            boolean en = f.equals("README.md");
+            String s = ReleaseNotesDocsTest.section(read(f),
+                    en ? "## Login and roles (auth, 0.11.0)" : "## 로그인과 역할 (auth, 0.11.0)");
+            has(f, s, en ? "The auth module" : "인증 모듈");
             has(f, s, "app.use(auth)");
             has(f, s, "auth.md)");
             has(f, s, "0.11.0");
-            has(f, s, f.equals("README.md") ? "#build-from-a-source-checkout" : "#소스-체크아웃-빌드");
+            has(f, s, "Maven Central");
+            has(f, s, en ? "](#install)" : "](#설치)");
+            for (String stale : new String[] {"Until 0.11.0 is published", "#build-from-a-source-checkout",
+                    "배포되기 전", "#소스-체크아웃-빌드"}) {
+                assertFalse(f + " auth section still says: " + stale, s.contains(stale));
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.docs;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -116,26 +117,31 @@ public class AuthGuideRound5DocsTest {
         }
     }
 
-    // OPS-AUTH-015 AC-6: the availability is one sentence of the Install section
+    // OPS-AUTH-015 AC-6: the availability is one sentence of the Install section (after the 2026-11-09 publication
+    // that sentence says 0.11.0 is on Maven Central)
     @Test
     public void OPS_AUTH_015_AC6_availabilityIsOneSentence() throws IOException {
-        String en = read("README.md");
-        assertFalse(en.contains("> **Availability:**"));
-        String line = null;
-        for (String l : en.split("\n")) {
-            if (l.contains("If 0.11.0 is unavailable")) {
-                line = l;
+        String[][] cases = {{"README.md", "## Install", "> **Availability:**", "NaruServe 0.11.0 is on Maven Central"},
+                {"README.ko.md", "## 설치", "> **가용성:**", "NaruServe 0.11.0은 Maven Central에 게시되어 있"}};
+        for (String[] c : cases) {
+            String doc = read(c[0]);
+            assertFalse(c[0] + " has a separate availability note", doc.contains(c[2]));
+            String install = ReleaseNotesDocsTest.section(doc, c[1]);
+            String line = null;
+            int count = 0;
+            for (String l : doc.split("\n")) {
+                if (l.contains(c[3])) {
+                    line = l;
+                    count++;
+                }
             }
+            assertEquals(c[0] + ": lines stating the availability", 1, count);
+            assertTrue(c[0] + ": the availability sentence sits in the Install section", install.contains(line));
+            String sentence = line.substring(line.indexOf(c[3]));
+            int end = sentence.indexOf(". ");
+            String first = end < 0 ? sentence : sentence.substring(0, end + 1);
+            assertTrue(c[0] + ": one sentence names the repository: " + first, first.contains("mavenCentral()"));
+            assertFalse(c[0] + ": " + line, line.trim().endsWith(":"));
         }
-        assertTrue(line != null && line.contains("0.11.0 is not yet on Maven Central") && !line.trim().endsWith(":"));
-        String ko = read("README.ko.md");
-        assertFalse(ko.contains("> **가용성:**"));
-        line = null;
-        for (String l : ko.split("\n")) {
-            if (l.contains("0.11.0을 받을 수 없다면")) {
-                line = l;
-            }
-        }
-        assertTrue(line != null && line.contains("0.11.0은 아직 Maven Central에 없습니다"));
     }
 }
