@@ -256,17 +256,18 @@ public class BuildChecksTest {
     }
 
     // SDS-AC-10; CON-BUILD-013 AC-1, CON-BUILD-013 AC-2, CON-BUILD-013 AC-3, CON-BUILD-007 AC-3, CON-BUILD-012 AC-1, OPS-BUILD-002 AC-3
+    // CON-BUILD-019 AC-2: NaruServe-proxy joins the API 21 checks through naruModules
     @Test
     public void con_BUILD_013_buildRunsTheChecks() {
         String out = runner("-m", "build").build().getOutput();
         assertTrue(out, out.contains(":checkDependencyRules"));
         for (String module : Arrays.asList("NaruServe-api", "NaruServe-tinyhttpd", "NaruServe-gson", "NaruServe",
-                "NaruServe-kotlin", "NaruServe-filelog", "NaruServe-logcat")) {
+                "NaruServe-kotlin", "NaruServe-filelog", "NaruServe-logcat", "NaruServe-proxy")) {
             assertTrue(module + "\n" + out, out.contains(":" + module + ":checkClassReferences"));
             assertTrue(module + "\n" + out, out.contains(":" + module + ":animalsnifferMain"));
         }
         for (String module : BuildLayoutTest.MODULES) {
-            // OPS-BUILD-002 AC-5: the Kotlin plugin is applied to all nine JAR modules (not to NaruServe-android).
+            // OPS-BUILD-002 AC-5: the Kotlin plugin is applied to every JAR module (not to NaruServe-android).
             assertTrue(module + "\n" + out, out.contains(":" + module + ":compileTestKotlin"));
         }
         assertTrue(out, out.contains(":NaruServe-api:test"));
@@ -339,7 +340,7 @@ public class BuildChecksTest {
                 "com/snoworca/naruserve/bootstrap/probe/UsesLogcat -> com/snoworca/naruserve/logcat/LogcatLogger"));
     }
 
-    // FR-BUILD-001 AC-1: without an Android SDK the build warns and includes the other nine modules only
+    // FR-BUILD-001 AC-1: without an Android SDK the build warns and includes the JAR modules only
     @Test
     public void fr_BUILD_001_AC1_withoutAnSdkTheAndroidModuleIsSkippedWithAWarning() {
         assertFalse("the copy has no local.properties", new File(work, "local.properties").exists());
@@ -356,7 +357,7 @@ public class BuildChecksTest {
         }
     }
 
-    // FR-REL-005 AC-7: without an Android SDK the staging check refuses to stage nine modules
+    // FR-REL-005 AC-7: without an Android SDK the staging check refuses to stage the JAR modules alone
     @Test
     public void fr_REL_005_AC7_checkCentralStagingFailsWithoutTheAndroidModule() {
         Map<String, String> env = new HashMap<>(System.getenv());

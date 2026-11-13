@@ -31,10 +31,16 @@ public final class ReleaseRecordsDocsTest {
     static final Pattern RUN_LINE = Pattern.compile(
             "^- run ([\\w-]+): command=(.+?); date=(\\d{4}-\\d{2}-\\d{2}); result=(.+)$");
 
-    /** The nine published modules, in the order of naruModules. */
-    static final List<String> MODULES = BuildLayoutTest.MODULES;
+    /**
+     * The JAR modules of the recorded release, in the order of its naruModules. The records describe a release
+     * published before NaruServe-proxy joined the build, so the list is that release's, not BuildLayoutTest.MODULES
+     * (CON-BUILD-019).
+     */
+    static final List<String> MODULES = java.util.Collections.unmodifiableList(Arrays.asList("NaruServe-api",
+            "NaruServe-servlet", "NaruServe-tinyhttpd", "NaruServe-gson", "NaruServe", "NaruServe-kotlin",
+            "NaruServe-slf4j", "NaruServe-filelog", "NaruServe-logcat"));
 
-    /** The published modules of this build: the nine and, when an Android SDK resolved, NaruServe-android. */
+    /** The published modules of the recorded release: its JAR modules and, when an Android SDK resolved, NaruServe-android. */
     static List<String> publishedModules() {
         List<String> modules = new java.util.ArrayList<>(MODULES);
         if (BuildLayoutTest.androidIncluded()) {
