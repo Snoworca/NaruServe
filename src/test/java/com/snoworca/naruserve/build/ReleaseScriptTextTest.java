@@ -198,11 +198,16 @@ public class ReleaseScriptTextTest {
         }
     }
 
-    /** The entries of {@code def naruModules = [...]} in build.gradle, without the leading colon. */
-    static List<String> naruModulesEntries(String build) {
+    /** The raw text between the brackets of {@code def naruModules = [...]} in build.gradle. */
+    static String naruModulesList(String build) {
         Matcher list = Pattern.compile("def\\s+naruModules\\s*=\\s*\\[([^\\]]*)]").matcher(build);
         assertTrue("build.gradle defines naruModules", list.find());
-        Matcher entry = Pattern.compile("['\"]:([\\w-]+)['\"]").matcher(list.group(1));
+        return list.group(1);
+    }
+
+    /** The entries of {@code def naruModules = [...]} in build.gradle, without the leading colon. */
+    static List<String> naruModulesEntries(String build) {
+        Matcher entry = Pattern.compile("['\"]:([\\w-]+)['\"]").matcher(naruModulesList(build));
         List<String> entries = new ArrayList<>();
         while (entry.find()) {
             entries.add(entry.group(1));

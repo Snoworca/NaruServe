@@ -397,10 +397,7 @@ public class BuildChecksTest {
     // artifactIds with their five files each, and fails on an extra or missing artifactId or a missing file
     @Test
     public void fr_REL_006_AC4_checkCentralStagingExpectsExactlyTheElevenArtifactIds() throws IOException {
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?m)^\\s*version = '([^']+)'")
-                .matcher(pristineBuild);
-        assertTrue("build.gradle sets the version", m.find());
-        String version = m.group(1);
+        String version = BuildLayoutTest.buildVersion(pristineBuild);
         Map<String, String> env = new HashMap<>(System.getenv());
         env.remove("ANDROID_HOME");
         env.remove("ANDROID_SDK_ROOT");

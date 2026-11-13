@@ -675,7 +675,7 @@ public class BuildLayoutTest {
         assertTrue("animal-sniffer API 21 over sourceSets.main of every Android module", sniff.find());
     }
     /** The {@code version = '...'} of the root build.gradle, the version the outer build published to staging. */
-    private static String buildVersion(String build) {
+    static String buildVersion(String build) {
         Matcher m = Pattern.compile("(?m)^\\s*version = '([^']+)'").matcher(build);
         assertTrue("build.gradle sets the version", m.find());
         return m.group(1);
@@ -691,19 +691,27 @@ public class BuildLayoutTest {
     }
 
     /**
-     * The {@code mainDependencies} entries of the root build.gradle: project path to the entry's map literal, with
-     * comment lines and all whitespace removed.
+     * The body of the {@code def <name> = [ ... ]} block of the root build.gradle (closed by a {@code ]} at the start
+     * of a line), with comment lines and all whitespace removed.
      */
-    static Map<String, String> mainDependencyEntries(String build) {
-        Matcher block = Pattern.compile("def mainDependencies = \\[(.*?)\\n\\]", Pattern.DOTALL).matcher(build);
-        assertTrue("build.gradle defines mainDependencies", block.find());
+    static String defBlockCode(String build, String name) {
+        Matcher block = Pattern.compile("def " + name + " = \\[(.*?)\\n\\]", Pattern.DOTALL).matcher(build);
+        assertTrue("build.gradle defines " + name, block.find());
         StringBuilder code = new StringBuilder();
         for (String line : block.group(1).split("\n")) {
             if (!line.trim().startsWith("//")) {
                 code.append(line);
             }
         }
-        String text = code.toString().replaceAll("\\s+", "");
+        return code.toString().replaceAll("\\s+", "");
+    }
+
+    /**
+     * The {@code mainDependencies} entries of the root build.gradle: project path to the entry's map literal, with
+     * comment lines and all whitespace removed.
+     */
+    static Map<String, String> mainDependencyEntries(String build) {
+        String text = defBlockCode(build, "mainDependencies");
         Map<String, String> entries = new LinkedHashMap<>();
         Matcher key = Pattern.compile("'(:[\\w-]+)':").matcher(text);
         int from = 0;
@@ -752,9 +760,8 @@ public class BuildLayoutTest {
     @Test
     public void con_BUILD_019_AC2_rootBuildConfiguresTheProxyModuleLikeTheOtherLibraryModules() throws Exception {
         String build = read(new File(ROOT, "build.gradle"));
-        Matcher list = Pattern.compile("def naruModules = \\[([^\\]]*)\\]").matcher(build);
-        assertTrue("build.gradle defines naruModules", list.find());
-        assertTrue(list.group(1), list.group(1).contains("':NaruServe-proxy'"));
+        String list = ReleaseScriptTextTest.naruModulesList(build);
+        assertTrue(list, list.contains("':NaruServe-proxy'"));
         File dir = new File(ROOT, PROXY_MODULE);
         assertTrue(dir + " exists", dir.isDirectory());
         for (String name : new String[] {"build.gradle", "build.gradle.kts"}) {
@@ -913,16 +920,8 @@ public class BuildLayoutTest {
         assertEquals(Arrays.asList("p.dependencies.add('compileOnly', 'org.jspecify:jspecify:1.0.0')",
                 "extraCompileOnly.getOrDefault(p.path, []).each { p.dependencies.add('compileOnly', it) }",
                 "p.dependencies.add('compileOnly', 'org.jspecify:jspecify:1.0.0')"), compileOnlyLines(build));
-        Matcher extra = Pattern.compile("def extraCompileOnly = \\[(.*?)\\n\\]", Pattern.DOTALL).matcher(build);
-        assertTrue("build.gradle defines extraCompileOnly", extra.find());
-        StringBuilder code = new StringBuilder();
-        for (String line : extra.group(1).split("\n")) {
-            if (!line.trim().startsWith("//")) {
-                code.append(line);
-            }
-        }
         assertEquals("':NaruServe-servlet':['" + SERVLET_API + "','" + WEBSOCKET_API + "'],",
-                code.toString().replaceAll("\\s+", ""));
+                defBlockCode(build, "extraCompileOnly"));
         Matcher applied = Pattern.compile("configure\\(naruProjects\\) \\{ p ->[^}]*configureDependencies\\(p\\)").matcher(build);
         assertTrue("every naruModules project, NaruServe-proxy included, gets configureDependencies", applied.find());
         assertTrue(compileOnlyLines(read(new File(ROOT, "gradle/release.gradle"))).isEmpty());
