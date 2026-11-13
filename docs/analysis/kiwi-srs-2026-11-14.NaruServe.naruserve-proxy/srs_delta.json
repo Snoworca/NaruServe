@@ -1,0 +1,47 @@
+{
+  "run_id": "2026-11-14.NaruServe.naruserve-proxy",
+  "caller": "kiwi-orchestrator 2.a initial authoring",
+  "mode": "live",
+  "target": "0.12.0",
+  "prd": "docs/prd/2026-11-14.naruserve-proxy.prd.md",
+  "prd_status": "unapproved (Approved: --auto)",
+  "classification": "new-feature + update + new-scope (PROXY, docs/spec/22.reverse-proxy.srs.md)",
+  "target_registered": true,
+  "scope_created": "22.reverse-proxy.srs.md (PROXY)",
+  "mutation_logs": [
+    "writer-1.mutations.jsonl",
+    "writer-2.mutations.jsonl",
+    "writer-3.mutations.jsonl",
+    "writer-4.mutations.jsonl",
+    "improvement_iter1.jsonl"
+  ],
+  "round_2_to_4_fixes_by_host": [
+    "SEC-PROXY-004 statement, AC-4, AC-5 limited to responses that can carry a body",
+    "FR-REL-006 AC-4 restores the release-machine run record; notes; link row to FR-REL-007",
+    "CON-BUILD-019 link row to CON-BUILD-021",
+    "IR-HTTP-011 AC-4 wording, AC-9 restating FR-JSON-001 AC-2, Rationale",
+    "FR-JSON-001 AC-2 expired toward IR-HTTP-011",
+    "FR-HTTP-031 notes",
+    "FR-PROXY-014 statement, AC-6, notes, depends_on SEC-PROXY-003"
+  ],
+  "added_ids_count": 58,
+  "discarded_ids": ["CON-BUILD-006", "FR-REL-001"],
+  "successors": {"CON-BUILD-006": "CON-BUILD-021", "FR-REL-001": "FR-REL-007"},
+  "expired_criteria": [
+    "FR-APP-006 AC-4", "IR-HTTP-010 AC-2", "IR-APP-008 AC-5", "IR-MULTIPART-002 AC-6", "FR-HTTP-017 AC-1",
+    "FR-STATIC-008 AC-5", "CON-BUILD-002 AC-1", "CON-BUILD-006 AC-1", "CON-BUILD-012 AC-1", "CON-BUILD-013 AC-3",
+    "OPS-BUILD-003 AC-3", "FR-REL-005 AC-7", "FR-REL-001 AC-1", "OPS-DX-007 AC-3", "OPS-REL-001 AC-1",
+    "FR-HTTP-020 AC-3", "FR-HTTP-020 AC-4", "FR-JSON-001 AC-9", "FR-JSON-001 AC-2"
+  ],
+  "rounds": [
+    {"iter": 1, "files": ["eval_iter1.part1.json", "eval_iter1.part2.json", "eval_iter1.part3.json", "eval_iter1.json"], "kept": 9, "prd_fail": 1},
+    {"iter": 2, "file": "eval_iter2.json", "kept": 7, "prd_fail": 1},
+    {"iter": 3, "file": "eval_iter3.json", "kept": 1, "prd_fail": 0},
+    {"iter": 4, "file": "eval_iter4.json", "kept": 1, "prd_fail": 0},
+    {"iter": 5, "file": "eval_iter5.json", "kept": 0, "prd_fail": 0, "fix_applied": false, "verdict": "pass"}
+  ],
+  "loop_cap": "5 by default, raised to 20 by the user during round 5",
+  "validate_spec": {"errors": 0, "warnings": 60, "note": "all SRS-W081 on requirements outside 0.12.0; 48 pre-existing, 12 from the two supersedes"},
+  "prd_coverage": {"uncitedItems": 0, "missingItems": 0, "uncitedRequirements": 0, "ungroundedCriteria": 0},
+  "design_overridden_by_prd": ["D-058: HEAD/204/304 bodyless before framing checks (PRD-155)"]
+}

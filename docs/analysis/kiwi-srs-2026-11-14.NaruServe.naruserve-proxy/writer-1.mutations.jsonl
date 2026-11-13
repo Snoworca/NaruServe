@@ -1,0 +1,27 @@
+{"tool":"add_requirement","id":"IR-HTTP-011","scope":"HTTP","title":"Public BodyTooLargeException in com.snoworca.naruserve","result":"ok","seeded_trace":7}
+{"tool":"add_requirement","id":"IR-HTTP-012","scope":"HTTP","title":"Public header value predicate HttpHeaderValues.isFieldValue","result":"ok","seeded_trace":3}
+{"tool":"add_requirement","id":"IR-APP-009","scope":"APP","title":"App option app.rawBodyLimit(bytes) for the raw request body","result":"ok","seeded_trace":9}
+{"tool":"add_requirement","id":"FR-APP-027","scope":"APP","title":"StandardErrors.statusOf answers an unwrapped BodyTooLargeException with 413","result":"ok","seeded_trace":4}
+{"tool":"add_requirement","id":"IR-HTTP-013","scope":"HTTP","title":"Request surface gains bodyStream, headerNames, rawHeaders and isFromTrustedProxy as default methods with Kotlin coverage","result":"ok","seeded_trace":8}
+{"tool":"add_requirement","id":"IR-HTTP-014","scope":"HTTP","title":"Response surface gains append, onAbort and relay as default methods with Kotlin coverage","result":"ok","seeded_trace":5}
+{"tool":"add_requirement","id":"FR-HTTP-030","scope":"HTTP","title":"req.bodyStream returns the raw request body under the one-read rule","result":"ok","seeded_trace":7}
+{"tool":"add_requirement","id":"FR-HTTP-031","scope":"HTTP","title":"Size limits of req.bodyStream: app default, per-call limit, 413 before reading and BodyTooLargeException while reading","result":"ok","seeded_trace":7}
+{"tool":"add_requirement","id":"FR-HTTP-032","scope":"HTTP","title":"req.headerNames() and req.rawHeaders() enumerate request headers as the adapter reported them","result":"ok","seeded_trace":4}
+{"tool":"add_requirement","id":"FR-HTTP-033","scope":"HTTP","title":"res.append adds a response header line under the res.header check","result":"ok","seeded_trace":5}
+{"tool":"add_requirement","id":"FR-HTTP-034","scope":"HTTP","title":"req.isFromTrustedProxy() reports whether the app's proxy trust setting trusts the direct peer","result":"ok","seeded_trace":6}
+{"tool":"add_requirement","id":"FR-HTTP-035","scope":"HTTP","title":"res.onAbort notifies listeners once when a response ends abnormally","result":"ok","seeded_trace":6}
+{"tool":"add_requirement","id":"FR-HTTP-036","scope":"HTTP","title":"res.relay leaves Content-Type to the app, frames from its length argument and adds no defaultCache","result":"ok","seeded_trace":4}
+{"tool":"add_requirement","id":"FR-HTTP-037","scope":"HTTP","title":"res.relay sends exactly contentLength bytes, keeps the length on HEAD and 304, and owns its stream like res.stream","result":"ok","seeded_trace":5}
+{"tool":"add_requirement","id":"FR-APP-028","scope":"APP","title":"Access log in= counts the bytes read through req.bodyStream","result":"ok","seeded_trace":4}
+{"tool":"add_requirement","id":"FR-ENGINE-013","scope":"ENGINE","title":"TinyHttpd conformance of the raw request access API: header order and case, raw body, unread body drain and the BodyTooLargeException name clash","result":"ok","seeded_trace":9}
+{"tool":"add_requirement","id":"FR-ENGINE-014","scope":"ENGINE","title":"TinyHttpd conformance of res.onAbort and res.relay over real sockets","result":"ok","seeded_trace":5}
+{"tool":"add_requirement","id":"FR-SVL-010","scope":"SVL","title":"Servlet adapter conformance of the raw access API: per-name header grouping, raw body, relay framing and onAbort","result":"ok","seeded_trace":7}
+{"tool":"add_trace_link","id":"IR-HTTP-012","type":"Requirement","reference":"FR-HTTP-015","relation":"depends_on","result":"ok","why":"clear SRS-W078 prose-only dependency"}
+{"tool":"expire_acceptance_criterion","id":"FR-APP-006","acId":"AC-4","successor":"FR-APP-027","result":"ok"}
+{"tool":"expire_acceptance_criterion","id":"IR-HTTP-010","acId":"AC-2","successor":"IR-HTTP-013","result":"ok"}
+{"tool":"expire_acceptance_criterion","id":"IR-APP-008","acId":"AC-5","successor":"IR-APP-009","result":"ok"}
+{"tool":"expire_acceptance_criterion","id":"IR-MULTIPART-002","acId":"AC-6","successor":"FR-HTTP-030","result":"ok"}
+{"tool":"expire_acceptance_criterion","id":"FR-HTTP-017","acId":"AC-1","successor":"FR-HTTP-037","result":"ok"}
+{"tool":"expire_acceptance_criterion","id":"FR-STATIC-008","acId":"AC-5","successor":"FR-HTTP-036","result":"ok"}
+{"tool":"edit_acceptance_criterion","id":"IR-HTTP-013","acId":"AC-4","result":"ok","why":"restate the still-true LATER_WAVE_NAMES clause of expired IR-MULTIPART-002 AC-6"}
+{"tool":"validate_spec","result":"errors=0 warnings=48 (SRS-W081 baseline)","note":"read-only; check_prd_coverage: no uncited partition item, no ungrounded criteria"}

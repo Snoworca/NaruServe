@@ -1,0 +1,263 @@
+{
+  "modules": [
+    {
+      "module": "NaruServe-api",
+      "depends_on": []
+    },
+    {
+      "module": "NaruServe-servlet",
+      "depends_on": [
+        "NaruServe-api"
+      ]
+    },
+    {
+      "module": "NaruServe-tinyhttpd",
+      "depends_on": [
+        "NaruServe-api"
+      ]
+    },
+    {
+      "module": "NaruServe-gson",
+      "depends_on": [
+        "NaruServe-api"
+      ]
+    },
+    {
+      "module": "NaruServe",
+      "depends_on": [
+        "NaruServe-api",
+        "NaruServe-gson",
+        "NaruServe-tinyhttpd"
+      ]
+    },
+    {
+      "module": "NaruServe-kotlin",
+      "depends_on": [
+        "NaruServe"
+      ]
+    },
+    {
+      "module": "NaruServe-slf4j",
+      "depends_on": [
+        "NaruServe-api"
+      ]
+    },
+    {
+      "module": "NaruServe-filelog",
+      "depends_on": [
+        "NaruServe-api"
+      ]
+    },
+    {
+      "module": "NaruServe-logcat",
+      "depends_on": [
+        "NaruServe-api"
+      ]
+    },
+    {
+      "module": "NaruServe-proxy",
+      "depends_on": [
+        "NaruServe-api"
+      ]
+    },
+    {
+      "module": "NaruServe-android",
+      "depends_on": [
+        "NaruServe",
+        "NaruServe-logcat"
+      ]
+    },
+    {
+      "module": "NaruServe-build",
+      "depends_on": [
+        "NaruServe-api",
+        "NaruServe-gson",
+        "NaruServe-servlet"
+      ]
+    }
+  ],
+  "requirement_modules": {
+    "CON-BUILD-019": [
+      "NaruServe-build",
+      "NaruServe-proxy"
+    ],
+    "CON-BUILD-020": [
+      "NaruServe-build"
+    ],
+    "CON-BUILD-021": [
+      "NaruServe-build",
+      "NaruServe-tinyhttpd"
+    ],
+    "FR-APP-027": [
+      "NaruServe-api"
+    ],
+    "FR-APP-028": [
+      "NaruServe-api"
+    ],
+    "FR-ENGINE-013": [
+      "NaruServe-tinyhttpd"
+    ],
+    "FR-ENGINE-014": [
+      "NaruServe-tinyhttpd"
+    ],
+    "FR-HTTP-030": [
+      "NaruServe-api"
+    ],
+    "FR-HTTP-031": [
+      "NaruServe-api"
+    ],
+    "FR-HTTP-032": [
+      "NaruServe-api"
+    ],
+    "FR-HTTP-033": [
+      "NaruServe-api"
+    ],
+    "FR-HTTP-034": [
+      "NaruServe-api"
+    ],
+    "FR-HTTP-035": [
+      "NaruServe-api"
+    ],
+    "FR-HTTP-036": [
+      "NaruServe-api"
+    ],
+    "FR-HTTP-037": [
+      "NaruServe-api"
+    ],
+    "FR-PROXY-001": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-002": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-003": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-004": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-005": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-006": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-007": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-008": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-009": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-010": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-011": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-012": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-013": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-014": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-015": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-016": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-017": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-018": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-019": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-020": [
+      "NaruServe-proxy"
+    ],
+    "FR-PROXY-021": [
+      "NaruServe-proxy"
+    ],
+    "FR-REL-006": [
+      "NaruServe-build"
+    ],
+    "FR-REL-007": [
+      "NaruServe-build"
+    ],
+    "FR-SVL-010": [
+      "NaruServe-servlet"
+    ],
+    "IR-APP-009": [
+      "NaruServe-api",
+      "NaruServe-build"
+    ],
+    "IR-HTTP-011": [
+      "NaruServe-api"
+    ],
+    "IR-HTTP-012": [
+      "NaruServe-api"
+    ],
+    "IR-HTTP-013": [
+      "NaruServe-api",
+      "NaruServe-build"
+    ],
+    "IR-HTTP-014": [
+      "NaruServe-api"
+    ],
+    "IR-PROXY-001": [
+      "NaruServe-proxy"
+    ],
+    "IR-PROXY-002": [
+      "NaruServe-proxy"
+    ],
+    "OPS-BUILD-004": [
+      "NaruServe-build"
+    ],
+    "OPS-DX-008": [
+      "NaruServe-api",
+      "NaruServe-build"
+    ],
+    "OPS-DX-009": [
+      "NaruServe-api",
+      "NaruServe-build"
+    ],
+    "OPS-DX-010": [
+      "NaruServe-api",
+      "NaruServe-build",
+      "NaruServe-proxy"
+    ],
+    "OPS-DX-011": [
+      "NaruServe-build"
+    ],
+    "REL-PROXY-001": [
+      "NaruServe-proxy"
+    ],
+    "REL-PROXY-002": [
+      "NaruServe-proxy"
+    ],
+    "SEC-PROXY-001": [
+      "NaruServe-proxy"
+    ],
+    "SEC-PROXY-002": [
+      "NaruServe-proxy"
+    ],
+    "SEC-PROXY-003": [
+      "NaruServe-proxy"
+    ],
+    "SEC-PROXY-004": [
+      "NaruServe-proxy"
+    ],
+    "SEC-PROXY-005": [
+      "NaruServe-proxy"
+    ]
+  }
+}

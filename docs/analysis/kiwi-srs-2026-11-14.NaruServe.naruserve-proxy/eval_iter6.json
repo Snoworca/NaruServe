@@ -1,0 +1,264 @@
+{
+ "evaluator": "verify-pass-1",
+ "iter": 6,
+ "partition": "delta-round6",
+ "prd_items": [
+  {
+   "id": "PRD-162",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005",
+    "SEC-PROXY-005#AC-1",
+    "SEC-PROXY-005#AC-2",
+    "SEC-PROXY-005#AC-6",
+    "SEC-PROXY-005#AC-8"
+   ],
+   "note": "Statement: the implementation always verifies the target host name (SSLSocket does not), no option turns it off; AC-1/AC-2 make a certificate naming another host fail with 502 CONNECT_FAILED, also with a custom sslSocketFactory."
+  },
+  {
+   "id": "PRD-163",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005",
+    "SEC-PROXY-005#AC-6",
+    "SEC-PROXY-005#AC-7"
+   ],
+   "note": "setEndpointIdentificationAlgorithm(\"HTTPS\") by reflection where it exists (JDK, Android 24+), HttpsURLConnection.getDefaultHostnameVerifier() otherwise (Android < 24). AC-6 now exercises the fallback with the verifier the proxy holds (default getDefaultHostnameVerifier(), test seam injects a recording one); fills: PRD-163/defect is a real gap (JDK default verifier rejects every host: reproduced, DefaultHostnameVerifier.verify(\"localhost\", null)=false on OpenJDK 17.0.20.1) and keeps the item's production behaviour."
+  },
+  {
+   "id": "PRD-190",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-HTTP-036#AC-1",
+    "FR-HTTP-036#AC-5",
+    "FR-HTTP-037#AC-1",
+    "FR-HTTP-037#AC-3",
+    "FR-HTTP-037#AC-4",
+    "FR-HTTP-037#AC-5",
+    "FR-HTTP-037#AC-6",
+    "FR-ENGINE-014#AC-3",
+    "FR-ENGINE-014#AC-5",
+    "FR-ENGINE-014#AC-6",
+    "FR-SVL-010#AC-4"
+   ],
+   "note": "AC-A13 clause by clause: no Content-Type + Content-Length: 5 + 5 bytes (FR-HTTP-036 AC-1, FR-ENGINE-014 AC-3, FR-SVL-010 AC-4); HEAD -> Content-Length: 5, no body (FR-HTTP-037 AC-5, FR-ENGINE-014 AC-5, FR-SVL-010 AC-4); 204 -> neither (FR-HTTP-037 AC-6, FR-ENGINE-014 AC-5, FR-SVL-010 AC-4); relay(in,-1) unknown length (FR-HTTP-037 AC-3, FR-ENGINE-014 AC-4); relay(in,-2) IAE (FR-HTTP-037 AC-4); 3-byte stream aborts (FR-HTTP-037 AC-1, FR-ENGINE-014 AC-6); defaultCache adds no Cache-Control (FR-HTTP-036 AC-5). The 304 'client receives Content-Length: 5' clause is narrowed by PRD-271: core commits it (FR-HTTP-037 AC-5), TinyHttpd omits it (FR-ENGINE-014 AC-5), servlet hands it to the container (FR-SVL-010 AC-4). Accepted as narrowed."
+  },
+  {
+   "id": "PRD-271",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-HTTP-037#AC-5",
+    "FR-HTTP-037#AC-9",
+    "FR-ENGINE-014#AC-5",
+    "FR-SVL-010#AC-4",
+    "FR-PROXY-014#AC-5",
+    "OPS-DX-009#AC-7"
+   ],
+   "note": "Every clause present: relay hands the 304 length to the adapter (FR-HTTP-037 AC-5/AC-9); in-memory adapter delivers it (FR-HTTP-037 AC-5, FR-PROXY-014 AC-5); servlet adapter hands it over (FR-SVL-010 AC-4); TinyHttpd 3.1.1 omits it (FR-ENGINE-014 AC-5, matches ExchangeResponse.commit at e73cd5d and the local de5c7ff checkout); TinyHttpd not changed (FR-ENGINE-014 Rationale note); documented (OPS-DX-009 AC-7). No 0.12.0 criterion still promises a TinyHttpd client a 304 Content-Length."
+  }
+ ],
+ "srs_items": [
+  {
+   "id": "FR-HTTP-037",
+   "verdict": "grounded",
+   "basis": "PRD-41, PRD-42, PRD-190, PRD-271",
+   "note": "Statement keeps the length in what relay commits; AC-5 adds the adapter-dependent client view; AC-9 restricts the 304 length to the committed headers. Consistent with FR-ENGINE-014, FR-SVL-010, FR-PROXY-014, OPS-DX-009."
+  },
+  {
+   "id": "FR-HTTP-037#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-190, PRD-271",
+   "note": "Testable on the in-memory adapter; client 304 Content-Length delegated to adapters."
+  },
+  {
+   "id": "FR-HTTP-037#AC-9",
+   "verdict": "grounded",
+   "basis": "PRD-190, PRD-271; fills: PRD-41 / contradiction (D-031)",
+   "note": "Restates expired FR-HTTP-017 AC-1 with the relay exception scoped to committed headers."
+  },
+  {
+   "id": "FR-ENGINE-014",
+   "verdict": "grounded",
+   "basis": "PRD-189, PRD-190, PRD-271; fills: PRD-29 / hole",
+   "note": "Statement defers 304 to FR-HTTP-037 rules; Implementation Notes stale (finding coherence-6-2)."
+  },
+  {
+   "id": "FR-ENGINE-014#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-190, PRD-271",
+   "note": "Matches TinyHttpd e73cd5d ExchangeResponse.commit (304 -> discard, lengthHeader -1) and finish() (no short-length abort when discard), so keep-alive clause is achievable."
+  },
+  {
+   "id": "FR-SVL-010",
+   "verdict": "grounded",
+   "basis": "PRD-15, PRD-29, PRD-38, PRD-41, PRD-178, PRD-181, PRD-189, PRD-190, PRD-271",
+   "note": "Implementation Notes stale on 304 (finding coherence-6-3)."
+  },
+  {
+   "id": "FR-SVL-010#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-190, PRD-38, PRD-41, PRD-271",
+   "note": "Adapter hand-over observable on the HttpServletResponse; client side bounded ('never another value')."
+  },
+  {
+   "id": "FR-PROXY-014",
+   "verdict": "grounded",
+   "basis": "PRD-89, PRD-150, PRD-155, PRD-156, PRD-157, PRD-158, PRD-207, PRD-208, PRD-271",
+   "note": "Statement, AC-5, AC-6 and notes agree with FR-HTTP-037 (relay length on 304 committed; client view adapter-dependent)."
+  },
+  {
+   "id": "FR-PROXY-014#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-155, PRD-271; fills: PRD-155 / hole (D-058)",
+   "note": "Relay called with -1/10/-1; client sees 304 Content-Length only where the adapter writes it."
+  },
+  {
+   "id": "OPS-DX-009",
+   "verdict": "grounded",
+   "basis": "PRD-27, PRD-30..PRD-43, PRD-271",
+   "note": "AC-4 describes what relay commits; AC-7 qualifies the client view per adapter; not contradictory."
+  },
+  {
+   "id": "OPS-DX-009#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-271",
+   "note": "Docs state TinyHttpd omits, servlet hands over, HEAD keeps on every built-in adapter."
+  },
+  {
+   "id": "SEC-PROXY-005",
+   "verdict": "grounded",
+   "basis": "PRD-112, PRD-159, PRD-160, PRD-161, PRD-162, PRD-163, PRD-164, PRD-165, PRD-220, PRD-227",
+   "note": "AC-3 not passable as written on the JDK (finding feasibility-6-1)."
+  },
+  {
+   "id": "SEC-PROXY-005#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-159, PRD-220",
+   "note": "Grounded in the item, but its localhost example fails on the JDK (kept finding feasibility-6-1)."
+  },
+  {
+   "id": "SEC-PROXY-005#AC-6",
+   "verdict": "fills",
+   "basis": "PRD-162, PRD-163; fills: PRD-163 / defect",
+   "note": "Real gap (JDK default verifier rejects every host); minimal: tests the held verifier via a package-private seam, production default unchanged."
+  },
+  {
+   "id": "FR-PROXY-017",
+   "verdict": "grounded",
+   "basis": "PRD-8, PRD-13, PRD-107..PRD-112, PRD-160, PRD-211, PRD-212, PRD-238, PRD-245",
+   "note": "Link to FR-PROXY-015 now extends; FR-PROXY-015 keeps depends_on FR-PROXY-017 (AC-9). Rebuilt depends_on graph of the 58: 163 in-target edges, 0 cycles."
+  }
+ ],
+ "findings": [
+  {
+   "id": "feasibility-6-1",
+   "finding_hash": "76d5765d2fae819bc0370df1c737bf986e2ba137",
+   "disposition": "keep",
+   "evidence": {
+    "kind": "failing-check",
+    "detail": "Probe on OpenJDK 17.0.20.1 (scratchpad Probe.java): plain Socket connected to 127.0.0.1, then SSLSocketFactory.getDefault().createSocket(plain, host, port, true).getSSLParameters().getServerNames(): host \"localhost\" -> null (no SNI extension); host \"example.test\" -> [type=host_name (0), value=example.test]. AC-3 quote: 'For a target given by host name (for example `https://localhost:<port>`), the SNI server name the https backend receives in the TLS ClientHello is that target host name.'"
+   },
+   "axis": "feasibility_grounding",
+   "req_id": "SEC-PROXY-005",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md:1319",
+   "description": "SEC-PROXY-005 AC-3 cannot pass with its own example: the JDK sends no SNI for a single-label host such as localhost, so the mandated createSocket(plain, host, port, true) alone does not deliver 'SNI carries the target host name' (statement, line 1309) for that target.",
+   "suggested_action": "fix_via_mcp"
+  },
+  {
+   "id": "coherence-6-2",
+   "finding_hash": "3e8fa4d598c55b0d80496797b1924423bf300674",
+   "disposition": "keep",
+   "evidence": {
+    "kind": "contradicting-quotes",
+    "detail": "docs/spec/06.engine-adapter.srs.md:2071 (Implementation Notes): 'check that TinyHttpd does not add its own `Content-Type` when none is set and keeps a `Content-Length` header on a `HEAD` or `304` response.' vs docs/spec/06.engine-adapter.srs.md:2047 (AC-5): 'answers a `304` response with no body bytes and no `Content-Length` (TinyHttpd 3.1.1 never writes `Content-Length` on a 304 ...)'."
+   },
+   "axis": "coherence",
+   "req_id": "FR-ENGINE-014",
+   "evidence_path": "docs/spec/06.engine-adapter.srs.md:2071",
+   "description": "The amendment changed AC-5 but left the implementation note asking for a 304 Content-Length over TinyHttpd.",
+   "suggested_action": "fix_via_mcp"
+  },
+  {
+   "id": "coherence-6-3",
+   "finding_hash": "0ddb1486458084431f2dfecde1d2e76f0ca82d16",
+   "disposition": "keep",
+   "evidence": {
+    "kind": "contradicting-quotes",
+    "detail": "docs/spec/14.servlet-adapter.srs.md:2058 (Implementation Notes): 'Check that the container neither adds a default `Content-Type` nor strips `Content-Length` from a `HEAD` or `304` response written through `commit`.' vs docs/spec/14.servlet-adapter.srs.md:2032 (AC-4): 'the client seeing `Content-Length: 5` only if the container writes it for a 304 and never another value'."
+   },
+   "axis": "coherence",
+   "req_id": "FR-SVL-010",
+   "evidence_path": "docs/spec/14.servlet-adapter.srs.md:2058",
+   "description": "The note treats a container that strips Content-Length from a 304 as something to rule out, while amended AC-4 (PRD-271) accepts it; only the HEAD part of the note still holds.",
+   "suggested_action": "fix_via_mcp"
+  },
+  {
+   "id": "coherence-6-4",
+   "finding_hash": "c0e224bb7f5d89c6f58a32c22a43ce264f01b4af",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "none",
+    "detail": "Considered OPS-DX-009 AC-4 ('keeps a non-negative length as `Content-Length` without a body for HEAD and 304') against AC-7 (client sees the 304 length only where the adapter writes it)."
+   },
+   "axis": "coherence",
+   "req_id": "OPS-DX-009",
+   "evidence_path": "docs/spec/16.developer-experience.srs.md:1496",
+   "description": "Not a contradiction: AC-4 describes what relay commits (FR-HTTP-037 AC-5/AC-9 use the same wording), AC-7 adds the per-adapter client view.",
+   "suggested_action": "reclassify"
+  },
+  {
+   "id": "coherence-6-5",
+   "finding_hash": "a7124d1d8268243895d9fa7c6f1cbc1040faba9a",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "none",
+    "detail": "Considered FR-HTTP-037 title/statement ('keeps the length on HEAD and 304', 'keeping a non-negative length as Content-Length for HEAD and 304') against AC-5 adapter clause."
+   },
+   "axis": "coherence",
+   "req_id": "FR-HTTP-037",
+   "evidence_path": "docs/spec/04.http-core.srs.md:5482",
+   "description": "Not a contradiction: the statement is about the core's committed headers; AC-5/AC-9 say so explicitly and FR-PROXY-014 notes use the same reading.",
+   "suggested_action": "reclassify"
+  },
+  {
+   "id": "coherence-6-6",
+   "finding_hash": "4959e4b198d860a05c0fa276c737cf6028503ef3",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "none",
+    "detail": "Considered SEC-PROXY-005 statement ('through `HttpsURLConnection.getDefaultHostnameVerifier()` otherwise') against AC-6 test seam."
+   },
+   "axis": "coherence",
+   "req_id": "SEC-PROXY-005",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md:1322",
+   "description": "Not a contradiction: AC-6 keeps getDefaultHostnameVerifier() as the held default and injects another only through a package-private test seam.",
+   "suggested_action": "reclassify"
+  },
+  {
+   "id": "mcp-6-7",
+   "finding_hash": "80785f00801c324a2ed58eb3574a0dace9ac3eef",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "tool-diagnostic",
+    "detail": "speckiwi validate --json: errors 0, warnings 60 (all SRS-W081, all on requirements outside 0.12.0). speckiwi prd coverage docs/prd/2026-11-14.naruserve-proxy.prd.md --target 0.12.0 --json: uncitedItems [], missingItems [], uncitedRequirements [], ungroundedCriteria []."
+   },
+   "axis": "mcp_compliance",
+   "req_id": "_",
+   "evidence_path": "_",
+   "description": "No diagnostic against the amended blocks; dependency graph rebuilt acyclic (FR-PROXY-017 -> FR-PROXY-015 is extends).",
+   "suggested_action": "reclassify"
+  }
+ ],
+ "summary": {
+  "kept": 3,
+  "dropped": 4,
+  "prd_fail": 0,
+  "prd_violated": 0,
+  "srs_drop": 0,
+  "srs_residual": 0
+ }
+}

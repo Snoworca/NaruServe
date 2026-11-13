@@ -1,0 +1,15 @@
+{
+ "iter": 2,
+ "evaluator": "host consolidation of kiwi-srs verifier rounds 7-8",
+ "findings_closed": [
+  "HIGH SEC-PROXY-005 AC-3 (SNI on localhost) - fixed by SRS amendment, accepted in kiwi-srs round 7",
+  "MEDIUM synthesis stale - synthesis.json revised",
+  "MEDIUM Write on 22.reverse-proxy.srs.md - initial template prose before any requirement block, the allowed exception of the golden rule (kiwi-srs \u00a70.G1 row 3)"
+ ],
+ "summary": {
+  "critical": 0,
+  "high": 0,
+  "medium": 0,
+  "low": 3
+ }
+}

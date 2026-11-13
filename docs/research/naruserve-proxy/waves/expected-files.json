@@ -1,0 +1,344 @@
+{
+  "CON-BUILD-019": [
+    "settings.gradle",
+    "build.gradle",
+    "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+    "src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java",
+    "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java",
+    "docs/api/README.md",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/package-info.java"
+  ],
+  "CON-BUILD-020": [
+    "build.gradle",
+    "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java"
+  ],
+  "CON-BUILD-021": [
+    "build.gradle",
+    "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/PublishedTinyHttpdCompatibilityTest.java"
+  ],
+  "FR-APP-027": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java"
+  ],
+  "FR-APP-028": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/RawBodyAccessLogTest.java"
+  ],
+  "FR-ENGINE-013": [
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawRequestSocketTest.java"
+  ],
+  "FR-ENGINE-014": [
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawResponseSocketTest.java"
+  ],
+  "FR-HTTP-030": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestBodyStreamTest.java"
+  ],
+  "FR-HTTP-031": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestBodyStreamLimitsTest.java"
+  ],
+  "FR-HTTP-032": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestRawHeadersTest.java"
+  ],
+  "FR-HTTP-033": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseAppendTest.java"
+  ],
+  "FR-HTTP-034": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ProxyTrustSetting.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/TrustedProxyPeerTest.java"
+  ],
+  "FR-HTTP-035": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java"
+  ],
+  "FR-HTTP-036": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseRelayTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticCacheTest.java"
+  ],
+  "FR-HTTP-037": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseRelayFramingTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java"
+  ],
+  "FR-PROXY-001": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTargetUrlTest.java"
+  ],
+  "FR-PROXY-002": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/HeaderRules.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyOptionsTest.java"
+  ],
+  "FR-PROXY-003": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/HeaderRules.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestHeadersTest.java"
+  ],
+  "FR-PROXY-004": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyHostHeaderTest.java"
+  ],
+  "FR-PROXY-005": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyFixedRequestHeadersTest.java"
+  ],
+  "FR-PROXY-006": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestTargetTest.java"
+  ],
+  "FR-PROXY-007": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RequestBodyCopier.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestBodyTest.java"
+  ],
+  "FR-PROXY-008": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RequestBodyCopier.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBodyLimitTest.java"
+  ],
+  "FR-PROXY-009": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyMethodTest.java"
+  ],
+  "FR-PROXY-010": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java"
+  ],
+  "FR-PROXY-011": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/HeaderRules.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyResponseHeadersTest.java"
+  ],
+  "FR-PROXY-012": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyFixedResponseHeadersTest.java"
+  ],
+  "FR-PROXY-013": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/LocationRewriter.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LocationRewriterTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyLocationRewriteTest.java"
+  ],
+  "FR-PROXY-014": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/FramingLists.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ChunkedBodyInputStream.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyResponseBodyTest.java"
+  ],
+  "FR-PROXY-015": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RequestBodyCopier.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyErrorsTest.java"
+  ],
+  "FR-PROXY-016": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyMidResponseFailureTest.java"
+  ],
+  "FR-PROXY-017": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RequestBodyCopier.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTimeoutsTest.java"
+  ],
+  "FR-PROXY-018": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RetryPolicy.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRetryTest.java"
+  ],
+  "FR-PROXY-019": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ConcurrencyLimiter.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java"
+  ],
+  "FR-PROXY-020": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBackendConnectionTest.java"
+  ],
+  "FR-PROXY-021": [
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyAccessLogTest.java"
+  ],
+  "FR-REL-006": [
+    "build.gradle",
+    "gradle/release.gradle",
+    "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java",
+    "src/test/java/com/snoworca/naruserve/build/CentralStagingTest.java",
+    "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java"
+  ],
+  "FR-REL-007": [
+    "gradle/release.gradle",
+    "build.gradle",
+    "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+    "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java"
+  ],
+  "FR-SVL-010": [
+    "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java",
+    "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawAccessTest.java"
+  ],
+  "IR-APP-009": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/RawBodyLimitTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawBodyLimitKotlinTest.kt",
+    "src/test/java/com/snoworca/naruserve/build/CrossModuleAuthGateTest.java"
+  ],
+  "IR-HTTP-011": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/BodyTooLargeException.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyTooLargeException.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FormBodyReader.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/BodyTooLargeExceptionTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/BodyTooLargeExceptionKotlinTest.kt"
+  ],
+  "IR-HTTP-012": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/common/HttpHeaderValues.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/common/HttpHeaderValuesTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpHeaderValuesKotlinTest.kt"
+  ],
+  "IR-HTTP-013": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+    "src/test/java/com/snoworca/naruserve/build/CrossModuleAuthGateTest.java"
+  ],
+  "IR-HTTP-014": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt"
+  ],
+  "IR-PROXY-001": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/package-info.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyApiTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/RawBackend.java",
+    "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyKotlinTest.kt"
+  ],
+  "IR-PROXY-002": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyException.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExceptionTest.java"
+  ],
+  "OPS-BUILD-004": [
+    "CLAUDE.md",
+    "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java"
+  ],
+  "OPS-DX-008": [
+    "docs/api/request.md",
+    "docs/api/en/request.md",
+    "docs/api/app.md",
+    "docs/api/en/app.md",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt",
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java"
+  ],
+  "OPS-DX-009": [
+    "docs/api/response.md",
+    "docs/api/en/response.md",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawResponseDocsKotlinTest.kt",
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java"
+  ],
+  "OPS-DX-010": [
+    "docs/api/proxy.md",
+    "docs/api/en/proxy.md",
+    "build.gradle",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+    "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java"
+  ],
+  "OPS-DX-011": [
+    "mkdocs.yml",
+    "mkdocs.en.yml",
+    "docs/api/README.md",
+    "docs/api/en/README.md",
+    "README.md",
+    "README.ko.md",
+    "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java"
+  ],
+  "REL-PROXY-001": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyLifetimeSocketTest.java"
+  ],
+  "REL-PROXY-002": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Watchdog.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/WatchdogTest.java"
+  ],
+  "SEC-PROXY-001": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/PathChecker.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/PathCheckerTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyPathChecksTest.java"
+  ],
+  "SEC-PROXY-002": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyForwardedHeadersTest.java"
+  ],
+  "SEC-PROXY-003": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/FramingLists.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/FramingListsTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestFramingTest.java"
+  ],
+  "SEC-PROXY-004": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ChunkedBodyInputStream.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/FramingLists.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/HeaderRules.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/BackendResponseParserTest.java"
+  ],
+  "SEC-PROXY-005": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TlsConnector.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsTest.java"
+  ]
+}

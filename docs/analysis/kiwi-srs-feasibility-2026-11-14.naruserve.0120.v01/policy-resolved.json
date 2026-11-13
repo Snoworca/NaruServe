@@ -1,0 +1,9 @@
+{"policy_source":"default","source_path":null,"note":"no .kiwi/feasibility-policy.yaml in project or home; skill §0.G6 default mapping applies","rules":[
+{"if":{"feasibility":"high","has_verification":true},"then":{"stability":"stable","require_user_confirm":true}},
+{"if":{"feasibility":"high"},"then":{"stability":"evolving"}},
+{"if":{"feasibility":"medium"},"then":{"stability":"keep"}},
+{"if":{"feasibility":"low"},"then":{"stability":"draft","require_user_confirm":"on demotion"}},
+{"if":{"feasibility":"blocked","status_in":["in_progress","implemented","verified"]},"then":{"stability":"keep","report":"status_conflict"}},
+{"if":{"feasibility":"blocked"},"then":{"stability":"deprecated","require_user_confirm":true}},
+{"if":"no match","then":{"stability":"keep","require_user_confirm":true}}],
+"gates":{"status_conflict_policy":"warn"}}

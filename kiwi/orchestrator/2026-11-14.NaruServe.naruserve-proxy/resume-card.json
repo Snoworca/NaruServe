@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-11-14.NaruServe.naruserve-proxy",
+  "run_contract": "docs/research/naruserve-proxy/00.run-contract.md@sha256:2b513c22904e27052e5dbef4693504ffc045481afb8f02fab2fea54b3acdffbf",
+  "position": {
+    "wave": 0,
+    "stage": 0,
+    "phase": "srs"
+  },
+  "next_action": {
+    "verb": "register-wave-srs",
+    "args": {
+      "step": "2.a",
+      "target": "0.12.0",
+      "prd": "docs/prd/2026-11-14.naruserve-proxy.prd.md"
+    },
+    "preconditions": [
+      "P-DESIGN-FROZEN"
+    ]
+  },
+  "frozen": {
+    "engine": "kiwi-orchestrator",
+    "work_root": "docs/research/naruserve-proxy/",
+    "journal": "kiwi/waves.jsonl",
+    "run_root": {
+      "git_toplevel": "/Users/beom/work/git/NaruServe",
+      "mcp_workspace_root": "/Users/beom/work/git/NaruServe"
+    },
+    "isolation_profile": "worktree-parallel",
+    "proof_strength": "strong",
+    "route": {
+      "rung": "R-ORCH",
+      "lock": "docs/research/naruserve-proxy/routing/route.lock.json@sha256:1f66336709fa8359361f7ea94ead7c602b2c551aa83c7307f9e9c5ff9c3f8bc4",
+      "probe_digest": "sha256:0911e9f3b7a3d1adefcf47e6fedfcfb90b435abf1352848edface024858af5d0"
+    },
+    "base_branch": "main",
+    "integration_branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/integration",
+    "integration_base_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4",
+    "design_lock": "docs/research/naruserve-proxy/design/00.design.lock.json@sha256:a46cf24ac753fbe60a4528324e3b310c012fca9f904842c39a551575162b97ce",
+    "constraints": "docs/research/naruserve-proxy/design/constraints.json@sha256:b2645a9c998ce18520b7ae7c8570d9c493d124575511ea5cdb155dc414adab4c",
+    "counts": {
+      "design_items": 75,
+      "integration_items": 5,
+      "constraints": 7
+    },
+    "regression_baseline": {
+      "command": "./gradlew -PtinyHttpdFromMaven=true build",
+      "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4",
+      "failing_tests": []
+    }
+  },
+  "done": [
+    {
+      "key": "preflight-isolation",
+      "proof": {
+        "kind": "digest",
+        "ref": "docs/research/naruserve-proxy/isolation.json@sha256:9e15b807d29333c671bb668944e1ca245720a9208218d1f9f64a68aa6a12699a"
+      }
+    },
+    {
+      "key": "integration-created",
+      "proof": {
+        "kind": "git-ref",
+        "ref": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/integration@853c7734784d13ae75f208bf16dd81e4fa1dbba4"
+      }
+    },
+    {
+      "key": "initial-run-artifacts",
+      "proof": {
+        "kind": "git-trailer",
+        "ref": "22815c580202a4c1223d11dfc74473f34646d533 Orch-Run=2026-11-14.NaruServe.naruserve-proxy Orch-Verb=commit-run-artifacts"
+      }
+    },
+    {
+      "key": "phase-1-artifacts",
+      "proof": {
+        "kind": "git-trailer",
+        "ref": "2786477471ddeb5cfc7d056d7d51fde08e842454 Orch-Run=2026-11-14.NaruServe.naruserve-proxy Orch-Verb=commit-run-artifacts"
+      }
+    },
+    {
+      "key": "design-frozen",
+      "proof": {
+        "kind": "digest",
+        "ref": "docs/research/naruserve-proxy/design/00.design.lock.json@sha256:a46cf24ac753fbe60a4528324e3b310c012fca9f904842c39a551575162b97ce"
+      }
+    }
+  ],
+  "open": [],
+  "blocked_on": null,
+  "invariant_digest": "sha256:6e7fd770d1b41711e6d61f3dd54eb54e3eb2cd2c1f91639c503b828f35676dbf",
+  "written_at": "2026-11-13T16:23:32.874Z"
+}

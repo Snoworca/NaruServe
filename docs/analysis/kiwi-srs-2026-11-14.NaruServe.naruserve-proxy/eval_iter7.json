@@ -1,0 +1,315 @@
+{
+  "evaluator": "verify-pass-1",
+  "iter": 7,
+  "partition": "delta",
+  "prd_items": [
+    {
+      "id": "PRD-159",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "SEC-PROXY-005",
+        "SEC-PROXY-005#AC-3",
+        "SEC-PROXY-005#AC-4"
+      ],
+      "note": "Statement keeps connect(address, connectTimeout) then createSocket(plain, host, port, true); AC-4 forbids self-connecting createSocket; AC-3 observes the host for every https target."
+    },
+    {
+      "id": "PRD-162",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "SEC-PROXY-005#AC-1",
+        "SEC-PROXY-005#AC-2",
+        "SEC-PROXY-005#AC-6"
+      ],
+      "note": "Implementation turns host name verification on; wrong-host backend gives 502 CONNECT_FAILED also with a private-CA factory."
+    },
+    {
+      "id": "PRD-163",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "SEC-PROXY-005",
+        "SEC-PROXY-005#AC-6"
+      ],
+      "note": "Statement names setEndpointIdentificationAlgorithm(\"HTTPS\") and HttpsURLConnection.getDefaultHostnameVerifier() fallback; AC-6 tests the fallback with an injected verifier. Defect fill confirmed by probe: OpenJDK 17.0.20 HttpsURLConnection$DefaultHostnameVerifier.verify returns false for localhost and example.com."
+    },
+    {
+      "id": "PRD-190",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-ENGINE-014#AC-3",
+        "FR-ENGINE-014#AC-4",
+        "FR-ENGINE-014#AC-5",
+        "FR-ENGINE-014#AC-6",
+        "FR-SVL-010#AC-4",
+        "FR-HTTP-037#AC-1",
+        "FR-HTTP-037#AC-3",
+        "FR-HTTP-037#AC-4",
+        "FR-HTTP-037#AC-5",
+        "FR-HTTP-037#AC-6",
+        "FR-HTTP-036#AC-5"
+      ],
+      "note": "Every AC-A13 clause is present (no Content-Type, Content-Length: 5 and 5 bytes, HEAD/304 bodyless, 204 neither, -1 unknown length, -2 IAE, 3-byte stream aborts, no Cache-Control under defaultCache); the 304 Content-Length clause is narrowed per user decision U-2/PRD-271, not weakened unilaterally."
+    },
+    {
+      "id": "PRD-220",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "SEC-PROXY-005#AC-1",
+        "SEC-PROXY-005#AC-2",
+        "SEC-PROXY-005#AC-3"
+      ],
+      "note": "AC-B29 values present: three backends 502 CONNECT_FAILED, one TCP connection each under .retries(2), private CA reaches first backend, wrong host still 502, SNI = target host. SNI oracle uses a dotted host; the defect fill is confirmed by probe (OpenJDK 17.0.20: ClientHello for createSocket(plain,\"localhost\",...) does not contain the name, for \"backend.test\" it does)."
+    },
+    {
+      "id": "PRD-271",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-037#AC-5",
+        "FR-HTTP-037#AC-9",
+        "FR-ENGINE-014#AC-5",
+        "FR-SVL-010#AC-4",
+        "FR-PROXY-014#AC-5",
+        "OPS-DX-009#AC-7"
+      ],
+      "note": "Core commits the length to the adapter on 304; in-memory adapter delivers it; TinyHttpd 3.1.1 omits it (verified: ExchangeResponse.commit at e73cd5d sets no lengthHeader for status 304; managed() swallows the Content-Length header); servlet adapter hands it to the container. TinyHttpd unchanged (FR-ENGINE-014 notes: do not work around it). Note: embedded Jetty 9.4.58 does write Content-Length: 5 on a 304 (probe), so FR-SVL-010 AC-4's either-way acceptance is looser than needed but not contrary to PRD-271."
+    }
+  ],
+  "srs_items": [
+    {
+      "id": "SEC-PROXY-005",
+      "verdict": "grounded",
+      "basis": "PRD-159, PRD-160, PRD-161, PRD-162, PRD-163, PRD-164, PRD-165, PRD-220",
+      "note": "Statement matches request §3.9 https bullet; adds TOTAL_TIMEOUT under watchdog (fills D-063)."
+    },
+    {
+      "id": "SEC-PROXY-005#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-161, PRD-162, PRD-220, PRD-227",
+      "note": "AC-B29 first sentence verbatim in substance."
+    },
+    {
+      "id": "SEC-PROXY-005#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-165, PRD-220",
+      "note": ""
+    },
+    {
+      "id": "SEC-PROXY-005#AC-3",
+      "verdict": "fills",
+      "basis": "PRD-159, PRD-220; fills: PRD-220 / defect (JDK sends no SNI for dotless hosts)",
+      "note": "Defect verified by probe on OpenJDK 17.0.20. Package-private test resolver seam is minimal, public API unchanged (IR-PROXY-001 AC-3). Testable: recording factory for localhost, backend ExtendedSSLSession/ClientHello for backend.test."
+    },
+    {
+      "id": "SEC-PROXY-005#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-159",
+      "note": ""
+    },
+    {
+      "id": "SEC-PROXY-005#AC-5",
+      "verdict": "fills",
+      "basis": "PRD-160, PRD-112; fills: PRD-160 / hole (design D-063)",
+      "note": "Consistent with AC-B20 (handshake timeout with connectTimeout 1 s is CONNECT_TIMEOUT) and Implementation Notes ordering (watchdog deadline checked first)."
+    },
+    {
+      "id": "SEC-PROXY-005#AC-6",
+      "verdict": "fills",
+      "basis": "PRD-162, PRD-163; fills: PRD-163 / defect (JDK default verifier rejects every host)",
+      "note": "Defect verified by probe. Referencing javax/net/ssl/HttpsURLConnection does not put java/net/HttpURLConnection in the constant pool (javap), so no clash with FR-PROXY-020 AC-3."
+    },
+    {
+      "id": "SEC-PROXY-005#AC-7",
+      "verdict": "grounded",
+      "basis": "PRD-164 (design D-067)",
+      "note": "Chooses the reflection branch of PRD-164."
+    },
+    {
+      "id": "SEC-PROXY-005#AC-8",
+      "verdict": "grounded",
+      "basis": "PRD-161, PRD-165",
+      "note": "IR-PROXY-001 AC-3 pins sslSocketFactory(javax.net.ssl.SSLSocketFactory) as the only TLS option."
+    },
+    {
+      "id": "FR-ENGINE-014",
+      "verdict": "grounded",
+      "basis": "PRD-189, PRD-190, PRD-271",
+      "note": "Statement not amended for the 304 exception; see finding internal-coherence-7-1."
+    },
+    {
+      "id": "FR-ENGINE-014#AC-1",
+      "verdict": "fills",
+      "basis": "PRD-189; fills: PRD-189 / hole (design D-069)",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-014#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-189",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-014#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-190, PRD-38",
+      "note": "TinyHttpd commit adds only Date, Server, app headers, Content-Length/TE, Connection; no default Content-Type."
+    },
+    {
+      "id": "FR-ENGINE-014#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-41, PRD-190",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-014#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-190, PRD-271",
+      "note": "Verified against TinyHttpd e73cd5d (v3.1.1) ExchangeResponse.commit: 304 -> discard, lengthHeader -1; HEAD -> lengthHeader = contentLength; 204 -> none. RFC 9110 §8.6 permits CL on 304 (MAY)."
+    },
+    {
+      "id": "FR-ENGINE-014#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-41, PRD-190",
+      "note": ""
+    },
+    {
+      "id": "FR-SVL-010",
+      "verdict": "grounded",
+      "basis": "PRD-29, PRD-181, PRD-15, PRD-178, PRD-190, PRD-189, PRD-271",
+      "note": "Implementation Notes line refs verified (snapshotHeaders :166, onAbort :341-342, abort :355); notes agree with AC-4."
+    },
+    {
+      "id": "FR-SVL-010#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-29, PRD-181",
+      "note": ""
+    },
+    {
+      "id": "FR-SVL-010#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-29",
+      "note": ""
+    },
+    {
+      "id": "FR-SVL-010#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-15, PRD-178",
+      "note": "Servlet part of AC-A1 (JSON and gzip)."
+    },
+    {
+      "id": "FR-SVL-010#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-190, PRD-38, PRD-41, PRD-271",
+      "note": "Testable: handed-over value read on the HttpServletResponse; client CL either 5 or absent. Probe: Jetty 9.4.58 writes Content-Length: 5 on a 304 (with and without flush) and on HEAD."
+    },
+    {
+      "id": "FR-SVL-010#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-189",
+      "note": ""
+    }
+  ],
+  "findings": [
+    {
+      "id": "internal-coherence-7-1",
+      "finding_hash": "8a823a012ac9aff5450ff65bcf3024809f7f5f8b",
+      "disposition": "keep",
+      "evidence": {
+        "kind": "contradicting-quotes",
+        "detail": "docs/spec/06.engine-adapter.srs.md:2034 (FR-ENGINE-014 statement): \"put `res.relay` responses on the wire with exactly the `Content-Type` the app set, the `Content-Length` taken from the length argument, the bodyless `HEAD`, `204` and `304` rules of FR-HTTP-037\" — and FR-HTTP-037's rule (docs/spec/04.http-core.srs.md:5482) is \"keeping a non-negative length as `Content-Length` for `HEAD` and `304`\"; versus docs/spec/06.engine-adapter.srs.md:2047 (FR-ENGINE-014 AC-5): \"answers a `304` response with no body bytes and no `Content-Length`\"."
+      },
+      "axis": "internal-coherence",
+      "req_id": "FR-ENGINE-014",
+      "evidence_path": "docs/spec/06.engine-adapter.srs.md",
+      "description": "The amendment changed AC-5 and the notes but not the statement: the statement still says the TinyHttpd wire carries the Content-Length taken from the length argument under FR-HTTP-037's rule that keeps it on 304, while AC-5 says TinyHttpd sends none on 304.",
+      "suggested_action": "fix_via_mcp"
+    },
+    {
+      "id": "conflict-7-2",
+      "finding_hash": "081713940e03ed08a0795c4fd20a808e258bcbe6",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "PRD-271 \"(서블릿·인메모리 어댑터는 전달 ...)\" vs FR-SVL-010 AC-4 \"the client seeing `Content-Length: 5` only if the container writes it for a 304\". Not contradicting: the adapter does hand it over (\"전달\"), and on the embedded Jetty 9.4.58 the client does receive Content-Length: 5 (probe in scratchpad jetty/JettyProbe.java)."
+      },
+      "axis": "conflict",
+      "req_id": "FR-SVL-010",
+      "evidence_path": "docs/spec/14.servlet-adapter.srs.md",
+      "description": "Possible weakening of PRD-271 for the servlet adapter; dropped because the adapter's part is stated and observed. Optional tightening: on embedded Jetty the test could require Content-Length: 5.",
+      "suggested_action": "escalate"
+    },
+    {
+      "id": "internal-coherence-7-3",
+      "finding_hash": "6a4ef58295f3deef7efc6333b32def183c194333",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "Statement \"so that SNI carries the target host name\" vs AC-3 \"the JDK sends no SNI for the dotless name `localhost`\". The statement's clause is a purpose of the createSocket(plain, host, ...) call, which AC-3 requires for every target; the dated Rationale bullet records the platform limit."
+      },
+      "axis": "internal-coherence",
+      "req_id": "SEC-PROXY-005",
+      "evidence_path": "docs/spec/22.reverse-proxy.srs.md",
+      "description": "No contradicting obligation; dropped.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "conflict-7-4",
+      "finding_hash": "e18b83bcae9a07adcaf49e7699fc31ad366b94f3",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "Checked: javac --release 8 of a call to HttpsURLConnection.getDefaultHostnameVerifier() gives constant-pool entries only for javax/net/ssl/HttpsURLConnection (javap -v), not java/net/HttpURLConnection."
+      },
+      "axis": "conflict",
+      "req_id": "FR-PROXY-020",
+      "evidence_path": "docs/spec/22.reverse-proxy.srs.md",
+      "description": "SEC-PROXY-005 fallback verifier does not break FR-PROXY-020 AC-3's class-reference ban.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "conflict-7-5",
+      "finding_hash": "d1d4130463fe91e92016d36d9ea5674c7bc01bc4",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "FR-HTTP-037 statement \"keeping a non-negative length as `Content-Length` for `HEAD` and `304`\" is scoped by its AC-5 (\"commits `Content-Length: 5` ... to the adapter ... whether a client receives the `Content-Length` of a `304` is the adapter's choice\") and AC-9 (\"in the headers it commits to the adapter\")."
+      },
+      "axis": "conflict",
+      "req_id": "FR-HTTP-037",
+      "evidence_path": "docs/spec/04.http-core.srs.md",
+      "description": "Core requirement does not contradict FR-ENGINE-014 AC-5 or FR-SVL-010 AC-4; FR-PROXY-014 AC-5 and OPS-DX-009 AC-7 use the same adapter-dependent wording.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "internal-coherence-7-6",
+      "finding_hash": "c8bccb6013e2f3c80bb958408117d702fc62b2d8",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "OPS-DX-009 AC-4 \"keeps a non-negative length as `Content-Length` without a body for HEAD and 304\" and AC-7 \"the client sees that `Content-Length` only where the adapter writes it: TinyHttpd 3.1.1 omits it\" describe relay's commit and the adapter's wire result respectively; both can be documented together."
+      },
+      "axis": "internal-coherence",
+      "req_id": "OPS-DX-009",
+      "evidence_path": "docs/spec/16.developer-experience.srs.md",
+      "description": "No contradiction with FR-ENGINE-014 AC-5 / FR-SVL-010 AC-4 (HEAD keeps CL on every built-in adapter in all three).",
+      "suggested_action": "discard"
+    }
+  ],
+  "tool_runs": {
+    "speckiwi validate --json": "errors 0, warnings 60, all SRS-W081, none on a 0.12.0 requirement (targets checked)",
+    "speckiwi prd coverage docs/prd/2026-11-14.naruserve-proxy.prd.md --target 0.12.0 --json": "uncitedItems [], assignedToOtherTargets [], missingItems [], uncitedRequirements [], ungroundedCriteria []"
+  },
+  "summary": {
+    "kept": 1,
+    "dropped": 5,
+    "prd_fail": 0,
+    "prd_violated": 0,
+    "srs_drop": 0,
+    "srs_residual": 0
+  }
+}

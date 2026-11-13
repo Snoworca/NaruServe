@@ -1,0 +1,544 @@
+{
+  "evaluator": "verify-pass-1",
+  "iter": 3,
+  "partition": "delta",
+  "prd_items": [
+    {
+      "id": "PRD-23",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-031#AC-1",
+        "FR-HTTP-031#AC-5",
+        "IR-HTTP-011#AC-1",
+        "IR-HTTP-011#AC-6"
+      ],
+      "note": "Overrun of an undeclared-length body throws BodyTooLargeException (IOException subclass) at the crossing read: FR-HTTP-031 AC-1 (byte 1025 at limit 1024), AC-5 (chunked over rawBodyLimit), IR-HTTP-011 AC-1 (direct IOException subclass) and AC-6."
+    },
+    {
+      "id": "PRD-24",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "IR-HTTP-011#AC-1",
+        "IR-HTTP-011#AC-2",
+        "IR-HTTP-011#AC-3"
+      ],
+      "note": "Class is public final in com.snoworca.naruserve (AC-1) and absent from internal with no alias (AC-2); internal readers use the public class (AC-3)."
+    },
+    {
+      "id": "PRD-145",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "CON-BUILD-019#AC-1",
+        "CON-BUILD-019#AC-2",
+        "CON-BUILD-019#AC-5",
+        "FR-REL-006#AC-1",
+        "FR-REL-006#AC-3"
+      ],
+      "note": "Separate module NaruServe-proxy with artifact naruserve-proxy (CON-BUILD-019 AC-1/AC-2, FR-REL-006 AC-1 artifactId naruserve-proxy); apps without the proxy get no backend client code (CON-BUILD-019 statement and AC-5: NaruServe, NaruServe-kotlin, NaruServe-android do not depend on it)."
+    },
+    {
+      "id": "PRD-150",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "SEC-PROXY-004#AC-4",
+        "SEC-PROXY-004#AC-5",
+        "SEC-PROXY-004#AC-7",
+        "FR-PROXY-014#AC-1",
+        "FR-PROXY-014#AC-2",
+        "FR-PROXY-014#AC-3"
+      ],
+      "note": "RFC 9112 §6.3 order of the request table (101, other 1xx, HEAD/204/304, TE+CL, chunked only, other TE, bad CL, CL, neither) is kept: SEC-PROXY-004 statement puts HEAD/204/304 bodyless before framing headers and limits AC-4/AC-5 to final responses that can carry a body; non-chunked codings rejected (stricter than RFC) in AC-5 (gzip, chunked / identity)."
+    },
+    {
+      "id": "PRD-151",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "SEC-PROXY-004#AC-9"
+      ],
+      "note": "Status line and headers read as ISO-8859-1; 0xE9 byte relayed as U+00E9/0xE9."
+    },
+    {
+      "id": "PRD-152",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "SEC-PROXY-004#AC-1",
+        "SEC-PROXY-004#AC-2",
+        "SEC-PROXY-004#AC-3",
+        "SEC-PROXY-004#AC-10"
+      ],
+      "note": "Every listed malformation present with the request's values: bad status line (AC-1), status line + headers over 64 KiB = 65536 bytes (AC-2), obs-fold and header-check failures incl. 0x00/0x7F (AC-3), chunk-size line over 4 KiB with extensions and trailers over 64 KiB (AC-10)."
+    },
+    {
+      "id": "PRD-155",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-PROXY-014#AC-4",
+        "FR-PROXY-014#AC-5",
+        "FR-PROXY-014#AC-6",
+        "SEC-PROXY-004#AC-4",
+        "SEC-PROXY-004#AC-5"
+      ],
+      "note": "HEAD responses, 204 and 304 are read without a body whatever their length headers say (FR-PROXY-014 statement and AC-6; SEC-PROXY-004 AC-4/AC-5 route these to FR-PROXY-014 AC-6). Matches the request row 'HEAD 요청에 대한 응답, 204, 304 | 본문을 읽지 않음' placed before the INVALID_RESPONSE framing rows."
+    },
+    {
+      "id": "PRD-221",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "SEC-PROXY-004#AC-1",
+        "SEC-PROXY-004#AC-2",
+        "SEC-PROXY-004#AC-3",
+        "SEC-PROXY-004#AC-4",
+        "SEC-PROXY-004#AC-5",
+        "SEC-PROXY-004#AC-6",
+        "SEC-PROXY-004#AC-8",
+        "FR-PROXY-016#AC-1",
+        "FR-PROXY-016#AC-2"
+      ],
+      "note": "Request AC-B30 cases all present: bad status line, >64 KiB headers, obs-fold, 0x00/0x7F value, CL with TE, differing CLs, CL -1, CL abc, TE gzip,chunked, TE identity, 101 -> 502 INVALID_RESPONSE; close before the status line (SEC-PROXY-004 AC-8); mid-body bad chunk (>4 KiB size line, >64 KiB trailers) and short Content-Length body abort the client connection and log a ProxyException INVALID_RESPONSE to the app logger (FR-PROXY-016 AC-1/AC-2). The round-2 limitation of AC-4/AC-5 to bodyful responses does not drop any AC-B30 case: each AC-B30 framing case is a final response that can carry a body."
+    },
+    {
+      "id": "PRD-231",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "CON-BUILD-019#AC-5",
+        "CON-BUILD-020#AC-4",
+        "CON-BUILD-021#AC-6",
+        "CON-BUILD-021#AC-8"
+      ],
+      "note": "Request A stays in naruserve-api (IR-HTTP-011 class in com.snoworca.naruserve of NaruServe-api) and request B in the separate naruserve-proxy module depending on NaruServe-api only (CON-BUILD-019 AC-3/AC-4)."
+    }
+  ],
+  "srs_items": [
+    {
+      "id": "SEC-PROXY-004",
+      "verdict": "grounded",
+      "basis": "PRD-150, PRD-151, PRD-152, PRD-154, PRD-221",
+      "note": "Statement now places HEAD/204/304 bodyless before any framing header and limits the CL/TE malformation clauses to 'a final response that can carry a body'; agrees with FR-PROXY-014 statement and AC-6 and with the request table order."
+    },
+    {
+      "id": "SEC-PROXY-004#AC-1",
+      "verdict": "fills",
+      "basis": "PRD-152, PRD-221; fills: PRD-152 / hole / status outside 100..599 is malformed (D-059)",
+      "note": "Minimal hole fill; 600 and 099 are the only out-of-range examples."
+    },
+    {
+      "id": "SEC-PROXY-004#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-152, PRD-221",
+      "note": "64 KiB = 65536 bytes matches the request."
+    },
+    {
+      "id": "SEC-PROXY-004#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-152, PRD-221",
+      "note": "obs-fold, 0x00/0x7F value, non-token name."
+    },
+    {
+      "id": "SEC-PROXY-004#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-150, PRD-221",
+      "note": "Limited to final responses that can carry a body; HEAD/204/304 deferred to FR-PROXY-014 AC-6 - consistent with the request table order. Values CL 5/6, -1, abc match AC-B30."
+    },
+    {
+      "id": "SEC-PROXY-004#AC-5",
+      "verdict": "fills",
+      "basis": "PRD-150, PRD-221; fills: PRD-150 / hole / parameters, empty values follow request parsing (D-054, D-073)",
+      "note": "gzip, chunked and identity from AC-B30; chunked;x=1 and empty value are the minimal fill aligned with SEC-PROXY-003 AC-6."
+    },
+    {
+      "id": "SEC-PROXY-004#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-154, PRD-208, PRD-221",
+      "note": "101 -> INVALID_RESPONSE; 100/103 skipped and not forwarded."
+    },
+    {
+      "id": "SEC-PROXY-004#AC-7",
+      "verdict": "fills",
+      "basis": "PRD-150; fills: PRD-150 / hole (D-054, D-073)",
+      "note": "Same list parsing as SEC-PROXY-003 AC-5 (5, 5 / 5 and 05 / CHUNKED / chunked,)."
+    },
+    {
+      "id": "SEC-PROXY-004#AC-8",
+      "verdict": "grounded",
+      "basis": "PRD-221",
+      "note": "Close or reset before the status line or mid-header -> INVALID_RESPONSE (AC-B30, request error table line 287)."
+    },
+    {
+      "id": "SEC-PROXY-004#AC-9",
+      "verdict": "grounded",
+      "basis": "PRD-151",
+      "note": ""
+    },
+    {
+      "id": "SEC-PROXY-004#AC-10",
+      "verdict": "grounded",
+      "basis": "PRD-152, PRD-153, PRD-221",
+      "note": "4 KiB chunk-size line incl. extensions, 64 KiB trailers, trailers read and discarded."
+    },
+    {
+      "id": "SEC-PROXY-004#AC-11",
+      "verdict": "fills",
+      "basis": "PRD-177; fills: PRD-177 / hole / raw ServerSocket test backends (D-070)",
+      "note": ""
+    },
+    {
+      "id": "FR-PROXY-014",
+      "verdict": "grounded",
+      "basis": "PRD-89, PRD-150, PRD-155, PRD-156, PRD-157, PRD-158, PRD-207, PRD-208",
+      "note": "Statement agrees with SEC-PROXY-004 (bodyless first). See kept finding internal-coherence-3-1: the lenient bodyless Content-Length rule admits an all-digit value that does not fit the long length argument of res.relay."
+    },
+    {
+      "id": "FR-PROXY-014#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-89, PRD-150, PRD-157, PRD-207",
+      "note": ""
+    },
+    {
+      "id": "FR-PROXY-014#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-150, PRD-156",
+      "note": "chunked -> relay -1."
+    },
+    {
+      "id": "FR-PROXY-014#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-150, PRD-158",
+      "note": "neither header -> read until close, relay -1."
+    },
+    {
+      "id": "FR-PROXY-014#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-155, PRD-208",
+      "note": "HEAD keeps backend Content-Length 1234, no body read (AC-B17)."
+    },
+    {
+      "id": "FR-PROXY-014#AC-5",
+      "verdict": "fills",
+      "basis": "PRD-155; fills: PRD-155 / hole / relay length for bodyless responses (D-058)",
+      "note": "Agrees with FR-HTTP-037 AC-5/AC-6 (304 keeps length, 204 sends none)."
+    },
+    {
+      "id": "FR-PROXY-014#AC-6",
+      "verdict": "fills",
+      "basis": "PRD-155; fills: PRD-155 / hole / relay length when the bodyless response carries an unusable Content-Length",
+      "note": "No INVALID_RESPONSE for HEAD/204/304 framing headers, matching PRD-155 '길이 헤더와 관계없이'. The relay(-1) results agree with FR-HTTP-037 AC-5 (no Content-Length on HEAD/304 with -1) and FR-PROXY-011 (Content-Length never copied as a header)."
+    },
+    {
+      "id": "FR-REL-006",
+      "verdict": "grounded",
+      "basis": "PRD-145, PRD-148",
+      "note": "Publishing of naruserve-proxy like the other modules (design D-041)."
+    },
+    {
+      "id": "FR-REL-006#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-145",
+      "note": "Refers to FR-REL-005 AC-5 only for url/license/developer/scm, avoiding its stale 0.9.0 version."
+    },
+    {
+      "id": "FR-REL-006#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-145, PRD-148",
+      "note": ""
+    },
+    {
+      "id": "FR-REL-006#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-145",
+      "note": ""
+    },
+    {
+      "id": "FR-REL-006#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-145",
+      "note": "Full restatement of expired FR-REL-005 AC-7: delete, publish, fail naming NaruServe-android, exactly N artifactIds each with the five files of FR-REL-005 AC-6, release-machine run recorded as central-staging; only the count changes 10 -> 11 and the list is explicit. Nothing of the old text is lost."
+    },
+    {
+      "id": "FR-REL-006#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-145",
+      "note": "Restates FR-REL-001 AC-1 with ten naruModules entries; FR-REL-007 statement and rationale agree."
+    },
+    {
+      "id": "CON-BUILD-019",
+      "verdict": "grounded",
+      "basis": "PRD-145, PRD-147, PRD-148, PRD-231",
+      "note": ""
+    },
+    {
+      "id": "CON-BUILD-019#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-145",
+      "note": "Restates expired CON-BUILD-002 AC-1 with ten modules; logger module names preserved."
+    },
+    {
+      "id": "CON-BUILD-019#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-145",
+      "note": "naruModules entry, no module build file (agrees with CON-BUILD-017)."
+    },
+    {
+      "id": "CON-BUILD-019#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-145, PRD-148",
+      "note": "Restates CON-BUILD-006 AC-1; values match build.gradle mainDependencies (gson 2.14.0, slf4j-api 1.7.36, TinyHttpd via CON-BUILD-018 pin - build.gradle holds 3.1.1, so not repeating the stale 3.1.0 is correct). CON-BUILD-021 statement points to this list; no conflict."
+    },
+    {
+      "id": "CON-BUILD-019#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-145, PRD-148",
+      "note": ""
+    },
+    {
+      "id": "CON-BUILD-019#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-145, PRD-231",
+      "note": ""
+    },
+    {
+      "id": "CON-BUILD-019#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-147",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-011",
+      "verdict": "grounded",
+      "basis": "PRD-23, PRD-24",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-011#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-24, PRD-23",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-011#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-24",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-011#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-24, PRD-23",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-011#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-24",
+      "note": "Wording now cites FR-JSON-001 AC-4 (live) and AC-8 of this requirement instead of the expired FR-JSON-001 AC-9; testable."
+    },
+    {
+      "id": "IR-HTTP-011#AC-5",
+      "verdict": "fills",
+      "basis": "PRD-50; fills: PRD-50 / hole / no @NonNull on public API (D-037)",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-011#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-24, PRD-23",
+      "note": "Restates expired FR-HTTP-020 AC-3 incl. its decision 'reads at most limit+1 bytes'."
+    },
+    {
+      "id": "IR-HTTP-011#AC-7",
+      "verdict": "grounded",
+      "basis": "PRD-24, PRD-23",
+      "note": "Restates expired FR-HTTP-020 AC-4."
+    },
+    {
+      "id": "IR-HTTP-011#AC-8",
+      "verdict": "grounded",
+      "basis": "PRD-24",
+      "note": "Restates expired FR-JSON-001 AC-9 incl. both decisions (state-based detection; same HttpException instance). 'each failure of this requirement' became 'each such failure' - see dropped finding incremental-delta-3-3."
+    },
+    {
+      "id": "IR-HTTP-011#AC-9",
+      "verdict": "fills",
+      "basis": "PRD-24; fills: PRD-24 / defect / restates FR-JSON-001 AC-2 whose exception clause pointed at the expired AC-9",
+      "note": "Word-for-word restatement of old FR-JSON-001 AC-2 incl. its decision (codec IOException -> 400, unchecked -> 500); exception now points at AC-8."
+    },
+    {
+      "id": "FR-JSON-001#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-24",
+      "note": "Expiry justified: its 'unless AC-9 applies' clause bound to an expired criterion, which counts nowhere (SRS-MD Rules §21.7 item 3); full text survives as IR-HTTP-011 AC-9."
+    },
+    {
+      "id": "FR-JSON-001#AC-9",
+      "verdict": "grounded",
+      "basis": "PRD-24",
+      "note": "Expiry justified: text named 'its internal BodyTooLargeException', false after the move; restated as IR-HTTP-011 AC-8."
+    },
+    {
+      "id": "FR-HTTP-031",
+      "verdict": "grounded",
+      "basis": "PRD-18, PRD-20, PRD-22, PRD-23, PRD-25, PRD-180, PRD-184, PRD-187, PRD-243",
+      "note": "Notes verified: JsonBodyReader.java:37-40 throws HttpException(413) before reading; DefaultRestApp.byteLimit() enforces 1..MAX_LIMIT; LimitedInputStream behaviour as described."
+    },
+    {
+      "id": "FR-HTTP-031#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-18, PRD-20, PRD-23",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-031#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-22, PRD-187, PRD-243",
+      "note": "1 MiB app limit, 2 MiB call limit, 1.5 MiB body, byte 1025 at 1024 - all match AC-A10."
+    },
+    {
+      "id": "FR-HTTP-031#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-22, PRD-187",
+      "note": "Range 1..1073741824 exact; bodyStream(0) IAE per AC-A10."
+    },
+    {
+      "id": "FR-HTTP-031#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-184",
+      "note": "413 HttpException from the call before reading (AC-A7)."
+    },
+    {
+      "id": "FR-HTTP-031#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-23, PRD-25, PRD-180",
+      "note": "AC-A3; 413 via FR-APP-027."
+    }
+  ],
+  "findings": [
+    {
+      "id": "internal-coherence-3-1",
+      "finding_hash": "99659c73be6034b67d07538e868f803188a244b3",
+      "disposition": "keep",
+      "evidence": {
+        "kind": "failing-check",
+        "detail": "FR-PROXY-014 Requirement (22.reverse-proxy.srs.md:1162): 'passing for HEAD and 304 the `Content-Length` value when it is a single all-digit value or several identical ones and `-1` otherwise'. The value `Content-Length: 99999999999999999999` is a single all-digit value, so the statement requires passing it, but it exceeds Long.MAX_VALUE 9223372036854775807 and cannot be the `long contentLength` argument of `res.relay(in, contentLength)` (FR-HTTP-037). The request-side parser it is meant to mirror bounds the same input: SEC-PROXY-003 Requirement 'Content-Length elements required to be digits that fit in a long and compared numerically' and SEC-PROXY-003 AC-2 'Content-Length: 99999999999999999999 ... get 400'. Secondary: 'several identical ones' vs SEC-PROXY-004 AC-7 'Content-Length: 5 and Content-Length: 05 are read as 5-byte bodies' (numeric equality) leaves undecided whether HEAD/304 lines `10` and `010` give 10 or -1."
+      },
+      "axis": "internal-coherence",
+      "req_id": "FR-PROXY-014",
+      "evidence_path": "docs/spec/22.reverse-proxy.srs.md:1162#Requirement",
+      "description": "The bodyless lenient Content-Length rule (round-2 statement and AC-6) prescribes an impossible action for an all-digit value that overflows long and does not say whether identity is textual or numeric; an implementer must guess (NumberFormatException -> -1?).",
+      "suggested_action": "fix_via_mcp"
+    },
+    {
+      "id": "scope-fit-3-2",
+      "finding_hash": "e5596959942b9c902ce8b52051f920f910ccbf9f",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "Considered: IR-HTTP-011 Requirement covers the public class, its removal from internal and 'make every internal limit-enforcing reader throw and catch the public class'; AC-9 asserts JSON 400 mapping. Not a contradiction: AC-9 is the non-overrun side of the catch rule of AC-8 (an IOException that is not the recorded overrun -> 400), and SRS-MD gives no diagnostic."
+      },
+      "axis": "scope-fit",
+      "req_id": "IR-HTTP-011",
+      "evidence_path": "docs/spec/04.http-core.srs.md:4777#AC-9",
+      "description": "AC-9 restates FR-JSON-001 AC-2 inside an interface requirement whose statement does not name the 400 mapping; acceptable as the complement of the catch rule, no evidence of a defect.",
+      "suggested_action": "reclassify"
+    },
+    {
+      "id": "incremental-delta-3-3",
+      "finding_hash": "e735cb9884f23817840bc98fe5a9e4c1ff896a31",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "Old FR-JSON-001 AC-9: 'each failure of this requirement reaches `onError` and the access log like any handler exception of FR-APP-005'; IR-HTTP-011 AC-8: 'each such failure reaches `onError` and the access log'. The narrowed clause loses nothing still true: FR-APP-005 AC-1/AC-2 route a handler's IOException, HttpException(400/413) and UnsupportedMediaTypeException to onError, and FR-APP-019 logs one access line per request."
+      },
+      "axis": "incremental-delta",
+      "req_id": "IR-HTTP-011",
+      "evidence_path": "docs/spec/04.http-core.srs.md:4777#AC-8",
+      "description": "Comparison of the full old texts of FR-JSON-001 AC-2/AC-9 with IR-HTTP-011 AC-9/AC-8: every clause and both decisions are carried over; only the onError clause narrows and its broader rule is owned by FR-APP-005/FR-APP-019.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "incremental-delta-3-4",
+      "finding_hash": "18b13b706fd508233be703aadf0a94de972b988e",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "Considered a wrongly expired criterion (its 400 rules are still true). SRS-MD Rules §21.7 item 3: 'An expired criterion counts nowhere'; AC-2's exception 'unless AC-9 applies' bound to the expired AC-9, so it could not stay a self-contained live check; its full text is restated verbatim in IR-HTTP-011 AC-9 with the exception re-pointed."
+      },
+      "axis": "incremental-delta",
+      "req_id": "FR-JSON-001",
+      "evidence_path": "docs/spec/07.json.srs.md:237#AC-2",
+      "description": "Expiry of FR-JSON-001 AC-2 is justified and its successor is complete.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "trace-path-3-5",
+      "finding_hash": "3a2fdb90e4de8d9e9f2c1cd18b306e24b6ee6e72",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "Row 'Requirement | FR-REL-007 | extends | re_stated_from: FR-REL-001#AC-1 (FR-REL-001 is superseded by FR-REL-007)'. FR-REL-007 does not hold FR-REL-001 AC-1, but the note names the discarded source and its successor, FR-REL-007's rationale says 'FR-REL-006 AC-5 already restates FR-REL-001 AC-1', and validate reports no diagnostic on FR-REL-006. All Code trace paths exist (build.gradle, gradle/release.gradle, PublishedPomTest.java, CentralStagingTest.java); the notes' claims ('ten modules' at build.gradle:614/623, 'the nine JAR modules' at gradle/release.gradle:13, PublishedPomTest.artifactIds() iterating BuildLayoutTest.MODULES, ReleaseRecordsDocsTest.publishedModules()) all hold."
+      },
+      "axis": "trace-path",
+      "req_id": "FR-REL-006",
+      "evidence_path": "docs/spec/15.release.srs.md:1637#TraceLinks",
+      "description": "Link row semantics are consistent; no defect.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "internal-coherence-3-6",
+      "finding_hash": "f4a0cb9e295707f4cc868594c8a5d663e06d967c",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "Statement 'Content-Length elements that are not digits or differ' vs AC-7 '5 and 05 are read as 5-byte bodies': 'differ' is read numerically through the statement's 'with the same list parsing as requests' (SEC-PROXY-003 'compared numerically'), so no contradiction."
+      },
+      "axis": "internal-coherence",
+      "req_id": "SEC-PROXY-004",
+      "evidence_path": "docs/spec/22.reverse-proxy.srs.md:1223#Requirement",
+      "description": "No contradiction between the round-2 statement and AC-4/AC-5/AC-7; the HEAD/204/304 carve-out agrees with FR-PROXY-014 AC-6, FR-HTTP-037 AC-5/AC-6, FR-PROXY-011 (Content-Length never copied), FR-PROXY-015 and FR-PROXY-016.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "mcp-srs-md-compliance-3-7",
+      "finding_hash": "cde15b3daf39196f1aaedc0cc498487e40e85198",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "tool-diagnostic",
+        "detail": "speckiwi validate --json (5.5.1): exit 0, 0 errors, 60 warnings all SRS-W081, on CON-BUILD-004/007/008/009/011/013, OPS-BUILD-002, FR-ROUTE-002..017, IR-ROUTE-004, OPS-ROUTE-003, FR-HTTP-001/004/008/023, IR-APP-005, FR-APP-009/011, SEC-APP-001, CON-APP-001, OPS-APP-002, IR-ENGINE-002, FR-ENGINE-002..007/009, FR-STATIC-001/002/011, FR-WS-001/004, CON-SVL-001, FR-REL-002/004/005, OPS-REL-003, CON-AUTH-001, OPS-APIKEY-001, FR-APIKEY-006 - none of them in list_requirements {target: 0.12.0} (58 ids). speckiwi prd coverage ... --target 0.12.0 --json: uncitedItems [], assignedToOtherTargets [], missingItems [], uncitedRequirements [], ungroundedCriteria []."
+      },
+      "axis": "mcp-srs-md-compliance",
+      "req_id": "_",
+      "evidence_path": "speckiwi validate --json; speckiwi prd coverage",
+      "description": "Tool checks pass the round-3 gate: only SRS-W081 diagnostics, all on requirements outside target 0.12.0, and every coverage list empty.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "incremental-delta-3-8",
+      "finding_hash": "33d3188bb9f19f86eef557d9e3580c9396c46055",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "FR-REL-005 AC-5/AC-6 still say version 0.9.0 while build.gradle:25 holds version = '0.11.0'; this staleness predates the run (0.10/0.11 releases) and is not caused by adding naruserve-proxy. FR-REL-006 AC-1 cites only the url/license/developer/scm entries of FR-REL-005 AC-5 and uses 'the build version', so it does not inherit the stale value."
+      },
+      "axis": "incremental-delta",
+      "req_id": "FR-REL-005",
+      "evidence_path": "docs/spec/15.release.srs.md:483#AC-5",
+      "description": "Pre-existing staleness outside this delta.",
+      "suggested_action": "discard"
+    }
+  ],
+  "summary": {
+    "kept": 1,
+    "dropped": 7,
+    "prd_fail": 0,
+    "prd_violated": 0,
+    "srs_drop": 0,
+    "srs_residual": 0
+  }
+}

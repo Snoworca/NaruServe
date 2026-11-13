@@ -1,0 +1,1929 @@
+{
+ "evaluator": "verify-pass-1",
+ "iter": 1,
+ "partition": "proxy-response-and-client",
+ "prd_items": [
+  {
+   "id": "PRD-87",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-011#AC-2",
+    "FR-PROXY-011#AC-6",
+    "FR-PROXY-011#AC-10"
+   ],
+   "note": "First line via res.header, later lines via res.append; app-set same-name header replaced, other names kept (AC-6)."
+  },
+  {
+   "id": "PRD-88",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-011#AC-7",
+    "FR-PROXY-011#AC-8"
+   ],
+   "note": "Set-Cookie and Vary always res.append; addCookie + 2 backend cookies = 3; Vary keeps Origin."
+  },
+  {
+   "id": "PRD-89",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-011#AC-5",
+    "FR-PROXY-014#AC-1"
+   ],
+   "note": "Content-Length never passed to res.header/res.append, only as relay length."
+  },
+  {
+   "id": "PRD-91",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-012#AC-1",
+    "FR-PROXY-012#AC-2",
+    "FR-PROXY-012#AC-5"
+   ],
+   "note": "responseHeader applied with res.header after copy and Location rewrite; removeResponseHeader keeps the app value."
+  },
+  {
+   "id": "PRD-92",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-013#AC-1",
+    "FR-PROXY-013#AC-2",
+    "FR-PROXY-013#AC-4",
+    "FR-PROXY-013#AC-5"
+   ],
+   "note": "Same origin (default port = omitted, scheme/host case-insensitive) and base-path or base-path + '/' prefix; others unchanged."
+  },
+  {
+   "id": "PRD-93",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-013#AC-1",
+    "FR-PROXY-013#AC-8",
+    "FR-PROXY-013#AC-10"
+   ],
+   "note": "Origin-less absolute path; no origin or received Host in the result."
+  },
+  {
+   "id": "PRD-94",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-013#AC-3",
+    "FR-PROXY-013#AC-7"
+   ],
+   "note": "Client-side prefix is the mount prefix under stripPrefix(true), else empty."
+  },
+  {
+   "id": "PRD-95",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-013#AC-7"
+   ],
+   "note": "req.baseUrl() (matched prefix through a nested router), not the use() string."
+  },
+  {
+   "id": "PRD-96",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-013#AC-6"
+   ],
+   "note": "Empty result becomes '/'."
+  },
+  {
+   "id": "PRD-97",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-1",
+    "FR-PROXY-015#AC-2",
+    "FR-PROXY-015#AC-3",
+    "IR-PROXY-002#AC-1"
+   ],
+   "note": "Pre-response backend failures thrown as ProxyException (HttpException subclass) into the error flow."
+  },
+  {
+   "id": "PRD-98",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-1",
+    "FR-PROXY-015#AC-2",
+    "IR-PROXY-002#AC-1",
+    "IR-PROXY-002#AC-2"
+   ],
+   "note": "Seven kinds, status per the §3.4 table, cause in getCause()."
+  },
+  {
+   "id": "PRD-99",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-4",
+    "IR-PROXY-002#AC-3"
+   ],
+   "note": "Null message; default error body holds neither target host nor port."
+  },
+  {
+   "id": "PRD-100",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-008#AC-3",
+    "FR-PROXY-008#AC-4"
+   ],
+   "note": "Cited as the fills basis of FR-PROXY-008 AC-4 (no plain '←' citation); FR-PROXY-008 requirement and AC-3/AC-4 state the item: read failure closes the backend connection and goes to the error flow, BodyTooLargeException wrapped as HttpException(413, null, cause)."
+  },
+  {
+   "id": "PRD-101",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-008#AC-4"
+   ],
+   "note": "Other client body read exceptions reach the error flow unwrapped."
+  },
+  {
+   "id": "PRD-102",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-008#AC-5"
+   ],
+   "note": "BodyAlreadyConsumedException / IllegalStateException unwrapped, 500, no backend connection."
+  },
+  {
+   "id": "PRD-103",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-6",
+    "FR-PROXY-015#AC-7"
+   ],
+   "note": "Best-effort early response: on write failure read the leftover response, relay it or INVALID_RESPONSE. See kept finding internal-coherence-1-1: the requirement sentence also covers write failures caused by the watchdog, where it contradicts WRITE_TIMEOUT/TOTAL_TIMEOUT."
+  },
+  {
+   "id": "PRD-104",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-8"
+   ],
+   "note": "No further client body read after a failed write; rest left to the adapter."
+  },
+  {
+   "id": "PRD-105",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-016#AC-4"
+   ],
+   "note": "IOException caused by ProxyException from the relayed stream; proxy never calls res.abort."
+  },
+  {
+   "id": "PRD-106",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-016#AC-1",
+    "FR-PROXY-016#AC-5"
+   ],
+   "note": "Logged to req.application().logger() before the IOException leaves the stream."
+  },
+  {
+   "id": "PRD-107",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-017#AC-1",
+    "FR-PROXY-002#AC-1"
+   ],
+   "note": "All four timeouts finite by default; 0 rejected."
+  },
+  {
+   "id": "PRD-108",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-017#AC-1",
+    "FR-PROXY-017#AC-2",
+    "FR-PROXY-017#AC-3"
+   ],
+   "note": "connectTimeout covers TCP connect and TLS handshake, default 10 s (exact value in AC-1)."
+  },
+  {
+   "id": "PRD-109",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-017#AC-1",
+    "FR-PROXY-017#AC-5",
+    "FR-PROXY-017#AC-6"
+   ],
+   "note": "writeTimeout default 60 s, client-body wait not counted."
+  },
+  {
+   "id": "PRD-110",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-017#AC-1",
+    "FR-PROXY-017#AC-4",
+    "FR-PROXY-016#AC-3"
+   ],
+   "note": "readTimeout to first byte and between bytes, default 60 s."
+  },
+  {
+   "id": "PRD-111",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-017#AC-1",
+    "FR-PROXY-017#AC-7",
+    "FR-PROXY-018#AC-10"
+   ],
+   "note": "totalTimeout default 5 min, includes retries and waits; 504 before response, abort after."
+  },
+  {
+   "id": "PRD-112",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-017#AC-8",
+    "SEC-PROXY-005#AC-5"
+   ],
+   "note": "First timeout reached applies; total may be shorter than the others."
+  },
+  {
+   "id": "PRD-114",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-018#AC-1"
+   ],
+   "note": "retries default 0; retries(n) adds n attempts; retries(0) turns off."
+  },
+  {
+   "id": "PRD-115",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-018#AC-7"
+   ],
+   "note": "Connect timeout never retried."
+  },
+  {
+   "id": "PRD-116",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-018#AC-4"
+   ],
+   "note": "Write/read/total timeout and INVALID_RESPONSE never retried (requirement sentence; AC-4 tests read timeout and INVALID_RESPONSE)."
+  },
+  {
+   "id": "PRD-118",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-001#AC-6"
+   ],
+   "note": "Synchronous Middleware holding the request thread."
+  },
+  {
+   "id": "PRD-119",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-001#AC-5",
+    "FR-PROXY-010#AC-6",
+    "FR-PROXY-007#AC-8"
+   ],
+   "note": "Slot and watchdog only after every check and req.bodyStream."
+  },
+  {
+   "id": "PRD-120",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-001#AC-2",
+    "REL-PROXY-001#AC-3",
+    "REL-PROXY-001#AC-4"
+   ],
+   "note": "Released exactly once on every path."
+  },
+  {
+   "id": "PRD-121",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-001#AC-1",
+    "REL-PROXY-001#AC-3"
+   ],
+   "note": "Relay case ends at the stream close() or onAbort, whichever first; backend socket closed there."
+  },
+  {
+   "id": "PRD-122",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-001#AC-4"
+   ],
+   "note": "Non-relay case releases before the middleware throws or returns."
+  },
+  {
+   "id": "PRD-123",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-019#AC-4",
+    "FR-PROXY-019#AC-9"
+   ],
+   "note": "maxConcurrent(n) result owns a new counter."
+  },
+  {
+   "id": "PRD-124",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-019#AC-3",
+    "FR-PROXY-019#AC-9"
+   ],
+   "note": "Derived objects share counter and limit."
+  },
+  {
+   "id": "PRD-125",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-019#AC-4",
+    "FR-PROXY-019#AC-5"
+   ],
+   "note": "maxConcurrent on a derived object makes a new counter; separate Proxy.to objects never share."
+  },
+  {
+   "id": "PRD-126",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-019#AC-8"
+   ],
+   "note": "Same object in two apps counts both."
+  },
+  {
+   "id": "PRD-146",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-020#AC-3"
+   ],
+   "note": "Own HTTP/1.1 client over java.net.Socket, no HttpURLConnection or java.net.http."
+  },
+  {
+   "id": "PRD-149",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-020#AC-2",
+    "FR-PROXY-003",
+    "FR-PROXY-007#AC-3",
+    "FR-PROXY-007#AC-4"
+   ],
+   "note": "Request line and headers in received order, body streamed with Content-Length or chunked."
+  },
+  {
+   "id": "PRD-150",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-004#AC-4",
+    "SEC-PROXY-004#AC-5",
+    "FR-PROXY-014#AC-1",
+    "FR-PROXY-014#AC-2",
+    "FR-PROXY-014#AC-3"
+   ],
+   "note": "RFC 9112 §6.3 order, codings other than chunked rejected (stricter than RFC). FR-PROXY-014 AC-6 deviates from that order for HEAD/204/304 — see PRD-155 and finding conflict-1-3."
+  },
+  {
+   "id": "PRD-151",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-004#AC-9"
+   ],
+   "note": "Status line and headers read as ISO-8859-1."
+  },
+  {
+   "id": "PRD-152",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-004#AC-1",
+    "SEC-PROXY-004#AC-2",
+    "SEC-PROXY-004#AC-3",
+    "SEC-PROXY-004#AC-10"
+   ],
+   "note": "Malformed status line, >64 KiB head, obs-fold, header check failures, >4 KiB chunk-size line, >64 KiB trailers are INVALID_RESPONSE."
+  },
+  {
+   "id": "PRD-153",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-004#AC-10",
+    "FR-PROXY-011#AC-3"
+   ],
+   "note": "Trailers read and discarded."
+  },
+  {
+   "id": "PRD-154",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-004#AC-6"
+   ],
+   "note": "101 INVALID_RESPONSE; 100/103 skipped."
+  },
+  {
+   "id": "PRD-155",
+   "kind": "in-scope",
+   "verdict": "fail",
+   "refs": [
+    "FR-PROXY-014#AC-4",
+    "FR-PROXY-014#AC-5",
+    "FR-PROXY-014#AC-6"
+   ],
+   "note": "AC-4/AC-5 read no body for HEAD/204/304, but FR-PROXY-014 AC-6 (citing PRD-155) turns a HEAD/204/304 response carrying both length headers or 'Content-Length: abc' into 502 INVALID_RESPONSE, while PRD-155 says these responses are bodyless 'regardless of length headers' (길이 헤더와 관계없이) and the request applies the table in RFC 9112 §6.3 order, where the HEAD/204/304 row precedes the CL+TE and invalid-CL rows. See kept finding conflict-1-3."
+  },
+  {
+   "id": "PRD-156",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-014#AC-2",
+    "SEC-PROXY-004#AC-7"
+   ],
+   "note": "Single chunked: decoded, relay length -1."
+  },
+  {
+   "id": "PRD-157",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-014#AC-1",
+    "SEC-PROXY-004#AC-7"
+   ],
+   "note": "Content-Length (one or equal values) read to that length and passed to relay."
+  },
+  {
+   "id": "PRD-158",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-014#AC-3"
+   ],
+   "note": "Neither header: read to EOF, relay -1."
+  },
+  {
+   "id": "PRD-159",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005#AC-3",
+    "SEC-PROXY-005#AC-4"
+   ],
+   "note": "Plain connect(address, connectTimeout) then createSocket(plain, host, port, true) with SNI."
+  },
+  {
+   "id": "PRD-160",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-017#AC-3",
+    "SEC-PROXY-005"
+   ],
+   "note": "Handshake SO_TIMEOUT = connect timeout stated in the SEC-PROXY-005 requirement; FR-PROXY-017 AC-3 tests the handshake connect timeout."
+  },
+  {
+   "id": "PRD-161",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005#AC-1",
+    "SEC-PROXY-005#AC-8"
+   ],
+   "note": "Certificate verification always on."
+  },
+  {
+   "id": "PRD-162",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005#AC-1",
+    "SEC-PROXY-005#AC-6"
+   ],
+   "note": "Host name verification done by the implementation."
+  },
+  {
+   "id": "PRD-163",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005#AC-6"
+   ],
+   "note": "setEndpointIdentificationAlgorithm where present, HttpsURLConnection default verifier otherwise."
+  },
+  {
+   "id": "PRD-164",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005#AC-7"
+   ],
+   "note": "Reflection chosen (one of the two allowed options); animal-sniffer passes without exemption."
+  },
+  {
+   "id": "PRD-165",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005#AC-2",
+    "SEC-PROXY-005#AC-8"
+   ],
+   "note": "No verification-off option; host name check stays on with sslSocketFactory."
+  },
+  {
+   "id": "PRD-166",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-020#AC-1",
+    "FR-PROXY-020#AC-2"
+   ],
+   "note": "New connection per attempt, Connection: close, no reuse."
+  },
+  {
+   "id": "PRD-167",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-020#AC-4"
+   ],
+   "note": "Optional short EOF wait that never delays the client or the slot."
+  },
+  {
+   "id": "PRD-169",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-002#AC-7",
+    "REL-PROXY-002#AC-9"
+   ],
+   "note": "Write and total timeouts enforced by the watchdog closing the socket."
+  },
+  {
+   "id": "PRD-170",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-002#AC-7"
+   ],
+   "note": "Plain socket closed, never the SSLSocket."
+  },
+  {
+   "id": "PRD-171",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-001#AC-3",
+    "REL-PROXY-002#AC-6"
+   ],
+   "note": "Reservations cancelled at request end."
+  },
+  {
+   "id": "PRD-172",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-002#AC-1",
+    "REL-PROXY-002#AC-2",
+    "REL-PROXY-002#AC-5"
+   ],
+   "note": "One JVM-wide scheduler created lazily by the first proxy request."
+  },
+  {
+   "id": "PRD-173",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-002#AC-3",
+    "REL-PROXY-002#AC-4"
+   ],
+   "note": "Daemon thread, ends when idle within 30 s."
+  },
+  {
+   "id": "PRD-174",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-002#AC-6"
+   ],
+   "note": "Cancelled reservations removed from the queue."
+  },
+  {
+   "id": "PRD-175",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-002#AC-3"
+   ],
+   "note": "Context class loader null."
+  },
+  {
+   "id": "PRD-176",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-019#AC-9"
+   ],
+   "note": "One AtomicInteger per maxConcurrent object, shared by reference, no lock."
+  },
+  {
+   "id": "PRD-177",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-004#AC-11"
+   ],
+   "note": "One automated test per malformed input."
+  },
+  {
+   "id": "PRD-207",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-011#AC-1",
+    "FR-PROXY-011#AC-2",
+    "FR-PROXY-011#AC-3",
+    "FR-PROXY-011#AC-4",
+    "FR-PROXY-011#AC-6",
+    "FR-PROXY-011#AC-7",
+    "FR-PROXY-011#AC-8",
+    "FR-PROXY-015#AC-6"
+   ],
+   "note": "Every AC-B16 clause present: 400/404/500, two Set-Cookie, Content-Type/Length/body, hop-by-hop and Connection-listed removal, no invented Content-Type, ACAO replace + X-App kept, 3 cookies, Vary both tokens, Trailer dropped, FIN early 401; RST left untested (FR-PROXY-015 rationale)."
+  },
+  {
+   "id": "PRD-208",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-014#AC-4",
+    "FR-PROXY-011#AC-1",
+    "SEC-PROXY-004#AC-6"
+   ],
+   "note": "HEAD keeps backend Content-Length, 302 not followed, 100 Continue not forwarded."
+  },
+  {
+   "id": "PRD-209",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-013#AC-1",
+    "FR-PROXY-013#AC-2",
+    "FR-PROXY-013#AC-3",
+    "FR-PROXY-013#AC-4",
+    "FR-PROXY-013#AC-5",
+    "FR-PROXY-013#AC-8"
+   ],
+   "note": "All AC-B18 cases incl. http://h:808 vs :8080, base path, H:80, client Host/XFH absent."
+  },
+  {
+   "id": "PRD-210",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-012#AC-1",
+    "FR-PROXY-012#AC-2",
+    "FR-PROXY-012#AC-3"
+   ],
+   "note": "All three AC-B19 cases with the exact values."
+  },
+  {
+   "id": "PRD-211",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-1",
+    "FR-PROXY-017#AC-1",
+    "FR-PROXY-017#AC-3",
+    "FR-PROXY-017#AC-4",
+    "FR-PROXY-017#AC-5",
+    "FR-PROXY-017#AC-6",
+    "FR-PROXY-015#AC-4"
+   ],
+   "note": "502/504 kinds, 1 s TLS-silent connect timeout, 1 s read timeout, 64 MiB with bodyLimit(128<<20) write timeout, paced client body no WRITE_TIMEOUT, defaults 10/60/60/5 min via accessors, no target in default error body."
+  },
+  {
+   "id": "PRD-212",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-017#AC-7",
+    "FR-PROXY-018#AC-10"
+   ],
+   "note": "Trickle -> TOTAL_TIMEOUT 504 / abort; retries(5).retryDelay(1 s).totalTimeout(2500 ms) -> 3 attempts, ~2 s, 502 CONNECT_FAILED."
+  },
+  {
+   "id": "PRD-213",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-018#AC-2"
+   ],
+   "note": "Bodyless GET and Content-Length: 0 GET 3 times, last 503 relayed; bodyless POST and GET with body once."
+  },
+  {
+   "id": "PRD-214",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-018#AC-4",
+    "FR-PROXY-018#AC-5"
+   ],
+   "note": "504 and read timeout once; refused connection retried for POST."
+  },
+  {
+   "id": "PRD-215",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-018#AC-8",
+    "FR-PROXY-018#AC-9"
+   ],
+   "note": "retryUnsafeMethods DELETE 2 vs 1; gap >=200 ms default, >=300 ms with retryDelay(300 ms)."
+  },
+  {
+   "id": "PRD-216",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-001#AC-1"
+   ],
+   "note": "Client disconnect closes backend connection; maxConcurrent(1) next request passes."
+  },
+  {
+   "id": "PRD-217",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-021#AC-1",
+    "FR-PROXY-021#AC-2"
+   ],
+   "note": "Same access-log format; in= counts forwarded body bytes."
+  },
+  {
+   "id": "PRD-218",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-019#AC-1",
+    "FR-PROXY-019#AC-2",
+    "FR-PROXY-019#AC-3",
+    "FR-PROXY-019#AC-4",
+    "FR-PROXY-019#AC-6",
+    "FR-PROXY-019#AC-7",
+    "REL-PROXY-001#AC-2"
+   ],
+   "note": "Every AC-B27 clause present incl. the 20x502 / 20x413 / 20x read-timeout leak check."
+  },
+  {
+   "id": "PRD-219",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-002#AC-4",
+    "REL-PROXY-002#AC-5"
+   ],
+   "note": "Thread gone within 30 s idle, total timeout re-applies, first request after start does not fail."
+  },
+  {
+   "id": "PRD-220",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005#AC-1",
+    "SEC-PROXY-005#AC-2",
+    "SEC-PROXY-005#AC-3"
+   ],
+   "note": "Untrusted CA / wrong host / handshake drop -> 502 CONNECT_FAILED, one connection with retries(2); private CA via sslSocketFactory; SNI = target host."
+  },
+  {
+   "id": "PRD-221",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-004#AC-1",
+    "SEC-PROXY-004#AC-2",
+    "SEC-PROXY-004#AC-3",
+    "SEC-PROXY-004#AC-4",
+    "SEC-PROXY-004#AC-5",
+    "SEC-PROXY-004#AC-6",
+    "SEC-PROXY-004#AC-8",
+    "SEC-PROXY-004#AC-10",
+    "FR-PROXY-016#AC-1",
+    "FR-PROXY-016#AC-2"
+   ],
+   "note": "Every AC-B30 input present (bad status line, >64 KiB head, obs-fold, 0x00/0x7F value, CL+TE, differing CL, CL -1, CL abc, TE gzip,chunked, TE identity, 101, close before status line) with 502 INVALID_RESPONSE; mid-body bad chunk, >64 KiB trailer, short Content-Length abort + logger INVALID_RESPONSE."
+  },
+  {
+   "id": "PRD-227",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-018#AC-1",
+    "FR-PROXY-018#AC-2",
+    "FR-PROXY-018#AC-3",
+    "FR-PROXY-018#AC-5",
+    "SEC-PROXY-005#AC-1"
+   ],
+   "note": "Off by default; connect failures (TLS excluded) for all methods; 502/503 only bodyless safe methods."
+  },
+  {
+   "id": "PRD-228",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-018#AC-7"
+   ],
+   "note": "Connect timeout not retried."
+  },
+  {
+   "id": "PRD-230",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-3",
+    "FR-PROXY-015#AC-5",
+    "FR-PROXY-010#AC-7"
+   ],
+   "note": "No proxy-made error body; onError answers by kind()."
+  },
+  {
+   "id": "PRD-232",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-020#AC-3"
+   ],
+   "note": "Option (a): own minimal HTTP/1.1 client."
+  },
+  {
+   "id": "PRD-233",
+   "kind": "exclusion",
+   "verdict": "respected",
+   "refs": [],
+   "note": "No 0.12.0 requirement adds a java.net.http module; FR-PROXY-020 AC-3 forbids java/net/http references; listed as out of scope."
+  },
+  {
+   "id": "PRD-234",
+   "kind": "exclusion",
+   "verdict": "respected",
+   "refs": [],
+   "note": "No backend-client SPI in any 0.12.0 requirement; listed as out of scope."
+  },
+  {
+   "id": "PRD-235",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-020#AC-1"
+   ],
+   "note": "New connection per request."
+  },
+  {
+   "id": "PRD-236",
+   "kind": "exclusion",
+   "verdict": "respected",
+   "refs": [],
+   "note": "FR-PROXY-020 never reuses a connection; pooling listed out of scope."
+  },
+  {
+   "id": "PRD-237",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-001#AC-6",
+    "FR-PROXY-019#AC-7"
+   ],
+   "note": "Synchronous Middleware bounded by total timeout and concurrency limit."
+  },
+  {
+   "id": "PRD-238",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-017#AC-1"
+   ],
+   "note": "Total timeout default 5 minutes."
+  },
+  {
+   "id": "PRD-245",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-017#AC-7",
+    "IR-PROXY-001#AC-3",
+    "IR-PROXY-002#AC-1"
+   ],
+   "note": "Option totalTimeout(long, TimeUnit) and kind TOTAL_TIMEOUT."
+  },
+  {
+   "id": "PRD-246",
+   "kind": "exclusion",
+   "verdict": "respected",
+   "refs": [],
+   "note": "IR-PROXY-001 AC-3 pins the public method set without deadline."
+  },
+  {
+   "id": "PRD-249",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-019#AC-1",
+    "FR-PROXY-019#AC-6",
+    "FR-PROXY-019#AC-7"
+   ],
+   "note": "Per object-derivation counter, unlimited default, immediate 503."
+  },
+  {
+   "id": "PRD-251",
+   "kind": "exclusion",
+   "verdict": "respected",
+   "refs": [],
+   "note": "FR-PROXY-019 AC-7: no default limit."
+  },
+  {
+   "id": "PRD-252",
+   "kind": "exclusion",
+   "verdict": "respected",
+   "refs": [],
+   "note": "No default derived from maxWorkers; no ServerOptions read API added."
+  },
+  {
+   "id": "PRD-253",
+   "kind": "exclusion",
+   "verdict": "respected",
+   "refs": [],
+   "note": "FR-PROXY-019 AC-4 and AC-6 require separate objects and unlimited mounts not to share/count."
+  },
+  {
+   "id": "PRD-257",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "REL-PROXY-002#AC-1",
+    "REL-PROXY-002#AC-4",
+    "REL-PROXY-002#AC-8"
+   ],
+   "note": "JVM-wide lazily created daemon scheduler that ends when idle."
+  },
+  {
+   "id": "PRD-258",
+   "kind": "exclusion",
+   "verdict": "respected",
+   "refs": [],
+   "note": "No ApplicationContext.computeIfAbsent or other app-level resource API in 0.12.0; REL-PROXY-002 AC-5 forbids own()/attribute use."
+  }
+ ],
+ "srs_items": [
+  {
+   "id": "FR-PROXY-011",
+   "verdict": "grounded",
+   "basis": "PRD-87, PRD-88, PRD-89, PRD-207",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-011#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-207, PRD-208",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-011#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-87, PRD-207",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-011#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-207, PRD-153",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-011#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-207",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-011#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-89",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-011#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-87, PRD-207",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-011#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-88, PRD-207",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-011#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-88, PRD-207",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-011#AC-9",
+   "verdict": "fills",
+   "basis": "fills: PRD-152 / hole (design D-059)",
+   "note": "Public Response cannot set a reason phrase; adapter phrase replaces the backend's. Real gap, minimal."
+  },
+  {
+   "id": "FR-PROXY-011#AC-10",
+   "verdict": "fills",
+   "basis": "fills: PRD-87 / hole",
+   "note": "Case-insensitive name comparison per RFC 9110 §5.1."
+  },
+  {
+   "id": "FR-PROXY-012",
+   "verdict": "grounded",
+   "basis": "PRD-91, PRD-210",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-012#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-91, PRD-210",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-012#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-91, PRD-210",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-012#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-210",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-012#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-91, PRD-210",
+   "note": "Later call wins (request §3.3)."
+  },
+  {
+   "id": "FR-PROXY-012#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-91",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-012#AC-6",
+   "verdict": "fills",
+   "basis": "fills: PRD-91 / hole",
+   "note": "Case-insensitive option names."
+  },
+  {
+   "id": "FR-PROXY-013",
+   "verdict": "grounded",
+   "basis": "PRD-92, PRD-93, PRD-94, PRD-95, PRD-96, PRD-209",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-013#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-92, PRD-93, PRD-209",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-013#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-92, PRD-209",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-013#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-94, PRD-209",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-013#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-92, PRD-209",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-013#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-92, PRD-209",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-013#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-96",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-013#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-94, PRD-95",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-013#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-93, PRD-209",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-013#AC-9",
+   "verdict": "fills",
+   "basis": "fills: PRD-92 / hole (design D-061)",
+   "note": "Network-path Location would leak the backend address otherwise."
+  },
+  {
+   "id": "FR-PROXY-013#AC-10",
+   "verdict": "grounded",
+   "basis": "PRD-93",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-014",
+   "verdict": "grounded",
+   "basis": "PRD-89, PRD-150, PRD-155, PRD-156, PRD-157, PRD-158",
+   "note": "The clause 'checking their framing headers first' for HEAD/204/304 has no basis (finding conflict-1-3)."
+  },
+  {
+   "id": "FR-PROXY-014#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-89, PRD-150, PRD-157, PRD-207",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-014#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-150, PRD-156",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-014#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-150, PRD-158",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-014#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-155, PRD-208",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-014#AC-5",
+   "verdict": "fills",
+   "basis": "fills: PRD-155 / hole (design D-058)",
+   "note": "Which length a bodyless HEAD/204/304 passes to relay is a real gap; -1 / CL value is minimal and matches FR-HTTP-037."
+  },
+  {
+   "id": "FR-PROXY-014#AC-6",
+   "verdict": "drop",
+   "basis": "none — claimed fills: PRD-155 / hole (design D-058)",
+   "note": "Not a real gap: request §3.9 decides framing 'RFC 9112 §6.3의 순서대로 아래 표에 따라', where the HEAD/204/304 row precedes the CL+TE and invalid-CL rows, and RFC 9112 §6.3 rule 1 ends such responses 'regardless of the header fields present'. The criterion turns those responses into 502, contradicting PRD-155 ('길이 헤더와 관계없이')."
+  },
+  {
+   "id": "SEC-PROXY-004",
+   "verdict": "grounded",
+   "basis": "PRD-150, PRD-151, PRD-152, PRD-153, PRD-154, PRD-221",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-004#AC-1",
+   "verdict": "fills",
+   "basis": "fills: PRD-152 / hole (design D-059)",
+   "note": "Malformed status lines grounded in PRD-152/221; the 100..599 range (600, 099) is the fill."
+  },
+  {
+   "id": "SEC-PROXY-004#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-152, PRD-221",
+   "note": "64 KiB = 65536 bytes, matches request."
+  },
+  {
+   "id": "SEC-PROXY-004#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-152, PRD-221",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-004#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-150, PRD-221",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-004#AC-5",
+   "verdict": "fills",
+   "basis": "fills: PRD-150 / hole (design D-054, D-073)",
+   "note": "gzip,chunked and identity grounded in AC-B30; chunked;x=1 and empty TE are the fill."
+  },
+  {
+   "id": "SEC-PROXY-004#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-154, PRD-208, PRD-221",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-004#AC-7",
+   "verdict": "fills",
+   "basis": "fills: PRD-150 / hole (design D-054, D-073)",
+   "note": "'5, 5' grounded (same value); '05' numeric equality and trailing empty TE element are fills; not contradicting '서로 다른 값' since values are numerically equal."
+  },
+  {
+   "id": "SEC-PROXY-004#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-221",
+   "note": "Request §3.4: 상태 줄 전의 reset·EOF 포함."
+  },
+  {
+   "id": "SEC-PROXY-004#AC-9",
+   "verdict": "grounded",
+   "basis": "PRD-151",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-004#AC-10",
+   "verdict": "grounded",
+   "basis": "PRD-152, PRD-153, PRD-221",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-004#AC-11",
+   "verdict": "fills",
+   "basis": "fills: PRD-177 / hole (design D-070)",
+   "note": "Test backends are raw ServerSockets."
+  },
+  {
+   "id": "SEC-PROXY-005",
+   "verdict": "grounded",
+   "basis": "PRD-159, PRD-160, PRD-161, PRD-162, PRD-163, PRD-164, PRD-165, PRD-220",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-005#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-161, PRD-162, PRD-220, PRD-227",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-005#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-165, PRD-220",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-005#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-159, PRD-220",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-005#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-159",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-005#AC-5",
+   "verdict": "fills",
+   "basis": "fills: PRD-160 / hole (design D-063)",
+   "note": "Total timeout bounds a trickling handshake. See finding internal-coherence-1-2 on the kind mapping."
+  },
+  {
+   "id": "SEC-PROXY-005#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-162, PRD-163",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-005#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-164 (design D-067)",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-005#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-161, PRD-165",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015",
+   "verdict": "grounded",
+   "basis": "PRD-97, PRD-98, PRD-99, PRD-103, PRD-104, PRD-230",
+   "note": "Early-response sentence over-generalises 'writing the request body fails' (finding internal-coherence-1-1)."
+  },
+  {
+   "id": "FR-PROXY-015#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-97, PRD-98, PRD-211",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-97, PRD-98",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-97, PRD-230",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-99, PRD-211",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015#AC-5",
+   "verdict": "fills",
+   "basis": "fills: PRD-106 / hole (design D-062)",
+   "note": "Request has the proxy log only mid-response failures; earlier ones left to the error flow."
+  },
+  {
+   "id": "FR-PROXY-015#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-103, PRD-207",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-103",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-104",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-016",
+   "verdict": "grounded",
+   "basis": "PRD-105, PRD-106, PRD-221",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-016#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-105, PRD-106, PRD-221",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-016#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-105, PRD-106, PRD-221",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-016#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-105, PRD-110",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-016#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-105",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-016#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-106 (design D-062)",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-017",
+   "verdict": "grounded",
+   "basis": "PRD-107, PRD-108, PRD-109, PRD-110, PRD-111, PRD-112, PRD-238, PRD-245",
+   "note": "Defaults 10 s / 60 s / 60 s / 5 min match the request exactly."
+  },
+  {
+   "id": "FR-PROXY-017#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-107, PRD-108, PRD-109, PRD-110, PRD-111, PRD-211, PRD-238",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-017#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-108",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-017#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-108, PRD-211",
+   "note": "Also carries fills: PRD-160 (design D-063) for the separate handshake bound; test itself is the AC-B20 case."
+  },
+  {
+   "id": "FR-PROXY-017#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-110, PRD-211",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-017#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-109, PRD-211",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-017#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-109, PRD-211",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-017#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-111, PRD-212, PRD-245",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-017#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-112",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-017#AC-9",
+   "verdict": "grounded",
+   "basis": "PRD-8, PRD-110",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-017#AC-10",
+   "verdict": "grounded",
+   "basis": "PRD-211 (design D-071)",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-018",
+   "verdict": "grounded",
+   "basis": "PRD-114, PRD-115, PRD-116, PRD-227, PRD-228",
+   "note": "retryDelay default 200 ms matches."
+  },
+  {
+   "id": "FR-PROXY-018#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-114, PRD-227",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-018#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-213, PRD-227",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-018#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-227",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-018#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-116, PRD-214",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-018#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-214, PRD-227",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-018#AC-6",
+   "verdict": "fills",
+   "basis": "fills: PRD-227 / hole (design D-064)",
+   "note": "Request names refused and name-resolution failures as examples of one class."
+  },
+  {
+   "id": "FR-PROXY-018#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-115, PRD-228",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-018#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-215",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-018#AC-9",
+   "verdict": "grounded",
+   "basis": "PRD-215",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-018#AC-10",
+   "verdict": "grounded",
+   "basis": "PRD-111, PRD-212",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-018#AC-11",
+   "verdict": "grounded",
+   "basis": "PRD-12",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-019",
+   "verdict": "grounded",
+   "basis": "PRD-123, PRD-124, PRD-125, PRD-126, PRD-176, PRD-249",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-019#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-218, PRD-249",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-019#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-218",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-019#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-124, PRD-176, PRD-218",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-019#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-123, PRD-125, PRD-218",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-019#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-125",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-019#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-218, PRD-249",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-019#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-218, PRD-237, PRD-249",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-019#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-126",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-019#AC-9",
+   "verdict": "grounded",
+   "basis": "PRD-123, PRD-124, PRD-176",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-001",
+   "verdict": "grounded",
+   "basis": "PRD-118, PRD-119, PRD-120, PRD-121, PRD-122",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-001#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-121, PRD-216",
+   "note": "TinyHttpd-socket test setup is a fill (design D-069)."
+  },
+  {
+   "id": "REL-PROXY-001#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-120, PRD-122, PRD-218",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-001#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-120, PRD-121, PRD-171",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-001#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-120, PRD-122",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-001#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-119, PRD-120",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-001#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-118, PRD-237",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-002",
+   "verdict": "grounded",
+   "basis": "PRD-169, PRD-170, PRD-171, PRD-172, PRD-173, PRD-174, PRD-175, PRD-257",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-002#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-172",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-002#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-170, PRD-172",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-002#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-173, PRD-175",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-002#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-173, PRD-219, PRD-257",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-002#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-172, PRD-219",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-002#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-171, PRD-174",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-002#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-169, PRD-170",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-002#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-172, PRD-257 (design D-066)",
+   "note": ""
+  },
+  {
+   "id": "REL-PROXY-002#AC-9",
+   "verdict": "grounded",
+   "basis": "PRD-169, PRD-170",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-020",
+   "verdict": "grounded",
+   "basis": "PRD-146, PRD-149, PRD-166, PRD-167, PRD-232, PRD-235",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-020#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-166, PRD-235",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-020#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-149, PRD-166",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-020#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-146, PRD-232",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-020#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-167",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-021",
+   "verdict": "grounded",
+   "basis": "PRD-217",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-021#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-217",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-021#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-217",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-021#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-217",
+   "note": ""
+  }
+ ],
+ "findings": [
+  {
+   "id": "internal-coherence-1-1",
+   "finding_hash": "ffd6d79f3032285eda3dd154e8d519b4deab1551",
+   "disposition": "keep",
+   "evidence": {
+    "kind": "contradicting-quotes",
+    "detail": "FR-PROXY-015 Requirement (docs/spec/22.reverse-proxy.srs.md, FR-PROXY-015 #### Requirement): \"when writing the request body fails, it tries to read the response left on the socket, relays it when a complete status line and header block arrive, reports `INVALID_RESPONSE` otherwise\" and \"`CONNECT_FAILED` when the connection cannot be established\". FR-PROXY-017 AC-5: \"sending a 64 MiB body to a backend that never reads the request body gives 504 with `kind()` `WRITE_TIMEOUT` about 1 second after the socket buffers fill\"; FR-PROXY-017 Requirement: \"whichever is reached first applies, and the proxy reports `CONNECT_TIMEOUT`, `WRITE_TIMEOUT`, `READ_TIMEOUT` or `TOTAL_TIMEOUT` as 504 before the response\". The write timeout and total timeout are enforced by closing the socket (REL-PROXY-002), so the body write fails and no response can be read from the closed socket: FR-PROXY-015's sentence yields INVALID_RESPONSE (and CONNECT_FAILED for a total timeout during the TCP connect), FR-PROXY-017 yields WRITE_TIMEOUT / TOTAL_TIMEOUT. The request scopes the early-response rule to a backend that closed the connection (§3.4: \"백엔드가 본문을 다 읽기 전에 응답(401·413 등)을 보내고 연결을 닫아 쓰기가 실패하면 ... 읽지 못하면 `INVALID_RESPONSE`\"; RST: \"응답을 잃을 수 있습니다\"), while the §3.4 table gives 쓰기 타임아웃 -> 504 `WRITE_TIMEOUT`. Only Implementation Notes (FR-PROXY-017: \"the watchdog records which deadline fired so the failing call maps to `WRITE_TIMEOUT` or `TOTAL_TIMEOUT`\") reconcile them; no requirement sentence or criterion does."
+   },
+   "axis": "internal coherence",
+   "req_id": "FR-PROXY-015",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md#FR-PROXY-015",
+   "description": "A body-write failure caused by the write-timeout or total-timeout watchdog closing the socket falls under FR-PROXY-015's early-response rule (INVALID_RESPONSE) and under FR-PROXY-017 (WRITE_TIMEOUT/TOTAL_TIMEOUT) at once. A backend close or reset (no deadline fired) correctly gives INVALID_RESPONSE; a watchdog close must give the recorded deadline kind.",
+   "suggested_action": "fix_via_mcp"
+  },
+  {
+   "id": "internal-coherence-1-2",
+   "finding_hash": "d2b97119ce4249c8d279af3d0c43d1151fe02a84",
+   "disposition": "keep",
+   "evidence": {
+    "kind": "contradicting-quotes",
+    "detail": "SEC-PROXY-005 AC-5: \"With `.connectTimeout(10, TimeUnit.SECONDS).totalTimeout(1, TimeUnit.SECONDS)`, a backend that accepts the TCP connection and never answers the TLS handshake gives 504 with `kind()` `TOTAL_TIMEOUT` after about 1 second\". SEC-PROXY-005 Implementation Notes: \"A handshake `SocketTimeoutException` is `CONNECT_TIMEOUT`; every other `SSLException` or `IOException` during the handshake or host name verification is `CONNECT_FAILED`, which the retry rules never retry.\" SEC-PROXY-005 Requirement: \"report every TLS handshake or verification failure other than a handshake timeout as `CONNECT_FAILED`\". The watchdog ends a handshake by closing the plain socket (REL-PROXY-002 Requirement), which surfaces as a SocketException (an IOException, not a SocketTimeoutException), so the notes and the requirement sentence classify it CONNECT_FAILED while AC-5 requires TOTAL_TIMEOUT."
+   },
+   "axis": "internal coherence",
+   "req_id": "SEC-PROXY-005",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md#SEC-PROXY-005",
+   "description": "The kind mapping for a total-timeout watchdog close during the TLS handshake contradicts AC-5 of the same requirement.",
+   "suggested_action": "fix_via_mcp"
+  },
+  {
+   "id": "conflict-1-3",
+   "finding_hash": "852293536c28c4dcef4ab1caf7f2b10ee657a9c3",
+   "disposition": "keep",
+   "evidence": {
+    "kind": "contradicting-quotes",
+    "detail": "Request §3.9 (docs/naruserve-proxy-request.md, 응답 읽기): \"본문 길이를 RFC 9112 §6.3의 순서대로 아래 표에 따라 정합니다\", table rows in order: \"HEAD 요청에 대한 응답, 204, 304 | 본문을 읽지 않음\" before \"`Transfer-Encoding`과 `Content-Length`가 함께 있음 | `INVALID_RESPONSE`\" and \"`Content-Length`가 숫자만으로 이루어지지 않음 ... | `INVALID_RESPONSE`\"; the separate malformed list (\"표와 별개로\") does not include these two. PRD-155: \"이 응답들은 길이 헤더와 관계없이 본문 없이 끝난 것으로 본다.\" FR-PROXY-014 AC-6: \"A response to a HEAD request, a 204 and a 304 whose header block carries both `Content-Length` and `Transfer-Encoding`, or `Content-Length: abc`, each give 502 with `kind()` `INVALID_RESPONSE`, because the framing headers are checked before the body is skipped.\" (FR-PROXY-014 Requirement: \"reading no body bytes in these three cases but checking their framing headers first\")."
+   },
+   "axis": "conflict",
+   "req_id": "FR-PROXY-014",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md#FR-PROXY-014",
+   "description": "FR-PROXY-014 reverses the request's RFC 9112 §6.3 order for HEAD/204/304 responses and turns valid bodyless responses into 502; the claimed gap (design D-058) is decided by the request. The legitimate part of D-058 (which length to pass to relay) stays in AC-5.",
+   "suggested_action": "escalate"
+  },
+  {
+   "id": "trace-path-1-4",
+   "finding_hash": "433d868024e5d34fc2b184dbe14e06d5a391c8c9",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "tool-diagnostic",
+    "detail": "speckiwi links check --json: SRS-W074 'Code trace path missing: NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java' for FR-PROXY-011..015, 017..019, REL-PROXY-001, FR-PROXY-021."
+   },
+   "axis": "trace path existence",
+   "req_id": "FR-PROXY-011",
+   "evidence_path": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+   "description": "Dropped: every such link carries trace_intent=addition_site for the new module that 0.12.0 creates, the project convention for planned files (e.g. 02.build.srs.md); speckiwi validate --json reports 0 errors and no PROXY diagnostic.",
+   "suggested_action": "discard"
+  },
+  {
+   "id": "verifiability-1-5",
+   "finding_hash": "2465eb0ca12a4a575c00ce423f348dd721b82e5e",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "none",
+    "detail": "FR-PROXY-021 Requirement counts 'request body bytes the proxy read through req.bodyStream(...) and forwarded'; bytes read but not forwarded (pre-read before a connect failure) would still be counted by FR-APP-028."
+   },
+   "axis": "AC verifiability",
+   "req_id": "FR-PROXY-021",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md#FR-PROXY-021",
+   "description": "Dropped: no criterion states a value that conflicts; AC-2 counts fully forwarded bodies only.",
+   "suggested_action": "discard"
+  },
+  {
+   "id": "scope-fit-1-6",
+   "finding_hash": "7e4da21bd04c029668701926e9a72f1431839c18",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "none",
+    "detail": "FR-PROXY-015 AC-5 makes the proxy log no pre-response failure, while PRD-99 says target address and cause stay 'getCause() 와 로그에만'."
+   },
+   "axis": "scope fit",
+   "req_id": "FR-PROXY-015",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md#FR-PROXY-015",
+   "description": "Dropped: PRD-99 restricts where the target may appear, it does not require the proxy to log; the fill is documented (design D-062).",
+   "suggested_action": "discard"
+  },
+  {
+   "id": "conflict-1-7",
+   "finding_hash": "c36f955b6b780c0ddeaf453dae0c2fde9b36c026",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "none",
+    "detail": "FR-PROXY-017 bounds the TCP connect and, separately, the TLS handshake with connectTimeout, while the request table names one interval 'TCP 연결과 TLS 핸드셰이크'."
+   },
+   "axis": "conflict",
+   "req_id": "FR-PROXY-017",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md#FR-PROXY-017",
+   "description": "Dropped: the request itself bounds the handshake by SO_TIMEOUT (a per-read bound, §3.9), so a single combined interval is not what the request specifies; the fill (design D-063) is minimal and the total timeout caps the sum.",
+   "suggested_action": "discard"
+  },
+  {
+   "id": "conflict-1-8",
+   "finding_hash": "7b1bd424dfe605673744042567e526a12b4bfa41",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "none",
+    "detail": "SEC-PROXY-004 AC-7 accepts 'Content-Length: 5' with 'Content-Length: 05' while the request rejects '서로 다른 값이 여러 개'."
+   },
+   "axis": "conflict",
+   "req_id": "SEC-PROXY-004",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md#SEC-PROXY-004",
+   "description": "Dropped: 5 and 05 are the same decimal value (RFC 9110 §8.6 compares values); fill via design D-054.",
+   "suggested_action": "discard"
+  },
+  {
+   "id": "internal-coherence-1-9",
+   "finding_hash": "3c0f327baa673feb957d279b119c32b24e6a2ee3",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "none",
+    "detail": "FR-PROXY-018 AC-6 classifies retryability by exception class (SSLException not retryable); a handshake dropped by the peer can surface as SocketException/EOFException."
+   },
+   "axis": "internal coherence",
+   "req_id": "FR-PROXY-018",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md#FR-PROXY-018",
+   "description": "Dropped: the requirement sentence classifies by phase ('neither a connect timeout nor a TLS failure'), and SEC-PROXY-005 AC-1 tests the handshake-drop backend with retries(2) and one connection; no contradicting quote.",
+   "suggested_action": "discard"
+  }
+ ],
+ "summary": {
+  "kept": 3,
+  "dropped": 6,
+  "prd_fail": 1,
+  "prd_violated": 0,
+  "srs_drop": 1,
+  "srs_residual": 0
+ }
+}

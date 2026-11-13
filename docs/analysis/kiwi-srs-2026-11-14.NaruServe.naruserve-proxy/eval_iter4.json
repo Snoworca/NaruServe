@@ -1,0 +1,93 @@
+{
+  "evaluator": "verify-pass-1",
+  "iter": 4,
+  "partition": "delta",
+  "prd_items": [
+    {"id": "PRD-89", "kind": "in-scope", "verdict": "accepted", "refs": ["FR-PROXY-011#AC-5", "FR-PROXY-014#AC-1"], "note": "Content-Length is never copied as a header (FR-PROXY-011 statement and AC-5) and reaches the client only as the relay length (FR-PROXY-014 AC-1)."},
+    {"id": "PRD-150", "kind": "in-scope", "verdict": "accepted", "refs": ["FR-PROXY-014#AC-1", "FR-PROXY-014#AC-2", "FR-PROXY-014#AC-3", "SEC-PROXY-004#AC-4", "SEC-PROXY-004#AC-5", "SEC-PROXY-004#AC-7"], "note": "RFC 9112 §6.3 order (bodyless first, then TE, then CL, then read-until-close) is stated in FR-PROXY-014 Rationale and SEC-PROXY-004 statement; the stricter-than-RFC rejection of non-chunked codings is SEC-PROXY-004 AC-5."},
+    {"id": "PRD-155", "kind": "in-scope", "verdict": "accepted", "refs": ["FR-PROXY-014#AC-4", "FR-PROXY-014#AC-5", "FR-PROXY-014#AC-6"], "note": "HEAD, 204 and 304 read no body whatever their length headers say (AC-6 covers CL+TE, duplicate, padded, invalid and overflowing CL), matching the PRD note '길이 헤더와 관계없이 본문 없이 끝난 것으로 본다' and the §3.9 table row order."},
+    {"id": "PRD-156", "kind": "in-scope", "verdict": "accepted", "refs": ["FR-PROXY-014#AC-2", "SEC-PROXY-004#AC-7"], "note": "Chunked decoded, relay length -1."},
+    {"id": "PRD-157", "kind": "in-scope", "verdict": "accepted", "refs": ["FR-PROXY-014#AC-1", "SEC-PROXY-004#AC-7"], "note": "Single CL read and relayed with that length (AC-1); several equal values read as one (SEC-PROXY-004 AC-7)."},
+    {"id": "PRD-158", "kind": "in-scope", "verdict": "accepted", "refs": ["FR-PROXY-014#AC-3"], "note": "Neither header: read until close, relay -1."},
+    {"id": "PRD-207", "kind": "in-scope", "verdict": "accepted", "refs": ["FR-PROXY-011#AC-1", "FR-PROXY-011#AC-2", "FR-PROXY-011#AC-3", "FR-PROXY-011#AC-4", "FR-PROXY-011#AC-6", "FR-PROXY-011#AC-7", "FR-PROXY-011#AC-8", "FR-PROXY-014#AC-1", "FR-PROXY-015#AC-6"], "note": "Every AC-B16 clause present: statuses 400/404/500, two Set-Cookie, Content-Type, Content-Length and body, hop-by-hop and Connection-listed headers, absent Content-Type, CORS replace plus X-App, three Set-Cookie, Vary both tokens, Trailer removed from a chunked response, FIN-closed early 401."},
+    {"id": "PRD-208", "kind": "in-scope", "verdict": "accepted", "refs": ["FR-PROXY-014#AC-4", "FR-PROXY-011#AC-1", "SEC-PROXY-004#AC-6"], "note": "HEAD keeps the backend Content-Length without a body (FR-PROXY-014 AC-4), 302 relayed not followed (FR-PROXY-011 AC-1), 100 Continue not sent (SEC-PROXY-004 AC-6). A HEAD Content-Length that is not a usable long (AC-6) becomes -1; AC-B17 presupposes a valid length, so this is not a weakening."}
+  ],
+  "srs_items": [
+    {"id": "FR-PROXY-014", "verdict": "grounded", "basis": "PRD-89, PRD-150, PRD-155, PRD-156, PRD-157, PRD-158, PRD-207, PRD-208", "note": "Statement matches the §3.9 response table rows HEAD/204/304, chunked, single CL and neither header; the SEC-PROXY-003 list parsing for the bodyless length agrees with SEC-PROXY-003 statement ('digits that fit in a long and compared numerically'). Links FR-HTTP-036, FR-HTTP-037, FR-PROXY-011, SEC-PROXY-004 and SEC-PROXY-003 all exist and are consistent."},
+    {"id": "FR-PROXY-014#AC-1", "verdict": "grounded", "basis": "PRD-89, PRD-150, PRD-157, PRD-207", "note": "Consistent with FR-PROXY-011 AC-2/AC-5 and FR-HTTP-036 AC-1."},
+    {"id": "FR-PROXY-014#AC-2", "verdict": "grounded", "basis": "PRD-150, PRD-156", "note": "Relay -1 for chunked; consistent with FR-HTTP-037 AC-3."},
+    {"id": "FR-PROXY-014#AC-3", "verdict": "grounded", "basis": "PRD-150, PRD-158", "note": ""},
+    {"id": "FR-PROXY-014#AC-4", "verdict": "grounded", "basis": "PRD-155, PRD-208", "note": "Client gets Content-Length: 1234 and no body; consistent with FR-HTTP-037 AC-5 (HEAD keeps a non-negative length)."},
+    {"id": "FR-PROXY-014#AC-5", "verdict": "fills", "basis": "fills: PRD-155 / hole / which length a bodyless response passes to relay (design D-058)", "note": "204 -> -1 and no Content-Length, 304 with CL 10 -> 10, 304 without length -> -1; consistent with FR-HTTP-037 AC-5, AC-6 and AC-9 (relay alone keeps the length on 304). Minimal within PRD-155."},
+    {"id": "FR-PROXY-014#AC-6", "verdict": "fills", "basis": "PRD-155; fills: PRD-155 / hole / which length relay keeps when the bodyless response carries an unusable Content-Length", "note": "No INVALID_RESPONSE for framing headers of HEAD/204/304 follows PRD-155 and the §3.9 row order; the usable/unusable split uses exactly SEC-PROXY-003's parsing (10 twice and 10/010 -> 10; abc, -1, 20-digit overflow, 10/11 -> -1). Agrees with SEC-PROXY-004 statement, AC-4 and AC-5, which exempt these responses and point back to this criterion. TE is not copied (FR-PROXY-011 hop-by-hop list), so the client sees only the relay framing."}
+  ],
+  "findings": [
+    {
+      "id": "internal-coherence-4-1",
+      "finding_hash": "e898671e79085fb1454d3f402f4dcfd25af6a3a0",
+      "disposition": "keep",
+      "evidence": {"kind": "contradicting-quotes", "detail": "docs/spec/22.reverse-proxy.srs.md line 1216 (FR-PROXY-014 Implementation Notes): \"For a bodyless response, parse `Content-Length` leniently: a single all-digit value or several identical ones gives that length, anything else gives `-1`\" vs line 1192 (FR-PROXY-014 AC-6): \"a HEAD response and a 304 carrying ... `Content-Length: 99999999999999999999` (beyond `Long.MAX_VALUE`) ... make it call `res.relay` with `-1`\" and \"the two lines `Content-Length: 10` and `Content-Length: 010` make the proxy call `res.relay` with `10`\", and line 1179 (statement): \"read with the same list parsing as SEC-PROXY-003 (every element digits that fit in a `long`, elements compared numerically)\". A single all-digit 20-digit value 'gives that length' by the note but -1 by AC-6; '010' and '10' are not identical strings yet AC-6 merges them numerically."},
+      "axis": "internal-coherence",
+      "req_id": "FR-PROXY-014",
+      "evidence_path": "docs/spec/22.reverse-proxy.srs.md#FR-PROXY-014/Implementation Notes",
+      "description": "Round 3 moved the bodyless Content-Length rule to SEC-PROXY-003's list parsing (fits in a long, numeric comparison) but the Implementation Notes still give the older 'single all-digit value or several identical ones' rule, which disagrees with AC-6 on the overflow case and on the numerically-equal-but-textually-different case.",
+      "suggested_action": "fix_via_mcp"
+    },
+    {
+      "id": "conflict-4-2",
+      "finding_hash": "7c3635e3f6e0fff6878729205538c1f63882a8db",
+      "disposition": "drop",
+      "evidence": {"kind": "none", "detail": "Request AC-B30 lists '`Content-Length`와 `Transfer-Encoding`을 함께 담은 응답' as giving 502 without naming a status or method, while FR-PROXY-014 AC-6 makes a HEAD/204/304 response with both headers not an INVALID_RESPONSE. The request's own §3.9 table (docs/naruserve-proxy-request.md lines 397-405) orders the row 'HEAD 요청에 대한 응답, 204, 304 — 본문을 읽지 않음' before the TE+CL row, under 'RFC 9112 §6.3의 순서대로'."},
+      "axis": "conflict",
+      "req_id": "FR-PROXY-014",
+      "evidence_path": "docs/naruserve-proxy-request.md#AC-B30",
+      "description": "Not a contradiction: AC-B30 is an example list satisfiable by a GET 200 test, which SEC-PROXY-004 AC-4 requires, and the request's §3.9 table explicitly puts the bodyless row first.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "ac-verifiability-4-3",
+      "finding_hash": "ca0503d46c3e500e5119542042ecd30af9409cad",
+      "disposition": "drop",
+      "evidence": {"kind": "none", "detail": "FR-PROXY-014 AC-4: 'the client receives `Content-Length: 1234` and no body well before the read timeout'."},
+      "axis": "ac-verifiability",
+      "req_id": "FR-PROXY-014",
+      "evidence_path": "docs/spec/22.reverse-proxy.srs.md#FR-PROXY-014/AC-4",
+      "description": "'well before' is soft, but the criterion is decidable: a proxy that read body bytes from a kept-open backend would block until the read timeout and then fail, so a test asserting completion before the configured read timeout distinguishes the two. No deterministic defect.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "trace-path-existence-4-4",
+      "finding_hash": "bf49980410d74dc97eb8fb892517bb0a582e2b2b",
+      "disposition": "drop",
+      "evidence": {"kind": "none", "detail": "`ls NaruServe-proxy` -> 'No such file or directory'; the Code trace row carries trace_intent=addition_site."},
+      "axis": "trace-path-existence",
+      "req_id": "FR-PROXY-014",
+      "evidence_path": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+      "description": "The path is a declared addition site for a new module, so its absence is expected.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "incremental-delta-4-5",
+      "finding_hash": "88d04bd1b8bf476efd9a9a70014043fea00debab",
+      "disposition": "drop",
+      "evidence": {"kind": "none", "detail": "Design D-058 (docs/research/naruserve-proxy/design/00.design.md line 116): 'The proxy SHALL validate the framing headers of every response before skipping the body of a HEAD, 204 or 304 response'. FR-PROXY-014 AC-6 does not validate them."},
+      "axis": "incremental-delta",
+      "req_id": "FR-PROXY-014",
+      "evidence_path": "docs/research/naruserve-proxy/design/00.design.md#D-058",
+      "description": "The design only decides defaults for gaps; the request's §3.9 row order and PRD-155 ('길이 헤더와 관계없이') decide this point, and FR-PROXY-014 Implementation Notes record the precedence and keep D-058's length choice. Not a defect.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "mcp-srs-md-compliance-4-6",
+      "finding_hash": "8c444fbf64877bd2cddcb56cf8b765e10638df12",
+      "disposition": "drop",
+      "evidence": {"kind": "tool-diagnostic", "detail": "`speckiwi validate --json` (speckiwi 5.5.1): errors [], 60 warnings all SRS-W081, on 56 requirements none of which has Target 0.12.0 (checked against each requirement's Target field). `speckiwi prd coverage docs/prd/2026-11-14.naruserve-proxy.prd.md --target 0.12.0 --json`: uncitedItems [], assignedToOtherTargets [], missingItems [], uncitedRequirements [], ungroundedCriteria []."},
+      "axis": "mcp-srs-md-compliance",
+      "req_id": "_",
+      "evidence_path": "_",
+      "description": "Tool checks clean under the round rules; recorded for completeness.",
+      "suggested_action": "discard"
+    }
+  ],
+  "summary": {"kept": 1, "dropped": 5, "prd_fail": 0, "prd_violated": 0, "srs_drop": 0, "srs_residual": 0}
+}

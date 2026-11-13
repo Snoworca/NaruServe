@@ -1,0 +1,319 @@
+{
+ "target": "0.12.0",
+ "run_id": "2026-11-14.naruserve.0120.v01",
+ "total_reqs_evaluated": 58,
+ "feasibility_distribution": {
+  "high": 56,
+  "medium": 2,
+  "low": 0,
+  "blocked": 0
+ },
+ "score_stats": {
+  "min": 72,
+  "max": 97,
+  "mean": 91.6
+ },
+ "target_verdict": "conditionally-ready",
+ "verdict_rationale": "56 of 58 requirements are high; no low or blocked requirement; no depends_on on a discarded requirement and no chain whose weakest link is below 60. Two medium requirements carry acceptance criteria that cannot pass as written against the pinned runtime (FR-ENGINE-014 AC-5 on TinyHttpd 3.1.1, SEC-PROXY-005 AC-6 on the JDK), and one 2-node depends_on cycle exists. Amend those two ACs and break the cycle before implementation reaches them.",
+ "critical_blockers": [
+  {
+   "req_id": "FR-ENGINE-014",
+   "severity": "HIGH",
+   "ac": "AC-5",
+   "summary": "TinyHttpd 3.1.1 writes no Content-Length on a 304: Content-Length set through addHeader is absorbed by managed() and commit() leaves lengthHeader -1 for 304.",
+   "evidence": [
+    "/Users/beom/work/git/TinyHttpd@e73cd5d:core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:160-174",
+    "/Users/beom/work/git/TinyHttpd@e73cd5d:core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:214-226",
+    "/Users/beom/work/git/TinyHttpd@e73cd5d:core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:484-485",
+    "/Users/beom/work/git/TinyHttpd@e73cd5d:core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:511-512",
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:186-206"
+   ],
+   "remedy": "Amend AC-5 (304 over TinyHttpd may omit Content-Length) or plan a TinyHttpd release and bump CON-BUILD-018."
+  },
+  {
+   "req_id": "SEC-PROXY-005",
+   "severity": "HIGH",
+   "ac": "AC-6",
+   "summary": "The mandated fallback HttpsURLConnection.getDefaultHostnameVerifier() rejects every host on OpenJDK (HttpsURLConnection$DefaultHostnameVerifier returns false), so \"accepts a backend whose certificate names the target host\" fails on the JVM test runtime.",
+   "evidence": [
+    "scratchpad probe on OpenJDK 17.0.20.1: verify(...) = false",
+    "~/.gradle/caches/.../android-api-level-21-5.0.1_r2.signature"
+   ],
+   "remedy": "Test the fallback with an injected HostnameVerifier seam, or restrict AC-6 to an Android runtime."
+  }
+ ],
+ "dependency_graph": {
+  "nodes": 58,
+  "in_target_edges": 164,
+  "external_edges": 39,
+  "cycles": [
+   [
+    "FR-PROXY-015",
+    "FR-PROXY-017",
+    "FR-PROXY-015"
+   ]
+  ],
+  "discarded_dependencies": [],
+  "deprecated_or_draft_dependencies": [],
+  "note": "Only supersedes links point at discarded requirements (CON-BUILD-021 -> CON-BUILD-006, FR-REL-007 -> FR-REL-001), which is expected. All 28 external depends_on targets are verified/evolving."
+ },
+ "dependency_chains": [
+  {
+   "chain": [
+    "REL-PROXY-001",
+    "FR-ENGINE-014",
+    "FR-HTTP-037",
+    "FR-HTTP-036",
+    "IR-HTTP-014"
+   ],
+   "weakest_link": "FR-ENGINE-014",
+   "weakest_score": 72,
+   "below_60": false,
+   "note": "direct dependant of medium-rated FR-ENGINE-014"
+  },
+  {
+   "chain": [
+    "OPS-BUILD-004",
+    "CON-BUILD-020",
+    "SEC-PROXY-005",
+    "FR-PROXY-001",
+    "SEC-PROXY-001",
+    "IR-PROXY-001"
+   ],
+   "weakest_link": "SEC-PROXY-005",
+   "weakest_score": 74,
+   "below_60": false
+  },
+  {
+   "chain": [
+    "CON-BUILD-020",
+    "SEC-PROXY-005",
+    "FR-PROXY-001",
+    "SEC-PROXY-001",
+    "IR-PROXY-001"
+   ],
+   "weakest_link": "SEC-PROXY-005",
+   "weakest_score": 74,
+   "below_60": false,
+   "note": "direct dependant of medium-rated SEC-PROXY-005"
+  },
+  {
+   "chain": [
+    "FR-PROXY-015",
+    "SEC-PROXY-005",
+    "FR-PROXY-001",
+    "SEC-PROXY-001",
+    "IR-PROXY-001"
+   ],
+   "weakest_link": "SEC-PROXY-005",
+   "weakest_score": 74,
+   "below_60": false,
+   "note": "direct dependant of medium-rated SEC-PROXY-005"
+  },
+  {
+   "chain": [
+    "FR-PROXY-017",
+    "SEC-PROXY-005",
+    "FR-PROXY-001",
+    "SEC-PROXY-001",
+    "IR-PROXY-001"
+   ],
+   "weakest_link": "SEC-PROXY-005",
+   "weakest_score": 74,
+   "below_60": false,
+   "note": "direct dependant of medium-rated SEC-PROXY-005"
+  },
+  {
+   "chain": [
+    "FR-PROXY-018",
+    "SEC-PROXY-005",
+    "FR-PROXY-001",
+    "SEC-PROXY-001",
+    "IR-PROXY-001"
+   ],
+   "weakest_link": "SEC-PROXY-005",
+   "weakest_score": 74,
+   "below_60": false,
+   "note": "direct dependant of medium-rated SEC-PROXY-005"
+  },
+  {
+   "chain": [
+    "REL-PROXY-002",
+    "SEC-PROXY-005",
+    "FR-PROXY-001",
+    "SEC-PROXY-001",
+    "IR-PROXY-001"
+   ],
+   "weakest_link": "SEC-PROXY-005",
+   "weakest_score": 74,
+   "below_60": false,
+   "note": "direct dependant of medium-rated SEC-PROXY-005"
+  },
+  {
+   "chain": [
+    "OPS-DX-011",
+    "OPS-DX-010",
+    "FR-PROXY-020",
+    "FR-PROXY-018",
+    "FR-PROXY-017",
+    "FR-PROXY-015",
+    "FR-PROXY-010",
+    "FR-PROXY-008",
+    "FR-PROXY-007",
+    "SEC-PROXY-003",
+    "FR-HTTP-032",
+    "IR-HTTP-013"
+   ],
+   "weakest_link": "FR-PROXY-017",
+   "weakest_score": 82,
+   "below_60": false
+  },
+  {
+   "chain": [
+    "FR-REL-007",
+    "FR-REL-006",
+    "CON-BUILD-019"
+   ],
+   "weakest_link": "FR-REL-007",
+   "weakest_score": 86,
+   "below_60": false
+  },
+  {
+   "chain": [
+    "FR-PROXY-021",
+    "FR-PROXY-008",
+    "FR-PROXY-007",
+    "SEC-PROXY-003",
+    "FR-HTTP-032",
+    "IR-HTTP-013"
+   ],
+   "weakest_link": "FR-PROXY-007",
+   "weakest_score": 89,
+   "below_60": false
+  },
+  {
+   "chain": [
+    "FR-SVL-010",
+    "FR-HTTP-037",
+    "FR-HTTP-036",
+    "IR-HTTP-014"
+   ],
+   "weakest_link": "FR-SVL-010",
+   "weakest_score": 89,
+   "below_60": false
+  },
+  {
+   "chain": [
+    "OPS-DX-008",
+    "FR-HTTP-031",
+    "FR-HTTP-030",
+    "IR-HTTP-013"
+   ],
+   "weakest_link": "OPS-DX-008",
+   "weakest_score": 89,
+   "below_60": false
+  },
+  {
+   "chain": [
+    "OPS-DX-009",
+    "FR-HTTP-037",
+    "FR-HTTP-036",
+    "IR-HTTP-014"
+   ],
+   "weakest_link": "OPS-DX-009",
+   "weakest_score": 89,
+   "below_60": false
+  },
+  {
+   "chain": [
+    "FR-ENGINE-013",
+    "FR-HTTP-031",
+    "FR-HTTP-030",
+    "IR-HTTP-013"
+   ],
+   "weakest_link": "FR-HTTP-030",
+   "weakest_score": 91,
+   "below_60": false
+  },
+  {
+   "chain": [
+    "CON-BUILD-021",
+    "CON-BUILD-019"
+   ],
+   "weakest_link": "CON-BUILD-021",
+   "weakest_score": 92,
+   "below_60": false
+  },
+  {
+   "chain": [
+    "FR-PROXY-012",
+    "FR-PROXY-013",
+    "FR-PROXY-006",
+    "FR-PROXY-001",
+    "SEC-PROXY-001",
+    "IR-PROXY-001"
+   ],
+   "weakest_link": "FR-PROXY-013",
+   "weakest_score": 93,
+   "below_60": false
+  },
+  {
+   "chain": [
+    "FR-PROXY-005",
+    "SEC-PROXY-002",
+    "FR-PROXY-003",
+    "FR-HTTP-032",
+    "IR-HTTP-013"
+   ],
+   "weakest_link": "FR-PROXY-003",
+   "weakest_score": 93,
+   "below_60": false
+  }
+ ],
+ "chains_below_60": [],
+ "stability_drift_candidates": [
+  {
+   "req_id": "FR-ENGINE-014",
+   "current_stability": "evolving",
+   "suggested": "draft if AC-5 is not amended before its wave",
+   "reason": "An acceptance criterion contradicts the pinned TinyHttpd behaviour."
+  },
+  {
+   "req_id": "SEC-PROXY-005",
+   "current_stability": "evolving",
+   "suggested": "draft if AC-6 is not amended before its wave",
+   "reason": "An acceptance criterion contradicts JDK HostnameVerifier behaviour."
+  },
+  {
+   "req_id": "FR-REL-007",
+   "current_stability": "evolving",
+   "suggested": "keep",
+   "reason": "High, but AC-1/AC-3 are release-step records outside this run (D-009); it can reach implemented, not verified, in this run."
+  }
+ ],
+ "conditions": [
+  "Break the FR-PROXY-015 <-> FR-PROXY-017 depends_on cycle (keep one direction, relink the other as extends/relates).",
+  "Run the regression of OPS-BUILD-004 in Maven mode (local TinyHttpd checkout is at de5c7ff, not e73cd5d).",
+  "Release-step records (FR-REL-006 AC-4/AC-5, FR-REL-007 AC-1/AC-3) stay pending after this run by design D-009."
+ ],
+ "revised_after_srs_amendments": {
+  "date": "2026-11-14",
+  "changes": [
+   "FR-ENGINE-014 AC-5 and statement narrowed to TinyHttpd 3.1.1 304 behaviour (user decision PRD-271)",
+   "SEC-PROXY-005 AC-3 SNI oracle on a dotted test host, AC-6 injected HostnameVerifier",
+   "FR-PROXY-017 -> FR-PROXY-015 link changed from depends_on to extends"
+  ],
+  "feasibility_distribution": {
+   "high": 58,
+   "medium": 0,
+   "low": 0,
+   "blocked": 0
+  },
+  "rejudged": {
+   "FR-ENGINE-014": "high (88, eval_iter1 rejudge)",
+   "SEC-PROXY-005": "high after AC-3/AC-6 amendments (kiwi-srs rounds 7-8 accepted)"
+  },
+  "dependency_cycles": 0,
+  "target_verdict": "release-ready for implementation (no blockers); FR-REL-006/FR-REL-007 criteria that need recorded release runs belong to the later release step (design D-009)"
+ }
+}

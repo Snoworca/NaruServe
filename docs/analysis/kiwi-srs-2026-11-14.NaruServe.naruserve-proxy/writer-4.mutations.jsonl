@@ -1,0 +1,19 @@
+{"tool":"add_requirement","id":"CON-BUILD-019","scope":"BUILD","title":"NaruServe-proxy module: settings, root build, NaruServe-api-only dependency, Java 8, no reverse dependency","result":"ok","seeded_trace":9}
+{"tool":"add_requirement","id":"CON-BUILD-020","scope":"BUILD","title":"NaruServe-proxy build checks: API 21, javax.servlet, internal/spi and forbidden packages","result":"ok","seeded_trace":6}
+{"tool":"add_requirement","id":"OPS-BUILD-004","scope":"BUILD","title":"CLAUDE.md module line names NaruServe-proxy; full build green with baseline tests","result":"ok","seeded_trace":5}
+{"tool":"add_requirement","id":"FR-REL-006","scope":"REL","title":"naruserve-proxy published: POM, staging of eleven artifactIds, SBOM","result":"ok","seeded_trace":7}
+{"tool":"add_requirement","id":"OPS-DX-008","scope":"DX","title":"request.md and app.md document the raw request API, onError over-limit forms and 0.12.0 compatibility","result":"ok","seeded_trace":12}
+{"tool":"add_requirement","id":"OPS-DX-009","scope":"DX","title":"response.md documents append, onAbort with custom-adapter limit, relay and isFieldValue","result":"ok","seeded_trace":8}
+{"tool":"add_requirement","id":"OPS-DX-010","scope":"DX","title":"docs/api/proxy.md and en/proxy.md: Proxy guide with every limit and warning","result":"ok","seeded_trace":18}
+{"tool":"add_requirement","id":"OPS-DX-011","scope":"DX","title":"Proxy guide in site nav, 19 guide pairs, README module tables without unreleased coordinate","result":"ok","seeded_trace":14}
+{"tool":"expire_acceptance_criterion","id":"CON-BUILD-002","acId":"AC-1","successor":"CON-BUILD-019","result":"ok"}
+{"tool":"expire_acceptance_criterion","id":"CON-BUILD-006","acId":"AC-1","successor":"CON-BUILD-019","result":"ok"}
+{"tool":"expire_acceptance_criterion","id":"CON-BUILD-012","acId":"AC-1","successor":"CON-BUILD-020","result":"ok"}
+{"tool":"expire_acceptance_criterion","id":"CON-BUILD-013","acId":"AC-3","successor":"CON-BUILD-020","result":"ok"}
+{"tool":"expire_acceptance_criterion","id":"OPS-BUILD-003","acId":"AC-3","successor":"OPS-BUILD-004","result":"ok"}
+{"tool":"expire_acceptance_criterion","id":"FR-REL-005","acId":"AC-7","successor":"FR-REL-006","result":"ok"}
+{"tool":"expire_acceptance_criterion","id":"FR-REL-001","acId":"AC-1","successor":"FR-REL-006","result":"ok"}
+{"tool":"expire_acceptance_criterion","id":"OPS-DX-007","acId":"AC-3","successor":"OPS-DX-011","result":"ok","why":"guide-pair count pinned to 18; proxy.md makes 19"}
+{"tool":"expire_acceptance_criterion","id":"OPS-REL-001","acId":"AC-1","successor":"OPS-DX-011","result":"ok","why":"README coordinates must equal docs/api/README module table rows; unreleased proxy row breaks equality"}
+{"tool":"validate_spec","result":"errors=0 warnings=48 (SRS-W081 baseline)","note":"read-only"}
+{"tool":"check_prd_coverage","result":"uncitedItems=0 ungroundedCriteria=0 uncitedRequirements=0","note":"read-only; whole target 0.12.0"}

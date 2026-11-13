@@ -1,0 +1,1271 @@
+{
+ "evaluator": "verify-pass-1",
+ "iter": 2,
+ "partition": "delta",
+ "tool_runs": {
+  "validate": "speckiwi validate --json → errors 0, warnings 62 (all SRS-W081); 60 on verified older requirements (expected), 2 on 0.12.0 requirements CON-BUILD-019 and FR-REL-006 (kept as findings)",
+  "prd_coverage": "speckiwi prd coverage docs/prd/2026-11-14.naruserve-proxy.prd.md --target 0.12.0 --json → uncitedItems [], assignedToOtherTargets [], missingItems [], uncitedRequirements [], ungroundedCriteria []"
+ },
+ "prd_items": [
+  {
+   "id": "PRD-7",
+   "kind": "goal",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-009#AC-1"
+   ],
+   "note": "Method token forwarded unchanged over HTTP/1.1 (PATCH, PROPFIND, PURGE)."
+  },
+  {
+   "id": "PRD-9",
+   "kind": "goal",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-3",
+    "FR-PROXY-018#AC-5"
+   ],
+   "note": "Connect failures retried; onError answers by kind() with a JSON body."
+  },
+  {
+   "id": "PRD-13",
+   "kind": "goal",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-1",
+    "FR-PROXY-015#AC-4",
+    "FR-PROXY-017#AC-1"
+   ],
+   "note": "Connect failure is 502 not 500; finite timeouts; target not leaked."
+  },
+  {
+   "id": "PRD-23",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "IR-HTTP-011#AC-1",
+    "IR-HTTP-011#AC-6",
+    "FR-HTTP-031#AC-1"
+   ],
+   "note": "Checked IOException subclass on the read that crosses the limit; restated with the public class in IR-HTTP-011 AC-6."
+  },
+  {
+   "id": "PRD-24",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "IR-HTTP-011#AC-1",
+    "IR-HTTP-011#AC-2"
+   ],
+   "note": "Moved to com.snoworca.naruserve, no internal alias."
+  },
+  {
+   "id": "PRD-33",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-HTTP-035#AC-5"
+   ],
+   "note": "void return checked by reflection."
+  },
+  {
+   "id": "PRD-34",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-HTTP-035#AC-6",
+    "FR-HTTP-035#AC-8"
+   ],
+   "note": "Listener may run on another thread; javadoc states it."
+  },
+  {
+   "id": "PRD-35",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-HTTP-035#AC-4"
+   ],
+   "note": "A throwing listener does not stop later listeners or the transfer cleanup (stream closed, state ABORTED)."
+  },
+  {
+   "id": "PRD-36",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-HTTP-035#AC-7",
+    "FR-HTTP-035#AC-8"
+   ],
+   "note": "SPI onAbort contract carried unchanged; idle-disconnect limit documented."
+  },
+  {
+   "id": "PRD-50",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "IR-HTTP-011#AC-5"
+   ],
+   "note": "Kotlin catch of the moved class without platform type (cited part only)."
+  },
+  {
+   "id": "PRD-52",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-009#AC-1",
+    "FR-PROXY-009#AC-2",
+    "FR-PROXY-009#AC-3"
+   ],
+   "note": "Token forwarded as received incl. extension methods; non-token 400; CONNECT/TRACE 405 with Allow: GET, HEAD, POST, PUT, DELETE, PATCH, OPTIONS (exact list matches request §3.2)."
+  },
+  {
+   "id": "PRD-53",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-009#AC-4",
+    "FR-PROXY-009#AC-6"
+   ],
+   "note": "Router.isWebSocketUpgrade criterion; other Upgrade removed and forwarded."
+  },
+  {
+   "id": "PRD-57",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-009#AC-1",
+    "FR-PROXY-009#AC-6"
+   ],
+   "note": "HTTP/1.1 to backend, no h2c attempt."
+  },
+  {
+   "id": "PRD-89",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-014#AC-1"
+   ],
+   "note": "Backend Content-Length passed only as the relay length."
+  },
+  {
+   "id": "PRD-97",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-1",
+    "FR-PROXY-015#AC-2"
+   ],
+   "note": "Pre-response backend failures reach the error flow as ProxyException."
+  },
+  {
+   "id": "PRD-98",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-1",
+    "FR-PROXY-015#AC-2"
+   ],
+   "note": "kind() and getCause() asserted."
+  },
+  {
+   "id": "PRD-99",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-4"
+   ],
+   "note": "Default error body contains neither target host nor port."
+  },
+  {
+   "id": "PRD-103",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-6",
+    "FR-PROXY-015#AC-7",
+    "FR-PROXY-015#AC-9"
+   ],
+   "note": "Early response best effort after a backend close/reset; INVALID_RESPONSE when unreadable; scoping to close/reset matches request §3.4 text, and AC-9 keeps watchdog closes as WRITE_TIMEOUT/TOTAL_TIMEOUT per the §3.4 error table."
+  },
+  {
+   "id": "PRD-104",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-8"
+   ],
+   "note": "No further client body read after a failed write; rest left to the adapter."
+  },
+  {
+   "id": "PRD-105",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-016#AC-4"
+   ],
+   "note": "Relayed stream throws IOException caused by ProxyException; proxy never calls res.abort."
+  },
+  {
+   "id": "PRD-106",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-016#AC-5",
+    "FR-PROXY-015#AC-5"
+   ],
+   "note": "Mid-response failure logged to req.application().logger() before throwing."
+  },
+  {
+   "id": "PRD-109",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-017#AC-1",
+    "FR-PROXY-017#AC-5",
+    "FR-PROXY-017#AC-6",
+    "FR-PROXY-015#AC-9"
+   ],
+   "note": "60 s default; client-body waiting not counted."
+  },
+  {
+   "id": "PRD-111",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-017#AC-1",
+    "FR-PROXY-017#AC-7",
+    "FR-PROXY-015#AC-9"
+   ],
+   "note": "5 min default incl. retries and waits; 504 before / abort after."
+  },
+  {
+   "id": "PRD-112",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-017#AC-8",
+    "SEC-PROXY-005#AC-5"
+   ],
+   "note": "First timeout reached applies; total shorter than others allowed."
+  },
+  {
+   "id": "PRD-145",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "CON-BUILD-019#AC-3",
+    "CON-BUILD-021#AC-1",
+    "FR-REL-006#AC-1",
+    "FR-REL-007#AC-2"
+   ],
+   "note": "Separate module NaruServe-proxy / artifact naruserve-proxy."
+  },
+  {
+   "id": "PRD-150",
+   "kind": "in-scope",
+   "verdict": "fail",
+   "refs": [
+    "SEC-PROXY-004#AC-5",
+    "SEC-PROXY-004",
+    "FR-PROXY-014#AC-6"
+   ],
+   "note": "FR-PROXY-014 follows the RFC 9112 §6.3 order (HEAD/204/304 bodyless first), but SEC-PROXY-004's statement and its AC-5 (which cites PRD-150) still make any non-single-chunked Transfer-Encoding INVALID_RESPONSE for every response, HEAD/204/304 included. That breaks the order the item and the request table (§3.9) fix. See finding coherence-2-1."
+  },
+  {
+   "id": "PRD-151",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-004#AC-9"
+   ],
+   "note": "ISO-8859-1 round-trip of 0xE9."
+  },
+  {
+   "id": "PRD-152",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-004#AC-1",
+    "SEC-PROXY-004#AC-2",
+    "SEC-PROXY-004#AC-3",
+    "SEC-PROXY-004#AC-10"
+   ],
+   "note": "64 KiB header limit, 4 KiB chunk-size line, 64 KiB trailer values match the request."
+  },
+  {
+   "id": "PRD-153",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-004#AC-10"
+   ],
+   "note": "Trailers read and discarded."
+  },
+  {
+   "id": "PRD-154",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-004#AC-6"
+   ],
+   "note": "101 INVALID_RESPONSE; other 1xx skipped."
+  },
+  {
+   "id": "PRD-155",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-014#AC-4",
+    "FR-PROXY-014#AC-5",
+    "FR-PROXY-014#AC-6",
+    "SEC-PROXY-004#AC-4"
+   ],
+   "note": "HEAD/204/304 bodyless whatever their length headers (FR-PROXY-014 AC-6; SEC-PROXY-004 AC-4 now defers). SEC-PROXY-004's AC-5 and statement still conflict, recorded under PRD-150 and finding coherence-2-1."
+  },
+  {
+   "id": "PRD-156",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-014#AC-2"
+   ],
+   "note": "Chunked decoded, relay -1."
+  },
+  {
+   "id": "PRD-157",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-014#AC-1",
+    "SEC-PROXY-004#AC-7"
+   ],
+   "note": "Single or identical Content-Length read and passed."
+  },
+  {
+   "id": "PRD-158",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-014#AC-3"
+   ],
+   "note": "Read until close, relay -1."
+  },
+  {
+   "id": "PRD-159",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005#AC-3",
+    "SEC-PROXY-005#AC-4"
+   ],
+   "note": "Plain connect then createSocket(plain, host, port, true); SNI."
+  },
+  {
+   "id": "PRD-160",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005",
+    "FR-PROXY-017#AC-3"
+   ],
+   "note": "Handshake SO_TIMEOUT = connect timeout; handshake timeout CONNECT_TIMEOUT."
+  },
+  {
+   "id": "PRD-161",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005#AC-1"
+   ],
+   "note": "Certificate verification on."
+  },
+  {
+   "id": "PRD-162",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005#AC-1",
+    "SEC-PROXY-005#AC-6"
+   ],
+   "note": "Host name verification enforced."
+  },
+  {
+   "id": "PRD-163",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005#AC-6"
+   ],
+   "note": "Endpoint identification by reflection, HostnameVerifier fallback."
+  },
+  {
+   "id": "PRD-164",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005#AC-7"
+   ],
+   "note": "Reflection, no animal-sniffer exemption."
+  },
+  {
+   "id": "PRD-165",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005#AC-2",
+    "SEC-PROXY-005#AC-8"
+   ],
+   "note": "No switch-off option; private CA via sslSocketFactory keeps host name check."
+  },
+  {
+   "id": "PRD-177",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-004#AC-11"
+   ],
+   "note": "A test per malformed input."
+  },
+  {
+   "id": "PRD-189",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-HTTP-035#AC-1",
+    "FR-HTTP-035#AC-2",
+    "FR-HTTP-035#AC-3",
+    "FR-HTTP-035#AC-4"
+   ],
+   "note": "Once on abort, never on success, immediate after abort, isolation."
+  },
+  {
+   "id": "PRD-194",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-009#AC-6"
+   ],
+   "note": "h2c GET forwarded without Upgrade/HTTP2-Settings (cited part)."
+  },
+  {
+   "id": "PRD-202",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-009#AC-2"
+   ],
+   "note": "Method token violation 400, no backend (cited part)."
+  },
+  {
+   "id": "PRD-203",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-009#AC-3",
+    "FR-PROXY-009#AC-4",
+    "FR-PROXY-009#AC-5"
+   ],
+   "note": "405 + standard Allow; app.ws gets the upgrade in either order."
+  },
+  {
+   "id": "PRD-207",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-014#AC-1",
+    "FR-PROXY-015#AC-6"
+   ],
+   "note": "Body relay; FIN early 401 relayed (cited parts)."
+  },
+  {
+   "id": "PRD-208",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-014#AC-4",
+    "SEC-PROXY-004#AC-6"
+   ],
+   "note": "HEAD keeps Content-Length without body; interim responses not forwarded."
+  },
+  {
+   "id": "PRD-211",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-1",
+    "FR-PROXY-015#AC-4",
+    "FR-PROXY-017#AC-3",
+    "FR-PROXY-017#AC-4",
+    "FR-PROXY-017#AC-5"
+   ],
+   "note": "502/504 per kind, short timing values, defaults via accessors, no target leak."
+  },
+  {
+   "id": "PRD-220",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-005#AC-1",
+    "SEC-PROXY-005#AC-2",
+    "SEC-PROXY-005#AC-3"
+   ],
+   "note": "TLS failures 502 CONNECT_FAILED with one connection under retries(2); private CA; SNI."
+  },
+  {
+   "id": "PRD-221",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "SEC-PROXY-004#AC-1",
+    "SEC-PROXY-004#AC-10",
+    "FR-PROXY-016#AC-2"
+   ],
+   "note": "Malformed responses 502 INVALID_RESPONSE; mid-body errors abort and log."
+  },
+  {
+   "id": "PRD-227",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-018#AC-1",
+    "FR-PROXY-018#AC-6",
+    "SEC-PROXY-005#AC-1"
+   ],
+   "note": "Off by default; connect failures except TLS; 502/503 only bodyless safe methods."
+  },
+  {
+   "id": "PRD-230",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-015#AC-3",
+    "FR-PROXY-015#AC-5"
+   ],
+   "note": "Proxy writes no error body; app shapes the response."
+  },
+  {
+   "id": "PRD-231",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "CON-BUILD-021#AC-6",
+    "CON-BUILD-021#AC-8",
+    "CON-BUILD-020#AC-4"
+   ],
+   "note": "Request A in naruserve-api, B in naruserve-proxy on the public API only."
+  },
+  {
+   "id": "PRD-263",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-009#AC-4",
+    "FR-PROXY-009#AC-5"
+   ],
+   "note": "WebSocket upgrade passed to next()."
+  },
+  {
+   "id": "PRD-270",
+   "kind": "in-scope",
+   "verdict": "accepted",
+   "refs": [
+    "FR-PROXY-009#AC-7"
+   ],
+   "note": "No next() after forwarding; first-registered mount wins."
+  }
+ ],
+ "srs_items": [
+  {
+   "id": "IR-HTTP-011",
+   "verdict": "grounded",
+   "basis": "PRD-24, PRD-23",
+   "note": "Statement matches request §6 / A-1 move; AC-6..AC-8 restate the expired FR-HTTP-020 AC-3/AC-4 and FR-JSON-001 AC-9 in full (limit+1 read bound, no source read on declared overrun, same-instance HttpException rethrow, overrun detected from the stream state, onError/access log)."
+  },
+  {
+   "id": "IR-HTTP-011#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-24, PRD-23",
+   "note": ""
+  },
+  {
+   "id": "IR-HTTP-011#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-24",
+   "note": ""
+  },
+  {
+   "id": "IR-HTTP-011#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-24, PRD-23",
+   "note": "Overlaps AC-6/AC-7 but is self-contained (cases spelled out inline)."
+  },
+  {
+   "id": "IR-HTTP-011#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-24",
+   "note": "Still cites the expired FR-JSON-001 AC-9; see finding coherence-2-6."
+  },
+  {
+   "id": "IR-HTTP-011#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-50; fills: PRD-50 / hole (no @NonNull per repository Kotlin rule)",
+   "note": ""
+  },
+  {
+   "id": "IR-HTTP-011#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-24, PRD-23",
+   "note": "Complete restatement of FR-HTTP-020 AC-3 incl. its SDS decision (at most limit+1 bytes)."
+  },
+  {
+   "id": "IR-HTTP-011#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-24, PRD-23",
+   "note": "Complete restatement of FR-HTTP-020 AC-4."
+  },
+  {
+   "id": "IR-HTTP-011#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-24",
+   "note": "Complete restatement of FR-JSON-001 AC-9 incl. both decisions (state-based detection, same instance)."
+  },
+  {
+   "id": "FR-HTTP-020",
+   "verdict": "grounded",
+   "basis": "baseline D-088 (verified wave-3)",
+   "note": "Statement still true (stream stays internal, no class name). New trace row to the public path carries trace_intent=addition_site; the old internal path row is kept by the verified-block guard, and the path still exists today."
+  },
+  {
+   "id": "FR-HTTP-020#AC-1",
+   "verdict": "grounded",
+   "basis": "baseline D-088",
+   "note": "Still true."
+  },
+  {
+   "id": "FR-HTTP-020#AC-2",
+   "verdict": "grounded",
+   "basis": "baseline D-088",
+   "note": "Still true."
+  },
+  {
+   "id": "FR-HTTP-020#AC-3",
+   "verdict": "grounded",
+   "basis": "baseline D-088",
+   "note": "Correctly expired (said the over-limit type is internal); successor IR-HTTP-011 AC-6."
+  },
+  {
+   "id": "FR-HTTP-020#AC-4",
+   "verdict": "grounded",
+   "basis": "baseline D-088",
+   "note": "Correctly expired; successor IR-HTTP-011 AC-7."
+  },
+  {
+   "id": "FR-JSON-001",
+   "verdict": "grounded",
+   "basis": "baseline D-186..D-191 (verified wave-5)",
+   "note": "AC-9 expiry is correct, but the live AC-2 still refers to it; see finding coherence-2-5. No new trace row to IR-HTTP-011, and none is needed (IR-HTTP-011 holds the extends link)."
+  },
+  {
+   "id": "FR-JSON-001#AC-9",
+   "verdict": "grounded",
+   "basis": "baseline D-186..D-188, D-219",
+   "note": "Correctly expired (named the internal class); successor IR-HTTP-011 AC-8 restates every clause."
+  },
+  {
+   "id": "FR-JSON-001#AC-2",
+   "verdict": "grounded",
+   "basis": "baseline D-187",
+   "note": "Its 'unless AC-9 applies' now points to an expired criterion (coherence-2-5)."
+  },
+  {
+   "id": "CON-BUILD-021",
+   "verdict": "grounded",
+   "basis": "PRD-145, PRD-231",
+   "note": "Restates every live criterion of discarded CON-BUILD-006 (AC-2..AC-9 → AC-1..AC-8); AC-1 of CON-BUILD-006 already expired to CON-BUILD-019 AC-3, which the statement points to. Wording differences ('Wave 1's', 'before the wave that adds the D-108 adapter') only drop history."
+  },
+  {
+   "id": "CON-BUILD-021#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-145",
+   "note": "= CON-BUILD-006 AC-2 + NaruServe-proxy; build.gradle:93-94 matches."
+  },
+  {
+   "id": "CON-BUILD-021#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-145",
+   "note": "= CON-BUILD-006 AC-3."
+  },
+  {
+   "id": "CON-BUILD-021#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-145",
+   "note": "= CON-BUILD-006 AC-4."
+  },
+  {
+   "id": "CON-BUILD-021#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-145",
+   "note": "= CON-BUILD-006 AC-5."
+  },
+  {
+   "id": "CON-BUILD-021#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-145",
+   "note": "= CON-BUILD-006 AC-6."
+  },
+  {
+   "id": "CON-BUILD-021#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-145, PRD-231",
+   "note": "= CON-BUILD-006 AC-7 + proxy named."
+  },
+  {
+   "id": "CON-BUILD-021#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-145",
+   "note": "= CON-BUILD-006 AC-8."
+  },
+  {
+   "id": "CON-BUILD-021#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-145, PRD-231",
+   "note": "= CON-BUILD-006 AC-9."
+  },
+  {
+   "id": "FR-REL-007",
+   "verdict": "grounded",
+   "basis": "PRD-145",
+   "note": "Restates every live criterion of discarded FR-REL-001 (AC-2..AC-5 → AC-1..AC-4, decisions folded in); FR-REL-001 AC-1 already expired to FR-REL-006 AC-5; ten naruModules entries + Android AAR consistent with FR-REL-006 AC-5 and CON-BUILD-019 AC-1."
+  },
+  {
+   "id": "FR-REL-007#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-145",
+   "note": "= FR-REL-001 AC-2."
+  },
+  {
+   "id": "FR-REL-007#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-145",
+   "note": "= FR-REL-001 AC-3 with its SDS decision."
+  },
+  {
+   "id": "FR-REL-007#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-145",
+   "note": "= FR-REL-001 AC-4."
+  },
+  {
+   "id": "FR-REL-007#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-145",
+   "note": "= FR-REL-001 AC-5 with the re-pointed method names."
+  },
+  {
+   "id": "FR-HTTP-035",
+   "verdict": "grounded",
+   "basis": "PRD-189, PRD-33..PRD-36",
+   "note": "Implementation Notes now wrap each listener and log RuntimeException via the app SafeLogger, consistent with AC-4. The claim that SafeCallbacks.run swallows silently was checked against common/SafeCallbacks.java and holds."
+  },
+  {
+   "id": "FR-HTTP-035#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-189, PRD-33",
+   "note": ""
+  },
+  {
+   "id": "FR-HTTP-035#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-189",
+   "note": ""
+  },
+  {
+   "id": "FR-HTTP-035#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-189 (design D-027)",
+   "note": ""
+  },
+  {
+   "id": "FR-HTTP-035#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-35, PRD-189 (design D-028)",
+   "note": "The logging clause rests on design D-028 ← PRD-189."
+  },
+  {
+   "id": "FR-HTTP-035#AC-5",
+   "verdict": "fills",
+   "basis": "PRD-33; fills: PRD-33 / hole (null listener)",
+   "note": ""
+  },
+  {
+   "id": "FR-HTTP-035#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-34",
+   "note": ""
+  },
+  {
+   "id": "FR-HTTP-035#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-36, PRD-189",
+   "note": ""
+  },
+  {
+   "id": "FR-HTTP-035#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-34, PRD-36",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-009",
+   "verdict": "grounded",
+   "basis": "PRD-52, PRD-53, PRD-57, PRD-203, PRD-263, PRD-270",
+   "note": "Allow list exact."
+  },
+  {
+   "id": "FR-PROXY-009#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-7, PRD-52, PRD-57",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-009#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-52, PRD-202",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-009#AC-3",
+   "verdict": "fills",
+   "basis": "PRD-52, PRD-203; fills: PRD-52 / hole (letter case of CONNECT/TRACE, design D-050)",
+   "note": "Rationale basis is now explicit; the case-insensitive match is a minimal, safety-side fill."
+  },
+  {
+   "id": "FR-PROXY-009#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-53, PRD-203, PRD-263",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-009#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-203, PRD-263",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-009#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-53, PRD-57, PRD-194",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-009#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-270",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-014",
+   "verdict": "grounded",
+   "basis": "PRD-150, PRD-155..PRD-158",
+   "note": "Bodyless-first order matches the request §3.9 table and RFC 9112 §6.3; conflicts with SEC-PROXY-004's statement and AC-5 (coherence-2-1)."
+  },
+  {
+   "id": "FR-PROXY-014#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-89, PRD-150, PRD-157, PRD-207",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-014#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-150, PRD-156",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-014#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-150, PRD-158",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-014#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-155, PRD-208",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-014#AC-5",
+   "verdict": "fills",
+   "basis": "PRD-155; fills: PRD-155 / hole (relay length of a bodyless response, design D-058)",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-014#AC-6",
+   "verdict": "fills",
+   "basis": "PRD-155; fills: PRD-155 / hole (length kept when Content-Length is unusable)",
+   "note": "Consistent with FR-HTTP-037 AC-5/AC-6 (-1 gives no Content-Length on HEAD/304; 204 never)."
+  },
+  {
+   "id": "FR-PROXY-015",
+   "verdict": "grounded",
+   "basis": "PRD-97, PRD-98, PRD-103, PRD-104, PRD-230",
+   "note": "Failed-write rule limited to backend close/reset as in request §3.4; watchdog closes keep WRITE_TIMEOUT/TOTAL_TIMEOUT, consistent with FR-PROXY-017 AC-5 (same test values) and FR-PROXY-018 (none retried)."
+  },
+  {
+   "id": "FR-PROXY-015#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-13, PRD-97, PRD-98, PRD-211",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-97, PRD-98",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-9, PRD-97, PRD-230",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-13, PRD-99, PRD-211",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015#AC-5",
+   "verdict": "fills",
+   "basis": "PRD-230; fills: PRD-106 / hole (who logs pre-response failures, design D-062)",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-103, PRD-207",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-103",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-104",
+   "note": ""
+  },
+  {
+   "id": "FR-PROXY-015#AC-9",
+   "verdict": "grounded",
+   "basis": "PRD-103, PRD-109, PRD-111, PRD-211",
+   "note": "Values .writeTimeout(1 s).bodyLimit(128 << 20), 64 MiB copied from AC-B20."
+  },
+  {
+   "id": "SEC-PROXY-004",
+   "verdict": "grounded",
+   "basis": "PRD-150..PRD-154, PRD-177, PRD-221",
+   "note": "Statement lists both-headers / bad Content-Length / non-chunked Transfer-Encoding as INVALID_RESPONSE with no HEAD/204/304 exception (coherence-2-1)."
+  },
+  {
+   "id": "SEC-PROXY-004#AC-1",
+   "verdict": "fills",
+   "basis": "PRD-152, PRD-221; fills: PRD-152 / hole (status outside 100..599, design D-059)",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-004#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-152, PRD-221",
+   "note": "65536 bytes = 64 KiB."
+  },
+  {
+   "id": "SEC-PROXY-004#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-152, PRD-221",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-004#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-150, PRD-221",
+   "note": "Now limited to responses that can carry a body; defers to FR-PROXY-014 AC-6."
+  },
+  {
+   "id": "SEC-PROXY-004#AC-5",
+   "verdict": "grounded",
+   "basis": "PRD-150, PRD-221; fills: PRD-150 / hole (coding parameters, empty values)",
+   "note": "Not limited to body-capable responses: contradicts FR-PROXY-014 AC-6 (coherence-2-1)."
+  },
+  {
+   "id": "SEC-PROXY-004#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-154, PRD-208, PRD-221",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-004#AC-7",
+   "verdict": "fills",
+   "basis": "PRD-150; fills: PRD-150 / hole (padded/repeated list elements, design D-054, D-073)",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-004#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-221",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-004#AC-9",
+   "verdict": "grounded",
+   "basis": "PRD-151",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-004#AC-10",
+   "verdict": "grounded",
+   "basis": "PRD-152, PRD-153, PRD-221",
+   "note": "4 KiB / 64 KiB values match."
+  },
+  {
+   "id": "SEC-PROXY-004#AC-11",
+   "verdict": "fills",
+   "basis": "PRD-177; fills: PRD-177 / hole (raw ServerSocket test backends, design D-070)",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-005",
+   "verdict": "grounded",
+   "basis": "PRD-159..PRD-165, PRD-220",
+   "note": "TLS failure kinds: CONNECT_FAILED except handshake timeout CONNECT_TIMEOUT (request §3.4 row 'connect timeout' / 'TLS failure other than a connect timeout') and watchdog TOTAL_TIMEOUT (AC-5). Consistent with FR-PROXY-015, FR-PROXY-017 AC-3 and FR-PROXY-018 AC-6/AC-7."
+  },
+  {
+   "id": "SEC-PROXY-005#AC-1",
+   "verdict": "grounded",
+   "basis": "PRD-161, PRD-162, PRD-220, PRD-227",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-005#AC-2",
+   "verdict": "grounded",
+   "basis": "PRD-165, PRD-220",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-005#AC-3",
+   "verdict": "grounded",
+   "basis": "PRD-159, PRD-220",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-005#AC-4",
+   "verdict": "grounded",
+   "basis": "PRD-159",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-005#AC-5",
+   "verdict": "fills",
+   "basis": "PRD-160, PRD-112; fills: PRD-160 / hole (handshake under total watchdog, design D-063)",
+   "note": "Consistent with the statement's TOTAL_TIMEOUT exception and the Implementation Notes' classification order."
+  },
+  {
+   "id": "SEC-PROXY-005#AC-6",
+   "verdict": "grounded",
+   "basis": "PRD-162, PRD-163",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-005#AC-7",
+   "verdict": "grounded",
+   "basis": "PRD-164 (design D-067)",
+   "note": ""
+  },
+  {
+   "id": "SEC-PROXY-005#AC-8",
+   "verdict": "grounded",
+   "basis": "PRD-161, PRD-165",
+   "note": ""
+  }
+ ],
+ "findings": [
+  {
+   "id": "coherence-2-1",
+   "finding_hash": "fef2daff7fed6c7a73876f441aa155e31ea53077",
+   "disposition": "keep",
+   "evidence": {
+    "kind": "contradicting-quotes",
+    "detail": "docs/spec/22.reverse-proxy.srs.md:1240 (SEC-PROXY-004 statement): \"treat as `INVALID_RESPONSE` ... both `Content-Length` and `Transfer-Encoding`, `Content-Length` elements that are not digits or differ, any `Transfer-Encoding` other than a single `chunked`\" (no HEAD/204/304 exception), and :1252 (SEC-PROXY-004 AC-5): \"A response with `Transfer-Encoding: gzip, chunked`, `Transfer-Encoding: identity`, `Transfer-Encoding: chunked;x=1` or an empty `Transfer-Encoding` value gives 502 with `kind()` `INVALID_RESPONSE`.\" vs :1179 (FR-PROXY-014 statement): \"treat the response to a HEAD request, a 204 and a 304 as bodyless before any other framing rule, reading no body bytes in these three cases whatever their framing headers say\" and :1192 (FR-PROXY-014 AC-6): \"Whatever framing headers a response to a HEAD request, a 204 or a 304 carries, the proxy reads no body bytes and reports no `INVALID_RESPONSE` for those headers\"."
+   },
+   "axis": "internal-coherence",
+   "req_id": "SEC-PROXY-004",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md:1240",
+   "description": "Round 1 limited SEC-PROXY-004 AC-4 to responses that can carry a body, but the statement and AC-5 still apply to every response. A HEAD/304 response with `Transfer-Encoding: gzip, chunked` is INVALID_RESPONSE under SEC-PROXY-004 AC-5 and no INVALID_RESPONSE under FR-PROXY-014 AC-6. This also departs from the RFC 9112 §6.3 order fixed by PRD-150, PRD-155 and the request's §3.9 table.",
+   "suggested_action": "fix_via_mcp"
+  },
+  {
+   "id": "supersede-2-2",
+   "finding_hash": "1907552bd37f2d5bb1153daeb8fae705c4d3fcf4",
+   "disposition": "keep",
+   "evidence": {
+    "kind": "contradicting-quotes",
+    "detail": "docs/spec/15.release.srs.md:514 (expired FR-REL-005 AC-7): \"...fails unless the staging directory holds exactly the ten artifactIds, each with the five files of AC-6; it is run on the release machine and recorded with the run name `central-staging`.\" [EXPIRED → FR-REL-006] vs :1665 (FR-REL-006 AC-4, the successor): \"...otherwise fails unless the staging directory holds exactly the eleven artifactIds (...), each with the five files of FR-REL-005 AC-6.\" (no run/record clause). FR-REL-006 Implementation Notes (:1693) still place that obligation on the expired/discarded criteria: \"the release step also records the `publish-local`, `central-staging` and `releaseSbom` runs in `docs/release/test-results.md` (FR-REL-001 AC-2, FR-REL-005 AC-1 and AC-7)\". FR-REL-001 is discarded → FR-REL-007, and FR-REL-005 AC-7 is expired → FR-REL-006."
+   },
+   "axis": "incremental-delta",
+   "req_id": "FR-REL-006",
+   "evidence_path": "docs/spec/15.release.srs.md:1665",
+   "description": "The successor criterion drops a clause of the expired FR-REL-005 AC-7 that is still true: the `central-staging` run on the release machine and its record. No live criterion now carries it, while FR-REL-007 AC-1 kept the matching record clause for the SBOM run. The Implementation Notes point to a discarded requirement and an expired criterion.",
+   "suggested_action": "fix_via_mcp"
+  },
+  {
+   "id": "mcp-compliance-2-3",
+   "finding_hash": "a749f942d9bd08c0ea4f75875dc9d2694a030c3e",
+   "disposition": "keep",
+   "evidence": {
+    "kind": "tool-diagnostic",
+    "detail": "`speckiwi validate --json` → warning {code: SRS-W081, requirementId: FR-REL-006, filePath: docs/spec/15.release.srs.md, line: 1682, message: \"Trace target FR-REL-001 is discarded; superseded by FR-REL-007\"}. FR-REL-006 is planned/0.12.0, not a verified older requirement."
+   },
+   "axis": "mcp-srs-md-compliance",
+   "req_id": "FR-REL-006",
+   "evidence_path": "docs/spec/15.release.srs.md:1682",
+   "description": "A new 0.12.0 requirement keeps an `extends` (re_stated_from FR-REL-001#AC-1) link and Rationale wording (\"FR-REL-001 AC-1, whose SBOM count names the nine entries\") to a requirement that round 1 discarded. The provenance can stay in the Change Notes or Rationale, but the live trace should also name FR-REL-007, or the warning should be resolved.",
+   "suggested_action": "fix_via_mcp"
+  },
+  {
+   "id": "mcp-compliance-2-4",
+   "finding_hash": "e7d5c4d444789b426f020e3b5a88352f53e64ad6",
+   "disposition": "keep",
+   "evidence": {
+    "kind": "tool-diagnostic",
+    "detail": "`speckiwi validate --json` → warning {code: SRS-W081, requirementId: CON-BUILD-019, filePath: docs/spec/02.build.srs.md, line: 1585, message: \"Trace target CON-BUILD-006 is discarded; superseded by CON-BUILD-021\"}. CON-BUILD-019 is planned/0.12.0. Its Rationale (:1560) still says in the present tense \"AC-3 restates CON-BUILD-006 AC-1, which pins exactly the main dependencies of every module\"."
+   },
+   "axis": "mcp-srs-md-compliance",
+   "req_id": "CON-BUILD-019",
+   "evidence_path": "docs/spec/02.build.srs.md:1585",
+   "description": "A new 0.12.0 requirement traces `extends` to CON-BUILD-006, which round 1 discarded. This warning is not covered by the verified-older-requirement exemption.",
+   "suggested_action": "fix_via_mcp"
+  },
+  {
+   "id": "coherence-2-5",
+   "finding_hash": "19ae1910d41b95fbc025b8f87246326bcb8f4005",
+   "disposition": "keep",
+   "evidence": {
+    "kind": "contradicting-quotes",
+    "detail": "docs/spec/07.json.srs.md:263 (FR-JSON-001 AC-2, live): \"an `IOException` thrown by `JsonCodec.decode` is turned into `HttpException` `400` with that exception as cause unless AC-9 applies\" vs FR-JSON-001 AC-9: \"~~When decoding fails and the core's size-limited stream recorded an overrun ...~~ [EXPIRED 2026-11-14 → IR-HTTP-011]\"."
+   },
+   "axis": "internal-coherence",
+   "req_id": "FR-JSON-001",
+   "evidence_path": "docs/spec/07.json.srs.md:263",
+   "description": "A live criterion makes its 400 mapping conditional on a criterion that round 1 expired. Read literally, the 413 exception now points to struck text. Its live home is IR-HTTP-011 AC-8, and the reference was not updated or expired with AC-9.",
+   "suggested_action": "escalate"
+  },
+  {
+   "id": "coherence-2-6",
+   "finding_hash": "d19e281513bc779e40744add67808f9fafcda861",
+   "disposition": "keep",
+   "evidence": {
+    "kind": "contradicting-quotes",
+    "detail": "docs/spec/04.http-core.srs.md:4805 (IR-HTTP-011 AC-4): \"...is still answered `413` with code `PAYLOAD_TOO_LARGE` (FR-JSON-001 AC-4, AC-9)\" vs docs/spec/07.json.srs.md FR-JSON-001 AC-9 \"[EXPIRED 2026-11-14 → IR-HTTP-011]\", restated as IR-HTTP-011 AC-8 of the same requirement."
+   },
+   "axis": "internal-coherence",
+   "req_id": "IR-HTTP-011",
+   "evidence_path": "docs/spec/04.http-core.srs.md:4805",
+   "description": "The criterion round 1 edited still cites the expired FR-JSON-001 AC-9 as its regression anchor instead of its own AC-8.",
+   "suggested_action": "fix_via_mcp"
+  },
+  {
+   "id": "coherence-2-7",
+   "finding_hash": "13e108733488f440b0ccd9422e48ec0262c64e64",
+   "disposition": "keep",
+   "evidence": {
+    "kind": "contradicting-quotes",
+    "detail": "docs/spec/04.http-core.srs.md:5148 (FR-HTTP-031 Implementation Notes): \"FR-HTTP-020 AC-3/AC-4 keep their rule; this requirement only adds a public caller.\" vs FR-HTTP-020 AC-3 and AC-4: \"~~...~~ [EXPIRED 2026-11-14 → IR-HTTP-011]\" (Change Notes: \"rule restated with the public class as IR-HTTP-011 AC-6 / AC-7\")."
+   },
+   "axis": "internal-coherence",
+   "req_id": "FR-HTTP-031",
+   "evidence_path": "docs/spec/04.http-core.srs.md:5148",
+   "description": "A 0.12.0 requirement says criteria that round 1 expired are still in force. The rule now lives in IR-HTTP-011 AC-6/AC-7.",
+   "suggested_action": "fix_via_mcp"
+  },
+  {
+   "id": "coherence-2-8",
+   "finding_hash": "5c104c4f3cc8e76218d264eccca0be23c8a5d590",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "none",
+    "detail": "RFC 9110 §9.1 makes method tokens case-sensitive, so `trace` is an extension method, but the request text does not address letter case."
+   },
+   "axis": "internal-coherence",
+   "req_id": "FR-PROXY-009",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md:841",
+   "description": "Possible tension between the case-insensitive CONNECT/TRACE match (AC-3) and 'extension methods forwarded as received' (PRD-52). Dropped: AC-3 carries an explicit fills: basis naming the gap, and no request sentence contradicts it.",
+   "suggested_action": "reclassify"
+  },
+  {
+   "id": "scope-2-9",
+   "finding_hash": "339a7871e7b6bdd820bcc823af0fcb371f5c5b2f",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "none",
+    "detail": "PRD-35 and AC-A12 require isolation only. The logging clause comes from design D-028 (← PRD-189)."
+   },
+   "axis": "scope-fit",
+   "req_id": "FR-HTTP-035",
+   "evidence_path": "docs/spec/04.http-core.srs.md:5338",
+   "description": "AC-4's 'logged through the app logger' goes beyond the request text. Dropped: it is backed by the frozen run design, has no contradicting request sentence, and the Implementation Notes now match it.",
+   "suggested_action": "reclassify"
+  },
+  {
+   "id": "coherence-2-10",
+   "finding_hash": "240260816b38be43abe83955d3a0b12a00951fd5",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "none",
+    "detail": "SEC-PROXY-005 Implementation Notes: \"every other `SSLException` or `IOException` is `CONNECT_FAILED`, which the retry rules never retry\" vs FR-PROXY-018 AC-5, which retries CONNECT_FAILED connect refusals."
+   },
+   "axis": "internal-coherence",
+   "req_id": "SEC-PROXY-005",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md:1290",
+   "description": "Dropped: the sentence sits under 'Map a failure during the handshake or host name verification', so it covers handshake-phase failures only, which FR-PROXY-018 also never retries.",
+   "suggested_action": "reclassify"
+  },
+  {
+   "id": "supersede-2-11",
+   "finding_hash": "3674bc99f781f6a864e26958e9626fed3c175c11",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "none",
+    "detail": "FR-REL-001 AC-1 named per-module example components (Gson, kotlin-stdlib, slf4j-api, TinyHttpd, Servlet API/Jetty excluded); FR-REL-006 AC-5 keeps only the general rule."
+   },
+   "axis": "incremental-delta",
+   "req_id": "FR-REL-006",
+   "evidence_path": "docs/spec/15.release.srs.md:1637",
+   "description": "Dropped: the general 'a component for every runtimeClasspath dependency ... none for compileOnly or test-scope' covers each example, so no value is lost.",
+   "suggested_action": "reclassify"
+  },
+  {
+   "id": "trace-2-12",
+   "finding_hash": "c3a47dff70df17e89f2cc7144f9a8563c64b4523",
+   "disposition": "drop",
+   "evidence": {
+    "kind": "none",
+    "detail": "IR-HTTP-011 trace row: internal/BodyTooLargeException.java 'implements; removed by the move'. The path exists today (checked with os.path.exists)."
+   },
+   "axis": "trace-path-existence",
+   "req_id": "IR-HTTP-011",
+   "evidence_path": "docs/spec/04.http-core.srs.md:4821",
+   "description": "Dropped: every trace path of the re-verified requirements either exists or carries trace_intent=addition_site.",
+   "suggested_action": "reclassify"
+  }
+ ],
+ "summary": {
+  "kept": 7,
+  "dropped": 5,
+  "prd_fail": 1,
+  "prd_violated": 0,
+  "srs_drop": 0,
+  "srs_residual": 0
+ }
+}

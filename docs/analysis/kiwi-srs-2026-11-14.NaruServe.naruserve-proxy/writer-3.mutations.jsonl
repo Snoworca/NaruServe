@@ -1,0 +1,24 @@
+{"tool":"add_requirement","id":"FR-PROXY-011","scope":"PROXY","title":"Proxy response status and headers copy rules","result":"ok","seeded_trace":6}
+{"tool":"add_trace_link","id":"FR-PROXY-011","reference":"FR-HTTP-037","relation":"depends_on","result":"ok","why":"implementation notes name FR-HTTP-037 in prose"}
+{"tool":"add_requirement","id":"FR-PROXY-012","scope":"PROXY","title":"Proxy fixed response headers responseHeader and removeResponseHeader","result":"ok","seeded_trace":4}
+{"tool":"add_requirement","id":"FR-PROXY-013","scope":"PROXY","title":"Proxy Location rewrite","result":"ok","seeded_trace":6}
+{"tool":"add_trace_link","id":"FR-PROXY-012","reference":"FR-PROXY-013","relation":"depends_on","result":"ok","why":"responseHeader applies after the Location rewrite"}
+{"tool":"validate_spec","result":"errors=0 warnings=48 (SRS-W081 baseline)","note":"read-only interim check"}
+{"tool":"add_requirement","id":"FR-PROXY-014","scope":"PROXY","title":"Proxy response body relay and bodyless HEAD 204 304 responses","result":"ok","seeded_trace":4}
+{"tool":"add_requirement","id":"SEC-PROXY-004","scope":"PROXY","title":"Proxy backend response parser and malformed responses","result":"ok","seeded_trace":6}
+{"tool":"add_trace_link","id":"FR-PROXY-014","reference":"SEC-PROXY-004","relation":"depends_on","result":"ok","why":"implementation notes name the response parser"}
+{"tool":"append_section_note","id":"FR-PROXY-014","section":"implementation_notes","mode":"replace","result":"ok","why":"replace a provisional phrase about the parser requirement ID"}
+{"tool":"add_requirement","id":"SEC-PROXY-005","scope":"PROXY","title":"Proxy https backends TLS connect, SNI and verification","result":"ok","seeded_trace":5}
+{"tool":"add_requirement","id":"FR-PROXY-015","scope":"PROXY","title":"Proxy failures before the response and best-effort early responses","result":"ok","seeded_trace":7}
+{"tool":"add_requirement","id":"FR-PROXY-016","scope":"PROXY","title":"Proxy failures after the response started abort the client and are logged","result":"ok","seeded_trace":5}
+{"tool":"add_requirement","id":"FR-PROXY-017","scope":"PROXY","title":"Proxy timeouts definitions, defaults and outcomes","result":"ok","seeded_trace":7}
+{"tool":"add_requirement","id":"FR-PROXY-018","scope":"PROXY","title":"Proxy retries","result":"ok","seeded_trace":6}
+{"tool":"add_requirement","id":"FR-PROXY-019","scope":"PROXY","title":"Proxy concurrency limit maxConcurrent","result":"ok","seeded_trace":5}
+{"tool":"add_requirement","id":"REL-PROXY-001","scope":"PROXY","title":"Proxy request lifetime: slot and watchdog released exactly once","result":"ok","seeded_trace":7,"note":"response carried a transient SRS-W065 status-cache diagnostic, not a spec finding"}
+{"tool":"add_requirement","id":"REL-PROXY-002","scope":"PROXY","title":"Proxy JVM-wide watchdog scheduler","result":"ok","seeded_trace":4}
+{"tool":"add_requirement","id":"FR-PROXY-020","scope":"PROXY","title":"Proxy backend HTTP/1.1 client connection per attempt with Connection: close","result":"ok","seeded_trace":5}
+{"tool":"append_section_note","id":"FR-PROXY-020","section":"implementation_notes","mode":"replace","result":"ok","why":"drop a read-timeout bound for the optional EOF wait that contradicted AC-4"}
+{"tool":"add_requirement","id":"FR-PROXY-021","scope":"PROXY","title":"Proxy requests in the access log","result":"ok","seeded_trace":4}
+{"tool":"edit_acceptance_criterion","id":"FR-PROXY-011","acId":"AC-3","result":"ok","why":"AC-B16 requires hop-by-hop response headers not to arrive at the client, so the socket-level check now names every non-framing hop-by-hop line"}
+{"tool":"check_prd_coverage","result":"read-only; every PRD item of the writer-3 partition is cited; remaining uncited items are writer-4 documentation and module items (PRD-27, 37, 74, 75, 90, 113, 117, 127, 145, 147, 148, 168, 231, 250, 267); no uncited requirements, no ungrounded criteria"}
+{"tool":"validate_spec","result":"errors=0 warnings=48 (SRS-W081 baseline)","note":"final check"}

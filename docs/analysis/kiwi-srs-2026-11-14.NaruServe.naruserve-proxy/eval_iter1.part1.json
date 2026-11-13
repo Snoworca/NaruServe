@@ -1,0 +1,2172 @@
+{
+  "evaluator": "verify-pass-1",
+  "iter": 1,
+  "partition": "request-A-and-build-docs",
+  "prd_items": [
+    {
+      "id": "PRD-1",
+      "kind": "user",
+      "verdict": "not-applicable",
+      "refs": [
+        "IR-PROXY-001#AC-1",
+        "FR-PROXY-006#AC-1"
+      ],
+      "note": "User/context item (requesting team migrating its gateway); cited as context only."
+    },
+    {
+      "id": "PRD-2",
+      "kind": "intent",
+      "verdict": "accepted",
+      "refs": [
+        "IR-HTTP-013#AC-1",
+        "IR-HTTP-014#AC-1"
+      ],
+      "note": "The three blocked points (raw body, header enumeration, repeated response headers) are each answered: bodyStream, headerNames/rawHeaders, append."
+    },
+    {
+      "id": "PRD-3",
+      "kind": "goal",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-030#AC-1",
+        "FR-HTTP-036#AC-1"
+      ],
+      "note": "Raw access API is general-purpose in NaruServe-api, usable outside the proxy (webhook signature, file relay)."
+    },
+    {
+      "id": "PRD-4",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "IR-PROXY-001#AC-1"
+      ],
+      "note": "app.use(\"/api/orders\", Proxy.to(url)) registers and forwards with no option set; safe defaults pinned in FR-PROXY-017/018/019."
+    },
+    {
+      "id": "PRD-5",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "IR-PROXY-001#AC-1"
+      ],
+      "note": "Proxy implements Middleware and not Installable."
+    },
+    {
+      "id": "PRD-6",
+      "kind": "exclusion",
+      "verdict": "respected",
+      "refs": [],
+      "note": "No 0.12.0 requirement adds an urlencoded form field-name enumeration API (grep of 04/05/16/22 for formNames/fieldNames: no hit)."
+    },
+    {
+      "id": "PRD-7",
+      "kind": "goal",
+      "verdict": "accepted",
+      "refs": [
+        "FR-PROXY-003#AC-1",
+        "FR-PROXY-006#AC-1",
+        "FR-PROXY-009#AC-1"
+      ],
+      "note": "Method, full path (prefix kept), query, headers incl. duplicates and body forwarded unchanged."
+    },
+    {
+      "id": "PRD-8",
+      "kind": "goal",
+      "verdict": "accepted",
+      "refs": [
+        "FR-PROXY-017#AC-9"
+      ],
+      "note": "Per-mount timeouts, read timeout in minutes (5 MINUTES relays, 300000 ms accessor)."
+    },
+    {
+      "id": "PRD-9",
+      "kind": "goal",
+      "verdict": "accepted",
+      "refs": [
+        "FR-PROXY-015#AC-3",
+        "FR-PROXY-018#AC-2",
+        "OPS-DX-010#AC-3"
+      ],
+      "note": "Retry of transient connect failures and ProxyException.kind() for JSON error answers in onError."
+    },
+    {
+      "id": "PRD-10",
+      "kind": "goal",
+      "verdict": "accepted",
+      "refs": [
+        "FR-PROXY-005#AC-1"
+      ],
+      "note": "Fixed gateway request header via requestHeader."
+    },
+    {
+      "id": "PRD-11",
+      "kind": "goal",
+      "verdict": "accepted",
+      "refs": [
+        "SEC-PROXY-002#AC-1"
+      ],
+      "note": "Client address and scheme sent as X-Forwarded-*."
+    },
+    {
+      "id": "PRD-12",
+      "kind": "goal",
+      "verdict": "accepted",
+      "refs": [
+        "FR-PROXY-018#AC-11",
+        "OPS-DX-010#AC-4"
+      ],
+      "note": "Path that must not be retried mounted separately with retries off."
+    },
+    {
+      "id": "PRD-13",
+      "kind": "goal",
+      "verdict": "accepted",
+      "refs": [
+        "FR-PROXY-015#AC-1",
+        "FR-PROXY-017#AC-1",
+        "FR-PROXY-015#AC-4"
+      ],
+      "note": "Connect failure 502 not 500, finite default timeouts; h2c/restricted-header pitfalls avoided by own socket client (FR-PROXY-020, PRD-57 items)."
+    },
+    {
+      "id": "PRD-14",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "IR-HTTP-013#AC-1",
+        "IR-HTTP-014#AC-1",
+        "IR-HTTP-012#AC-1"
+      ],
+      "note": "A-1..A-7 placed in NaruServe-api (com.snoworca.naruserve and .common)."
+    },
+    {
+      "id": "PRD-15",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-030#AC-1",
+        "FR-HTTP-030#AC-11",
+        "FR-ENGINE-013#AC-2"
+      ],
+      "note": "bodyStream()/bodyStream(long); Content-Encoding kept, chunked coding removed."
+    },
+    {
+      "id": "PRD-16",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-030#AC-3",
+        "FR-HTTP-030#AC-4",
+        "FR-HTTP-030#AC-5"
+      ],
+      "note": "Both directions of the one-read rule and the non-form form()/parts() exemption."
+    },
+    {
+      "id": "PRD-17",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-030#AC-6",
+        "FR-HTTP-030#AC-8",
+        "FR-HTTP-030#AC-9"
+      ],
+      "note": "Same object for equal limit before any read; BodyAlreadyConsumedException after a byte whatever the limit; IllegalStateException for unread different limit."
+    },
+    {
+      "id": "PRD-18",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-030#AC-7"
+      ],
+      "note": "bodyStream() == bodyStream(rawBodyLimit) for the repeat rule."
+    },
+    {
+      "id": "PRD-19",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-030#AC-10",
+        "FR-ENGINE-013#AC-3"
+      ],
+      "note": "Unread/unclosed stream released at request end."
+    },
+    {
+      "id": "PRD-20",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "IR-APP-009#AC-1"
+      ],
+      "note": "app.rawBodyLimit(bytes) added."
+    },
+    {
+      "id": "PRD-21",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "IR-APP-009#AC-2",
+        "IR-APP-009#AC-3"
+      ],
+      "note": "Range 1..1073741824 and default 1048576 (1 MiB) both stated; same as jsonLimit/formLimit."
+    },
+    {
+      "id": "PRD-22",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-031#AC-2",
+        "FR-HTTP-031#AC-3"
+      ],
+      "note": "Per-call limit, same range, IllegalArgumentException outside (0, -1, 1073741825)."
+    },
+    {
+      "id": "PRD-23",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-031#AC-1",
+        "FR-HTTP-031#AC-5",
+        "IR-HTTP-011#AC-1"
+      ],
+      "note": "BodyTooLargeException, an IOException subclass, thrown on crossing the limit for undeclared length."
+    },
+    {
+      "id": "PRD-24",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "IR-HTTP-011#AC-1",
+        "IR-HTTP-011#AC-2"
+      ],
+      "note": "Moved to com.snoworca.naruserve with no internal alias. See kept finding incremental-delta-1-1 on stale 'internal' wording left in FR-HTTP-020 and FR-JSON-001."
+    },
+    {
+      "id": "PRD-25",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-APP-027#AC-1",
+        "FR-APP-027#AC-4",
+        "FR-HTTP-031#AC-5"
+      ],
+      "note": "Unwrapped BodyTooLargeException -> 413."
+    },
+    {
+      "id": "PRD-26",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-APP-027#AC-3"
+      ],
+      "note": "Wrapped -> ordinary exception 500."
+    },
+    {
+      "id": "PRD-27",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "OPS-DX-008#AC-2"
+      ],
+      "note": "Docs state both over-limit forms must be checked in onError."
+    },
+    {
+      "id": "PRD-28",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-032#AC-1",
+        "FR-HTTP-032#AC-2",
+        "IR-HTTP-013#AC-1"
+      ],
+      "note": "headerNames() lowercase set, rawHeaders() name/value pairs; Express counterparts documented in OPS-DX-008 AC-3."
+    },
+    {
+      "id": "PRD-29",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-ENGINE-013#AC-1",
+        "FR-SVL-010#AC-1",
+        "FR-SVL-010#AC-2",
+        "FR-HTTP-032#AC-6"
+      ],
+      "note": "Adapter-reported order and case; servlet grouping per name with value order kept."
+    },
+    {
+      "id": "PRD-30",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-033#AC-1",
+        "FR-HTTP-033#AC-2",
+        "FR-HTTP-033#AC-3",
+        "IR-HTTP-014#AC-1"
+      ],
+      "note": "append returns Response; header keeps replace semantics."
+    },
+    {
+      "id": "PRD-31",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-033#AC-4",
+        "FR-HTTP-033#AC-5",
+        "IR-HTTP-012#AC-3"
+      ],
+      "note": "Name token; no control chars except HTAB; nothing above U+00FF."
+    },
+    {
+      "id": "PRD-32",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-034#AC-1",
+        "FR-HTTP-034#AC-2",
+        "FR-HTTP-034#AC-3",
+        "FR-HTTP-034#AC-5"
+      ],
+      "note": "Same trust decision as remoteAddress() through one shared helper."
+    },
+    {
+      "id": "PRD-33",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "IR-HTTP-014#AC-1",
+        "FR-HTTP-035#AC-5"
+      ],
+      "note": "onAbort returns void."
+    },
+    {
+      "id": "PRD-34",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-035#AC-6",
+        "FR-HTTP-035#AC-8",
+        "OPS-DX-009#AC-2"
+      ],
+      "note": "Listener may run off the request thread (javadoc + docs)."
+    },
+    {
+      "id": "PRD-35",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-035#AC-4"
+      ],
+      "note": "One listener's exception does not stop later listeners or transfer cleanup. See kept finding feasibility-1-1 on the logging clause vs SafeCallbacks."
+    },
+    {
+      "id": "PRD-36",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-035#AC-7",
+        "FR-HTTP-035#AC-8"
+      ],
+      "note": "SPI contract carried unchanged; idle disconnect may be reported only at next I/O."
+    },
+    {
+      "id": "PRD-37",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "OPS-DX-009#AC-3"
+      ],
+      "note": "Custom adapter without onAbort override limitation documented."
+    },
+    {
+      "id": "PRD-38",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-036#AC-1",
+        "FR-HTTP-036#AC-2",
+        "IR-HTTP-014#AC-1"
+      ],
+      "note": "relay never adds/changes Content-Type, keeps length; separate name from stream."
+    },
+    {
+      "id": "PRD-39",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-036#AC-4"
+      ],
+      "note": "Only app-set headers plus framing are sent."
+    },
+    {
+      "id": "PRD-40",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-036#AC-5",
+        "FR-HTTP-036#AC-6"
+      ],
+      "note": "No defaultCache on relay."
+    },
+    {
+      "id": "PRD-41",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-037#AC-1",
+        "FR-HTTP-037#AC-3",
+        "FR-HTTP-037#AC-4",
+        "FR-HTTP-037#AC-5",
+        "FR-HTTP-037#AC-6"
+      ],
+      "note": "Exact length, abort on early end, -1 unknown, < -1 IAE; HEAD/304 keep Content-Length, 204 none."
+    },
+    {
+      "id": "PRD-42",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-037#AC-7",
+        "FR-HTTP-037#AC-8"
+      ],
+      "note": "Copy after handler returns; response owns and closes the stream like stream()."
+    },
+    {
+      "id": "PRD-43",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "IR-HTTP-012#AC-1",
+        "IR-HTTP-012#AC-4"
+      ],
+      "note": "Public HttpHeaderValues.isFieldValue, same predicate as DefaultResponse.isFieldValue (DefaultResponse.java:1023-1031: c<0x20 except TAB, 0x7F, >0xFF)."
+    },
+    {
+      "id": "PRD-74",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "OPS-DX-010#AC-5"
+      ],
+      "note": "Advises against legacy trustProxy(true) with the proxy because clients can forge the address."
+    },
+    {
+      "id": "PRD-75",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "OPS-DX-010#AC-5"
+      ],
+      "note": "Warns address-based backend checks are bypassed; move to admin key or non-exposed port."
+    },
+    {
+      "id": "PRD-90",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "OPS-DX-010#AC-6"
+      ],
+      "note": "Do not set Content-Type/Content-Encoding/ETag before the proxy; Response cannot remove headers."
+    },
+    {
+      "id": "PRD-113",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "OPS-DX-010#AC-7"
+      ],
+      "note": "Name resolution (JDK resolver) and client-side I/O are not released by totalTimeout."
+    },
+    {
+      "id": "PRD-117",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "OPS-DX-010#AC-8"
+      ],
+      "note": "Safe-method retry caveat; side-effect GET gets its own no-retry mount."
+    },
+    {
+      "id": "PRD-127",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "OPS-DX-010#AC-9",
+        "OPS-DX-010#AC-10"
+      ],
+      "note": "Disconnect detection limit, maxWorkers (default 64) exhaustion, maxConcurrent behaviour."
+    },
+    {
+      "id": "PRD-145",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "CON-BUILD-019#AC-1",
+        "CON-BUILD-019#AC-5",
+        "FR-REL-006#AC-1"
+      ],
+      "note": "Separate module NaruServe-proxy, artifact naruserve-proxy; NaruServe/kotlin/android do not depend on it."
+    },
+    {
+      "id": "PRD-147",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "CON-BUILD-019#AC-6",
+        "CON-BUILD-020#AC-1",
+        "CON-BUILD-020#AC-2"
+      ],
+      "note": "Java 8 bytecode (major 52) and API 21 animal-sniffer without exemption."
+    },
+    {
+      "id": "PRD-148",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "CON-BUILD-020#AC-4",
+        "CON-BUILD-020#AC-6",
+        "CON-BUILD-019#AC-4"
+      ],
+      "note": "Build check forbids internal and spi references in proxy main classes."
+    },
+    {
+      "id": "PRD-168",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "OPS-DX-010#AC-11"
+      ],
+      "note": "TIME_WAIT / ephemeral port exhaustion risk and connection pool as root remedy documented."
+    },
+    {
+      "id": "PRD-178",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-030#AC-1",
+        "FR-ENGINE-013#AC-2",
+        "FR-SVL-010#AC-3"
+      ],
+      "note": "AC-A1: JSON with whitespace, binary, urlencoded, gzip (still compressed) byte-exact."
+    },
+    {
+      "id": "PRD-179",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-030#AC-3",
+        "FR-HTTP-030#AC-5"
+      ],
+      "note": "AC-A2: both directions with body(Map.class); form(\"a\") on JSON then bodyStream returns the whole body."
+    },
+    {
+      "id": "PRD-180",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-031#AC-5",
+        "FR-ENGINE-013#AC-5",
+        "FR-APP-027#AC-1"
+      ],
+      "note": "AC-A3: chunked over rawBodyLimit -> BodyTooLargeException at the crossing read; unwrapped -> 413."
+    },
+    {
+      "id": "PRD-181",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-ENGINE-013#AC-1",
+        "FR-SVL-010#AC-1",
+        "FR-HTTP-032#AC-3"
+      ],
+      "note": "AC-A4: TinyHttpd [x-a, x-b] and three pairs in order/case; servlet [x-a, x-b], values 1,2,3 with x-a 1 then 2; UnsupportedOperationException on modification."
+    },
+    {
+      "id": "PRD-182",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-033#AC-1",
+        "FR-HTTP-033#AC-2"
+      ],
+      "note": "AC-A5: two Set-Cookie lines received; header still replaces."
+    },
+    {
+      "id": "PRD-183",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-030#AC-2",
+        "FR-HTTP-030#AC-6",
+        "FR-HTTP-030#AC-8",
+        "FR-ENGINE-013#AC-3"
+      ],
+      "note": "AC-A6: non-null empty stream, same object twice, bodyStream(2048) -> IllegalStateException, 1 byte read -> BodyAlreadyConsumedException, 32 KiB unread body with keep-alive next request served (within 64 KiB maxDrainBytes; TinyHttpd.java:270 default 64*1024)."
+    },
+    {
+      "id": "PRD-184",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-031#AC-4"
+      ],
+      "note": "AC-A7: declared Content-Length over rawBodyLimit -> HttpException 413 from the bodyStream call before any byte is read."
+    },
+    {
+      "id": "PRD-185",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-033#AC-4"
+      ],
+      "note": "AC-A8: CR, LF, NUL, U+0100 rejected like res.header (also DEL)."
+    },
+    {
+      "id": "PRD-186",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-APP-028#AC-1",
+        "FR-APP-028#AC-2",
+        "FR-APP-028#AC-3"
+      ],
+      "note": "AC-A9: in= counts bytes read through bodyStream."
+    },
+    {
+      "id": "PRD-187",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-031#AC-2",
+        "FR-HTTP-031#AC-3"
+      ],
+      "note": "AC-A10: rawBodyLimit 1 MiB; bodyStream(2 MiB) reads 1.5 MiB (1572864); bodyStream(1024) throws at byte 1025; bodyStream(0) IAE."
+    },
+    {
+      "id": "PRD-188",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-034#AC-1",
+        "FR-HTTP-034#AC-2",
+        "FR-HTTP-034#AC-3"
+      ],
+      "note": "AC-A11: none/hops 0/empty CIDR false; hops 1 and trustProxy(true) true; trustProxyCidrs(\"10.0.0.0/8\") only inside."
+    },
+    {
+      "id": "PRD-189",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-035#AC-1",
+        "FR-HTTP-035#AC-2",
+        "FR-HTTP-035#AC-3",
+        "FR-HTTP-035#AC-4",
+        "FR-ENGINE-014#AC-1"
+      ],
+      "note": "AC-A12: disconnect (real socket) or res.abort -> once; never on normal completion; immediate after abort; later listener runs after an earlier throws."
+    },
+    {
+      "id": "PRD-190",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "FR-HTTP-036#AC-1",
+        "FR-HTTP-036#AC-5",
+        "FR-HTTP-037#AC-1",
+        "FR-HTTP-037#AC-3",
+        "FR-HTTP-037#AC-4",
+        "FR-HTTP-037#AC-5",
+        "FR-HTTP-037#AC-6"
+      ],
+      "note": "AC-A13: no Content-Type + Content-Length: 5; HEAD/304 Content-Length: 5 no body; 204 neither; -1 unknown length; -2 IAE; 3-byte stream for 5 aborts; no Cache-Control under defaultCache."
+    },
+    {
+      "id": "PRD-191",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "IR-HTTP-012#AC-2"
+      ],
+      "note": "AC-A14: empty and HTAB true; CR, LF, NUL, DEL, U+0100 false."
+    },
+    {
+      "id": "PRD-231",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "CON-BUILD-019#AC-3",
+        "CON-BUILD-019#AC-5",
+        "IR-HTTP-012#AC-1",
+        "IR-HTTP-013#AC-1",
+        "IR-HTTP-014#AC-1"
+      ],
+      "note": "A in naruserve-api, B in naruserve-proxy; A-4..A-7 public so the module needs no internal."
+    },
+    {
+      "id": "PRD-243",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "IR-APP-009#AC-1",
+        "IR-APP-009#AC-2",
+        "FR-HTTP-031#AC-2",
+        "FR-PROXY-002#AC-3"
+      ],
+      "note": "App default rawBodyLimit 1 MiB, per-call bodyStream(long), per-mount .bodyLimit (IR-PROXY-001 AC-3 / FR-PROXY-002 AC-3)."
+    },
+    {
+      "id": "PRD-244",
+      "kind": "exclusion",
+      "verdict": "respected",
+      "refs": [],
+      "note": "No requirement bounds the mount limit by the app limit: FR-PROXY-002 AC-3 checks bodyLimit only against 1..1073741824 at call time."
+    },
+    {
+      "id": "PRD-250",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "OPS-DX-010#AC-10"
+      ],
+      "note": "Example Proxy p = Proxy.to(url).maxConcurrent(16) with p and p.retries(0) sharing 16."
+    },
+    {
+      "id": "PRD-254",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "IR-HTTP-014#AC-1",
+        "IR-HTTP-014#AC-3"
+      ],
+      "note": "Name res.relay(InputStream, long)."
+    },
+    {
+      "id": "PRD-255",
+      "kind": "exclusion",
+      "verdict": "respected",
+      "refs": [
+        "IR-HTTP-014#AC-3"
+      ],
+      "note": "IR-HTTP-014 AC-3 asserts Response declares no stream(InputStream, long) overload."
+    },
+    {
+      "id": "PRD-256",
+      "kind": "exclusion",
+      "verdict": "respected",
+      "refs": [],
+      "note": "No pipe method on Response in any 0.12.0 requirement; IR-HTTP-014 AC-3 pins the exact Response set."
+    },
+    {
+      "id": "PRD-267",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "OPS-DX-008#AC-6"
+      ],
+      "note": "Compatibility note names both 0.12.0 behaviour changes (413 mapping, package move with import change)."
+    },
+    {
+      "id": "PRD-268",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "IR-HTTP-013#AC-2",
+        "IR-HTTP-014#AC-2"
+      ],
+      "note": "Default methods throwing UnsupportedOperationException; test doubles compile unchanged."
+    },
+    {
+      "id": "PRD-269",
+      "kind": "in-scope",
+      "verdict": "accepted",
+      "refs": [
+        "IR-HTTP-013#AC-3"
+      ],
+      "note": "Package-private DefaultRequest.bodyStream() renamed before the public method is added."
+    }
+  ],
+  "srs_items": [
+    {
+      "id": "IR-HTTP-011",
+      "verdict": "grounded",
+      "basis": "PRD-24, PRD-23",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-011#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-24, PRD-23",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-011#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-24",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-011#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-24, PRD-23",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-011#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-24",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-011#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-50; fills: PRD-50 / hole / @NonNull ban",
+      "note": "Kotlin coverage of the moved class."
+    },
+    {
+      "id": "IR-HTTP-012",
+      "verdict": "grounded",
+      "basis": "PRD-43, PRD-31",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-012#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-43",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-012#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-191",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-012#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-31",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-012#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-43, PRD-31",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-012#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-50",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-013",
+      "verdict": "grounded",
+      "basis": "PRD-14, PRD-15, PRD-28, PRD-32, PRD-268, PRD-269",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-013#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-2, PRD-14, PRD-15, PRD-28, PRD-32",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-013#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-268",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-013#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-269",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-013#AC-4",
+      "verdict": "fills",
+      "basis": "PRD-268; fills: PRD-268 / hole / surface tests fail on unlisted methods",
+      "note": "Correct successor of IR-HTTP-010 AC-2; Request set diff v0.10.0..HEAD = requestId, socketAddress only, matching '0.10.0 set plus socketAddress and requestId'. LATER_WAVE_NAMES is Collections.emptyList() (HttpApiSurfaceTest.java:32)."
+    },
+    {
+      "id": "IR-HTTP-013#AC-5",
+      "verdict": "fills",
+      "basis": "fills: PRD-50 / hole / @NonNull ban",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-013#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-50",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-014",
+      "verdict": "grounded",
+      "basis": "PRD-30, PRD-33, PRD-38, PRD-254, PRD-268",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-014#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-2, PRD-14, PRD-30, PRD-33, PRD-38, PRD-254",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-014#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-268",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-014#AC-3",
+      "verdict": "fills",
+      "basis": "PRD-254, PRD-268; fills: PRD-268 / hole / surface tests",
+      "note": "Also enforces exclusion PRD-255."
+    },
+    {
+      "id": "IR-HTTP-014#AC-4",
+      "verdict": "fills",
+      "basis": "fills: PRD-50 / hole / @NonNull ban",
+      "note": ""
+    },
+    {
+      "id": "IR-HTTP-014#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-50",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-030",
+      "verdict": "grounded",
+      "basis": "PRD-15, PRD-16, PRD-17, PRD-18, PRD-19",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-030#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-15, PRD-178, PRD-3",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-030#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-183",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-030#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-16, PRD-179",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-030#AC-4",
+      "verdict": "fills",
+      "basis": "fills: PRD-16 / hole / bare call takes the body (design D-012)",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-030#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-16, PRD-179",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-030#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-17, PRD-183",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-030#AC-7",
+      "verdict": "grounded",
+      "basis": "PRD-18",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-030#AC-8",
+      "verdict": "grounded",
+      "basis": "PRD-17, PRD-183",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-030#AC-9",
+      "verdict": "fills",
+      "basis": "fills: PRD-17 / hole / which stream operations consume (design D-013)",
+      "note": "close/skip counted as consumption: a defined answer to a gap the request leaves open, minimal."
+    },
+    {
+      "id": "FR-HTTP-030#AC-10",
+      "verdict": "grounded",
+      "basis": "PRD-19",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-030#AC-11",
+      "verdict": "grounded",
+      "basis": "PRD-15",
+      "note": "Correct successor of the BodyStateTest half of IR-MULTIPART-002 AC-6."
+    },
+    {
+      "id": "FR-HTTP-031",
+      "verdict": "grounded",
+      "basis": "PRD-18, PRD-20, PRD-22, PRD-23, PRD-184",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-031#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-18, PRD-20, PRD-23",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-031#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-22, PRD-187, PRD-243",
+      "note": "1 MiB app, 2097152 call, 1572864 body, byte 1025 -- values match AC-A10."
+    },
+    {
+      "id": "FR-HTTP-031#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-22, PRD-187",
+      "note": "Range 1..1073741824 matches request."
+    },
+    {
+      "id": "FR-HTTP-031#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-184",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-031#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-23, PRD-25, PRD-180",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-032",
+      "verdict": "grounded",
+      "basis": "PRD-28, PRD-29",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-032#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-28, PRD-181",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-032#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-28, PRD-29, PRD-181",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-032#AC-3",
+      "verdict": "fills",
+      "basis": "PRD-181; fills: PRD-28 / hole / entry immutability",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-032#AC-4",
+      "verdict": "fills",
+      "basis": "fills: PRD-28 / hole / Locale.ROOT",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-032#AC-5",
+      "verdict": "fills",
+      "basis": "fills: PRD-28 / hole / built once per request",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-032#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-29",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-033",
+      "verdict": "grounded",
+      "basis": "PRD-30, PRD-31",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-033#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-30, PRD-182",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-033#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-182, PRD-30",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-033#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-30",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-033#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-185, PRD-31",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-033#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-31",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-033#AC-6",
+      "verdict": "fills",
+      "basis": "fills: PRD-30 / hole / committed case follows res.header",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-034",
+      "verdict": "grounded",
+      "basis": "PRD-32, PRD-188",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-034#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-32, PRD-188",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-034#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-32, PRD-188",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-034#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-32, PRD-188",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-034#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-32 (design D-026)",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-034#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-32 (design D-026)",
+      "note": "ProxyTrustSetting.peerTrusted is private and false for LEGACY (ProxyTrustSetting.java:139-141); new shared helper is implementable in the same package."
+    },
+    {
+      "id": "FR-HTTP-035",
+      "verdict": "grounded",
+      "basis": "PRD-33, PRD-34, PRD-35, PRD-36, PRD-189",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-035#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-189, PRD-33",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-035#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-189",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-035#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-189",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-035#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-35, PRD-189 (design D-028)",
+      "note": "See kept finding feasibility-1-1: logging clause vs Implementation Notes reuse of SafeCallbacks (silent)."
+    },
+    {
+      "id": "FR-HTTP-035#AC-5",
+      "verdict": "fills",
+      "basis": "PRD-33; fills: PRD-33 / hole / null listener",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-035#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-34",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-035#AC-7",
+      "verdict": "grounded",
+      "basis": "PRD-36, PRD-189",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-035#AC-8",
+      "verdict": "grounded",
+      "basis": "PRD-34, PRD-36",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-036",
+      "verdict": "grounded",
+      "basis": "PRD-38, PRD-39, PRD-40",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-036#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-38, PRD-190",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-036#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-38",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-036#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-38 (design D-029)",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-036#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-39",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-036#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-40, PRD-190",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-036#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-40",
+      "note": "Correct successor of FR-STATIC-008 AC-5: restates the defaultCache rule with the relay exception."
+    },
+    {
+      "id": "FR-HTTP-037",
+      "verdict": "grounded",
+      "basis": "PRD-41, PRD-42, PRD-190",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-037#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-41, PRD-190",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-037#AC-2",
+      "verdict": "fills",
+      "basis": "fills: PRD-41 / hole / surplus bytes (design D-032)",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-037#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-41, PRD-190",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-037#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-41, PRD-190",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-037#AC-5",
+      "verdict": "fills",
+      "basis": "PRD-190; fills: PRD-41 / contradiction / bodyless HEAD/304 with positive length (design D-031)",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-037#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-190",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-037#AC-7",
+      "verdict": "grounded",
+      "basis": "PRD-42",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-037#AC-8",
+      "verdict": "grounded",
+      "basis": "PRD-42",
+      "note": ""
+    },
+    {
+      "id": "FR-HTTP-037#AC-9",
+      "verdict": "grounded",
+      "basis": "PRD-190",
+      "note": "Correct successor of FR-HTTP-017 AC-1; FR-HTTP-017 AC-2..AC-4 and its statement stay true."
+    },
+    {
+      "id": "IR-APP-009",
+      "verdict": "grounded",
+      "basis": "PRD-20, PRD-21, PRD-243",
+      "note": ""
+    },
+    {
+      "id": "IR-APP-009#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-20, PRD-243",
+      "note": ""
+    },
+    {
+      "id": "IR-APP-009#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-21, PRD-243",
+      "note": "Default 1048576 checked at byte 1048577."
+    },
+    {
+      "id": "IR-APP-009#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-21",
+      "note": ""
+    },
+    {
+      "id": "IR-APP-009#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-21 (design D-019)",
+      "note": ""
+    },
+    {
+      "id": "IR-APP-009#AC-5",
+      "verdict": "fills",
+      "basis": "PRD-20; fills: PRD-268 / hole / surface tests",
+      "note": "Correct successor of IR-APP-008 AC-5; RestApp diff v0.10.0..HEAD = onRegistration, registrations, trustProxyHops x2, trustProxyCidrs x2, trustProxy() -- matches the stated 0.11.0 set; defaultCache p0 is the only @Nullable RestApp position (HttpApiSurfaceTest.java:273)."
+    },
+    {
+      "id": "IR-APP-009#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-50",
+      "note": ""
+    },
+    {
+      "id": "FR-APP-027",
+      "verdict": "grounded",
+      "basis": "PRD-25, PRD-26",
+      "note": ""
+    },
+    {
+      "id": "FR-APP-027#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-25, PRD-180",
+      "note": ""
+    },
+    {
+      "id": "FR-APP-027#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-25",
+      "note": ""
+    },
+    {
+      "id": "FR-APP-027#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-26",
+      "note": ""
+    },
+    {
+      "id": "FR-APP-027#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-25, PRD-26",
+      "note": "Correct successor of FR-APP-006 AC-4."
+    },
+    {
+      "id": "FR-APP-028",
+      "verdict": "grounded",
+      "basis": "PRD-186",
+      "note": ""
+    },
+    {
+      "id": "FR-APP-028#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-186",
+      "note": ""
+    },
+    {
+      "id": "FR-APP-028#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-186",
+      "note": ""
+    },
+    {
+      "id": "FR-APP-028#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-186",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-013",
+      "verdict": "grounded",
+      "basis": "PRD-29, PRD-15, PRD-19, PRD-24, PRD-180",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-013#AC-1",
+      "verdict": "fills",
+      "basis": "PRD-29, PRD-181; fills: PRD-29 / hole / per-adapter conformance",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-013#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-15, PRD-178",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-013#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-183, PRD-19",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-013#AC-4",
+      "verdict": "fills",
+      "basis": "PRD-24; fills: PRD-24 / defect / name clash (design D-023)",
+      "note": "Harmless constraint; the claimed shadowing cannot occur (see dropped finding feasibility-1-d2)."
+    },
+    {
+      "id": "FR-ENGINE-013#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-180, PRD-23",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-014",
+      "verdict": "grounded",
+      "basis": "PRD-189, PRD-190",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-014#AC-1",
+      "verdict": "fills",
+      "basis": "PRD-189; fills: PRD-189 / hole / in-memory adapter never aborts",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-014#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-189",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-014#AC-3",
+      "verdict": "fills",
+      "basis": "PRD-190, PRD-38; fills: PRD-29 / hole / per-adapter wire behaviour",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-014#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-41, PRD-190",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-014#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-190",
+      "note": ""
+    },
+    {
+      "id": "FR-ENGINE-014#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-41, PRD-190",
+      "note": ""
+    },
+    {
+      "id": "FR-SVL-010",
+      "verdict": "grounded",
+      "basis": "PRD-29, PRD-181",
+      "note": ""
+    },
+    {
+      "id": "FR-SVL-010#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-29, PRD-181",
+      "note": ""
+    },
+    {
+      "id": "FR-SVL-010#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-29",
+      "note": ""
+    },
+    {
+      "id": "FR-SVL-010#AC-3",
+      "verdict": "fills",
+      "basis": "PRD-15, PRD-178; fills: PRD-29 / hole",
+      "note": ""
+    },
+    {
+      "id": "FR-SVL-010#AC-4",
+      "verdict": "fills",
+      "basis": "PRD-190, PRD-38, PRD-41; fills: PRD-29 / hole",
+      "note": ""
+    },
+    {
+      "id": "FR-SVL-010#AC-5",
+      "verdict": "fills",
+      "basis": "PRD-189; fills: PRD-29 / hole",
+      "note": ""
+    },
+    {
+      "id": "CON-BUILD-019",
+      "verdict": "grounded",
+      "basis": "PRD-145, PRD-148, PRD-231, PRD-147",
+      "note": ""
+    },
+    {
+      "id": "CON-BUILD-019#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-145",
+      "note": "Correct successor of CON-BUILD-002 AC-1 (ten JAR modules + android)."
+    },
+    {
+      "id": "CON-BUILD-019#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-145",
+      "note": ""
+    },
+    {
+      "id": "CON-BUILD-019#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-145, PRD-148",
+      "note": "Correct successor of CON-BUILD-006 AC-1; but see kept finding incremental-delta-1-2 (CON-BUILD-006 statement left stale)."
+    },
+    {
+      "id": "CON-BUILD-019#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-145, PRD-148",
+      "note": ""
+    },
+    {
+      "id": "CON-BUILD-019#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-145, PRD-231",
+      "note": ""
+    },
+    {
+      "id": "CON-BUILD-019#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-147",
+      "note": ""
+    },
+    {
+      "id": "CON-BUILD-020",
+      "verdict": "grounded",
+      "basis": "PRD-147, PRD-148",
+      "note": ""
+    },
+    {
+      "id": "CON-BUILD-020#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-147",
+      "note": "Correct successor of CON-BUILD-012 AC-1 (eight modules)."
+    },
+    {
+      "id": "CON-BUILD-020#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-147",
+      "note": ""
+    },
+    {
+      "id": "CON-BUILD-020#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-147",
+      "note": "Correct successor of CON-BUILD-013 AC-3."
+    },
+    {
+      "id": "CON-BUILD-020#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-148, PRD-231",
+      "note": ""
+    },
+    {
+      "id": "CON-BUILD-020#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-147, PRD-148",
+      "note": ""
+    },
+    {
+      "id": "CON-BUILD-020#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-148",
+      "note": ""
+    },
+    {
+      "id": "OPS-BUILD-004",
+      "verdict": "grounded",
+      "basis": "PRD-145, PRD-147, PRD-231",
+      "note": ""
+    },
+    {
+      "id": "OPS-BUILD-004#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-145, PRD-147, PRD-231",
+      "note": "Correct successor of OPS-BUILD-003 AC-3 (eleven modules, eight API 21 targets)."
+    },
+    {
+      "id": "OPS-BUILD-004#AC-2",
+      "verdict": "fills",
+      "basis": "fills: PRD-2 / hole / regression baseline (design I-002)",
+      "note": "3829 baseline count taken from design I-002; not re-counted by this verifier."
+    },
+    {
+      "id": "FR-REL-006",
+      "verdict": "grounded",
+      "basis": "PRD-145, PRD-148",
+      "note": ""
+    },
+    {
+      "id": "FR-REL-006#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-145",
+      "note": ""
+    },
+    {
+      "id": "FR-REL-006#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-145, PRD-148",
+      "note": ""
+    },
+    {
+      "id": "FR-REL-006#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-145",
+      "note": ""
+    },
+    {
+      "id": "FR-REL-006#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-145",
+      "note": "Correct successor of FR-REL-005 AC-7 (eleven artifactIds)."
+    },
+    {
+      "id": "FR-REL-006#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-145",
+      "note": "Correct successor of FR-REL-001 AC-1; but see kept finding incremental-delta-1-3 (FR-REL-001 statement still says nine JAR modules)."
+    },
+    {
+      "id": "OPS-DX-008",
+      "verdict": "grounded",
+      "basis": "PRD-15..PRD-29, PRD-267",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-008#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-15, PRD-16, PRD-17, PRD-18, PRD-19, PRD-22",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-008#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-27, PRD-23, PRD-25, PRD-26",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-008#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-28, PRD-29",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-008#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-32",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-008#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-20, PRD-21",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-008#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-267, PRD-24, PRD-25",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-008#AC-7",
+      "verdict": "fills",
+      "basis": "fills: PRD-27 / hole / docs/api rule (design D-040, I-003)",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-009",
+      "verdict": "grounded",
+      "basis": "PRD-30..PRD-43",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-009#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-30, PRD-31",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-009#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-33, PRD-34, PRD-35, PRD-36",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-009#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-37",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-009#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-38, PRD-39, PRD-40, PRD-41, PRD-42",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-009#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-43, PRD-31",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-009#AC-6",
+      "verdict": "fills",
+      "basis": "fills: PRD-27 / hole / docs/api rule",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-010",
+      "verdict": "grounded",
+      "basis": "PRD-75, PRD-74, PRD-90, PRD-113, PRD-117, PRD-127, PRD-168, PRD-250",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-010#AC-1",
+      "verdict": "grounded",
+      "basis": "PRD-44, PRD-51, PRD-145",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-010#AC-2",
+      "verdict": "grounded",
+      "basis": "PRD-45, PRD-48, PRD-137..PRD-144",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-010#AC-3",
+      "verdict": "grounded",
+      "basis": "PRD-9, PRD-97, PRD-98, PRD-99, PRD-106, PRD-230",
+      "note": "Statuses 502/504/504/504/504/502/503 match request §3.4 table."
+    },
+    {
+      "id": "OPS-DX-010#AC-4",
+      "verdict": "grounded",
+      "basis": "PRD-12, PRD-50, PRD-224, PRD-270",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-010#AC-5",
+      "verdict": "grounded",
+      "basis": "PRD-75, PRD-74",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-010#AC-6",
+      "verdict": "grounded",
+      "basis": "PRD-90; fills: PRD-87 / hole / Date and reason phrase (design D-060)",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-010#AC-7",
+      "verdict": "grounded",
+      "basis": "PRD-107..PRD-113",
+      "note": "Defaults connect 10 s, write 60 s, read 60 s, total 5 min match the request."
+    },
+    {
+      "id": "OPS-DX-010#AC-8",
+      "verdict": "grounded",
+      "basis": "PRD-114, PRD-117, PRD-227",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-010#AC-9",
+      "verdict": "grounded",
+      "basis": "PRD-118, PRD-127, PRD-249",
+      "note": "maxWorkers default 64 matches request §3.6."
+    },
+    {
+      "id": "OPS-DX-010#AC-10",
+      "verdict": "grounded",
+      "basis": "PRD-123..PRD-127, PRD-249, PRD-250",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-010#AC-11",
+      "verdict": "grounded",
+      "basis": "PRD-166, PRD-168, PRD-172, PRD-173, PRD-257",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-010#AC-12",
+      "verdict": "fills",
+      "basis": "fills: PRD-75 / hole / docs/api rule (design D-068)",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-011",
+      "verdict": "grounded",
+      "basis": "fills: PRD-145 / hole / hard-coded module and page lists",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-011#AC-1",
+      "verdict": "fills",
+      "basis": "PRD-75; fills: PRD-145 / hole / nav lists",
+      "note": "PRD-75 (address warning) does not itself ask for navigation; the fills basis carries it."
+    },
+    {
+      "id": "OPS-DX-011#AC-2",
+      "verdict": "fills",
+      "basis": "PRD-75; fills: PRD-145 / hole",
+      "note": "Correct successor of OPS-DX-007 AC-3 (19 pairs)."
+    },
+    {
+      "id": "OPS-DX-011#AC-3",
+      "verdict": "fills",
+      "basis": "PRD-145, PRD-147, PRD-148; fills: PRD-145 / hole",
+      "note": "docs/api/README.md:92 says 'nine'; AC-3 makes it ten."
+    },
+    {
+      "id": "OPS-DX-011#AC-4",
+      "verdict": "fills",
+      "basis": "PRD-145; fills: PRD-145 / hole",
+      "note": ""
+    },
+    {
+      "id": "OPS-DX-011#AC-5",
+      "verdict": "fills",
+      "basis": "PRD-145; fills: PRD-145 / hole / unpublished module",
+      "note": "Correct successor of OPS-REL-001 AC-1 (coordinates only of published modules, the ten of 0.11.0)."
+    },
+    {
+      "id": "FR-APP-006#AC-4 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor FR-APP-027#AC-4",
+      "note": "'any other exception 500' is false once an unwrapped BodyTooLargeException maps to 413; successor restates all statuses plus the new one."
+    },
+    {
+      "id": "IR-HTTP-010#AC-2 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor IR-HTTP-013#AC-4",
+      "note": "Exact Request set grows by five methods. The keyword clause for socketAddress/requestId is not restated but stays covered jar-wide by FR-KT-002 (KotlinKeywordsTest#sdsAc6_FR_KT_002_AC1_AC3_realJarHasNoKeywordNamedMethod)."
+    },
+    {
+      "id": "IR-APP-008#AC-5 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor IR-APP-009#AC-5",
+      "note": "Exact RestApp set gains rawBodyLimit."
+    },
+    {
+      "id": "IR-MULTIPART-002#AC-6 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor IR-HTTP-013#AC-4, IR-HTTP-013#AC-5, FR-HTTP-030#AC-11",
+      "note": "'still finds no InputStream ... reader on Request' becomes false; all three halves (method set, nullable positions, BodyStateTest allow-list) restated."
+    },
+    {
+      "id": "FR-HTTP-017#AC-1 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor FR-HTTP-037#AC-9",
+      "note": "'a 204 or 304 response ... adds no Content-Length' false for relay on 304; successor restates for every other writer."
+    },
+    {
+      "id": "FR-STATIC-008#AC-5 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor FR-HTTP-036#AC-6",
+      "note": "'defaultCache applies to every response without Cache-Control' false for relay; restated with the relay exception."
+    },
+    {
+      "id": "CON-BUILD-002#AC-1 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor CON-BUILD-019#AC-1",
+      "note": "'nine modules ... and no other module' false with NaruServe-proxy."
+    },
+    {
+      "id": "CON-BUILD-006#AC-1 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor CON-BUILD-019#AC-3",
+      "note": "Exact per-module list lacks NaruServe-proxy; TinyHttpd version delegated to CON-BUILD-018. Requirement statement of CON-BUILD-006 left stale -- kept finding incremental-delta-1-2."
+    },
+    {
+      "id": "CON-BUILD-012#AC-1 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor CON-BUILD-020#AC-1",
+      "note": "Seven-module API 21 list incomplete."
+    },
+    {
+      "id": "CON-BUILD-013#AC-3 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor CON-BUILD-020#AC-3",
+      "note": "Seven-module javax.servlet check list incomplete."
+    },
+    {
+      "id": "OPS-BUILD-003#AC-3 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor OPS-BUILD-004#AC-1",
+      "note": "Ten modules / seven API 21 targets become eleven / eight."
+    },
+    {
+      "id": "FR-REL-005#AC-7 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor FR-REL-006#AC-4",
+      "note": "'exactly the ten artifactIds' becomes eleven."
+    },
+    {
+      "id": "FR-REL-001#AC-1 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor FR-REL-006#AC-5",
+      "note": "'the nine entries of naruModules' becomes ten. Statement of FR-REL-001 left stale -- kept finding incremental-delta-1-3."
+    },
+    {
+      "id": "OPS-DX-007#AC-3 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor OPS-DX-011#AC-2",
+      "note": "18 guide pairs become 19."
+    },
+    {
+      "id": "OPS-REL-001#AC-1 (expired)",
+      "verdict": "grounded",
+      "basis": "expiry correct; successor OPS-DX-011#AC-5",
+      "note": "README coordinates can no longer equal every module-table row once an unpublished proxy row is added."
+    },
+    {
+      "id": "FR-HTTP-019 (left unexpired)",
+      "verdict": "grounded",
+      "basis": "still true",
+      "note": "Statement and AC-1..AC-4 stay true: the same-object repeat rule sits in DefaultRequest above BodyState, so a second raw begin through BodyState still throws (AC-3); AC-5 is a wave 3 merge statement."
+    },
+    {
+      "id": "FR-HTTP-020#AC-3 (left unexpired)",
+      "verdict": "grounded",
+      "basis": "rule still true; wording stale",
+      "note": "Limit stream still throws BodyTooLargeException on byte 11; but 'the internal over-limit IOException subclass' names a class IR-HTTP-011 AC-2 removes from internal, and the Trace Links row still points at internal/BodyTooLargeException.java (04.http-core.srs.md:2263). Kept finding incremental-delta-1-1."
+    },
+    {
+      "id": "FR-HTTP-020#AC-4 (left unexpired)",
+      "verdict": "grounded",
+      "basis": "rule still true; wording stale",
+      "note": "Same as AC-3 ('the same internal over-limit IOException subclass'). Kept finding incremental-delta-1-1."
+    },
+    {
+      "id": "FR-JSON-001#AC-9 (left unexpired)",
+      "verdict": "grounded",
+      "basis": "rule still true; wording stale",
+      "note": "'its internal `BodyTooLargeException`' contradicts IR-HTTP-011 AC-2. Kept finding incremental-delta-1-1."
+    },
+    {
+      "id": "IR-HTTP-001#AC-2 (left unexpired)",
+      "verdict": "grounded",
+      "basis": "still true",
+      "note": "Names a subset of Response methods; append/onAbort/relay add no conflict."
+    },
+    {
+      "id": "IR-HTTP-001#AC-4 (left unexpired)",
+      "verdict": "grounded",
+      "basis": "still true",
+      "note": "New methods carry no @Nullable position (IR-HTTP-013 AC-5, IR-HTTP-014 AC-4), so the reflection test of the current surface still holds."
+    },
+    {
+      "id": "IR-ENGINE-003#AC-5 (left unexpired)",
+      "verdict": "grounded",
+      "basis": "still true",
+      "note": "Says the exact RestApp set is 're-pointed to include' its methods and that defaultCache p0 is the only @Nullable RestApp position; rawBodyLimit(long) adds no nullable position, so both stay true."
+    }
+  ],
+  "findings": [
+    {
+      "id": "incremental-delta-1-1",
+      "finding_hash": "213c0cfc7c12703a351af0815a08c4fc3db7b687",
+      "disposition": "keep",
+      "evidence": {
+        "kind": "contradicting-quotes",
+        "detail": "docs/spec/04.http-core.srs.md:4800 IR-HTTP-011 AC-2: \"`Class.forName(\"com.snoworca.naruserve.internal.BodyTooLargeException\")` throws `ClassNotFoundException`, and the `NaruServe-api` JAR holds no class of that name\" vs docs/spec/07.json.srs.md:270 FR-JSON-001 AC-9 (unexpired, verified): \"(its internal `BodyTooLargeException`, an `IOException` that a codec such as Gson may wrap)\" and docs/spec/04.http-core.srs.md:2231-2232 FR-HTTP-020 AC-3/AC-4: \"throws the internal over-limit `IOException` subclass\" / \"throws the same internal over-limit `IOException` subclass\"; FR-HTTP-020 Trace Links row docs/spec/04.http-core.srs.md:2263: \"| Code | NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyTooLargeException.java | implements | - |\", a file IR-HTTP-011 deletes."
+      },
+      "axis": "incremental-delta",
+      "req_id": "IR-HTTP-011",
+      "evidence_path": "docs/spec/04.http-core.srs.md:2231;docs/spec/07.json.srs.md:270",
+      "description": "The writer kept FR-HTTP-020 AC-3/AC-4 and FR-JSON-001 AC-9 unexpired on the ground that their rule stays true. The rule does, but each criterion still calls the over-limit class internal, and FR-HTTP-020 still traces to internal/BodyTooLargeException.java, which IR-HTTP-011 AC-2 requires to be absent. After 0.12.0 these verified criteria name a class that cannot exist.",
+      "suggested_action": "fix_via_mcp"
+    },
+    {
+      "id": "incremental-delta-1-2",
+      "finding_hash": "41213c573794886530f6deac8526a0cf0915ce6d",
+      "disposition": "keep",
+      "evidence": {
+        "kind": "contradicting-quotes",
+        "detail": "docs/spec/02.build.srs.md:373 CON-BUILD-006 Requirement: \"the complete main and compileOnly dependency set of every module, fixed in wave 1 and changed since only by re-wording AC-1 (the android-module decision of 2026-10-26), so other changes add only test-scope dependencies or the release plugins owned by issue #18\" vs docs/spec/02.build.srs.md:1565 CON-BUILD-019 AC-3: \"`NaruServe-proxy` `NaruServe-api` only\" (a new main `api` dependency added in 0.12.0, not test scope, not a release plugin)."
+      },
+      "axis": "incremental-delta",
+      "req_id": "CON-BUILD-006",
+      "evidence_path": "docs/spec/02.build.srs.md:373",
+      "description": "Expiring CON-BUILD-006 AC-1 left its requirement statement unchanged. The statement says the main dependency set changes only through the android-module re-wording and otherwise gains only test-scope dependencies or release plugins, while CON-BUILD-019 AC-3 adds a main dependency for a new module.",
+      "suggested_action": "fix_via_mcp"
+    },
+    {
+      "id": "incremental-delta-1-3",
+      "finding_hash": "f22fc25974645ff3e42f23c13f0ff6aa1c65dfc0",
+      "disposition": "keep",
+      "evidence": {
+        "kind": "contradicting-quotes",
+        "detail": "docs/spec/15.release.srs.md:56 FR-REL-001 Requirement: \"generate a CycloneDX SBOM for each published module (the nine JAR modules and, when it is included, the `NaruServe-android` AAR)\" vs docs/spec/15.release.srs.md:1665 FR-REL-006 AC-5: \"one for each of the ten entries of `naruModules` and, when it is included, `NaruServe-android`\"."
+      },
+      "axis": "incremental-delta",
+      "req_id": "FR-REL-001",
+      "evidence_path": "docs/spec/15.release.srs.md:56",
+      "description": "Only FR-REL-001 AC-1 was expired. The statement still defines the published modules as nine JAR modules plus the AAR, which contradicts the ten-module SBOM rule of FR-REL-006 AC-5 that succeeds it.",
+      "suggested_action": "fix_via_mcp"
+    },
+    {
+      "id": "feasibility-1-1",
+      "finding_hash": "93acfd93f8320d0869c6177606d3e131e908097c",
+      "disposition": "keep",
+      "evidence": {
+        "kind": "contradicting-quotes",
+        "detail": "docs/spec/04.http-core.srs.md:5359 FR-HTTP-035 AC-4: \"the first listener's exception is logged through the app logger\" vs docs/spec/04.http-core.srs.md:5387 Implementation Notes: \"Back the listeners with the public `common.AbortListeners` (... failures isolated through `SafeCallbacks`)\"; code NaruServe-api/src/main/java/com/snoworca/naruserve/common/SafeCallbacks.java run(): `try { callback.run(); } catch (Throwable ignored) { // Resource notification failures must not interrupt the caller's cleanup. }` and AbortListeners.notifyListener calls SafeCallbacks.run, so it logs nothing."
+      },
+      "axis": "feasibility",
+      "req_id": "FR-HTTP-035",
+      "evidence_path": "docs/spec/04.http-core.srs.md:5387",
+      "description": "The implementation path the requirement prescribes discards a listener exception without logging, so following the note fails AC-4's logging clause (design D-028). The note needs to say that each listener is wrapped to log through the app logger before AbortListeners isolates it, or that AbortListeners is not reused as is.",
+      "suggested_action": "fix_via_mcp"
+    },
+    {
+      "id": "feasibility-1-d1",
+      "finding_hash": "e05ca7083848336bdcd9ba4ef87481daaa20f333",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "IR-HTTP-010 AC-2 clause 'the new names contain no Kotlin hard keyword (FR-KT-002)' is not restated in IR-HTTP-013 AC-4 for socketAddress/requestId."
+      },
+      "axis": "incremental-delta",
+      "req_id": "IR-HTTP-013",
+      "evidence_path": "docs/spec/04.http-core.srs.md:4567",
+      "description": "Dropped: FR-KT-002 already checks the whole JAR (KotlinKeywordsTest#sdsAc6_FR_KT_002_AC1_AC3_realJarHasNoKeywordNamedMethod), so nothing true is lost.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "feasibility-1-d2",
+      "finding_hash": "888efad326abd2013823189f67ca38da347a86e2",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java:4 `import com.snoworca.tinyhttpd.http.BodyTooLargeException;` -- the class sits in package com.snoworca.naruserve.tinyhttpd and has no on-demand import of com.snoworca.naruserve.*, so a single-type import keeps resolving to TinyHttpd's class after the move."
+      },
+      "axis": "feasibility",
+      "req_id": "FR-ENGINE-013",
+      "evidence_path": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+      "description": "FR-ENGINE-013 AC-4 claims the moved public class could shadow TinyHttpd's class. Dropped: that claim is not accurate, but requiring the fully qualified name is harmless and testable, and the 413 mapping part of AC-4 is grounded.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "mcp-compliance-1-d3",
+      "finding_hash": "988d8d452d77dd899b5215857f100b7410657ccb",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "tool-diagnostic",
+        "detail": "mcp validate_spec: errors 0, warnings 48, all SRS-W081 (discarded trace targets) in pre-existing requirements; none in a 0.12.0 requirement of this partition."
+      },
+      "axis": "mcp-compliance",
+      "req_id": "_",
+      "evidence_path": "docs/spec",
+      "description": "No SRS-MD diagnostic hits this partition.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "trace-path-1-d4",
+      "finding_hash": "b9eab731b4b881d8fcac388ec3f7d6ba793e1ddf",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "failing-check",
+        "detail": "Missing Code trace paths: NaruServe-api/src/main/java/com/snoworca/naruserve/BodyTooLargeException.java (IR-HTTP-011), docs/api/proxy.md and docs/api/en/proxy.md (OPS-DX-010); every other Code trace path of the 26 partition requirements exists."
+      },
+      "axis": "trace-path",
+      "req_id": "_",
+      "evidence_path": "IR-HTTP-011;OPS-DX-010",
+      "description": "Dropped: all three rows are marked trace_intent=addition_site for files this target creates.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "incremental-delta-1-d5",
+      "finding_hash": "bda8386295ffa592d145484fb9240c0c1b5f56c4",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "FR-REL-005 Requirement (15.release.srs.md:499) still says 'publish each of the nine JAR modules'."
+      },
+      "axis": "incremental-delta",
+      "req_id": "FR-REL-005",
+      "evidence_path": "docs/spec/15.release.srs.md:499",
+      "description": "Dropped: the whole requirement is bound to the 0.9.0 artifacts (`com.snoworca.naruserve:<artifactId>:0.9.0`), a historical record already older than 0.11.0. It is not a live module-count invariant.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "ac-verifiability-1-d6",
+      "finding_hash": "41ded02e3c4b3db2b9772a4ec4ab8a96f447c2f8",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "FR-SVL-010 AC-4 expects Content-Length: 5 on a 304 relayed through the embedded servlet container."
+      },
+      "axis": "feasibility",
+      "req_id": "FR-SVL-010",
+      "evidence_path": "docs/spec/14.servlet-adapter.srs.md",
+      "description": "Dropped: a container might strip Content-Length on 304, but there is no evidence, and the Implementation Notes already ask the implementer to check it.",
+      "suggested_action": "discard"
+    },
+    {
+      "id": "conflict-1-d7",
+      "finding_hash": "1ec10e1ddabe42b0208e446d77a51d8c1509c100",
+      "disposition": "drop",
+      "evidence": {
+        "kind": "none",
+        "detail": "FR-HTTP-030 AC-9 counts close()/skip() as consumption, so close + different limit gives BodyAlreadyConsumedException where the request's literal rule ('unread and a different limit -> IllegalStateException') might apply."
+      },
+      "axis": "conflict",
+      "req_id": "FR-HTTP-030",
+      "evidence_path": "docs/spec/04.http-core.srs.md",
+      "description": "Dropped: the request does not say which stream operations count as reading. Design D-013 fills that gap explicitly and the criterion cites the fills basis.",
+      "suggested_action": "discard"
+    }
+  ],
+  "summary": {
+    "kept": 4,
+    "dropped": 7,
+    "prd_fail": 0,
+    "prd_violated": 0,
+    "srs_drop": 0,
+    "srs_residual": 0
+  }
+}

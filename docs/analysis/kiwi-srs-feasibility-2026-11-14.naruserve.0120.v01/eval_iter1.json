@@ -1,0 +1,110 @@
+{
+ "evaluator": "independent-verifier",
+ "iter": 1,
+ "findings": [
+  {
+   "id": "ac_verifiability-1",
+   "finding_hash": "b13609c26b4cfbe11e4a6574dac88824f6e570f0",
+   "severity": "HIGH",
+   "axis": "ac_verifiability",
+   "req_id": "SEC-PROXY-005",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md:1319",
+   "description": "per-req-judgement rates AC-1..AC-5, AC-7, AC-8 of SEC-PROXY-005 'automatable' (ac_verifiability 10) and flags only AC-6. AC-3 ('For a target given by host name (for example https://localhost:<port>), the SNI server name the https backend receives in the TLS ClientHello is that target host name') fails as written on the JVM test runtime with the mechanism the statement mandates: SunJSSE does not put a single-label host into SNI. Probe on OpenJDK 17.0.20.1: SSLSocketFactory.getDefault().createSocket(plainConnectedSocket, \"localhost\", port, true).getSSLParameters().getServerNames() = null, while host \"example.test\" gives [type=host_name (0), value=example.test]. So the statement's 'so that SNI carries the target host name' is false for localhost and the AC's own example cannot pass without extra work.",
+   "suggested_action": "Amend SEC-PROXY-005 AC-3 via MCP: use a dotted target host name in the test (resolved through a package-private resolver seam) or require the client to set SNIHostName explicitly (reflective SSLParameters.setServerNames, API 24+) and drop the localhost example; re-score SEC-PROXY-005 ac_verifiability."
+  },
+  {
+   "id": "coherence-1",
+   "finding_hash": "077495b1f03f36adb23c6f850649121cf0a93449",
+   "severity": "MEDIUM",
+   "axis": "internal_coherence",
+   "req_id": "_",
+   "evidence_path": "docs/analysis/kiwi-srs-feasibility-2026-11-14.naruserve.0120.v01/synthesis.json",
+   "description": "synthesis.json and per-req-judgement.json are stale against the current SRS: dependency_graph reports 164 in-target depends_on edges and the cycle [FR-PROXY-015, FR-PROXY-017]; the rebuilt graph of the 58 now has 163 in-target and 39 external depends_on edges and no cycle (FR-PROXY-017 -> FR-PROXY-015 is now 'extends', docs/spec/22.reverse-proxy.srs.md:1532). critical_blockers (FR-ENGINE-014 AC-5, SEC-PROXY-005 AC-6), the stability_drift_candidates for those two, and the conditions on FR-HTTP-037, FR-PROXY-014, FR-PROXY-015, FR-PROXY-017 are resolved by the amendments (PRD-271/U-2; injected-verifier AC-6). FR-PROXY-015/FR-PROXY-017 dependency_health 9 still carries the cycle penalty.",
+   "suggested_action": "Re-run the judgement for FR-ENGINE-014, SEC-PROXY-005, FR-PROXY-015, FR-PROXY-017 (and dependants' chain notes) and regenerate synthesis.json before the verdict is used; mutation plan stays no-op (see rejudge)."
+  },
+  {
+   "id": "no_edit_after_mutation-1",
+   "finding_hash": "18a4003f1e753084ff5edb3925ef0a6f4edcb35e",
+   "severity": "MEDIUM",
+   "axis": "no_edit_after_mutation",
+   "req_id": "_",
+   "evidence_path": "docs/spec/22.reverse-proxy.srs.md",
+   "description": "The session log (~/.claude/projects/-Users-beom-work-git-NaruServe/e9062f5a-947b-47f3-bb41-f7450f2a1a14.jsonl line 1420, 2026-11-13T16:24:58Z) shows a direct Write tool call on docs/spec/22.reverse-proxy.srs.md 54 s after the scaffold_scope MCP mutation (16:24:04Z). It replaced only the scaffold placeholders (Scope Overview 'Describe the scope.', In/Out of Scope, Assumptions) and left '## 4. Requirements' empty; it preceded every add_requirement, validate_spec ran right after, and no Edit/Write on docs/spec appears afterwards in the main session or its 40 subagent logs (the post-analysis amendments were edit_acceptance_criterion / append_section_note / table-row MCP calls). No requirement block was written outside MCP, but it is a non-MCP write to docs/spec after a mutation.",
+   "suggested_action": "Record it as an accepted exception (scope prose has no MCP writer) in the run record, or route scope prose through an MCP section tool in future runs."
+  },
+  {
+   "id": "evidence_existence-1",
+   "finding_hash": "0a6bd1adb732dd0814fd3b32de73705eb208b2ac",
+   "severity": "LOW",
+   "axis": "evidence_existence",
+   "req_id": "FR-SVL-010",
+   "evidence_path": "scratchpad probe: Jetty 9.4.58 GET 304 => Content-Length: 5 kept",
+   "description": "Evidence is a probe whose source and output were not saved; it cannot be re-checked from the run directory. (The SEC-PROXY-005 probe was reproduced: HttpsURLConnection$DefaultHostnameVerifier.verify(\"localhost\", null) = false on OpenJDK 17.0.20.1.) Sampled 22 path:line evidences (build.gradle:13-21,140-161,165-168; TinyHttpd@e73cd5d ExchangeResponse.java:159-174, 214-226, 481-515, Exchange.java:213-219; TinyHttpdExchange.java:186-206; DefaultRestApp.java:216-219,297-300,1048-1062,1136-1147; StandardErrors.java:17-28; LimitedInputStream.java:13-16,109-121; BodyState.java:22-41; Dispatcher.java:217-223,240-253; DefaultRequest.java:203-210; Router.java:270-273; DefaultResponse.java:564-567,634-637,917-939; ServletExchange.java:164-180,336-346; RestApp.java:177-195; Request.java:137-151; Response.java:67-83; HttpException.java; TinyHttpdBodyStream.java:1-48): all exist and say what is claimed.",
+   "suggested_action": "Save probe sources/outputs under the run directory and cite them as files."
+  },
+  {
+   "id": "evidence_existence-2",
+   "finding_hash": "e6e47e1ee852315cabfa05083832c4df69782095",
+   "severity": "LOW",
+   "axis": "evidence_existence",
+   "req_id": "CON-BUILD-020",
+   "evidence_path": "~/.gradle/caches/.../android-api-level-21-5.0.1_r2.signature",
+   "description": "Abbreviated path (also cited by REL-PROXY-002 and SEC-PROXY-005) is not resolvable as written; the signature artifact does exist under ~/.gradle/caches/modules-2/files-2.1/net.sf.androidscents.signature/android-api-level-21.",
+   "suggested_action": "Cite the full cache path or the Gradle coordinate net.sf.androidscents.signature:android-api-level-21:5.0.1_r2."
+  },
+  {
+   "id": "coherence-2",
+   "finding_hash": "afb47d8b64e0b0fd9a63f0e54c5a78c45415ad16",
+   "severity": "LOW",
+   "axis": "internal_coherence",
+   "req_id": "FR-ENGINE-014",
+   "evidence_path": "docs/spec/06.engine-adapter.srs.md:2071",
+   "description": "Implementation Notes still say 'check that TinyHttpd ... keeps a `Content-Length` header on a `HEAD` or `304` response', contradicting amended AC-5 (docs/spec/06.engine-adapter.srs.md:2047: 'answers a `304` response with no body bytes and no `Content-Length`'). The analysis' evidence_strength 12 was partly based on this note; after the AC amendment the note is the remaining stale text.",
+   "suggested_action": "fix_via_mcp: replace the note's 304 clause (HEAD only)."
+  }
+ ],
+ "rejudge": [
+  {
+   "req_id": "FR-ENGINE-014",
+   "your_score": 88,
+   "your_label": "high",
+   "note": "AC-5 now matches TinyHttpd 3.1.1 at e73cd5d (ExchangeResponse.commit: status 304 -> discard, lengthHeader -1; finish() skips the short-length abort when discard, so keep-alive continues); local checkout de5c7ff has the same ExchangeResponse.java. No Content-Type default in TinyHttpd. Remaining weakness: stale implementation note (coherence-2) and AC-1 disconnect timing. Label medium -> high; policy rule 1 gives evolving = no-op."
+  },
+  {
+   "req_id": "SEC-PROXY-005",
+   "your_score": 76,
+   "your_label": "medium",
+   "note": "AC-6 blocker resolved (injected recording verifier, JDK default not the oracle). New issue: AC-3 SNI with the localhost example fails on the JDK (ac_verifiability-1). Implementable with an explicit reflective setServerNames or a dotted-host test seam. Stays medium -> keep (no-op)."
+  },
+  {
+   "req_id": "FR-PROXY-015",
+   "your_score": 89,
+   "your_label": "high",
+   "note": "Cycle removed; dependency_health back to 15. No label change."
+  },
+  {
+   "req_id": "FR-PROXY-017",
+   "your_score": 88,
+   "your_label": "high",
+   "note": "Now extends FR-PROXY-015, graph acyclic; timing ACs use second-scale values with 'about' tolerance (AC-10). No label change."
+  }
+ ],
+ "summary": {
+  "critical": 0,
+  "high": 1,
+  "medium": 2,
+  "low": 3
+ },
+ "axes_checked": {
+  "1_score_label": "58/58 axis sums equal totals; labels match bands (56 high 82-97, 2 medium 72/74).",
+  "2_evidence": "22 path:line evidences sampled, all exist and support the claim; prose/addition_site entries for NaruServe-proxy are expected; 2 LOW.",
+  "3_ac_verifiability": "1 HIGH miss (SEC-PROXY-005 AC-3).",
+  "4_cycles": "Rebuilt now: 163 in-target + 39 external depends_on edges, 0 cycles; 28 external targets exist, none discarded/draft/deprecated.",
+  "5_blockers": "Both blockers reproduced from code/probe (TinyHttpd 304 commit branch; DefaultHostnameVerifier returns false); both now resolved by amendments.",
+  "6_mapping": "Default policy: 56 high -> rule 1 evolving (no-op), 2 medium -> rule 2 keep; no has_verification (0 evidence rows), so rule 0 never applies. Conforms.",
+  "7_guards": "guard_blocked 0, dry_run true, 0 mutations; nothing bypassed.",
+  "8_status_conflict": "All 58 planned; no blocked feasibility; no conflict to report.",
+  "9_coherence": "synthesis stale after amendments (MEDIUM).",
+  "10_no_edit_after_mutation": "One direct Write to the freshly scaffolded 22.reverse-proxy.srs.md prose (MEDIUM); amendments are MCP-shaped (dated Rationale notes, AC text edits, one trace-row relation change); speckiwi validate: 0 errors, 60 SRS-W081 all outside 0.12.0."
+ }
+}

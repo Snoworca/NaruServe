@@ -1,0 +1,2452 @@
+{
+ "run_id": "2026-11-14.naruserve.0120.v01",
+ "target": "0.12.0",
+ "judgements": [
+  {
+   "req_id": "CON-BUILD-019",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Adding one entry to naruModules plus mainDependencies/moduleDescriptions entries follows the existing pattern; settings.gradle include list is explicit.",
+     "evidence": [
+      "build.gradle:13-14",
+      "build.gradle:21",
+      "build.gradle:167",
+      "settings.gradle:12-20",
+      "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:35",
+      "src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "All four code traces are correctly marked addition_site and the files exist; statement matches the current naruModules/androidModules wiring."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 3 requirement(s): CON-BUILD-018, FR-BUILD-001, CON-BUILD-017. External targets CON-BUILD-018, FR-BUILD-001, CON-BUILD-017 exist and are verified/evolving. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Every AC is a Gradle model or class-file assertion (runtimeClasspath, major version 52) decidable by the root build tests. (6 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Module scaffolding is the first step of request B."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Keeps proxy code out of apps that do not use it, as the request asks."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "CON-BUILD-020",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "classRefPrefixes already has per-module branches; a `:NaruServe-proxy` branch with six prefixes and BuildChecksTest probes follow existing TestKit probes.",
+     "evidence": [
+      "build.gradle:142-160",
+      "build.gradle:21",
+      "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:264",
+      "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:464-469",
+      "~/.gradle/caches/.../android-api-level-21-5.0.1_r2.signature"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Traces are addition_site and point at existing files; the API 21 signature confirms reflection is needed for setEndpointIdentificationAlgorithm (absent from API 21), matching AC-2 no-exemption rule."
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "depends_on 2 requirement(s): CON-BUILD-019, SEC-PROXY-005. In-target targets exist, planned/evolving, none discarded or deprecated. Depends on medium-rated SEC-PROXY-005. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Animal-sniffer and class-reference checks are deterministic Gradle tasks; AC-6 TestKit probes mirror existing ones. (6 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Guards the module boundary required by request B."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Keeps the proxy on public API and Android API 21."
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Depends on SEC-PROXY-005 (medium): AC-2 relies on the reflective TLS path staying exemption-free."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "CON-BUILD-021",
+   "feasibility": "high",
+   "score": 92,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Restates the existing per-module dependency set with one new module; extraCompileOnly/jspecify loop already applies to every naruModules entry.",
+     "evidence": [
+      "build.gradle:13-14",
+      "build.gradle:64-71",
+      "build.gradle:316"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "build.gradle trace is addition_site; statement matches current mainDependencies map (e.g. tinyhttpd 3.1.1 at :64-66)."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): CON-BUILD-019, CON-BUILD-011, CON-BUILD-017, CON-BUILD-002. External targets CON-BUILD-011, CON-BUILD-017, CON-BUILD-002 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Dependency declarations and runtimeClasspath contents are decidable by build tests. (8 ACs)"
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Re-targeted supersession of CON-BUILD-006; small widening for the new module."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Dependency hygiene for the new module."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-APP-027",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "One-line change in StandardErrors.statusOf to map an unwrapped public BodyTooLargeException to 413.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:19-21",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java:25-28"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "statusOf today maps only HttpException (else 500), exactly as the statement says it builds on."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 2 requirement(s): IR-HTTP-011, FR-APP-005. External targets FR-APP-005 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Harness tests of status/body/onError instance are deterministic. (4 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Needed so an escaped bodyStream overrun becomes 413."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Request A raw access API: needed by the proxy and gives Express users req.rawHeaders / raw body parity."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-APP-028",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "The existing private bodyStream already returns body.stream(input), which counts bytesRead; the public method keeps that wrapping.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:205-231",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java:40",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:242-252"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Traces addition_site; the in= field already comes from req.body().bytesRead()."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 1 requirement(s): FR-HTTP-030. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Access log lines are captured in existing tests; numeric in= values are decidable. (3 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Required for proxy access logging (FR-PROXY-021)."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Accurate access logs for raw-body handlers."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-ENGINE-013",
+   "feasibility": "high",
+   "score": 92,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "TinyHttpd already reports header entries in wire order and case; only the FQN rename of TinyHttpd BodyTooLargeException is code; the rest is socket conformance tests.",
+     "evidence": [
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java:4,43",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:161-163",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdAdapter.java:108",
+      "/Users/beom/work/git/TinyHttpd@e73cd5d:core/src/main/java/com/snoworca/tinyhttpd/server/Exchange.java:213-219"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "TinyHttpdBodyStream imports TinyHttpd BodyTooLargeException at :4 and tests it at :43, exactly the clash the statement names; getHeaderEntries keeps name order/case."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): FR-HTTP-032, FR-HTTP-030, FR-HTTP-031, IR-HTTP-011. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Socket tests over a real TinyHttpd listener are deterministic; AC-3 keep-alive drain depends on the TinyHttpd 64 KiB default. (5 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Adapter conformance of request A."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Request A raw access API: needed by the proxy and gives Express users req.rawHeaders / raw body parity."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-ENGINE-014",
+   "feasibility": "medium",
+   "score": 72,
+   "axes": {
+    "implementability": {
+     "score": 16,
+     "rationale": "onAbort and HEAD/204 framing work, but AC-5 requires `Content-Length: 5` on a 304 relayed through TinyHttpd. TinyHttpd 3.1.1 swallows a Content-Length header into its contentLength field (managed()) and, for status 304, commits with discard=true and lengthHeader=-1, so no Content-Length line is written. Meeting AC-5 needs a TinyHttpd change, which is outside this target (pinned 3.1.1, CON-BUILD-010).",
+     "evidence": [
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:186-206",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:267-283",
+      "/Users/beom/work/git/TinyHttpd@e73cd5d:core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:160-174 (managed Content-Length)",
+      "/Users/beom/work/git/TinyHttpd@e73cd5d:core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:214-226 (addHeader)",
+      "/Users/beom/work/git/TinyHttpd@e73cd5d:core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:484-485,511-512 (304: no length header)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 12,
+     "rationale": "Trace is addition_site, but the statement and the implementation note (\"check that TinyHttpd ... keeps a Content-Length header on a HEAD or 304 response\") assume engine behaviour the pinned TinyHttpd does not have for 304."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 3 requirement(s): FR-HTTP-035, FR-HTTP-036, FR-HTTP-037. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "All ACs are socket tests; AC-5 is decidable but will fail as written; AC-1 disconnect timing depends on when the kernel reports the broken pipe. (6 ACs)"
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "Adapter conformance; the 304 clause pulls in an engine change outside the target."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Real-socket behaviour of onAbort/relay that the proxy relies on."
+    }
+   },
+   "blockers": [
+    "AC-5 (304 keeps Content-Length over TinyHttpd) cannot pass with TinyHttpd 3.1.1: ExchangeResponse.commit drops the length header for 304 (e73cd5d ExchangeResponse.java:484-485 with managed() at :160-174)."
+   ],
+   "conditions": [
+    "Amend AC-5 to accept no Content-Length on a TinyHttpd 304 (RFC 9110 allows it), or schedule a TinyHttpd release that keeps it and bump CON-BUILD-018."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-HTTP-030",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "BodyState already has Kind.RAW and the counting stream; needs a same-object cache above BodyState and consumption tracking (read/skip/close) on the returned stream; cleanup reuses closeBody().",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java:24-25,40",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:205-231",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:187-201"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Traces addition_site; RAW kind and closeBody exist as the note says. Repeat-call/same-object rules (AC-6..AC-9) are new logic."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 2 requirement(s): IR-HTTP-013, IR-APP-009. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "All 11 ACs are in-memory adapter or reflection tests with recording inputs. (11 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Central raw-body API of request A."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Request A raw access API: needed by the proxy and gives Express users req.rawHeaders / raw body parity."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-HTTP-031",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Reuses LimitedInputStream (declared length fails before read; probe of limit+1) and JsonBodyReader-style pre-read 413; range check via byteLimit.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java:15,111-120",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:37-41",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:299"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "LimitedInputStream behaviour matches the statement; traces addition_site."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): FR-HTTP-030, IR-APP-009, IR-HTTP-011, FR-APP-027. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Deterministic limit tests with recording inputs. (5 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Size safety of the raw body."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Request A raw access API: needed by the proxy and gives Express users req.rawHeaders / raw body parity."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-HTTP-032",
+   "feasibility": "high",
+   "score": 96,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Build an unmodifiable LinkedHashSet and SimpleImmutableEntry list once from HttpExchange.headers(), beside header()/headers().",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:485-507",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java:161-163"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Statement matches the ordered duplicate-keeping SPI list of IR-HTTP-003."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 2 requirement(s): IR-HTTP-013, IR-HTTP-003. External targets IR-HTTP-003 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Pure in-memory tests incl. tr-TR locale. (6 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Proxy header forwarding needs it."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Express req.rawHeaders parity."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-HTTP-033",
+   "feasibility": "high",
+   "score": 96,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "append = requireNew + checkHeader + headers.add, as addCookie already does.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:445-451",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:456-467"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "checkHeader and addCookie are exactly as described."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 2 requirement(s): IR-HTTP-014, IR-HTTP-012. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Header line assertions are deterministic. (6 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Proxy copies duplicate response headers with it."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Express res.append parity."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-HTTP-034",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Add one package-private helper to ProxyTrustSetting (NONE/LEGACY/HOPS/CIDRS) used by isFromTrustedProxy and remoteAddress/isSecure.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ProxyTrustSetting.java:139-141",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:517-530",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:226-272"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "peerTrusted is private and returns false for LEGACY as stated; the helper avoids two trust decisions."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): IR-HTTP-013, IR-ENGINE-003, SEC-ENGINE-001, SEC-ENGINE-002. External targets IR-ENGINE-003, SEC-ENGINE-001, SEC-ENGINE-002 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Unit tests over the four settings are deterministic. (5 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Needed for X-Forwarded-For trust (SEC-PROXY-002)."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express trust proxy fn parity."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-HTTP-035",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "AbortListeners (once-only, fire-on-late-register) exists; fire it from DefaultResponse.abort, the convergence point of res.abort and adapter aborts via HttpExecution.cancel; add a logging wrapper because SafeCallbacks logs nothing.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/common/AbortListeners.java:16-55",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:740-762",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java:29-41"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "abort() returns early once COMPLETED/ABORTED, giving the not-on-success and once rules; HttpExecution registers exchange.onAbort(this::cancel) as stated."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 1 requirement(s): IR-HTTP-014. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1..AC-7 are deterministic unit tests; AC-8 is a javadoc source test. (8 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Proxy releases slots on client abort."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express res.on(close) parity."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-HTTP-036",
+   "feasibility": "high",
+   "score": 92,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Reuse startBody with contentType null and add a flag that skips the defaultCache insertion in begin().",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:566",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:933-938"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "begin() applies defaultCache whenever no Cache-Control is set (:935-937), the exact behaviour relay must bypass."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 1 requirement(s): IR-HTTP-014. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "In-memory commit header lists are decidable. (6 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Proxy relays backend headers verbatim."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Transparent relaying for any app."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-HTTP-037",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "startBody/runTransfer need three changes: 204 length drop, stop-at-length surplus handling and bodyless close for HEAD/204/304, while prepare() keeps its current 204/304 rule for other writers.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:566",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:636",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:919-930"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "prepare() drops Content-Length for 204/304 and startBody puts it whenever length>=0, as the note says."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 2 requirement(s): IR-HTTP-014, FR-HTTP-036. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "In-memory adapter tests decide every AC; AC-7 needs a blocking source to show return-before-copy. (9 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Proxy body path."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Streaming relay primitive."
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "The 304-keeps-Content-Length rule holds at the core; over TinyHttpd 3.1.1 the engine drops it (see FR-ENGINE-014)."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-001",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Hand-written URL parser with explicit grammar; no platform dependency.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Traces addition_site; reuses the SEC-PROXY-001 checker."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 2 requirement(s): IR-PROXY-001, SEC-PROXY-001. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Table-driven unit tests over the listed URLs. (6 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-002",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Option validation reuses public HttpHeaderValues.isToken/isFieldValue (IR-HTTP-012); TimeUnit conversions saturate natively.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/common/HttpHeaderValues.java:9-21"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Statement matches the public helpers; bodyLimit range equals byteLimit range."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): IR-PROXY-001, IR-HTTP-012, FR-HTTP-015, IR-APP-009. External targets FR-HTTP-015 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Deterministic accessor and exception tests. (9 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-003",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Header block assembly from req.rawHeaders() with fixed ordering and ISO-8859-1 writing.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Depends on rawHeaders (FR-HTTP-032) as stated."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): IR-PROXY-001, FR-HTTP-032, IR-HTTP-012, FR-HTTP-015. External targets FR-HTTP-015 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Raw backend socket captures the exact header bytes. (8 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-004",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Host formatting from the parsed target; duplicate Host detection via rawHeaders.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Consistent with FR-PROXY-001 parsing."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 3 requirement(s): FR-PROXY-001, FR-PROXY-003, FR-HTTP-032. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Backend capture tests. (5 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-005",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Ordered map of fixed request headers applied last.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Consistent with FR-PROXY-003 layout."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 3 requirement(s): FR-PROXY-002, FR-PROXY-003, SEC-PROXY-002. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Backend capture tests. (5 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-006",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Target = base path + raw originalUrl() or url(); DefaultRequest already exposes both with raw query.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:433-435"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "DefaultRequest.originalUrl/url/baseUrl exist (:433-435)."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): FR-PROXY-001, SEC-PROXY-001, FR-ROUTE-020, FR-HTTP-030. External targets FR-ROUTE-020 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Backend capture of request target and body bytes. (4 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-007",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "Streaming copy with one-byte pre-read and framing rewrite; AC-7 needs a forked -Xmx64m JVM moving 1 GiB.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Builds on bodyStream (FR-HTTP-030) as stated."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 3 requirement(s): SEC-PROXY-003, FR-PROXY-003, FR-HTTP-030. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "All ACs automatable; AC-7 is a heavy forked-JVM test; AC-6 needs a raw client that disconnects mid-body. (8 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-7 (1 GiB under -Xmx64m) should run as a tagged slow test so the default build stays practical."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-008",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Exception classification in the copy loop (RuntimeException and IOException), wrapping only the public BodyTooLargeException.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java:38-48"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Pitfall about TinyHttpd unchecked HttpException from read() matches TinyHttpdBodyStream.map (:38-48)."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 5 requirement(s): FR-PROXY-007, FR-HTTP-030, FR-HTTP-031, IR-HTTP-011, IR-APP-009. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "In-memory and socket tests. (5 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-009",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Method token checks, 405 via HttpException.withHeader, WebSocket upgrade detection with the public Router.isWebSocketUpgrade; upgrade requests reach middleware registered with use(String, Middleware) through the legacy pipeline.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/routing/Router.java:272",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:181-194",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:1048-1062,1136-1147"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Dispatcher routes upgrades matching app.ws to handleLegacy and use(String,Middleware) adds to middlewareRegistrations, as AC-5 and the R-8 note assume."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): IR-PROXY-001, FR-PROXY-003, FR-HTTP-026, FR-WS-001. External targets FR-HTTP-026, FR-WS-001 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "In-memory and socket tests. (7 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-5 must mount with app.use(String, Middleware); app.use(Object, Middleware) does not join the legacy WebSocket pipeline (DefaultRestApp.java:1136-1147)."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-010",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "A fixed sequence in Proxy.handle; each step is defined by another requirement.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Consistent with its dependencies."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 6 requirement(s): FR-PROXY-009, SEC-PROXY-001, FR-PROXY-003, FR-PROXY-004, SEC-PROXY-003, FR-PROXY-008. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Order tests with requests failing several checks. (7 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-011",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Header copy with res.header/res.append and hop-by-hop filtering; needs FR-HTTP-033 append and FR-HTTP-036 relay.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Statement matches the planned Response surface; no header-removal method exists, as the note warns."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 6 requirement(s): IR-PROXY-001, FR-HTTP-033, FR-HTTP-013, FR-HTTP-036, FR-COOKIE-001, FR-HTTP-037. External targets FR-HTTP-013, FR-COOKIE-001 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Recording Response unit tests plus socket tests. (10 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-012",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "One ordered name->value/removal map applied after the copy and Location rewrite.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Consistent with FR-PROXY-011/013."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): FR-PROXY-011, FR-PROXY-002, FR-HTTP-013, FR-PROXY-013. External targets FR-HTTP-013 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Backend capture tests. (6 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-013",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Hand-parsed Location origin comparison and prefix replacement using req.baseUrl().",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:435"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "baseUrl exists (DefaultRequest.java:435)."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 5 requirement(s): FR-PROXY-001, FR-PROXY-006, FR-PROXY-011, FR-PROXY-004, FR-ROUTE-020. External targets FR-ROUTE-020 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Table-driven tests. (10 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-014",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "relay(stream, length) with bodyless-first framing; core relay keeps a 304 Content-Length but TinyHttpd 3.1.1 drops it on the wire.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target",
+      "/Users/beom/work/git/TinyHttpd@e73cd5d:core/src/main/java/com/snoworca/tinyhttpd/server/ExchangeResponse.java:484-485"
+     ]
+    },
+    "evidence_strength": {
+     "score": 17,
+     "rationale": "Traces addition_site; AC-5 \"reaches the client as 304 with Content-Length: 10\" only holds on the in-memory or servlet adapter."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 5 requirement(s): FR-HTTP-037, FR-HTTP-036, FR-PROXY-011, SEC-PROXY-004, SEC-PROXY-003. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Recording Response tests decide the relay length; client-visible 304 length is adapter-dependent. (6 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Verify AC-5 through the in-memory adapter or the recorded relay length; a TinyHttpd gateway writes no Content-Length on 304."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-015",
+   "feasibility": "high",
+   "score": 83,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "ProxyException mapping before relay plus best-effort early-response read after a write failure; watchdog-kind precedence over INVALID_RESPONSE.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Builds on IR-PROXY-002 and FR-APP-005 as stated."
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "depends_on 7 requirement(s): IR-PROXY-002, FR-APP-005, SEC-PROXY-004, SEC-PROXY-005, FR-PROXY-010, FR-PROXY-007, FR-PROXY-017. External targets FR-APP-005 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. Depends on medium-rated SEC-PROXY-005. Part of the 2-node depends_on cycle FR-PROXY-015 <-> FR-PROXY-017."
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-6 early-response and AC-9 write/total timeout tests are timing- and buffer-dependent but automatable. (9 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Break the depends_on cycle with FR-PROXY-017 (keep one direction, e.g. FR-PROXY-017 -> FR-PROXY-015, and turn the other into a relates/extends link)."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-016",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "A package-private wrapper stream that maps failures, logs once and throws IOException(cause); DefaultResponse copy aborts on read failure.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:636"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "runTransfer aborts on source failure (DefaultResponse.java:636) as assumed."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): FR-PROXY-014, FR-HTTP-037, IR-PROXY-002, SEC-PROXY-004. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Recording logger and raw-socket backends. (5 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-017",
+   "feasibility": "high",
+   "score": 82,
+   "axes": {
+    "implementability": {
+     "score": 23,
+     "rationale": "Read timeout via SO_TIMEOUT, write and total timeouts via a watchdog closing the plain socket; connect timeout via Socket.connect(addr, ms) and handshake SO_TIMEOUT.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Blocking-socket constraints described in the note are correct."
+    },
+    "dependency_health": {
+     "score": 9,
+     "rationale": "depends_on 5 requirement(s): FR-PROXY-002, IR-PROXY-002, SEC-PROXY-005, FR-PROXY-015, FR-PROXY-016. In-target targets exist, planned/evolving, none discarded or deprecated. Depends on medium-rated SEC-PROXY-005. Part of the 2-node depends_on cycle FR-PROXY-015 <-> FR-PROXY-017."
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "Timing tests of about 1-2 s are automatable but sensitive to CI load. (10 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Break the depends_on cycle with FR-PROXY-015.",
+    "Allow timing tolerance in AC-3..AC-8 so the tests are not flaky."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-018",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Retry loop with eligibility from bytes actually sent and a deadline-aware wait.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Consistent with FR-PROXY-007/017."
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "depends_on 5 requirement(s): FR-PROXY-002, FR-PROXY-017, FR-PROXY-015, SEC-PROXY-005, FR-PROXY-007. In-target targets exist, planned/evolving, none discarded or deprecated. Depends on medium-rated SEC-PROXY-005. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Counting backends decide each AC; AC-9/AC-10 are timing-based. (11 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-019",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Shared AtomicInteger with a CAS loop; derived instances copy the reference.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Consistent with IR-PROXY-001 copy semantics."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): IR-PROXY-001, FR-PROXY-002, IR-PROXY-002, FR-PROXY-010. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Concurrency tests with delayed backends; AC-9 accessor identity. (9 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-020",
+   "feasibility": "high",
+   "score": 93,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Minimal HTTP/1.1 client over java.net.Socket with Connection: close; no pooling.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target",
+      "build.gradle:142-160"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Class-reference check pattern exists in build.gradle:142-160."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): FR-PROXY-003, FR-PROXY-007, REL-PROXY-001, FR-PROXY-018. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Connection-count backends and class-reference test. (4 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-PROXY-021",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "No proxy code writes the access log; counting comes from bodyStream (FR-APP-028).",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:242-252"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Dispatcher writes in= from bytesRead (:242-252)."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 3 requirement(s): FR-APP-028, FR-APP-019, FR-PROXY-008. External targets FR-APP-019 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Access log capture tests. (3 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-REL-006",
+   "feasibility": "high",
+   "score": 88,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "POM, staging and SBOM follow from naruModules; checkCentralStaging derives ids from naruModules; tests need one more assertion.",
+     "evidence": [
+      "build.gradle:167",
+      "build.gradle:614-646",
+      "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java",
+      "src/test/java/com/snoworca/naruserve/build/CentralStagingTest.java",
+      "gradle/release.gradle:13"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Traces addition_site; \"ten modules\" wording at build.gradle:614,623 and \"nine JAR modules\" at release.gradle:13 confirm the comments the note says to update."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 1 requirement(s): CON-BUILD-019. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 12,
+     "rationale": "AC-1..AC-3 are default-build tests; AC-4 is a recorded checkCentralStaging run that the release step makes (design D-009), and AC-5 needs -Prelease. (5 ACs)"
+    },
+    "scope_fit": {
+     "score": 8,
+     "rationale": "Publishing config is in scope, but the recorded runs belong to the release step after this run."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Makes the module consumable from Maven Central."
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-4/AC-5 recorded runs are made by the release step (D-009); until then the requirement can reach implemented, not verified."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-REL-007",
+   "feasibility": "high",
+   "score": 86,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Existing conditional release.gradle apply already satisfies most of it; the SBOM loop follows naruModules.",
+     "evidence": [
+      "build.gradle:693",
+      "gradle/release.gradle:13"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "build.gradle:693 holds the guarded apply exactly as AC-2 requires; traces addition_site."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): FR-REL-006, CON-BUILD-017, CON-BUILD-019, OPS-BUILD-002. External targets CON-BUILD-017, OPS-BUILD-002 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 11,
+     "rationale": "AC-2/AC-4 are default-build tests; AC-1 and AC-3 are recorded release-machine runs owned by the release step (D-009). (4 ACs)"
+    },
+    "scope_fit": {
+     "score": 7,
+     "rationale": "Re-targeted supersession of FR-REL-001; its record ACs fall to the release step outside this run."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Release SBOM for supply-chain transparency."
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "AC-1/AC-3 recorded runs belong to the release step; the requirement cannot be verified inside this run."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "FR-SVL-010",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Mostly conformance tests; snapshotHeaders groups per name and onAbort uses AbortListeners. An empirical Jetty 9.4.58 probe keeps `Content-Length: 5` on a 304 and on HEAD, so AC-4 is reachable; a 204 with Content-Length makes Jetty answer 500, so the adapter must not send one (as FR-HTTP-037 AC-6 already requires).",
+     "evidence": [
+      "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:166-179",
+      "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java:338-345",
+      "scratchpad probe: Jetty 9.4.58 GET 304 => Content-Length: 5 kept"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Traces addition_site; snapshotHeaders behaviour matches AC-2."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 5 requirement(s): FR-HTTP-032, FR-HTTP-030, FR-HTTP-036, FR-HTTP-037, FR-HTTP-035. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Embedded Jetty tests are automated. (5 ACs)"
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Adapter conformance of request A."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Request A raw access API: needed by the proxy and gives Express users req.rawHeaders / raw body parity."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "IR-APP-009",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Adds a field/setter beside jsonLimit/formLimit using byteLimit() and requireConfigurable; passed to Dispatcher via a package setter like proxyTrust.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java:179,194",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:218,299,318",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:211-213"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Traces addition_site; range/default/guard mirror jsonLimit exactly as stated."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 1 requirement(s): CON-APP-002. External targets CON-APP-002 exist and are verified/evolving. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Reflection surface test, lifecycle guard test and Kotlin compile test are all automated. (6 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Default limit for bodyStream."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express express.raw({limit}) parity."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "IR-HTTP-011",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Class move from internal to the root package plus importer updates; JSON 413 detection already relies on limited-stream state.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyTooLargeException.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java:111-120",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FormBodyReader.java",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java",
+      "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java:4"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Importers named in the note exist; the simple-name clash with TinyHttpd is real (TinyHttpdBodyStream.java:4)."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "No depends_on links; nothing to block it."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Reflection, ClassNotFound and limit tests are deterministic. (9 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Proxy distinguishes overruns by this class."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Request A raw access API: needed by the proxy and gives Express users req.rawHeaders / raw body parity."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "IR-HTTP-012",
+   "feasibility": "high",
+   "score": 96,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "Copy the existing package-private DefaultResponse.isFieldValue into public HttpHeaderValues and delegate.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/common/HttpHeaderValues.java:9-21",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:1015-1031"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "isToken already delegates the same way; predicate matches the statement."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 1 requirement(s): FR-HTTP-015. External targets FR-HTTP-015 exist and are verified/evolving. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Char-range sweep test is exhaustive. (5 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Proxy may not use internal."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Reusable header validation."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "IR-HTTP-013",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Rename the package-private DefaultRequest.bodyStream first, then add default methods like socketAddress()/requestId().",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:139,150",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:205,286,295",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java:41"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "The three callers of the package-private bodyStream are exactly those named (:286, :295, JsonBodyReader:41)."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "No depends_on links; nothing to block it."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Reflection surface and Kotlin compile/run tests. (6 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Public surface of request A."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Request A raw access API: needed by the proxy and gives Express users req.rawHeaders / raw body parity."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "IR-HTTP-014",
+   "feasibility": "high",
+   "score": 95,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Three default methods on Response following the IR-HTTP-010 pattern; Runnable gives Kotlin trailing lambdas.",
+     "evidence": [
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java:69,82",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:456-467"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Statement matches the current Response surface (header replace at :69, stream at :82)."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "No depends_on links; nothing to block it."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Reflection and Kotlin tests. (5 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Public surface of request A."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Request A raw access API: needed by the proxy and gives Express users req.rawHeaders / raw body parity."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "IR-PROXY-001",
+   "feasibility": "high",
+   "score": 96,
+   "axes": {
+    "implementability": {
+     "score": 28,
+     "rationale": "Immutable final Middleware with a static factory and copy-on-option methods; Middleware is a single-method interface.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Middleware.java:6-9",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:15,33,57",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java:35-37,139,150",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/ApplicationContext.java:31",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:1048-1062"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Traces addition_site; Middleware and refusePathInstallable exist as the API builds on them."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 2 requirement(s): FR-AUTH-010, FR-KT-001. External targets FR-AUTH-010, FR-KT-001 exist and are verified/evolving. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Reflection method-set test and Kotlin compile test. (6 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "IR-PROXY-002",
+   "feasibility": "high",
+   "score": 97,
+   "axes": {
+    "implementability": {
+     "score": 29,
+     "rationale": "HttpException is non-final with an (int, String, Throwable) constructor; ProxyException is a thin subclass.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/HttpException.java:15,33"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "HttpException.java:15,33 confirm the super constructor the note uses."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 1 requirement(s): IR-PROXY-001. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Reflection and onError tests. (4 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "OPS-BUILD-004",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 26,
+     "rationale": "Only the CLAUDE.md module line changes plus BuildLayoutTest expectations; the regression run is an existing Maven-mode build.",
+     "evidence": [
+      "CLAUDE.md (module line)",
+      "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+      "docs/research/naruserve-proxy/design/00.design.md (3829 baseline)",
+      "build.gradle:65-66"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Traces are addition_site; the 3829-test baseline is recorded in the run design. The local TinyHttpd checkout HEAD is de5c7ff, not e73cd5d, so Maven mode is indeed required as the note says."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 2 requirement(s): CON-BUILD-019, CON-BUILD-020. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-1 is a text test; AC-2 is a recorded `./gradlew -PtinyHttpdFromMaven=true build` run compared with the recorded baseline. (2 ACs)"
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Regression gate for the whole target."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Keeps project docs in step with the module set."
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Run AC-2 in Maven mode; the local TinyHttpd checkout is at de5c7ff, not the verified e73cd5d."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "OPS-DX-008",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Doc sections in existing bilingual pages; DocsExamplesCompileTest and KotlinDocsMarkersTest machinery exists.",
+     "evidence": [
+      "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java:139",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java:22",
+      "docs/api/request.md",
+      "docs/api/response.md",
+      "docs/api/app.md"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Traces addition_site; pages exist; the pinned AuthCoreDocsTest lines are noted."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 8 requirement(s): FR-HTTP-030, FR-HTTP-031, FR-APP-027, IR-HTTP-011, FR-HTTP-032, FR-HTTP-034, IR-APP-009, OPS-DX-007. External targets OPS-DX-007 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Compile/marker tests are automated; prose facts need content assertions. (7 ACs)"
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Documentation of request A."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-first docs are a project rule."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "OPS-DX-009",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Rows and sections in response.md following its method-table shape.",
+     "evidence": [
+      "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java:139",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java:22",
+      "docs/api/request.md",
+      "docs/api/response.md"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Traces addition_site; page and tests exist."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 6 requirement(s): FR-HTTP-033, FR-HTTP-035, FR-HTTP-036, FR-HTTP-037, IR-HTTP-012, OPS-DX-007. External targets OPS-DX-007 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Compile/marker tests are automated; prose facts need content assertions. (6 ACs)"
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Documentation of request A."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Express-first docs are a project rule."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "OPS-DX-010",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 24,
+     "rationale": "New bilingual page; needs testImplementation of NaruServe-proxy at the root and a new KOTLIN_ROOTS entry.",
+     "evidence": [
+      "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java:139",
+      "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java:22",
+      "docs/api/request.md",
+      "docs/api/response.md",
+      "build.gradle:316",
+      "docs/api/ (no proxy.md yet)"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Traces addition_site; KOTLIN_ROOTS and root testImplementation wiring named correctly."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 14 requirement(s): IR-PROXY-001, IR-PROXY-002, FR-PROXY-002, FR-PROXY-011, FR-PROXY-015, FR-PROXY-016, FR-PROXY-017, FR-PROXY-018, FR-PROXY-019, FR-PROXY-020, REL-PROXY-001, REL-PROXY-002, SEC-PROXY-002, OPS-DX-007. External targets OPS-DX-007 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "12 ACs; compile/marker checks automated; many are prose statements that need content assertions. (12 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "User guide of request B."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Docs are required for adoption of the proxy."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "OPS-DX-011",
+   "feasibility": "high",
+   "score": 89,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "mkdocs nav entries and README rows; GuideConsistencyDocsTest pins 18 pairs today; ReadmeDocsTest needs published-release filtering.",
+     "evidence": [
+      "mkdocs.yml",
+      "mkdocs.en.yml",
+      "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java:139",
+      "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java",
+      "tools/docs-site/requirements.txt"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "The 18-pair assertion exists at :139 as the note says; mkdocs files exist."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): OPS-DX-005, OPS-DX-010, CON-BUILD-019, OPS-REL-012. External targets OPS-DX-005, OPS-REL-012 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-2..AC-5 are docs tests; AC-1 needs `mkdocs build --strict` with the pinned toolchain (mkdocs is not on PATH here; tools/docs-site/requirements.txt pins it). (5 ACs)"
+    },
+    "scope_fit": {
+     "score": 9,
+     "rationale": "Navigation for the new page."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "Discoverability of the module."
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Install the pinned docs toolchain from tools/docs-site/requirements.txt to record AC-1."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "REL-PROXY-001",
+   "feasibility": "high",
+   "score": 90,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "One AtomicBoolean shared by relayed-stream close, onAbort listener and the finally path.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Builds on FR-HTTP-035 and FR-ENGINE-014 AC-1 (onAbort over sockets), which are reachable."
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "depends_on 5 requirement(s): FR-PROXY-019, FR-PROXY-010, FR-HTTP-035, FR-HTTP-037, FR-ENGINE-014. In-target targets exist, planned/evolving, none discarded or deprecated. Depends on medium-rated FR-ENGINE-014. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "Unit tests for exactly-once release; AC-1 needs real TinyHttpd sockets. (6 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Relies only on FR-ENGINE-014 AC-1/AC-2 (onAbort), not on its blocked 304 clause."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "REL-PROXY-002",
+   "feasibility": "high",
+   "score": 91,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "ScheduledThreadPoolExecutor with allowCoreThreadTimeOut and setRemoveOnCancelPolicy, both present in the API 21 signature.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target",
+      "~/.gradle/caches/.../android-api-level-21-5.0.1_r2.signature"
+     ]
+    },
+    "evidence_strength": {
+     "score": 19,
+     "rationale": "Checked: setRemoveOnCancelPolicy(Z) and allowCoreThreadTimeOut(Z) are in android-api-level-21."
+    },
+    "dependency_health": {
+     "score": 14,
+     "rationale": "depends_on 3 requirement(s): REL-PROXY-001, FR-PROXY-017, SEC-PROXY-005. In-target targets exist, planned/evolving, none discarded or deprecated. Depends on medium-rated SEC-PROXY-005. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 13,
+     "rationale": "AC-4 waits up to 30 s; the others are unit or thread-listing tests. (9 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [
+    "Make the idle keep-alive short so AC-4 does not dominate test time."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "SEC-PROXY-001",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Single package-private path checker on raw originalUrl(); framework already rejects non-slash raw paths before middleware.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target",
+      "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java:219-222"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Dispatcher answers non-\"/\" raw paths with 400 (Dispatcher.java:222), as the note says."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 3 requirement(s): IR-PROXY-001, FR-ROUTE-020, FR-HTTP-023. External targets FR-ROUTE-020, FR-HTTP-023 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Table-driven 400 tests; AC-8 on both adapters. (9 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "SEC-PROXY-002",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Forwarding headers from isFromTrustedProxy/isSecure/socketAddress with own IP-literal parse.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Depends on FR-HTTP-034 and existing SEC-ENGINE-003/SEC-HTTP-001."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 5 requirement(s): FR-PROXY-003, FR-HTTP-034, SEC-ENGINE-003, SEC-HTTP-001, FR-HTTP-032. External targets SEC-ENGINE-003, SEC-HTTP-001 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "Backend capture under each trust setting. (9 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "SEC-PROXY-003",
+   "feasibility": "high",
+   "score": 94,
+   "axes": {
+    "implementability": {
+     "score": 27,
+     "rationale": "Shared Content-Length/Transfer-Encoding list parser with explicit rules.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Note about TinyHttpd pre-rejecting CL+TE matches FR-ENGINE-003 AC-6."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 3 requirement(s): IR-PROXY-001, FR-HTTP-032, FR-ENGINE-003. External targets FR-ENGINE-003 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "In-memory adapter tests per malformed case. (7 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "SEC-PROXY-004",
+   "feasibility": "high",
+   "score": 92,
+   "axes": {
+    "implementability": {
+     "score": 25,
+     "rationale": "Byte-by-byte bounded header reader, chunk decoder and framing rules; well specified edge cases.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target"
+     ]
+    },
+    "evidence_strength": {
+     "score": 18,
+     "rationale": "Shares the SEC-PROXY-003 parser as stated."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): IR-PROXY-002, SEC-PROXY-003, IR-HTTP-012, FR-HTTP-015. External targets FR-HTTP-015 exist and are verified/evolving. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 14,
+     "rationale": "AC-11 mandates one raw ServerSocket test per malformed input. (11 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 10,
+     "rationale": "Core of request B (reverse proxy module); directly delivers the user-requested gateway feature."
+    }
+   },
+   "blockers": [],
+   "conditions": [],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  },
+  {
+   "req_id": "SEC-PROXY-005",
+   "feasibility": "medium",
+   "score": 74,
+   "axes": {
+    "implementability": {
+     "score": 18,
+     "rationale": "Plain connect + SSLSocketFactory.createSocket(plain, host, port, true) and reflective setEndpointIdentificationAlgorithm are all available, but the mandated fallback HttpsURLConnection.getDefaultHostnameVerifier() is, on the JDK the tests run on, a verifier that rejects every host. AC-6 (\"the fallback path ... accepts a backend whose certificate names the target host\") therefore cannot pass on the JVM; it only works on Android, where the default verifier really checks.",
+     "evidence": [
+      "NaruServe-proxy/ does not exist yet (trace_intent=addition_site); the module is pure new code over the public API, whose prerequisites are planned in this same target",
+      "~/.gradle/caches/.../android-api-level-21-5.0.1_r2.signature",
+      "scratchpad probe: OpenJDK 17.0.20.1 HttpsURLConnection.getDefaultHostnameVerifier() = javax.net.ssl.HttpsURLConnection$DefaultHostnameVerifier, verify(\"localhost\", ...) = false"
+     ]
+    },
+    "evidence_strength": {
+     "score": 12,
+     "rationale": "Traces addition_site; API 21 signature has createSocket(Socket,String,int,boolean), getDefaultHostnameVerifier and no setEndpointIdentificationAlgorithm (reflection justified). The statement assumes the default verifier verifies, which is false on OpenJDK."
+    },
+    "dependency_health": {
+     "score": 15,
+     "rationale": "depends_on 4 requirement(s): FR-PROXY-001, FR-PROXY-002, IR-PROXY-001, IR-PROXY-002. In-target targets exist, planned/evolving, none discarded or deprecated. No cycle."
+    },
+    "ac_verifiability": {
+     "score": 10,
+     "rationale": "AC-1..AC-5, AC-7, AC-8 are automatable with test keystores; AC-6 is decidable but fails as written on the test JVM. (8 ACs)"
+    },
+    "scope_fit": {
+     "score": 10,
+     "rationale": "Inside the reverse proxy request scope."
+    },
+    "product_fit": {
+     "score": 9,
+     "rationale": "https backends are part of the request; strict verification is a security must."
+    }
+   },
+   "blockers": [
+    "AC-6 cannot pass on the JVM test runtime: HttpsURLConnection.getDefaultHostnameVerifier() returns HttpsURLConnection$DefaultHostnameVerifier, which returns false for every host (probe on OpenJDK 17.0.20.1)."
+   ],
+   "conditions": [
+    "Amend the statement/AC-6: test the fallback with an injected HostnameVerifier (or a package-private verifier seam) instead of the JDK default, or run AC-6 only on an Android runtime."
+   ],
+   "has_verification": false,
+   "current_stability": "evolving",
+   "current_status": "planned",
+   "external_module_impact": null
+  }
+ ]
+}
