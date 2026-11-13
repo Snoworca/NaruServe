@@ -357,7 +357,7 @@ public class BuildChecksTest {
         }
     }
 
-    // FR-REL-005 AC-7: without an Android SDK the staging check refuses to stage the JAR modules alone
+    // FR-REL-005 AC-7, FR-REL-006 AC-4: without an Android SDK the staging check refuses to stage the JAR modules alone
     @Test
     public void fr_REL_005_AC7_checkCentralStagingFailsWithoutTheAndroidModule() {
         Map<String, String> env = new HashMap<>(System.getenv());
@@ -365,6 +365,93 @@ public class BuildChecksTest {
         env.remove("ANDROID_SDK_ROOT");
         String out = runner("checkCentralStaging", "--dry-run").withEnvironment(env).buildAndFail().getOutput();
         assertTrue(out, out.contains("checkCentralStaging needs NaruServe-android"));
+    }
+
+    /** The artifactIds FR-REL-006 AC-4 names, sorted as checkCentralStaging reports them. */
+    private static final List<String> STAGED_IDS = Arrays.asList("naruserve", "naruserve-android", "naruserve-api",
+            "naruserve-filelog", "naruserve-gson", "naruserve-kotlin", "naruserve-logcat", "naruserve-proxy",
+            "naruserve-servlet", "naruserve-slf4j", "naruserve-tinyhttpd");
+
+    /**
+     * Prints the tasks checkCentralStaging depends on, then runs its verifying action alone, without running those
+     * clean and publish tasks.
+     */
+    private static final String STAGING_PROBE = "tasks.register('probeCentralStagingCheck') {\n"
+            + "    def check = tasks.getByName('checkCentralStaging')\n"
+            + "    doLast {\n"
+            + "        println 'staging deps=' + check.taskDependencies.getDependencies(check)*.path.toSorted()\n"
+            + "        check.actions.each { it.execute(check) }\n"
+            + "    }\n"
+            + "}";
+
+    /** Writes the five staged files of {@code id} at {@code version} into the copy's build/central-staging. */
+    private static void stage(String id, String version) throws IOException {
+        File dir = new File(work, "build/central-staging/com/snoworca/naruserve/" + id + "/" + version);
+        String main = id.equals("naruserve-android") ? ".aar" : ".jar";
+        for (String suffix : new String[] {main, "-sources.jar", "-javadoc.jar", ".pom", ".module"}) {
+            write(new File(dir, id + "-" + version + suffix), "staged");
+        }
+    }
+
+    // FR-REL-006 AC-4: checkCentralStaging cleans and publishes every module first, accepts exactly the named
+    // artifactIds with their five files each, and fails on an extra or missing artifactId or a missing file
+    @Test
+    public void fr_REL_006_AC4_checkCentralStagingExpectsExactlyTheElevenArtifactIds() throws IOException {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?m)^\\s*version = '([^']+)'")
+                .matcher(pristineBuild);
+        assertTrue("build.gradle sets the version", m.find());
+        String version = m.group(1);
+        Map<String, String> env = new HashMap<>(System.getenv());
+        env.remove("ANDROID_HOME");
+        env.remove("ANDROID_SDK_ROOT");
+        File staging = new File(work, "build/central-staging");
+        appendBuild(STAGING_PROBE);
+        try {
+            for (String id : STAGED_IDS) {
+                stage(id, version);
+            }
+            String out = runner("probeCentralStagingCheck").withEnvironment(env).build().getOutput();
+            assertTrue(out, out.contains("central-staging: " + STAGED_IDS.size() + " artifactIds at " + version + ": "
+                    + String.join(", ", STAGED_IDS)));
+            // The clean task and the publish task of every JAR module (the AAR is absent without an SDK).
+            List<String> deps = new ArrayList<>();
+            deps.add(":cleanCentralStaging");
+            for (String module : BuildLayoutTest.MODULES) {
+                deps.add(":" + module + ":publishAllPublicationsToCentralStagingRepository");
+            }
+            java.util.Collections.sort(deps);
+            assertTrue(out, out.contains("staging deps=" + deps));
+
+            // Each of the five files is required, for the proxy JAR and for the AAR.
+            String[][] required = {{"naruserve-proxy", ".jar"}, {"naruserve-proxy", "-sources.jar"},
+                {"naruserve-proxy", "-javadoc.jar"}, {"naruserve-proxy", ".pom"}, {"naruserve-proxy", ".module"},
+                {"naruserve-android", ".aar"}};
+            for (String[] r : required) {
+                File missing = new File(staging, "com/snoworca/naruserve/" + r[0] + "/" + version + "/" + r[0] + "-"
+                        + version + r[1]);
+                assertTrue(missing.delete());
+                out = runner("probeCentralStagingCheck").withEnvironment(env).buildAndFail().getOutput();
+                assertTrue(out, out.contains("central-staging misses " + missing.getPath()));
+                stage(r[0], version);
+            }
+
+            // An artifactId outside the named set fails the check too.
+            stage("naruserve-proxy-old", version);
+            out = runner("probeCentralStagingCheck").withEnvironment(env).buildAndFail().getOutput();
+            List<String> withExtra = new ArrayList<>(STAGED_IDS);
+            withExtra.add("naruserve-proxy-old");
+            java.util.Collections.sort(withExtra);
+            assertTrue(out, out.contains("central-staging holds " + withExtra + ", expected " + STAGED_IDS));
+            deleteTree(new File(staging, "com/snoworca/naruserve/naruserve-proxy-old"));
+
+            deleteTree(new File(staging, "com/snoworca/naruserve/naruserve-proxy"));
+            out = runner("probeCentralStagingCheck").withEnvironment(env).buildAndFail().getOutput();
+            List<String> withoutProxy = new ArrayList<>(STAGED_IDS);
+            withoutProxy.remove("naruserve-proxy");
+            assertTrue(out, out.contains("central-staging holds " + withoutProxy + ", expected " + STAGED_IDS));
+        } finally {
+            deleteTree(staging);
+        }
     }
 
     // FR-BUILD-001 AC-1: an SDK named by ANDROID_HOME includes the Android module

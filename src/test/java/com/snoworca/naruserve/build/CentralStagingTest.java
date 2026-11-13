@@ -94,6 +94,24 @@ public class CentralStagingTest {
         assertTrue("naruserve-kotlin sources hold a .kt file", kotlinSource);
     }
 
+    // FR-REL-006 AC-3: naruserve-proxy is staged with the jar, sources, javadoc, POM and module, each checksummed
+    @Test
+    public void fr_REL_006_AC3_proxyIsStagedWithTheFiveFilesAndTheirChecksums() throws IOException {
+        File dir = moduleDir("naruserve-proxy");
+        assertTrue("staged " + dir, dir.isDirectory());
+        for (String suffix : new String[] {".jar", "-sources.jar", "-javadoc.jar", ".pom", ".module"}) {
+            File f = staged("naruserve-proxy", suffix);
+            assertTrue("staged " + f, f.isFile());
+            assertTrue("md5 of " + f, new File(f.getPath() + ".md5").isFile());
+            assertTrue("sha1 of " + f, new File(f.getPath() + ".sha1").isFile());
+        }
+        for (String name : dir.list()) {
+            assertFalse("no test-fixtures artifact: " + name, name.contains("test-fixtures"));
+        }
+        assertTrue(entries(staged("naruserve-proxy", "-sources.jar"))
+                .contains("com/snoworca/naruserve/proxy/package-info.java"));
+    }
+
     // FR-REL-005 AC-6: only this build's artifactIds, no stale upper-case or SNAPSHOT directory
     @Test
     public void fr_REL_005_AC6_stagingHoldsOnlyThePublishedArtifactIds() {

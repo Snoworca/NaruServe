@@ -157,4 +157,27 @@ public class ReleaseScriptTextTest {
         assertTrue(script, script.contains(
                 "includeConfigs = [p.path == ':NaruServe-android' ? 'releaseRuntimeClasspath' : 'runtimeClasspath']"));
     }
+
+    // FR-REL-006 AC-5 (default-build part): releaseSbom writes NaruServe-proxy.cdx.json from a runtimeClasspath that
+    // holds naruserve-api alone; the -Prelease run itself is not part of the default build (CON-BUILD-017).
+    @Test
+    public void fr_REL_006_AC5_releaseSbomCoversTheProxyWhoseRuntimeClasspathHoldsOnlyTheApi() throws IOException {
+        String script = file("gradle/release.gradle");
+        assertTrue(script, script.contains("def publishedModules = subprojects as List<Project>"));
+        assertTrue(script, Pattern.compile("publishedModules\\.each\\s*\\{\\s*Project p ->").matcher(script).find());
+        assertTrue(script, script.contains("jsonOutput = sbomDir.map { it.file(\"${p.name}.cdx.json\") }"));
+        assertTrue(script, Pattern.compile(
+                "dependsOn publishedModules\\.collect\\s*\\{\\s*it\\.tasks\\.named\\('cyclonedxDirectBom'\\)").matcher(script).find());
+        assertFalse("release.gradle counts no module set in words",
+                Pattern.compile("(?i)\\b(nine|ten|eleven)\\b").matcher(script).find());
+        // The proxy is a subproject of the root build, so the loop above gives it an SBOM.
+        assertTrue(file("settings.gradle").contains("include ':" + BuildLayoutTest.PROXY_MODULE + "'"));
+        java.util.Set<String> runtime = BuildLayoutTest.components(BuildLayoutTest.PROXY_MODULE, "runtimeClasspath");
+        assertEquals(java.util.Collections.singleton("com.snoworca.naruserve:NaruServe-api"), runtime);
+        for (String c : runtime) {
+            for (String banned : new String[] {"com.google.code.gson:", "com.snoworca:tinyhttpd-", "org.jetbrains.kotlin:"}) {
+                assertFalse(c + " in the proxy SBOM", c.startsWith(banned));
+            }
+        }
+    }
 }
