@@ -1,5 +1,5 @@
 // Release-only tasks; the root build.gradle applies this script solely under -Prelease, so a default
-// ./gradlew build, online or offline, never resolves these plugins (FR-REL-001, CON-BUILD-017).
+// ./gradlew build, online or offline, never resolves these plugins (FR-REL-001, FR-REL-007, CON-BUILD-017).
 buildscript {
     repositories {
         gradlePluginPortal()
@@ -16,6 +16,7 @@ def publishedModules = subprojects as List<Project>
 def sbomDir = layout.buildDirectory.dir('reports/naruserve/sbom')
 
 // @req FR-REL-001
+// @req FR-REL-007
 publishedModules.each { Project p ->
     // By class: applying by id from a subproject does not see this script's buildscript classpath.
     p.pluginManager.apply(org.cyclonedx.gradle.CyclonedxPlugin)
@@ -30,6 +31,7 @@ publishedModules.each { Project p ->
 }
 
 // @req FR-REL-001
+// @req FR-REL-007
 tasks.register('releaseSbom') {
     description = 'Writes one CycloneDX JSON SBOM per published module to build/reports/naruserve/sbom.'
     group = 'release'

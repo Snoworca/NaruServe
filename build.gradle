@@ -700,5 +700,6 @@ test {
 
 // @req FR-REL-001
 // @req CON-BUILD-017
+// @req FR-REL-007
 // Release-only tasks (SBOM, vulnerability scan, licenses); a default build never applies or resolves them.
 if (project.hasProperty('release')) { apply from: 'gradle/release.gradle' }
