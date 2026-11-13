@@ -8,6 +8,70 @@
  "nodes": [
   {
    "wave": "wave-1",
+   "title": "NaruServe-proxy module, dependency rules, release lists",
+   "purpose": "CON-BUILD-019 NaruServe-proxy module: included in settings, configured from the root build, depending on NaruServe-api only, with Java 8 bytecode, and no other module depending on it; CON-BUILD-021 Main and compileOnly dependencies of every module, including NaruServe-proxy; FR-REL-006 naruserve-pr…",
+   "acs": [
+    "CON-BUILD-019 AC-1",
+    "CON-BUILD-019 AC-2",
+    "CON-BUILD-019 AC-3",
+    "CON-BUILD-019 AC-4",
+    "CON-BUILD-019 AC-5",
+    "CON-BUILD-019 AC-6",
+    "CON-BUILD-021 AC-1",
+    "CON-BUILD-021 AC-2",
+    "CON-BUILD-021 AC-3",
+    "CON-BUILD-021 AC-4",
+    "CON-BUILD-021 AC-5",
+    "CON-BUILD-021 AC-6",
+    "CON-BUILD-021 AC-7",
+    "CON-BUILD-021 AC-8",
+    "FR-REL-006 AC-1",
+    "FR-REL-006 AC-2",
+    "FR-REL-006 AC-3",
+    "FR-REL-006 AC-4",
+    "FR-REL-006 AC-5",
+    "FR-REL-007 AC-1",
+    "FR-REL-007 AC-2",
+    "FR-REL-007 AC-3",
+    "FR-REL-007 AC-4"
+   ],
+   "done_when": [
+    {
+     "id": "DW-1",
+     "text": "Every live acceptance criterion of CON-BUILD-019, CON-BUILD-021, FR-REL-006, FR-REL-007 is cited by a test that was red before its implementation commit and is green now."
+    },
+    {
+     "id": "DW-2",
+     "text": "./gradlew -PtinyHttpdFromMaven=true build passes with no failing test beyond the P.4 baseline (none)."
+    }
+   ],
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/package-info.java",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/PublishedTinyHttpdCompatibilityTest.java",
+    "build.gradle",
+    "docs/api/README.md",
+    "gradle/release.gradle",
+    "settings.gradle",
+    "src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java",
+    "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+    "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+    "src/test/java/com/snoworca/naruserve/build/CentralStagingTest.java",
+    "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java",
+    "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java"
+   ],
+   "description": "Requirements: CON-BUILD-019 — NaruServe-proxy module: included in settings, configured from the root build, depending on NaruServe-api only, with Java 8 bytecode, and no other module depending on it; CON-BUILD-021 — Main and compileOnly dependencies of every module, including NaruServe-proxy; FR-REL-006 — naruserve-proxy is published like the other library modules: POM, staging of eleven artifactIds and an SBOM; FR-REL-007 — CycloneDX SBOM for every published module, NaruServe-proxy included, generated only for a -Prelease run",
+   "cautions": [
+    "Write the failing test citing `<REQ-ID> AC-<n>` before the implementation (kiwi-coder TDD); never weaken an existing test.",
+    "Build and test in Maven mode: ./gradlew -PtinyHttpdFromMaven=true build (the sibling TinyHttpd checkout is not at the verified commit).",
+    "Do not touch docs/spec, docs/sds, docs/prd or docs/research/naruserve-proxy; SRS mutations go to the deferred queue."
+   ],
+   "on_complete": [],
+   "github_issues": []
+  },
+  {
+   "wave": "wave-2",
    "title": "Public BodyTooLargeException and its 413 mapping",
    "purpose": "IR-HTTP-011 Public BodyTooLargeException in com.snoworca.naruserve; FR-APP-027 StandardErrors.statusOf answers an unwrapped BodyTooLargeException with 413",
    "acs": [
@@ -60,7 +124,7 @@
    "github_issues": []
   },
   {
-   "wave": "wave-2",
+   "wave": "wave-3",
    "title": "Header enumeration, trusted-proxy check, Request API",
    "purpose": "IR-HTTP-013 Request surface gains bodyStream, headerNames, rawHeaders and isFromTrustedProxy as default methods with Kotlin coverage; FR-HTTP-032 req.headerNames() and req.rawHeaders() enumerate request headers as the adapter reported them; FR-HTTP-034 req.isFromTrustedProxy() reports whether the a…",
    "acs": [
@@ -113,7 +177,7 @@
    "github_issues": []
   },
   {
-   "wave": "wave-3",
+   "wave": "wave-4",
    "title": "res.onAbort and the Response API surface",
    "purpose": "IR-HTTP-014 Response surface gains append, onAbort and relay as default methods with Kotlin coverage; FR-HTTP-035 res.onAbort notifies listeners once when a response ends abnormally",
    "acs": [
@@ -159,7 +223,7 @@
    "github_issues": []
   },
   {
-   "wave": "wave-4",
+   "wave": "wave-5",
    "title": "bodyStream, rawBodyLimit and access-log counting",
    "purpose": "IR-APP-009 App option app.rawBodyLimit(bytes) for the raw request body; FR-HTTP-030 req.bodyStream returns the raw request body under the one-read rule; FR-APP-028 Access log in= counts the bytes read through req.bodyStream; FR-HTTP-031 Size limits of req.bodyStream: app default, per-call limit, 41…",
    "acs": [
@@ -226,7 +290,7 @@
    "github_issues": []
   },
   {
-   "wave": "wave-5",
+   "wave": "wave-6",
    "title": "res.relay framing and TinyHttpd relay conformance",
    "purpose": "FR-HTTP-036 res.relay leaves Content-Type to the app, frames from its length argument and adds no defaultCache; FR-HTTP-037 res.relay sends exactly contentLength bytes, keeps the length on HEAD and 304, and owns its stream like res.stream; FR-ENGINE-014 TinyHttpd conformance of res.onAbort and res.…",
    "acs": [
@@ -282,7 +346,43 @@
    "github_issues": []
   },
   {
-   "wave": "wave-6",
+   "wave": "wave-7",
+   "title": "TinyHttpd request-side raw access conformance",
+   "purpose": "FR-ENGINE-013 TinyHttpd conformance of the raw request access API: header order and case, raw body, unread body drain and the BodyTooLargeException name clash",
+   "acs": [
+    "FR-ENGINE-013 AC-1",
+    "FR-ENGINE-013 AC-2",
+    "FR-ENGINE-013 AC-3",
+    "FR-ENGINE-013 AC-4",
+    "FR-ENGINE-013 AC-5"
+   ],
+   "done_when": [
+    {
+     "id": "DW-1",
+     "text": "Every live acceptance criterion of FR-ENGINE-013 is cited by a test that was red before its implementation commit and is green now."
+    },
+    {
+     "id": "DW-2",
+     "text": "./gradlew -PtinyHttpdFromMaven=true build passes with no failing test beyond the P.4 baseline (none)."
+    }
+   ],
+   "files": [
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawRequestSocketTest.java",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java"
+   ],
+   "description": "Requirements: FR-ENGINE-013 — TinyHttpd conformance of the raw request access API: header order and case, raw body, unread body drain and the BodyTooLargeException name clash",
+   "cautions": [
+    "Write the failing test citing `<REQ-ID> AC-<n>` before the implementation (kiwi-coder TDD); never weaken an existing test.",
+    "Build and test in Maven mode: ./gradlew -PtinyHttpdFromMaven=true build (the sibling TinyHttpd checkout is not at the verified commit).",
+    "Do not touch docs/spec, docs/sds, docs/prd or docs/research/naruserve-proxy; SRS mutations go to the deferred queue."
+   ],
+   "on_complete": [],
+   "github_issues": []
+  },
+  {
+   "wave": "wave-8",
    "title": "res.append, public isFieldValue, response docs",
    "purpose": "IR-HTTP-012 Public header value predicate HttpHeaderValues.isFieldValue; FR-HTTP-033 res.append adds a response header line under the res.header check; OPS-DX-009 response.md documents the raw response API: res.append, res.onAbort with the custom-adapter limit, res.relay and HttpHeaderValues.isFiel…",
    "acs": [
@@ -336,7 +436,7 @@
    "github_issues": []
   },
   {
-   "wave": "wave-7",
+   "wave": "wave-9",
    "title": "Servlet adapter conformance for raw access",
    "purpose": "FR-SVL-010 Servlet adapter conformance of the raw access API: per-name header grouping, raw body, relay framing and onAbort",
    "acs": [
@@ -370,7 +470,7 @@
    "github_issues": []
   },
   {
-   "wave": "wave-8",
+   "wave": "wave-10",
    "title": "Proxy API shape, options, response header copy",
    "purpose": "IR-PROXY-001 Proxy public API: a final Middleware created by Proxy.to(url) whose option methods return new immutable instances; FR-PROXY-002 Proxy option values are checked at the option call: range errors and managed header names throw IllegalArgumentException, null throws NullPointerException; FR…",
    "acs": [
@@ -433,7 +533,7 @@
    "github_issues": []
   },
   {
-   "wave": "wave-9",
+   "wave": "wave-11",
    "title": "Shared framing list parser and smuggling guard",
    "purpose": "SEC-PROXY-003 Proxy request framing checks: ambiguous Content-Length and Transfer-Encoding answer 400 or 501 before any backend connection",
    "acs": [
@@ -473,7 +573,7 @@
    "github_issues": []
   },
   {
-   "wave": "wave-10",
+   "wave": "wave-12",
    "title": "Request headers, body framing, body limit, access log",
    "purpose": "FR-PROXY-003 Proxy request header forwarding: received order and duplicates kept, hop-by-hop and Expect removed, Cookie lines merged, no Via, headers checked and written in ISO-8859-1; FR-PROXY-007 Proxy request body framing to the backend: the length header is rewritten for the body actually sent,…",
    "acs": [
@@ -534,7 +634,7 @@
    "github_issues": []
   },
   {
-   "wave": "wave-11",
+   "wave": "wave-13",
    "title": "Target URL, Host, path assembly and path checks",
    "purpose": "SEC-PROXY-001 Proxy path and request-target checks: dangerous raw paths answer 400 before any backend connection, and the target origin is pinned; FR-PROXY-001 Proxy.to(url) accepts an http or https origin with an optional base path, strips trailing slashes and rejects every other URL at the call; …",
    "acs": [
@@ -596,7 +696,64 @@
    "github_issues": []
   },
   {
-   "wave": "wave-12",
+   "wave": "wave-14",
+   "title": "ProxyException, TLS, proxy build checks, regression",
+   "purpose": "IR-PROXY-002 Public ProxyException with a nested Kind enum, a status derived from the kind, a null message and one public constructor; SEC-PROXY-005 Proxy https backends: plain connect with the connect timeout, TLS wrap with SNI, certificate and host name verification always on and API 21 safe, TLS…",
+   "acs": [
+    "IR-PROXY-002 AC-1",
+    "IR-PROXY-002 AC-2",
+    "IR-PROXY-002 AC-3",
+    "IR-PROXY-002 AC-4",
+    "SEC-PROXY-005 AC-1",
+    "SEC-PROXY-005 AC-2",
+    "SEC-PROXY-005 AC-3",
+    "SEC-PROXY-005 AC-4",
+    "SEC-PROXY-005 AC-5",
+    "SEC-PROXY-005 AC-6",
+    "SEC-PROXY-005 AC-7",
+    "SEC-PROXY-005 AC-8",
+    "CON-BUILD-020 AC-1",
+    "CON-BUILD-020 AC-2",
+    "CON-BUILD-020 AC-3",
+    "CON-BUILD-020 AC-4",
+    "CON-BUILD-020 AC-5",
+    "CON-BUILD-020 AC-6",
+    "OPS-BUILD-004 AC-1",
+    "OPS-BUILD-004 AC-2"
+   ],
+   "done_when": [
+    {
+     "id": "DW-1",
+     "text": "Every live acceptance criterion of IR-PROXY-002, SEC-PROXY-005, CON-BUILD-020, OPS-BUILD-004 is cited by a test that was red before its implementation commit and is green now."
+    },
+    {
+     "id": "DW-2",
+     "text": "./gradlew -PtinyHttpdFromMaven=true build passes with no failing test beyond the P.4 baseline (none)."
+    }
+   ],
+   "files": [
+    "CLAUDE.md",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyException.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TlsConnector.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExceptionTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsTest.java",
+    "build.gradle",
+    "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+    "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java"
+   ],
+   "description": "Requirements: IR-PROXY-002 — Public ProxyException with a nested Kind enum, a status derived from the kind, a null message and one public constructor; SEC-PROXY-005 — Proxy https backends: plain connect with the connect timeout, TLS wrap with SNI, certificate and host name verification always on and API 21 safe, TLS failures reported as CONNECT_FAILED; CON-BUILD-020 — NaruServe-proxy build checks: API 21 animal-sniffer without exemptions, no javax.servlet, and no reference to the internal or spi packages or to platform and adapter types; OPS-BUILD-004 — CLAUDE.md module line names NaruServe-proxy and the full build stays green with the baseline tests",
+   "cautions": [
+    "Write the failing test citing `<REQ-ID> AC-<n>` before the implementation (kiwi-coder TDD); never weaken an existing test.",
+    "Build and test in Maven mode: ./gradlew -PtinyHttpdFromMaven=true build (the sibling TinyHttpd checkout is not at the verified commit).",
+    "Do not touch docs/spec, docs/sds, docs/prd or docs/research/naruserve-proxy; SRS mutations go to the deferred queue.",
+    "The proxy module may use only the public NaruServe-api surface (no internal or spi packages)."
+   ],
+   "on_complete": [],
+   "github_issues": []
+  },
+  {
+   "wave": "wave-15",
    "title": "Methods, fixed response headers, Location rewrite",
    "purpose": "FR-PROXY-009 Proxy method handling: tokens forwarded as received, CONNECT and TRACE answered 405, WebSocket upgrades passed to next(), other upgrades forwarded without Upgrade, no next() after forwarding; FR-PROXY-013 Proxy Location rewrite: a same-origin absolute or network-path Location under the…",
    "acs": [
@@ -656,116 +813,7 @@
    "github_issues": []
   },
   {
-   "wave": "wave-13",
-   "title": "ProxyException and TLS to the backend",
-   "purpose": "IR-PROXY-002 Public ProxyException with a nested Kind enum, a status derived from the kind, a null message and one public constructor; SEC-PROXY-005 Proxy https backends: plain connect with the connect timeout, TLS wrap with SNI, certificate and host name verification always on and API 21 safe, TLS…",
-   "acs": [
-    "IR-PROXY-002 AC-1",
-    "IR-PROXY-002 AC-2",
-    "IR-PROXY-002 AC-3",
-    "IR-PROXY-002 AC-4",
-    "SEC-PROXY-005 AC-1",
-    "SEC-PROXY-005 AC-2",
-    "SEC-PROXY-005 AC-3",
-    "SEC-PROXY-005 AC-4",
-    "SEC-PROXY-005 AC-5",
-    "SEC-PROXY-005 AC-6",
-    "SEC-PROXY-005 AC-7",
-    "SEC-PROXY-005 AC-8"
-   ],
-   "done_when": [
-    {
-     "id": "DW-1",
-     "text": "Every live acceptance criterion of IR-PROXY-002, SEC-PROXY-005 is cited by a test that was red before its implementation commit and is green now."
-    },
-    {
-     "id": "DW-2",
-     "text": "./gradlew -PtinyHttpdFromMaven=true build passes with no failing test beyond the P.4 baseline (none)."
-    }
-   ],
-   "files": [
-    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
-    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyException.java",
-    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TlsConnector.java",
-    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExceptionTest.java",
-    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsTest.java"
-   ],
-   "description": "Requirements: IR-PROXY-002 — Public ProxyException with a nested Kind enum, a status derived from the kind, a null message and one public constructor; SEC-PROXY-005 — Proxy https backends: plain connect with the connect timeout, TLS wrap with SNI, certificate and host name verification always on and API 21 safe, TLS failures reported as CONNECT_FAILED",
-   "cautions": [
-    "Write the failing test citing `<REQ-ID> AC-<n>` before the implementation (kiwi-coder TDD); never weaken an existing test.",
-    "Build and test in Maven mode: ./gradlew -PtinyHttpdFromMaven=true build (the sibling TinyHttpd checkout is not at the verified commit).",
-    "Do not touch docs/spec, docs/sds, docs/prd or docs/research/naruserve-proxy; SRS mutations go to the deferred queue.",
-    "The proxy module may use only the public NaruServe-api surface (no internal or spi packages)."
-   ],
-   "on_complete": [],
-   "github_issues": []
-  },
-  {
-   "wave": "wave-14",
-   "title": "NaruServe-proxy module build and release lists",
-   "purpose": "CON-BUILD-019 NaruServe-proxy module: included in settings, configured from the root build, depending on NaruServe-api only, with Java 8 bytecode, and no other module depending on it; CON-BUILD-020 NaruServe-proxy build checks: API 21 animal-sniffer without exemptions, no javax.servlet, and no refe…",
-   "acs": [
-    "CON-BUILD-019 AC-1",
-    "CON-BUILD-019 AC-2",
-    "CON-BUILD-019 AC-3",
-    "CON-BUILD-019 AC-4",
-    "CON-BUILD-019 AC-5",
-    "CON-BUILD-019 AC-6",
-    "CON-BUILD-020 AC-1",
-    "CON-BUILD-020 AC-2",
-    "CON-BUILD-020 AC-3",
-    "CON-BUILD-020 AC-4",
-    "CON-BUILD-020 AC-5",
-    "CON-BUILD-020 AC-6",
-    "FR-REL-006 AC-1",
-    "FR-REL-006 AC-2",
-    "FR-REL-006 AC-3",
-    "FR-REL-006 AC-4",
-    "FR-REL-006 AC-5",
-    "FR-REL-007 AC-1",
-    "FR-REL-007 AC-2",
-    "FR-REL-007 AC-3",
-    "FR-REL-007 AC-4",
-    "OPS-BUILD-004 AC-1",
-    "OPS-BUILD-004 AC-2"
-   ],
-   "done_when": [
-    {
-     "id": "DW-1",
-     "text": "Every live acceptance criterion of CON-BUILD-019, CON-BUILD-020, FR-REL-006, FR-REL-007, OPS-BUILD-004 is cited by a test that was red before its implementation commit and is green now."
-    },
-    {
-     "id": "DW-2",
-     "text": "./gradlew -PtinyHttpdFromMaven=true build passes with no failing test beyond the P.4 baseline (none)."
-    }
-   ],
-   "files": [
-    "CLAUDE.md",
-    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/package-info.java",
-    "build.gradle",
-    "docs/api/README.md",
-    "gradle/release.gradle",
-    "settings.gradle",
-    "src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java",
-    "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
-    "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
-    "src/test/java/com/snoworca/naruserve/build/CentralStagingTest.java",
-    "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java",
-    "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
-    "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java",
-    "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java"
-   ],
-   "description": "Requirements: CON-BUILD-019 — NaruServe-proxy module: included in settings, configured from the root build, depending on NaruServe-api only, with Java 8 bytecode, and no other module depending on it; CON-BUILD-020 — NaruServe-proxy build checks: API 21 animal-sniffer without exemptions, no javax.servlet, and no reference to the internal or spi packages or to platform and adapter types; FR-REL-006 — naruserve-proxy is published like the other library modules: POM, staging of eleven artifactIds and an SBOM; FR-REL-007 — CycloneDX SBOM for every published module, NaruServe-proxy included, generated only for a -Prelease run; OPS-BUILD-004 — CLAUDE.md module line names NaruServe-proxy and the full build stays green with the baseline tests",
-   "cautions": [
-    "Write the failing test citing `<REQ-ID> AC-<n>` before the implementation (kiwi-coder TDD); never weaken an existing test.",
-    "Build and test in Maven mode: ./gradlew -PtinyHttpdFromMaven=true build (the sibling TinyHttpd checkout is not at the verified commit).",
-    "Do not touch docs/spec, docs/sds, docs/prd or docs/research/naruserve-proxy; SRS mutations go to the deferred queue."
-   ],
-   "on_complete": [],
-   "github_issues": []
-  },
-  {
-   "wave": "wave-15",
+   "wave": "wave-16",
    "title": "Check order, concurrency limit, slot lifetime",
    "purpose": "FR-PROXY-010 Proxy check order and its own answers: one fixed order of checks before forwarding, with 400, 405 and 501 thrown as plain HttpException with a null message; FR-PROXY-019 Proxy concurrency limit: maxConcurrent(n) creates a counter shared by the objects derived from it, a request over th…",
    "acs": [
@@ -824,7 +872,7 @@
    "github_issues": []
   },
   {
-   "wave": "wave-16",
+   "wave": "wave-17",
    "title": "Response body relay, mid-response failure, parser",
    "purpose": "SEC-PROXY-004 Proxy backend response parser: ISO-8859-1 status line and headers, RFC 9112 §6.3 framing stricter than the RFC, interim 1xx skipped, and every malformed response an INVALID_RESPONSE; FR-PROXY-014 Proxy response body relay: the backend body goes to res.relay with its Content-Length or …",
    "acs": [
@@ -879,53 +927,6 @@
     "Do not touch docs/spec, docs/sds, docs/prd or docs/research/naruserve-proxy; SRS mutations go to the deferred queue.",
     "Proxy.java is the shared hub of the proxy module: keep edits to the parts your requirements need; later waves extend it.",
     "The proxy module may use only the public NaruServe-api surface (no internal or spi packages)."
-   ],
-   "on_complete": [],
-   "github_issues": []
-  },
-  {
-   "wave": "wave-17",
-   "title": "Dependency rules successor, TinyHttpd request side",
-   "purpose": "CON-BUILD-021 Main and compileOnly dependencies of every module, including NaruServe-proxy; FR-ENGINE-013 TinyHttpd conformance of the raw request access API: header order and case, raw body, unread body drain and the BodyTooLargeException name clash",
-   "acs": [
-    "CON-BUILD-021 AC-1",
-    "CON-BUILD-021 AC-2",
-    "CON-BUILD-021 AC-3",
-    "CON-BUILD-021 AC-4",
-    "CON-BUILD-021 AC-5",
-    "CON-BUILD-021 AC-6",
-    "CON-BUILD-021 AC-7",
-    "CON-BUILD-021 AC-8",
-    "FR-ENGINE-013 AC-1",
-    "FR-ENGINE-013 AC-2",
-    "FR-ENGINE-013 AC-3",
-    "FR-ENGINE-013 AC-4",
-    "FR-ENGINE-013 AC-5"
-   ],
-   "done_when": [
-    {
-     "id": "DW-1",
-     "text": "Every live acceptance criterion of CON-BUILD-021, FR-ENGINE-013 is cited by a test that was red before its implementation commit and is green now."
-    },
-    {
-     "id": "DW-2",
-     "text": "./gradlew -PtinyHttpdFromMaven=true build passes with no failing test beyond the P.4 baseline (none)."
-    }
-   ],
-   "files": [
-    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
-    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
-    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/PublishedTinyHttpdCompatibilityTest.java",
-    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawRequestSocketTest.java",
-    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java",
-    "build.gradle",
-    "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java"
-   ],
-   "description": "Requirements: CON-BUILD-021 — Main and compileOnly dependencies of every module, including NaruServe-proxy; FR-ENGINE-013 — TinyHttpd conformance of the raw request access API: header order and case, raw body, unread body drain and the BodyTooLargeException name clash",
-   "cautions": [
-    "Write the failing test citing `<REQ-ID> AC-<n>` before the implementation (kiwi-coder TDD); never weaken an existing test.",
-    "Build and test in Maven mode: ./gradlew -PtinyHttpdFromMaven=true build (the sibling TinyHttpd checkout is not at the verified commit).",
-    "Do not touch docs/spec, docs/sds, docs/prd or docs/research/naruserve-proxy; SRS mutations go to the deferred queue."
    ],
    "on_complete": [],
    "github_issues": []
@@ -1167,346 +1168,346 @@
  "edges": [
   {
    "from": "wave-1",
-   "to": "wave-4",
-   "reason": "FR-HTTP-031 depends on FR-APP-027; FR-HTTP-031 depends on IR-HTTP-011"
+   "to": "wave-10",
+   "reason": "IR-PROXY-001 depends on CON-BUILD-019"
   },
   {
    "from": "wave-1",
-   "to": "wave-10",
-   "reason": "FR-PROXY-008 depends on IR-HTTP-011"
-  },
-  {
-   "from": "wave-1",
-   "to": "wave-17",
-   "reason": "FR-ENGINE-013 depends on IR-HTTP-011"
-  },
-  {
-   "from": "wave-1",
-   "to": "wave-21",
-   "reason": "OPS-DX-008 depends on FR-APP-027; OPS-DX-008 depends on IR-HTTP-011"
-  },
-  {
-   "from": "wave-2",
-   "to": "wave-4",
-   "reason": "FR-HTTP-030 depends on IR-HTTP-013"
-  },
-  {
-   "from": "wave-2",
-   "to": "wave-7",
-   "reason": "FR-SVL-010 depends on FR-HTTP-032"
-  },
-  {
-   "from": "wave-2",
-   "to": "wave-9",
-   "reason": "SEC-PROXY-003 depends on FR-HTTP-032"
-  },
-  {
-   "from": "wave-2",
-   "to": "wave-10",
-   "reason": "FR-PROXY-003 depends on FR-HTTP-032"
-  },
-  {
-   "from": "wave-2",
-   "to": "wave-11",
-   "reason": "FR-PROXY-004 depends on FR-HTTP-032"
-  },
-  {
-   "from": "wave-2",
-   "to": "wave-17",
-   "reason": "FR-ENGINE-013 depends on FR-HTTP-032"
-  },
-  {
-   "from": "wave-2",
-   "to": "wave-19",
-   "reason": "SEC-PROXY-002 depends on FR-HTTP-032; SEC-PROXY-002 depends on FR-HTTP-034"
-  },
-  {
-   "from": "wave-2",
-   "to": "wave-21",
-   "reason": "OPS-DX-008 depends on FR-HTTP-032; OPS-DX-008 depends on FR-HTTP-034; OPS-DX-008 depends on IR-HTTP-013"
-  },
-  {
-   "from": "wave-3",
-   "to": "wave-5",
-   "reason": "FR-ENGINE-014 depends on FR-HTTP-035; FR-HTTP-036 depends on IR-HTTP-014; FR-HTTP-037 depends on IR-HTTP-014"
-  },
-  {
-   "from": "wave-3",
-   "to": "wave-6",
-   "reason": "FR-HTTP-033 depends on IR-HTTP-014; OPS-DX-009 depends on FR-HTTP-035"
-  },
-  {
-   "from": "wave-3",
-   "to": "wave-7",
-   "reason": "FR-SVL-010 depends on FR-HTTP-035"
-  },
-  {
-   "from": "wave-3",
-   "to": "wave-15",
-   "reason": "REL-PROXY-001 depends on FR-HTTP-035"
-  },
-  {
-   "from": "wave-4",
-   "to": "wave-7",
-   "reason": "FR-SVL-010 depends on FR-HTTP-030"
-  },
-  {
-   "from": "wave-4",
-   "to": "wave-8",
-   "reason": "FR-PROXY-002 depends on IR-APP-009"
-  },
-  {
-   "from": "wave-4",
-   "to": "wave-10",
-   "reason": "FR-PROXY-007 depends on FR-HTTP-030; FR-PROXY-008 depends on FR-HTTP-030; FR-PROXY-008 depends on FR-HTTP-031; FR-PROXY-008 depends on IR-APP-009; FR-PROXY-021 depends on FR-APP-028"
-  },
-  {
-   "from": "wave-4",
-   "to": "wave-11",
-   "reason": "FR-PROXY-006 depends on FR-HTTP-030"
-  },
-  {
-   "from": "wave-4",
-   "to": "wave-17",
-   "reason": "FR-ENGINE-013 depends on FR-HTTP-030; FR-ENGINE-013 depends on FR-HTTP-031"
-  },
-  {
-   "from": "wave-4",
-   "to": "wave-21",
-   "reason": "OPS-DX-008 depends on FR-HTTP-030; OPS-DX-008 depends on FR-HTTP-031; OPS-DX-008 depends on IR-APP-009"
-  },
-  {
-   "from": "wave-5",
-   "to": "wave-6",
-   "reason": "OPS-DX-009 depends on FR-HTTP-036; OPS-DX-009 depends on FR-HTTP-037"
-  },
-  {
-   "from": "wave-5",
-   "to": "wave-7",
-   "reason": "FR-SVL-010 depends on FR-HTTP-036; FR-SVL-010 depends on FR-HTTP-037"
-  },
-  {
-   "from": "wave-5",
-   "to": "wave-8",
-   "reason": "FR-PROXY-011 depends on FR-HTTP-036; FR-PROXY-011 depends on FR-HTTP-037"
-  },
-  {
-   "from": "wave-5",
-   "to": "wave-15",
-   "reason": "REL-PROXY-001 depends on FR-ENGINE-014; REL-PROXY-001 depends on FR-HTTP-037"
-  },
-  {
-   "from": "wave-5",
-   "to": "wave-16",
-   "reason": "FR-PROXY-014 depends on FR-HTTP-036; FR-PROXY-014 depends on FR-HTTP-037; FR-PROXY-016 depends on FR-HTTP-037"
-  },
-  {
-   "from": "wave-6",
-   "to": "wave-8",
-   "reason": "FR-PROXY-002 depends on IR-HTTP-012; FR-PROXY-011 depends on FR-HTTP-033"
-  },
-  {
-   "from": "wave-6",
-   "to": "wave-10",
-   "reason": "FR-PROXY-003 depends on IR-HTTP-012"
-  },
-  {
-   "from": "wave-6",
-   "to": "wave-16",
-   "reason": "SEC-PROXY-004 depends on IR-HTTP-012"
-  },
-  {
-   "from": "wave-8",
-   "to": "wave-9",
-   "reason": "SEC-PROXY-003 depends on IR-PROXY-001"
-  },
-  {
-   "from": "wave-8",
-   "to": "wave-10",
-   "reason": "FR-PROXY-003 depends on IR-PROXY-001"
-  },
-  {
-   "from": "wave-8",
-   "to": "wave-11",
-   "reason": "FR-PROXY-001 depends on IR-PROXY-001; SEC-PROXY-001 depends on IR-PROXY-001"
-  },
-  {
-   "from": "wave-8",
-   "to": "wave-12",
-   "reason": "FR-PROXY-009 depends on IR-PROXY-001; FR-PROXY-012 depends on FR-PROXY-002; FR-PROXY-012 depends on FR-PROXY-011; FR-PROXY-013 depends on FR-PROXY-011"
-  },
-  {
-   "from": "wave-8",
-   "to": "wave-13",
-   "reason": "IR-PROXY-002 depends on IR-PROXY-001; SEC-PROXY-005 depends on FR-PROXY-002; SEC-PROXY-005 depends on IR-PROXY-001"
-  },
-  {
-   "from": "wave-8",
-   "to": "wave-15",
-   "reason": "FR-PROXY-019 depends on FR-PROXY-002; FR-PROXY-019 depends on IR-PROXY-001"
-  },
-  {
-   "from": "wave-8",
-   "to": "wave-16",
-   "reason": "FR-PROXY-014 depends on FR-PROXY-011"
-  },
-  {
-   "from": "wave-8",
-   "to": "wave-18",
-   "reason": "FR-PROXY-017 depends on FR-PROXY-002"
-  },
-  {
-   "from": "wave-8",
-   "to": "wave-19",
-   "reason": "FR-PROXY-005 depends on FR-PROXY-002"
-  },
-  {
-   "from": "wave-8",
-   "to": "wave-20",
-   "reason": "FR-PROXY-018 depends on FR-PROXY-002"
-  },
-  {
-   "from": "wave-8",
-   "to": "wave-21",
-   "reason": "OPS-DX-010 depends on FR-PROXY-002; OPS-DX-010 depends on FR-PROXY-011; OPS-DX-010 depends on IR-PROXY-001"
-  },
-  {
-   "from": "wave-9",
-   "to": "wave-10",
-   "reason": "FR-PROXY-007 depends on SEC-PROXY-003"
-  },
-  {
-   "from": "wave-9",
-   "to": "wave-15",
-   "reason": "FR-PROXY-010 depends on SEC-PROXY-003"
-  },
-  {
-   "from": "wave-9",
-   "to": "wave-16",
-   "reason": "FR-PROXY-014 depends on SEC-PROXY-003; SEC-PROXY-004 depends on SEC-PROXY-003"
-  },
-  {
-   "from": "wave-10",
-   "to": "wave-11",
-   "reason": "FR-PROXY-004 depends on FR-PROXY-003"
-  },
-  {
-   "from": "wave-10",
-   "to": "wave-12",
-   "reason": "FR-PROXY-009 depends on FR-PROXY-003"
-  },
-  {
-   "from": "wave-10",
-   "to": "wave-15",
-   "reason": "FR-PROXY-010 depends on FR-PROXY-003; FR-PROXY-010 depends on FR-PROXY-008"
-  },
-  {
-   "from": "wave-10",
-   "to": "wave-18",
-   "reason": "FR-PROXY-015 depends on FR-PROXY-007"
-  },
-  {
-   "from": "wave-10",
-   "to": "wave-19",
-   "reason": "FR-PROXY-005 depends on FR-PROXY-003; SEC-PROXY-002 depends on FR-PROXY-003"
-  },
-  {
-   "from": "wave-10",
-   "to": "wave-20",
-   "reason": "FR-PROXY-018 depends on FR-PROXY-007; FR-PROXY-020 depends on FR-PROXY-003; FR-PROXY-020 depends on FR-PROXY-007"
-  },
-  {
-   "from": "wave-11",
-   "to": "wave-12",
-   "reason": "FR-PROXY-013 depends on FR-PROXY-001; FR-PROXY-013 depends on FR-PROXY-004; FR-PROXY-013 depends on FR-PROXY-006"
-  },
-  {
-   "from": "wave-11",
-   "to": "wave-13",
-   "reason": "SEC-PROXY-005 depends on FR-PROXY-001"
-  },
-  {
-   "from": "wave-11",
-   "to": "wave-15",
-   "reason": "FR-PROXY-010 depends on FR-PROXY-004; FR-PROXY-010 depends on SEC-PROXY-001"
-  },
-  {
-   "from": "wave-12",
-   "to": "wave-15",
-   "reason": "FR-PROXY-010 depends on FR-PROXY-009"
-  },
-  {
-   "from": "wave-13",
    "to": "wave-14",
-   "reason": "CON-BUILD-020 depends on SEC-PROXY-005"
+   "reason": "CON-BUILD-020 depends on CON-BUILD-019; OPS-BUILD-004 depends on CON-BUILD-019"
   },
   {
-   "from": "wave-13",
-   "to": "wave-15",
-   "reason": "FR-PROXY-019 depends on IR-PROXY-002"
-  },
-  {
-   "from": "wave-13",
-   "to": "wave-16",
-   "reason": "FR-PROXY-016 depends on IR-PROXY-002; SEC-PROXY-004 depends on IR-PROXY-002"
-  },
-  {
-   "from": "wave-13",
-   "to": "wave-18",
-   "reason": "FR-PROXY-015 depends on IR-PROXY-002; FR-PROXY-015 depends on SEC-PROXY-005; FR-PROXY-017 depends on IR-PROXY-002; FR-PROXY-017 depends on SEC-PROXY-005"
-  },
-  {
-   "from": "wave-13",
-   "to": "wave-19",
-   "reason": "REL-PROXY-002 depends on SEC-PROXY-005"
-  },
-  {
-   "from": "wave-13",
-   "to": "wave-20",
-   "reason": "FR-PROXY-018 depends on SEC-PROXY-005"
-  },
-  {
-   "from": "wave-13",
-   "to": "wave-21",
-   "reason": "OPS-DX-010 depends on IR-PROXY-002"
-  },
-  {
-   "from": "wave-14",
-   "to": "wave-17",
-   "reason": "CON-BUILD-021 depends on CON-BUILD-019"
-  },
-  {
-   "from": "wave-14",
+   "from": "wave-1",
    "to": "wave-21",
    "reason": "OPS-DX-011 depends on CON-BUILD-019"
   },
   {
+   "from": "wave-2",
+   "to": "wave-5",
+   "reason": "FR-HTTP-031 depends on FR-APP-027; FR-HTTP-031 depends on IR-HTTP-011"
+  },
+  {
+   "from": "wave-2",
+   "to": "wave-7",
+   "reason": "FR-ENGINE-013 depends on IR-HTTP-011"
+  },
+  {
+   "from": "wave-2",
+   "to": "wave-12",
+   "reason": "FR-PROXY-008 depends on IR-HTTP-011"
+  },
+  {
+   "from": "wave-2",
+   "to": "wave-21",
+   "reason": "OPS-DX-008 depends on FR-APP-027; OPS-DX-008 depends on IR-HTTP-011"
+  },
+  {
+   "from": "wave-3",
+   "to": "wave-5",
+   "reason": "FR-HTTP-030 depends on IR-HTTP-013"
+  },
+  {
+   "from": "wave-3",
+   "to": "wave-7",
+   "reason": "FR-ENGINE-013 depends on FR-HTTP-032"
+  },
+  {
+   "from": "wave-3",
+   "to": "wave-9",
+   "reason": "FR-SVL-010 depends on FR-HTTP-032"
+  },
+  {
+   "from": "wave-3",
+   "to": "wave-11",
+   "reason": "SEC-PROXY-003 depends on FR-HTTP-032"
+  },
+  {
+   "from": "wave-3",
+   "to": "wave-12",
+   "reason": "FR-PROXY-003 depends on FR-HTTP-032"
+  },
+  {
+   "from": "wave-3",
+   "to": "wave-13",
+   "reason": "FR-PROXY-004 depends on FR-HTTP-032"
+  },
+  {
+   "from": "wave-3",
+   "to": "wave-19",
+   "reason": "SEC-PROXY-002 depends on FR-HTTP-032; SEC-PROXY-002 depends on FR-HTTP-034"
+  },
+  {
+   "from": "wave-3",
+   "to": "wave-21",
+   "reason": "OPS-DX-008 depends on FR-HTTP-032; OPS-DX-008 depends on FR-HTTP-034; OPS-DX-008 depends on IR-HTTP-013"
+  },
+  {
+   "from": "wave-4",
+   "to": "wave-6",
+   "reason": "FR-ENGINE-014 depends on FR-HTTP-035; FR-HTTP-036 depends on IR-HTTP-014; FR-HTTP-037 depends on IR-HTTP-014"
+  },
+  {
+   "from": "wave-4",
+   "to": "wave-8",
+   "reason": "FR-HTTP-033 depends on IR-HTTP-014; OPS-DX-009 depends on FR-HTTP-035"
+  },
+  {
+   "from": "wave-4",
+   "to": "wave-9",
+   "reason": "FR-SVL-010 depends on FR-HTTP-035"
+  },
+  {
+   "from": "wave-4",
+   "to": "wave-16",
+   "reason": "REL-PROXY-001 depends on FR-HTTP-035"
+  },
+  {
+   "from": "wave-5",
+   "to": "wave-7",
+   "reason": "FR-ENGINE-013 depends on FR-HTTP-030; FR-ENGINE-013 depends on FR-HTTP-031"
+  },
+  {
+   "from": "wave-5",
+   "to": "wave-9",
+   "reason": "FR-SVL-010 depends on FR-HTTP-030"
+  },
+  {
+   "from": "wave-5",
+   "to": "wave-10",
+   "reason": "FR-PROXY-002 depends on IR-APP-009"
+  },
+  {
+   "from": "wave-5",
+   "to": "wave-12",
+   "reason": "FR-PROXY-007 depends on FR-HTTP-030; FR-PROXY-008 depends on FR-HTTP-030; FR-PROXY-008 depends on FR-HTTP-031; FR-PROXY-008 depends on IR-APP-009; FR-PROXY-021 depends on FR-APP-028"
+  },
+  {
+   "from": "wave-5",
+   "to": "wave-13",
+   "reason": "FR-PROXY-006 depends on FR-HTTP-030"
+  },
+  {
+   "from": "wave-5",
+   "to": "wave-21",
+   "reason": "OPS-DX-008 depends on FR-HTTP-030; OPS-DX-008 depends on FR-HTTP-031; OPS-DX-008 depends on IR-APP-009"
+  },
+  {
+   "from": "wave-6",
+   "to": "wave-8",
+   "reason": "OPS-DX-009 depends on FR-HTTP-036; OPS-DX-009 depends on FR-HTTP-037"
+  },
+  {
+   "from": "wave-6",
+   "to": "wave-9",
+   "reason": "FR-SVL-010 depends on FR-HTTP-036; FR-SVL-010 depends on FR-HTTP-037"
+  },
+  {
+   "from": "wave-6",
+   "to": "wave-10",
+   "reason": "FR-PROXY-011 depends on FR-HTTP-036; FR-PROXY-011 depends on FR-HTTP-037"
+  },
+  {
+   "from": "wave-6",
+   "to": "wave-16",
+   "reason": "REL-PROXY-001 depends on FR-ENGINE-014; REL-PROXY-001 depends on FR-HTTP-037"
+  },
+  {
+   "from": "wave-6",
+   "to": "wave-17",
+   "reason": "FR-PROXY-014 depends on FR-HTTP-036; FR-PROXY-014 depends on FR-HTTP-037; FR-PROXY-016 depends on FR-HTTP-037"
+  },
+  {
+   "from": "wave-8",
+   "to": "wave-10",
+   "reason": "FR-PROXY-002 depends on IR-HTTP-012; FR-PROXY-011 depends on FR-HTTP-033"
+  },
+  {
+   "from": "wave-8",
+   "to": "wave-12",
+   "reason": "FR-PROXY-003 depends on IR-HTTP-012"
+  },
+  {
+   "from": "wave-8",
+   "to": "wave-17",
+   "reason": "SEC-PROXY-004 depends on IR-HTTP-012"
+  },
+  {
+   "from": "wave-10",
+   "to": "wave-11",
+   "reason": "SEC-PROXY-003 depends on IR-PROXY-001"
+  },
+  {
+   "from": "wave-10",
+   "to": "wave-12",
+   "reason": "FR-PROXY-003 depends on IR-PROXY-001"
+  },
+  {
+   "from": "wave-10",
+   "to": "wave-13",
+   "reason": "FR-PROXY-001 depends on IR-PROXY-001; SEC-PROXY-001 depends on IR-PROXY-001"
+  },
+  {
+   "from": "wave-10",
+   "to": "wave-14",
+   "reason": "IR-PROXY-002 depends on IR-PROXY-001; SEC-PROXY-005 depends on FR-PROXY-002; SEC-PROXY-005 depends on IR-PROXY-001"
+  },
+  {
+   "from": "wave-10",
+   "to": "wave-15",
+   "reason": "FR-PROXY-009 depends on IR-PROXY-001; FR-PROXY-012 depends on FR-PROXY-002; FR-PROXY-012 depends on FR-PROXY-011; FR-PROXY-013 depends on FR-PROXY-011"
+  },
+  {
+   "from": "wave-10",
+   "to": "wave-16",
+   "reason": "FR-PROXY-019 depends on FR-PROXY-002; FR-PROXY-019 depends on IR-PROXY-001"
+  },
+  {
+   "from": "wave-10",
+   "to": "wave-17",
+   "reason": "FR-PROXY-014 depends on FR-PROXY-011"
+  },
+  {
+   "from": "wave-10",
+   "to": "wave-18",
+   "reason": "FR-PROXY-017 depends on FR-PROXY-002"
+  },
+  {
+   "from": "wave-10",
+   "to": "wave-19",
+   "reason": "FR-PROXY-005 depends on FR-PROXY-002"
+  },
+  {
+   "from": "wave-10",
+   "to": "wave-20",
+   "reason": "FR-PROXY-018 depends on FR-PROXY-002"
+  },
+  {
+   "from": "wave-10",
+   "to": "wave-21",
+   "reason": "OPS-DX-010 depends on FR-PROXY-002; OPS-DX-010 depends on FR-PROXY-011; OPS-DX-010 depends on IR-PROXY-001"
+  },
+  {
+   "from": "wave-11",
+   "to": "wave-12",
+   "reason": "FR-PROXY-007 depends on SEC-PROXY-003"
+  },
+  {
+   "from": "wave-11",
+   "to": "wave-16",
+   "reason": "FR-PROXY-010 depends on SEC-PROXY-003"
+  },
+  {
+   "from": "wave-11",
+   "to": "wave-17",
+   "reason": "FR-PROXY-014 depends on SEC-PROXY-003; SEC-PROXY-004 depends on SEC-PROXY-003"
+  },
+  {
+   "from": "wave-12",
+   "to": "wave-13",
+   "reason": "FR-PROXY-004 depends on FR-PROXY-003"
+  },
+  {
+   "from": "wave-12",
+   "to": "wave-15",
+   "reason": "FR-PROXY-009 depends on FR-PROXY-003"
+  },
+  {
+   "from": "wave-12",
+   "to": "wave-16",
+   "reason": "FR-PROXY-010 depends on FR-PROXY-003; FR-PROXY-010 depends on FR-PROXY-008"
+  },
+  {
+   "from": "wave-12",
+   "to": "wave-18",
+   "reason": "FR-PROXY-015 depends on FR-PROXY-007"
+  },
+  {
+   "from": "wave-12",
+   "to": "wave-19",
+   "reason": "FR-PROXY-005 depends on FR-PROXY-003; SEC-PROXY-002 depends on FR-PROXY-003"
+  },
+  {
+   "from": "wave-12",
+   "to": "wave-20",
+   "reason": "FR-PROXY-018 depends on FR-PROXY-007; FR-PROXY-020 depends on FR-PROXY-003; FR-PROXY-020 depends on FR-PROXY-007"
+  },
+  {
+   "from": "wave-13",
+   "to": "wave-14",
+   "reason": "SEC-PROXY-005 depends on FR-PROXY-001"
+  },
+  {
+   "from": "wave-13",
+   "to": "wave-15",
+   "reason": "FR-PROXY-013 depends on FR-PROXY-001; FR-PROXY-013 depends on FR-PROXY-004; FR-PROXY-013 depends on FR-PROXY-006"
+  },
+  {
+   "from": "wave-13",
+   "to": "wave-16",
+   "reason": "FR-PROXY-010 depends on FR-PROXY-004; FR-PROXY-010 depends on SEC-PROXY-001"
+  },
+  {
+   "from": "wave-14",
+   "to": "wave-16",
+   "reason": "FR-PROXY-019 depends on IR-PROXY-002"
+  },
+  {
+   "from": "wave-14",
+   "to": "wave-17",
+   "reason": "FR-PROXY-016 depends on IR-PROXY-002; SEC-PROXY-004 depends on IR-PROXY-002"
+  },
+  {
+   "from": "wave-14",
+   "to": "wave-18",
+   "reason": "FR-PROXY-015 depends on IR-PROXY-002; FR-PROXY-015 depends on SEC-PROXY-005; FR-PROXY-017 depends on IR-PROXY-002; FR-PROXY-017 depends on SEC-PROXY-005"
+  },
+  {
+   "from": "wave-14",
+   "to": "wave-19",
+   "reason": "REL-PROXY-002 depends on SEC-PROXY-005"
+  },
+  {
+   "from": "wave-14",
+   "to": "wave-20",
+   "reason": "FR-PROXY-018 depends on SEC-PROXY-005"
+  },
+  {
+   "from": "wave-14",
+   "to": "wave-21",
+   "reason": "OPS-DX-010 depends on IR-PROXY-002"
+  },
+  {
    "from": "wave-15",
+   "to": "wave-16",
+   "reason": "FR-PROXY-010 depends on FR-PROXY-009"
+  },
+  {
+   "from": "wave-16",
    "to": "wave-18",
    "reason": "FR-PROXY-015 depends on FR-PROXY-010"
   },
   {
-   "from": "wave-15",
+   "from": "wave-16",
    "to": "wave-19",
    "reason": "REL-PROXY-002 depends on REL-PROXY-001"
   },
   {
-   "from": "wave-15",
+   "from": "wave-16",
    "to": "wave-20",
    "reason": "FR-PROXY-020 depends on REL-PROXY-001"
   },
   {
-   "from": "wave-15",
+   "from": "wave-16",
    "to": "wave-21",
    "reason": "OPS-DX-010 depends on FR-PROXY-019; OPS-DX-010 depends on REL-PROXY-001"
   },
   {
-   "from": "wave-16",
+   "from": "wave-17",
    "to": "wave-18",
    "reason": "FR-PROXY-015 depends on SEC-PROXY-004; FR-PROXY-017 depends on FR-PROXY-016"
   },
   {
-   "from": "wave-16",
+   "from": "wave-17",
    "to": "wave-21",
    "reason": "OPS-DX-010 depends on FR-PROXY-016"
   },
