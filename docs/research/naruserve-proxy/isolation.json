@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-11-14.NaruServe.naruserve-proxy",
+  "profile": "worktree-parallel",
+  "reason": "The host runtime (Claude Code Agent tool) launches child agents with isolation: \"worktree\", one native linked git worktree per worker under .claude/worktrees/, which .gitignore already ignores (.claude/). The same machine ran worktree-parallel lanes for runs 2026-10-19.NaruServe.naruserve-v1 and 2026-10-28.naru.express5-v010. No --serial option or serial wording in the request.",
+  "worktree_root": ".claude/worktrees/",
+  "worktree_root_ignored": true,
+  "build_note": "Lane worktrees build with -PtinyHttpdFromMaven=true because settings.gradle includeBuild resolves the sibling TinyHttpd checkout relative to the root checkout."
+}
