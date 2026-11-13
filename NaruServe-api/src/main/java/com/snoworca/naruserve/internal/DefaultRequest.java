@@ -200,9 +200,13 @@ public final class DefaultRequest implements Request {
         if (input != null) input.close();
     }
 
-    /** The exchange body counted by {@link #body()}; only a reader that took the body calls this. */
+    /**
+     * The exchange body counted by {@link #body()}. The JSON, form and multipart readers call this after taking the
+     * body; the public bodyStream overrides call it directly until the one-read rule applies to them.
+     */
     // @req FR-JSON-001
-    InputStream bodyStream() {
+    // @req IR-HTTP-013
+    InputStream exchangeInput() {
         synchronized (inputLock) {
             if (inputClosed) throw new BodyAlreadyConsumedException("request body is closed");
             if (ownedInput != null) return body.stream(ownedInput);
@@ -228,6 +232,41 @@ public final class DefaultRequest implements Request {
             throw failure;
         }
         return body.stream(input);
+    }
+
+    /** The exchange body; the one-read rule and the raw body limit are not applied yet. */
+    // @req IR-HTTP-013
+    @Override
+    public InputStream bodyStream() {
+        return exchangeInput();
+    }
+
+    /** As {@link #bodyStream()}; {@code maxBytes} is not enforced yet. */
+    // @req IR-HTTP-013
+    @Override
+    public InputStream bodyStream(long maxBytes) {
+        return exchangeInput();
+    }
+
+    /** Empty until header enumeration is implemented. */
+    // @req IR-HTTP-013
+    @Override
+    public java.util.Set<String> headerNames() {
+        return Collections.emptySet();
+    }
+
+    /** Empty until header enumeration is implemented. */
+    // @req IR-HTTP-013
+    @Override
+    public List<Map.Entry<String, String>> rawHeaders() {
+        return Collections.emptyList();
+    }
+
+    /** False until the trusted proxy predicate is implemented. */
+    // @req IR-HTTP-013
+    @Override
+    public boolean isFromTrustedProxy() {
+        return false;
     }
 
     // @req FR-JSON-001
@@ -283,7 +322,7 @@ public final class DefaultRequest implements Request {
         try {
             FormData d = body.sharedParse(() -> {
                 if (urlencoded) {
-                    return FormData.urlencoded(FormBodyReader.read(bodyStream(), contentLength(), formLimit));
+                    return FormData.urlencoded(FormBodyReader.read(exchangeInput(), contentLength(), formLimit));
                 }
                 if (!multipartBody) {
                     return FormData.EMPTY; // unreachable: sharedParse refuses a body that is not UNREAD
@@ -292,7 +331,7 @@ public final class DefaultRequest implements Request {
                 if (boundary == null) {
                     throw new HttpException(400, "multipart/form-data without a valid boundary");
                 }
-                return FormData.multipart(MultipartParser.parse(bodyStream(), contentLength(), boundary, multipart,
+                return FormData.multipart(MultipartParser.parse(exchangeInput(), contentLength(), boundary, multipart,
                         formLimit, spool));
             });
             boolean late;

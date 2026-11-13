@@ -38,7 +38,7 @@ final class JsonBodyReader {
         if (declared > limit) {
             throw new HttpException(413);
         }
-        LimitedInputStream in = new LimitedInputStream(req.bodyStream(), limit, declared);
+        LimitedInputStream in = new LimitedInputStream(req.exchangeInput(), limit, declared);
         // REPORT, not the InputStreamReader default REPLACE: invalid UTF-8 must fail, not decode to U+FFFD.
         PushbackReader reader = new PushbackReader(new InputStreamReader(in, StandardCharsets.UTF_8.newDecoder()
                 .onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT)), 1);

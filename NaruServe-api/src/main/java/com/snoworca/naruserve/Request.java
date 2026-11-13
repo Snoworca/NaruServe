@@ -1,6 +1,9 @@
 package com.snoworca.naruserve;
 
+import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import com.snoworca.naruserve.common.InputValues;
 import org.jspecify.annotations.Nullable;
 
@@ -12,6 +15,7 @@ import org.jspecify.annotations.Nullable;
 // @req IR-JSON-002
 // @req FR-COOKIE-002
 // @req IR-MULTIPART-002
+// @req IR-HTTP-013
 public interface Request {
 
     /** Legacy enum representation; extended wire tokens use methodToken() and throw here rather than inventing a Method. */
@@ -149,6 +153,55 @@ public interface Request {
     // @req FR-HTTP-029
     default String requestId() {
         throw new UnsupportedOperationException(getClass().getName() + " has no request id");
+    }
+
+    /**
+     * The raw request body as a stream under the app's raw body limit, like reading Express {@code req} as a
+     * stream; an empty stream when the request has no body. The default throws
+     * {@link UnsupportedOperationException} so request fakes still compile.
+     */
+    // @req IR-HTTP-013
+    default InputStream bodyStream() {
+        throw new UnsupportedOperationException(getClass().getName() + " has no body stream");
+    }
+
+    /**
+     * As {@link #bodyStream()} with {@code maxBytes} as the limit for this call instead of the app's raw body limit.
+     * The default throws {@link UnsupportedOperationException} so request fakes still compile.
+     */
+    // @req IR-HTTP-013
+    default InputStream bodyStream(long maxBytes) {
+        throw new UnsupportedOperationException(getClass().getName() + " has no body stream");
+    }
+
+    /**
+     * The names of the request headers as an unmodifiable set, lowercased and in arrival order, like the keys of
+     * Express {@code req.headers}. The default throws {@link UnsupportedOperationException} so request fakes still
+     * compile.
+     */
+    // @req IR-HTTP-013
+    default Set<String> headerNames() {
+        throw new UnsupportedOperationException(getClass().getName() + " has no header enumeration");
+    }
+
+    /**
+     * Every request header line as an unmodifiable list of name and value entries, as the adapter reported them, like
+     * Express {@code req.rawHeaders} in pairs. The default throws {@link UnsupportedOperationException} so request
+     * fakes still compile.
+     */
+    // @req IR-HTTP-013
+    default List<Map.Entry<String, String>> rawHeaders() {
+        throw new UnsupportedOperationException(getClass().getName() + " has no header enumeration");
+    }
+
+    /**
+     * Whether the app's proxy trust setting trusts the connection peer, so {@link #remoteAddress()} and
+     * {@link #isSecure()} follow the forwarding headers; Kotlin reads it as {@code req.isFromTrustedProxy}. The
+     * default throws {@link UnsupportedOperationException} so request fakes still compile.
+     */
+    // @req IR-HTTP-013
+    default boolean isFromTrustedProxy() {
+        throw new UnsupportedOperationException(getClass().getName() + " has no proxy trust setting");
     }
 
     /** The service registered under {@code type}: {@code application().get(type)}. */
