@@ -1,0 +1,698 @@
+{
+ "loop": "D",
+ "scope": "design",
+ "roundIndex": 2,
+ "mode": "normal",
+ "cap": 5,
+ "streakBefore": 0,
+ "frozenDenominator": 112,
+ "verifiers": [
+  "design-verifier-r2"
+ ],
+ "rows": [
+  {
+   "id": "AMB-1",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-2",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-3",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-4",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-5",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-6",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-7",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-8",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-9",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-10",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-11",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-12",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-13",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-14",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-15",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-16",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-17",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-18",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-19",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-20",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-21",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-22",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-23",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-24",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-25",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-26",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-27",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-28",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "AMB-29",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "CON-1",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-001",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-002",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-003",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-004",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-005",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-006",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-007",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-008",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-009",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-010",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-011",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-012",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-013",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-014",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-015",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-016",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-017",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-018",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-019",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-020",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-021",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-022",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-023",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-024",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-025",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-026",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-027",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-028",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-029",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-030",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-031",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-032",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-033",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-034",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-035",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-036",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-037",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-038",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-039",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-040",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-041",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-042",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-043",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-044",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-045",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-046",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-047",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-048",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-049",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-050",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-051",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-052",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-053",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-054",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-055",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-056",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-057",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-058",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-059",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-060",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-061",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-062",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-063",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-064",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-065",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-066",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-067",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-068",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-069",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-070",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-071",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-072",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-073",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-074",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "D-075",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "C-001",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "C-002",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "C-003",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "C-004",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "C-005",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "C-006",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  },
+  {
+   "id": "C-007",
+   "verdict": "pass",
+   "kept": false,
+   "verifier": "design-verifier-r2"
+  }
+ ],
+ "fixAppliedThisRound": false,
+ "regression": {
+  "failingTests": [],
+  "baselineFailingTests": [],
+  "exitCode": 0
+ },
+ "residual": [
+  {
+   "id": "X-1",
+   "reasonClass": "design-gap"
+  }
+ ]
+}

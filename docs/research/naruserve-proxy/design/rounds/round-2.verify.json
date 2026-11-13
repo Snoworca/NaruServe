@@ -1,0 +1,694 @@
+{
+  "round": 2,
+  "verifier": "design-verifier-r2",
+  "frozen_denominator": {
+    "open_questions": 30,
+    "implementability": 75,
+    "constraints": 7
+  },
+  "open_questions": [
+    {
+      "id": "AMB-1",
+      "resolved_by": "D-012",
+      "verdict": "resolved",
+      "note": "Any bodyStream call takes the body for body/form/parts regardless of Content-Type; matches request A-1 L93 literally; form-before-bodyStream on non-form body stays allowed (PRD-16)."
+    },
+    {
+      "id": "AMB-2",
+      "resolved_by": "D-013",
+      "verdict": "resolved",
+      "note": "read/skip that advance and close count as consumption, available does not; extends the byte-read rule of A-1 L93 to close so AC-B9 fails a consumed body."
+    },
+    {
+      "id": "AMB-3",
+      "resolved_by": "D-024",
+      "verdict": "resolved",
+      "note": "Unmodifiable insertion-ordered Locale.ROOT-lowercased set and unmodifiable list of immutable entries, built once per request from HttpExchange.headers() (spi/HttpExchange.java:41)."
+    },
+    {
+      "id": "AMB-4",
+      "resolved_by": "D-027, D-028",
+      "verdict": "resolved",
+      "note": "Runnable parameter mirroring SPI HttpExchange.onAbort(Runnable) (spi/HttpExchange.java:116), void, NPE on null, immediate run after abort, RuntimeException caught and logged to app logger."
+    },
+    {
+      "id": "AMB-5",
+      "resolved_by": "D-021",
+      "verdict": "resolved",
+      "note": "Public final IOException subclass in com.snoworca.naruserve keeping (long) ctor and limit() as in internal/BodyTooLargeException.java:7-21; no alias left in internal (request §6 L525)."
+    },
+    {
+      "id": "AMB-6",
+      "resolved_by": "D-036, D-035, D-037",
+      "verdict": "resolved",
+      "note": "Every new Request/Response method is a default throwing UnsupportedOperationException (existing pattern, e.g. Request.socketAddress Request.java:139). isFieldValue null: D-035 makes the existing DefaultResponse predicate (internal/DefaultResponse.java:1023, NPE on null) the one public predicate, in @NullMarked package common, so null is outside the contract and throws NPE as isToken does."
+    },
+    {
+      "id": "AMB-7",
+      "resolved_by": "D-029, D-032",
+      "verdict": "resolved",
+      "note": "relay drops app-set Content-Length/Transfer-Encoding and frames only from its argument; surplus bytes are not sent, stream closed, normal finish (matches runTransfer's bounded copy, DefaultResponse.java:636-688)."
+    },
+    {
+      "id": "AMB-8",
+      "resolved_by": "D-048, D-072",
+      "verdict": "resolved",
+      "note": "Accepted grammar (scheme case-insensitive, ASCII host incl. bracketed IPv6 without zone, port 1..65535, optional base path) with everything else IAE; base path passes the §3.2 segment and character checks; null -> NPE."
+    },
+    {
+      "id": "AMB-9",
+      "resolved_by": "D-052",
+      "verdict": "resolved",
+      "note": "Path check always over full raw originalUrl() path+query (DefaultRequest.java:117 includes query); forwarded target is basePath + url() under stripPrefix else basePath + originalUrl(), literal concatenation, so an exact mount match sends basePath + '/'."
+    },
+    {
+      "id": "AMB-10",
+      "resolved_by": "D-050, D-056",
+      "verdict": "resolved",
+      "note": "Total order of pre-forward checks fixed: WS upgrade -> next(), method token 400, CONNECT/TRACE 405, target chars/segments 400, headers/multiple Host 400, framing 400/501, bodyStream, 1-byte pre-read (D-056), slot 503, watchdog."
+    },
+    {
+      "id": "AMB-11",
+      "resolved_by": "D-050",
+      "verdict": "resolved",
+      "note": "CONNECT and TRACE matched case-insensitively for 405; other tokens forwarded as received (PRD-52)."
+    },
+    {
+      "id": "AMB-12",
+      "resolved_by": "D-053",
+      "verdict": "resolved",
+      "note": "Host first, client headers in received order minus removed with merged Cookie at first Cookie position, then X-Forwarded-For/Proto/Host, then .requestHeader values in option order, then framing header and Connection: close."
+    },
+    {
+      "id": "AMB-13",
+      "resolved_by": "D-054, D-073",
+      "verdict": "resolved",
+      "note": "Comma split + OWS trim, Content-Length elements digits fitting a long compared numerically; Transfer-Encoding lines comma-joined, empty elements ignored, case-insensitive names, parameterised coding or empty value treated as non-chunked under both framing tables."
+    },
+    {
+      "id": "AMB-14",
+      "resolved_by": "D-058",
+      "verdict": "resolved",
+      "note": "Framing headers validated on every response before skipping HEAD/204/304 bodies; valid length or -1 passed to relay for HEAD/304, -1 for 204."
+    },
+    {
+      "id": "AMB-15",
+      "resolved_by": "D-059",
+      "verdict": "resolved",
+      "note": "3-digit status outside 100..599 is INVALID_RESPONSE; backend reason phrase dropped, adapter standard phrase used (res.status accepts 100..999, DefaultResponse.java:367-369, so the stricter range is a proxy-side rule)."
+    },
+    {
+      "id": "AMB-16",
+      "resolved_by": "D-060",
+      "verdict": "resolved",
+      "note": "Date copied like any header under the §3.3 copy rule; documentation states Date and reason phrase come from the gateway adapter."
+    },
+    {
+      "id": "AMB-17",
+      "resolved_by": "D-061",
+      "verdict": "resolved",
+      "note": "Network-path Location resolved against target scheme and rewritten under the same origin/base-path rule, else left unchanged."
+    },
+    {
+      "id": "AMB-18",
+      "resolved_by": "D-049, D-074",
+      "verdict": "resolved",
+      "note": "Public final ProxyException extends HttpException (non-final, HttpException.java:15) in the proxy package, nested ProxyException.Kind with the seven kinds, kind(), status from kind per §3.4 table, null message, cause kept, single public ctor (Kind, @Nullable Throwable)."
+    },
+    {
+      "id": "AMB-19",
+      "resolved_by": "D-051",
+      "verdict": "resolved",
+      "note": "400/405/501 thrown into the error flow as plain HttpException with null message (405 Allow per request §3.2 via existing HttpException.withHeader), not ProxyException."
+    },
+    {
+      "id": "AMB-20",
+      "resolved_by": "D-062",
+      "verdict": "resolved",
+      "note": "Proxy logs a ProxyException itself only for post-commit failures; earlier failures go to the error flow and its logging."
+    },
+    {
+      "id": "AMB-21",
+      "resolved_by": "D-063",
+      "verdict": "resolved",
+      "note": "connectTimeout bounds TCP connect and separately the TLS handshake as SO_TIMEOUT; a trickling handshake is bounded by totalTimeout."
+    },
+    {
+      "id": "AMB-22",
+      "resolved_by": "D-047",
+      "verdict": "resolved",
+      "note": "Socket milliseconds rounded up to >= 1 ms and clamped to Integer.MAX_VALUE; watchdog keeps nanoseconds saturated at Long.MAX_VALUE."
+    },
+    {
+      "id": "AMB-23",
+      "resolved_by": "D-056",
+      "verdict": "resolved",
+      "note": "1-byte pre-read runs after req.bodyStream(...) and before slot acquisition and watchdog start."
+    },
+    {
+      "id": "AMB-24",
+      "resolved_by": "D-064",
+      "verdict": "resolved",
+      "note": "Every TCP-level connect failure that is neither a connect timeout nor a TLS failure is retried when retries are enabled."
+    },
+    {
+      "id": "AMB-25",
+      "resolved_by": "D-046, D-075",
+      "verdict": "resolved",
+      "note": "retries/maxConcurrent int, bodyLimit long, switches boolean, no public getters (package-private accessors for unit tests); sslSocketFactory accepted and unused on http targets, NPE only for null."
+    },
+    {
+      "id": "AMB-26",
+      "resolved_by": "D-026, D-055",
+      "verdict": "resolved",
+      "note": "isFromTrustedProxy: CIDR mode false unless the socket address parses and lies in a CIDR; hops>=1 and legacy true as request A-4 table requires. XFF: with no usable socket address the client XFF is dropped and none sent. 'Usable' is not spelled out (see X-1)."
+    },
+    {
+      "id": "AMB-27",
+      "resolved_by": "D-041, D-042, I-004",
+      "verdict": "resolved",
+      "note": "Module NaruServe-proxy/naruserve-proxy from root build.gradle, NaruServe-api only (api scope like every library module, build.gradle:61-76), release 8, API 21 animal-sniffer set, published; not bundled into NaruServe/-kotlin/-android; module lists incl. CLAUDE.md updated."
+    },
+    {
+      "id": "AMB-28",
+      "resolved_by": "D-008, D-009, D-001",
+      "verdict": "resolved",
+      "note": "A and B both delivered in this run under new target 0.12.0; build.gradle version bump and publishing left to the release step."
+    },
+    {
+      "id": "AMB-29",
+      "resolved_by": "D-002, D-003, D-004, D-005, D-006, D-040, D-068",
+      "verdict": "resolved",
+      "note": "Request A in 04.http-core and 05.application (+06/14 for adapter conformance), request B in new scope 22.reverse-proxy (prefix PROXY; 22 is next free NN after 21.auth-api-keys); docs/api request/response/app pages plus new proxy.md with Express http-proxy-middleware mapping."
+    },
+    {
+      "id": "CON-1",
+      "resolved_by": "D-031, D-058",
+      "verdict": "resolved",
+      "note": "Exact-length/abort rule applies only when a body is sent; HEAD/304 keep a non-negative length as Content-Length with no body, 204 sends neither, stream closed unread; consistent with A-6 L166 and the existing bodyless() path (DefaultResponse.java:769-773) that skips runTransfer."
+    }
+  ],
+  "implementability": [
+    {
+      "id": "D-001",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "New target 0.12.0; v0.11.0 tag exists and 00.index.md lists 0.11.0 as active. fills: PRD-1 names a real gap (proposed version in U-1 header, no PRD item)."
+    },
+    {
+      "id": "D-002",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Placement in 04.http-core matches request header L8. Basis PRD-14 (request A in naruserve-api) supports it loosely."
+    },
+    {
+      "id": "D-003",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Placement in 05.application matches request header L8; fills gap real."
+    },
+    {
+      "id": "D-004",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "06.engine-adapter and 14.servlet-adapter exist; per-adapter behaviour is in AC-A4/AC-A6."
+    },
+    {
+      "id": "D-005",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Highest existing scope NN is 21 (21.auth-api-keys.srs.md), so 22 follows the CLAUDE.md allocation rule; PROXY prefix unused."
+    },
+    {
+      "id": "D-006",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "02.build, 15.release, 16.developer-experience exist; module/artifact lists live there."
+    },
+    {
+      "id": "D-007",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "existing_srs_context.json has 16 'potential-update' candidate matches, consistent with the claim."
+    },
+    {
+      "id": "D-008",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Request L9 permits but does not require a split; delivering both is a defensible default. Basis PRD-148 supports the B-depends-on-A part."
+    },
+    {
+      "id": "D-009",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Consistent with run contract; build.gradle:25 keeps version 0.11.0."
+    },
+    {
+      "id": "D-010",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "InputStream return; DefaultRequest implements Request."
+    },
+    {
+      "id": "D-011",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Package-private DefaultRequest.bodyStream() exists at DefaultRequest.java:205 and is used by form/JSON readers (e.g. :286, :295); a public override with narrower access would not compile, so rename is required."
+    },
+    {
+      "id": "D-012",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Literal reading of A-1 L93; BodyState.begin(Kind.RAW) already models a RAW reader (internal/BodyState.java)."
+    },
+    {
+      "id": "D-013",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill for AMB-2; needs a wrapper tracking consumption over BodyState.stream; no conflict with request rules."
+    },
+    {
+      "id": "D-014",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Same timing as JsonBodyReader declared-length check (request L102)."
+    },
+    {
+      "id": "D-015",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "internal/LimitedInputStream.java already throws BodyTooLargeException on overrun."
+    },
+    {
+      "id": "D-016",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "BodyState.stream counts read/skip bytes for in= (internal/BodyState.java:38-70)."
+    },
+    {
+      "id": "D-017",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "DefaultRequest.closeBody (DefaultRequest.java:185-201) closes the owned input at request end; TinyHttpd drains up to maxDrainBytes."
+    },
+    {
+      "id": "D-018",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Matches A-1 L92 / AC-A6."
+    },
+    {
+      "id": "D-019",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "DefaultRestApp.jsonLimit uses lifecycle.requireConfigurable + byteLimit (DefaultRestApp.java:214-218); formLimit same (:314-318); rawBodyLimit can reuse both."
+    },
+    {
+      "id": "D-020",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Same byteLimit range check reusable."
+    },
+    {
+      "id": "D-021",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Current class internal/BodyTooLargeException.java is public final IOException with (long) ctor and limit(); move is mechanical; internal users LimitedInputStream, FormBodyReader, MultipartParser updated."
+    },
+    {
+      "id": "D-022",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "StandardErrors.statusOf (internal/StandardErrors.java:19-21) is a single instanceof; adding a BodyTooLargeException branch is direct."
+    },
+    {
+      "id": "D-023",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Defect real: TinyHttpdBodyStream imports com.snoworca.tinyhttpd.http.BodyTooLargeException and com.snoworca.naruserve.HttpException (TinyHttpdBodyStream.java:3-4); FQN avoids a simple-name clash once both live in imported packages."
+    },
+    {
+      "id": "D-024",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "HttpExchange.headers() gives received-order list with duplicates (spi/HttpExchange.java:39-41)."
+    },
+    {
+      "id": "D-025",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "DefaultResponse.checkHeader (DefaultResponse.java:445-451) reusable; headers list already supports multiple entries (addCookie adds lines)."
+    },
+    {
+      "id": "D-026",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Verified against internal/ProxyTrustSetting.java: modes NONE/LEGACY/HOPS/CIDRS; existing private peerTrusted (hops>=1, or CIDR trusted(peer) where unparsable -> false, empty CIDR list -> false) lacks LEGACY, so the new shared package-private helper must add LEGACY=true; feasible and matches request A-4 table."
+    },
+    {
+      "id": "D-027",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Runnable mirrors SPI HttpExchange.onAbort(Runnable) and common/AbortListeners.onAbort(Runnable)."
+    },
+    {
+      "id": "D-028",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Matches A-5 / AC-A12; DefaultResponse.abort (DefaultResponse.java:740-762) and adapter abort notification are the two sources."
+    },
+    {
+      "id": "D-029",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "startBody already removes Content-Length/Transfer-Encoding and sets length from argument (DefaultResponse.java:581-587); relay passes no contentType."
+    },
+    {
+      "id": "D-030",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "defaultCache is applied in begin() (DefaultResponse.java:933-938); relay needs a skip flag; request A-6 L164 asks for it."
+    },
+    {
+      "id": "D-031",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Resolves CON-1; bodyless() path closes input without runTransfer (DefaultResponse.java:596-600), so no abort for HEAD/304; 204 must drop Content-Length."
+    },
+    {
+      "id": "D-032",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "runTransfer copies only 'left' bytes then finishes and closes input (DefaultResponse.java:636-688)."
+    },
+    {
+      "id": "D-033",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Matches A-6 L165 and stream's refusal-closes-input ownership."
+    },
+    {
+      "id": "D-034",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Same deferred copy as stream (runTransfer after handler returns)."
+    },
+    {
+      "id": "D-035",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "DefaultResponse.isFieldValue is package-private static (DefaultResponse.java:1023); HttpHeaderValues (common) currently only has isToken/commaSeparated; moving the body there and delegating is direct."
+    },
+    {
+      "id": "D-036",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Existing pattern: Request.socketAddress/application and Response.json/addCookie/file are defaults throwing UnsupportedOperationException (Request.java:128-141, Response.java:101-113)."
+    },
+    {
+      "id": "D-037",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Consistent with FR-KT-001 AC-3 (13.kotlin-compatibility.srs.md:66): no @NonNull on public API, @NullMarked default. The CLAUDE.md '@Nullable/@NonNull' wording is read through that rule (AF-2)."
+    },
+    {
+      "id": "D-038",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Matches CLAUDE.md T11 rule."
+    },
+    {
+      "id": "D-039",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Surface tests exist (NaruServe-api/src/test/.../HttpApiSurfaceTest.java etc.)."
+    },
+    {
+      "id": "D-040",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Repository docs rule; fills gap real."
+    },
+    {
+      "id": "D-041",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "build.gradle wires modules via a dependency table (build.gradle:61-76, all 'api') and androidModules animal-sniffer set (:21, :435-443); adding one module is mechanical."
+    },
+    {
+      "id": "D-042",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Matches request §5 #6 / PRD-231."
+    },
+    {
+      "id": "D-043",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "CON-BUILD-013 checkClassReferences precedent exists (build.gradle:143); forbidding internal/spi prefixes is a small extension."
+    },
+    {
+      "id": "D-044",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Matches PRD-51 and the @NullMarked convention."
+    },
+    {
+      "id": "D-045",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Matches request §3.1 L197 and L26 (Middleware only, not Installable since path use refuses Installable, DefaultRestApp.java:1035-1042)."
+    },
+    {
+      "id": "D-046",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-25; package-private accessors suffice for AC-B20 unit test."
+    },
+    {
+      "id": "D-047",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-22; prevents sub-ms values becoming 0 = infinite on Socket APIs."
+    },
+    {
+      "id": "D-048",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-8; consistent with §3.1 L198 rejection list."
+    },
+    {
+      "id": "D-049",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "HttpException is non-final with (int, String, Throwable) ctor (HttpException.java:15, :33)."
+    },
+    {
+      "id": "D-050",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-10/11; order respects §3.6 L335 (slot/watchdog after checks and bodyStream)."
+    },
+    {
+      "id": "D-051",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Matches §5 #5 / PRD-230; HttpException.withHeader exists for Allow."
+    },
+    {
+      "id": "D-052",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "DefaultRequest.originalUrl includes the raw query (DefaultRequest.java:117) and url() appends rawQuery (:433), so both forwarded forms keep the query as §3.2 requires."
+    },
+    {
+      "id": "D-053",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-12; consistent with §3.2 L213/L218 (option headers applied after other header processing)."
+    },
+    {
+      "id": "D-054",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-13."
+    },
+    {
+      "id": "D-055",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-26; 'usable' is undefined (see X-1) but a default is defensible."
+    },
+    {
+      "id": "D-056",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-23; consistent with §3.6 L335."
+    },
+    {
+      "id": "D-057",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Defect real: TinyHttpdBodyStream.read/skip throw unchecked HttpException 413/408/400 (TinyHttpdBodyStream.java:41-53); request §3.4 L294 says other exceptions are not wrapped."
+    },
+    {
+      "id": "D-058",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-14."
+    },
+    {
+      "id": "D-059",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-15; stricter than res.status range 100..999 (DefaultResponse.java:367-369), which is fine."
+    },
+    {
+      "id": "D-060",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-16; documentation-only."
+    },
+    {
+      "id": "D-061",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-17; serves the §3.3 L276 rationale."
+    },
+    {
+      "id": "D-062",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-20; consistent with §3.4 L297."
+    },
+    {
+      "id": "D-063",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-21; follows §3.9 L405 literally."
+    },
+    {
+      "id": "D-064",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-24; same 'before any request byte' rationale as §3.5 L320."
+    },
+    {
+      "id": "D-065",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Default 'no limit' is the requester's explicit decision (§5 #16, PRD-249). object.md:35 and :835 forbid unbounded defaults; the item records that maxWorkers (default 64) and totalTimeout bound threads and backend connections per proxy, so it reconciles rather than contradicts. Keep the rationale in the SRS."
+    },
+    {
+      "id": "D-066",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Matches §5 #18(a)/PRD-257; outside-lifecycle deviation (object.md §14.1) documented and tested (AC-B28)."
+    },
+    {
+      "id": "D-067",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "setEndpointIdentificationAlgorithm is API 24; reflection keeps animal-sniffer clean (no exemption, CON-AUTH-003 precedent)."
+    },
+    {
+      "id": "D-068",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Matches documentation asks of request (PRD-75 etc.)."
+    },
+    {
+      "id": "D-069",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Verified: testFixtures RecordingExchange/InMemoryHttpAdapter do not override onAbort, so the SPI default no-op applies (spi/HttpExchange.java:116-118)."
+    },
+    {
+      "id": "D-070",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "JDK test-scope backends; no new dependency."
+    },
+    {
+      "id": "D-071",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Matches AC-B20 last sentences."
+    },
+    {
+      "id": "D-072",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-8; closes base-path traversal hole."
+    },
+    {
+      "id": "D-073",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-13; consistent with §3.2 L224 (comma-joined list, case-insensitive)."
+    },
+    {
+      "id": "D-074",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-18; public ctor shape decided."
+    },
+    {
+      "id": "D-075",
+      "verdict": "implementable",
+      "pointer": null,
+      "note": "Gap-fill AMB-25; consistent with §3.8 L367 NPE-for-null rule."
+    }
+  ],
+  "constraints": [
+    {
+      "id": "C-001",
+      "verdict": "satisfied",
+      "note": "D-041 and I-001 put NaruServe-proxy under release 8 and the API 21 animal-sniffer set; D-067 avoids API 24 calls via reflection; D-047 keeps TimeUnit (no java.time)."
+    },
+    {
+      "id": "C-002",
+      "verdict": "satisfied",
+      "note": "Request A adds only InputStream/Runnable/Set/List/Map.Entry types; I-005 bans android/servlet/gson/tinyhttpd/kotlin in the proxy module; no nio.file, CompletableFuture or java.net.http anywhere."
+    },
+    {
+      "id": "C-003",
+      "verdict": "satisfied",
+      "note": "D-041 configures the module from root build.gradle; no module build file."
+    },
+    {
+      "id": "C-004",
+      "verdict": "satisfied",
+      "note": "onAbort takes java.lang.Runnable (@FunctionalInterface); short Express-style names (bodyStream, append, relay, to, kind); no Kotlin hard keywords; D-037/D-044 use @NullMarked + @Nullable; Proxy is an immutable fluent object, not a JavaBean value object."
+    },
+    {
+      "id": "C-005",
+      "verdict": "satisfied",
+      "note": "D-040, D-068 and I-003 require docs/api updates with Express counterpart and Java/Kotlin examples in the same wave."
+    },
+    {
+      "id": "C-006",
+      "verdict": "satisfied",
+      "note": "No item weakens tests; D-038, D-069-D-071 and I-002 define test obligations; TDD order is a process rule the design does not contradict."
+    },
+    {
+      "id": "C-007",
+      "verdict": "satisfied",
+      "note": "D-009 ends the run on its integration branch without release; no item prescribes git add -A or merging into main."
+    }
+  ],
+  "extra_findings": [
+    {
+      "id": "X-1",
+      "description": "D-055 says the proxy sends no X-Forwarded-For when 'no usable socket address exists' but never defines 'usable'. Request.socketAddress() returns a non-null String as the adapter reports it (Request.java:132-141), so an empty value, a host name (servlet container with lookups on) or a malformed literal could either be appended to X-Forwarded-For or dropped. That is observable at the backend, and AMB-26 asked about 'not an IP literal' specifically.",
+      "suggested_item": "A socket address is usable for X-Forwarded-For only when, after removing surrounding brackets and any '%zone', it parses as an IPv4 or IPv6 literal (the parse ProxyTrustSetting.Cidr.address already performs); otherwise the client X-Forwarded-For is dropped and none is sent."
+    }
+  ],
+  "counts": {
+    "rows": 112,
+    "unresolved": 0,
+    "needs_decision": 0,
+    "contradicts_existing": 0,
+    "constraint_violations": 0
+  }
+}

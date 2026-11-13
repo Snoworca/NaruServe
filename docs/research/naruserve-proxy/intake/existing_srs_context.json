@@ -1,0 +1,681 @@
+{
+  "schema_version": "1.0.0",
+  "active_target": "0.11.0",
+  "active_target_status": "Target Map row says 'active', but 0.11.0 is already released: tag v0.11.0 exists, build.gradle version is 0.11.0, OPS-REL-012 (verified) states the READMEs describe the published 0.11.0 Maven Central release, and every 0.11.0 requirement is verified (197 verified, 11 discarded). The row was never set to completed.",
+  "recommended_target": "0.12.0",
+  "target_reason": "0.11.0 is published and immutable on Maven Central, so new public API and a new artifact cannot ship under it. The request itself proposes 0.12.0 and changes two existing behaviors (BodyTooLargeException becomes public and maps to 413). Register 0.12.0 with set_active_target(create:true), record the goal, optionally mark 0.11.0 completed (speckiwi set-target-status), and add a 0.12.0 version-bump requirement modelled on OPS-REL-010.",
+  "candidate_matches": [
+    {
+      "req_id": "FR-HTTP-020",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.85,
+      "note": "AC-3/AC-4 name the over-limit type an 'internal over-limit IOException subclass' and the trace link points at internal/BodyTooLargeException.java; A-1 moves BodyTooLargeException to the public package com.snoworca.naruserve. Statement ('internal limit-enforcing input stream') can stay, but AC wording and trace link must change.",
+      "request_items": [
+        "A-1"
+      ]
+    },
+    {
+      "req_id": "FR-APP-006",
+      "scope_doc": "docs/spec/05.application.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.8,
+      "note": "AC-4 says an HttpException maps to its status and 'any other exception 500'; A-1 changes StandardErrors.statusOf so an unwrapped BodyTooLargeException is answered 413 PAYLOAD_TOO_LARGE (request §6 lists this as one of two behavior changes).",
+      "request_items": [
+        "A-1"
+      ]
+    },
+    {
+      "req_id": "FR-HTTP-019",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.75,
+      "note": "Rationale says the raw kind is an internal consumer; AC-3 says a second raw read throws BodyAlreadyConsumedException, while A-1 returns the same unread stream on a repeated bodyStream() with the same limit (IllegalStateException for a different limit); AC-5 allow-list of public body-reading methods (re-pointed by IR-JSON-002 AC-8) must gain bodyStream/bodyStream(long). Not a contradiction if repeat-call caching sits above BodyState, but the AC text must say so.",
+      "request_items": [
+        "A-1"
+      ]
+    },
+    {
+      "req_id": "FR-HTTP-017",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.7,
+      "note": "AC-1 decision: a 204 or 304 response commits with length 0 and adds no Content-Length. A-6 res.relay keeps a non-negative contentLength as Content-Length on 304 (and HEAD) and drops it only on 204; the decision must be scoped to the existing body writers or carve out relay.",
+      "request_items": [
+        "A-6"
+      ]
+    },
+    {
+      "req_id": "FR-STATIC-008",
+      "scope_doc": "docs/spec/10.static-files.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.7,
+      "note": "AC-5 decision: defaultCache is applied at commit to any response holding no Cache-Control 'whatever set it'. A-6 requires res.relay responses never receive the app defaultCache; the decision needs an explicit relay exception.",
+      "request_items": [
+        "A-6"
+      ]
+    },
+    {
+      "req_id": "FR-JSON-001",
+      "scope_doc": "docs/spec/07.json.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.55,
+      "note": "AC-9 refers to 'its internal BodyTooLargeException'; wording becomes stale once the class is public (A-1). Behavior (413 for JSON overrun) unchanged.",
+      "request_items": [
+        "A-1"
+      ]
+    },
+    {
+      "req_id": "IR-HTTP-010",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.5,
+      "note": "AC-2 pins the exact Request method set of HttpApiSurfaceTest to '0.10.0 set plus socketAddress and requestId'; bodyStream, bodyStream(long), headerNames, rawHeaders and isFromTrustedProxy re-point that test. Precedent (IR-HTTP-010 itself) is that the new requirement re-points the set and keeps new methods as default methods throwing UnsupportedOperationException.",
+      "request_items": [
+        "A-1",
+        "A-2",
+        "A-4"
+      ]
+    },
+    {
+      "req_id": "IR-HTTP-001",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.45,
+      "note": "AC-2/AC-4 exact Response method set and @Nullable position set of HttpApiSurfaceTest (re-pointed by later waves); append, onAbort and relay change the Response set. New requirement must re-point and keep nullable positions unchanged (all new returns/params non-null).",
+      "request_items": [
+        "A-3",
+        "A-5",
+        "A-6"
+      ]
+    },
+    {
+      "req_id": "IR-ENGINE-003",
+      "scope_doc": "docs/spec/06.engine-adapter.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.45,
+      "note": "AC-5 holds the latest re-point of the exact RestApp method set in HttpApiSurfaceTest; app.rawBodyLimit(long) re-points it again. AC-4 accessors are what A-4 isFromTrustedProxy evaluates (via internal ProxyTrustSetting).",
+      "request_items": [
+        "A-1",
+        "A-4"
+      ]
+    },
+    {
+      "req_id": "CON-BUILD-002",
+      "scope_doc": "docs/spec/02.build.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.8,
+      "note": "AC-1 lists the nine JAR modules plus NaruServe-android 'and no other module'; request B adds NaruServe-proxy to settings.gradle.",
+      "request_items": [
+        "B-3.9"
+      ]
+    },
+    {
+      "req_id": "CON-BUILD-012",
+      "scope_doc": "docs/spec/02.build.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.75,
+      "note": "AC-1 enumerates the seven animal-sniffer API 21 modules; NaruServe-proxy must be added (build.gradle derives androidModules from naruModules, so adding it to naruModules enrolls it automatically).",
+      "request_items": [
+        "B-3.9"
+      ]
+    },
+    {
+      "req_id": "CON-BUILD-006",
+      "scope_doc": "docs/spec/02.build.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.7,
+      "note": "AC-1 pins exactly the main dependencies of every module; NaruServe-proxy needs an entry (NaruServe-api only, no Gson/TinyHttpd).",
+      "request_items": [
+        "B-3.9"
+      ]
+    },
+    {
+      "req_id": "FR-REL-005",
+      "scope_doc": "docs/spec/15.release.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.7,
+      "note": "Publishes 'the nine JAR modules' and checkCentralStaging (AC-7) requires 'exactly the ten artifactIds'; naruserve-proxy makes eleven.",
+      "request_items": [
+        "B-3.9"
+      ]
+    },
+    {
+      "req_id": "CON-BUILD-013",
+      "scope_doc": "docs/spec/02.build.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.6,
+      "note": "AC-3 lists the Android-targeted modules for the javax.servlet class-reference check; NaruServe-proxy joins the list.",
+      "request_items": [
+        "B-3.9"
+      ]
+    },
+    {
+      "req_id": "OPS-BUILD-003",
+      "scope_doc": "docs/spec/02.build.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.6,
+      "note": "AC-3: CLAUDE.md module line lists all ten modules and the seven API 21 targets; must name NaruServe-proxy (eleven modules, eight API 21 targets).",
+      "request_items": [
+        "B-3.9"
+      ]
+    },
+    {
+      "req_id": "FR-REL-001",
+      "scope_doc": "docs/spec/15.release.srs.md",
+      "relation": "potential-update",
+      "similarity_score": 0.55,
+      "note": "AC-1 SBOM per published module names 'the nine entries of naruModules'; becomes ten JAR entries.",
+      "request_items": [
+        "B-3.9"
+      ]
+    },
+    {
+      "req_id": "IR-HTTP-009",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "related",
+      "similarity_score": 0.75,
+      "note": "SPI HttpExchange.onAbort contract (notify once, late registration fires immediately, throwing listeners isolated, idle-peer closure not promised); A-5 res.onAbort republishes it on Response. Reuse common.AbortListeners.",
+      "request_items": [
+        "A-5",
+        "B-3.6"
+      ]
+    },
+    {
+      "req_id": "FR-HTTP-014",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "related",
+      "similarity_score": 0.65,
+      "note": "res.stream sets Content-Type and commits with unknown length, copies after handler return and closes the input once; A-6 relay follows the same ownership/copy-after-return rule but preserves length and never sets Content-Type.",
+      "request_items": [
+        "A-6"
+      ]
+    },
+    {
+      "req_id": "FR-HTTP-011",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "related",
+      "similarity_score": 0.6,
+      "note": "req.header/headers case-insensitive accessors; A-2 headerNames/rawHeaders add enumeration beside them.",
+      "request_items": [
+        "A-2"
+      ]
+    },
+    {
+      "req_id": "IR-HTTP-003",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "related",
+      "similarity_score": 0.6,
+      "note": "SPI already exposes headers as List<Map.Entry<String,String>> in received order with duplicates kept, which is what A-2 rawHeaders surfaces.",
+      "request_items": [
+        "A-2"
+      ]
+    },
+    {
+      "req_id": "FR-HTTP-013",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "related",
+      "similarity_score": 0.6,
+      "note": "AC-1 decision: res.header replaces an existing name (Express res.set); A-3 keeps it and adds res.append (Express res.append).",
+      "request_items": [
+        "A-3"
+      ]
+    },
+    {
+      "req_id": "FR-HTTP-015",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "related",
+      "similarity_score": 0.6,
+      "note": "AC-4 header validation (token name, no CTL except HTAB, nothing above U+00FF) is the 'header check' that A-3 append reuses and A-7 isFieldValue publishes.",
+      "request_items": [
+        "A-3",
+        "A-7"
+      ]
+    },
+    {
+      "req_id": "FR-WS-001",
+      "scope_doc": "docs/spec/11.websocket.srs.md",
+      "relation": "related",
+      "similarity_score": 0.6,
+      "note": "Upgrade requests matching app.ws run the global and prefix middleware chain first, so a path-mounted proxy sees WebSocket upgrades; B §3.2 requires the proxy to call next() for them (AC-B12).",
+      "request_items": [
+        "B-3.2"
+      ]
+    },
+    {
+      "req_id": "SEC-ENGINE-002",
+      "scope_doc": "docs/spec/06.engine-adapter.srs.md",
+      "relation": "related",
+      "similarity_score": 0.6,
+      "note": "CIDR trust: peer trusted only inside a trusted CIDR; A-4 isFromTrustedProxy must use the same predicate (shared internal ProxyTrustSetting).",
+      "request_items": [
+        "A-4",
+        "B-3.2"
+      ]
+    },
+    {
+      "req_id": "SEC-ENGINE-001",
+      "scope_doc": "docs/spec/06.engine-adapter.srs.md",
+      "relation": "related",
+      "similarity_score": 0.55,
+      "note": "Hop mode: peer trusted when n >= 1; A-4 table row 'trustProxyHops(n), n>=1 -> true' and 'hops 0 -> false' must match.",
+      "request_items": [
+        "A-4"
+      ]
+    },
+    {
+      "req_id": "SEC-ENGINE-003",
+      "scope_doc": "docs/spec/06.engine-adapter.srs.md",
+      "relation": "related",
+      "similarity_score": 0.5,
+      "note": "isSecure() follows X-Forwarded-Proto only from a trusted peer; B §3.2 sets X-Forwarded-Proto from req.isSecure().",
+      "request_items": [
+        "A-4",
+        "B-3.2"
+      ]
+    },
+    {
+      "req_id": "CON-ENGINE-001",
+      "scope_doc": "docs/spec/06.engine-adapter.srs.md",
+      "relation": "related",
+      "similarity_score": 0.45,
+      "note": "Legacy trustProxy(true) keeps left-most behavior and spoofing warning; A-4 returns true for it and B docs must repeat the warning.",
+      "request_items": [
+        "A-4",
+        "B-3.2"
+      ]
+    },
+    {
+      "req_id": "SEC-HTTP-001",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "related",
+      "similarity_score": 0.5,
+      "note": "req.socketAddress() is the peer independent of proxy settings; A-4 judges socketAddress(), and B appends it to X-Forwarded-For.",
+      "request_items": [
+        "A-4",
+        "B-3.2"
+      ]
+    },
+    {
+      "req_id": "FR-SVL-002",
+      "scope_doc": "docs/spec/14.servlet-adapter.srs.md",
+      "relation": "related",
+      "similarity_score": 0.55,
+      "note": "Servlet adapter keeps per-name value order but no cross-name order; A-2/AC-A4 documents exactly this limitation for rawHeaders on Servlet.",
+      "request_items": [
+        "A-2"
+      ]
+    },
+    {
+      "req_id": "FR-SVL-003",
+      "scope_doc": "docs/spec/14.servlet-adapter.srs.md",
+      "relation": "related",
+      "similarity_score": 0.45,
+      "note": "Servlet response writing (commit with length, 204/304 without Content-Length, abort); relay and onAbort need Servlet conformance.",
+      "request_items": [
+        "A-5",
+        "A-6"
+      ]
+    },
+    {
+      "req_id": "FR-APP-019",
+      "scope_doc": "docs/spec/05.application.srs.md",
+      "relation": "related",
+      "similarity_score": 0.55,
+      "note": "Access log in= counts body bytes read through the BodyState stream; A-1 bodyStream must use the same counting path (AC-A9, AC-B26).",
+      "request_items": [
+        "A-1",
+        "B-3.4"
+      ]
+    },
+    {
+      "req_id": "FR-ENGINE-003",
+      "scope_doc": "docs/spec/06.engine-adapter.srs.md",
+      "relation": "related",
+      "similarity_score": 0.5,
+      "note": "TinyHttpd rejects CL+TE with 400 before dispatch (AC-6, cited by B §3.2 framing table) and drains up to 64 KiB of unread body (AC-7, basis of AC-A6).",
+      "request_items": [
+        "A-1",
+        "B-3.2"
+      ]
+    },
+    {
+      "req_id": "FR-ENGINE-005",
+      "scope_doc": "docs/spec/06.engine-adapter.srs.md",
+      "relation": "related",
+      "similarity_score": 0.5,
+      "note": "TinyHttpd's own BodyTooLargeException is mapped to HttpException 413 in the adapter; a public com.snoworca.naruserve.BodyTooLargeException creates a simple-name clash inside NaruServe-tinyhttpd (use FQN).",
+      "request_items": [
+        "A-1"
+      ]
+    },
+    {
+      "req_id": "IR-JSON-002",
+      "scope_doc": "docs/spec/07.json.srs.md",
+      "relation": "related",
+      "similarity_score": 0.5,
+      "note": "AC-2 jsonLimit range 1..1073741824, default 1 MiB, NEW-state guard: the precedent A-1 copies for app.rawBodyLimit.",
+      "request_items": [
+        "A-1"
+      ]
+    },
+    {
+      "req_id": "FR-MULTIPART-002",
+      "scope_doc": "docs/spec/09.multipart.srs.md",
+      "relation": "related",
+      "similarity_score": 0.4,
+      "note": "formLimit 413 on accumulated bytes incl. chunked: same limit model as rawBodyLimit.",
+      "request_items": [
+        "A-1"
+      ]
+    },
+    {
+      "req_id": "CON-APP-002",
+      "scope_doc": "docs/spec/05.application.srs.md",
+      "relation": "related",
+      "similarity_score": 0.5,
+      "note": "Every new RestApp configuration method must call AppLifecycle.requireConfigurable first; applies to app.rawBodyLimit.",
+      "request_items": [
+        "A-1"
+      ]
+    },
+    {
+      "req_id": "FR-APP-005",
+      "scope_doc": "docs/spec/05.application.srs.md",
+      "relation": "related",
+      "similarity_score": 0.45,
+      "note": "Unified error path: HttpException(413) and ProxyException (an HttpException) reach onError; committed responses abort instead of writing an error body (B §3.4 mid-stream failures).",
+      "request_items": [
+        "A-1",
+        "B-3.4"
+      ]
+    },
+    {
+      "req_id": "FR-AUTH-010",
+      "scope_doc": "docs/spec/17.auth.srs.md",
+      "relation": "related",
+      "similarity_score": 0.55,
+      "note": "AC-7: app.use(path, mw) refuses an Installable mw for non-root paths; B deliberately makes Proxy a plain Middleware (not Installable) so path mounting works.",
+      "request_items": [
+        "B-3.1"
+      ]
+    },
+    {
+      "req_id": "FR-APP-003",
+      "scope_doc": "docs/spec/05.application.srs.md",
+      "relation": "related",
+      "similarity_score": 0.4,
+      "note": "Prefix middleware scope and req.baseUrl(); B Location rewrite and stripPrefix use the matched mount prefix.",
+      "request_items": [
+        "B-3.3",
+        "B-3.8"
+      ]
+    },
+    {
+      "req_id": "FR-ROUTE-020",
+      "scope_doc": "docs/spec/03.routing.srs.md",
+      "relation": "related",
+      "similarity_score": 0.35,
+      "note": "Mounted URL views (originalUrl/baseUrl/url) that B §3.2 forwards (originalUrl) or strips (url).",
+      "request_items": [
+        "B-3.2"
+      ]
+    },
+    {
+      "req_id": "FR-HTTP-026",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "related",
+      "similarity_score": 0.4,
+      "note": "Router.isWebSocketUpgrade(token, Connection, Upgrade) is the criterion B §3.2 reuses for passing WebSocket upgrades to next().",
+      "request_items": [
+        "B-3.2"
+      ]
+    },
+    {
+      "req_id": "FR-HTTP-023",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "related",
+      "similarity_score": 0.3,
+      "note": "OPTIONS * answered 204 and raw paths not starting with '/' answered 400 before middleware, so they never reach the proxy (B §3.2).",
+      "request_items": [
+        "B-3.2"
+      ]
+    },
+    {
+      "req_id": "FR-APP-025",
+      "scope_doc": "docs/spec/05.application.srs.md",
+      "relation": "related",
+      "similarity_score": 0.3,
+      "note": "app.use(path, proxy) is recorded as PATH_MIDDLEWARE with the Proxy object as target.",
+      "request_items": [
+        "B-3.1"
+      ]
+    },
+    {
+      "req_id": "FR-COOKIE-001",
+      "scope_doc": "docs/spec/08.cookie.srs.md",
+      "relation": "related",
+      "similarity_score": 0.4,
+      "note": "addCookie is today the only way to emit repeated Set-Cookie lines; res.append generalizes it and proxy appends backend Set-Cookie beside app cookies (AC-B16).",
+      "request_items": [
+        "A-3",
+        "B-3.3"
+      ]
+    },
+    {
+      "req_id": "FR-DX-010",
+      "scope_doc": "docs/spec/16.developer-experience.srs.md",
+      "relation": "related",
+      "similarity_score": 0.35,
+      "note": "common.HttpHeaderValues is tagged @req FR-DX-010 (CORS); A-7 adds isFieldValue to that class and needs its own requirement.",
+      "request_items": [
+        "A-7"
+      ]
+    },
+    {
+      "req_id": "CON-AUTH-002",
+      "scope_doc": "docs/spec/17.auth.srs.md",
+      "relation": "related",
+      "similarity_score": 0.5,
+      "note": "Precedent: utils.auth uses only Core public API, enforced by a class-reference test against com/snoworca/naruserve/internal/; the proxy module needs the same rule (plus no spi dependency).",
+      "request_items": [
+        "B-3.9"
+      ]
+    },
+    {
+      "req_id": "CON-AUTH-003",
+      "scope_doc": "docs/spec/17.auth.srs.md",
+      "relation": "related",
+      "similarity_score": 0.5,
+      "note": "Precedent: API 21/Java 8 class-reference test (no java/time, java/nio/file, Base64, CompletableFuture, java/util/function, java/net/http) and animal-sniffer with no @IgnoreJRERequirement; relevant to B §3.9 SSLParameters.setEndpointIdentificationAlgorithm (API 24 on Android).",
+      "request_items": [
+        "B-3.9"
+      ]
+    },
+    {
+      "req_id": "FR-KT-001",
+      "scope_doc": "docs/spec/13.kotlin-compatibility.srs.md",
+      "relation": "related",
+      "similarity_score": 0.45,
+      "note": "Nullability check covers only NaruServe-api packages (com.snoworca.naruserve, .spi, .routing) and forbids @NonNull; the proxy package needs @NullMarked and an equivalent check.",
+      "request_items": [
+        "A-1",
+        "B-3.1"
+      ]
+    },
+    {
+      "req_id": "FR-KT-002",
+      "scope_doc": "docs/spec/13.kotlin-compatibility.srs.md",
+      "relation": "related",
+      "similarity_score": 0.35,
+      "note": "Public method names avoid Kotlin hard keywords; to, append, relay, bodyStream, onAbort, kind are all safe.",
+      "request_items": [
+        "A-1",
+        "B-3.1"
+      ]
+    },
+    {
+      "req_id": "IR-KT-001",
+      "scope_doc": "docs/spec/13.kotlin-compatibility.srs.md",
+      "relation": "related",
+      "similarity_score": 0.35,
+      "note": "getX/setX rule is for mutable value objects; isFromTrustedProxy reads as Kotlin property req.isFromTrustedProxy like req.isSecure. Proxy is an immutable fluent option object (ServerOptions precedent), not a JavaBean.",
+      "request_items": [
+        "A-4",
+        "B-3.1"
+      ]
+    },
+    {
+      "req_id": "FR-KT-004",
+      "scope_doc": "docs/spec/13.kotlin-compatibility.srs.md",
+      "relation": "related",
+      "similarity_score": 0.35,
+      "note": "Every Kotlin example in docs/api must exist as a compiling Kotlin test; applies to new request/response/proxy docs (AC-B33).",
+      "request_items": [
+        "B-3.1"
+      ]
+    },
+    {
+      "req_id": "CON-HTTP-002",
+      "scope_doc": "docs/spec/04.http-core.srs.md",
+      "relation": "related",
+      "similarity_score": 0.3,
+      "note": "Public types in com.snoworca.naruserve avoid Optional, java.util.function, streams, java.nio.file; new methods use InputStream, List<Map.Entry>, Runnable, TimeUnit only.",
+      "request_items": [
+        "A-1",
+        "A-2",
+        "A-5"
+      ]
+    },
+    {
+      "req_id": "OPS-REL-010",
+      "scope_doc": "docs/spec/15.release.srs.md",
+      "relation": "related",
+      "similarity_score": 0.35,
+      "note": "Precedent for versioning the checkout ahead of a release (0.11.0); a 0.12.0 equivalent is needed if the new target ships.",
+      "request_items": [
+        "B-3.9"
+      ]
+    }
+  ],
+  "scopes": [
+    "HTTP",
+    "APP",
+    "ENGINE",
+    "SVL",
+    "KT",
+    "BUILD",
+    "REL",
+    "DX",
+    "PROXY"
+  ],
+  "scope_docs": [
+    "docs/spec/04.http-core.srs.md",
+    "docs/spec/05.application.srs.md",
+    "docs/spec/06.engine-adapter.srs.md",
+    "docs/spec/14.servlet-adapter.srs.md",
+    "docs/spec/13.kotlin-compatibility.srs.md",
+    "docs/spec/02.build.srs.md",
+    "docs/spec/15.release.srs.md",
+    "docs/spec/16.developer-experience.srs.md",
+    "docs/spec/22.reverse-proxy.srs.md"
+  ],
+  "scope_assignment_notes": {
+    "HTTP": "A-1 bodyStream/bodyStream(long)/rawBodyLimit and public BodyTooLargeException, A-2 headerNames/rawHeaders, A-3 append, A-5 onAbort, A-6 relay, A-7 HttpHeaderValues.isFieldValue (body ownership FR-HTTP-019/020 and the Request/Response surface live here; IR-JSON-002 precedent keeps a limit with its reader).",
+    "APP": "StandardErrors.statusOf 413 mapping for BodyTooLargeException (FR-APP-006), rawBodyLimit NEW-state guard (CON-APP-002), access-log in= for bodyStream (FR-APP-019).",
+    "ENGINE": "A-4 isFromTrustedProxy predicate parity with SEC-ENGINE-001..003 on TinyHttpd; TinyHttpd conformance for rawHeaders order/case, relay framing, onAbort, unread-body drain (AC-A6).",
+    "SVL": "Servlet conformance for rawHeaders (per-name order only), relay, onAbort.",
+    "KT": "Kotlin compile-and-run tests for new Request/Response methods and Proxy (AC-B33); may instead be ACs inside each IR requirement as IR-HTTP-010 did.",
+    "BUILD": "NaruServe-proxy module, dependencies, API 21 check, class-reference/public-API-only check.",
+    "REL": "Eleven published artifacts, SBOM/license, 0.12.0 version bump and release notes (behavior changes of request §6).",
+    "DX": "Bilingual docs/api pages (request/response additions, new proxy guide with Express/http-proxy-middleware mapping and the documented limits).",
+    "PROXY": "Request B behavior: Proxy.to API, forwarding/response rules, path checks, framing, X-Forwarded rules, errors/timeouts/retries, concurrency, TLS, parser."
+  },
+  "new_scope": {
+    "needed": true,
+    "proposed_name": "Reverse Proxy",
+    "proposed_prefix": "PROXY",
+    "proposed_document": "docs/spec/22.reverse-proxy.srs.md",
+    "reason": "Request B is a separate optional module (NaruServe-proxy, package com.snoworca.naruserve.proxy) with its own HTTP/1.1 client, about 34 acceptance criteria and security-sensitive rules (smuggling, path normalization, TLS hostname checks) that fit no registered scope; 06.engine-adapter is about inbound adapters and 04.http-core is the Core surface. Prefix PROXY is unused among the 21 registered prefixes; 22 is the next free number. Create it with speckiwi scaffold-scope 'Reverse Proxy:PROXY' --apply (needs user approval)."
+  },
+  "architecture_fit": [
+    {
+      "id": "AF-1",
+      "finding": "No conflict with object.md scope: §1.3 lists 'HTTP 클라이언트, 프록시' as 선택/향후, so an optional separate module is the sanctioned shape; Core stays free of the backend client.",
+      "evidence": "object.md:45 (§1.3); object.md §2.1 layering",
+      "adjustment": "Keep the HTTP client and Proxy out of NaruServe-api; NaruServe-proxy depends on NaruServe-api only (not on NaruServe/Gson/TinyHttpd)."
+    },
+    {
+      "id": "AF-2",
+      "finding": "Nullability contract in practice is JSpecify @NullMarked package default plus @Nullable only; FR-KT-001 AC-3 fails the build if @NonNull appears on public API. CLAUDE.md's '@Nullable/@NonNull' wording must be read through that rule.",
+      "evidence": "FR-KT-001 AC-1/AC-3 (13.kotlin-compatibility.srs.md); NaruServe-api common/package-info.java",
+      "adjustment": "Annotate nothing on bodyStream, headerNames, rawHeaders, isFromTrustedProxy, append, onAbort, relay, isFieldValue (all non-null); add package-info @NullMarked for com.snoworca.naruserve.proxy and an equivalent nullability check in the proxy module (FR-KT-001 covers only NaruServe-api packages). ProxyException(…, @Nullable String message, …) keeps message null per §3.4."
+    },
+    {
+      "id": "AF-3",
+      "finding": "Adding abstract methods to public Request/Response breaks user/test implementations (e.g. Kotlin FixedRequest double).",
+      "evidence": "IR-HTTP-010 AC-1 precedent; request §6",
+      "adjustment": "Declare every new Request/Response method as a default method throwing UnsupportedOperationException(getClass().getName()+...) with DefaultRequest/DefaultResponse overrides; rename the existing package-private DefaultRequest.bodyStream() (DefaultRequest.java:205) first."
+    },
+    {
+      "id": "AF-4",
+      "finding": "Kotlin naming rules are met: no hard keyword among to, bodyStream, headerNames, rawHeaders, append, onAbort, relay, kind, isFieldValue; isFromTrustedProxy becomes the Kotlin property req.isFromTrustedProxy like req.isSecure; res.onAbort(Runnable) takes a JDK @FunctionalInterface so Kotlin trailing lambdas work.",
+      "evidence": "FR-KT-002, IR-KT-001 AC-3, CLAUDE.md Kotlin section",
+      "adjustment": "Add Kotlin compile-and-run tests for each new method and for Proxy.to(url).readTimeout(30, TimeUnit.SECONDS) (AC-B33)."
+    },
+    {
+      "id": "AF-5",
+      "finding": "Proxy option methods (connectTimeout(long, TimeUnit), retries(int), stripPrefix(boolean)…) do not follow getX/setX, but IR-KT-001 targets mutable JavaBean value objects (Cookie); an immutable fluent option object matches the ServerOptions precedent (writeTimeout(long, TimeUnit)).",
+      "evidence": "IR-KT-001; NaruServe-api ServerOptions.java:30-50",
+      "adjustment": "Keep fluent 'wither' names. If configured values must be readable (AC-B20 checks defaults 'through the object's settings'), expose them as getX() (e.g. getReadTimeoutMillis()) or keep them package-private for tests; do not add no-arg overloads like readTimeout() that read as both getter and setter."
+    },
+    {
+      "id": "AF-6",
+      "finding": "ProxyException.kind() mirrors HttpException.status() (short accessor, not getKind()), which is consistent; the enum's placement/name is not fixed by the request. Existing public enums are top-level (SameSite, LogLevel, RegistrationKind, AppState).",
+      "evidence": "HttpException.java:41 status(); NaruServe-api enums",
+      "adjustment": "Decide nested ProxyException.Kind vs top-level ProxyErrorKind during implementation (docs/api (미확정) rule) and record it; constants CONNECT_FAILED, CONNECT_TIMEOUT, WRITE_TIMEOUT, READ_TIMEOUT, TOTAL_TIMEOUT, INVALID_RESPONSE, CONCURRENCY_LIMIT. HttpException is non-final with (int, String, Throwable) constructor, so subclassing works."
+    },
+    {
+      "id": "AF-7",
+      "finding": "Android hostname verification: SSLParameters.setEndpointIdentificationAlgorithm is absent from the android-api-level-21 signature, so even a runtime-guarded direct call fails animal-sniffer; auth precedent forbids @IgnoreJRERequirement exemptions.",
+      "evidence": "request §3.9 https bullet; CON-AUTH-003 AC-1; build.gradle:434-445",
+      "adjustment": "Call it through reflection (or use HttpsURLConnection.getDefaultHostnameVerifier() on every platform) so the proxy module passes animal-sniffer without exemptions; add a CON-AUTH-003-style class-reference test (no java/net/http, java/time, java/util/function, CompletableFuture, java/nio/file)."
+    },
+    {
+      "id": "AF-8",
+      "finding": "Proxy must use only public API; request A exists to make that possible, but there is no build rule yet enforcing it for a separate module.",
+      "evidence": "request §3.9; CON-AUTH-002 AC-1 precedent; CON-BUILD-013 checkClassReferences",
+      "adjustment": "Add a class-reference check for NaruServe-proxy forbidding com/snoworca/naruserve/internal/ and com/snoworca/naruserve/spi/ (plus the CON-BUILD-013 prefixes)."
+    },
+    {
+      "id": "AF-9",
+      "finding": "object.md §14.2 says defaults are never 'unlimited' and §1.2-6 requires size/time/connection bounds for all network I/O; the proposed maxConcurrent default is 'no limit' (decision #16).",
+      "evidence": "object.md §1.2 principle 6, §14.2; request §3.6, §5 #16",
+      "adjustment": "Keep the requester's choice only with an explicit SRS rationale that the bound is maxWorkers (ServerOptions default 64) plus totalTimeout 5 min; otherwise pick a finite default. Flag as a decision for the SRS author."
+    },
+    {
+      "id": "AF-10",
+      "finding": "The JVM-wide lazily created daemon scheduler lives outside the app lifecycle (object.md §11.4 stop order, §14.1 'reclaim resources on shutdown'); ApplicationContext.own is closed after STARTING.",
+      "evidence": "object.md §11.4, §14.1; request §3.9 and §5 #18; IR-APP-005",
+      "adjustment": "Acceptable per §5 #18(a) because idle threads die within 30 s and carry no context class loader; state this as a documented deviation in the PROXY requirement and test it (AC-B28)."
+    },
+    {
+      "id": "AF-11",
+      "finding": "Making BodyTooLargeException public in com.snoworca.naruserve clashes by simple name with TinyHttpd's BodyTooLargeException that NaruServe-tinyhttpd already maps (FR-ENGINE-005 AC-1).",
+      "evidence": "FR-ENGINE-005 AC-1; NaruServe-api internal/BodyTooLargeException.java",
+      "adjustment": "Use fully qualified names in the adapter; keep NaruServe's class an IOException subclass as FR-HTTP-020 requires; document the move under request §6 compatibility notes."
+    },
+    {
+      "id": "AF-12",
+      "finding": "object.md §4.1 body policy already anticipates a raw reader under BodyState ('JSON/raw/form/multipart') and says repeats throw unless an explicit cache option exists; A-1's same-stream return for an unread repeated call is a narrow relaxation comparable to FR-DX-007's JSON cache.",
+      "evidence": "object.md §4.1 본문 소비 정책; FR-HTTP-019; FR-DX-007",
+      "adjustment": "Write it as an explicit rule in the HTTP requirement and amend FR-HTTP-019 AC-3/AC-5 wording."
+    },
+    {
+      "id": "AF-13",
+      "finding": "CLAUDE.md docs rule: every public API needs a docs/api entry with the Express counterpart and Java and Kotlin examples, bilingual mirrors under docs/api/en, and Java blocks that compile (CON-HTTP-009).",
+      "evidence": "CLAUDE.md 'API 문서'; CON-HTTP-009; FR-KT-004",
+      "adjustment": "Plan docs/api/request.md, response.md, app.md updates and a new docs/api/proxy.md (+ en) mapping to Express req stream/req.rawHeaders/res.append and http-proxy-middleware; CLAUDE.md module line must list NaruServe-proxy (OPS-BUILD-003)."
+    }
+  ]
+}

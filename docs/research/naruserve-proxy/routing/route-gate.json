@@ -1,0 +1,19 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy",
+ "probe_path": "docs/research/naruserve-proxy/routing/probe.json",
+ "probe_digest": "sha256:0911e9f3b7a3d1adefcf47e6fedfcfb90b435abf1352848edface024858af5d0",
+ "decided_at": "2026-11-13T16:04:42Z",
+ "gates": [
+  {
+   "gate_id": "route-proposal",
+   "severity": "business-decision",
+   "selected": "proposed",
+   "decided_by": null,
+   "options": ["R-ORCH", "abort"],
+   "recommended": true,
+   "withheld_because": [],
+   "resolution": {"rule": "recommended-fastpath", "committee_size": 0, "marked_by": "kiwi-orchestrator §4.6; user standing instruction: pick the recommended option at decision gates"}
+  }
+ ]
+}

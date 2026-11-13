@@ -1,0 +1,318 @@
+{
+  "schema_version": "1.0.0",
+  "key_entities": [
+    "Request.bodyStream()",
+    "Request.bodyStream(long maxBytes)",
+    "RestApp.rawBodyLimit(long bytes)",
+    "Request.headerNames()",
+    "Request.rawHeaders()",
+    "Response.append(String name, String value)",
+    "Request.isFromTrustedProxy()",
+    "Response.onAbort(<callback>)",
+    "Response.relay(InputStream in, long contentLength)",
+    "com.snoworca.naruserve.common.HttpHeaderValues.isFieldValue(String)",
+    "com.snoworca.naruserve.BodyTooLargeException (moved from internal)",
+    "StandardErrors.statusOf (BodyTooLargeException -> 413)",
+    "BodyAlreadyConsumedException (existing, reused)",
+    "HttpException(413) from bodyStream on declared Content-Length over limit",
+    "Gradle module NaruServe-proxy / artifact naruserve-proxy",
+    "package com.snoworca.naruserve.proxy",
+    "Proxy (implements Middleware, immutable)",
+    "Proxy.to(String url)",
+    "Proxy.requestHeader(String, String)",
+    "Proxy.removeRequestHeader(String)",
+    "Proxy.responseHeader(String, String)",
+    "Proxy.removeResponseHeader(String)",
+    "Proxy.connectTimeout(long, TimeUnit)",
+    "Proxy.writeTimeout(long, TimeUnit)",
+    "Proxy.readTimeout(long, TimeUnit)",
+    "Proxy.totalTimeout(long, TimeUnit)",
+    "Proxy.retries(n)",
+    "Proxy.retryDelay(long, TimeUnit)",
+    "Proxy.retryUnsafeMethods(boolean)",
+    "Proxy.stripPrefix(boolean)",
+    "Proxy.preserveHost(boolean)",
+    "Proxy.bodyLimit(long)",
+    "Proxy.maxConcurrent(n)",
+    "Proxy.rewriteLocation(boolean)",
+    "Proxy.sslSocketFactory(SSLSocketFactory)",
+    "ProxyException (extends HttpException)",
+    "ProxyException.kind(): CONNECT_FAILED, CONNECT_TIMEOUT, WRITE_TIMEOUT, READ_TIMEOUT, TOTAL_TIMEOUT, INVALID_RESPONSE, CONCURRENCY_LIMIT",
+    "JVM-wide lazily created watchdog scheduler (daemon, core thread timeout)",
+    "Minimal HTTP/1.1 socket client (request writer, response parser, chunked codec, TLS with SNI + hostname verification)",
+    "Target version 0.12.0",
+    "SRS scopes 04.http-core, 05.application, new proxy scope"
+  ],
+  "ambiguities": [
+    {
+      "id": "AMB-1",
+      "section": "§2 A-1",
+      "question": "Does merely calling bodyStream() (zero bytes read) move the body out of UNREAD, so that a later form()/parts() on a non-form body throws BodyAlreadyConsumedException, or does form() still return the empty result because it never reads a non-form body?",
+      "why_it_matters": "Today DefaultRequest.formData() returns EMPTY for a non-form body only while the body state is UNREAD and throws once it is taken. A-1 says 'bodyStream then body/form/parts -> BodyAlreadyConsumedException' but also that re-calling bodyStream returns the same stream while nothing was read, so a new 'stream handed out, unread' state is implied and its interaction with form()/parts() is not pinned.",
+      "closes_by": "default",
+      "proposed_default": "Calling bodyStream() marks the body as taken for every other reader: body(...), form(...), parts() throw BodyAlreadyConsumedException afterwards regardless of Content-Type (literal reading of A-1). Only bodyStream itself may hand the same unread stream back (same limit, zero bytes read).",
+      "evidence": "§2 A-1 L93: 'bodyStream을 부른 뒤 body(...)·form(...)·parts()를 부르거나 ... BodyAlreadyConsumedException'; DefaultRequest.java:275-282 (EMPTY only while UNREAD)."
+    },
+    {
+      "id": "AMB-2",
+      "section": "§2 A-1",
+      "question": "Which stream operations count as 'read' for the one-shot rule: does skip(), or close() without reading, consume the body?",
+      "why_it_matters": "If a middleware closes the stream unread and the proxy then receives the same (closed) stream back, the proxy forwards a truncated/empty body instead of failing with 500 as AC-B9 intends for consumed bodies.",
+      "closes_by": "default",
+      "proposed_default": "read() and skip() that advance, and close(), all count as consumption; a later bodyStream(...) then throws BodyAlreadyConsumedException. available()/markSupported() do not count; mark/reset unsupported.",
+      "evidence": "§2 A-1 L93: '1바이트라도 읽혔으면 한도와 관계없이 BodyAlreadyConsumedException'; L95 framework cleans up unclosed streams."
+    },
+    {
+      "id": "AMB-3",
+      "section": "§2 A-2",
+      "question": "Exact immutability and shape of headerNames()/rawHeaders(): are Map.Entry elements immutable (setValue throws), is the Set ordered, and which locale lowercases names?",
+      "why_it_matters": "AC-A4 requires UnsupportedOperationException on mutation of 'both results'; a mutable entry would let callers alter the request headers through setValue.",
+      "closes_by": "default",
+      "proposed_default": "headerNames(): unmodifiable insertion-ordered set (LinkedHashSet) of names lowercased with Locale.ROOT; rawHeaders(): unmodifiable List of AbstractMap.SimpleImmutableEntry (setValue throws UnsupportedOperationException). Both are snapshots computed once per request.",
+      "evidence": "§2 A-2 L113: '두 결과 모두 불변'; AC-A4."
+    },
+    {
+      "id": "AMB-4",
+      "section": "§2 A-5",
+      "question": "What is the parameter type of res.onAbort: java.lang.Runnable (as the SPI) or a new @FunctionalInterface that may throw checked exceptions? The example res.onAbort(() -> backend.close()) suggests a close() that typically throws IOException.",
+      "why_it_matters": "Public API signature; Kotlin/Java lambda compatibility and whether callers must wrap checked exceptions.",
+      "closes_by": "default",
+      "proposed_default": "void onAbort(Runnable listener) mirroring SPI HttpExchange.onAbort (the doc says the SPI contract is moved to the public API as is); null -> NullPointerException; a callback's RuntimeException is caught and logged to the app logger, not propagated. docs/api example uses a non-throwing close helper.",
+      "evidence": "§2 A-5 L146, L152: 'SPI HttpExchange.onAbort의 계약(IR-HTTP-009)을 그대로 공개 API로 옮긴 것'."
+    },
+    {
+      "id": "AMB-5",
+      "section": "§2 A-1, §6",
+      "question": "What is the public surface of BodyTooLargeException after the move (constructors, limit() accessor, final-ness), and does a deprecated alias stay in the internal package?",
+      "why_it_matters": "It becomes public API in com.snoworca.naruserve; the internal class is referenced by other modules/tests.",
+      "closes_by": "default",
+      "proposed_default": "Keep the existing shape: public final class BodyTooLargeException extends IOException with public BodyTooLargeException(long limit) and public long limit(). No shim in internal (§6 states internal users must change their import); all in-repo references updated.",
+      "evidence": "internal/BodyTooLargeException.java; §6 L525."
+    },
+    {
+      "id": "AMB-6",
+      "section": "§6, §2 A-7",
+      "question": "Must every new Request/Response method be a default method throwing UnsupportedOperationException (the doc says this 'can avoid' breakage), and how does isFieldValue treat null?",
+      "why_it_matters": "Source compatibility for user-written Request/Response fakes; null contract of a new public static method.",
+      "closes_by": "default",
+      "proposed_default": "Yes: bodyStream(), bodyStream(long), headerNames(), rawHeaders(), isFromTrustedProxy(), append(...), onAbort(...), relay(...) are added as default methods throwing UnsupportedOperationException (existing pattern, e.g. Request.socketAddress()). HttpHeaderValues.isFieldValue(null) throws NullPointerException like isToken.",
+      "evidence": "§6 L526: '기존 메서드처럼 기본 구현(UnsupportedOperationException)을 두면 이 문제를 피할 수 있습니다'; Request.java:139."
+    },
+    {
+      "id": "AMB-7",
+      "section": "§2 A-6",
+      "question": "How does relay treat an app-set Content-Length/Transfer-Encoding header, and what happens to surplus stream bytes when the stream is longer than contentLength?",
+      "why_it_matters": "relay must not leak a stale app-set length (e.g. relay(in,-1) after res.header(\"Content-Length\",...)) and must define whether surplus bytes abort or are ignored.",
+      "closes_by": "default",
+      "proposed_default": "relay always removes any app-set Content-Length/Transfer-Encoding and writes framing only from its argument (none for -1, none for 204). With contentLength >= 0 it sends exactly that many bytes, then closes the stream without reading further and finishes normally.",
+      "evidence": "§2 A-6 L164-L165."
+    },
+    {
+      "id": "AMB-8",
+      "section": "§3.1",
+      "question": "What exactly is a 'malformed' target URL: scheme case, empty port (http://h:/), port range, non-ASCII/IDN host, IPv6 zone id, null, and a base path that itself contains segments the §3.2 path check would reject (., .., //, ;, %2e, control chars)?",
+      "why_it_matters": "Proxy.to throws IllegalArgumentException at construction; unvalidated base paths could reintroduce the traversal/encoding problems §3.2 rejects for request paths.",
+      "closes_by": "default",
+      "proposed_default": "Scheme http/https case-insensitive; host required and ASCII (reg-name, IPv4, or bracketed IPv6 without zone id); port optional, if present 1..65535 digits (empty port -> IAE); no query/fragment/userinfo; base path (after stripping all trailing '/') must pass the §3.2 segment and request-target character checks, else IAE; null -> NullPointerException.",
+      "evidence": "§3.1 L198-L199: '형식이 잘못되면 Proxy.to 호출 시 IllegalArgumentException'."
+    },
+    {
+      "id": "AMB-9",
+      "section": "§3.2, §3.8",
+      "question": "Which raw path is checked with stripPrefix(true): the full originalUrl() path or only the forwarded url() part? And what is forwarded when the request equals the mount prefix exactly (url() is \"/\") with a non-empty base path: /base/ or /base?",
+      "why_it_matters": "Changes which requests get 400 when a parameterised mount prefix contains rejected characters, and the exact path the backend receives.",
+      "closes_by": "default",
+      "proposed_default": "Always validate the full raw originalUrl() path and query (superset; simplest). Forwarded target = basePath + (stripPrefix ? url() : originalUrl()), literal concatenation, so an exact mount match with stripPrefix sends basePath + \"/\" (e.g. /base/).",
+      "evidence": "§3.2 L211, L248 'raw 경로를 세그먼트별로 검사'; §3.8 L357; HttpExecution.java:224 (rest becomes \"/\")."
+    },
+    {
+      "id": "AMB-10",
+      "section": "§3.2, §3.6",
+      "question": "In what order are the pre-forward checks applied when a request fails several (bad method token 400, CONNECT/TRACE 405, request-target/path 400, header validity/multiple Host 400, framing 400/501, Content-Length over limit 413, consumed body 500, concurrency 503)?",
+      "why_it_matters": "The observable status and the exception the app's onError sees differ by order.",
+      "closes_by": "default",
+      "proposed_default": "WebSocket upgrade -> next(); method token (400); CONNECT/TRACE (405); request-target characters and path segments (400); header name/value validity and multiple Host (400); body framing (400/501); req.bodyStream(limit) (413 / BodyAlreadyConsumedException / IllegalStateException); 1-byte pre-read when no framing header; then slot (503) and watchdog start; then connect.",
+      "evidence": "§3.6 L335 lists checks then bodyStream then slot, without order among the checks."
+    },
+    {
+      "id": "AMB-11",
+      "section": "§3.2",
+      "question": "Are CONNECT and TRACE matched case-sensitively (RFC 9110 methods are case-sensitive, so 'trace' would be forwarded as an extension method)?",
+      "why_it_matters": "Some backends normalise method case; forwarding 'trace' could reach a TRACE handler the proxy meant to block.",
+      "closes_by": "default",
+      "proposed_default": "Match CONNECT and TRACE case-insensitively for the 405 rejection; all other tokens are forwarded exactly as received.",
+      "evidence": "§3.2 L209 'CONNECT·TRACE는 백엔드로 보내지 않고 405'."
+    },
+    {
+      "id": "AMB-12",
+      "section": "§3.2",
+      "question": "Where in the backend request do the rewritten/added headers go: Host, merged Cookie, X-Forwarded-For/Proto/Host, .requestHeader values, the framing header and Connection: close?",
+      "why_it_matters": "AC-B3 asserts client headers 'arrive in order'; tests that inspect raw header order need a fixed placement rule.",
+      "closes_by": "default",
+      "proposed_default": "Request line, then Host first; remaining client headers in received order minus removed ones, with the merged Cookie at the first Cookie position; then X-Forwarded-For, X-Forwarded-Proto, X-Forwarded-Host; then .requestHeader values in option order (their same-name client lines removed); then Content-Length or Transfer-Encoding; then Connection: close.",
+      "evidence": "§3.2 L213, L218; §3.9 L390 '요청 줄과 헤더를 받은 순서대로 쓰고'."
+    },
+    {
+      "id": "AMB-13",
+      "section": "§3.2, §3.9",
+      "question": "How are Content-Length and Transfer-Encoding values parsed on both sides: leading zeros (05 vs 5), surrounding whitespace, a comma list inside one line (Content-Length: 5, 5), values overflowing long, empty TE list elements, TE parameters (chunked;x=1), empty TE value?",
+      "why_it_matters": "These are the request-smuggling edge cases; the doc fixes the main rows but not the lexical rules, so 400/501/INVALID_RESPONSE outcomes depend on the guess.",
+      "closes_by": "default",
+      "proposed_default": "Split each field line on ',' and trim OWS. Content-Length: every element must be 1*DIGIT and fit in a long (else 400 / INVALID_RESPONSE); elements compared numerically. Transfer-Encoding: empty elements ignored; an empty overall value, or any coding with parameters, is treated as a non-chunked coding (request: 400 if last, 501 if before chunked per table; response: INVALID_RESPONSE). Coding names case-insensitive.",
+      "evidence": "§3.2 L224-L234; §3.9 L398-L402."
+    },
+    {
+      "id": "AMB-14",
+      "section": "§3.9",
+      "question": "Do the framing-validity rules (TE+CL together, bad/conflicting CL, non-chunked TE) apply to HEAD/204/304 responses, whose row 'do not read the body' comes first in the RFC 9112 §6.3 order?",
+      "why_it_matters": "A 304/HEAD response with an invalid Content-Length must either be rejected or have its length dropped; the proxy passes that length to relay.",
+      "closes_by": "default",
+      "proposed_default": "Validate framing headers on every response; only then skip reading the body for HEAD/204/304. HEAD/304 pass a valid Content-Length (or -1 when chunked/absent) to relay; 204 passes -1 (relay drops it).",
+      "evidence": "§3.9 L391-L403 table order."
+    },
+    {
+      "id": "AMB-15",
+      "section": "§3.3, §3.9",
+      "question": "How are backend status codes outside 100..599 (syntactically valid 3DIGIT per RFC 9112) and the backend reason phrase handled?",
+      "why_it_matters": "res.status() presumably rejects codes > 599; the client-visible reason phrase differs from the backend's.",
+      "closes_by": "default",
+      "proposed_default": "A 3-digit status outside 100..599 is INVALID_RESPONSE (502). The backend reason phrase is discarded; the adapter writes its standard phrase (no public reason API).",
+      "evidence": "§3.3 L267 '백엔드 값 그대로'; §3.9 L391 '잘못된 상태 줄'."
+    },
+    {
+      "id": "AMB-16",
+      "section": "§3.3",
+      "question": "What happens to response headers the adapter manages itself? TinyHttpd silently drops an app-set Date and writes its own (ExchangeResponse.managed), so a backend Date never reaches the client via TinyHttpd, while a servlet container may behave differently.",
+      "why_it_matters": "§3.3 promises headers are forwarded 'in order with duplicates'; Date (and reason phrase) cannot be, and adapters differ.",
+      "closes_by": "default",
+      "proposed_default": "Accept adapter behaviour: copy Date like any header; document in the proxy guide that Date (and the reason phrase) come from the gateway adapter. No acceptance test asserts backend Date.",
+      "evidence": "TinyHttpd core/.../ExchangeResponse.java:193, :504."
+    },
+    {
+      "id": "AMB-17",
+      "section": "§3.3",
+      "question": "Is a network-path reference Location (//h:8081/x) an 'absolute URL' to rewrite or a 'relative URL' to leave unchanged?",
+      "why_it_matters": "Leaving it unchanged leaks the internal backend address to the client, the exact problem the Location rewrite exists to prevent.",
+      "closes_by": "default",
+      "proposed_default": "Resolve a '//authority' reference against the target scheme and apply the normal same-origin + base-path rule; rewrite when it matches, otherwise leave it unchanged. Path-relative and path-absolute references stay unchanged.",
+      "evidence": "§3.3 L274 '조건에 맞지 않는 값과 상대 URL은 그대로 둡니다'; L276 rationale about exposing internal addresses."
+    },
+    {
+      "id": "AMB-18",
+      "section": "§3.4",
+      "question": "What is ProxyException's public shape: name and location of the kind enum, constructors, and how status maps from kind?",
+      "why_it_matters": "Public API that apps switch on in onError (§7); tests may construct it.",
+      "closes_by": "default",
+      "proposed_default": "public final class ProxyException extends HttpException in com.snoworca.naruserve.proxy; nested public enum ProxyException.Kind {CONNECT_FAILED, CONNECT_TIMEOUT, WRITE_TIMEOUT, READ_TIMEOUT, TOTAL_TIMEOUT, INVALID_RESPONSE, CONCURRENCY_LIMIT}; public Kind kind(); public constructor ProxyException(Kind kind, @Nullable Throwable cause) with status derived from kind (502/504/503) and a null message.",
+      "evidence": "§3.4 L280-L293 ('kind()는 오류 종류 열거형' without a type name)."
+    },
+    {
+      "id": "AMB-19",
+      "section": "§3.2, §3.4",
+      "question": "Does the proxy emit its own 400/405/501 rejections by throwing HttpException into the error flow or by writing the response directly?",
+      "why_it_matters": "Decides whether the app's onError/error middleware sees them and what body format the client gets.",
+      "closes_by": "default",
+      "proposed_default": "Throw HttpException(status) with a null message (405 via .withHeader(\"Allow\", \"GET, HEAD, POST, PUT, DELETE, PATCH, OPTIONS\")), consistent with §5 #5. These are plain HttpException, not ProxyException (no kind).",
+      "evidence": "§3.2 L209, L222, L248 ('400으로 응답'); §5 #5; HttpException.withHeader exists."
+    },
+    {
+      "id": "AMB-20",
+      "section": "§3.4",
+      "question": "Must the proxy itself log pre-response ProxyExceptions (the doc says target address and cause 'stay only in getCause() and the log'), or only post-commit failures?",
+      "why_it_matters": "Double logging versus no log when an app onError swallows the exception.",
+      "closes_by": "default",
+      "proposed_default": "The proxy logs (WARN, with cause) only failures after the response started, as §3.4 requires; pre-response failures go to the error flow, where the framework's failure logging (DefaultRequest.logFailure via FinalHandler) or the app's onError handles them.",
+      "evidence": "§3.4 L293, L297."
+    },
+    {
+      "id": "AMB-21",
+      "section": "§3.4, §3.9",
+      "question": "Is connectTimeout one budget for TCP connect plus TLS handshake, or does each phase get the full value (§3.9 sets handshake SO_TIMEOUT to the connect timeout, which is also per-read)?",
+      "why_it_matters": "A slow connect followed by a slow or trickling handshake times out or not depending on the reading.",
+      "closes_by": "default",
+      "proposed_default": "Follow §3.9 literally: connect(address, connectTimeout), then SO_TIMEOUT = connectTimeout during the handshake (CONNECT_TIMEOUT on expiry); a trickling handshake is bounded by totalTimeout. Document it.",
+      "evidence": "§3.4 L304 '재는 구간: TCP 연결과 TLS 핸드셰이크'; §3.9 L405."
+    },
+    {
+      "id": "AMB-22",
+      "section": "§3.4, §3.8",
+      "question": "How are (long, TimeUnit) values converted for socket APIs: sub-millisecond values round to 0 ms, which Socket.connect/setSoTimeout treat as infinite; huge values overflow int milliseconds?",
+      "why_it_matters": "connectTimeout(1, NANOSECONDS) would silently become 'no timeout', contradicting 'no unlimited default / 0 is rejected'.",
+      "closes_by": "default",
+      "proposed_default": "Convert with ceiling to at least 1 ms and clamp to Integer.MAX_VALUE ms for socket APIs; keep nanosecond precision for the watchdog (total/write) with saturation at Long.MAX_VALUE.",
+      "evidence": "§3.8 L371 '0보다 큰 값. 0은 무제한을 뜻하지 않고 거부함'."
+    },
+    {
+      "id": "AMB-23",
+      "section": "§3.2, §3.6",
+      "question": "Does the 1-byte pre-read (no Content-Length and no Transfer-Encoding) happen before slot acquisition and before the total-timeout watchdog starts?",
+      "why_it_matters": "A slow client could hold a concurrency slot or trigger TOTAL_TIMEOUT before any backend contact.",
+      "closes_by": "default",
+      "proposed_default": "Yes: the pre-read is part of framing determination and runs after req.bodyStream(...) but before slot acquisition and watchdog start; its blocking is bounded by the adapter's body-read protection.",
+      "evidence": "§3.2 L230; §3.6 L335."
+    },
+    {
+      "id": "AMB-24",
+      "section": "§3.5",
+      "question": "Which non-timeout, non-TLS connection failures are retried? The retry table names only 'connection refused, name resolution failure', while CONNECT_FAILED also covers others (no route to host, network unreachable).",
+      "why_it_matters": "Retry count observable with .retries(n) against unreachable networks.",
+      "closes_by": "default",
+      "proposed_default": "Retry every TCP-level connect failure that is not a connect timeout and not a TLS failure (all happen before any request byte is sent, same rationale as the table).",
+      "evidence": "§3.5 L320; §3.4 L282 '(연결 거부, 이름 해석 실패, ... 등)'."
+    },
+    {
+      "id": "AMB-25",
+      "section": "§3.8",
+      "question": "Exact parameter types of count options and whether configured values are publicly readable; behaviour of sslSocketFactory on an http target.",
+      "why_it_matters": "Public API signatures; AC-B20 needs the configured defaults verified 'from the object's settings'.",
+      "closes_by": "default",
+      "proposed_default": "retries(int), maxConcurrent(int), bodyLimit(long), boolean toggles take boolean; no public getters (package-private accessors used by the unit test for AC-B20); sslSocketFactory(...) on an http target is accepted and unused.",
+      "evidence": "§3.8 L355-L377; AC-B20 L462."
+    },
+    {
+      "id": "AMB-26",
+      "section": "§2 A-4, §3.2",
+      "question": "What do isFromTrustedProxy() and the X-Forwarded-For rewrite do when the socket address is unavailable or not an IP literal?",
+      "why_it_matters": "Avoids forwarding a client-supplied XFF unverified or appending an empty element.",
+      "closes_by": "default",
+      "proposed_default": "isFromTrustedProxy() returns false when the address cannot be parsed; the proxy then removes any client X-Forwarded-For and, if no usable socket address exists, sends no X-Forwarded-For.",
+      "evidence": "§2 A-4 L132; §3.2 L240."
+    },
+    {
+      "id": "AMB-27",
+      "section": "§3.9, §5 #6",
+      "question": "Packaging of the new module: dependency scope on NaruServe-api, API 21 animal-sniffer check, Maven publication, and whether NaruServe / NaruServe-android / NaruServe-kotlin bundle it.",
+      "why_it_matters": "Build layout and what users receive transitively.",
+      "closes_by": "default",
+      "proposed_default": "Gradle project NaruServe-proxy (artifactId naruserve-proxy) configured in root build.gradle, api dependency on NaruServe-api only, Java 8 release, in the animal-sniffer API 21 set, published like the other modules, not bundled into NaruServe, NaruServe-android or NaruServe-kotlin. Project CLAUDE.md module list updated to mention it.",
+      "evidence": "§3.9 L386; CLAUDE.md build section; build.gradle:165-182."
+    },
+    {
+      "id": "AMB-28",
+      "section": "header table, §6",
+      "question": "Are requests A and B delivered together in this run, and does the run bump the build version to 0.12.0?",
+      "why_it_matters": "The header allows splitting A and B; version string appears in docs and published artifacts.",
+      "closes_by": "default",
+      "proposed_default": "Deliver A and B in this run (B depends on A). Record 0.12.0 as the target version in SRS/docs ('since 0.12.0'); leave the actual build.gradle version bump and publishing to the release step.",
+      "evidence": "Header L7, L9 ('제안 버전 0.12.0', '별도 이슈로 나눠 받아도 됩니다')."
+    },
+    {
+      "id": "AMB-29",
+      "section": "header table, §3",
+      "question": "Where do the requirements and docs live: which SRS scope for the proxy and which docs/api pages?",
+      "why_it_matters": "The header says 'new scope for the proxy module' without a name; CLAUDE.md requires docs/api updates with Express mappings.",
+      "closes_by": "default",
+      "proposed_default": "Request A requirements in 04.http-core (Request/Response) and 05.application (rawBodyLimit); request B in a new scope allocated with the next free NN (slug 'proxy'). docs/api: update request/response pages and add a proxy page with Express (http-proxy-middleware) mapping, Java and Kotlin examples, and the warnings §3.2/§3.3/§3.6 require.",
+      "evidence": "Header L8; §3.2 L246, §3.3 L268, §3.6 L341 ('프록시 문서는 ...')."
+    }
+  ],
+  "contradictions": [
+    {
+      "id": "CON-1",
+      "sections": ["§2 A-6", "§3.3", "§3.9"],
+      "description": "A-6 says that with contentLength >= 0 relay sends exactly that many bytes and aborts the response if the stream ends early, yet the same section and §3.3 require HEAD (and 304) responses to keep Content-Length with no body; §3.9 has the proxy skip reading the backend body for HEAD/304, so it hands relay an empty stream with a positive length, which the literal abort rule would turn into an aborted response.",
+      "proposed_resolution": "The exact-length/abort rule applies only when a body is actually sent. For HEAD requests and 204/304 responses relay reads nothing, closes the stream, keeps Content-Length per A-6 (HEAD/304) or drops it (204), and finishes normally."
+    }
+  ],
+  "ambiguities_needing_user": 0
+}

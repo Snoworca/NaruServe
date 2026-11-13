@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-11-14.NaruServe.naruserve-proxy",
+  "constraints": [
+    {"id": "C-001", "statement": "Java 8 source/target bytecode; minimum runtime Android 5.0 (API 21), checked with animal-sniffer android-api-level-21 on every Android-targeted module.", "source": "CLAUDE.md (project) 핵심 제약"},
+    {"id": "C-002", "statement": "Core public API must not use java.nio.file.*, CompletableFuture, java.net.http.*, android.*, javax/jakarta.servlet.* or force the Kotlin stdlib.", "source": "CLAUDE.md (project) 핵심 제약"},
+    {"id": "C-003", "statement": "Build only with the Gradle 8.14.3 wrapper; the root build.gradle configures every module and modules carry no build files of their own.", "source": "CLAUDE.md (project) 빌드"},
+    {"id": "C-004", "statement": "Every callback is a @FunctionalInterface; public API uses Express-style short names, no Kotlin keywords as method names, value objects follow getX/setX, nullability via @Nullable with the @NullMarked default.", "source": "CLAUDE.md (project) Kotlin 호환"},
+    {"id": "C-005", "statement": "Public API changes update docs/api/ in the same change, with the Express counterpart and Java and Kotlin examples; unnamed items are decided during implementation and recorded.", "source": "CLAUDE.md (project) API 문서"},
+    {"id": "C-006", "statement": "Behaviour changes follow TDD: a failing test citing the requirement before implementation, never weakening tests.", "source": "CLAUDE.md (project) TDD principle"},
+    {"id": "C-007", "statement": "Never run git add -A or git commit -a; commits stage explicit pathspecs; the integration branch is never merged into main by the run.", "source": "kiwi-orchestrator run contract / user handbook §4"}
+  ]
+}
