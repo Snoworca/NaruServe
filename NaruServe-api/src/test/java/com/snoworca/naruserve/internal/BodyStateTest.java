@@ -246,13 +246,16 @@ public class BodyStateTest {
     }
 
     // SDS-AC-11; FR-HTTP-019 AC-5, re-pointed by IR-JSON-002 AC-8: body(Class) and body(TypeRef) are the JSON readers;
-    // re-pointed by IR-MULTIPART-002 AC-6: form, file, files and parts are the only other readers, of the FORM kind
+    // re-pointed by IR-MULTIPART-002 AC-6: form, file, files and parts are the only other readers, of the FORM kind;
+    // IR-HTTP-013 AC-1: bodyStream() and bodyStream(long) are exactly the InputStream-returning readers (their body
+    // ownership is FR-HTTP-030 AC-11)
     @Test
     public void sdsAc11_FR_HTTP_019_AC5_requestHasNoPublicBodyReadingMethod() {
         List<String> bodyNames = Arrays.asList("json", "text", "bytes", "stream", "inputStream", "raw");
         List<String> formReaders = Arrays.asList("form", "file", "files", "parts");
         List<String> bodyReaders = new java.util.ArrayList<>();
         java.util.Set<String> seenFormReaders = new java.util.TreeSet<>();
+        java.util.Set<String> streamReaders = new java.util.TreeSet<>();
         for (Method m : Request.class.getMethods()) {
             if (m.getName().equals("body")) {
                 bodyReaders.add(Arrays.toString(m.getParameterTypes()));
@@ -261,13 +264,16 @@ public class BodyStateTest {
                 seenFormReaders.add(m.getName() + Arrays.toString(m.getParameterTypes()));
             }
             assertFalse(m.getName(), bodyNames.contains(m.getName()));
-            assertFalse(m.getName(), java.io.InputStream.class.isAssignableFrom(m.getReturnType()));
+            if (java.io.InputStream.class.isAssignableFrom(m.getReturnType())) {
+                streamReaders.add(m.getName() + Arrays.toString(m.getParameterTypes()));
+            }
             assertFalse(m.getName(), m.getReturnType() == byte[].class);
         }
         java.util.Collections.sort(bodyReaders);
         assertEquals(Arrays.asList("[class com.snoworca.naruserve.TypeRef]", "[class java.lang.Class]"), bodyReaders);
         assertEquals(new java.util.TreeSet<>(Arrays.asList("file[class java.lang.String]",
                 "files[class java.lang.String]", "form[class java.lang.String]", "parts[]")), seenFormReaders);
+        assertEquals(new java.util.TreeSet<>(Arrays.asList("bodyStream[]", "bodyStream[long]")), streamReaders);
         Method body;
         try {
             body = DefaultRequest.class.getDeclaredMethod("body");

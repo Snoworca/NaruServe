@@ -87,7 +87,8 @@ public class HttpApiSurfaceTest {
 
     // SDS-AC-1; IR-HTTP-001 AC-1; IR-APP-004 AC-3 adds application and service from wave 4; SDS-AC-11 of
     // docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-3.sds.md; FR-COOKIE-002 AC-8 adds the cookie readers; IR-MULTIPART-002 AC-6 adds
-    // form, file, files and parts; IR-HTTP-010 AC-2 adds socketAddress and requestId
+    // form, file, files and parts; IR-HTTP-010 AC-2 adds socketAddress and requestId; IR-HTTP-013 AC-4 adds bodyStream,
+    // bodyStream(long), headerNames, rawHeaders and isFromTrustedProxy with every earlier signature unchanged
     @Test
     public void sdsAc1_IR_HTTP_001_AC1_requestDeclaresTheWave3Methods() throws Exception {
         assertTrue(Request.class.isInterface());
@@ -111,7 +112,10 @@ public class HttpApiSurfaceTest {
                 // wave 6: IR-MULTIPART-002 AC-6
                 "form(String)->String", "file(String)->UploadFile", "files(String)->List", "parts()->List",
                 // 0.11.0: IR-HTTP-010 AC-2 (C6a, C7)
-                "socketAddress()->String", "requestId()->String"),
+                "socketAddress()->String", "requestId()->String",
+                // 0.12.0: IR-HTTP-013 AC-4 (re-points IR-HTTP-010 AC-2)
+                "bodyStream()->InputStream", "bodyStream(long)->InputStream", "headerNames()->Set",
+                "rawHeaders()->List", "isFromTrustedProxy()->boolean"),
                 signatures(Request.class));
         for (String name : new String[] {"queries", "headers"}) {
             assertEquals(name, "java.util.List<java.lang.String>",
@@ -508,6 +512,158 @@ public class HttpApiSurfaceTest {
         assertTrue(RestApp.class.getMethod("method", String.class, Object.class, Middleware[].class).isVarArgs());
         assertTrue(RouteBuilder.class.getMethod("method", String.class, Middleware[].class).isVarArgs());
         assertEquals(RouteBuilder.class, RestApp.class.getMethod("route", Object.class).getReturnType());
+    }
+
+    /** The five Request methods IR-HTTP-013 adds, each as name and parameter types. */
+    private static java.lang.reflect.Method[] requestAMethods() throws NoSuchMethodException {
+        return new java.lang.reflect.Method[] {Request.class.getMethod("bodyStream"),
+                Request.class.getMethod("bodyStream", long.class), Request.class.getMethod("headerNames"),
+                Request.class.getMethod("rawHeaders"), Request.class.getMethod("isFromTrustedProxy")};
+    }
+
+    /** Calls {@code m} on {@code target} with a fixed argument for {@code bodyStream(long)}. */
+    private static Object call(java.lang.reflect.Method m, Object target) throws Exception {
+        try {
+            return m.getParameterCount() == 0 ? m.invoke(target) : m.invoke(target, 2048L);
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof Exception) {
+                throw (Exception) cause;
+            }
+            throw (Error) cause;
+        }
+    }
+
+    // IR-HTTP-013 AC-1: the five methods and their generic return types
+    @Test
+    public void IR_HTTP_013_AC1_requestDeclaresBodyStreamHeaderEnumerationAndTrustedProxyPredicate() throws Exception {
+        assertEquals(InputStream.class, Request.class.getMethod("bodyStream").getReturnType());
+        assertEquals(InputStream.class, Request.class.getMethod("bodyStream", long.class).getReturnType());
+        assertEquals(boolean.class, Request.class.getMethod("isFromTrustedProxy").getReturnType());
+        assertEquals("java.util.Set<java.lang.String>",
+                Request.class.getMethod("headerNames").getGenericReturnType().getTypeName());
+        assertEquals("java.util.List<java.util.Map$Entry<java.lang.String, java.lang.String>>",
+                Request.class.getMethod("rawHeaders").getGenericReturnType().getTypeName());
+    }
+
+    // IR-HTTP-013 AC-2: default methods throwing UnsupportedOperationException naming the implementing class, the
+    // MinimalRequest test double compiles unchanged, and DefaultRequest overrides each one publicly
+    @Test
+    public void IR_HTTP_013_AC2_defaultsThrowNamingTheImplementingClassAndDefaultRequestOverrides() throws Exception {
+        Request minimal = new RequestIdAndSocketAddressTest.MinimalRequest();
+        String implementing = RequestIdAndSocketAddressTest.MinimalRequest.class.getName();
+        for (java.lang.reflect.Method m : requestAMethods()) {
+            assertTrue(m.toString(), m.isDefault());
+            try {
+                call(m, minimal);
+                fail(m + " of a bare Request returned");
+            } catch (UnsupportedOperationException e) {
+                assertNotNull(m.toString(), e.getMessage());
+                assertTrue(m + ": " + e.getMessage(), e.getMessage().startsWith(implementing + " has no "));
+            }
+            java.lang.reflect.Method override = com.snoworca.naruserve.internal.DefaultRequest.class
+                    .getMethod(m.getName(), m.getParameterTypes());
+            assertEquals(m.toString(), com.snoworca.naruserve.internal.DefaultRequest.class,
+                    override.getDeclaringClass());
+            assertTrue(m.toString(), Modifier.isPublic(override.getModifiers()));
+            assertEquals(m.toString(), m.getReturnType(), override.getReturnType());
+        }
+    }
+
+    // IR-HTTP-013 AC-3: one zero-argument bodyStream on DefaultRequest, public and returning InputStream; the
+    // internal readers (JsonBodyReader, the form and multipart paths of DefaultRequest) call the renamed method
+    @Test
+    public void IR_HTTP_013_AC3_internalBodyStreamIsRenamedAndTheOnlyZeroArgBodyStreamIsPublic() throws Exception {
+        List<java.lang.reflect.Method> zeroArg = new java.util.ArrayList<>();
+        for (java.lang.reflect.Method m : com.snoworca.naruserve.internal.DefaultRequest.class.getDeclaredMethods()) {
+            if (m.getName().equals("bodyStream") && m.getParameterCount() == 0 && !m.isSynthetic()) {
+                zeroArg.add(m);
+            }
+        }
+        assertEquals(zeroArg.toString(), 1, zeroArg.size());
+        assertTrue(zeroArg.get(0).toString(), Modifier.isPublic(zeroArg.get(0).getModifiers()));
+        assertEquals(InputStream.class, zeroArg.get(0).getReturnType());
+        java.io.File internal = new java.io.File(System.getProperty("user.dir"),
+                "src/main/java/com/snoworca/naruserve/internal");
+        String json = read(new java.io.File(internal, "JsonBodyReader.java"));
+        assertFalse("JsonBodyReader calls the renamed internal method", json.contains("bodyStream("));
+        String request = read(new java.io.File(internal, "DefaultRequest.java"));
+        int formData = request.indexOf("FormData formData()");
+        assertTrue("DefaultRequest declares formData()", formData >= 0);
+        String formPath = request.substring(formData, request.indexOf("void releaseUploads()", formData));
+        assertTrue(formPath, formPath.contains("FormBodyReader.read("));
+        assertTrue(formPath, formPath.contains("MultipartParser.parse("));
+        assertFalse("the form and multipart paths call the renamed internal method", formPath.contains("bodyStream("));
+    }
+
+    private static String read(java.io.File f) throws IOException {
+        assertTrue(f.getPath(), f.isFile());
+        return new String(java.nio.file.Files.readAllBytes(f.toPath()), java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    // IR-HTTP-013 AC-4: restating IR-MULTIPART-002 AC-6, LATER_WAVE_NAMES names no form reader and none of the five
+    @Test
+    public void IR_HTTP_013_AC4_laterWaveNamesListNamesNoFormReaderAndNoneOfTheFiveMethods() throws Exception {
+        for (String name : new String[] {"form", "file", "files", "parts"}) {
+            assertFalse(name, LATER_WAVE_NAMES.contains(name));
+        }
+        for (java.lang.reflect.Method m : requestAMethods()) {
+            assertFalse(m.getName(), LATER_WAVE_NAMES.contains(m.getName()));
+        }
+    }
+
+    /** Whether {@code type} or any of its type arguments, at any depth, carries a jspecify nullness annotation. */
+    private static boolean hasNullness(AnnotatedType type) {
+        if (type.isAnnotationPresent(Nullable.class)
+                || type.isAnnotationPresent(org.jspecify.annotations.NonNull.class)) {
+            return true;
+        }
+        if (type instanceof java.lang.reflect.AnnotatedParameterizedType) {
+            for (AnnotatedType arg : ((java.lang.reflect.AnnotatedParameterizedType) type)
+                    .getAnnotatedActualTypeArguments()) {
+                if (hasNullness(arg)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // IR-HTTP-013 AC-5: none of the five carries @Nullable or @NonNull, on the return type or any of its type
+    // arguments, and none leaves the package @NullMarked scope through @NullUnmarked; the exact nullable set of
+    // sdsAc3_IR_HTTP_001_AC4_packageNullMarkedAndNullableOnlyOnListedPositions gains no position
+    @Test
+    public void IR_HTTP_013_AC5_theFiveMethodsCarryNoNullnessAnnotation() throws Exception {
+        assertNotNull(Request.class.getPackage().getAnnotation(NullMarked.class));
+        assertFalse(Request.class.isAnnotationPresent(org.jspecify.annotations.NullUnmarked.class));
+        for (java.lang.reflect.Method m : requestAMethods()) {
+            assertFalse(m.toString(), hasNullness(m.getAnnotatedReturnType()));
+            assertFalse(m.toString(), m.isAnnotationPresent(org.jspecify.annotations.NullUnmarked.class));
+            for (AnnotatedType p : m.getAnnotatedParameterTypes()) {
+                assertEquals(m.toString(), 0, p.getAnnotations().length);
+                assertFalse(m.toString(), hasNullness(p));
+            }
+            for (java.lang.annotation.Annotation a : m.getAnnotations()) {
+                String simple = a.annotationType().getSimpleName();
+                assertFalse(m + " " + simple, simple.equals("Nullable") || simple.equals("NonNull")
+                        || simple.equals("Nonnull") || simple.equals("NotNull"));
+            }
+        }
+        for (String position : nullablePositions(Request.class)) {
+            for (java.lang.reflect.Method m : requestAMethods()) {
+                assertFalse(position, position.startsWith("Request." + m.getName() + "["));
+            }
+        }
+    }
+
+    // IR-HTTP-013 AC-6: FR-KT-002, the five names are no Kotlin hard keyword
+    @Test
+    public void IR_HTTP_013_AC6_theFiveNamesAreNoKotlinHardKeyword() throws Exception {
+        assertEquals(Collections.emptyList(),
+                KotlinContractChecks.keywordFailures(Collections.<Class<?>>singletonList(Request.class)));
+        for (java.lang.reflect.Method m : requestAMethods()) {
+            assertTrue(m.getName(), m.getName().matches("[a-z][A-Za-z]*"));
+        }
     }
 
 }

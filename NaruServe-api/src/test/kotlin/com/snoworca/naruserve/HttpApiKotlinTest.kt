@@ -177,4 +177,34 @@ class HttpApiKotlinTest {
         assertEquals(202, t.send("GET", "/end").status())
         assertTrue(t.send("GET", "/abort").abnormallyClosed())
     }
+
+    // IR-HTTP-013 AC-6: Kotlin accepts these typed declarations from a platform type too; the "no platform type"
+    // half rests on the package @NullMarked scope that HttpApiSurfaceTest IR_HTTP_013_AC5 pins for the five methods.
+    @Test
+    fun `IR-HTTP-013 AC-6 Kotlin reads bodyStream headerNames rawHeaders and isFromTrustedProxy without platform types`() {
+        val t = TestApp.create()
+        val seen = ArrayList<Any>()
+        t.app().get("/raw") { req, res ->
+            val s: InputStream = req.bodyStream()
+            val names: Set<String> = req.headerNames()
+            val raw: List<Map.Entry<String, String>> = req.rawHeaders()
+            val trusted: Boolean = req.isFromTrustedProxy
+            s.close()
+            seen.addAll(listOf(s, names, raw, trusted))
+            res.send("raw")
+        }
+        t.app().get("/big") { req, res ->
+            val big: InputStream = req.bodyStream(2048L)
+            big.close()
+            seen += big
+            res.send("big")
+        }
+        val raw = t.send("GET", "/raw", "X-A", "1")
+        assertEquals(200, raw.status())
+        assertEquals("raw", raw.text())
+        val big = t.send("GET", "/big")
+        assertEquals(200, big.status())
+        assertEquals("big", big.text())
+        assertEquals(5, seen.size)
+    }
 }
