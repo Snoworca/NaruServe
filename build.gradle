@@ -11,8 +11,9 @@ plugins {
 def kotlinVersion = '2.2.0'
 
 // @req CON-BUILD-002
+// @req CON-BUILD-019
 def naruModules = [':NaruServe-api', ':NaruServe-servlet', ':NaruServe-tinyhttpd', ':NaruServe-gson', ':NaruServe',
-                   ':NaruServe-kotlin', ':NaruServe-slf4j', ':NaruServe-filelog', ':NaruServe-logcat']
+                   ':NaruServe-kotlin', ':NaruServe-slf4j', ':NaruServe-filelog', ':NaruServe-logcat', ':NaruServe-proxy']
 def naruProjects = naruModules.collect { project(it) }
 
 // @req CON-BUILD-012
@@ -74,6 +75,9 @@ def mainDependencies = [
     ':NaruServe-slf4j'    : [api: [':NaruServe-api', 'org.slf4j:slf4j-api:1.7.36']],
     ':NaruServe-filelog'  : [api: [':NaruServe-api']],
     ':NaruServe-logcat'   : [api: [':NaruServe-api']],
+    // @req CON-BUILD-019
+    // The proxy uses only the public API; NaruServe, NaruServe-kotlin and NaruServe-android never declare it.
+    ':NaruServe-proxy'    : [api: [':NaruServe-api']],
     // @req FR-BUILD-001
     ':NaruServe-android'  : [api: [':NaruServe', ':NaruServe-logcat']],
 ]
@@ -174,6 +178,7 @@ def moduleDescriptions = [
     'NaruServe-filelog'  : 'NaruServe Logger that writes rotating log files.',
     'NaruServe-slf4j'    : 'NaruServe Logger adapter for SLF4J (JVM only).',
     'NaruServe-servlet'  : 'Runs a NaruServe app on a Servlet 3.1+ container (JVM only).',
+    'NaruServe-proxy'    : 'NaruServe reverse proxy middleware that forwards requests to a backend HTTP server.',
     'NaruServe-android'  : 'NaruServe for Android: the default bundle, the Logcat logger and the INTERNET permission.',
 ]
 def configurePom = { Project p, MavenPublication publication ->
@@ -250,6 +255,12 @@ configure(naruProjects) { p ->
     test {
         useJUnit()
     }
+
+    // @req CON-BUILD-019
+    // javadoc fails with "No public or protected classes found to document" on a module whose main sources are only
+    // package-info.java (NaruServe-proxy before its first class); such a module publishes an empty javadoc jar.
+    def mainJava = p.sourceSets.main.java
+    p.tasks.named('javadoc') { onlyIf { mainJava.files.any { it.name != 'package-info.java' } } }
 
     def prefixes = classRefPrefixes(p.path)
     if (!prefixes.isEmpty()) {
@@ -611,7 +622,7 @@ dependencies {
     testImplementation rootServletTestDependency
 }
 // @req FR-REL-005
-// checkCentralStaging stages all ten modules from scratch and fails rather than stage nine without the AAR.
+// checkCentralStaging stages every module from scratch and fails rather than stage the JAR modules without the AAR.
 def centralStagingDir = layout.buildDirectory.dir('central-staging')
 def cleanCentralStaging = tasks.register('cleanCentralStaging', Delete) {
     delete centralStagingDir
@@ -620,7 +631,7 @@ def stagedProjects = androidProject != null ? naruProjects + [androidProject] : 
 def publishToCentralStaging = stagedProjects.collect { "${it.path}:publishAllPublicationsToCentralStagingRepository" }
 tasks.register('checkCentralStaging') {
     group = 'publishing'
-    description = 'Publishes the ten modules to build/central-staging and checks the files Maven Central needs.'
+    description = 'Publishes every module to build/central-staging and checks the files Maven Central needs.'
     dependsOn cleanCentralStaging, publishToCentralStaging
     def ids = (naruModules + [':NaruServe-android']).collect { it.substring(1).toLowerCase(Locale.ROOT) }.toSorted()
     def stagedVersion = version

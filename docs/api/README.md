@@ -89,7 +89,8 @@ DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답
 | `NaruServe-servlet` | `com.snoworca.naruserve:naruserve-servlet` | Servlet 3.1+ 컨테이너 위에서 NaruServe 앱을 실행하는 어댑터 | 미지원(JVM 전용) |
 
 "지원(API 21+)" 모듈은 빌드 때 animal-sniffer `android-api-level-21` 검사를 받습니다.
-`NaruServe-android`는 Android Gradle Plugin으로 만드는 AAR이라 Android SDK가 있을 때만 빌드됩니다(`local.properties`의 `sdk.dir`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` 순서로 찾습니다). SDK가 없으면 경고만 내고 나머지 아홉 모듈을 빌드합니다. 이 모듈에는 자체 코드가 없고 `minSdk`는 21입니다.
+`NaruServe-proxy`(`com.snoworca.naruserve:naruserve-proxy`)는 다음 릴리스에 더해지는 리버스 프록시 모듈입니다. `NaruServe-api`에만 의존하고, `NaruServe`·`NaruServe-kotlin`·`NaruServe-android`는 이 모듈을 포함하지 않으므로 프록시를 쓰는 앱만 따로 넣습니다.
+`NaruServe-android`는 Android Gradle Plugin으로 만드는 AAR이라 Android SDK가 있을 때만 빌드됩니다(`local.properties`의 `sdk.dir`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` 순서로 찾습니다). SDK가 없으면 경고만 내고 나머지 모듈을 빌드합니다. 이 모듈에는 자체 코드가 없고 `minSdk`는 21입니다.
 기본 HTTP 엔진 빌드는 TinyHttpd 체크아웃을 사용하며, 커밋 `e73cd5d`(TinyHttpd 3.1.1, 태그 `v3.1.1`: RAW 요청 대상 정책)에서 검증했습니다. 체크아웃 HEAD가 다르면 빌드는 실패하지 않고 경고만 냅니다. `-PtinyHttpdFromMaven=true`를 지정하면 체크아웃 없이 Maven Central의 3.1.1 JAR로 빌드합니다. 어댑터는 `RequestTargetPolicy.RAW`로 인코딩된 경로와 원본 쿼리를 보존합니다. HTTP 구문·Host·프레이밍 검사와 WebSocket 경로 검사는 유지됩니다.
 
 `RestApp.create()`는 `NaruServe` 모듈이 기본 HTTP 엔진(TinyHttpd)과 Gson을 자동으로 조립합니다.

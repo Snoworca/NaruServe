@@ -10,8 +10,8 @@ buildscript {
     }
 }
 
-// The published modules are the subprojects of the root build: the nine JAR modules and, when settings.gradle found an
-// Android SDK, the NaruServe-android AAR (FR-BUILD-001).
+// The published modules are the subprojects of the root build: the JAR modules of naruModules and, when
+// settings.gradle found an Android SDK, the NaruServe-android AAR (FR-BUILD-001).
 def publishedModules = subprojects as List<Project>
 def sbomDir = layout.buildDirectory.dir('reports/naruserve/sbom')
 
