@@ -79,7 +79,8 @@ public final class ReleaseRecordsDocsTest {
         return run;
     }
 
-    // SDS-AC-2, SDS-AC-4; FR-REL-001 AC-2, FR-REL-001 AC-4
+    // SDS-AC-2, SDS-AC-4; FR-REL-001 AC-2, FR-REL-001 AC-4; FR-REL-007 AC-1, FR-REL-007 AC-3 (record format, checked on the
+    // recorded release; the record of the next release is written by its release step, not by a build change)
     @Test
     public void fr_REL_001_AC2_AC4_everyReleaseRunHasOneLineWithCommandDateAndResult() throws IOException {
         for (String name : RUN_NAMES) {
@@ -89,7 +90,8 @@ public final class ReleaseRecordsDocsTest {
         }
     }
 
-    // SDS-AC-2; FR-REL-001 AC-2
+    // SDS-AC-2; FR-REL-001 AC-2; FR-REL-007 AC-1 (command, date, file list and component counts of the recorded release's
+    // modules; the next release's record, NaruServe-proxy.cdx.json included, is written by its release step)
     @Test
     public void fr_REL_001_AC2_sbomRunListsNineModuleFilesWithComponentCounts() throws IOException {
         String[] sbom = run("sbom");
@@ -221,7 +223,7 @@ public final class ReleaseRecordsDocsTest {
         }
     }
 
-    // SDS-AC-4; FR-REL-001 AC-4
+    // SDS-AC-4; FR-REL-001 AC-4; FR-REL-007 AC-3 (recorded offline build of the recorded release)
     @Test
     public void fr_REL_001_AC4_offlineBuildRunExitedZero() throws IOException {
         String[] offline = run("offline-build");

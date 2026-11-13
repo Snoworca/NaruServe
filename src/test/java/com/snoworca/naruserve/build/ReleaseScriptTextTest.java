@@ -31,13 +31,13 @@ public class ReleaseScriptTextTest {
         return BuildLayoutTest.read(new File(ROOT, path));
     }
 
-    // SDS-AC-3; FR-REL-001 AC-3
+    // SDS-AC-3; FR-REL-001 AC-3, FR-REL-007 AC-2
     @Test
     public void fr_REL_001_AC3_buildGradleAppliesReleaseScriptOnlyUnderTheReleaseProperty() throws IOException {
         assertTrue("build.gradle holds the guarded apply", GUARDED_APPLY.matcher(file("build.gradle")).find());
     }
 
-    // SDS-AC-3; FR-REL-001 AC-3
+    // SDS-AC-3; FR-REL-001 AC-3, FR-REL-007 AC-2
     @Test
     public void fr_REL_001_AC3_releasePluginNamesOccurOnlyInReleaseScript() throws IOException {
         for (String path : new String[] {"build.gradle", "settings.gradle", "gradle.properties"}) {
@@ -49,7 +49,24 @@ public class ReleaseScriptTextTest {
         assertTrue(file("gradle/release.gradle").toLowerCase(Locale.ROOT).contains("cyclonedx"));
     }
 
-    // SDS-AC-3; FR-REL-001 AC-3
+    // FR-REL-007 AC-2 — both plugin names, in any letter case, are absent from the scanned files and present in
+    // gradle/release.gradle, so the release script is the one place that names them
+    @Test
+    public void fr_REL_007_AC2_bothReleasePluginNamesOccurInTheReleaseScriptAndNowhereElseScanned() throws IOException {
+        String[] names = {"cyclonedx", "dependencycheck"};
+        for (String path : new String[] {"build.gradle", "settings.gradle", "gradle.properties"}) {
+            String text = file(path).toLowerCase(Locale.ROOT);
+            for (String name : names) {
+                assertFalse(path + " names " + name, text.contains(name));
+            }
+        }
+        String release = file("gradle/release.gradle").toLowerCase(Locale.ROOT);
+        for (String name : names) {
+            assertTrue("gradle/release.gradle names " + name, release.contains(name));
+        }
+    }
+
+    // SDS-AC-3; FR-REL-001 AC-3, FR-REL-007 AC-2
     @Test
     public void fr_REL_001_AC3_releaseScriptPinsEveryPluginVersionAsExactLiteral() throws IOException {
         Matcher m = Pattern.compile("classpath\\s*\\(?\\s*['\"]([^'\"]+)['\"]").matcher(file("gradle/release.gradle"));
@@ -74,7 +91,7 @@ public class ReleaseScriptTextTest {
         return block.matcher(script).find() || call.matcher(script).find();
     }
 
-    // SDS-AC-3; FR-REL-001 AC-3
+    // SDS-AC-3; FR-REL-001 AC-3, FR-REL-007 AC-2
     @Test
     public void fr_REL_001_AC3_noReleaseTaskIsWiredIntoCheckBuildOrTest() throws IOException {
         assertTrue(wiresReleaseTaskIntoDefaultBuild("tasks.named('check') { dependsOn releaseSbom }"));
@@ -179,5 +196,38 @@ public class ReleaseScriptTextTest {
                 assertFalse(c + " in the proxy SBOM", c.startsWith(banned));
             }
         }
+    }
+
+    /** The entries of {@code def naruModules = [...]} in build.gradle, without the leading colon. */
+    static List<String> naruModulesEntries(String build) {
+        Matcher list = Pattern.compile("def\\s+naruModules\\s*=\\s*\\[([^\\]]*)]").matcher(build);
+        assertTrue("build.gradle defines naruModules", list.find());
+        Matcher entry = Pattern.compile("['\"]:([\\w-]+)['\"]").matcher(list.group(1));
+        List<String> entries = new ArrayList<>();
+        while (entry.find()) {
+            entries.add(entry.group(1));
+        }
+        return entries;
+    }
+
+    // FR-REL-007 AC-1 (default-build part: the module files the releaseSbom run writes and its record lists) —
+    // the SBOM loop covers the subprojects, which are the entries of naruModules, NaruServe-proxy included, plus
+    // NaruServe-android when settings.gradle includes it; the -Prelease run and its record are the release step's
+    @Test
+    public void fr_REL_007_AC1_sbomModulesAreTheNaruModulesEntriesWithTheProxyPlusTheOptionalAar() throws IOException {
+        List<String> entries = naruModulesEntries(file("build.gradle"));
+        assertEquals("naruModules lists the JAR modules of BuildLayoutTest", BuildLayoutTest.MODULES, entries);
+        assertTrue("naruModules holds " + BuildLayoutTest.PROXY_MODULE, entries.contains(BuildLayoutTest.PROXY_MODULE));
+        Matcher include = Pattern.compile("(?m)^\\s*include\\s*\\(?\\s*['\"]:([\\w-]+)['\"]").matcher(file("settings.gradle"));
+        java.util.Set<String> included = new java.util.TreeSet<>();
+        while (include.find()) {
+            included.add(include.group(1));
+        }
+        java.util.Set<String> expected = new java.util.TreeSet<>(entries);
+        expected.add(BuildLayoutTest.ANDROID_MODULE);
+        assertEquals("settings.gradle includes the naruModules entries and the optional AAR only", expected, included);
+        String script = file("gradle/release.gradle");
+        assertTrue(script, script.contains("def publishedModules = subprojects as List<Project>"));
+        assertTrue(script, script.contains("jsonOutput = sbomDir.map { it.file(\"${p.name}.cdx.json\") }"));
     }
 }

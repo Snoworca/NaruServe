@@ -409,7 +409,7 @@ public class BuildLayoutTest {
         }
     }
 
-    // SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-1, body unchanged)
+    // SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-1, body unchanged); FR-REL-007 AC-4
     @Test
     public void con_BUILD_017_AC1_rootBuildFileHoldsPluginsCompileDependenciesAndChecks() throws IOException {
         String build = read(new File(ROOT, "build.gradle"));
@@ -450,7 +450,7 @@ public class BuildLayoutTest {
         }
     }
 
-    // SDS-AC-5, SDS-AC-7; CON-BUILD-017 AC-2, CON-BUILD-014 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-2, body unchanged)
+    // SDS-AC-5, SDS-AC-7; CON-BUILD-017 AC-2, CON-BUILD-014 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-2, body unchanged); FR-REL-007 AC-4
     @Test
     public void con_BUILD_017_AC2_noModuleBuildFile() {
         for (String module : MODULES) {
@@ -460,7 +460,7 @@ public class BuildLayoutTest {
         }
     }
 
-    // SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5
+    // SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5; FR-REL-007 AC-4 (checks the conditional apply of FR-REL-007 AC-2)
     @Test
     public void con_BUILD_017_AC1_onlyReferenceToAnotherScriptIsTheGuardedReleaseApply() throws IOException {
         String build = read(new File(ROOT, "build.gradle"));
