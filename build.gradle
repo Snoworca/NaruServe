@@ -57,7 +57,7 @@ def configureCompile = { Project p ->
     }
 }
 
-// Main (api/implementation) dependencies of CON-BUILD-006 AC-1; ':' entries are projects.
+// Main (api/implementation) dependencies of CON-BUILD-019 AC-3, the list CON-BUILD-021 points to; ':' entries are projects.
 def mainDependencies = [
     ':NaruServe-api'      : [:],
     ':NaruServe-servlet'  : [api: [':NaruServe-api']],
@@ -65,9 +65,9 @@ def mainDependencies = [
     ':NaruServe-tinyhttpd': [api: [':NaruServe-api'],
                              implementation: ['com.snoworca:tinyhttpd-core:3.1.1',
                                               'com.snoworca:tinyhttpd-websocket:3.1.1']],
-    // api scope: GsonJsonCodec takes a caller-built Gson (CON-BUILD-006 AC-9).
+    // api scope: GsonJsonCodec takes a caller-built Gson (CON-BUILD-021 AC-8).
     ':NaruServe-gson'     : [api: [':NaruServe-api', 'com.google.code.gson:gson:2.14.0']],
-    // api NaruServe-gson: a NaruServe caller compiles against GsonJsonCodec and Gson; no Logcat, any JDK (CON-BUILD-006 AC-9).
+    // api NaruServe-gson: a NaruServe caller compiles against GsonJsonCodec and Gson; no Logcat, any JDK (CON-BUILD-021 AC-8).
     ':NaruServe'          : [api: [':NaruServe-api', ':NaruServe-gson'],
                              implementation: [':NaruServe-tinyhttpd']],
     ':NaruServe-kotlin'   : [api: [':NaruServe', "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"]],
@@ -82,12 +82,12 @@ def mainDependencies = [
     ':NaruServe-android'  : [api: [':NaruServe', ':NaruServe-logcat']],
 ]
 
-// compileOnly dependencies of CON-BUILD-006 AC-2 besides the nullability library every module gets.
+// compileOnly dependencies of CON-BUILD-021 AC-1 besides the nullability library every module gets.
 def extraCompileOnly = [
     ':NaruServe-servlet': ['javax.servlet:javax.servlet-api:3.1.0', 'javax.websocket:javax.websocket-api:1.1'],
 ]
 
-// @req CON-BUILD-006
+// @req CON-BUILD-021
 // @req CON-BUILD-009
 // @req CON-BUILD-011
 def configureDependencies = { Project p ->
@@ -281,7 +281,7 @@ configure(naruProjects) { p ->
     }
 }
 
-// Test fixtures source set for the in-memory HttpAdapter of a later wave (CON-BUILD-006 AC-8).
+// Test fixtures source set for the in-memory HttpAdapter of a later wave (CON-BUILD-021 AC-7).
 project(':NaruServe-api') {
     apply plugin: 'java-test-fixtures'
     // @req FR-HTTP-001
@@ -663,7 +663,7 @@ test {
     useJUnit()
     dependsOn checkDependencyRules
     dependsOn naruModules.collect { "${it}:testClasses" }
-    // con_BUILD_006_AC8 reads this jar.
+    // con_BUILD_006_AC8 and con_BUILD_021_AC7 read this jar.
     dependsOn ':NaruServe-api:testFixturesJar'
     mustRunAfter naruModules.collect { "${it}:check" }
     // The checks read files outside this task's inputs, so never skip them as up to date.
