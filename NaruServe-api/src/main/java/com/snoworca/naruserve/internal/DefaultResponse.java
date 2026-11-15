@@ -84,6 +84,8 @@ public final class DefaultResponse implements Response {
     private @Nullable SseRegistry sseRegistry;
     private @Nullable DefaultSseClient sseClient;
     private boolean upgraded101;
+    /** Set by {@link #openSession}: the exchange's abort reports now belong to the session. */
+    private boolean sessionOpen;
     private final AbortListeners abortListeners = new AbortListeners();
     private @Nullable SafeLogger listenerLogger;
 
@@ -814,10 +816,24 @@ public final class DefaultResponse implements Response {
     // @req FR-HTTP-035
     @Override
     public void abort(@Nullable Throwable error) {
+        abort(error, false);
+    }
+
+    /**
+     * The exchange's onAbort hook: {@link #abort} with no error, a no-op once {@link #openSession} handed the
+     * connection to the session, decided under the same lock.
+     */
+    // @req FR-HTTP-035
+    // @req FR-APP-019
+    void abortByExchange() {
+        abort(null, true);
+    }
+
+    private void abort(@Nullable Throwable error, boolean byExchange) {
         boolean copyRunning;
         DefaultSseClient sse;
         synchronized (this) {
-            if (state == ResponseState.COMPLETED || state == ResponseState.ABORTED) {
+            if (state == ResponseState.COMPLETED || state == ResponseState.ABORTED || (byExchange && sessionOpen)) {
                 return;
             }
             state = ResponseState.ABORTED;
@@ -944,6 +960,20 @@ public final class DefaultResponse implements Response {
             }
         }
         fireDone();
+    }
+
+    /**
+     * The session's onOpen gate: false when the response already left NEW (an abort came first), so no 101 may be
+     * reported; else true, and a later exchange-reported abort ends the session, not this response.
+     */
+    // @req FR-HTTP-035
+    // @req FR-APP-019
+    synchronized boolean openSession() {
+        if (state != ResponseState.NEW) {
+            return false;
+        }
+        sessionOpen = true;
+        return true;
     }
 
     /** True once {@link #upgraded} ended this response: the session writes its own access lines. */
