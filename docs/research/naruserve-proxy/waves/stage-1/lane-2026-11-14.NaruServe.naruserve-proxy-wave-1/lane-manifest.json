@@ -1,0 +1,54 @@
+{
+  "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-1",
+  "wave": "wave-1",
+  "status": "complete",
+  "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-1",
+  "base_sha": "889c380ebc79a4f6719f3d73264330e2c6c3888a",
+  "head_sha": "6c010c318a9b45ef081d31585d0f9e76786107b0",
+  "commits": [
+    {"sha": "6e0f26c", "subject": "test(build): expect the NaruServe-proxy module in the build layout", "req": "CON-BUILD-019", "kind": "test"},
+    {"sha": "3aedd25", "subject": "build: add the NaruServe-proxy module depending on NaruServe-api only", "req": "CON-BUILD-019", "kind": "implementation"},
+    {"sha": "9e4e2b9", "subject": "test(build): pin the main and compileOnly dependencies of every module", "req": "CON-BUILD-021", "kind": "test"},
+    {"sha": "5146d81", "subject": "build: cite CON-BUILD-021 for the dependency rules", "req": "CON-BUILD-021", "kind": "implementation"},
+    {"sha": "1e84fe0", "subject": "test(release): check that naruserve-proxy is published, staged and covered by the SBOM", "req": "FR-REL-006", "kind": "test"},
+    {"sha": "d9c7e73", "subject": "build: publish naruserve-proxy with the other library modules", "req": "FR-REL-006", "kind": "implementation", "note": "empty commit (--allow-empty): the implementation landed in 3aedd25"},
+    {"sha": "e40bd2e", "subject": "test(release): cite FR-REL-007 for the release-only SBOM build", "req": "FR-REL-007", "kind": "test"},
+    {"sha": "11b91e9", "subject": "build: tag the release-only script apply with FR-REL-007", "req": "FR-REL-007", "kind": "implementation"},
+    {"sha": "6c010c3", "subject": "test(build): share the build.gradle parsing helpers between the build tests", "req": "CON-BUILD-019, FR-REL-006, FR-REL-007", "kind": "review"}
+  ],
+  "requirements": {"landed": ["CON-BUILD-019", "CON-BUILD-021", "FR-REL-006", "FR-REL-007"], "failed": null, "held": []},
+  "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-1/.kiwi/deferred-srs-mutations.jsonl",
+  "deferred_queue_summary": "36 entries: 26 add_verification_evidence, 2 add_trace_link, 4 update_status(implemented), 4 add_completed_work. The kiwi-coder children queued update_status(implemented) although kiwi-pm ran with --no-final; the host decides whether to replay those. FR-REL-007 has no evidence queued for AC-1/AC-3 and FR-REL-006 AC-4/AC-5 evidence covers only the default-build part (records belong to the release step, D-009).",
+  "reports": [
+    ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-1-con-build-019/lanes/w1s1l1/reports/pm-2026-11-13T190922Z.md",
+    ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-1-con-build-021/lanes/w1s1l1/reports/pm-2026-11-13T192057Z.md",
+    ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-1-fr-rel-006/lanes/w1s1l1/reports/pm-2026-11-13T193131Z.md",
+    ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-1-fr-rel-007/lanes/w1s1l1/reports/pm-2026-11-13T193931Z.md",
+    ".kiwi/sessions/2026-11-14.naruserve.self-w1l1review/analysis/report.md"
+  ],
+  "red_evidence": [
+    {"req": "CON-BUILD-019", "test": "BuildLayoutTest#con_BUILD_019_AC1..AC6, AuthPlacementTest#CON_AUTH_001_AC2_noNewProject", "red_output": "red before 3aedd25, e.g. 'naruModules ... lacks :NaruServe-proxy', 'NaruServe-proxy main output holds class files'"},
+    {"req": "CON-BUILD-021", "test": "BuildLayoutTest#con_BUILD_021_AC1..AC8", "red_output": "already green: criteria restated from CON-BUILD-006 and met by the existing build; mutation probes turned AC-1 and AC-6 red (extra compileOnly on the proxy; proxy declaring NaruServe-logcat)"},
+    {"req": "FR-REL-006", "test": "PublishedPomTest#fr_REL_006_AC1/AC2, CentralStagingTest#fr_REL_006_AC3, BuildChecksTest#fr_REL_006_AC4, ReleaseScriptTextTest#fr_REL_006_AC5", "red_output": "already green after CON-BUILD-019 (3aedd25); each turned red under a mutation probe (description, extra Gson dep, module metadata off, id removed, proxy filtered from SBOM loop)"},
+    {"req": "FR-REL-007", "test": "ReleaseScriptTextTest#fr_REL_007_AC1/AC2 + citations on existing FR-REL-001/CON-BUILD-017 tests", "red_output": "coverage gap red before (no test cited FR-REL-007); new tests already green, mutation probes red"}
+  ],
+  "review_outcome": {"status": "TASK_DONE", "kept_findings": 0, "detail": "2 rounds, check_review_round PASS both; 11 findings all dropped; clean code: 3 fixed (6c010c3), 6 dismissed, 0 unresolved"},
+  "intentionally_empty": null,
+  "design_refuted": [],
+  "srs_deltas": [
+    {"req": "FR-REL-006", "ac": "AC-5", "delta": "The CycloneDX plugin names the component by project name: com.snoworca.naruserve:NaruServe-api, not 'naruserve-api'. Suggest rewording AC-5 to 'the NaruServe-api (com.snoworca.naruserve) component'.", "evidence": "offline ./gradlew -PtinyHttpdFromMaven=true -Prelease releaseSbom --offline wrote NaruServe-proxy.cdx.json with the single component com.snoworca.naruserve:NaruServe-api:0.11.0"},
+    {"req": "FR-REL-006/FR-REL-007", "ac": "FR-REL-006 AC-4 (central-staging record), FR-REL-007 AC-1 (releaseSbom record), FR-REL-007 AC-3 (offline-build record)", "delta": "Need recorded release runs in docs/release/test-results.md; out of this wave by design D-009. Verified here only by default-build tests and unrecorded manual runs. ReleaseRecordsDocsTest.MODULES lists the nine modules of the recorded release; the release step must add NaruServe-proxy when it records 0.12.0.", "evidence": "manual checkCentralStaging printed 'central-staging: 11 artifactIds at 0.11.0'; no record written"}
+  ],
+  "out_of_lease_paths": [],
+  "follow_ups_outside_lease": [
+    "CLAUDE.md module line does not name NaruServe-proxy (OPS-BUILD-004 AC-1, later wave); BuildLayoutTest's CLAUDE.md line test skips the proxy until then",
+    "docs/api/README.md has no module-table row for NaruServe-proxy (ReadmeDocsTest pins 10 rows and is outside this lane); proxy named in a sentence instead",
+    "docs/api/en/README.md, README.md, README.ko.md still say 'nine modules' build without an Android SDK",
+    "NaruServe-tinyhttpd PublishedTinyHttpdCompatibilityTest still cites expired CON-BUILD-006 AC-1 (now CON-BUILD-019 AC-3)",
+    "build.gradle javadoc onlyIf guard: NaruServe-proxy publishes a manifest-only -javadoc.jar until its first class lands"
+  ],
+  "test_sufficiency": {"gaps": 0, "detail": "check_test_sufficiency ids CON-BUILD-019, CON-BUILD-021, FR-REL-006, FR-REL-007 (workspaceRoot = worktree): passed, every AC cited; FR-REL-007 AC-1/AC-3 citations check the earlier release's record format only"},
+  "regression": {"command": "./gradlew -PtinyHttpdFromMaven=true build", "tests": 3853, "failures": 0, "exit_code": 0},
+  "bootstrap": "not-applicable",
+  "notes": "Review analysis written under .kiwi/sessions/2026-11-14.naruserve.self-w1l1review/analysis/ instead of docs/analysis/ to stay inside the lane write set. All commits carry Orch-Run/Orch-Wave/Orch-Stage/Orch-Lane, REQ and Commit-Kind trailers."
+}

@@ -1,0 +1,807 @@
+diff --git a/NaruServe-api/src/main/java/com/snoworca/naruserve/BodyTooLargeException.java b/NaruServe-api/src/main/java/com/snoworca/naruserve/BodyTooLargeException.java
+new file mode 100644
+index 0000000..b725cdf
+--- /dev/null
++++ b/NaruServe-api/src/main/java/com/snoworca/naruserve/BodyTooLargeException.java
+@@ -0,0 +1,28 @@
++package com.snoworca.naruserve;
++
++import java.io.IOException;
++
++/**
++ * The request body passed its byte limit. An {@code IOException}, so code reading a body stream already handles it;
++ * the core's body readers answer it with 413, unlike a transport {@code IOException}.
++ */
++// @req IR-HTTP-011
++public final class BodyTooLargeException extends IOException {
++
++    private static final long serialVersionUID = 1L;
++
++    private final long limit;
++
++    /** {@code limit} is the byte limit the body passed. */
++    // @req IR-HTTP-011
++    public BodyTooLargeException(long limit) {
++        super("request body exceeds the limit of " + limit + " bytes");
++        this.limit = limit;
++    }
++
++    /** The byte limit the body passed. */
++    // @req IR-HTTP-011
++    public long limit() {
++        return limit;
++    }
++}
+diff --git a/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyTooLargeException.java b/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyTooLargeException.java
+deleted file mode 100644
+index e8d8bd6..0000000
+--- a/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyTooLargeException.java
++++ /dev/null
+@@ -1,22 +0,0 @@
+-package com.snoworca.naruserve.internal;
+-
+-import java.io.IOException;
+-
+-/** The request body passed its byte limit; body readers answer it with 413, unlike a transport IOException. */
+-// @req FR-HTTP-020
+-public final class BodyTooLargeException extends IOException {
+-
+-    private static final long serialVersionUID = 1L;
+-
+-    private final long limit;
+-
+-    // @req FR-HTTP-020
+-    public BodyTooLargeException(long limit) {
+-        super("request body exceeds the limit of " + limit + " bytes");
+-        this.limit = limit;
+-    }
+-
+-    public long limit() {
+-        return limit;
+-    }
+-}
+diff --git a/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java b/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java
+index d6140ca..4592dec 100644
+--- a/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java
++++ b/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java
+@@ -2,0 +3 @@ package com.snoworca.naruserve.internal;
++import com.snoworca.naruserve.BodyTooLargeException;
+@@ -30 +31,3 @@ final class FinalHandler {
+-            status=error instanceof HttpException?((HttpException)error).status():response.statusCode();
++            // The statusOf classification: an HttpException's status, 413 for an unwrapped overrun (FR-APP-027).
++            status=error instanceof HttpException || error instanceof BodyTooLargeException
++                    ?StandardErrors.statusOf(error):response.statusCode();
+diff --git a/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FormBodyReader.java b/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FormBodyReader.java
+index cff65bd..26f3a3d 100644
+--- a/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FormBodyReader.java
++++ b/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FormBodyReader.java
+@@ -2,0 +3 @@ package com.snoworca.naruserve.internal;
++import com.snoworca.naruserve.BodyTooLargeException;
+diff --git a/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java b/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java
+index 7aed096..09fe61c 100644
+--- a/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java
++++ b/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java
+@@ -2,0 +3 @@ package com.snoworca.naruserve.internal;
++import com.snoworca.naruserve.BodyTooLargeException;
+diff --git a/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java b/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java
+index e28dbc9..6b57b58 100644
+--- a/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java
++++ b/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java
+@@ -2,0 +3 @@ package com.snoworca.naruserve.internal;
++import com.snoworca.naruserve.BodyTooLargeException;
+diff --git a/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java b/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java
+index c133bf0..feba231 100644
+--- a/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java
++++ b/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java
+@@ -2,0 +3 @@ package com.snoworca.naruserve.internal;
++import com.snoworca.naruserve.BodyTooLargeException;
+@@ -17 +18,4 @@ public final class StandardErrors {
+-    /** {@link HttpException#status()}, otherwise 500. */
++    /**
++     * {@link HttpException#status()}, 413 for an unwrapped {@link BodyTooLargeException}, otherwise 500; an exception
++     * that only wraps an overrun in its cause stays 500.
++     */
+@@ -18,0 +23 @@ public final class StandardErrors {
++    // @req FR-APP-027
+@@ -20 +25,4 @@ public final class StandardErrors {
+-        return error instanceof HttpException ? ((HttpException) error).status() : 500;
++        if (error instanceof HttpException) {
++            return ((HttpException) error).status();
++        }
++        return error instanceof BodyTooLargeException ? 413 : 500;
+diff --git a/NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java b/NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java
+index b454ae1..963266f 100644
+--- a/NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java
++++ b/NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java
+@@ -8,0 +9 @@ import com.snoworca.naruserve.AppState;
++import com.snoworca.naruserve.BodyTooLargeException;
+@@ -2805 +2806,2 @@ public final class Auth implements Middleware, com.snoworca.naruserve.Installabl
+-     * logged a 500. DEV leaves it to the next layer, where the stack trace helps.
++     * logged a 500. An unwrapped BodyTooLargeException is 413 as in Core's status classification (FR-APP-027). DEV
++     * leaves it to the next layer, where the stack trace helps.
+@@ -2806,0 +2809 @@ public final class Auth implements Middleware, com.snoworca.naruserve.Installabl
++    // @req FR-APP-027
+@@ -2811 +2814,2 @@ public final class Auth implements Middleware, com.snoworca.naruserve.Installabl
+-        int status = err instanceof HttpException ? ((HttpException) err).status() : 500;
++        int status = err instanceof HttpException ? ((HttpException) err).status()
++                : err instanceof BodyTooLargeException ? 413 : 500;
+diff --git a/NaruServe-api/src/test/java/com/snoworca/naruserve/BodyTooLargeExceptionTest.java b/NaruServe-api/src/test/java/com/snoworca/naruserve/BodyTooLargeExceptionTest.java
+new file mode 100644
+index 0000000..ee75a76
+--- /dev/null
++++ b/NaruServe-api/src/test/java/com/snoworca/naruserve/BodyTooLargeExceptionTest.java
+@@ -0,0 +1,111 @@
++package com.snoworca.naruserve;
++
++import static org.junit.Assert.assertEquals;
++import static org.junit.Assert.assertNotNull;
++import static org.junit.Assert.assertSame;
++import static org.junit.Assert.assertTrue;
++import static org.junit.Assert.fail;
++
++import java.io.File;
++import java.io.IOException;
++import java.lang.reflect.Constructor;
++import java.lang.reflect.Method;
++import java.lang.reflect.Modifier;
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.Enumeration;
++import java.util.List;
++import java.util.jar.JarEntry;
++import java.util.jar.JarFile;
++import org.junit.Test;
++
++/**
++ * The over-limit body exception lives in the public package. The class is looked up by name so this test also
++ * describes a jar built before the move.
++ */
++public class BodyTooLargeExceptionTest {
++
++    private static final String PUBLIC_NAME = "com.snoworca.naruserve.BodyTooLargeException";
++    private static final String INTERNAL_NAME = "com.snoworca.naruserve.internal.BodyTooLargeException";
++
++    private static Class<?> publicClass(ClassLoader loader) {
++        try {
++            return Class.forName(PUBLIC_NAME, false, loader);
++        } catch (ClassNotFoundException e) {
++            throw new AssertionError(PUBLIC_NAME + " is missing from " + loader, e);
++        }
++    }
++
++    private static void assertShape(Class<?> type) throws Exception {
++        int mods = type.getModifiers();
++        assertTrue(type + " public", Modifier.isPublic(mods));
++        assertTrue(type + " final", Modifier.isFinal(mods));
++        assertSame(IOException.class, type.getSuperclass());
++        Constructor<?> ctor = type.getDeclaredConstructor(long.class);
++        assertTrue("(long limit) is public", Modifier.isPublic(ctor.getModifiers()));
++        Method limit = type.getDeclaredMethod("limit");
++        assertTrue("limit() is public", Modifier.isPublic(limit.getModifiers()));
++        assertSame(long.class, limit.getReturnType());
++        for (long value : new long[] {1L, 10L, 1048576L, Long.MAX_VALUE}) {
++            Object e = ctor.newInstance(value);
++            assertEquals(value, ((Long) limit.invoke(e)).longValue());
++            assertTrue(((IOException) e).getMessage(), ((IOException) e).getMessage().contains(String.valueOf(value)));
++        }
++    }
++
++    // IR-HTTP-011 AC-1: public, final, a direct IOException subclass with a public (long limit) and long limit()
++    @Test
++    public void IR_HTTP_011_AC1_publicFinalIOExceptionWithLimitConstructorAndAccessor() throws Exception {
++        assertShape(publicClass(BodyTooLargeExceptionTest.class.getClassLoader()));
++        assertShape(publicClass(ApiJarClasses.loader()));
++    }
++
++    // IR-HTTP-011 AC-2: the internal class is gone, from the class path and from the NaruServe-api jar
++    @Test
++    public void IR_HTTP_011_AC2_internalClassIsGoneWithNoAliasInTheJar() throws Exception {
++        for (ClassLoader loader : new ClassLoader[] {BodyTooLargeExceptionTest.class.getClassLoader(),
++                ApiJarClasses.loader()}) {
++            try {
++                Class.forName(INTERNAL_NAME, false, loader);
++                fail(INTERNAL_NAME + " still loads from " + loader);
++            } catch (ClassNotFoundException expected) {
++                // moved, no alias
++            }
++        }
++        String jarPath = System.getProperty("naruserve.apiJar");
++        assertNotNull("naruserve.apiJar", jarPath);
++        Class<?> moved = publicClass(ApiJarClasses.loader());
++        List<String> sameName = new ArrayList<>();
++        List<String> aliases = new ArrayList<>();
++        try (JarFile jar = new JarFile(new File(jarPath))) {
++            Enumeration<JarEntry> entries = jar.entries();
++            while (entries.hasMoreElements()) {
++                String entry = entries.nextElement().getName();
++                if (!entry.endsWith(".class") || entry.endsWith("package-info.class")
++                        || entry.equals("module-info.class")) {
++                    continue;
++                }
++                String name = entry.substring(0, entry.length() - ".class".length()).replace('/', '.');
++                String simple = name.substring(Math.max(name.lastIndexOf('.'), name.lastIndexOf('$')) + 1);
++                if (simple.equals("BodyTooLargeException") && !name.equals(PUBLIC_NAME)) {
++                    sameName.add(name);
++                }
++                if (!name.equals(PUBLIC_NAME)
++                        && moved.isAssignableFrom(Class.forName(name, false, ApiJarClasses.loader()))) {
++                    aliases.add(name);
++                }
++            }
++        }
++        assertEquals(Collections.emptyList(), sameName);
++        assertEquals(Collections.emptyList(), aliases);
++    }
++
++    // IR-HTTP-011 AC-5: the nullability reflection check of FR-KT-001 finds no @NonNull on the moved class
++    @Test
++    public void IR_HTTP_011_AC5_noNonNullOnTheMovedClass() {
++        Class<?> moved = publicClass(ApiJarClasses.loader());
++        assertTrue(PUBLIC_NAME + " enumerated as public API", ApiJarClasses.publicTypes().contains(moved));
++        assertEquals(Collections.emptyList(),
++                KotlinContractChecks.nonNullFailures(Collections.<Class<?>>singletonList(moved)));
++    }
++}
+diff --git a/NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java b/NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java
+index 831661b..db5e475 100644
+--- a/NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java
++++ b/NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java
+@@ -190 +190 @@ public class JsonBodyAcceptanceTest {
+-    // SDS-AC-8; FR-JSON-001 AC-2
++    // SDS-AC-8; IR-HTTP-011 AC-9
+@@ -200 +200 @@ public class JsonBodyAcceptanceTest {
+-    // SDS-AC-8; FR-JSON-001 AC-2
++    // SDS-AC-8; IR-HTTP-011 AC-9
+@@ -208 +208 @@ public class JsonBodyAcceptanceTest {
+-    // SDS-AC-8; FR-JSON-001 AC-2: the peeked first char still reaches the codec
++    // SDS-AC-8; IR-HTTP-011 AC-9: the peeked first char still reaches the codec
+@@ -279,0 +280,24 @@ public class JsonBodyAcceptanceTest {
++
++    // IR-HTTP-011 AC-4: a chunked JSON body over jsonLimit, wrapped by the codec as Gson does, is 413
++    // PAYLOAD_TOO_LARGE and the overrun is the public BodyTooLargeException in the cause chain
++    @Test
++    public void IR_HTTP_011_AC4_chunkedOverrunIs413PayloadTooLargeThroughThePublicClass() {
++        for (boolean unchecked : new boolean[] {false, true}) {
++            InMemoryHttpAdapter a = new InMemoryHttpAdapter();
++            TestApp app = TestApp.create(a);
++            app.app().jsonCodec(new WrappingCodec(unchecked)).jsonLimit(10);
++            java.util.List<Throwable> seen = new java.util.ArrayList<>();
++            app.app().post("/b", (req, res) -> res.send(String.valueOf(req.body(String.class))));
++            app.app().onError((error, req, res) -> seen.add(error));
++            assertDefaultError(413, HttpException.class, post(app, a, "/b", "application/json", repeat('1', 11), false));
++            assertEquals(1, seen.size());
++            HttpException e = (HttpException) seen.get(0);
++            assertEquals(413, e.status());
++            assertEquals("PAYLOAD_TOO_LARGE", e.code());
++            boolean found = false;
++            for (Throwable c = e; c != null; c = c.getCause()) {
++                found |= c instanceof BodyTooLargeException;
++            }
++            assertTrue(String.valueOf(e.getCause()), found);
++        }
++    }
+diff --git a/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java b/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java
+index 661d193..2045776 100644
+--- a/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java
++++ b/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java
+@@ -10,0 +11 @@ import static org.junit.Assert.fail;
++import com.snoworca.naruserve.BodyTooLargeException;
+@@ -412 +413 @@ public class ErrorPathTest {
+-    // SDS-AC-10; FR-APP-006 AC-3, FR-APP-006 AC-4, FR-APP-005 AC-2
++    // SDS-AC-10; FR-APP-006 AC-3, FR-APP-006 AC-4, FR-APP-005 AC-2 (FR-APP-027 AC-4 below restates AC-4 with the overrun)
+@@ -430,0 +432,81 @@ public class ErrorPathTest {
++    // FR-APP-027 AC-1: an unwrapped overrun escaping the handler is answered 413 PAYLOAD_TOO_LARGE, not logged as a 500
++    @Test
++    public void FR_APP_027_AC1_anUnwrappedBodyTooLargeExceptionIsAnswered413WithTheStandardBody() {
++        BodyTooLargeException overrun = new BodyTooLargeException(10);
++        LegacyHttpHarness t = app();
++        t.app().get("/upload", throwing(overrun));
++        DispatcherTest.assertError(413, "PAYLOAD_TOO_LARGE", "Payload Too Large", t.send("GET", "/upload"));
++        assertEquals(413, StandardErrors.statusOf(overrun));
++        assertEquals(0, log.count("ERROR"));
++    }
++
++    // FR-APP-027 AC-1: the shipped app's common HTTP final answer gives the overrun 413 too and does not log it as a 500
++    @Test
++    public void FR_APP_027_AC1_theCommonHttpFinalAnswerGivesAnEscapedOverrun413AndNoErrorLog() {
++        DefaultRestApp rest = new DefaultRestApp();
++        rest.logger(log);
++        rest.get("/upload", throwing(new BodyTooLargeException(10)));
++        rest.get("/wrapped", throwing(new RuntimeException(new BodyTooLargeException(10))));
++        RecordingExchange overrun = HttpExecutionContractTest.dispatch(rest, "GET", "/upload");
++        assertEquals(413, overrun.status);
++        assertEquals(0, log.count("ERROR"));
++        RecordingExchange wrapped = new RecordingExchange("GET", "/wrapped");
++        rest.dispatcher().handle(wrapped);
++        assertEquals(500, wrapped.status);
++        assertEquals(1, log.count("ERROR"));
++    }
++
++    // FR-APP-027 AC-2: onError gets the thrown overrun itself, unwrapped, and can tell it from HttpException(413)
++    @Test
++    public void FR_APP_027_AC2_onErrorReceivesTheSameUnwrappedBodyTooLargeExceptionInstance() {
++        BodyTooLargeException overrun = new BodyTooLargeException(10);
++        LegacyHttpHarness t = app();
++        t.app().onError(recording);
++        t.app().get("/upload", throwing(overrun));
++        t.app().get("/http413", throwing(new HttpException(413)));
++        DispatcherTest.assertError(413, "PAYLOAD_TOO_LARGE", "Payload Too Large", t.send("GET", "/upload"));
++        assertEquals(1, seen.size());
++        assertSame(overrun, seen.get(0).error);
++        assertTrue(seen.get(0).error instanceof BodyTooLargeException);
++        assertFalse(seen.get(0).error instanceof HttpException);
++        assertEquals(10L, ((BodyTooLargeException) seen.get(0).error).limit());
++        DispatcherTest.assertError(413, "PAYLOAD_TOO_LARGE", "Payload Too Large", t.send("GET", "/http413"));
++        assertEquals(2, seen.size());
++        assertTrue(seen.get(1).error instanceof HttpException);
++        assertFalse(seen.get(1).error instanceof BodyTooLargeException);
++    }
++
++    // FR-APP-027 AC-3: a wrapped overrun is an ordinary exception answered 500 INTERNAL_ERROR and logged
++    @Test
++    public void FR_APP_027_AC3_aRuntimeExceptionWrappingTheOverrunIsAnswered500InternalError() {
++        RuntimeException wrapped = new RuntimeException(new BodyTooLargeException(10));
++        LegacyHttpHarness t = app();
++        t.app().onError(recording);
++        t.app().get("/upload", throwing(wrapped));
++        DispatcherTest.assertError(500, "INTERNAL_ERROR", "Internal Server Error", t.send("GET", "/upload"));
++        assertEquals(1, seen.size());
++        assertSame(wrapped, seen.get(0).error);
++        assertEquals(1, log.count("ERROR"));
++        assertSame(wrapped, log.errors.get(0));
++    }
++
++    // FR-APP-027 AC-4: FR-APP-006 AC-4 restated with the change through the harness
++    @Test
++    public void FR_APP_027_AC4_http400_422_413_415AndTheOverrunKeepTheirStatusAndOthersAre500() {
++        LegacyHttpHarness t = app();
++        t.app().get("/400", throwing(new HttpException(400)));
++        t.app().get("/422", throwing(new HttpException(422, "name required")));
++        t.app().get("/413", throwing(new HttpException(413)));
++        t.app().get("/415", throwing(new UnsupportedMediaTypeException()));
++        t.app().get("/overrun", throwing(new BodyTooLargeException(10)));
++        t.app().get("/io", throwing(new IOException("disk")));
++        t.app().get("/state", throwing(new IllegalStateException("x")));
++        DispatcherTest.assertError(400, "BAD_REQUEST", "Bad Request", t.send("GET", "/400"));
++        DispatcherTest.assertError(422, "UNPROCESSABLE_ENTITY", "name required", t.send("GET", "/422"));
++        DispatcherTest.assertError(413, "PAYLOAD_TOO_LARGE", "Payload Too Large", t.send("GET", "/413"));
++        DispatcherTest.assertError(415, "UNSUPPORTED_MEDIA_TYPE", "Unsupported Media Type", t.send("GET", "/415"));
++        DispatcherTest.assertError(413, "PAYLOAD_TOO_LARGE", "Payload Too Large", t.send("GET", "/overrun"));
++        DispatcherTest.assertError(500, "INTERNAL_ERROR", "Internal Server Error", t.send("GET", "/io"));
++        DispatcherTest.assertError(500, "INTERNAL_ERROR", "Internal Server Error", t.send("GET", "/state"));
++    }
++
+diff --git a/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java b/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java
+index fc369e6..f7d3fbc 100644
+--- a/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java
++++ b/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java
+@@ -8,0 +9 @@ import static org.junit.Assert.fail;
++import com.snoworca.naruserve.BodyTooLargeException;
+@@ -14,0 +16 @@ import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
++import com.snoworca.naruserve.testing.RecordingLogger;
+@@ -84 +86 @@ public class JsonBodyReaderTest {
+-    // SDS-AC-11; FR-JSON-001 AC-9
++    // SDS-AC-11; IR-HTTP-011 AC-8
+@@ -98 +100 @@ public class JsonBodyReaderTest {
+-    // SDS-AC-9; FR-JSON-001 AC-9: a codec that swallows the overrun still gives 413
++    // SDS-AC-9; IR-HTTP-011 AC-8: a codec that swallows the overrun still gives 413
+@@ -148 +150 @@ public class JsonBodyReaderTest {
+-    // FR-JSON-001 AC-2: an unchecked codec failure without an HttpException cause stays itself (500)
++    // IR-HTTP-011 AC-9: an unchecked codec failure without an HttpException cause stays itself (500)
+@@ -159 +161 @@ public class JsonBodyReaderTest {
+-    // FR-JSON-001 AC-2: a codec IOException becomes 400 with it as the cause
++    // IR-HTTP-011 AC-9: a codec IOException becomes 400 with it as the cause
+@@ -210 +212 @@ public class JsonBodyReaderTest {
+-    // SDS-AC-9; FR-JSON-001 AC-9: the overrun stays readable after a codec wrapped the failure
++    // SDS-AC-9; IR-HTTP-011 AC-8: the overrun stays readable after a codec wrapped the failure
+@@ -221,0 +224 @@ public class JsonBodyReaderTest {
++            assertSame(BodyTooLargeException.class, expected.getClass());
+@@ -228,0 +232 @@ public class JsonBodyReaderTest {
++            assertSame(BodyTooLargeException.class, expected.getClass());
+@@ -236,0 +241,140 @@ public class JsonBodyReaderTest {
++
++    /** True when {@code t}'s cause chain holds the public over-limit exception. */
++    private static boolean overrunInChain(Throwable t) {
++        for (int depth = 0; t != null && depth < 64; t = t.getCause(), depth++) {
++            if (t instanceof BodyTooLargeException) {
++                return true;
++            }
++        }
++        return false;
++    }
++
++    // IR-HTTP-011 AC-8: an overrun wrapped by the codec (checked or unchecked, as Gson does) is 413 with the public
++    // class in the cause chain, and it reaches onError and the access log like any handler exception
++    @Test
++    public void IR_HTTP_011_AC8_wrappedOverrunIs413AndReachesOnErrorAndTheAccessLog() {
++        for (boolean unchecked : new boolean[] {false, true}) {
++            JsonCodec wrapping = new JsonCodec() {
++                @Override
++                public <T> @Nullable T decode(Reader reader, Type type) throws IOException {
++                    try {
++                        TextCodec.readAll(reader);
++                    } catch (IOException e) {
++                        if (unchecked) {
++                            throw new IllegalStateException("syntax", e);
++                        }
++                        throw new IOException("syntax", e);
++                    }
++                    throw new IOException("unexpected end");
++                }
++
++                @Override
++                public void encode(@Nullable Object value, Writer writer) throws IOException {
++                    writer.write("null");
++                }
++            };
++            RecordingLogger log = new RecordingLogger();
++            java.util.List<Throwable> seen = new java.util.ArrayList<>();
++            InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
++            TestApp t = TestApp.create(adapter);
++            t.app().logger(log).jsonCodec(wrapping).jsonLimit(10);
++            t.app().post("/b", (req, res) -> res.send(String.valueOf(req.body(String.class))));
++            t.app().onError((error, req, res) -> seen.add(error));
++            t.start();
++            byte[] body = new byte[100];
++            Arrays.fill(body, (byte) '1');
++            ClientResponse r = adapter.send(ClientRequest.of("POST", "/b").header("Content-Type", "application/json")
++                    .body(body));
++            assertEquals(413, r.status());
++            assertEquals(1, seen.size());
++            HttpException e = (HttpException) seen.get(0);
++            assertEquals(413, e.status());
++            assertEquals("PAYLOAD_TOO_LARGE", e.code());
++            assertTrue(String.valueOf(e.getCause()), overrunInChain(e));
++            assertEquals(log.info().toString(), 1, log.info().size());
++            assertTrue(log.info().get(0), log.info().get(0).startsWith("POST /b 413 "));
++        }
++    }
++
++    // IR-HTTP-011 AC-8: a codec that drops the overrun from the cause chain and throws its own failure still gives
++    // 413, because the overrun is read from the limited stream's state
++    @Test
++    public void IR_HTTP_011_AC8_overrunDroppedFromTheCauseChainIsStill413() {
++        for (boolean unchecked : new boolean[] {false, true}) {
++            JsonCodec dropping = new JsonCodec() {
++                @Override
++                public <T> @Nullable T decode(Reader reader, Type type) throws IOException {
++                    try {
++                        TextCodec.readAll(reader);
++                    } catch (IOException ignored) {
++                        // the overrun is dropped; the codec reports its own failure without a cause
++                    }
++                    if (unchecked) {
++                        throw new IllegalStateException("unexpected end");
++                    }
++                    throw new IOException("unexpected end");
++                }
++
++                @Override
++                public void encode(@Nullable Object value, Writer writer) throws IOException {
++                    writer.write("null");
++                }
++            };
++            RecordingLogger log = new RecordingLogger();
++            java.util.List<Throwable> seen = new java.util.ArrayList<>();
++            InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
++            TestApp t = TestApp.create(adapter);
++            t.app().logger(log).jsonCodec(dropping).jsonLimit(10);
++            t.app().post("/b", (req, res) -> res.send(String.valueOf(req.body(String.class))));
++            t.app().onError((error, req, res) -> seen.add(error));
++            t.start();
++            byte[] body = new byte[100];
++            Arrays.fill(body, (byte) '1');
++            ClientResponse r = adapter.send(ClientRequest.of("POST", "/b").header("Content-Type", "application/json")
++                    .body(body));
++            assertEquals(413, r.status());
++            assertEquals(1, seen.size());
++            HttpException e = (HttpException) seen.get(0);
++            assertEquals(413, e.status());
++            assertEquals("PAYLOAD_TOO_LARGE", e.code());
++            assertEquals(log.info().toString(), 1, log.info().size());
++            assertTrue(log.info().get(0), log.info().get(0).startsWith("POST /b 413 "));
++        }
++    }
++
++    // IR-HTTP-011 AC-8: an HttpException in the cause chain (the adapter 408) is the instance onError sees and the
++    // access log records with its own status
++    @Test
++    public void IR_HTTP_011_AC8_causeChainHttpExceptionReachesOnErrorAndTheAccessLog() {
++        HttpException timeout = new HttpException(408);
++        RecordingLogger log = new RecordingLogger();
++        java.util.List<Throwable> seen = new java.util.ArrayList<>();
++        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
++        TestApp t = TestApp.create(adapter);
++        t.app().logger(log).jsonCodec(new FailingCodec(new IOException("read failed", timeout)));
++        t.app().post("/b", (req, res) -> res.send(String.valueOf(req.body(String.class))));
++        t.app().onError((error, req, res) -> seen.add(error));
++        t.start();
++        ClientResponse r = adapter.send(ClientRequest.of("POST", "/b").header("Content-Type", "application/json")
++                .header("Content-Length", "2").body("{}".getBytes(StandardCharsets.UTF_8)));
++        assertEquals(408, r.status());
++        assertEquals(1, seen.size());
++        assertSame(timeout, seen.get(0));
++        assertEquals(log.info().toString(), 1, log.info().size());
++        assertTrue(log.info().get(0), log.info().get(0).startsWith("POST /b 408 "));
++    }
++
++    // IR-HTTP-011 AC-9: a codec IOException that is not an overrun is 400 BAD_REQUEST with it as cause, and does not
++    // carry the over-limit class
++    @Test
++    public void IR_HTTP_011_AC9_nonOverrunCodecIOExceptionIs400BadRequest() {
++        IOException malformed = new IOException("malformed");
++        Outcome out = new Outcome();
++        ClientResponse r = send(new FailingCodec(malformed), 10, "application/json",
++                "{}".getBytes(StandardCharsets.UTF_8), false, out);
++        assertEquals(400, r.status());
++        HttpException e = (HttpException) out.thrown.get();
++        assertEquals("BAD_REQUEST", e.code());
++        assertSame(malformed, e.getCause());
++        assertFalse(overrunInChain(e));
++    }
+diff --git a/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java b/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java
+index eef3c65..2fa4185 100644
+--- a/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java
++++ b/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java
+@@ -3,0 +4 @@ import static org.junit.Assert.assertEquals;
++import static org.junit.Assert.assertSame;
+@@ -6,0 +8,2 @@ import static org.junit.Assert.fail;
++import com.snoworca.naruserve.BodyTooLargeException;
++import com.snoworca.naruserve.HttpException;
+@@ -9,0 +13 @@ import java.io.InputStream;
++import java.nio.charset.StandardCharsets;
+@@ -79 +83 @@ public class LimitedInputStreamTest {
+-    // SDS-AC-12; FR-HTTP-020 AC-3
++    // SDS-AC-12; IR-HTTP-011 AC-6, IR-HTTP-011 AC-3
+@@ -92,0 +97 @@ public class LimitedInputStreamTest {
++            assertSame(BodyTooLargeException.class, e.getClass());
+@@ -99 +104 @@ public class LimitedInputStreamTest {
+-    // SDS-AC-12; FR-HTTP-020 AC-3
++    // SDS-AC-12; IR-HTTP-011 AC-6
+@@ -110,0 +116,2 @@ public class LimitedInputStreamTest {
++            assertSame(BodyTooLargeException.class, expected.getClass());
++            assertEquals(10, expected.limit());
+@@ -115 +122 @@ public class LimitedInputStreamTest {
+-    // SDS-AC-12; FR-HTTP-020 AC-3
++    // SDS-AC-12; IR-HTTP-011 AC-6, IR-HTTP-011 AC-1
+@@ -120,0 +128 @@ public class LimitedInputStreamTest {
++        assertEquals("com.snoworca.naruserve.BodyTooLargeException", BodyTooLargeException.class.getName());
+@@ -123 +131 @@ public class LimitedInputStreamTest {
+-    // SDS-AC-12; FR-HTTP-020 AC-3
++    // SDS-AC-12; IR-HTTP-011 AC-6
+@@ -143 +151 @@ public class LimitedInputStreamTest {
+-    // SDS-AC-13; FR-HTTP-020 AC-4
++    // SDS-AC-13; IR-HTTP-011 AC-7, IR-HTTP-011 AC-3
+@@ -152,0 +161,2 @@ public class LimitedInputStreamTest {
++            assertSame(BodyTooLargeException.class, expected.getClass());
++            assertEquals(10, expected.limit());
+@@ -159,0 +170 @@ public class LimitedInputStreamTest {
++            assertSame(BodyTooLargeException.class, expected.getClass());
+@@ -163,0 +175,40 @@ public class LimitedInputStreamTest {
++    // IR-HTTP-011 AC-3: the urlencoded form reader answers both overruns 413 with the public class as the cause
++    @Test
++    public void IR_HTTP_011_AC3_formReaderAnswersBothOverruns413ThroughThePublicClass() throws IOException {
++        byte[] eleven = "a=123456789".getBytes(StandardCharsets.US_ASCII);
++        assertEquals(11, eleven.length);
++        for (long declared : new long[] {-1, 11}) {
++            try {
++                FormBodyReader.read(new ByteArrayInputStream(eleven), declared, 10);
++                fail("expected 413 for declared length " + declared);
++            } catch (HttpException e) {
++                assertEquals(413, e.status());
++                assertSame(BodyTooLargeException.class, e.getCause().getClass());
++                assertEquals(10, ((BodyTooLargeException) e.getCause()).limit());
++            }
++        }
++        assertEquals("12345678", FormBodyReader.read(new ByteArrayInputStream("a=12345678".getBytes(
++                StandardCharsets.US_ASCII)), -1, 10).get("a").get(0));
++    }
++
++    // IR-HTTP-011 AC-3: the multipart parser recognises a body overrun through the public class
++    @Test
++    public void IR_HTTP_011_AC3_multipartParserRecognisesTheOverrunThroughThePublicClass() throws IOException {
++        String b = "XyZ";
++        byte[] body = ("--" + b + "\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\n"
++                + "0123456789012345678901234567890123456789\r\n--" + b + "--\r\n").getBytes(StandardCharsets.US_ASCII);
++        MultipartSettings s = new MultipartSettings();
++        s.maxRequestSize(64);
++        assertTrue(body.length > 64);
++        for (long declared : new long[] {-1, body.length}) {
++            try {
++                MultipartParser.parse(new ByteArrayInputStream(body), declared, b, s, 1048576L, new SpoolRegistry());
++                fail("expected 413 for declared length " + declared);
++            } catch (HttpException e) {
++                assertEquals(413, e.status());
++                assertSame(BodyTooLargeException.class, e.getCause().getClass());
++                assertEquals(64, ((BodyTooLargeException) e.getCause()).limit());
++            }
++        }
++    }
++
+diff --git a/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java b/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java
+index 49bf9e5..600c41f 100644
+--- a/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java
++++ b/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java
+@@ -5,0 +6 @@ import static org.junit.Assert.assertEquals;
++import com.snoworca.naruserve.BodyTooLargeException;
+@@ -54 +55 @@ public class StandardErrorsTest {
+-    // SDS-AC-10; FR-APP-006 AC-3, FR-APP-006 AC-4
++    // SDS-AC-10; FR-APP-006 AC-3, FR-APP-006 AC-4 (restated with its successor in FR-APP-027 AC-4 below)
+@@ -67,0 +69,30 @@ public class StandardErrorsTest {
++    // FR-APP-027 AC-1: an unwrapped BodyTooLargeException maps to 413 and keeps the reason phrase as its message
++    @Test
++    public void FR_APP_027_AC1_statusOfAnUnwrappedBodyTooLargeExceptionIs413WithTheReasonPhrase() {
++        BodyTooLargeException overrun = new BodyTooLargeException(10);
++        assertEquals(413, StandardErrors.statusOf(overrun));
++        assertEquals("Payload Too Large", StandardErrors.messageOf(overrun, 413));
++        assertEquals("PAYLOAD_TOO_LARGE", StandardErrors.code(StandardErrors.statusOf(overrun)));
++    }
++
++    // FR-APP-027 AC-3: only the unwrapped exception is mapped; a wrapper stays an ordinary 500
++    @Test
++    public void FR_APP_027_AC3_statusOfAnExceptionWrappingABodyTooLargeExceptionStays500() {
++        assertEquals(500, StandardErrors.statusOf(new RuntimeException(new BodyTooLargeException(10))));
++        assertEquals(500, StandardErrors.statusOf(new IOException(new BodyTooLargeException(10))));
++        assertEquals("Internal Server Error",
++                StandardErrors.messageOf(new RuntimeException(new BodyTooLargeException(10)), 500));
++    }
++
++    // FR-APP-027 AC-4: FR-APP-006 AC-4 restated with the change, at the statusOf level
++    @Test
++    public void FR_APP_027_AC4_statusOfMapsHttpExceptionsUnsupportedMediaTypeAndTheOverrunAndOthersTo500() {
++        assertEquals(400, StandardErrors.statusOf(new HttpException(400)));
++        assertEquals(422, StandardErrors.statusOf(new HttpException(422, "name required")));
++        assertEquals(413, StandardErrors.statusOf(new HttpException(413)));
++        assertEquals(415, StandardErrors.statusOf(new UnsupportedMediaTypeException()));
++        assertEquals(413, StandardErrors.statusOf(new BodyTooLargeException(10)));
++        assertEquals(500, StandardErrors.statusOf(new IOException("x")));
++        assertEquals(500, StandardErrors.statusOf(new IllegalStateException("x")));
++    }
++
+diff --git a/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java b/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java
+index e14851e..a01c93c 100644
+--- a/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java
++++ b/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java
+@@ -6,0 +7 @@ import static org.junit.Assert.assertTrue;
++import com.snoworca.naruserve.BodyTooLargeException;
+@@ -74,0 +76,36 @@ public class JuniorFinalItemsTest {
++    // FR-APP-027 AC-1 AC-3: in PROD auth's last error layer answers an unwrapped overrun 413 PAYLOAD_TOO_LARGE unlogged,
++    // with the same message as HttpException(413) there, and a wrapped one stays a logged 500 INTERNAL_ERROR
++    @Test
++    public void FR_APP_027_AC1_AC3_prodAnswersAnUnwrappedOverrun413AndAWrappedOne500() {
++        for (boolean appended : new boolean[] {false, true}) {
++            W8 f = fixture();
++            f.routes = w -> {
++                w.app.get("/overrun", (req, res) -> {
++                    throw new BodyTooLargeException(10);
++                });
++                w.app.get("/wrapped", (req, res) -> {
++                    throw new RuntimeException(new BodyTooLargeException(10));
++                });
++                w.app.get("/http413", (req, res) -> {
++                    throw new HttpException(413);
++                });
++            };
++            if (appended) {
++                f.errors = null; // no app.onError: auth appends its error layer at start
++            }
++            f.start(b -> b.permit("/overrun").permit("/wrapped").permit("/http413"));
++            int before = f.logger.count("ERROR");
++            ClientResponse overrun = f.get("/overrun");
++            assertEquals(overrun.text(), 413, overrun.status());
++            assertEquals("PAYLOAD_TOO_LARGE", W8.code(overrun));
++            ClientResponse http413 = f.get("/http413");
++            assertEquals(http413.text(), 413, http413.status());
++            assertEquals(message(http413), message(overrun));
++            assertEquals(before, f.logger.count("ERROR"));
++            ClientResponse wrapped = f.get("/wrapped");
++            assertEquals(wrapped.text(), 500, wrapped.status());
++            assertEquals("INTERNAL_ERROR", W8.code(wrapped));
++            assertEquals(before + 1, f.logger.count("ERROR"));
++        }
++    }
++
+diff --git a/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/BodyTooLargeExceptionKotlinTest.kt b/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/BodyTooLargeExceptionKotlinTest.kt
+new file mode 100644
+index 0000000..3a2ecb6
+--- /dev/null
++++ b/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/BodyTooLargeExceptionKotlinTest.kt
+@@ -0,0 +1,39 @@
++package com.snoworca.naruserve
++
++import com.snoworca.naruserve.internal.LimitedInputStream
++import java.io.ByteArrayInputStream
++import java.io.IOException
++import org.junit.Assert.assertEquals
++import org.junit.Assert.assertTrue
++import org.junit.Assert.fail
++import org.junit.Test
++
++class BodyTooLargeExceptionKotlinTest {
++
++    @Test
++    fun `IR-HTTP-011 AC-5 catch BodyTooLargeException and read limit as Long`() {
++        var caught: Long = -1
++        try {
++            throw BodyTooLargeException(10)
++        } catch (e: BodyTooLargeException) {
++            val limit: Long = e.limit()
++            val asIo: IOException = e
++            val message: String? = asIo.message
++            assertTrue(message.orEmpty().contains("10"))
++            caught = limit
++        }
++        assertEquals(10L, caught)
++    }
++
++    @Test
++    fun `IR-HTTP-011 AC-5 an overrun of the limited stream is caught by the public type`() {
++        val stream = LimitedInputStream(ByteArrayInputStream(ByteArray(11)), 10, -1)
++        try {
++            stream.readBytes()
++            fail("expected BodyTooLargeException")
++        } catch (e: BodyTooLargeException) {
++            val limit: Long = e.limit()
++            assertEquals(10L, limit)
++        }
++    }
++}
+diff --git a/NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonBodyLimitTest.java b/NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonBodyLimitTest.java
+new file mode 100644
+index 0000000..37e7c0f
+--- /dev/null
++++ b/NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonBodyLimitTest.java
+@@ -0,0 +1,53 @@
++package com.snoworca.naruserve.gson;
++
++import static org.junit.Assert.assertEquals;
++import static org.junit.Assert.assertTrue;
++
++import com.snoworca.naruserve.BodyTooLargeException;
++import com.snoworca.naruserve.HttpException;
++import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
++import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
++import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
++import com.snoworca.naruserve.testing.TestApp;
++import java.nio.charset.StandardCharsets;
++import java.util.ArrayList;
++import java.util.List;
++import org.junit.Test;
++
++/** The JSON body limit through the default Gson codec, which wraps the stream's IOException. */
++public class GsonBodyLimitTest {
++
++    // IR-HTTP-011 AC-4: a chunked JSON body over jsonLimit, decoded by GsonJsonCodec, is 413 PAYLOAD_TOO_LARGE and
++    // the overrun is the public BodyTooLargeException in the cause chain
++    @Test
++    public void IR_HTTP_011_AC4_chunkedOverrunThroughGsonIs413PayloadTooLarge() {
++        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
++        TestApp t = TestApp.create(adapter);
++        t.app().jsonCodec(new GsonJsonCodec()).jsonLimit(10);
++        t.app().post("/b", (req, res) -> res.send(String.valueOf(req.body(String.class))));
++        List<Throwable> seen = new ArrayList<>();
++        t.app().onError((error, req, res) -> seen.add(error));
++        t.start();
++        byte[] eleven = "\"123456789\"".getBytes(StandardCharsets.UTF_8);
++        assertEquals(11, eleven.length);
++        ClientResponse r = adapter.send(ClientRequest.of("POST", "/b").header("Content-Type", "application/json")
++                .body(eleven));
++        assertEquals(413, r.status());
++        assertEquals(1, seen.size());
++        HttpException e = (HttpException) seen.get(0);
++        assertEquals(413, e.status());
++        assertEquals("PAYLOAD_TOO_LARGE", e.code());
++        boolean found = false;
++        int depth = 0;
++        for (Throwable c = e; c != null && depth++ < 64; c = c.getCause()) {
++            found |= c instanceof BodyTooLargeException;
++        }
++        assertTrue(String.valueOf(e.getCause()), found);
++
++        byte[] ten = "\"12345678\"".getBytes(StandardCharsets.UTF_8);
++        ClientResponse ok = adapter.send(ClientRequest.of("POST", "/b").header("Content-Type", "application/json")
++                .body(ten));
++        assertEquals(200, ok.status());
++        assertEquals("12345678", ok.text());
++    }
++}

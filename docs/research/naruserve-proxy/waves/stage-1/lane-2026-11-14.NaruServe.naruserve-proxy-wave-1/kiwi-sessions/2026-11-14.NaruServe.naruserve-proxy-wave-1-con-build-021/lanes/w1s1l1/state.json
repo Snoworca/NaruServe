@@ -1,0 +1,74 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-1-con-build-021",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "CON-BUILD-021"
+ ],
+ "write_set": [
+  "build.gradle",
+  "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "started_at": "2026-11-14T05:00:00Z",
+ "updated_at": "2026-11-14T05:40:00Z",
+ "frozen_at": null,
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "regression_baseline": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "passed": 3829,
+  "failed": 0,
+  "failed_test_ids": [],
+  "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4",
+  "captured_at": "2026-11-14",
+  "source": "--regression-baseline pin"
+ },
+ "mcp_call_log": [],
+ "pending_mutations": [
+  "11 calls deferred to .kiwi/deferred-srs-mutations.jsonl"
+ ],
+ "tool_versions": {
+  "kiwi_coder": "0.1.9",
+  "speckiwi": "5.5.1"
+ },
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :test --tests com.snoworca.naruserve.build.BuildLayoutTest",
+  "exit_code": 0,
+  "captured_failure": "already green: criterion restated, implementation predates (CON-BUILD-019 commit 3aedd25 and earlier waves). Mutation probe (proxy main +NaruServe-logcat, proxy compileOnly +slf4j-api) exit 1: con_BUILD_021_AC6 expected:<[:NaruServe-android]> but was:<[:NaruServe-android, :NaruServe-proxy]>; con_BUILD_021_AC1 NaruServe-proxy expected:<[jspecify]> but was:<[jspecify, slf4j-api]>",
+  "timestamp": "2026-11-14T05:10:00Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "timestamp": "2026-11-14T05:35:00Z"
+ },
+ "regression_summary": {
+  "last_run_at": "2026-11-14T05:35:00Z",
+  "scope": "full",
+  "passed": 3846,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "loop_counters": {
+  "phase1": {
+   "kept": 0,
+   "dropped": 7,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 0,
+   "dropped": 9,
+   "rounds": 1
+  }
+ }
+}

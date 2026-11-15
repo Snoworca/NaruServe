@@ -1,0 +1,42 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-2-fr-app-027",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "FR-APP-027"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "updated_at": "2026-11-15T12:12:40Z",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "regression_baseline": {
+  "source": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+  "total": 3829,
+  "failed": 0
+ },
+ "regression_summary": {
+  "last_run_at": "2026-11-15T12:12:40Z",
+  "scope": "full",
+  "passed": 3854,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests StandardErrorsTest --tests ErrorPathTest",
+  "exit_code": 1,
+  "captured_failure": "5 FR-APP-027 tests: expected:<413> but was:<500>",
+  "timestamp": "2026-11-15T12:12:40Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "timestamp": "2026-11-15T12:12:40Z"
+ }
+}

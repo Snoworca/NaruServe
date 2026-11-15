@@ -1,0 +1,177 @@
+{
+  "resolved_findings": [],
+  "findings": [
+    {
+      "id": "FND-201",
+      "axis": "behaviour-preservation",
+      "verdict": "drop",
+      "evidence": {
+        "command": "temporary NaruServe-api/src/test/java/com/snoworca/naruserve/internal/TmpPricklyProofTest.java (deleted after run) comparing the pre-refactor FinalHandler ternary and pre-refactor statusOf against StandardErrors.statusOr/statusOf over 11 errors x 10 fallbacks; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.internal.TmpPricklyProofTest -i",
+        "output": "PROOF-EQUIV cases=110 / BUILD SUCCESSFUL",
+        "intent_output": "statusOr(error, response.statusCode()) == old `error instanceof HttpException || error instanceof BodyTooLargeException ? statusOf(error) : response.statusCode()` for every case, including wrapped overruns, HttpException(413) with an overrun cause and out-of-range fallbacks (0, -1, 200, 302, 600); statusOf(error) == old statusOf for every error"
+      },
+      "drop_reason": "Proven equivalent by execution. The only difference is that response.statusCode() is now evaluated eagerly for HttpException/BodyTooLargeException errors; it is a side-effect-free synchronized getter (DefaultResponse.java:697) and finish() already takes the same monitor via response.state() several times before this line, so no new lock or ordering hazard.",
+      "title": "FinalHandler status classification via statusOr is identical to the old ternary",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+        "line_range": "29-31"
+      },
+      "description": "Checked whether folding the FinalHandler ternary into StandardErrors.statusOr(error, fallback) changes any status, and whether statusOf (ErrorPath.java:38, DefaultRequest.java:180) keeps its 500 default.",
+      "suggested_fix": "none",
+      "is_behavioral": false,
+      "tags": [
+        "CC-002",
+        "FR-APP-027",
+        "FR-APP-006"
+      ]
+    },
+    {
+      "id": "FND-202",
+      "axis": "test-assertion-preservation",
+      "verdict": "drop",
+      "evidence": {
+        "command": "git diff -U0 93e6c2bd f39eecd6 -- NaruServe-api/src/test (assertion-by-assertion comparison) + ./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test (full module, fresh run after the proof test was removed) + temporary cyclic-cause proof (JsonBodyAcceptanceTest.overrunInChain on a<->b cause cycle, timeout 5s)",
+        "output": "full run: 2921 tests, 0 failures, 0 errors (339 classes); JsonBodyReaderTest 13/0/0, JsonBodyAcceptanceTest 11/0/0, StandardErrorsTest 9/0/0; PROOF-CYCLE ok (cycle -> false, 3-deep wrap -> true, null -> false)",
+        "intent_output": "Every removed assertion reappears: both IR_HTTP_011_AC8 tests keep assertEquals(413, r.status()), assertEquals(1, seen.size()), the HttpException cast, assertEquals(413, e.status()), assertEquals(\"PAYLOAD_TOO_LARGE\", e.code()), the 1-line access-log size and 'POST /b 413 ' prefix (now in assertOverrunIs413ThroughOnErrorAndTheAccessLog); the wrapping test keeps assertTrue(..., overrunInChain(e)) with the same message; JsonBodyAcceptanceTest keeps assertTrue(String.valueOf(e.getCause()), ...) over the same chain from e."
+      },
+      "drop_reason": "No assertion lost or weakened. Two neutral deltas only: (1) in the wrapping test the overrunInChain assertion now runs after the access-log assertions instead of before them (order only; all still execute on success); (2) JsonBodyAcceptanceTest's chain walk is now bounded at depth 64 and short-circuits, which can only make it stricter on pathological >64-deep chains and turns a former infinite loop on a cyclic chain into a clean failure.",
+      "title": "CC-003/CC-004 test extraction keeps every assertion",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+        "line_range": "264-322"
+      },
+      "description": "Compared the before/after assertion sets of the two IR_HTTP_011_AC8 tests and the JsonBodyAcceptanceTest cause-chain check.",
+      "suggested_fix": "none",
+      "is_behavioral": false,
+      "tags": [
+        "CC-003",
+        "CC-004",
+        "IR-HTTP-011"
+      ]
+    },
+    {
+      "id": "FND-203",
+      "axis": "public-api",
+      "verdict": "drop",
+      "evidence": {
+        "command": "git diff -U0 93e6c2bd f39eecd6 -- NaruServe-api/src/main; grep -rn 'statusOf(\\|statusOr(' NaruServe-api/src/main/java",
+        "output": "statusOf and the new statusOr are package-private static in com.snoworca.naruserve.internal (StandardErrors.java:24,34); FinalHandler is package-private; Auth change is a comment only",
+        "intent_output": "no public or protected signature added, removed or changed in main sources"
+      },
+      "drop_reason": "No public signature change. The only new public member is the test-source helper JsonBodyAcceptanceTest.overrunInChain, which is not shipped API (see CC-201).",
+      "title": "No public signature change",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+        "line_range": "24-39"
+      },
+      "description": "Checked the round for public API drift.",
+      "suggested_fix": "none",
+      "is_behavioral": false,
+      "tags": [
+        "api"
+      ]
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-201",
+      "principle": "Dependency direction / cohesion of test utilities (a test class used as a helper library)",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+        "line_range": "301-310"
+      },
+      "description": "overrunInChain became a public static member of the acceptance test class and is static-imported across packages by com.snoworca.naruserve.internal.JsonBodyReaderTest (JsonBodyReaderTest.java:3), so an internal unit test now depends on a public-package acceptance test class. A test-only helper belongs in the shared testing support package (com.snoworca.naruserve.testing, next to RecordingLogger/TestApp) rather than in a test class. Mitigating: JsonBodyReaderTest already imported JsonBodyAcceptanceTest.TextCodec before this round."
+    },
+    {
+      "id": "CC-202",
+      "principle": "Comments must match code (stale identifier in comment)",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+        "line_range": "29-30"
+      },
+      "description": "The comment still calls it 'The statusOf classification' while the line now calls StandardErrors.statusOr with the response status as fallback; statusOf is the 500-fallback variant, so the name in the comment points at the wrong method."
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+      "hunks_total": 2,
+      "anchors": [
+        "import com.snoworca.naruserve.BodyTooLargeException;",
+        "            status=StandardErrors.statusOr(error,response.statusCode());"
+      ],
+      "findings": [
+        "FND-201",
+        "CC-202"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+      "hunks_total": 2,
+      "anchors": [
+        "        return statusOr(error, 500);",
+        "        return error instanceof BodyTooLargeException ? 413 : fallback;"
+      ],
+      "findings": [
+        "FND-201",
+        "FND-203"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+      "hunks_total": 1,
+      "anchors": [
+        "            // FR-APP-027: an unwrapped overrun is 413. BodyTooLargeException is an IOException, so this branch must"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+      "hunks_total": 3,
+      "anchors": [
+        "            boolean found = false;",
+        "            assertTrue(String.valueOf(e.getCause()), found);",
+        "        return false;"
+      ],
+      "findings": [
+        "FND-202",
+        "CC-201"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+      "hunks_total": 6,
+      "anchors": [
+        "import static com.snoworca.naruserve.JsonBodyAcceptanceTest.overrunInChain;",
+        "    private static boolean overrunInChain(Throwable t) {",
+        "            HttpException e = assertOverrunIs413ThroughOnErrorAndTheAccessLog(wrapping);",
+        "            assertEquals(log.info().toString(), 1, log.info().size());",
+        "            assertOverrunIs413ThroughOnErrorAndTheAccessLog(dropping);",
+        "    private static HttpException assertOverrunIs413ThroughOnErrorAndTheAccessLog(JsonCodec codec) {"
+      ],
+      "findings": [
+        "FND-202",
+        "CC-201"
+      ]
+    }
+  ],
+  "summary": {
+    "round": 3,
+    "range": "93e6c2bdddcd71c433ca99893745f5f1a51b2065..f39eecd6ebfaae02dcfaac7aa49d95e96405c1d1",
+    "hunks_reviewed": 14,
+    "hunks_total": 14,
+    "kept": 0,
+    "residual": 0,
+    "dropped": 3,
+    "new_clean_code": 2,
+    "behaviour_preserved": true,
+    "assertions_lost_or_weakened": 0,
+    "public_signature_changes": 0,
+    "regression": "NaruServe-api full test: 2921 tests, 0 failures, 0 errors",
+    "requirements": [
+      "IR-HTTP-011",
+      "FR-APP-027"
+    ],
+    "notes": "Working tree NaruServe-api == f39eecd (git diff f39eecd -- NaruServe-api empty). Temporary proof test created and deleted; git status unchanged. One proof attempt first failed because the fixture used HttpException(200), which the constructor rejects (fixture error, not product); the corrected run passed."
+  }
+}

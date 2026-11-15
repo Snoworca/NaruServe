@@ -1,0 +1,61 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.naruserve.naruserve-proxy-wave-3-ir-http-013",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "IR-HTTP-013"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops",
+  "20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "started_at": "2026-11-13T18:53:33Z",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "regression_baseline": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "failed": 0,
+  "total_tests": 3829,
+  "failed_test_ids": [],
+  "pinned_from": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+  "head_sha_lane": "bef626f87f09b2cb9a23dedf210aef5277b4d04f"
+ },
+ "mcp_call_log": [],
+ "pending_mutations": [],
+ "updated_at": "2026-11-14T00:00:00Z",
+ "loop_counters": {
+  "phase1": {
+   "kept": 2,
+   "dropped": 6,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 1,
+   "dropped": 9,
+   "rounds": 1
+  }
+ },
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.HttpApiSurfaceTest ; :NaruServe-api:compileTestKotlin",
+  "exit_code": 1,
+  "captured_failure": "7 HttpApiSurfaceTest failures (NoSuchMethodException Request.bodyStream(); exact set mismatch; DefaultRequest.bodyStream() not public); Kotlin: Unresolved reference bodyStream/headerNames/rawHeaders/isFromTrustedProxy",
+  "timestamp": "2026-11-14"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build --continue",
+  "exit_code": 0,
+  "timestamp": "2026-11-14"
+ },
+ "regression_summary": {
+  "scope": "full",
+  "passed": 3839,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "deferred_mutations_appended": 7
+}

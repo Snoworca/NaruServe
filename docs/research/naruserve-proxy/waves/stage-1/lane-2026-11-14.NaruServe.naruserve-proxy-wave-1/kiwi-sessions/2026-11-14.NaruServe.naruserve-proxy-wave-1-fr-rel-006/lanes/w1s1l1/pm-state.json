@@ -1,0 +1,58 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-1-fr-rel-006",
+ "base_sha": "5146d8110358e2b32f014eb879e1757cbd24e507",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-REL-006"
+ ],
+ "req_filter": [
+  "FR-REL-006"
+ ],
+ "write_set": [
+  "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java",
+  "src/test/java/com/snoworca/naruserve/build/CentralStagingTest.java",
+  "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+  "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java"
+ ],
+ "started_at": "2026-11-13T19:21:06Z",
+ "last_updated_at": "2026-11-13T19:31:31Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-13T19:21:06Z",
+  "ended_at": "2026-11-13T19:31:31Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-1-fr-rel-006",
+  "result_summary": "FR-REL-006 AC-1..AC-5 tests added; already green after CON-BUILD-019 (mutation probes red); full build 3851 tests 0 failures; implementation commit is empty marker",
+  "changed": true,
+  "commit_sha": "d9c7e73",
+  "commits": [
+   {
+    "req_id": "FR-REL-006",
+    "test_sha": "1e84fe0",
+    "implementation_sha": "d9c7e73"
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-13T19:21:06Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-REL-006": "evolving"
+  },
+  "status_snapshot": {
+   "FR-REL-006": "planned"
+  }
+ },
+ "req_coverage": {},
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-1-fr-rel-006/lanes/w1s1l1/reports/pm-2026-11-13T193131Z.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": null
+}

@@ -1,0 +1,14 @@
+{"ts":"2026-11-13T18:50:49Z","event":"pm_boot","req_ids":["CON-BUILD-019"],"lifecycle":"pass"}
+{"event":"phase_start","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-1-con-build-019","target":"0.12.0","mode":"normal"}
+{"event":"run_start","req_ids":["CON-BUILD-019"]}
+{"event":"tdd_draft_done","iter":1,"file_paths":["src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java","src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java","src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java","src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java"]}
+{"event":"tdd_red_confirmed","exit_code":1}
+{"event":"tdd_review_done","iter":1,"finding_summary":{"kept":1,"dropped":12}}
+{"event":"tdd_review_done","iter":2,"finding_summary":{"kept":0,"dropped":0},"note":"kept finding (AC-6 assertion message) closed by message change"}
+{"event": "impl_done", "iter": 1, "files_changed": ["settings.gradle", "build.gradle", "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/package-info.java", "docs/api/README.md", "gradle/release.gradle"]}
+{"event": "formal_review_done", "iter": 1, "finding_summary": {"kept": 0, "dropped": 0}}
+{"event": "prickly_review_done", "iter": 1, "finding_summary": {"kept": 5, "dropped": 10}}
+{"event": "test_green", "exit_code": 0}
+{"event": "regression_done", "scope": "full", "passed": 3838, "failed": 0}
+{"event": "run_done"}
+{"ts":"2026-11-13T19:09:22Z","event":"pm_done","commits":["6e0f26c","3aedd25"]}

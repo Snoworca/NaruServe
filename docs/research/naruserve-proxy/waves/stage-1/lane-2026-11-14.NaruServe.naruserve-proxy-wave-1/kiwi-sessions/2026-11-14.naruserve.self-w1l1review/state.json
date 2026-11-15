@@ -1,0 +1,100 @@
+{
+ "run_id": "2026-11-14.naruserve.self-w1l1review",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "started_at": "2026-11-13T19:39:53.307167Z",
+ "mode": "self",
+ "mode_flags": [
+  "--keep-clean-code",
+  "--no-pipeline-emit",
+  "--loops 20"
+ ],
+ "phase": "8",
+ "finding_queue": [],
+ "fix_iter": 1,
+ "recheck_iter": 1,
+ "clean_code_round": 2,
+ "clean_code_dismissed": [
+  {
+   "id": "CC-001",
+   "principle": "dead code",
+   "location": "BuildLayoutTest.java 819-825; ReleaseScriptTextTest.java 194-199",
+   "reason": "removing the loops deletes assertions (preservation rule)"
+  },
+  {
+   "id": "CC-003",
+   "principle": "duplication",
+   "location": "ReleaseScriptTextTest.java 217-228",
+   "reason": "project convention: each test parses settings.gradle inline; independent expected lists"
+  },
+  {
+   "id": "CC-006",
+   "principle": "function size",
+   "location": "BuildChecksTest.java 397-452",
+   "reason": "project keeps one test method per acceptance criterion"
+  },
+  {
+   "id": "CC-101",
+   "reason": "cross-class static test helpers already a convention before 889c380"
+  },
+  {
+   "id": "CC-102",
+   "reason": "only callers pass literal identifiers"
+  },
+  {
+   "id": "CC-103",
+   "reason": "helpers read different block shapes; both match build.gradle"
+  }
+ ],
+ "clean_code_skip": false,
+ "guarantee_scope": "Gradle build configuration (settings.gradle, build.gradle, gradle/release.gradle) for the NaruServe-proxy module and the root build/release tests changed in 889c380..HEAD; default build in Maven mode (-PtinyHttpdFromMaven=true); no release records (D-009)",
+ "declared_limits": [],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "4ebb8fd679f8ff561f688155ac349d69c1519f17",
+   "scope": "full",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/package-info.java",
+    "build.gradle",
+    "gradle/release.gradle",
+    "settings.gradle",
+    "src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java",
+    "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+    "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+    "src/test/java/com/snoworca/naruserve/build/CentralStagingTest.java",
+    "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java",
+    "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java"
+   ],
+   "tokens_used": 158343,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  },
+  {
+   "round": 2,
+   "tree_sha": "85953a9c24e1a92a5aecb05067833bd07bd631bf",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+    "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+    "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java"
+   ],
+   "tokens_used": 74250,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  }
+ ],
+ "regression_baseline": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+ "regression_pass": true,
+ "pr_responded": false,
+ "failed": false
+}

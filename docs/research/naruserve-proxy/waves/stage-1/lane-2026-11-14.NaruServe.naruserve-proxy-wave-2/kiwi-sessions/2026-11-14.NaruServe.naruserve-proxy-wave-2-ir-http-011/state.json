@@ -1,0 +1,68 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-2-ir-http-011",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "IR-HTTP-011"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "started_at": "2026-11-13T18:52:51Z",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "regression_baseline": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "passed": 3829,
+  "failed": 0,
+  "failed_test_ids": [],
+  "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4",
+  "source": "pinned by parent"
+ },
+ "mcp_call_log": [],
+ "pending_mutations": [],
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.BodyTooLargeException*' (+ LimitedInputStreamTest, JsonBodyReaderTest, JsonBodyAcceptanceTest)",
+  "exit_code": 1,
+  "captured_failure": "runtime: IR_HTTP_011_AC1 -> com.snoworca.naruserve.BodyTooLargeException is missing; IR_HTTP_011_AC2 -> internal.BodyTooLargeException still loads; IR_HTTP_011_AC5 -> missing from jar loader. compile: BodyTooLargeExceptionKotlinTest.kt:17 Unresolved reference 'BodyTooLargeException'; LimitedInputStreamTest.java:8, JsonBodyReaderTest.java:9, JsonBodyAcceptanceTest.java:299 error: cannot find symbol",
+  "timestamp": "2026-11-13T18:55:51.939815Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests BodyTooLargeException* LimitedInputStreamTest JsonBodyReaderTest JsonBodyAcceptanceTest KotlinNullabilityTest MultipartParserTest",
+  "exit_code": 0,
+  "timestamp": "2026-11-13T18:59:57.054900Z"
+ },
+ "green_evidence_meta": {
+  "tests": 53,
+  "failures": 0
+ },
+ "loop_counters": {
+  "phase1": {
+   "kept": 2,
+   "dropped": 9,
+   "rounds": 2
+  },
+  "phase2": {
+   "kept": 1,
+   "dropped": 10,
+   "rounds": 2
+  }
+ },
+ "updated_at": "2026-11-13T19:06:52.627169Z",
+ "regression_summary": {
+  "scope": "full",
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "passed": 3845,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "deferred_queue": ".kiwi/deferred-srs-mutations.jsonl",
+ "deferred_calls": 18
+}

@@ -1,0 +1,28 @@
+{
+ "mode": "self",
+ "pr_url": null,
+ "pr_number": null,
+ "self_scope": {
+  "source": "base-head",
+  "files": [
+   "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/package-info.java",
+   "build.gradle",
+   "gradle/release.gradle",
+   "settings.gradle",
+   "src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java",
+   "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+   "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+   "src/test/java/com/snoworca/naruserve/build/CentralStagingTest.java",
+   "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java",
+   "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+   "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java"
+  ],
+  "commit_range": "889c380ebc79a4f6719f3d73264330e2c6c3888a..HEAD",
+  "diff_loc": 745,
+  "excluded_prose": [
+   "docs/api/README.md"
+  ],
+  "refused_artifacts": [],
+  "unclassified_files": []
+ }
+}

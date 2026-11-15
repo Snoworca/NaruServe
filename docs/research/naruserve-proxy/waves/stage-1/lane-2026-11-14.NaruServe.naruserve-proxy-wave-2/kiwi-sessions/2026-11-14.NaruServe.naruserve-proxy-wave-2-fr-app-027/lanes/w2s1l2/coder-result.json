@@ -1,0 +1,97 @@
+{
+ "status": "TASK_DONE",
+ "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-2-fr-app-027",
+ "summary": "FR-APP-027 is implemented. StandardErrors.statusOf now maps an unwrapped BodyTooLargeException to 413 (code PAYLOAD_TOO_LARGE). messageOf keeps the reason phrase 'Payload Too Large'. An exception that wraps an overrun (RuntimeException or IOException cause) stays 500 INTERNAL_ERROR, and onError receives the same unwrapped instance. 9 new tests cite FR-APP-027 AC-1..AC-4. No existing test was weakened or deleted, and none asserted that an escaped overrun gives 500. Only the comments of the two existing FR-APP-006 AC-4 tests were extended to point to FR-APP-027 AC-4. Two out-of-lease edits were needed because statusOf does not control every error path. (1) FinalHandler: the shipped app's common HTTP final answer computes its own status. After the statusOf change it answered an escaped overrun 500 while DefaultRequest.logFailure (statusOf=413) stopped logging it, which made it an unlogged 500. A probe confirmed this, and a red test showed 500 where 413 was expected. FinalHandler now uses statusOf for HttpException and BodyTooLargeException, so the answer is 413, as the request's AC-A3 expects. (2) Auth.prodAnswer: the PROD auth last error layer had the same unlogged-500 gap; the prickly reviewer found it and a red test confirmed it. It now answers 413 PAYLOAD_TOO_LARGE. Its message comes from auth's own reason table ('Client Error'), the same as HttpException(413) there. AC-3 unit and harness tests already passed before the change, by design: they guard against mapping through the cause chain. Full build: 3854 tests, 0 failures (3845 + 9 new). The parent should still promote the requirement to implemented. docs/api (middleware.md, ko and en) is not updated here because a developer-experience requirement in docs/spec/16 owns that page. One review finding was dropped: FinalHandler and Auth repeat the type check instead of sharing one classifier (drift risk only).",
+ "test_files": [
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-2/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-2/NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-2/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java"
+ ],
+ "impl_files": [
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-2/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-2/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-2/NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"
+ ],
+ "out_of_lease": [
+  {
+   "path": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-2/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+   "reason": "The common HTTP final handler of the shipped app classified status itself (HttpException else response.statusCode). Without this edit an escaped unwrapped overrun was answered 500 but no longer logged, because logFailure uses statusOf. Minimal change: route HttpException and BodyTooLargeException through StandardErrors.statusOf. No other lane's writeSet claims this file."
+  },
+  {
+   "path": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-2/NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "reason": "prodAnswer (PROD auth last error layer) answered an unwrapped overrun 500 with no ERROR log after the statusOf change. Minimal change: map an unwrapped BodyTooLargeException to 413 there too. No other lane's writeSet claims this file."
+  },
+  {
+   "path": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-2/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java",
+   "reason": "The red test for the Auth.prodAnswer fix needs the package-private auth W8 fixture, so it cannot live in ErrorPathTest. One new test was added and nothing existing changed."
+  }
+ ],
+ "red_evidence": [
+  {
+   "test": "StandardErrorsTest.FR_APP_027_AC1_statusOfAnUnwrappedBodyTooLargeExceptionIs413WithTheReasonPhrase",
+   "red_output": "java.lang.AssertionError: expected:<413> but was:<500> at StandardErrorsTest.java:73"
+  },
+  {
+   "test": "StandardErrorsTest.FR_APP_027_AC4_statusOfMapsHttpExceptionsUnsupportedMediaTypeAndTheOverrunAndOthersTo500",
+   "red_output": "java.lang.AssertionError: expected:<413> but was:<500> at StandardErrorsTest.java:94"
+  },
+  {
+   "test": "ErrorPathTest.FR_APP_027_AC1_anUnwrappedBodyTooLargeExceptionIsAnswered413WithTheStandardBody",
+   "red_output": "java.lang.AssertionError: expected:<413> but was:<500> at ErrorPathTest.java:438"
+  },
+  {
+   "test": "ErrorPathTest.FR_APP_027_AC2_onErrorReceivesTheSameUnwrappedBodyTooLargeExceptionInstance",
+   "red_output": "java.lang.AssertionError: expected:<413> but was:<500> at ErrorPathTest.java:451"
+  },
+  {
+   "test": "ErrorPathTest.FR_APP_027_AC4_http400_422_413_415AndTheOverrunKeepTheirStatusAndOthersAre500",
+   "red_output": "java.lang.AssertionError: expected:<413> but was:<500> at ErrorPathTest.java:492"
+  },
+  {
+   "test": "ErrorPathTest.FR_APP_027_AC1_theCommonHttpFinalAnswerGivesAnEscapedOverrun413AndNoErrorLog",
+   "red_output": "java.lang.AssertionError at ErrorPathTest.java:451 (assertEquals(413, overrun.status); probe: status=500 errors=0 HTML body) with the statusOf change applied but FinalHandler unchanged"
+  },
+  {
+   "test": "JuniorFinalItemsTest.FR_APP_027_AC1_AC3_prodAnswersAnUnwrappedOverrun413AndAWrappedOne500",
+   "red_output": "java.lang.AssertionError: {\"error\":{\"code\":\"INTERNAL_ERROR\",\"message\":\"Internal Server Error\",...}} expected:<413> but was:<500> at JuniorFinalItemsTest.java:96"
+  }
+ ],
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 3854,
+  "failures": 0
+ },
+ "srs_deltas": [
+  {
+   "tool": "update_status",
+   "id": "FR-APP-027",
+   "status": "in_progress",
+   "queued": true
+  },
+  {
+   "tool": "add_trace_link",
+   "count": 3,
+   "queued": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "count": 10,
+   "covers": [
+    "AC-1",
+    "AC-2",
+    "AC-3",
+    "AC-4"
+   ],
+   "queued": true
+  },
+  {
+   "tool": "add_completed_work",
+   "queued": true
+  },
+  {
+   "note": "Suggested Implementation Notes clarification for FR-APP-027 (not applied, docs/spec is read-only for this lane): FinalHandler (common HTTP final answer) and Auth.prodAnswer (PROD auth last error layer) classify status separately from statusOf, and both now map an unwrapped BodyTooLargeException to 413. In the shipped app without onError the 413 is the HTML finalhandler page, as for HttpException(413)."
+  }
+ ],
+ "questions": [],
+ "error": null
+}

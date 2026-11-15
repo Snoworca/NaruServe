@@ -1,0 +1,13 @@
+{"round":1,
+ "fixed":[
+  {"id":"CC-002","files":["NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java","NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java"],
+   "summary":"Added package-private StandardErrors.statusOr(Throwable, int fallback) as the single classification (HttpException -> status(), unwrapped BodyTooLargeException -> 413, else fallback). statusOf(e) is now statusOr(e, 500); FinalHandler uses statusOr(error, response.statusCode()) and keeps the 400-599 clamp. A fallback parameter was used instead of a -1 sentinel so even an HttpException subclass overriding status() behaves exactly as before. Dropped FinalHandler's now-unused HttpException/BodyTooLargeException imports. No public signature changed."},
+  {"id":"CC-003","files":["NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java","NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java"],
+   "summary":"Moved the depth-bounded (64) overrunInChain helper to JsonBodyAcceptanceTest as a public static method (cross-package, like TextCodec); IR_HTTP_011_AC4 now uses it instead of its unbounded loop, and JsonBodyReaderTest static-imports it in place of its private copy. Assertion messages unchanged."},
+  {"id":"CC-004","files":["NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java"],
+   "summary":"Extracted assertOverrunIs413ThroughOnErrorAndTheAccessLog(JsonCodec), which does the shared setup and asserts status 413, seen.size()==1, e.status()==413, e.code()==PAYLOAD_TOO_LARGE and exactly one 'POST /b 413 ' access-log line, and returns the HttpException. The wrapping test still asserts overrunInChain(e) on the returned exception. Test names and AC comments unchanged."},
+  {"id":"CC-102","files":["NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java"],
+   "summary":"The routerError BodyTooLargeException branch comment now says the branch must stay before isStoreFailure, because BodyTooLargeException is an IOException and would otherwise be answered 503 as a store failure. The FND-001 code is unchanged."}
+ ],
+ "unresolved":[],
+ "regression":{"command":"./gradlew -PtinyHttpdFromMaven=true build --rerun-tasks","tests":3855,"failures":0,"exit_code":0}}

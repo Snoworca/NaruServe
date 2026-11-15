@@ -1,0 +1,137 @@
+{
+ "run_id": "2026-11-15.naruserve.self-w2review",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "started_at": "2026-11-15T12:13:28Z",
+ "mode": "self",
+ "mode_flags": [
+  "--loops 20",
+  "--keep-clean-code",
+  "--no-pipeline-emit"
+ ],
+ "phase": "7",
+ "finding_queue": [],
+ "fix_iter": 3,
+ "recheck_iter": 3,
+ "clean_code_round": 3,
+ "clean_code_dismissed": [
+  {
+   "id": "CC-001",
+   "reason": "package boundary: utils.auth must not depend on internal"
+  },
+  {
+   "id": "CC-005",
+   "reason": "inline java.util FQNs follow existing practice in 11 test files"
+  },
+  {
+   "id": "CC-101",
+   "reason": "SRS traceability wording, not a code principle"
+  },
+  {
+   "id": "CC-103",
+   "reason": "test naming cites AC as documented in its comment"
+  },
+  {
+   "id": "CC-201",
+   "reason": "follows the existing TextCodec cross-test import precedent"
+  }
+ ],
+ "clean_code_skip": false,
+ "guarantee_scope": "IR-HTTP-011 and FR-APP-027 acceptance criteria over the lane diff 8b1f994..HEAD (public BodyTooLargeException, limited-stream/form/multipart/JSON overrun handling, StandardErrors/FinalHandler/Auth 413 mapping)",
+ "declared_limits": [],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "c8ade252c43958a31a99f3b7ac5188f9dbad60cd",
+   "scope": "full",
+   "scope_widen_reason": "first round reviews the whole lane window",
+   "files": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/BodyTooLargeException.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyTooLargeException.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FormBodyReader.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/BodyTooLargeExceptionTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/BodyTooLargeExceptionKotlinTest.kt",
+    "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonBodyLimitTest.java"
+   ],
+   "tokens_used": 150718,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-001",
+     "tier": "block",
+     "family": "auth-error-classification-of-BodyTooLargeException",
+     "introduced_by_round": null
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "tree_sha": "93e6c2bdddcd71c433ca99893745f5f1a51b2065",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java"
+   ],
+   "tokens_used": 79423,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  },
+  {
+   "round": 3,
+   "tree_sha": "f39eecd6ebfaae02dcfaac7aa49d95e96405c1d1",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java"
+   ],
+   "tokens_used": 99865,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  },
+  {
+   "round": 4,
+   "tree_sha": "c83acd5d488f30321280247db7f3a9cad96c9bbf",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java"
+   ],
+   "tokens_used": 65049,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  }
+ ],
+ "regression_baseline": {
+  "source": "kiwi-coder full build at HEAD 57c1edf (same tree)",
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 3854,
+  "failures": 0
+ },
+ "regression_pass": false,
+ "pr_responded": false,
+ "failed": false
+}

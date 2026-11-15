@@ -1,0 +1,63 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-1-con-build-019",
+ "base_sha": "889c380ebc79a4f6719f3d73264330e2c6c3888a",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "CON-BUILD-019"
+ ],
+ "req_filter": [
+  "CON-BUILD-019"
+ ],
+ "write_set": [
+  "settings.gradle",
+  "build.gradle",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/package-info.java",
+  "docs/api/README.md",
+  "gradle/release.gradle",
+  "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+  "src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java",
+  "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+  "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java"
+ ],
+ "started_at": "2026-11-13T18:50:49Z",
+ "last_updated_at": "2026-11-13T19:09:22Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-13T18:50:49Z",
+  "ended_at": "2026-11-13T19:09:22Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-1-con-build-019",
+  "result_summary": "CON-BUILD-019 AC-1..AC-6 red->green; full build 3838 tests 0 failures",
+  "changed": true,
+  "commit_sha": "3aedd25",
+  "commits": [
+   {
+    "req_id": "CON-BUILD-019",
+    "test_sha": "6e0f26c",
+    "implementation_sha": "3aedd25"
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-13T18:50:49Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "CON-BUILD-019": "evolving"
+  },
+  "status_snapshot": {
+   "CON-BUILD-019": "planned"
+  }
+ },
+ "req_coverage": {},
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-1-con-build-019/lanes/w1s1l1/reports/pm-2026-11-13T190922Z.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": null
+}

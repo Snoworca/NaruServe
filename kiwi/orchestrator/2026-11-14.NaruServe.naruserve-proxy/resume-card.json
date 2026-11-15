@@ -1,21 +1,25 @@
 {
   "schema_version": "1.0.0",
   "run_id": "2026-11-14.NaruServe.naruserve-proxy",
-  "run_contract": "docs/research/naruserve-proxy/00.run-contract.md@sha256:2b513c22904e27052e5dbef4693504ffc045481afb8f02fab2fea54b3acdffbf",
+  "run_contract": "docs/research/naruserve-proxy/00.run-contract.md@sha256:5d8815eadd0bdaa17f0f73ff8c5b6c80fd8d476b0533ab90a74db8ac3a013dce",
   "position": {
-    "wave": 0,
-    "stage": 0,
-    "phase": "srs"
+    "wave": 1,
+    "stage": 1,
+    "phase": "execute"
   },
   "next_action": {
-    "verb": "register-wave-srs",
+    "verb": "collect-lane",
     "args": {
-      "step": "2.a",
-      "target": "0.12.0",
-      "prd": "docs/prd/2026-11-14.naruserve-proxy.prd.md"
+      "stage": 1,
+      "lanes": [
+        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-1",
+        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-2",
+        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-3"
+      ]
     },
     "preconditions": [
-      "P-DESIGN-FROZEN"
+      "P-DESIGN-FROZEN",
+      "P-LANE-PLAN-FROZEN"
     ]
   },
   "frozen": {
@@ -37,11 +41,17 @@
     "integration_branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/integration",
     "integration_base_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4",
     "design_lock": "docs/research/naruserve-proxy/design/00.design.lock.json@sha256:a46cf24ac753fbe60a4528324e3b310c012fca9f904842c39a551575162b97ce",
+    "waves_lock": "docs/research/naruserve-proxy/waves/waves.lock.json@sha256:65e81d03cbdeeb71b9c0c5638722d8ed4d726d1741ca53dd3dc53d0a9ae0bc2c",
     "constraints": "docs/research/naruserve-proxy/design/constraints.json@sha256:b2645a9c998ce18520b7ae7c8570d9c493d124575511ea5cdb155dc414adab4c",
+    "convergence": "docs/research/naruserve-proxy/design/convergence-registry.json@sha256:29915c1b6c5d7ac5378fb6d45b1cdc389542d1a7fe2f67fd39cc44c5e975e5c8",
+    "lane_lock": {
+      "wave-1": "docs/research/naruserve-proxy/waves/stage-1/lanes.lock.json@sha256:4a2f4365ebc4fba9bb4a0cfde8dcb09efa024822fd79f4929c3612008d3c67ca"
+    },
     "counts": {
       "design_items": 75,
       "integration_items": 5,
-      "constraints": 7
+      "constraints": 7,
+      "waves": 21
     },
     "regression_baseline": {
       "command": "./gradlew -PtinyHttpdFromMaven=true build",
@@ -65,29 +75,45 @@
       }
     },
     {
-      "key": "initial-run-artifacts",
-      "proof": {
-        "kind": "git-trailer",
-        "ref": "22815c580202a4c1223d11dfc74473f34646d533 Orch-Run=2026-11-14.NaruServe.naruserve-proxy Orch-Verb=commit-run-artifacts"
-      }
-    },
-    {
-      "key": "phase-1-artifacts",
-      "proof": {
-        "kind": "git-trailer",
-        "ref": "2786477471ddeb5cfc7d056d7d51fde08e842454 Orch-Run=2026-11-14.NaruServe.naruserve-proxy Orch-Verb=commit-run-artifacts"
-      }
-    },
-    {
       "key": "design-frozen",
       "proof": {
         "kind": "digest",
         "ref": "docs/research/naruserve-proxy/design/00.design.lock.json@sha256:a46cf24ac753fbe60a4528324e3b310c012fca9f904842c39a551575162b97ce"
       }
+    },
+    {
+      "key": "srs-authored",
+      "proof": {
+        "kind": "git-trailer",
+        "ref": "637336e49e786a7dd57aa719f54d4a7e8db2439a Orch-Run=2026-11-14.NaruServe.naruserve-proxy Orch-Verb=commit-run-artifacts"
+      }
+    },
+    {
+      "key": "waves-frozen",
+      "proof": {
+        "kind": "git-trailer",
+        "ref": "f4dddef89507e9571ee45e18181fa62b0c1d993b Orch-Run=2026-11-14.NaruServe.naruserve-proxy Orch-Verb=commit-run-artifacts"
+      }
     }
   ],
-  "open": [],
+  "open": [
+    {
+      "key": "wave-1/s1/lane-2026-11-14.NaruServe.naruserve-proxy-wave-1",
+      "state": "executing",
+      "base_sha": "889c380ebc79a4f6719f3d73264330e2c6c3888a"
+    },
+    {
+      "key": "wave-2/s1/lane-2026-11-14.NaruServe.naruserve-proxy-wave-2",
+      "state": "executing",
+      "base_sha": "8b1f994bc3b4cb01a8c0ddc4a2f4215ec7b5bf63"
+    },
+    {
+      "key": "wave-3/s1/lane-2026-11-14.NaruServe.naruserve-proxy-wave-3",
+      "state": "executing",
+      "base_sha": "bef626f87f09b2cb9a23dedf210aef5277b4d04f"
+    }
+  ],
   "blocked_on": null,
-  "invariant_digest": "sha256:6e7fd770d1b41711e6d61f3dd54eb54e3eb2cd2c1f91639c503b828f35676dbf",
-  "written_at": "2026-11-13T16:23:32.874Z"
+  "invariant_digest": "sha256:ffabbd25a0cce98e952ca339eb51945ba980f829112a4f450b8135f1eddd9bfe",
+  "written_at": "2026-11-13T18:50:52.601Z"
 }

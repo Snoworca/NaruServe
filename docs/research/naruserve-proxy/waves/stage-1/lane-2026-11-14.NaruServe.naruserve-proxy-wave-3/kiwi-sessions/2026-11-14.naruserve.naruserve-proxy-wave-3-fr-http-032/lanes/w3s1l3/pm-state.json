@@ -1,0 +1,38 @@
+{
+ "run_id": "2026-11-14.naruserve.naruserve-proxy-wave-3-fr-http-032",
+ "run_id_given": "2026-11-14.NaruServe.naruserve-proxy-wave-3-fr-http-032",
+ "base_sha": "ec5a11bd8d48b060402d7279c9c13560f1c77d94",
+ "sds_path": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-HTTP-032"
+ ],
+ "req_filter": [
+  "FR-HTTP-032"
+ ],
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "FR-HTTP-032",
+    "test_sha": "84d5725",
+    "implementation_sha": "95ec138"
+   }
+  ],
+  "changed": true,
+  "commit_sha": "95ec138",
+  "result_summary": "FR-HTTP-032 AC-1..6 green; build 3847 tests 0 failures"
+ },
+ "lifecycle_gate_state": {
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-HTTP-032": "evolving"
+  },
+  "status_snapshot": {
+   "FR-HTTP-032": "planned"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": []
+}

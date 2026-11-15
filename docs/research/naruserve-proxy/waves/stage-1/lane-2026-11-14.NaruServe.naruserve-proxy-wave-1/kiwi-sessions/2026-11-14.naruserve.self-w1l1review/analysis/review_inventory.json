@@ -1,0 +1,436 @@
+{
+  "findings": [
+    {
+      "id": "FND-001",
+      "axis": "P3",
+      "verdict": "drop",
+      "evidence": {
+        "command": "javadoc -d jd-out -cp jspecify-1.0.0.jar NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/package-info.java; ./gradlew -PtinyHttpdFromMaven=true :test --tests ... ; grep ':javadoc ' log",
+        "output": "error: No public or protected classes found to document. / :NaruServe-kotlin:javadoc SKIPPED, :NaruServe-proxy:javadoc SKIPPED, all other modules :javadoc UP-TO-DATE",
+        "intent_output": "javadoc of modules with classes unaffected; proxy still builds"
+      },
+      "drop_reason": "Proven not to be a regression: the guard is required, and the only other affected module (NaruServe-kotlin) has identical output.",
+      "title": "javadoc onlyIf guard: needed for the proxy and changes no other module's output",
+      "location": {
+        "file": "build.gradle",
+        "line_range": "259-263"
+      },
+      "description": "The guard skips javadoc when a module's main Java sources are only package-info.java. Running javadoc on the proxy package-info alone reproduces 'error: No public or protected classes found to document', so the guard is needed. The only other module it touches is NaruServe-kotlin, which has no Java sources. Its javadoc task goes from NO-SOURCE to SKIPPED, and its javadoc jar stays manifest-only as before. Every other module still runs javadoc (UP-TO-DATE).",
+      "suggested_fix": "-",
+      "is_behavioral": false,
+      "tags": [
+        "build"
+      ]
+    },
+    {
+      "id": "FND-002",
+      "axis": "P1",
+      "verdict": "drop",
+      "evidence": {
+        "command": "unzip -l build/central-staging/com/snoworca/naruserve/naruserve-proxy/0.11.0/naruserve-proxy-0.11.0-javadoc.jar",
+        "output": "META-INF/ , META-INF/MANIFEST.MF (2 files)",
+        "intent_output": "a -javadoc.jar present for the proxy"
+      },
+      "drop_reason": "The AC only requires the file to exist, and the published NaruServe-kotlin jar is already the same. No failure could be shown.",
+      "title": "The proxy -javadoc.jar is staged but holds only a manifest",
+      "location": {
+        "file": "build.gradle",
+        "line_range": "259-263"
+      },
+      "description": "FR-REL-006 AC-3 requires a -javadoc.jar, and checkCentralStaging only checks that the file exists. The staged naruserve-proxy-0.11.0-javadoc.jar holds only META-INF/MANIFEST.MF. The already-published naruserve-kotlin javadoc jar is the same, and Maven Central requires only that the jar is present.",
+      "suggested_fix": "-",
+      "is_behavioral": false,
+      "tags": [
+        "release"
+      ]
+    },
+    {
+      "id": "FND-003",
+      "axis": "P2",
+      "verdict": "drop",
+      "evidence": {
+        "command": "sed mutation of build.gradle:71; ./gradlew -PtinyHttpdFromMaven=true :test --tests 'BuildLayoutTest.con_BUILD_019*' --tests 'BuildLayoutTest.con_BUILD_021_AC6*'",
+        "output": "7 tests completed, 2 failed: con_BUILD_019_AC5_defaultBundlesNeitherDeclareNorResolveTheProxy, con_BUILD_019_AC3_AC5_mainDependenciesOfEveryModuleWithTheProxyOnTheApiOnly",
+        "intent_output": "tests fail when the constraint is broken"
+      },
+      "drop_reason": "No defect: the tests are proven to fail when the constraint is broken.",
+      "title": "The new dependency tests catch a NaruServe -> NaruServe-proxy dependency",
+      "location": {
+        "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+        "line_range": "789-847"
+      },
+      "description": "A temporary mutation added ':NaruServe-proxy' to NaruServe's api list in build.gradle. con_BUILD_019_AC3_AC5 and con_BUILD_019_AC5 both failed ('NaruServe runtime holds the proxy'). build.gradle was reverted and the outputs rebuilt. So the tests are not vacuous.",
+      "suggested_fix": "-",
+      "is_behavioral": false,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "id": "FND-004",
+      "axis": "P2",
+      "verdict": "drop",
+      "evidence": {
+        "command": "-",
+        "output": "-",
+        "intent_output": "-"
+      },
+      "drop_reason": "This is redundant code, not a test that cannot fail; the exact-set assertion already gives the coverage. It is listed under clean_code CC-001.",
+      "title": "Banned-prefix loops after an exact-set assertEquals can never fail",
+      "location": {
+        "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+        "line_range": "816-826"
+      },
+      "description": "con_BUILD_019_AC4 (and ReleaseScriptTextTest.fr_REL_006_AC5, lines 190-199) first asserts that runtime == {NaruServe-api}, then loops over runtime looking for banned prefixes. Once the first assertion passes, the loop cannot fail. Each test as a whole can still fail.",
+      "suggested_fix": "Remove the loops, or replace the exact-set assertion with the banned-prefix check.",
+      "is_behavioral": false,
+      "tags": [
+        "test",
+        "dead-code"
+      ]
+    },
+    {
+      "id": "FND-005",
+      "axis": "P8",
+      "verdict": "drop",
+      "evidence": {
+        "command": "-",
+        "output": "-",
+        "intent_output": "-"
+      },
+      "drop_reason": "Maintainability remark with no failure shown. OPS-BUILD-004 is outside this review range.",
+      "title": "CLAUDE.md module-line test skips NaruServe-proxy unconditionally",
+      "location": {
+        "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+        "line_range": "638-641"
+      },
+      "description": "ops_BUILD_003_AC3_AC4 now skips the proxy with a 'continue'. Nothing makes anyone remove the skip once OPS-BUILD-004 adds the proxy to CLAUDE.md, so the check stays weaker than it needs to be.",
+      "suggested_fix": "Remove the skip in the wave that implements OPS-BUILD-004 AC-1.",
+      "is_behavioral": false,
+      "tags": [
+        "maintainability"
+      ]
+    },
+    {
+      "id": "FND-006",
+      "axis": "P5",
+      "verdict": "drop",
+      "evidence": {
+        "command": "./gradlew -PtinyHttpdFromMaven=true :test --tests 'BuildChecksTest.fr_REL_006_AC4*'",
+        "output": "EXIT 0, testcase time=5.376",
+        "intent_output": "stable pass"
+      },
+      "drop_reason": "Passes on the pinned Gradle 8.14.3; no flakiness was shown.",
+      "title": "The staging probe runs checkCentralStaging's actions from another task",
+      "location": {
+        "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+        "line_range": "379-386"
+      },
+      "description": "STAGING_PROBE calls check.actions.each { it.execute(check) } so it can run the verify action without the clean and publish steps. This relies on Gradle task-action internals and could break on a Gradle upgrade. On the pinned 8.14.3 it passes deterministically.",
+      "suggested_fix": "-",
+      "is_behavioral": false,
+      "tags": [
+        "test",
+        "flakiness"
+      ]
+    },
+    {
+      "id": "FND-007",
+      "axis": "P7",
+      "verdict": "drop",
+      "evidence": {
+        "command": "./gradlew -PtinyHttpdFromMaven=true :test --tests 'BuildChecksTest.fr_REL_006_AC4*'",
+        "output": "testcase time=5.376 s",
+        "intent_output": "acceptable build time"
+      },
+      "drop_reason": "Measured 5.4 s, which is acceptable.",
+      "title": "fr_REL_006_AC4 runs nine nested TestKit builds",
+      "location": {
+        "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+        "line_range": "397-452"
+      },
+      "description": "The test starts one nested build for the passing case, six for missing files, one for an extra artifactId and one for a missing artifactId.",
+      "suggested_fix": "-",
+      "is_behavioral": false,
+      "tags": [
+        "performance"
+      ]
+    },
+    {
+      "id": "FND-008",
+      "axis": "P1",
+      "verdict": "drop",
+      "evidence": {
+        "command": "./gradlew -PtinyHttpdFromMaven=true -Prelease releaseSbom --rerun-tasks -q; python3 read NaruServe-proxy.cdx.json",
+        "output": "EXIT 0; 11 files; CycloneDX ['com.snoworca.naruserve:NaruServe-api']",
+        "intent_output": "proxy SBOM holds naruserve-api only"
+      },
+      "drop_reason": "AC holds; recording the run belongs to the release step (D-009).",
+      "title": "FR-REL-006 AC-5 is checked by execution: the proxy SBOM holds only naruserve-api",
+      "location": {
+        "file": "gradle/release.gradle",
+        "line_range": "13-34"
+      },
+      "description": "The default-build test checks AC-5 only through the script text and the runtimeClasspath. Running the -Prelease releaseSbom task writes 11 .cdx.json files, NaruServe-proxy.cdx.json included, with bomFormat CycloneDX and the single component com.snoworca.naruserve:NaruServe-api.",
+      "suggested_fix": "-",
+      "is_behavioral": false,
+      "tags": [
+        "release"
+      ]
+    },
+    {
+      "id": "FND-009",
+      "axis": "P3",
+      "verdict": "drop",
+      "evidence": {
+        "command": "./gradlew -PtinyHttpdFromMaven=true build --continue",
+        "output": "BUILD SUCCESSFUL in 37s; 3850 tests, 0 failures, 0 errors",
+        "intent_output": "green build"
+      },
+      "drop_reason": "No regression.",
+      "title": "Full default build stays green",
+      "location": {
+        "file": "build.gradle",
+        "line_range": "1-710"
+      },
+      "description": "./gradlew build --continue passes with 3850 tests, 0 failures and 0 errors across all modules and the root tests (Android SDK present).",
+      "suggested_fix": "-",
+      "is_behavioral": false,
+      "tags": [
+        "regression"
+      ]
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-001",
+      "principle": "dead code",
+      "location": {
+        "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+        "line_range": "819-825"
+      },
+      "description": "Banned-prefix loop after assertEquals(set(NARU_API), runtime) cannot fail; same pattern in ReleaseScriptTextTest.java 194-199."
+    },
+    {
+      "id": "CC-002",
+      "principle": "duplication (DRY)",
+      "location": {
+        "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+        "line_range": "400-403"
+      },
+      "description": "The build-version regex is copied from BuildLayoutTest.buildVersion (BuildLayoutTest.java 678-682) instead of reusing it."
+    },
+    {
+      "id": "CC-003",
+      "principle": "duplication (DRY)",
+      "location": {
+        "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+        "line_range": "217-228"
+      },
+      "description": "The settings.gradle include parsing and the 'naruModules + android' set assertion repeat BuildLayoutTest con_BUILD_019_AC1 (731-750) and the include regex at BuildLayoutTest.java 100."
+    },
+    {
+      "id": "CC-004",
+      "principle": "duplication (DRY)",
+      "location": {
+        "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+        "line_range": "916-925"
+      },
+      "description": "The comment-stripping of the extraCompileOnly block repeats the stripping inside mainDependencyEntries (697-707). A shared 'code of a def X = [ ... ] block' helper would cover both."
+    },
+    {
+      "id": "CC-005",
+      "principle": "duplication (DRY)",
+      "location": {
+        "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+        "line_range": "755-757"
+      },
+      "description": "The naruModules list regex duplicates ReleaseScriptTextTest.naruModulesEntries (201-211)."
+    },
+    {
+      "id": "CC-006",
+      "principle": "function size / mixed responsibilities",
+      "location": {
+        "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+        "line_range": "397-452"
+      },
+      "description": "One test method covers the pass case, the task dependencies, six missing-file cases, an extra artifactId and a missing artifactId. A failure only reports the first broken case."
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/package-info.java",
+      "hunks_total": 1,
+      "anchors": [
+        "/**"
+      ],
+      "findings": []
+    },
+    {
+      "file": "build.gradle",
+      "hunks_total": 15,
+      "anchors": [
+        "// @req CON-BUILD-019",
+        "                   ':NaruServe-kotlin', ':NaruServe-slf4j', ':NaruServe-filelog', ':NaruServe-logcat']",
+        "// Main (api/implementation) dependencies of CON-BUILD-006 AC-1; ':' entries are projects.",
+        "    // api scope: GsonJsonCodec takes a caller-built Gson (CON-BUILD-006 AC-9).",
+        "    // api NaruServe-gson: a NaruServe caller compiles against GsonJsonCodec and Gson; no Logcat, any JDK (CON-BUILD-006 AC-9).",
+        "    // The proxy uses only the public API; NaruServe, NaruServe-kotlin and NaruServe-android never declare it.",
+        "// compileOnly dependencies of CON-BUILD-006 AC-2 besides the nullability library every module gets.",
+        "// @req CON-BUILD-006",
+        "    'NaruServe-proxy'    : 'NaruServe reverse proxy middleware that forwards requests to a backend HTTP server.',",
+        "    // javadoc fails with \"No public or protected classes found to document\" on a module whose main sources are only",
+        "// Test fixtures source set for the in-memory HttpAdapter of a later wave (CON-BUILD-006 AC-8).",
+        "// checkCentralStaging stages all ten modules from scratch and fails rather than stage nine without the AAR.",
+        "    description = 'Publishes the ten modules to build/central-staging and checks the files Maven Central needs.'",
+        "    // con_BUILD_006_AC8 reads this jar.",
+        "// @req FR-REL-007"
+      ],
+      "findings": [
+        "FND-001",
+        "FND-002",
+        "FND-009"
+      ]
+    },
+    {
+      "file": "gradle/release.gradle",
+      "hunks_total": 4,
+      "anchors": [
+        "// ./gradlew build, online or offline, never resolves these plugins (FR-REL-001, CON-BUILD-017).",
+        "// The published modules are the subprojects of the root build: the nine JAR modules and, when settings.gradle found an",
+        "// @req FR-REL-007",
+        "// @req FR-REL-007"
+      ],
+      "findings": [
+        "FND-008"
+      ],
+      "identical_hunks": [
+        [
+          3,
+          4
+        ]
+      ]
+    },
+    {
+      "file": "settings.gradle",
+      "hunks_total": 2,
+      "anchors": [
+        "// @req CON-BUILD-019",
+        "// ANDROID_SDK_ROOT; without one the other nine modules still build."
+      ],
+      "findings": []
+    },
+    {
+      "file": "src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java",
+      "hunks_total": 4,
+      "anchors": [
+        "    // CON-AUTH-001 AC-2: no auth Gradle project; the module list is the one of 0.10.0",
+        "                + \"':NaruServe-filelog', ':NaruServe-logcat']\"));",
+        "                \":NaruServe-logcat\", \":NaruServe-android\")), includes);",
+        "                \"NaruServe-kotlin\", \"NaruServe-slf4j\", \"NaruServe-filelog\", \"NaruServe-logcat\"}) {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+      "hunks_total": 6,
+      "anchors": [
+        "    // CON-BUILD-019 AC-2: NaruServe-proxy joins the API 21 checks through naruModules",
+        "                \"NaruServe-kotlin\", \"NaruServe-filelog\", \"NaruServe-logcat\")) {",
+        "            // OPS-BUILD-002 AC-5: the Kotlin plugin is applied to all nine JAR modules (not to NaruServe-android).",
+        "    // FR-BUILD-001 AC-1: without an Android SDK the build warns and includes the other nine modules only",
+        "    // FR-REL-005 AC-7: without an Android SDK the staging check refuses to stage nine modules",
+        "    /** The artifactIds FR-REL-006 AC-4 names, sorted as checkCentralStaging reports them. */"
+      ],
+      "findings": [
+        "FND-006",
+        "FND-007"
+      ]
+    },
+    {
+      "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+      "hunks_total": 8,
+      "anchors": [
+        "import static org.junit.Assert.assertNull;",
+        "            \"NaruServe-logcat\");",
+        "        packages.put(\"NaruServe-proxy\", \"com.snoworca.naruserve.proxy\");",
+        "    // SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-1, body unchanged)",
+        "    // SDS-AC-5, SDS-AC-7; CON-BUILD-017 AC-2, CON-BUILD-014 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-2, body unchanged)",
+        "    // SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5",
+        "            // OPS-BUILD-003 AC-3 expired for 0.12.0; OPS-BUILD-004 AC-1 adds NaruServe-proxy to the module line.",
+        "    /** The {@code version = '...'} of the root build.gradle, the version the outer build published to staging. */"
+      ],
+      "findings": [
+        "FND-003",
+        "FND-004",
+        "FND-005"
+      ]
+    },
+    {
+      "file": "src/test/java/com/snoworca/naruserve/build/CentralStagingTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "    // FR-REL-006 AC-3: naruserve-proxy is staged with the jar, sources, javadoc, POM and module, each checksummed"
+      ],
+      "findings": []
+    },
+    {
+      "file": "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java",
+      "hunks_total": 3,
+      "anchors": [
+        "        // FR-REL-006 AC-2: the reverse proxy depends on the API alone (fr_REL_006_AC2 checks there is nothing else).",
+        "            String id = e.getKey();",
+        "    /** The POM {@code project} of {@code id} carries the coordinates and metadata FR-REL-005 AC-5 requires. */"
+      ],
+      "findings": []
+    },
+    {
+      "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+      "hunks_total": 5,
+      "anchors": [
+        "    // SDS-AC-3; FR-REL-001 AC-3",
+        "    // SDS-AC-3; FR-REL-001 AC-3",
+        "    // FR-REL-007 AC-2 — both plugin names, in any letter case, are absent from the scanned files and present in",
+        "    // SDS-AC-3; FR-REL-001 AC-3",
+        "    // FR-REL-006 AC-5 (default-build part): releaseSbom writes NaruServe-proxy.cdx.json from a runtimeClasspath that"
+      ],
+      "findings": [
+        "FND-004"
+      ],
+      "identical_hunks": [
+        [
+          1,
+          2,
+          4
+        ]
+      ]
+    },
+    {
+      "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+      "hunks_total": 5,
+      "anchors": [
+        "    /** The nine published modules, in the order of naruModules. */",
+        "    /** The published modules of this build: the nine and, when an Android SDK resolved, NaruServe-android. */",
+        "    // SDS-AC-2, SDS-AC-4; FR-REL-001 AC-2, FR-REL-001 AC-4",
+        "    // SDS-AC-2; FR-REL-001 AC-2",
+        "    // SDS-AC-4; FR-REL-001 AC-4"
+      ],
+      "findings": []
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "by_verdict": {
+      "drop": 9
+    },
+    "by_axis": {
+      "P3": 2,
+      "P1": 2,
+      "P2": 2,
+      "P8": 1,
+      "P5": 1,
+      "P7": 1
+    },
+    "notes": "gradle/release.gradle hunks 3 and 4 are each the single added line '// @req FR-REL-007', so the two anchors in that row are necessarily identical; no other anchor repeats. Anchors are given without the leading +/- marker."
+  }
+}

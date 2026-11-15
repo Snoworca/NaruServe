@@ -1,0 +1,71 @@
+{
+  "immediate_fix": [
+    {
+      "id": "FND-001",
+      "rationale": "Block. FR-APP-027 (statement and AC-1) says an unwrapped BodyTooLargeException thrown by a handler that reaches the error flow is answered 413 PAYLOAD_TOO_LARGE. The reviewer's scratch test shows this on a real call path: a route on auth.routes() (apps can extend it) that throws new BodyTooLargeException(10) gets 503 SERVICE_UNAVAILABLE and a misleading ERROR line 'a store failed', while the same exception on an app route gets 413 and HttpException(413) on the auth router also gets 413. Cause: Auth.routerError (Auth.java:2646-2668) reaches isStoreFailure (Auth.java:2678-2681), which treats every IOException, now including the public BodyTooLargeException, as a store failure. The diff already changed Auth.prodAnswer for FR-APP-027, so the auth classification change is incomplete in the lane's own out-of-lease edit, and finishing it is in the guarantee scope. Fix: in routerError, answer an unwrapped BodyTooLargeException with respond(req, res, 413, coreCode(413), null, null) before the isStoreFailure branch (or leave it out of isStoreFailure). Add a regression test: an auth.routes() handler throwing new BodyTooLargeException(10) gets 413 PAYLOAD_TOO_LARGE with no new ERROR line. Assert that a plain IOException still gives 503 and that new RuntimeException(new BodyTooLargeException(10)) still follows the non-413 path (FR-APP-027 AC-3).",
+      "estimated_complexity": "small",
+      "is_behavioral": true,
+      "tags": ["FR-APP-027", "auth", "error-handling", "out-of-lease-file", "real-call-path"]
+    }
+  ],
+  "declared_limit": [],
+  "kept_tiers": [
+    {
+      "id": "FND-001",
+      "tier": "block",
+      "family": "auth-error-classification-of-BodyTooLargeException",
+      "introduced_by_round": null,
+      "family_action": null
+    }
+  ],
+  "discussion_needed": [],
+  "rejected": [
+    {
+      "id": "FND-002",
+      "rationale": "Drop confirmed. IR-HTTP-011 Implementation Notes assign D-023 (the FQN for the TinyHttpd class) to the FR-ENGINE requirement of this target. That requirement is outside this wave's guarantee scope (IR-HTTP-011 / FR-APP-027), and TinyHttpdBodyStream.java is not in the wave-2 write set. The single-type import in package com.snoworca.naruserve.tinyhttpd shadows nothing and resolves to com.snoworca.tinyhttpd.http.BodyTooLargeException, so there is no functional defect.",
+      "rejection_category": "out_of_scope"
+    },
+    {
+      "id": "FND-003",
+      "rationale": "Drop confirmed. The fix would be a prose docs/api page. kiwi-review-fix-loop reviews code only, and docs/api is not in the wave-2 write set (a later documentation wave owns it). Neither IR-HTTP-011 nor FR-APP-027 has an AC that requires docs. Carry it to the docs wave.",
+      "rejection_category": "out_of_scope"
+    },
+    {
+      "id": "FND-004",
+      "rationale": "Drop confirmed. This is only about test method names. The assertions are intact or stronger, and the comments re-point to IR-HTTP-011 AC-6/AC-8/AC-9 as the Implementation Notes require ('the tests that cite the expired criteria re-point to these'). No AC is violated and there is no functional defect.",
+      "rejection_category": "dropped"
+    },
+    {
+      "id": "FND-005",
+      "rationale": "Drop confirmed as intended. FR-APP-027 Implementation Notes say that statusOf is shared with ErrorPath and DefaultRequest.logFailure, so after the change an escaped overrun is no longer logged as a 500 request failure. That is the same treatment HttpException(413) already gets, and the access log line remains. It does not lose data, leak secrets or bypass authorization.",
+      "rejection_category": "already_intended"
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-001",
+      "decision": "dismissed",
+      "reason": "This conflicts with the project's package boundaries. utils.auth does not depend on com.snoworca.naruserve.internal (no auth main source imports it), and Auth keeps its own copy of the core mapping on purpose (Auth.coreCode mirrors StandardErrors.code). Exposing statusOf to auth would add a new public dependency on internal. The real divergence in auth is FND-001, which the fixer handles. While doing so, the fixer may share one private Auth helper between prodAnswer and routerError, but that is not required."
+    },
+    {
+      "id": "CC-002",
+      "decision": "fix",
+      "reason": "Valid DRY point in lines the lane changed, and both files are touched for FR-APP-027. FinalHandler.java:31-33 repeats which types statusOf classifies. Add a package-private StandardErrors helper (for example 'classified status, or -1 when unclassified') and use it in FinalHandler so the mapping lives in one place. The change must keep behaviour: HttpException gives its status, an unwrapped BodyTooLargeException gives 413, everything else falls back to response.statusCode(), and the 400-599 clamp stays. The existing ErrorPathTest and StandardErrorsTest must pass unchanged."
+    },
+    {
+      "id": "CC-003",
+      "decision": "fix",
+      "reason": "Fix only inside NaruServe-api. The cause-chain walk in JsonBodyAcceptanceTest:296-300 has no depth bound, while the same check in JsonBodyReaderTest.overrunInChain is depth-bounded. Make it one bounded helper that both tests reuse. There is precedent for sharing between these test classes (JsonBodyReaderTest already imports JsonBodyAcceptanceTest.TextCodec). GsonBodyLimitTest is in another module with no shared test fixture, so leave it alone. Keep every assertion; this is not a refactor that may weaken assertions."
+    },
+    {
+      "id": "CC-004",
+      "decision": "fix",
+      "reason": "Valid and local to new lane test code. Both IR_HTTP_011_AC8 overrun tests repeat about 25 lines of app, logger, adapter and request setup plus the same assertion block, and only the codec differs. Extract a helper that takes the JsonCodec. Constraint: no assertion may be weakened or dropped. The wrapping test must still assert overrunInChain(e) through a flag or by asserting it at the call site, and both tests must still assert status 413, seen.size()==1, e.status()==413, e.code()==PAYLOAD_TOO_LARGE and exactly one 'POST /b 413 ' access-log line, for both the checked and the unchecked variants."
+    },
+    {
+      "id": "CC-005",
+      "decision": "dismissed",
+      "reason": "Cosmetic and consistent with existing practice: inline java.util.ArrayList/List FQNs already appear in 11 NaruServe-api test files. Readability does not change in any way that matters."
+    }
+  ]
+}

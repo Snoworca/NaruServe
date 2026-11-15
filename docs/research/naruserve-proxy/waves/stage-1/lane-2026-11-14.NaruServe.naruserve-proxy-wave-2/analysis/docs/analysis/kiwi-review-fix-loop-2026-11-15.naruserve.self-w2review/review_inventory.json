@@ -1,0 +1,368 @@
+{
+  "findings": [
+    {
+      "id": "FND-001",
+      "axis": "P1",
+      "verdict": "keep",
+      "evidence": {
+        "command": "cd /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-2 && # temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/ZzReviewScratchTest.java (deleted afterwards): W8 fixture, w.auth.routes().post(\"/ops/overrun\", (req,res)->{throw new BodyTooLargeException(10);}), w.auth.routes().post(\"/ops/http413\", ...throw new HttpException(413)), w.app.post(\"/plain\", ...throw new BodyTooLargeException(10)); f.start(b -> b.permit(\"/plain\")); POST each with a bearer token, print status/body/new ERROR log lines, assertEquals(413, /auth/ops/overrun status) && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.utils.auth.ZzReviewScratchTest' -i",
+        "output": "SCRATCH /auth/ops/http413 -> 413 {\"error\":{\"code\":\"PAYLOAD_TOO_LARGE\",\"message\":\"Client Error\",...}} newErrorLogs=0\nSCRATCH /auth/ops/overrun -> 503 {\"error\":{\"code\":\"SERVICE_UNAVAILABLE\",\"message\":\"Service Unavailable\",...}} newErrorLogs=1\nSCRATCH /plain -> 413 {\"error\":{\"code\":\"PAYLOAD_TOO_LARGE\",\"message\":\"Client Error\",...}} newErrorLogs=0\nZzReviewScratchTest > overrunInAuthRouter FAILED\njava.lang.AssertionError: {\"error\":{\"code\":\"SERVICE_UNAVAILABLE\",...}} expected:<413> but was:<503>",
+        "intent_output": "/auth/ops/overrun -> 413 {\"error\":{\"code\":\"PAYLOAD_TOO_LARGE\",...}} newErrorLogs=0 (same as an app route and as HttpException(413) on the auth router; FR-APP-027: an unwrapped BodyTooLargeException that reaches the error flow is 413, and the diff's own Auth.prodAnswer comment says auth follows Core's classification)"
+      },
+      "drop_reason": null,
+      "title": "Auth router error middleware answers an unwrapped BodyTooLargeException 503 SERVICE_UNAVAILABLE and logs it as a store failure",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+        "line_range": "2646-2668, 2678-2681"
+      },
+      "description": "The diff made Core (StandardErrors.statusOf, FinalHandler) and auth's PROD final layer (Auth.prodAnswer) answer an unwrapped BodyTooLargeException 413, but auth's router error middleware (routerError, attached to auth.routes()/adminRoutes(), which apps can extend) still falls through to isStoreFailure, which treats every IOException - now including the public BodyTooLargeException - as a store failure: 503 SERVICE_UNAVAILABLE plus an ERROR line 'auth: a store failed ... answering 503'. So the same exception gives 413 on an app route and 503 + a misleading ERROR log on an auth-router route, while HttpException(413) gives 413 on both. Not a regression (the IOException branch predates the diff), but the diff's classification change is incomplete across the auth layers it chose to touch.",
+      "suggested_fix": "In Auth.routerError, answer `err instanceof BodyTooLargeException` as respond(req, res, 413, coreCode(413), null, null) before the isStoreFailure branch (or exclude BodyTooLargeException in isStoreFailure and route it to the HttpException-like branch); add a regression test next to AuthClientErrorLoggingTest/JuniorFinalItemsTest asserting 413 PAYLOAD_TOO_LARGE and no new ERROR line for an auth.routes() handler throwing new BodyTooLargeException(10), and 500/503 behaviour unchanged for a plain IOException.",
+      "is_behavioral": true,
+      "tags": [
+        "FR-APP-027",
+        "auth",
+        "consistency",
+        "error-handling",
+        "out-of-lease-file"
+      ]
+    },
+    {
+      "id": "FND-002",
+      "axis": "P8",
+      "verdict": "drop",
+      "evidence": {
+        "command": "grep -n 'BodyTooLargeException' NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+        "output": "4:import com.snoworca.tinyhttpd.http.BodyTooLargeException;\n43:        if (e instanceof BodyTooLargeException) {",
+        "intent_output": "D-023: the TinyHttpd class named by its fully qualified name"
+      },
+      "drop_reason": "D-023 belongs to an FR-ENGINE requirement outside this wave (IR-HTTP-011/FR-APP-027) and the file is not in the wave-2 write_set; the single-type import shadows nothing (adapter package is com.snoworca.naruserve.tinyhttpd, not com.snoworca.naruserve), so it compiles and resolves to the TinyHttpd class - no behavioural defect.",
+      "title": "TinyHttpd adapter still imports its BodyTooLargeException by simple name (D-023 not applied)",
+      "location": {
+        "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+        "line_range": "4, 43"
+      },
+      "description": "Design D-023 asks for the FQN; the adapter keeps a simple-name import. Safe today, ambiguous to readers now that two public classes share the name.",
+      "suggested_fix": "Apply in the wave that owns the FR-ENGINE requirement: drop the import and use com.snoworca.tinyhttpd.http.BodyTooLargeException inline.",
+      "is_behavioral": false,
+      "tags": [
+        "D-023",
+        "naming"
+      ]
+    },
+    {
+      "id": "FND-003",
+      "axis": "P6",
+      "verdict": "drop",
+      "evidence": {
+        "command": "grep -rn BodyTooLargeException docs/api",
+        "output": "(no output)",
+        "intent_output": "I-003 / CLAUDE.md: a public API change updates docs/api in the same wave"
+      },
+      "drop_reason": "Prose documentation is outside kiwi-review-fix-loop scope (code only), and docs/api pages are not in the wave-2 write_set (they are listed for a later documentation wave in expected-files.json).",
+      "title": "New public BodyTooLargeException has no docs/api entry",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/BodyTooLargeException.java",
+        "line_range": "1-28"
+      },
+      "description": "The class became public API (and changes the onError/status contract) without a docs/api page or Express counterpart note.",
+      "suggested_fix": "Track for the docs wave: document BodyTooLargeException and the 413 mapping in docs/api (ko + en).",
+      "is_behavioral": false,
+      "tags": [
+        "docs",
+        "I-003"
+      ]
+    },
+    {
+      "id": "FND-004",
+      "axis": "P7",
+      "verdict": "drop",
+      "evidence": {
+        "command": "",
+        "output": "",
+        "intent_output": ""
+      },
+      "drop_reason": "Naming only: method names such as sdsAc12_FR_HTTP_020_AC3_* and FR_JSON_001_AC2_* still cite the expired criteria while their comments re-point to IR-HTTP-011 AC-6/AC-8/AC-9; the assertions are intact and strengthened.",
+      "title": "Re-pointed tests keep expired requirement IDs in their method names",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java",
+        "line_range": "83-170"
+      },
+      "description": "Traceability tools that scan method names will still see FR-HTTP-020 AC-3/AC-4 and FR-JSON-001 AC-2/AC-9; comments carry the new IDs.",
+      "suggested_fix": "Optional rename when convenient.",
+      "is_behavioral": false,
+      "tags": [
+        "traceability",
+        "naming"
+      ]
+    },
+    {
+      "id": "FND-005",
+      "axis": "P2",
+      "verdict": "drop",
+      "evidence": {
+        "command": "",
+        "output": "",
+        "intent_output": ""
+      },
+      "drop_reason": "Intended: FR-APP-027 Implementation Notes state that after the change an escaped overrun is no longer logged as a 500 request failure (DefaultRequest.logFailure and ErrorPath both key on statusOf==500); same treatment as HttpException(413).",
+      "title": "An unwrapped overrun escaping after the response started is now aborted without an ERROR log",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "line_range": "179-183"
+      },
+      "description": "logFailure skips non-500 statuses, so a BodyTooLargeException that escapes a streaming handler (response aborted) leaves only the access log line; before the diff it was logged at ERROR.",
+      "suggested_fix": "None required.",
+      "is_behavioral": true,
+      "tags": [
+        "logging",
+        "FR-APP-027"
+      ]
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-001",
+      "principle": "DRY / single source of truth",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+        "line_range": "2814-2815"
+      },
+      "description": "prodAnswer re-implements StandardErrors.statusOf (HttpException status, 413 for BodyTooLargeException, else 500) because statusOf is package-private; a future mapping change must be made twice (and FND-001 shows a third auth path already diverged)."
+    },
+    {
+      "id": "CC-002",
+      "principle": "DRY / knowledge duplication (shotgun surgery)",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+        "line_range": "31-33"
+      },
+      "description": "FinalHandler hard-codes which types statusOf classifies (`instanceof HttpException || instanceof BodyTooLargeException`) to choose between statusOf and response.statusCode(); a third mapped type needs edits in both StandardErrors and FinalHandler. A StandardErrors helper (e.g. 'classified status or -1') would keep the knowledge in one place."
+    },
+    {
+      "id": "CC-003",
+      "principle": "DRY (test helpers)",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+        "line_range": "296-300"
+      },
+      "description": "The 'BodyTooLargeException in the cause chain' walk is written three times with different guards: unbounded in JsonBodyAcceptanceTest:296-300, depth-bounded helper JsonBodyReaderTest.overrunInChain:243-250, inline depth-bounded loop GsonBodyLimitTest:40-44."
+    },
+    {
+      "id": "CC-004",
+      "principle": "DRY / test size",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+        "line_range": "253-342"
+      },
+      "description": "The two IR_HTTP_011_AC8 overrun tests duplicate ~25 lines of app/codec/logger/request setup and the same assertion block; only the codec differs. Extract a helper taking the JsonCodec."
+    },
+    {
+      "id": "CC-005",
+      "principle": "Readability (consistent imports)",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+        "line_range": "277, 324, 351"
+      },
+      "description": "Inline fully qualified java.util.List/java.util.ArrayList in new test code (also JsonBodyAcceptanceTest:289) while the files otherwise import their types."
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/BodyTooLargeException.java",
+      "hunks_total": 1,
+      "anchors": [
+        "public final class BodyTooLargeException extends IOException {"
+      ],
+      "findings": [
+        "FND-003"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyTooLargeException.java",
+      "hunks_total": 1,
+      "anchors": [
+        "package com.snoworca.naruserve.internal;"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+      "hunks_total": 2,
+      "anchors": [
+        "import com.snoworca.naruserve.BodyTooLargeException;",
+        "status=error instanceof HttpException || error instanceof BodyTooLargeException"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FormBodyReader.java",
+      "hunks_total": 1,
+      "anchors": [
+        "import com.snoworca.naruserve.BodyTooLargeException;"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+      "hunks_total": 1,
+      "anchors": [
+        "import com.snoworca.naruserve.BodyTooLargeException;"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java",
+      "hunks_total": 1,
+      "anchors": [
+        "import com.snoworca.naruserve.BodyTooLargeException;"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+      "hunks_total": 4,
+      "anchors": [
+        "import com.snoworca.naruserve.BodyTooLargeException;",
+        "/** {@link HttpException#status()}, otherwise 500. */",
+        "// @req FR-APP-027",
+        "return error instanceof BodyTooLargeException ? 413 : 500;"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+      "hunks_total": 4,
+      "anchors": [
+        "import com.snoworca.naruserve.BodyTooLargeException;",
+        "* logged a 500. DEV leaves it to the next layer, where the stack trace helps.",
+        "// @req FR-APP-027",
+        ": err instanceof BodyTooLargeException ? 413 : 500;"
+      ],
+      "findings": [
+        "FND-001"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/BodyTooLargeExceptionTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "public void IR_HTTP_011_AC2_internalClassIsGoneWithNoAliasInTheJar() throws Exception {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+      "hunks_total": 4,
+      "anchors": [
+        "// SDS-AC-8; FR-JSON-001 AC-2",
+        "// SDS-AC-8; IR-HTTP-011 AC-9",
+        "// SDS-AC-8; IR-HTTP-011 AC-9: the peeked first char still reaches the codec",
+        "public void IR_HTTP_011_AC4_chunkedOverrunIs413PayloadTooLargeThroughThePublicClass() {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java",
+      "hunks_total": 3,
+      "anchors": [
+        "import com.snoworca.naruserve.BodyTooLargeException;",
+        "// SDS-AC-10; FR-APP-006 AC-3, FR-APP-006 AC-4, FR-APP-005 AC-2",
+        "public void FR_APP_027_AC1_anUnwrappedBodyTooLargeExceptionIsAnswered413WithTheStandardBody() {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+      "hunks_total": 10,
+      "anchors": [
+        "import com.snoworca.naruserve.BodyTooLargeException;",
+        "import com.snoworca.naruserve.testing.RecordingLogger;",
+        "// SDS-AC-11; IR-HTTP-011 AC-8",
+        "// SDS-AC-9; IR-HTTP-011 AC-8: a codec that swallows the overrun still gives 413",
+        "// IR-HTTP-011 AC-9: an unchecked codec failure without an HttpException cause stays itself (500)",
+        "// IR-HTTP-011 AC-9: a codec IOException becomes 400 with it as the cause",
+        "// SDS-AC-9; IR-HTTP-011 AC-8: the overrun stays readable after a codec wrapped the failure",
+        "assertSame(BodyTooLargeException.class, expected.getClass());",
+        "            assertSame(BodyTooLargeException.class, expected.getClass());",
+        "/** True when {@code t}'s cause chain holds the public over-limit exception. */"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java",
+      "hunks_total": 14,
+      "anchors": [
+        "import static org.junit.Assert.assertSame;",
+        "import com.snoworca.naruserve.HttpException;",
+        "import java.nio.charset.StandardCharsets;",
+        "// SDS-AC-12; IR-HTTP-011 AC-6, IR-HTTP-011 AC-3",
+        "assertSame(BodyTooLargeException.class, e.getClass());",
+        "// SDS-AC-12; IR-HTTP-011 AC-6",
+        "assertEquals(10, expected.limit());",
+        "// SDS-AC-12; IR-HTTP-011 AC-6, IR-HTTP-011 AC-1",
+        "assertEquals(\"com.snoworca.naruserve.BodyTooLargeException\", BodyTooLargeException.class.getName());",
+        "// SDS-AC-12; FR-HTTP-020 AC-3",
+        "// SDS-AC-13; IR-HTTP-011 AC-7, IR-HTTP-011 AC-3",
+        "            assertEquals(10, expected.limit());",
+        "assertSame(BodyTooLargeException.class, expected.getClass());",
+        "public void IR_HTTP_011_AC3_formReaderAnswersBothOverruns413ThroughThePublicClass() throws IOException {"
+      ],
+      "findings": [
+        "FND-004"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java",
+      "hunks_total": 3,
+      "anchors": [
+        "import com.snoworca.naruserve.BodyTooLargeException;",
+        "// SDS-AC-10; FR-APP-006 AC-3, FR-APP-006 AC-4",
+        "public void FR_APP_027_AC3_statusOfAnExceptionWrappingABodyTooLargeExceptionStays500() {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java",
+      "hunks_total": 2,
+      "anchors": [
+        "import com.snoworca.naruserve.BodyTooLargeException;",
+        "public void FR_APP_027_AC1_AC3_prodAnswersAnUnwrappedOverrun413AndAWrappedOne500() {"
+      ],
+      "findings": [
+        "FND-001"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/BodyTooLargeExceptionKotlinTest.kt",
+      "hunks_total": 1,
+      "anchors": [
+        "val limit: Long = e.limit()"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonBodyLimitTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "public void IR_HTTP_011_AC4_chunkedOverrunThroughGsonIs413PayloadTooLarge() {"
+      ],
+      "findings": []
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "by_verdict": {
+      "keep": 1,
+      "drop": 4
+    },
+    "by_axis": {
+      "P1": 1,
+      "P8": 1,
+      "P6": 1,
+      "P7": 1,
+      "P2": 1
+    },
+    "review_denominator_files": 17,
+    "hunks_reviewed": 54
+  }
+}

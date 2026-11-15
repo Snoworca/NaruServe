@@ -1,0 +1,204 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-1-con-build-019",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "CON-BUILD-019"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "started_at": "2026-11-14T00:00:00Z",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "regression_baseline": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "passed": 3829,
+  "failed": 0,
+  "failed_test_ids": [],
+  "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4",
+  "source": "--regression-baseline pin"
+ },
+ "mcp_call_log": [
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "CON-BUILD-019",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:731",
+    "covers": "AC-1",
+    "notes": "BuildLayoutTest#con_BUILD_019_AC1_settingsIncludesTheProxyModuleAndKeepsTheRootName red then green; full Maven-mode build 0 failures"
+   },
+   "args_hash": "8ef1d644586e5eff39d31d25397a1014c953a646",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-14T04:10:00Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "CON-BUILD-019",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:753",
+    "covers": "AC-2",
+    "notes": "BuildLayoutTest#con_BUILD_019_AC2_rootBuildConfiguresTheProxyModuleLikeTheOtherLibraryModules red then green; full Maven-mode build 0 failures"
+   },
+   "args_hash": "8485494b2e458c9ac5774a7f07325f4ffe02ae45",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-14T04:10:00Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "CON-BUILD-019",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:786",
+    "covers": "AC-3",
+    "notes": "BuildLayoutTest#con_BUILD_019_AC3_AC5_mainDependenciesOfEveryModuleWithTheProxyOnTheApiOnly red then green; full Maven-mode build 0 failures"
+   },
+   "args_hash": "b9e72d4b48acbaf6aa305c08bd203b4249ba12aa",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-14T04:10:00Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "CON-BUILD-019",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:816",
+    "covers": "AC-4",
+    "notes": "BuildLayoutTest#con_BUILD_019_AC4_proxyRuntimeClasspathHoldsOnlyTheApi red then green; full Maven-mode build 0 failures"
+   },
+   "args_hash": "093543b370b364a3c04f6ecb8a155f1ef2e2e1bb",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-14T04:10:00Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "CON-BUILD-019",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:830",
+    "covers": "AC-5",
+    "notes": "BuildLayoutTest#con_BUILD_019_AC5_defaultBundlesNeitherDeclareNorResolveTheProxy red then green; full Maven-mode build 0 failures"
+   },
+   "args_hash": "b929f814b95c9a43e6a8478c2a3742418d1412f5",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-14T04:10:00Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "CON-BUILD-019",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:852",
+    "covers": "AC-6",
+    "notes": "BuildLayoutTest#con_BUILD_019_AC6_proxyMainClassesAreReleaseEightMajor52 red then green; full Maven-mode build 0 failures"
+   },
+   "args_hash": "7093aba73924bd81981d7867a549fd8427106449",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-14T04:10:00Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_trace_link",
+   "args": {
+    "id": "CON-BUILD-019",
+    "type": "Code",
+    "reference": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/package-info.java",
+    "relation": "implements",
+    "notes": "NullMarked package annotation so the module emits a class file"
+   },
+   "args_hash": "4545518682add31236f7311556f2258b9bb9c8bc",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-14T04:10:00Z",
+   "deferred": true
+  },
+  {
+   "tool": "update_status",
+   "args": {
+    "id": "CON-BUILD-019",
+    "status": "implemented"
+   },
+   "args_hash": "4429321936ea3031d40e1a7eeef6d85ce44db278",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-14T04:10:00Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_completed_work",
+   "args": {
+    "date": "2026-11-14",
+    "summary": "[req] CON-BUILD-019 - NaruServe-proxy module in settings and naruModules, api NaruServe-api only, Java 8 bytecode, no dependent module. green=PASS (6/6 new tests). files: settings.gradle, build.gradle, NaruServe-proxy package-info.java, docs/api/README.md. AC: CON-BUILD-019 AC-1..6 PASS",
+    "requirementIds": [
+     "CON-BUILD-019"
+    ],
+    "target": "0.12.0",
+    "scope": "BUILD"
+   },
+   "args_hash": "fd9d4b53bf7046b4938472af447bccac1a34f080",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-14T04:10:00Z",
+   "deferred": true
+  }
+ ],
+ "pending_mutations": [],
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :test --tests com.snoworca.naruserve.build.BuildLayoutTest --tests com.snoworca.naruserve.build.AuthPlacementTest --tests com.snoworca.naruserve.docs.ReleaseRecordsDocsTest",
+  "exit_code": 1,
+  "captured_failure": "52 tests completed, 12 failed; con_BUILD_019_AC1..AC6 all FAILED (settings lacks NaruServe-proxy; dependency report lists no NaruServe-proxy; no proxy main classes; mainDependencies lacks :NaruServe-proxy)",
+  "timestamp": "2026-11-14T00:00:00Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :test --tests BuildLayoutTest,AuthPlacementTest,ReleaseRecordsDocsTest,PublishedPomTest,CentralStagingTest,ServletBuildTest,ReadmeDocsTest",
+  "exit_code": 0,
+  "timestamp": "2026-11-14T04:05:00Z"
+ },
+ "regression_summary": {
+  "scope": "full",
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "passed": 3838,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "loop_counters": {
+  "phase1": {
+   "kept": 1,
+   "dropped": 12,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 5,
+   "dropped": 10,
+   "rounds": 1
+  }
+ }
+}

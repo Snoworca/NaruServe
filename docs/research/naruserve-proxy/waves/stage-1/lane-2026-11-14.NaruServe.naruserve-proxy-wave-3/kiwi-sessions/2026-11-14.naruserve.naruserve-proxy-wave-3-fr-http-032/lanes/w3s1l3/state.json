@@ -1,0 +1,168 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-11-14.naruserve.naruserve-proxy-wave-3-fr-http-032",
+  "sds_path": null,
+  "sds_sha256": null,
+  "target": "0.12.0",
+  "req_ids": [
+    "FR-HTTP-032"
+  ],
+  "write_set": [
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestRawHeadersTest.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java"
+  ],
+  "mode": "normal",
+  "flags": [
+    "--loops 20",
+    "--regression-baseline",
+    "--defer-srs-mutation"
+  ],
+  "spawn_context": "pm-child",
+  "started_at": "2026-11-13T19:18:40Z",
+  "updated_at": "2026-11-13T19:18:40Z",
+  "frozen_at": null,
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "loop_counters": {
+    "phase1": {
+      "kept": 2,
+      "dropped": 4,
+      "rounds": 2
+    },
+    "phase2": {
+      "kept": 0,
+      "dropped": 9,
+      "rounds": 1
+    }
+  },
+  "red_evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.RequestRawHeadersTest",
+    "exit_code": 1,
+    "captured_failure": "8 tests completed, 8 failed; e.g. FR_HTTP_032_AC1_headerNamesAreLowercasedDistinctAndInFirstSeenOrder: expected:<[x-a, x-b]> but was:<[]>; FR_HTTP_032_AC3_bothEnumerationsAndTheirEntriesAreUnmodifiable: headerNames().remove did not throw UnsupportedOperationException",
+    "timestamp": "2026-11-13T19:18:40Z"
+  },
+  "green_evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.RequestRawHeadersTest",
+    "exit_code": 0,
+    "timestamp": "2026-11-13T19:18:40Z"
+  },
+  "regression_baseline": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true build",
+    "source": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+    "failed": 0,
+    "failed_test_ids": [],
+    "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4"
+  },
+  "regression_summary": {
+    "last_run_at": "2026-11-13T19:18:40Z",
+    "scope": "full",
+    "command": "./gradlew -PtinyHttpdFromMaven=true build --continue",
+    "passed": 3847,
+    "failed": 0,
+    "regressed_files": []
+  },
+  "mcp_call_log": [
+    {
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-HTTP-032",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestRawHeadersTest.java:77",
+        "covers": "AC-1",
+        "notes": "FR-HTTP-032 AC-1 green: FR_HTTP_032_AC1_headerNamesAreLowercasedDistinctAndInFirstSeenOrder and FR_HTTP_032_AC1_headerNamesKeepFirstSeenOrderRatherThanSortedOrder; ./gradlew -PtinyHttpdFromMaven=true build 3847 tests 0 failures"
+      },
+      "args_hash": "5075522a804354584333b19689170525c4ad80db",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "called_at": "2026-11-13T19:18:22Z",
+      "run_id": "2026-11-14.naruserve.naruserve-proxy-wave-3-fr-http-032"
+    },
+    {
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-HTTP-032",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestRawHeadersTest.java:91",
+        "covers": "AC-2",
+        "notes": "FR-HTTP-032 AC-2 green: FR_HTTP_032_AC2_rawHeadersKeepOrderCaseAndDuplicates; ./gradlew -PtinyHttpdFromMaven=true build 3847 tests 0 failures"
+      },
+      "args_hash": "b75fcfdd4dbf809d4204072b4f3b974179a7fc87",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "called_at": "2026-11-13T19:18:22Z",
+      "run_id": "2026-11-14.naruserve.naruserve-proxy-wave-3-fr-http-032"
+    },
+    {
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-HTTP-032",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestRawHeadersTest.java:100",
+        "covers": "AC-3",
+        "notes": "FR-HTTP-032 AC-3 green: FR_HTTP_032_AC3_bothEnumerationsAndTheirEntriesAreUnmodifiable and FR_HTTP_032_AC3_entriesAreImmutableEvenWhenTheAdapterReportsMutableOnes; ./gradlew -PtinyHttpdFromMaven=true build 3847 tests 0 failures"
+      },
+      "args_hash": "09ecb2c0247cf28998aa512e48efdcb647500203",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "called_at": "2026-11-13T19:18:22Z",
+      "run_id": "2026-11-14.naruserve.naruserve-proxy-wave-3-fr-http-032"
+    },
+    {
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-HTTP-032",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestRawHeadersTest.java:140",
+        "covers": "AC-4",
+        "notes": "FR-HTTP-032 AC-4 green: FR_HTTP_032_AC4_namesAreLowercasedWithLocaleRootUnderTurkishDefault; ./gradlew -PtinyHttpdFromMaven=true build 3847 tests 0 failures"
+      },
+      "args_hash": "92df7461af2e161fec2fd73f21a392f936f38f16",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "called_at": "2026-11-13T19:18:22Z",
+      "run_id": "2026-11-14.naruserve.naruserve-proxy-wave-3-fr-http-032"
+    },
+    {
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-HTTP-032",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestRawHeadersTest.java:154",
+        "covers": "AC-5",
+        "notes": "FR-HTTP-032 AC-5 green: FR_HTTP_032_AC5_eachEnumerationIsBuiltOncePerRequest; ./gradlew -PtinyHttpdFromMaven=true build 3847 tests 0 failures"
+      },
+      "args_hash": "84453f093ba848e3d555a17b74e58685a77ae4ce",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "called_at": "2026-11-13T19:18:22Z",
+      "run_id": "2026-11-14.naruserve.naruserve-proxy-wave-3-fr-http-032"
+    },
+    {
+      "tool": "add_verification_evidence",
+      "args": {
+        "id": "FR-HTTP-032",
+        "type": "test",
+        "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestRawHeadersTest.java:164",
+        "covers": "AC-6",
+        "notes": "FR-HTTP-032 AC-6 green: FR_HTTP_032_AC6_headersOfEveryNameMatchTheRawEntriesOfThatName; ./gradlew -PtinyHttpdFromMaven=true build 3847 tests 0 failures"
+      },
+      "args_hash": "9bec37d79e386dadc45924b4ceff44860cbc2d0d",
+      "ok": null,
+      "response_hash": null,
+      "dry_run": false,
+      "called_at": "2026-11-13T19:18:22Z",
+      "run_id": "2026-11-14.naruserve.naruserve-proxy-wave-3-fr-http-032"
+    }
+  ],
+  "pending_mutations": [],
+  "tool_versions": {
+    "kiwi_coder": "0.1.9",
+    "speckiwi": "5.5.1"
+  }
+}

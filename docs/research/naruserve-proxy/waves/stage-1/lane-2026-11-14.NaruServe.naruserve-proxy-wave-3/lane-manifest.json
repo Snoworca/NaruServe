@@ -1,0 +1,145 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-3",
+ "wave": "wave-3",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-3",
+ "base_sha": "bef626f87f09b2cb9a23dedf210aef5277b4d04f",
+ "head_sha": "ab723d5417b66a0e1cf81ba0dce99de9a6d0ef00",
+ "commits": [
+  {
+   "sha": "e3c27210b93dbe51f1c6bd7bc49564155462182b",
+   "subject": "test(http): pin the bodyStream, headerNames, rawHeaders and isFromTrustedProxy surface",
+   "req": "IR-HTTP-013",
+   "kind": "test",
+   "missing_trailers": true,
+   "trailer_note": "REQ/Commit-Kind/Orch-* lines are in the message body but in the paragraph before Co-Authored-By, so git parses only Co-Authored-By as the trailer block; history not rewritten per brief"
+  },
+  {
+   "sha": "ec5a11bd8d48b060402d7279c9c13560f1c77d94",
+   "subject": "feat(http): add bodyStream, headerNames, rawHeaders and isFromTrustedProxy to Request",
+   "req": "IR-HTTP-013",
+   "kind": "implementation",
+   "missing_trailers": true,
+   "trailer_note": "REQ/Commit-Kind/Orch-* lines are in the message body but in the paragraph before Co-Authored-By, so git parses only Co-Authored-By as the trailer block; history not rewritten per brief"
+  },
+  {
+   "sha": "84d5725068deb6ecc6b662187f1e7b3bfdce6f12",
+   "subject": "test(http): pin headerNames and rawHeaders enumeration",
+   "req": "FR-HTTP-032",
+   "kind": "test",
+   "missing_trailers": true,
+   "trailer_note": "REQ/Commit-Kind/Orch-* lines are in the message body but in the paragraph before Co-Authored-By, so git parses only Co-Authored-By as the trailer block; history not rewritten per brief"
+  },
+  {
+   "sha": "95ec1387f6762ae189fc4233d70e9bae73a03cac",
+   "subject": "feat(http): enumerate request headers in headerNames and rawHeaders",
+   "req": "FR-HTTP-032",
+   "kind": "implementation",
+   "missing_trailers": true,
+   "trailer_note": "REQ/Commit-Kind/Orch-* lines are in the message body but in the paragraph before Co-Authored-By, so git parses only Co-Authored-By as the trailer block; history not rewritten per brief"
+  },
+  {
+   "sha": "d1f77ea35b15650bde283489e72de7a98a589165",
+   "subject": "test(http): pin isFromTrustedProxy over every proxy trust setting",
+   "req": "FR-HTTP-034",
+   "kind": "test",
+   "missing_trailers": true,
+   "trailer_note": "REQ/Commit-Kind/Orch-* lines are in the message body but in the paragraph before Co-Authored-By, so git parses only Co-Authored-By as the trailer block; history not rewritten per brief"
+  },
+  {
+   "sha": "ab723d5417b66a0e1cf81ba0dce99de9a6d0ef00",
+   "subject": "feat(http): report whether the proxy trust setting trusts the direct peer",
+   "req": "FR-HTTP-034",
+   "kind": "implementation",
+   "missing_trailers": true,
+   "trailer_note": "REQ/Commit-Kind/Orch-* lines are in the message body but in the paragraph before Co-Authored-By, so git parses only Co-Authored-By as the trailer block; history not rewritten per brief"
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "IR-HTTP-013",
+   "FR-HTTP-032",
+   "FR-HTTP-034"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-3/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  ".kiwi/sessions/2026-11-14.naruserve.naruserve-proxy-wave-3-ir-http-013/lanes/w3s1l3/",
+  ".kiwi/sessions/2026-11-14.naruserve.naruserve-proxy-wave-3-fr-http-032/lanes/w3s1l3/",
+  ".kiwi/sessions/2026-11-14.naruserve.naruserve-proxy-wave-3-fr-http-034/lanes/w3s1l3/",
+  ".kiwi/sessions/2026-11-15.naruserve.self-w3review/analysis/"
+ ],
+ "red_evidence": [
+  {
+   "req": "IR-HTTP-013",
+   "test": "HttpApiSurfaceTest (7 failures) + HttpApiKotlinTest compile",
+   "red_output": "NoSuchMethodException: Request.bodyStream(); DefaultRequest.bodyStream() not public; Kotlin: Unresolved reference 'bodyStream'/'headerNames'/'rawHeaders'/'isFromTrustedProxy'"
+  },
+  {
+   "req": "FR-HTTP-032",
+   "test": "RequestRawHeadersTest (8 tests)",
+   "red_output": "all 8 red against the empty Set/List stub from IR-HTTP-013"
+  },
+  {
+   "req": "FR-HTTP-034",
+   "test": "TrustedProxyPeerTest AC-2/3/4 + ProxyTrustSettingPeerTest AC-5",
+   "red_output": "expected:<true> but was:<false> (x3); cannot find symbol ProxyTrustSetting.trustsPeer. AC-1 test was green from the start (stub returned false) \u2014 regression guard only"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "detail": "4 findings all dropped by execution proof; coverage PASS; check_review_round PASS; 4 clean-code observations all dismissed; no review commits"
+ },
+ "intentionally_empty": null,
+ "design_refuted": [],
+ "srs_deltas": [
+  {
+   "req": "FR-HTTP-034",
+   "kind": "stale-implementation-notes",
+   "detail": "Implementation Notes name private peerTrusted (ProxyTrustSetting:139-141) and DefaultRequest:517-530, which no longer exist; helper is ProxyTrustSetting.trustsPeer(String)"
+  },
+  {
+   "req": "FR-HTTP-034",
+   "kind": "ac-not-red-first",
+   "detail": "AC-1 (false cases) could not be red before implementation because the IR-HTTP-013 interim stub already returned false; DW-1 red-first holds for AC-2..AC-5 only"
+  },
+  {
+   "req": "IR-HTTP-013",
+   "kind": "queue-contains-promotion",
+   "detail": "deferred queue holds an update_status IR-HTTP-013 -> implemented appended by the coder despite --no-final; host should drop or apply it deliberately"
+  }
+ ],
+ "out_of_lease_paths": [
+  {
+   "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+   "reason": "existing assertion 'no Request method returns InputStream' contradicts IR-HTTP-013 AC-1; re-pointed to 'exactly bodyStream[] and bodyStream[long]' (per FR-HTTP-030 AC-11), other assertions unchanged"
+  },
+  {
+   "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ProxyTrustSettingPeerTest.java",
+   "reason": "new test; FR-HTTP-034 AC-5 unit test of the package-private helper must live in the internal package"
+  },
+  {
+   "path": "docs/api/",
+   "reason": "NOT edited (outside lease); docs/api has no entry for bodyStream/headerNames/rawHeaders/isFromTrustedProxy yet \u2014 project rule requires it before release"
+  }
+ ],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "check_test_sufficiency ids IR-HTTP-013,FR-HTTP-032,FR-HTTP-034 on the worktree: 17/17 ACs cited, passed"
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 3853,
+  "failures": 0,
+  "exit_code": 0
+ },
+ "bootstrap": "not-applicable",
+ "notes": [
+  "kiwi-pm session ids lower-cased (card run-id has uppercase, violating [a-z0-9.-]); given ids kept as run_id_given in pm-state.json",
+  "interim stubs from IR-HTTP-013 for headerNames/rawHeaders/isFromTrustedProxy are replaced; bodyStream()/bodyStream(long) still delegate to exchangeInput() without one-read rule or maxBytes (FR-HTTP-030/031, later wave)",
+  "package-private DefaultRequest.bodyStream() renamed to exchangeInput()"
+ ]
+}

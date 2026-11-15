@@ -1,0 +1,56 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-1-con-build-021",
+ "base_sha": "3aedd25e4bb59f0d61863df3184ee0adfd53c741",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "CON-BUILD-021"
+ ],
+ "req_filter": [
+  "CON-BUILD-021"
+ ],
+ "write_set": [
+  "build.gradle",
+  "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java"
+ ],
+ "started_at": "2026-11-13T19:09:31Z",
+ "last_updated_at": "2026-11-13T19:20:57Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-13T19:09:31Z",
+  "ended_at": "2026-11-13T19:20:57Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-1-con-build-021",
+  "result_summary": "CON-BUILD-021 AC-1..AC-8 tests added (already green: restated criteria; mutation probes red for AC-1, AC-6); build.gradle comments re-pointed; full build 3846 tests 0 failures",
+  "changed": true,
+  "commit_sha": "5146d81",
+  "commits": [
+   {
+    "req_id": "CON-BUILD-021",
+    "test_sha": "9e4e2b9",
+    "implementation_sha": "5146d81"
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-13T19:09:31Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "CON-BUILD-021": "evolving"
+  },
+  "status_snapshot": {
+   "CON-BUILD-021": "planned"
+  }
+ },
+ "req_coverage": {},
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-1-con-build-021/lanes/w1s1l1/reports/pm-2026-11-13T192057Z.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": null
+}

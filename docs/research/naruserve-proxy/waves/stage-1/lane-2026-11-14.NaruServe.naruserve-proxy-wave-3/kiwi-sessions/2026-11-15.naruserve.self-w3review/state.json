@@ -1,0 +1,82 @@
+{
+ "run_id": "2026-11-15.naruserve.self-w3review",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "started_at": "2026-11-15T12:05:18Z",
+ "mode": "self",
+ "mode_flags": [
+  "--keep-clean-code",
+  "--loops 20",
+  "--no-pipeline-emit"
+ ],
+ "phase": "8",
+ "finding_queue": [],
+ "fix_iter": 0,
+ "recheck_iter": 0,
+ "clean_code_round": 1,
+ "clean_code_dismissed": [
+  {
+   "id": "CC-001",
+   "principle": "Dead code",
+   "location": "ProxyTrustSetting.java:101-102,137-138",
+   "reason": "default branch required for Java 8 enum switch to compile"
+  },
+  {
+   "id": "CC-002",
+   "principle": "Duplication",
+   "location": "DefaultRequest.java:603-615",
+   "reason": "deliberate NONE fast path; decision lives only in trustsPeer"
+  },
+  {
+   "id": "CC-003",
+   "principle": "Brittle tests",
+   "location": "ProxyTrustSettingPeerTest.java:72-93; HttpApiSurfaceTest.java:576-590",
+   "reason": "existing project convention; AC-5/AC-3 are structural and need source-text evidence"
+  },
+  {
+   "id": "CC-004",
+   "principle": "Readability (FQNs)",
+   "location": "HttpApiSurfaceTest.java:517-668",
+   "reason": "matches the file's existing FQN style"
+  }
+ ],
+ "clean_code_skip": false,
+ "guarantee_scope": "Wave-3 lane diff bef626f..HEAD in NaruServe-api: Request default methods (IR-HTTP-013), headerNames/rawHeaders (FR-HTTP-032), isFromTrustedProxy + ProxyTrustSetting.trustsPeer (FR-HTTP-034). bodyStream behaviour (one-read rule, maxBytes) is out of scope (FR-HTTP-030/031, later wave).",
+ "declared_limits": [],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "0755f4d35013c5bdf79aa6fe4d5779aa269b9996",
+   "scope": "full",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ProxyTrustSetting.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestRawHeadersTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/TrustedProxyPeerTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ProxyTrustSettingPeerTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt"
+   ],
+   "tokens_used": 121859,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  }
+ ],
+ "regression_baseline": {
+  "source": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+  "failing_tests": [],
+  "total_tests": 3829
+ },
+ "regression_pass": true,
+ "failed": false,
+ "analysis_dir": ".kiwi/sessions/2026-11-15.naruserve.self-w3review/analysis"
+}

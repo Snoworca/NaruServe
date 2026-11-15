@@ -1,0 +1,48 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-2-fr-app-027",
+ "base_sha": "d956f7b",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-APP-027"
+ ],
+ "req_filter": [
+  "FR-APP-027"
+ ],
+ "write_set": [],
+ "started_at": "2026-11-15T11:51:57Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "FR-APP-027",
+    "test_sha": "ebae2a7",
+    "implementation_sha": "57c1edf"
+   }
+  ],
+  "questions": [],
+  "ended_at": "2026-11-15T12:13:01Z",
+  "changed": true,
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-2-fr-app-027",
+  "commit_sha": "57c1edf",
+  "result_summary": "statusOf maps unwrapped overrun to 413; 3854 tests 0 failures"
+ },
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-15T11:51:57Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-APP-027": "evolving"
+  },
+  "status_snapshot": {
+   "FR-APP-027": "planned"
+  }
+ },
+ "clean_code_skip": null,
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-2-fr-app-027/lanes/w2s1l2/reports/pm-report.md",
+ "last_updated_at": "2026-11-15T12:13:01Z"
+}

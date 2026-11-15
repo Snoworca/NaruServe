@@ -1,0 +1,169 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-2",
+ "wave": "wave-2",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-2",
+ "base_sha": "8b1f994bc3b4cb01a8c0ddc4a2f4215ec7b5bf63",
+ "head_sha": "39984456b9efea61ece2cbe2ac6aa3a3261f9f80",
+ "commits": [
+  {
+   "sha": "7af9d62eda899becc49d8bae7ef7d32176cce9a9",
+   "subject": "test(http): public BodyTooLargeException contract and limit overruns",
+   "req": "IR-HTTP-011",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "d956f7b01a083e0303c034f94eb7718a3f617aa3",
+   "subject": "feat(http): move BodyTooLargeException to the public package",
+   "req": "IR-HTTP-011",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "ebae2a7ee5d9d52401964ea2ef832a2dffeca352",
+   "subject": "test(app): an unwrapped BodyTooLargeException is answered 413",
+   "req": "FR-APP-027",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "57c1edf0e16e81d929ce9c6a4696d1b0125bc438",
+   "subject": "feat(app): map an unwrapped BodyTooLargeException to 413",
+   "req": "FR-APP-027",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "37dc92b44c730fc6d877d5969f4d8607d50ce5d2",
+   "subject": "fix(auth): answer an unwrapped overrun on the auth router 413",
+   "req": "FR-APP-027",
+   "kind": "review",
+   "missing_trailers": false
+  },
+  {
+   "sha": "39984456b9efea61ece2cbe2ac6aa3a3261f9f80",
+   "subject": "refactor: keep the overrun status mapping in one place",
+   "req": "IR-HTTP-011,FR-APP-027",
+   "kind": "review",
+   "missing_trailers": false
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "IR-HTTP-011",
+   "FR-APP-027"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-2/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-2-ir-http-011/lanes/w2s1l2/reports/pm-report.md",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-2-fr-app-027/lanes/w2s1l2/reports/pm-report.md",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-2-ir-http-011/state.json",
+  "docs/analysis/kiwi-review-fix-loop-2026-11-15.naruserve.self-w2review/report.md"
+ ],
+ "red_evidence": [
+  {
+   "req": "IR-HTTP-011",
+   "test": "BodyTooLargeExceptionTest IR_HTTP_011_AC1/AC2/AC5, BodyTooLargeExceptionKotlinTest, LimitedInputStreamTest, JsonBodyReaderTest, JsonBodyAcceptanceTest",
+   "red_output": "AC1 public class missing; AC2 internal class still loads; Kotlin: Unresolved reference 'BodyTooLargeException'; javac: cannot find symbol (exit 1)"
+  },
+  {
+   "req": "FR-APP-027",
+   "test": "StandardErrorsTest.FR_APP_027_AC1_statusOfAnUnwrappedBodyTooLargeExceptionIs413WithTheReasonPhrase",
+   "red_output": "expected:<413> but was:<500> at StandardErrorsTest.java:73"
+  },
+  {
+   "req": "FR-APP-027",
+   "test": "ErrorPathTest.FR_APP_027_AC1/AC2/AC4",
+   "red_output": "expected:<413> but was:<500> at ErrorPathTest.java:438/451/492"
+  },
+  {
+   "req": "FR-APP-027",
+   "test": "JuniorFinalItemsTest.FR_APP_027_AC1_AC3_authRouterAnswersAnUnwrappedOverrun413 (review FND-001)",
+   "red_output": "expected:<413> but was:<503>"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "rounds": 4,
+  "fixed_findings": [
+   "FND-001"
+  ],
+  "rejected": [
+   "FND-002",
+   "FND-003",
+   "FND-004",
+   "FND-005"
+  ],
+  "clean_code_fixed": [
+   "CC-002",
+   "CC-003",
+   "CC-004",
+   "CC-102",
+   "CC-202"
+  ],
+  "clean_code_dismissed": [
+   "CC-001",
+   "CC-005",
+   "CC-101",
+   "CC-103",
+   "CC-201"
+  ],
+  "check_review_round": "PASS",
+  "analysis_dir": "docs/analysis/kiwi-review-fix-loop-2026-11-15.naruserve.self-w2review"
+ },
+ "intentionally_empty": null,
+ "design_refuted": [],
+ "srs_deltas": [
+  {
+   "req": "FR-APP-027",
+   "kind": "implementation-note",
+   "text": "FinalHandler, Auth.prodAnswer and Auth.routerError classify status apart from statusOf; all now map an unwrapped BodyTooLargeException to 413 (StandardErrors.statusOr is the single core classification). Without them an escaped overrun was an unlogged 500 (FinalHandler, prodAnswer) or a logged 503 store failure (routerError).",
+   "evidence": "red tests ErrorPathTest.FR_APP_027_AC1_theCommonHttpFinalAnswerGivesAnEscapedOverrun413AndNoErrorLog, JuniorFinalItemsTest.FR_APP_027_AC1_AC3_*"
+  },
+  {
+   "req": "IR-HTTP-011",
+   "kind": "note",
+   "text": "D-023 (TinyHttpdBodyStream names TinyHttpd's BodyTooLargeException by FQN) not applied: outside the lane write set; the single-type import compiles and resolves correctly. Left to the FR-ENGINE requirement."
+  },
+  {
+   "req": "IR-HTTP-011",
+   "kind": "note",
+   "text": "docs/api documents neither the new public BodyTooLargeException nor the FR-APP-027 413 change; left to the docs wave."
+  }
+ ],
+ "out_of_lease_paths": [
+  {
+   "path": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonBodyLimitTest.java",
+   "reason": "IR-HTTP-011 AC-4 needs the real Gson codec"
+  },
+  {
+   "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+   "reason": "FR-APP-027: the common final handler classified status itself; an escaped overrun became an unlogged 500"
+  },
+  {
+   "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "reason": "FR-APP-027: prodAnswer and routerError (review FND-001) answered the overrun 500/503"
+  },
+  {
+   "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java",
+   "reason": "red tests for the Auth fixes need the package-private W8 fixture"
+  }
+ ],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "speckiwi coverage --tests --ids IR-HTTP-011,FR-APP-027: IR-HTTP-011 AC-1..AC-9 and FR-APP-027 AC-1..AC-4 all cited, expiredCitations 0, passed true"
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 3855,
+  "failures": 0,
+  "exit_code": 0,
+  "note": "run with --rerun-tasks after clearing test results; baseline 3829/0"
+ },
+ "bootstrap": "not-applicable"
+}

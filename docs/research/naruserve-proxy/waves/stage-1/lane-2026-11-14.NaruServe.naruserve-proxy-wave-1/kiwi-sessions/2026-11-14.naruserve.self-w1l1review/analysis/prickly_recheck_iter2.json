@@ -1,0 +1,138 @@
+{
+  "findings": [
+    {
+      "id": "FND-101",
+      "axis": "correctness/regex-semantics",
+      "verdict": "drop",
+      "evidence": {
+        "command": "jshell -R-Duser.dir=<worktree> <scratchpad>/probe.jsh (old regex 'def naruModules = \\[([^\\]]*)\\]' vs new 'def\\s+naruModules\\s*=\\s*\\[([^\\]]*)]' on real build.gradle and two decoy texts)",
+        "output": "real build.gradle: same=true oldProxy=true newProxy=true | '// def naruModules=[proxy]' before real def: same=false oldProxy=false newProxy=true | standard-spaced comment after real def: same=true",
+        "intent_output": "On the real build.gradle both regexes capture the identical group; divergence only on a hand-made decoy line"
+      },
+      "drop_reason": "The whitespace-tolerant naruModules regex extracts byte-identical text from the real build.gradle (probe same=true). It diverges only for a commented-out, non-standard-spaced decoy definition placed before the real one; the old regex is fooled the same way by a standard-spaced commented decoy, so no new class of false pass. ReleaseScriptTextTest already used this regex in round 1. Not a regression.",
+      "title": "con_BUILD_019_AC2 now uses the whitespace-tolerant naruModules regex",
+      "location": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:763-764; src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java:201-206",
+      "description": "Checked whether the looser regex lets con_BUILD_019_AC2 pass while it should fail. It accepts reformatted but equivalent Groovy (def  naruModules=[...]), and it still needs the '=' so it cannot match naruModulesX or xnaruModules. A false pass needs an adversarial commented decoy, which the old regex was also exposed to.",
+      "is_behavioral": false,
+      "tags": [
+        "regex",
+        "refactor",
+        "round-2"
+      ]
+    },
+    {
+      "id": "FND-102",
+      "axis": "behaviour-preservation",
+      "verdict": "drop",
+      "evidence": {
+        "command": "./gradlew -PtinyHttpdFromMaven=true :test --tests 'com.snoworca.naruserve.build.*' ; git show 4ebb8fd...:<files> vs working tree",
+        "output": "BUILD SUCCESSFUL in 25s; BuildChecksTest tests=31 failures=0 errors=0; BuildLayoutTest tests=44 failures=0 errors=0; ReleaseScriptTextTest tests=11 failures=0 errors=0; whole build.* package 159 tests, 0 failures, 0 errors, 0 skipped",
+        "intent_output": "All moved assertions are still reached by every caller: buildVersion asserts 'build.gradle sets the version' (callers BuildLayoutTest:783,1019, BuildChecksTest:400); defBlockCode asserts 'build.gradle defines <name>' (via mainDependencyEntries callers 808,850,942,950,961,975,983,1030 and extraCompileOnly 924); naruModulesList asserts 'build.gradle defines naruModules' (BuildLayoutTest:763, naruModulesEntries->ReleaseScriptTextTest:223)"
+      },
+      "drop_reason": "No defect: the regexes for buildVersion, mainDependencies and extraCompileOnly are byte-identical to round 1 (the mainDependencies block regex is now built as 'def ' + name + ' = \\[(.*?)\\n\\]' and gives the same pattern), the comment stripping and whitespace removal are unchanged, the assertion messages are kept (extraCompileOnly/mainDependencies through the name parameter), and no caller lost an assertion. buildVersion went from private to package-private, which only widens visibility inside the test package; no public signature changed.",
+      "title": "Helper extraction keeps behaviour and assertions",
+      "location": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java:678-725,763,922-924; src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:400; src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java:201-216",
+      "description": "Checked CC-002, CC-004 and CC-005 for lost or weakened asserts and for behaviour drift.",
+      "is_behavioral": false,
+      "tags": [
+        "refactor",
+        "assertion-preservation",
+        "round-2"
+      ]
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-101",
+      "principle": "Cohesion / dependency direction (test helpers live in an unrelated test class)",
+      "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+      "line_range": "763",
+      "related": [
+        "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java:201-206",
+        "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java:400"
+      ],
+      "description": "The DRY fixes make test classes depend on each other in both directions: BuildLayoutTest calls ReleaseScriptTextTest.naruModulesList, and BuildChecksTest calls BuildLayoutTest.buildVersion. Helpers that parse build.gradle text (buildVersion, defBlockCode, naruModulesList/Entries, mainDependencyEntries) belong in one package-private utility, e.g. BuildGradleText, not spread across test classes.",
+      "severity": "low"
+    },
+    {
+      "id": "CC-102",
+      "principle": "Robustness / least surprise (unescaped regex interpolation)",
+      "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+      "line_range": "697-698",
+      "description": "defBlockCode concatenates 'name' into the pattern without Pattern.quote. The current callers pass plain identifiers, so this is safe today; quoting would make the helper's contract explicit.",
+      "severity": "trivial"
+    },
+    {
+      "id": "CC-103",
+      "principle": "Consistency (the two block-parsing helpers tolerate whitespace differently)",
+      "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+      "line_range": "698",
+      "related": [
+        "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java:203"
+      ],
+      "description": "defBlockCode needs the exact 'def X = [' spacing, but naruModulesList accepts 'def\\s+X\\s*=\\s*['. The sibling helpers that parse the same file should use one convention.",
+      "severity": "trivial"
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        String version = BuildLayoutTest.buildVersion(pristineBuild);"
+      ],
+      "identical_hunks": [],
+      "findings": [
+        "FND-102"
+      ]
+    },
+    {
+      "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+      "hunks_total": 7,
+      "anchors": [
+        "    static String buildVersion(String build) {",
+        "     * of a line), with comment lines and all whitespace removed.",
+        "    static String defBlockCode(String build, String name) {",
+        "        String text = defBlockCode(build, \"mainDependencies\");",
+        "        String list = ReleaseScriptTextTest.naruModulesList(build);",
+        "        assertTrue(\"build.gradle defines extraCompileOnly\", extra.find());",
+        "                defBlockCode(build, \"extraCompileOnly\"));"
+      ],
+      "identical_hunks": [],
+      "findings": [
+        "FND-101",
+        "FND-102"
+      ]
+    },
+    {
+      "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+      "hunks_total": 2,
+      "anchors": [
+        "    static String naruModulesList(String build) {",
+        "        return list.group(1);"
+      ],
+      "identical_hunks": [],
+      "findings": [
+        "FND-101",
+        "FND-102"
+      ]
+    }
+  ],
+  "resolved_findings": [],
+  "summary": {
+    "round": 2,
+    "scope": "git diff -U0 4ebb8fd679f8ff561f688155ac349d69c1519f17 85953a9c24e1a92a5aecb05067833bd07bd631bf",
+    "verdict_counts": {
+      "keep": 0,
+      "drop": 2,
+      "residual": 0
+    },
+    "blocking_kept": 0,
+    "clean_code_new": 3,
+    "regression": "BUILD SUCCESSFUL in 25s; BuildChecksTest tests=31 failures=0 errors=0; BuildLayoutTest tests=44 failures=0 errors=0; ReleaseScriptTextTest tests=11 failures=0 errors=0; whole build.* package 159 tests, 0 failures, 0 errors, 0 skipped",
+    "behaviour_identical": true,
+    "assertions_lost": 0,
+    "public_signature_changes": 0,
+    "worktree_clean_check": "git status --porcelain shows only the 3 M test files plus ?? .kiwi/"
+  }
+}

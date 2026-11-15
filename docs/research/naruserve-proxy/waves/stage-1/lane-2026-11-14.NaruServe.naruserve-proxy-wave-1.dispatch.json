@@ -1,0 +1,60 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy",
+ "wave": "wave-1",
+ "wave_number": 1,
+ "stage": 1,
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-1",
+ "lane_index": 1,
+ "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-1",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-1",
+ "base_sha": "889c380ebc79a4f6719f3d73264330e2c6c3888a",
+ "lane_plan": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/stage-1/lanes.lock.json",
+ "write_set": [
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/package-info.java",
+  "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/PublishedTinyHttpdCompatibilityTest.java",
+  "build.gradle",
+  "docs/api/README.md",
+  "gradle/release.gradle",
+  "settings.gradle",
+  "src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java",
+  "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+  "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+  "src/test/java/com/snoworca/naruserve/build/CentralStagingTest.java",
+  "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java",
+  "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+  "src/test/java/com/snoworca/naruserve/docs/ReleaseNotesDocsTest.java",
+  "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java"
+ ],
+ "requirements": [
+  "CON-BUILD-019",
+  "CON-BUILD-021",
+  "FR-REL-006",
+  "FR-REL-007"
+ ],
+ "node_title": "NaruServe-proxy module, dependency rules, release lists",
+ "done_when": [
+  {
+   "id": "DW-1",
+   "text": "Every live acceptance criterion of CON-BUILD-019, CON-BUILD-021, FR-REL-006, FR-REL-007 is cited by a test that was red before its implementation commit and is green now."
+  },
+  {
+   "id": "DW-2",
+   "text": "./gradlew -PtinyHttpdFromMaven=true build passes with no failing test beyond the P.4 baseline (none)."
+  }
+ ],
+ "verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build",
+ "regression_baseline": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+ "queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-1/.kiwi/deferred-srs-mutations.jsonl",
+ "manifest": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-1/.kiwi/lane-manifest.json",
+ "trailers": {
+  "Orch-Run": "2026-11-14.NaruServe.naruserve-proxy",
+  "Orch-Wave": "1",
+  "Orch-Stage": "1",
+  "Orch-Lane": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-1"
+ },
+ "kiwi_pm_args": "--req-filter {REQ} --run-id 2026-11-14.NaruServe.naruserve-proxy-wave-1-{req} --session-suffix w1s1l1 --no-final --no-pipeline-emit --commit-lane-work --defer-srs-mutation /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-1/.kiwi/deferred-srs-mutations.jsonl --regression-baseline /Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json --loops 20",
+ "review_args": "--base 889c380ebc79a4f6719f3d73264330e2c6c3888a --head HEAD --req-filter CON-BUILD-019,CON-BUILD-021,FR-REL-006,FR-REL-007 --no-pipeline-emit --keep-clean-code --loops 20",
+ "prd": "/Users/beom/work/git/NaruServe/docs/prd/2026-11-14.naruserve-proxy.prd.md",
+ "design": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/design/00.design.md",
+ "brief": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/00.worker-brief.md"
+}

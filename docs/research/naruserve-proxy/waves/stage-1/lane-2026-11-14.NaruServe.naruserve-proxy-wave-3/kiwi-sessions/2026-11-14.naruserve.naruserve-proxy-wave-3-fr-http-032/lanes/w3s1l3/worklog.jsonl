@@ -1,0 +1,15 @@
+{"event":"phase_start","run_id":"2026-11-14.naruserve.naruserve-proxy-wave-3-fr-http-032","sds_path":null,"target":"0.12.0","mode":"normal","flags":["--loops 20","--defer-srs-mutation"],"at":"2026-11-14T00:00:00Z"}
+{"event":"run_start","sds_id":null,"req_ids":["FR-HTTP-032"]}
+{"event":"tdd_draft_done","iter":1,"file_paths":["NaruServe-api/src/test/java/com/snoworca/naruserve/RequestRawHeadersTest.java"]}
+{"event":"tdd_red_confirmed","exit_code":1,"test_names":["FR_HTTP_032_AC1_headerNamesAreLowercasedDistinctAndInFirstSeenOrder","FR_HTTP_032_AC2_rawHeadersKeepOrderCaseAndDuplicates","FR_HTTP_032_AC3_bothEnumerationsAndTheirEntriesAreUnmodifiable","FR_HTTP_032_AC4_namesAreLowercasedWithLocaleRootUnderTurkishDefault","FR_HTTP_032_AC5_eachEnumerationIsBuiltOncePerRequest","FR_HTTP_032_AC6_headersOfEveryNameMatchTheRawEntriesOfThatName"]}
+{"event": "tdd_review_done", "iter": 1, "finding_summary": {"kept": 2, "dropped": 4}, "at": "2026-11-13T19:18:40Z"}
+{"event": "tdd_draft_done", "iter": 2, "file_paths": ["NaruServe-api/src/test/java/com/snoworca/naruserve/RequestRawHeadersTest.java"], "at": "2026-11-13T19:18:40Z"}
+{"event": "tdd_review_done", "iter": 2, "finding_summary": {"kept": 0, "dropped": 3}, "at": "2026-11-13T19:18:40Z"}
+{"event": "tdd_red_confirmed", "exit_code": 1, "test_count": 8, "at": "2026-11-13T19:18:40Z"}
+{"event": "impl_done", "iter": 1, "files_changed": ["NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java"], "at": "2026-11-13T19:18:40Z"}
+{"event": "formal_review_done", "iter": 1, "finding_summary": {"kept": 0, "dropped": 0}, "notes": "mock regex none; build ok; coverage --tests passed; new private symbols referenced", "at": "2026-11-13T19:18:40Z"}
+{"event": "prickly_review_done", "iter": 1, "finding_summary": {"kept": 0, "dropped": 9}, "at": "2026-11-13T19:18:40Z"}
+{"event": "test_green", "exit_code": 0, "at": "2026-11-13T19:18:40Z"}
+{"event": "regression_done", "scope": "full", "passed": 3847, "failed": 0, "at": "2026-11-13T19:18:40Z"}
+{"event": "mcp_call", "tool": "add_verification_evidence", "deferred": true, "count": 6, "at": "2026-11-13T19:18:40Z"}
+{"event": "run_done", "duration_ms": null, "at": "2026-11-13T19:18:40Z"}

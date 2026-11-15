@@ -1,0 +1,59 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-1-fr-rel-006",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "FR-REL-006"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "started_at": "2026-11-13T19:22:54Z",
+ "updated_at": "2026-11-13T19:30:51Z",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "regression_baseline": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "failed": 0,
+  "total_tests": 3829,
+  "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4",
+  "source": "pinned by parent"
+ },
+ "mcp_call_log": [],
+ "pending_mutations": [],
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :test --tests <FR-REL-006 tests> (mutation probe of build.gradle/release.gradle)",
+  "exit_code": 1,
+  "captured_failure": "7 failed: fr_REL_006_AC1..AC5 red under probes; K1-K3 probes red for AC-4 after strengthening",
+  "timestamp": "2026-11-13T19:30:51Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "timestamp": "2026-11-13T19:30:51Z"
+ },
+ "regression_summary": {
+  "scope": "full",
+  "passed": 3851,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "loop_counters": {
+  "phase1": {
+   "kept": 0,
+   "dropped": 0,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 3,
+   "dropped": 7,
+   "rounds": 1
+  }
+ },
+ "deferred_mutations_appended": 7
+}

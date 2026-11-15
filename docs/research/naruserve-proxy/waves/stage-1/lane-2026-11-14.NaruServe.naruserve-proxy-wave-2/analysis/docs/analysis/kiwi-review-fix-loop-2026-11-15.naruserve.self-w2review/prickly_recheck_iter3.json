@@ -1,0 +1,33 @@
+{
+  "resolved_findings": ["CC-202"],
+  "findings": [],
+  "clean_code": [],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+      "hunks_total": 1,
+      "anchors": [
+        "            // StandardErrors.statusOr classifies the error: an HttpException's status, 413 for an unwrapped overrun (FR-APP-027),"
+      ],
+      "findings": []
+    }
+  ],
+  "summary": {
+    "round": 4,
+    "clean_code_round": 3,
+    "range": "f39eecd6ebfaae02dcfaac7aa49d95e96405c1d1..c83acd5d488f30321280247db7f3a9cad96c9bbf",
+    "hunks_reviewed": 1,
+    "hunks_total": 1,
+    "kept": 0,
+    "residual": 0,
+    "dropped": 0,
+    "new_clean_code": 0,
+    "behaviour_preserved": true,
+    "functional_change": false,
+    "public_signature_changes": 0,
+    "resolution_check": "CC-202 resolved: FinalHandler.java:29-30 now names StandardErrors.statusOr, which is the method called at line 31; the description (HttpException status, 413 for an unwrapped BodyTooLargeException, otherwise the fallback = response.statusCode()) matches StandardErrors.java:28-39 exactly.",
+    "requirements": ["FR-APP-027", "FR-APP-006"],
+    "dismissed_not_reraised": ["CC-001", "CC-005", "CC-101", "CC-103", "CC-201"],
+    "notes": "Comment-only hunk; no execution needed. Working tree NaruServe-api equals c83acd5 (git diff c83acd5 -- NaruServe-api empty). No files modified by the reviewer other than this report."
+  }
+}

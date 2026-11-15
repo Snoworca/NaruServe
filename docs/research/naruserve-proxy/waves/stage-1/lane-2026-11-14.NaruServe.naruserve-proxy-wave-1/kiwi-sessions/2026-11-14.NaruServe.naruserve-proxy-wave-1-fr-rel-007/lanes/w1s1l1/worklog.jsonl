@@ -1,0 +1,8 @@
+{"ts":"2026-11-13T19:31:40Z","event":"pm_boot","req_ids":["FR-REL-007"],"lifecycle":"pass"}
+{"event":"run_start","req_ids":["FR-REL-007"]}
+{"event":"tdd_red_confirmed","evidence":"coverage gaps AC-1..AC-4"}
+{"event":"tdd_review_done","finding_summary":{"kept":0,"dropped":5}}
+{"event":"test_green","exit_code":0}
+{"event":"regression_done","scope":"full","passed":3853,"failed":0}
+{"event":"run_done","green":true,"regression":"pass"}
+{"ts":"2026-11-13T19:39:31Z","event":"pm_done"}

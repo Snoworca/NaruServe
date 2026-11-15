@@ -1,0 +1,10 @@
+{"ts":"2026-11-13T19:21:06Z","event":"pm_boot","req_ids":["FR-REL-006"],"lifecycle":"pass"}
+{"event":"phase_start","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-1-fr-rel-006","target":"0.12.0","mode":"normal"}
+{"event":"run_start","req_ids":["FR-REL-006"]}
+{"event":"tdd_draft_done","iter":1,"file_paths":["src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java","src/test/java/com/snoworca/naruserve/build/CentralStagingTest.java","src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java","src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java"]}
+{"event":"tdd_red_confirmed","exit_code":1,"mode":"mutation-probe","note":"all new tests already green on HEAD 5146d81; red shown by a temporary mutation of build.gradle and gradle/release.gradle (restored from backup, git diff empty)","test_names":["BuildChecksTest#fr_REL_006_AC4","CentralStagingTest#fr_REL_006_AC3","PublishedPomTest#fr_REL_006_AC1","PublishedPomTest#fr_REL_006_AC2","ReleaseScriptTextTest#fr_REL_006_AC5"]}
+{"event": "prickly_review_done", "iter": 1, "finding_summary": {"kept": 3, "dropped": 7}}
+{"event": "test_green", "exit_code": 0}
+{"event": "regression_done", "scope": "full", "passed": 3851, "failed": 0}
+{"event": "run_done", "green": true, "regression": "pass"}
+{"ts":"2026-11-13T19:31:31Z","event":"pm_done"}

@@ -1,0 +1,12 @@
+{"ts":"2026-11-13T19:09:31Z","event":"pm_boot","req_ids":["CON-BUILD-021"],"lifecycle":"pass"}
+{"ts":"2026-11-14T05:00:00Z","event":"phase_start","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-1-con-build-021","target":"0.12.0","mode":"normal"}
+{"ts":"2026-11-14T05:00:00Z","event":"run_start","sds_id":null,"req_ids":["CON-BUILD-021"]}
+{"ts":"2026-11-14T05:20:00Z","event":"tdd_review_done","iter":1,"finding_summary":{"kept":0,"dropped":7}}
+{"ts":"2026-11-14T05:20:00Z","event":"impl_done","iter":1,"files_changed":["build.gradle"]}
+{"ts":"2026-11-14T05:40:00Z","event":"tdd_red_confirmed","exit_code":0,"note":"already green; mutation probe red for AC-1, AC-6"}
+{"ts":"2026-11-14T05:40:00Z","event":"formal_review_done","iter":1,"finding_summary":{"kept":0,"dropped":0}}
+{"ts":"2026-11-14T05:40:00Z","event":"prickly_review_done","iter":1,"finding_summary":{"kept":0,"dropped":9}}
+{"ts":"2026-11-14T05:40:00Z","event":"test_green","exit_code":0}
+{"ts":"2026-11-14T05:40:00Z","event":"regression_done","scope":"full","passed":3846,"failed":0}
+{"ts":"2026-11-14T05:40:00Z","event":"run_done","deferred_mutations":11}
+{"ts":"2026-11-13T19:20:57Z","event":"pm_done"}

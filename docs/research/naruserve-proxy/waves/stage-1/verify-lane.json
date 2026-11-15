@@ -1,0 +1,122 @@
+{
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-1": {
+  "head": "6c010c318a9b45ef081d31585d0f9e76786107b0",
+  "commits": 9,
+  "red_evidence": 4,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "detail": "2 rounds, check_review_round PASS both; 11 findings all dropped; clean code: 3 fixed (6c010c3), 6 dismissed, 0 unresolved"
+  },
+  "failed": null,
+  "landed": [
+   "CON-BUILD-019",
+   "CON-BUILD-021",
+   "FR-REL-006",
+   "FR-REL-007"
+  ],
+  "test_before_impl": {
+   "CON-BUILD-019": true,
+   "CON-BUILD-021": true,
+   "FR-REL-006": true,
+   "FR-REL-007": true
+  },
+  "base_ancestor": true,
+  "outside_write_set": [],
+  "manifest_out_of_lease": [],
+  "spec_or_sds_changed": [],
+  "commits_missing_orch": []
+ },
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-2": {
+  "head": "39984456b9efea61ece2cbe2ac6aa3a3261f9f80",
+  "commits": 6,
+  "red_evidence": 4,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "rounds": 4,
+   "fixed_findings": [
+    "FND-001"
+   ],
+   "rejected": [
+    "FND-002",
+    "FND-003",
+    "FND-004",
+    "FND-005"
+   ],
+   "clean_code_fixed": [
+    "CC-002",
+    "CC-003",
+    "CC-004",
+    "CC-102",
+    "CC-202"
+   ],
+   "clean_code_dismissed": [
+    "CC-001",
+    "CC-005",
+    "CC-101",
+    "CC-103",
+    "CC-201"
+   ],
+   "check_review_round": "PASS",
+   "analysis_dir": "docs/analysis/kiwi-review-fix-loop-2026-11-15.naruserve.self-w2review"
+  },
+  "failed": null,
+  "landed": [
+   "IR-HTTP-011",
+   "FR-APP-027"
+  ],
+  "test_before_impl": {
+   "IR-HTTP-011": true,
+   "FR-APP-027": true
+  },
+  "base_ancestor": true,
+  "outside_write_set": [
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java",
+   "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonBodyLimitTest.java"
+  ],
+  "manifest_out_of_lease": [
+   "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonBodyLimitTest.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java"
+  ],
+  "spec_or_sds_changed": [],
+  "commits_missing_orch": []
+ },
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-3": {
+  "head": "0fafcc4bae2f207a2c757ac43d85a002516bcf98",
+  "commits": 6,
+  "red_evidence": 3,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "detail": "4 findings all dropped by execution proof; coverage PASS; check_review_round PASS; 4 clean-code observations all dismissed; no review commits"
+  },
+  "failed": null,
+  "landed": [
+   "IR-HTTP-013",
+   "FR-HTTP-032",
+   "FR-HTTP-034"
+  ],
+  "test_before_impl": {
+   "IR-HTTP-013": true,
+   "FR-HTTP-032": true,
+   "FR-HTTP-034": true
+  },
+  "base_ancestor": true,
+  "outside_write_set": [
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ProxyTrustSettingPeerTest.java"
+  ],
+  "manifest_out_of_lease": [
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ProxyTrustSettingPeerTest.java",
+   "docs/api/"
+  ],
+  "spec_or_sds_changed": [],
+  "commits_missing_orch": []
+ }
+}

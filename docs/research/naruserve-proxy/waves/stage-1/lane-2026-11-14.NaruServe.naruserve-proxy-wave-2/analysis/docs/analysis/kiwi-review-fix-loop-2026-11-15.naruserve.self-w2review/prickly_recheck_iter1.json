@@ -1,0 +1,74 @@
+{
+  "resolved_findings": ["FND-001"],
+  "resolution_evidence": {
+    "FND-001": {
+      "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.utils.auth.JuniorFinalItemsTest'",
+      "output": "TEST-...JuniorFinalItemsTest.xml: tests=\"13\" skipped=\"0\" failures=\"0\" errors=\"0\"; includes testcase FR_APP_027_AC1_AC3_authRouterAnswersAnUnwrappedOverrun413",
+      "intent_output": "With the fix the auth router answers an unwrapped BodyTooLargeException 413 PAYLOAD_TOO_LARGE unlogged (same message as HttpException(413)), a plain IOException stays a logged 503 SERVICE_UNAVAILABLE store failure, and RuntimeException(BodyTooLargeException) stays a logged 500 INTERNAL_ERROR (AC-3).",
+      "mutation_probe": {
+        "command": "sed -i '' '2661,2662d' Auth.java (remove the new BodyTooLargeException branch); ./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests '...JuniorFinalItemsTest.FR_APP_027_AC1_AC3_authRouterAnswersAnUnwrappedOverrun413'; restore from backup (shasum 8590ecc4f55fb31ccc256e9dbf3a9323a1931f03 matched)",
+        "output": "JuniorFinalItemsTest > FR_APP_027_AC1_AC3_authRouterAnswersAnUnwrappedOverrun413 FAILED java.lang.AssertionError at JuniorFinalItemsTest.java:135",
+        "intent_output": "Line 135 is assertEquals(413, overrun.status()); without the fix the route answers 503 via isStoreFailure (BodyTooLargeException extends IOException), so the test detects FND-001."
+      },
+      "regression": {
+        "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test (restored source, recompiled)",
+        "output": "BUILD SUCCESSFUL in 3m 5s; aggregated test-results: 2921 tests, 0 skipped, 0 failures, 0 errors",
+        "intent_output": "No regression in NaruServe-api from the 3-line Auth change."
+      }
+    }
+  },
+  "findings": [],
+  "residual": [],
+  "dropped": [],
+  "clean_code": [
+    {
+      "id": "CC-101",
+      "location": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java:2646",
+      "observation": "The `// @req FR-APP-027` tag on routerError traces auth-router behaviour to a requirement whose statement is scoped to StandardErrors.statusOf. It matches the existing tag on prodAnswer (line ~2812) so it is consistent, but the auth-router 413 is an extension the requirement text does not name; consider citing it in FR-APP-027 implementation notes or an auth requirement at SRS sync time.",
+      "is_behavioral": false
+    },
+    {
+      "id": "CC-102",
+      "location": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java:2661",
+      "observation": "Branch order is correct and necessary: the BodyTooLargeException check must stay above isStoreFailure because BodyTooLargeException extends IOException. A short note like 'before isStoreFailure: it is an IOException' would protect the order against a future reshuffle; the current comment only says 'not a store failure'.",
+      "is_behavioral": false
+    },
+    {
+      "id": "CC-103",
+      "location": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java:116",
+      "observation": "The test name cites AC-1/AC-3, which the SRS words for the Core harness and app routes; this test is the auth-router analogue. Acceptable since the comment says so; no change needed.",
+      "is_behavioral": false
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-2/NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+      "hunks_total": 2,
+      "anchors": [
+        "+    // @req FR-APP-027",
+        "+        } else if (err instanceof BodyTooLargeException) { // FR-APP-027: an unwrapped overrun is 413, not a store failure"
+      ],
+      "findings": []
+    },
+    {
+      "file": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-2/NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "+    public void FR_APP_027_AC1_AC3_authRouterAnswersAnUnwrappedOverrun413() {"
+      ],
+      "findings": []
+    }
+  ],
+  "summary": {
+    "requirement": "FR-APP-027 (Stability=evolving, Status=planned)",
+    "review_denominator": 2,
+    "hunks_total": 3,
+    "hunks_covered": 3,
+    "fnd_001": "resolved (new test passes; mutation removing the fix fails it at the 413 assertion)",
+    "new_findings_kept": 0,
+    "new_findings_residual": 0,
+    "clean_code_observations": 3,
+    "regression": "NaruServe-api 2921/2921 PASS",
+    "git_status_unchanged": true
+  }
+}

@@ -1,0 +1,59 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-1-fr-rel-007",
+ "base_sha": "d9c7e736ce984625997d25d82f2a3f69588631d5",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-REL-007"
+ ],
+ "req_filter": [
+  "FR-REL-007"
+ ],
+ "write_set": [
+  "build.gradle",
+  "gradle/release.gradle",
+  "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+  "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+  "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java"
+ ],
+ "started_at": "2026-11-13T19:31:40Z",
+ "last_updated_at": "2026-11-13T19:39:31Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-13T19:31:40Z",
+  "ended_at": "2026-11-13T19:39:31Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-1-fr-rel-007",
+  "result_summary": "FR-REL-007 AC-1..AC-4 cited (2 new tests, comment citations); full build 3853 tests 0 failures; AC-1/AC-3 release records belong to the release step",
+  "changed": true,
+  "commit_sha": "11b91e9",
+  "commits": [
+   {
+    "req_id": "FR-REL-007",
+    "test_sha": "e40bd2e",
+    "implementation_sha": "11b91e9"
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-13T19:31:40Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-REL-007": "evolving"
+  },
+  "status_snapshot": {
+   "FR-REL-007": "planned"
+  }
+ },
+ "req_coverage": {},
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-1-fr-rel-007/lanes/w1s1l1/reports/pm-2026-11-13T193931Z.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": null
+}

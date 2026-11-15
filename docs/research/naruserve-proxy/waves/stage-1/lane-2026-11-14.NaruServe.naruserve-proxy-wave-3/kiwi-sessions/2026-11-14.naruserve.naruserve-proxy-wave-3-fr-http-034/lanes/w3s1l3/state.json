@@ -1,0 +1,55 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.naruserve.naruserve-proxy-wave-3-fr-http-034",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "FR-HTTP-034"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--regression-baseline",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "loop_counters": {
+  "phase1": {
+   "kept": 1,
+   "dropped": 6,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 0,
+   "dropped": 8,
+   "rounds": 0
+  }
+ },
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.TrustedProxyPeerTest",
+  "exit_code": 1,
+  "captured_failure": "4 tests completed, 3 failed: AC2/AC3/AC4 expected:<true> but was:<false>; AC1 passes on the false stub. ProxyTrustSettingPeerTest: compileTestJava error: cannot find symbol trustsPeer",
+  "timestamp": "2026-11-15"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build --continue",
+  "exit_code": 0,
+  "timestamp": "2026-11-15"
+ },
+ "regression_baseline": {
+  "source": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+  "failed_test_ids": []
+ },
+ "regression_summary": {
+  "scope": "full",
+  "passed": 3853,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "mcp_call_log": [],
+ "pending_mutations": [],
+ "deferred_mutations_appended": 6
+}

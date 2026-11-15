@@ -1,0 +1,43 @@
+{
+ "run_id": "2026-11-14.naruserve.naruserve-proxy-wave-3-ir-http-013",
+ "run_id_given": "2026-11-14.NaruServe.naruserve-proxy-wave-3-ir-http-013",
+ "base_sha": "bef626f87f09b2cb9a23dedf210aef5277b4d04f",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "IR-HTTP-013"
+ ],
+ "req_filter": [
+  "IR-HTTP-013"
+ ],
+ "write_set": [],
+ "started_at": "2026-11-13T18:50:59Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "IR-HTTP-013",
+    "test_sha": "e3c2721",
+    "implementation_sha": "ec5a11b"
+   }
+  ],
+  "changed": true,
+  "commit_sha": "ec5a11b",
+  "result_summary": "IR-HTTP-013 AC-1..6 green; build 3839 tests 0 failures"
+ },
+ "lifecycle_gate_state": {
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "IR-HTTP-013": "evolving"
+  },
+  "status_snapshot": {
+   "IR-HTTP-013": "planned"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.naruserve.naruserve-proxy-wave-3-ir-http-013/lanes/w3s1l3/reports/pm-final.md"
+}

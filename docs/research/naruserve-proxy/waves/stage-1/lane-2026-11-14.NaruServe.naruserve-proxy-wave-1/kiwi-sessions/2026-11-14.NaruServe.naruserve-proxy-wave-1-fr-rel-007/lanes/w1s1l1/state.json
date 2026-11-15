@@ -1,0 +1,8 @@
+{"schema_version":"1.0.0","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-1-fr-rel-007","sds_path":null,"target":"0.12.0","req_ids":["FR-REL-007"],"mode":"normal","flags":["--loops 20","--defer-srs-mutation"],"spawn_context":"pm-child","phase":"done","next_resume_hint":null,"failed":false,
+"loop_counters":{"phase1":{"kept":0,"dropped":0,"rounds":1},"phase2":{"kept":0,"dropped":5,"rounds":1}},
+"red_evidence":{"command":"speckiwi coverage --tests --ids FR-REL-007 --json","exit_code":0,"captured_failure":"passed=false; gaps FR-REL-007 AC-1 AC-2 AC-3 AC-4 uncited","timestamp":"2026-11-14T05:40:00Z"},
+"red_evidence_meta":{"mutation_probe":"release.gradle with dependencycheck removed and proxy dropped from publishedModules: fr_REL_007_AC2_* and fr_REL_007_AC1_* fail; file restored"},
+"green_evidence":{"command":"./gradlew -PtinyHttpdFromMaven=true build","exit_code":0,"timestamp":"2026-11-14T06:00:00Z"},
+"regression_baseline":{"command":"./gradlew -PtinyHttpdFromMaven=true build","failed":0,"passed":3829,"head_sha":"853c7734784d13ae75f208bf16dd81e4fa1dbba4","source":"pinned by parent"},
+"regression_summary":{"scope":"full","passed":3853,"failed":0,"regressed_files":[]},
+"pending_mutations":[],"deferred_mutations_appended":9,"updated_at":"2026-11-14T06:00:00Z"}

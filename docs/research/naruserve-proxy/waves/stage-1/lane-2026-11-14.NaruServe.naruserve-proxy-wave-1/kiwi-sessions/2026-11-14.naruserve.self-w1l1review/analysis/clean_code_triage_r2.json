@@ -1,0 +1,22 @@
+{
+  "clean_code_triage": [
+    {
+      "id": "CC-101",
+      "decision": "dismissed",
+      "reason": "Conflicts with the existing convention. Before 889c380, test classes in both packages already call each other's package-private static helpers. In build/, AuthPlacementTest, BuildChecksTest, ClassConstraintsTest and others call BuildLayoutTest.property/read/walk/MODULES/assertTinyHttpdClean; CentralStagingTest calls PublishedPomTest.artifactIds(); and BuildLayoutTest:470 already used ReleaseScriptTextTest.GUARDED_APPLY, so the BuildLayoutTest <-> ReleaseScriptTextTest link in both directions is not new. In docs/, ApiMarkersDocsTest calls ReadmeDocsTest.root/read, and AuthGuideCompletenessDocsTest calls ReleaseNotesDocsTest.section and AuthGuideDocsTest.tableRows/anchors/anchor. A separate BuildGradleText utility would be a new pattern that no other helper follows.",
+      "fix_hint": ""
+    },
+    {
+      "id": "CC-102",
+      "decision": "dismissed",
+      "reason": "Not a valid issue: it only matters for inputs that no caller passes. defBlockCode has exactly two callers, BuildLayoutTest:714 (\"mainDependencies\") and BuildLayoutTest:924 (\"extraCompileOnly\"). Both are literal Java identifiers with no regex metacharacters, and the reviewer agrees it is safe today. The helper is test-only and package-private.",
+      "fix_hint": ""
+    },
+    {
+      "id": "CC-103",
+      "decision": "dismissed",
+      "reason": "Not a defect, and changing it would conflict with round-2 verification. The two helpers parse different kinds of block. defBlockCode reads multi-line blocks closed by a newline followed by ']'. naruModulesList reads an inline bracket list, and its whitespace-tolerant regex predates this round (ReleaseScriptTextTest round 1). build.gradle uses the exact 'def X = [' spacing for all three definitions (lines 15, 61, 86), so both helpers match the real file. FND-102 confirmed the defBlockCode regexes are byte-identical to round 1. Making them consistent would change verified assertion regexes for no behavioural gain. The issue is cosmetic (severity trivial).",
+      "fix_hint": ""
+    }
+  ]
+}
