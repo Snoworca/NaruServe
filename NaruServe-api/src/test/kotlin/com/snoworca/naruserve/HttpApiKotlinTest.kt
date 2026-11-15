@@ -3,9 +3,11 @@ package com.snoworca.naruserve
 import com.snoworca.naruserve.routing.RouterPolicy
 import com.snoworca.naruserve.testing.TestApp
 import java.io.ByteArrayInputStream
+import java.io.IOException
 import java.io.InputStream
 import java.lang.reflect.Proxy
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -235,5 +237,19 @@ class HttpApiKotlinTest {
         val relayed = t.send("GET", "/relay")
         assertEquals(200, relayed.status())
         assertArrayEquals(byteArrayOf(1, 2, 3, 4, 5), relayed.body())
+    }
+
+    // FR-HTTP-035 AC-1: a Kotlin trailing-lambda listener runs exactly once when the handler aborts twice
+    @Test
+    fun `FR-HTTP-035 AC-1 Kotlin onAbort lambda runs once over two res abort calls`() {
+        val t = TestApp.create()
+        val runs = AtomicInteger()
+        t.app().get("/abort") { _, res ->
+            res.onAbort { runs.incrementAndGet() }
+            res.abort(IOException("x"))
+            res.abort(IOException("x"))
+        }
+        assertTrue(t.send("GET", "/abort").abnormallyClosed())
+        assertEquals(1, runs.get())
     }
 }
