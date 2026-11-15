@@ -1,0 +1,66 @@
+{
+  "lane_cap": 4,
+  "depends": {
+    "2026-11-14.NaruServe.naruserve-proxy-wave-5": [],
+    "2026-11-14.NaruServe.naruserve-proxy-wave-6": []
+  },
+  "declaration": "docs/research/naruserve-proxy/waves/waves.json",
+  "declaration_digests": {
+    "2026-11-14.NaruServe.naruserve-proxy-wave-5": "9e42f4821e30ed5041405897861525145cc5611dd7c0418635114379e9f70d1f",
+    "2026-11-14.NaruServe.naruserve-proxy-wave-6": "26263284ce836f189988c4a835ceb4eb66bc6eefc7fbaacdd202bfe0d1e26c24"
+  },
+  "sds_digests": {},
+  "lane_count": 2,
+  "stage_count": 1,
+  "lanes": [
+    {
+      "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-5",
+      "stage": 1,
+      "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-5",
+      "sds": null,
+      "writeSet": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyState.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/RawBodyAccessLogTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/RawBodyLimitTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestBodyStreamLimitsTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestBodyStreamTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+        "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawBodyLimitKotlinTest.kt",
+        "src/test/java/com/snoworca/naruserve/build/CrossModuleAuthGateTest.java"
+      ]
+    },
+    {
+      "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-6",
+      "stage": 1,
+      "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-6",
+      "sds": null,
+      "writeSet": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseRelayFramingTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseRelayTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticCacheTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultResponseTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ResponseStreamTest.java",
+        "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+        "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawResponseSocketTest.java"
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "index": 1,
+      "laneIds": [
+        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-5",
+        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-6"
+      ]
+    }
+  ],
+  "conflicts": []
+}
