@@ -1,0 +1,62 @@
+{
+  "wave": "wave-3",
+  "round": 2,
+  "verifier": "loop-p-wave-3-r2",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "FR-HTTP-032 AC-6",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R2Test.java::LP1_FR_HTTP_032_AC6_sigmaCaseVariantsShareValues",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: names=[x-ς, x-σ] mismatches=x-ς: headers=[1] raw=[1, 2]; x-σ: headers=[2] raw=[1, 2];",
+      "note": "Request with headers 'X-Σ: 1' and 'x-σ: 2' (case variants of the same name). headerKey() = toLowerCase(Locale.ROOT) applies the context-sensitive final-sigma rule, so 'X-Σ' becomes 'x-ς' and 'x-σ' stays 'x-σ'. headerNames() lists two names, and headers(name) returns only one of the two values for each, while the raw entries that match each name case-insensitively (String.equalsIgnoreCase, and Unicode case folding too) hold both. Introduced by 5926d5c: green at 8ef3fab, red at 5926d5c."
+    },
+    {
+      "id": "LP-2",
+      "cites": "FR-HTTP-034 AC-5",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R2Test.java::LP2_FR_HTTP_034_AC5_hopModeUnparsablePeerAgreesWithRemoteAddress",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "trustProxyHops(1) over peer 'unknown': isFromTrustedProxy true, remoteAddress and isSecure follow the forwarding headers. The two decisions agree."
+    },
+    {
+      "id": "LP-3",
+      "cites": "FR-HTTP-034 AC-3",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R2Test.java::LP3_FR_HTTP_034_AC3_mappedPeerInsideCidr",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Peer ::ffff:10.1.2.3 under trustProxyCidrs(10.0.0.0/8) is trusted, and remoteAddress agrees."
+    },
+    {
+      "id": "LP-4",
+      "cites": "FR-HTTP-032 AC-5",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R2Test.java::LP4_FR_HTTP_032_AC5_concurrentFirstCallsShareInstances",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "When two threads make the first calls at the same moment, they get the same headerNames() and rawHeaders() instances."
+    },
+    {
+      "id": "LP-5",
+      "cites": "FR-HTTP-032 AC-3",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R2Test.java::LP5_FR_HTTP_032_AC3_bulkMutatorsThrow",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "removeIf, iterator remove, sort, replaceAll and listIterator add all throw UnsupportedOperationException, and both views stay unchanged."
+    },
+    {
+      "id": "LP-6",
+      "cites": "FR-HTTP-011 AC-1",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R2Test.java::LP6_FR_HTTP_011_AC1_headerLookupMatchesSigmaCaseVariant",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "org.junit.ComparisonFailure: expected:<[1 [1]]> but was:<[null []]>",
+      "note": "Breaks code outside the wave. The fix changed header()/headers() from equalsIgnoreCase to toLowerCase(Locale.ROOT).equals, so req.header(\"x-σ\") and req.headers(\"X-σ\") no longer find a header sent as 'X-Σ' (Σ at word end lowercases to final sigma ς). Same root cause as LP-1. Green at 8ef3fab, red at 5926d5c. A rule that matches both this case and the U+0130 case would compare per-char case folds, e.g. toUpperCase(ROOT) then toLowerCase(ROOT) for both key and name."
+    }
+  ],
+  "summary": { "tests_written": 6, "kept": 2 }
+}

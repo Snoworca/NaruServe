@@ -1,0 +1,146 @@
+{
+  "wave": "wave-3",
+  "round": 3,
+  "verifier": "loop-p-wave-3-r3",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "FR-HTTP-032 AC-6",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3Test.java::FR_HTTP_032_AC6_dottedCapitalIFirstThenAsciiKeepsTheAsciiValue",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: raw=[X-İd=1, x-id=2] walk: x-i̇d=[1];  expected:<[1, 2]> but was:<[1]>",
+      "note": "Lost value. X-\\u0130d and x-id are one name by the rule (equalsIgnoreCase holds; req.header(\"x-id\") answers 1), so HeaderEnumeration absorbs x-id into the first class, but the listed name is headerKey(\"X-\\u0130d\") = \"x-i\\u0307d\" and headers(\"x-i\\u0307d\") does not match x-id (length differs, lowercases differ). Value 2 is reachable through no listed name. Root cause: DefaultRequest.HeaderEnumeration.matchesAny compares the new name with the first raw name, while headers(listedName) compares with its Locale.ROOT lowercase. The rule 'equalsIgnoreCase OR ROOT-lowercase equal' is not transitive around U+0130."
+    },
+    {
+      "id": "LP-2",
+      "cites": "FR-HTTP-032 AC-6",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3Test.java::FR_HTTP_032_AC6_dottedCapitalIBridgingTwoListedNamesIsNotReportedTwice",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: raw=[x-id=1, X-İd=2, x-i̇d=3] walk: x-id=[1, 2]; x-i̇d=[2, 3];  expected:<[1, 2, 3]> but was:<[1, 2, 2, 3]>",
+      "note": "Double report. X-\\u0130d matches x-id (equalsIgnoreCase) and x-i\\u0307d (ROOT lowercase), but x-id and x-i\\u0307d do not match each other. headerNames() lists both, and walking headerNames()/headers(name) reports value 2 twice, so a proxy forwarding from the enumeration would send that header line twice. Same non-transitivity root cause as LP-1."
+    },
+    {
+      "id": "LP-3",
+      "cites": "FR-HTTP-032 AC-6",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3Test.java::FR_HTTP_032_AC6_dotlessDottedCombiningChainKeepsEachValueOnce",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: raw=[x-ıd=1, X-İd=2, x-i̇d=3] walk: x-ıd=[1, 2]; x-i̇d=[2, 3];  expected:<[1, 2, 3]> but was:<[1, 2, 2, 3]>",
+      "note": "Same defect as LP-2 reached through Turkish dotless \\u0131 (x-\\u0131d equalsIgnoreCase X-\\u0130d). Confirms the overlap is not limited to ASCII i."
+    },
+    {
+      "id": "LP-4",
+      "cites": "FR-HTTP-032 AC-6",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3Test.java::FR_HTTP_032_AC6_kelvinSignIsOneNameWithAsciiK",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Kelvin sign U+212A, x-k and X-K form one name, [x-k], with values [1,2,3]."
+    },
+    {
+      "id": "LP-5",
+      "cites": "FR-HTTP-032 AC-6",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3Test.java::FR_HTTP_032_AC6_sharpSIsNotSs",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "\\u00df stays separate from SS/ss, and each name's values are correct."
+    },
+    {
+      "id": "LP-6",
+      "cites": "FR-HTTP-032 AC-6",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3Test.java::FR_HTTP_032_AC6_dotlessIAndAsciiAreOneName",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "X-ID, x-\\u0131d and x-id form one name, x-id, with [1,2,3]."
+    },
+    {
+      "id": "LP-7",
+      "cites": "FR-HTTP-032 AC-6",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3Test.java::FR_HTTP_032_AC6_threeSigmasAreOneName",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "\\u03c3, \\u03a3 and \\u03c2 in mixed order form one name with [1,2,3], and header() returns the first value."
+    },
+    {
+      "id": "LP-8",
+      "cites": "FR-HTTP-032 AC-4",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3Test.java::FR_HTTP_032_AC4_turkishDefaultWithDottedI",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Under tr-TR, X-ID lists as x-id."
+    },
+    {
+      "id": "LP-9",
+      "cites": "FR-HTTP-011 AC-1",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3Test.java::FR_HTTP_011_AC1_asciiVariantsStillMatch",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "No regression: header/headers still match ASCII case variants, and a prefix name does not match."
+    },
+    {
+      "id": "LP-10",
+      "cites": "FR-HTTP-032 AC-3",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3Test.java::FR_HTTP_032_AC3_iteratorAndBulkMutatorsAreRefused",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "iterator.remove, removeIf, addAll, listIterator.set, subList.clear, clear, replaceAll and sort all throw UOE, and the results stay unchanged."
+    },
+    {
+      "id": "LP-11",
+      "cites": "FR-HTTP-034 AC-4",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3Test.java::FR_HTTP_034_AC4_hostNamePeerIsNotResolved",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "A localhost peer is not resolved under the 127.0.0.0/8 CIDR, so it gets false, and remoteAddress and isSecure agree."
+    },
+    {
+      "id": "LP-12",
+      "cites": "FR-HTTP-034 AC-3",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3Test.java::FR_HTTP_034_AC3_mappedPeerInsideCidrAgreesWithRemoteAddress",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "An IPv4-mapped peer and a bracketed full IPv6 loopback are trusted, in agreement with remoteAddress and isSecure."
+    },
+    {
+      "id": "LP-13",
+      "cites": "FR-HTTP-034 AC-1",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3Test.java::FR_HTTP_034_AC1_lastSettingWins",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "The last trust setting decides: CIDR then hops(0) gives false, and hops(2) then trustProxy(false) gives false."
+    },
+    {
+      "id": "LP-14",
+      "cites": "FR-HTTP-034 AC-2",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3Test.java::FR_HTTP_034_AC2_hopsWithoutForwardingHeaderIsTrusted",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "hops(2) with no X-Forwarded-For is trusted, and remoteAddress stays the peer."
+    },
+    {
+      "id": "LP-15",
+      "cites": "IR-HTTP-013 AC-2",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R3SurfaceTest.java::IR_HTTP_013_AC2_defaultsNameTheImplementingClassAndDefaultRequestOverridesPublicly",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "All five defaults throw UOE naming MinimalRequest's class. DefaultRequest overrides each one publicly, and neither side carries a return annotation."
+    }
+  ],
+  "summary": {
+    "tests_written": 15,
+    "kept": 3
+  }
+}
