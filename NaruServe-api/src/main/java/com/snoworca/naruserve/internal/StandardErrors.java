@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.BodyTooLargeException;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.spi.ErrorRenderer;
 import java.nio.charset.StandardCharsets;
@@ -14,10 +15,17 @@ public final class StandardErrors {
     private StandardErrors() {
     }
 
-    /** {@link HttpException#status()}, otherwise 500. */
+    /**
+     * {@link HttpException#status()}, 413 for an unwrapped {@link BodyTooLargeException}, otherwise 500; an exception
+     * that only wraps an overrun in its cause stays 500.
+     */
     // @req FR-APP-006
+    // @req FR-APP-027
     static int statusOf(Throwable error) {
-        return error instanceof HttpException ? ((HttpException) error).status() : 500;
+        if (error instanceof HttpException) {
+            return ((HttpException) error).status();
+        }
+        return error instanceof BodyTooLargeException ? 413 : 500;
     }
 
     /** The app-supplied message of an {@link HttpException}, otherwise the reason phrase; a 500 always the reason. */

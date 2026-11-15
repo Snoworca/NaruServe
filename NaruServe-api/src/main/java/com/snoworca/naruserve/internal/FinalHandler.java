@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.BodyTooLargeException;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.common.HtmlEscaping;
 import java.io.PrintWriter;
@@ -27,7 +28,9 @@ final class FinalHandler {
         if(error==null) {
             status=404;message="Cannot "+request.methodToken()+" "+encodeUrl(request.rawPath());
         }else{
-            status=error instanceof HttpException?((HttpException)error).status():response.statusCode();
+            // The statusOf classification: an HttpException's status, 413 for an unwrapped overrun (FR-APP-027).
+            status=error instanceof HttpException || error instanceof BodyTooLargeException
+                    ?StandardErrors.statusOf(error):response.statusCode();
             if(status<400 || status>599)status=500;
             StringWriter stack=new StringWriter();error.printStackTrace(new PrintWriter(stack));
             message=stack.toString().replace("\r\n","\n");
