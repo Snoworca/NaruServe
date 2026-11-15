@@ -283,6 +283,16 @@ public final class Dispatcher implements ExchangeHandler {
         res.applyDefaultCache(statics.defaultCache());
         res.sseRegistry(sse);
         res.listenerLogger(errors.logger); // FR-HTTP-035 AC-4: no HttpExecution hands it over on this path
+        // FR-HTTP-035 AC-7: as HttpExecution.cancel, an adapter-reported disconnect aborts the response (a no-op
+        // once it completed), registered before middleware runs so res.onAbort listeners see it on this path too.
+        // Only until the upgrade starts: an abort of the upgraded connection ends the session, whose close line
+        // reports it, and must not end the 101 response as aborted with a second request line (FR-APP-019 AC-8).
+        AtomicBoolean upgrading = new AtomicBoolean();
+        ex.onAbort(() -> {
+            if (!upgrading.get()) {
+                res.abort(null);
+            }
+        });
         // The request ends once the response finished (complete or abort) and the handler chain returned, so a
         // handler may still save() an upload after res.send(); whichever comes last releases the uploads.
         AtomicInteger untilEnd = new AtomicInteger(2);
@@ -326,6 +336,7 @@ public final class Dispatcher implements ExchangeHandler {
             pipeline.run(req, res, route, terminal, errors, rid);
             if (reached.get() && res.state() == ResponseState.NEW) {
                 RouteHandler h = m.handler();
+                upgrading.set(true);
                 upgrades.run(ex, req, res, h instanceof WebSocketRoute ? ((WebSocketRoute) h).handler() : null, rid);
             }
         } catch (Exception e) {
