@@ -180,8 +180,9 @@ public class RequestRawHeadersTest {
         assertEquals(Arrays.asList("1", "2"), s.headersPerName.get(0));
         assertEquals(Arrays.asList("3"), s.headersPerName.get(1));
     }
-    // FR-HTTP-032 AC-6: a name whose Locale.ROOT lowercase is longer than the raw name (U+0130 capital dotted I
-    // lowercases to i + U+0307) still finds its values through headers(name) and header(name)
+    // FR-HTTP-032 AC-6: a name whose String.toLowerCase is longer than the raw name (U+0130 capital dotted I
+    // lowercases to i + U+0307 there) is listed per character as x-id and still finds its values through
+    // headers(name) and header(name)
     @Test
     public void FR_HTTP_032_AC6_headersOfANameWhoseLowercaseChangesLengthMatchTheRawEntries() {
         TestApp t = TestApp.create();
@@ -201,7 +202,7 @@ public class RequestRawHeadersTest {
         assertEquals(200, t.send("GET", "/h", "X-\u0130D", "a", "X-B", "b").status());
         Seen s = ref.get();
         assertTrue("handler did not run", s != null);
-        assertEquals(Arrays.asList("x-i\u0307d", "x-b"), new ArrayList<>(s.names));
+        assertEquals(Arrays.asList("x-id", "x-b"), new ArrayList<>(s.names));
         assertEquals(Arrays.asList(Arrays.asList("a"), Arrays.asList("b")), s.headersPerName);
         assertEquals(Arrays.asList("a", "b"), single);
     }
@@ -238,5 +239,118 @@ public class RequestRawHeadersTest {
         assertEquals(200, t.send("GET", "/h", "X-\u03a3", "1").status());
         assertEquals("1", single.get());
         assertEquals(Arrays.asList("1"), all.get());
+    }
+
+    /** The character-by-character {@link Character#toLowerCase(char)} of {@code name}, without any locale. */
+    private static String perCharLower(String name) {
+        char[] c = name.toCharArray();
+        for (int i = 0; i < c.length; i++) {
+            c[i] = Character.toLowerCase(c[i]);
+        }
+        return new String(c);
+    }
+
+    /**
+     * Every listed name is the per-character lowercase of the first raw name it matches by equalsIgnoreCase, so it
+     * has that raw name's length.
+     */
+    private static void assertListedNamesArePerCharLowercaseOfFirstRawName(Seen s) {
+        for (String name : s.names) {
+            String firstRaw = null;
+            for (Map.Entry<String, String> e : s.raw) {
+                if (e.getKey().equalsIgnoreCase(name)) {
+                    firstRaw = e.getKey();
+                    break;
+                }
+            }
+            assertTrue("listed name " + name + " matches no raw name", firstRaw != null);
+            assertEquals(perCharLower(firstRaw), name);
+            assertEquals(firstRaw.length(), name.length());
+        }
+    }
+
+    /** Walking headerNames() and headers(name) reaches every raw value exactly once. */
+    private static void assertEachValueReachedOnce(Seen s, String... values) {
+        List<String> reached = new ArrayList<>();
+        for (List<String> v : s.headersPerName) {
+            reached.addAll(v);
+        }
+        Collections.sort(reached);
+        List<String> expected = new ArrayList<>(Arrays.asList(values));
+        Collections.sort(expected);
+        assertEquals("values reached through headerNames()/headers(name)", expected, reached);
+    }
+
+    // FR-HTTP-032 AC-4: under the default locale tr-TR each listed name is the character-by-character
+    // Character.toLowerCase of its first raw name: TITLE -> title, X-<U+0130>D -> x-id (not i + U+0307),
+    // X-<U+03A3><U+03A3> -> x-<U+03C3><U+03C3> (no word-final U+03C2), each the length of its raw name
+    @Test
+    public void FR_HTTP_032_AC4_namesAreLowercasedCharacterByCharacterKeepingTheRawLength() {
+        Locale saved = Locale.getDefault();
+        Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+        try {
+            Seen s = capture("TITLE", "a", "X-\u0130D", "b", "X-\u03a3\u03a3", "c");
+            assertEquals(Arrays.asList("title", "x-id", "x-\u03c3\u03c3"), new ArrayList<>(s.names));
+            assertListedNamesArePerCharLowercaseOfFirstRawName(s);
+            assertEquals(Arrays.asList(Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("c")), s.headersPerName);
+        } finally {
+            Locale.setDefault(saved);
+        }
+    }
+
+    // FR-HTTP-032 AC-7: X-<U+0130>d: 1 with x-id: 2 gives one listed name x-id whose headers are [1, 2]
+    @Test
+    public void FR_HTTP_032_AC7_capitalDottedIAndPlainIAreOneNameListedAsXId() {
+        Seen s = capture("X-\u0130d", "1", "x-id", "2");
+        assertEquals(Arrays.asList("x-id"), new ArrayList<>(s.names));
+        assertEquals(Arrays.asList(Arrays.asList("1", "2")), s.headersPerName);
+        assertListedNamesArePerCharLowercaseOfFirstRawName(s);
+    }
+
+    // FR-HTTP-032 AC-7: X-<U+03A3>: 1 with x-<U+03C3>: 2 gives one name x-<U+03C3> whose headers are [1, 2]
+    @Test
+    public void FR_HTTP_032_AC7_capitalAndSmallSigmaAreOneNameListedWithSmallSigma() {
+        Seen s = capture("X-\u03a3", "1", "x-\u03c3", "2");
+        assertEquals(Arrays.asList("x-\u03c3"), new ArrayList<>(s.names));
+        assertEquals(Arrays.asList(Arrays.asList("1", "2")), s.headersPerName);
+        assertListedNamesArePerCharLowercaseOfFirstRawName(s);
+    }
+
+    // FR-HTTP-032 AC-7: x-<U+0131>d: 1, X-<U+0130>d: 2 and x-i<U+0307>d: 3 give names whose headers together hold
+    // each value exactly once, and every listed name has the length of its first raw name
+    @Test
+    public void FR_HTTP_032_AC7_dotlessDottedAndCombiningDotNamesReachEachValueOnce() {
+        Seen s = capture("x-\u0131d", "1", "X-\u0130d", "2", "x-i\u0307d", "3");
+        assertEachValueReachedOnce(s, "1", "2", "3");
+        assertListedNamesArePerCharLowercaseOfFirstRawName(s);
+        assertEquals(Arrays.asList("x-\u0131d", "x-i\u0307d"), new ArrayList<>(s.names));
+        assertEquals(Arrays.asList(Arrays.asList("1", "2"), Arrays.asList("3")), s.headersPerName);
+    }
+
+    // FR-HTTP-032 AC-6: X-<U+0130>d: 1 then x-id: 2 keeps value 2 reachable through a listed name (loop P case 1)
+    @Test
+    public void FR_HTTP_032_AC6_valueAfterACapitalDottedINameStaysReachable() {
+        Seen s = capture("X-\u0130d", "1", "x-id", "2");
+        assertEachValueReachedOnce(s, "1", "2");
+    }
+
+    // FR-HTTP-032 AC-6: X-<U+0130>d after x-id and x-i<U+0307>d does not bridge them, so walking headerNames() and
+    // headers(name) reports every value exactly once (loop P case 2)
+    @Test
+    public void FR_HTTP_032_AC6_capitalDottedIDoesNotBridgeTwoNamesIntoADuplicateValue() {
+        Seen s = capture("x-id", "1", "x-i\u0307d", "2", "X-\u0130d", "3");
+        assertEachValueReachedOnce(s, "1", "2", "3");
+        assertEquals(Arrays.asList("x-id", "x-i\u0307d"), new ArrayList<>(s.names));
+        assertEquals(Arrays.asList(Arrays.asList("1", "3"), Arrays.asList("2")), s.headersPerName);
+    }
+
+    // FR-HTTP-032 AC-6: the same bridge through a dotless x-<U+0131>d first name reports every value exactly once
+    // (loop P case 3)
+    @Test
+    public void FR_HTTP_032_AC6_dotlessINameIsNotBridgedIntoADuplicateValue() {
+        Seen s = capture("x-\u0131d", "1", "x-i\u0307d", "2", "X-\u0130d", "3");
+        assertEachValueReachedOnce(s, "1", "2", "3");
+        assertEquals(Arrays.asList("x-\u0131d", "x-i\u0307d"), new ArrayList<>(s.names));
+        assertEquals(Arrays.asList(Arrays.asList("1", "3"), Arrays.asList("2")), s.headersPerName);
     }
 }
