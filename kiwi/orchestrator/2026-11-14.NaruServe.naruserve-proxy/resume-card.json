@@ -3,23 +3,21 @@
   "run_id": "2026-11-14.NaruServe.naruserve-proxy",
   "run_contract": "docs/research/naruserve-proxy/00.run-contract.md@sha256:5d8815eadd0bdaa17f0f73ff8c5b6c80fd8d476b0533ab90a74db8ac3a013dce",
   "position": {
-    "wave": 1,
-    "stage": 1,
-    "phase": "execute"
+    "wave": 4,
+    "stage": 2,
+    "phase": "readiness"
   },
   "next_action": {
-    "verb": "collect-lane",
+    "verb": "derive-readiness",
     "args": {
-      "stage": 1,
-      "lanes": [
-        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-1",
-        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-2",
-        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-3"
+      "stage": 2,
+      "waves": [
+        "wave-4"
       ]
     },
     "preconditions": [
       "P-DESIGN-FROZEN",
-      "P-LANE-PLAN-FROZEN"
+      "P-WAVE-ISSUES-CLOSED"
     ]
   },
   "frozen": {
@@ -44,9 +42,7 @@
     "waves_lock": "docs/research/naruserve-proxy/waves/waves.lock.json@sha256:65e81d03cbdeeb71b9c0c5638722d8ed4d726d1741ca53dd3dc53d0a9ae0bc2c",
     "constraints": "docs/research/naruserve-proxy/design/constraints.json@sha256:b2645a9c998ce18520b7ae7c8570d9c493d124575511ea5cdb155dc414adab4c",
     "convergence": "docs/research/naruserve-proxy/design/convergence-registry.json@sha256:29915c1b6c5d7ac5378fb6d45b1cdc389542d1a7fe2f67fd39cc44c5e975e5c8",
-    "lane_lock": {
-      "wave-1": "docs/research/naruserve-proxy/waves/stage-1/lanes.lock.json@sha256:4a2f4365ebc4fba9bb4a0cfde8dcb09efa024822fd79f4929c3612008d3c67ca"
-    },
+    "lane_lock": {},
     "counts": {
       "design_items": 75,
       "integration_items": 5,
@@ -94,26 +90,24 @@
         "kind": "git-trailer",
         "ref": "f4dddef89507e9571ee45e18181fa62b0c1d993b Orch-Run=2026-11-14.NaruServe.naruserve-proxy Orch-Verb=commit-run-artifacts"
       }
-    }
-  ],
-  "open": [
-    {
-      "key": "wave-1/s1/lane-2026-11-14.NaruServe.naruserve-proxy-wave-1",
-      "state": "executing",
-      "base_sha": "889c380ebc79a4f6719f3d73264330e2c6c3888a"
     },
     {
-      "key": "wave-2/s1/lane-2026-11-14.NaruServe.naruserve-proxy-wave-2",
-      "state": "executing",
-      "base_sha": "8b1f994bc3b4cb01a8c0ddc4a2f4215ec7b5bf63"
+      "key": "stage-1-closed",
+      "proof": {
+        "kind": "git-trailer",
+        "ref": "6ecfde370e7f4ff993936ebb9327b52a639bf68e Orch-Run=2026-11-14.NaruServe.naruserve-proxy Orch-Verb=commit-run-artifacts"
+      }
     },
     {
-      "key": "wave-3/s1/lane-2026-11-14.NaruServe.naruserve-proxy-wave-3",
-      "state": "executing",
-      "base_sha": "bef626f87f09b2cb9a23dedf210aef5277b4d04f"
+      "key": "lane-lock/wave-1/stage-1",
+      "proof": {
+        "kind": "digest",
+        "ref": "docs/research/naruserve-proxy/waves/stage-1/lanes.lock.json@sha256:4a2f4365ebc4fba9bb4a0cfde8dcb09efa024822fd79f4929c3612008d3c67ca"
+      }
     }
   ],
+  "open": [],
   "blocked_on": null,
-  "invariant_digest": "sha256:ffabbd25a0cce98e952ca339eb51945ba980f829112a4f450b8135f1eddd9bfe",
-  "written_at": "2026-11-13T18:50:52.601Z"
+  "invariant_digest": "sha256:5581ac1e6af03c052a61c14ba66fa47bc9b98d0a18d46e31d2bffe92e7a37547",
+  "written_at": "2026-11-15T14:54:09.441Z"
 }
