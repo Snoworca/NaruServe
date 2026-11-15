@@ -271,14 +271,23 @@ public final class DefaultRequest implements Request {
         return headerEnumeration().raw;
     }
 
-    /**
-     * The one header-name matching rule of {@link #headerNames()}, {@link #header(String)} and {@link #headers(String)}:
-     * the name lowercased with {@link Locale#ROOT}. Unlike {@link String#equalsIgnoreCase}, it matches a name whose
-     * lowercase has another length (U+0130 lowercases to i + U+0307), so every listed name finds its values.
-     */
+    /** The name {@link #headerNames()} lists for a raw header name: the name lowercased with {@link Locale#ROOT}. */
     // @req FR-HTTP-032
     private static String headerKey(String name) {
         return name.toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * The one header-name matching rule of {@link #headerNames()}, {@link #header(String)} and {@link #headers(String)}:
+     * two names are the same when {@link String#equalsIgnoreCase} holds or their {@link Locale#ROOT} lowercases are
+     * equal. The first alone misses a name whose lowercase has another length (U+0130 lowercases to i + U+0307); the
+     * second alone splits names that differ only by a word-final sigma (U+03A3 lowercases to U+03C2 there).
+     * {@code keyA} is {@code headerKey(a)}, computed once by the caller.
+     */
+    // @req FR-HTTP-011
+    // @req FR-HTTP-032
+    private static boolean sameHeaderName(String a, String keyA, String b) {
+        return a.equalsIgnoreCase(b) || keyA.equals(headerKey(b));
     }
 
     // @req FR-HTTP-032
@@ -305,13 +314,30 @@ public final class DefaultRequest implements Request {
         // @req FR-HTTP-032
         HeaderEnumeration(List<Map.Entry<String, String>> headers) {
             Set<String> n = new LinkedHashSet<>();
+            // The first raw name of each listed name, in the order of n.
+            List<String> firstRaw = new ArrayList<>();
             List<Map.Entry<String, String>> r = new ArrayList<>(headers.size());
             for (Map.Entry<String, String> e : headers) {
-                n.add(headerKey(e.getKey()));
-                r.add(new AbstractMap.SimpleImmutableEntry<>(e.getKey(), e.getValue()));
+                String name = e.getKey();
+                String key = headerKey(name);
+                if (!n.contains(key) && !matchesAny(firstRaw, name, key)) {
+                    n.add(key);
+                    firstRaw.add(name);
+                }
+                r.add(new AbstractMap.SimpleImmutableEntry<>(name, e.getValue()));
             }
             names = Collections.unmodifiableSet(n);
             raw = Collections.unmodifiableList(r);
+        }
+
+        // @req FR-HTTP-032
+        private static boolean matchesAny(List<String> listed, String name, String key) {
+            for (String l : listed) {
+                if (sameHeaderName(name, key, l)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
@@ -582,7 +608,7 @@ public final class DefaultRequest implements Request {
     public @Nullable String header(String name) {
         String key = headerKey(name);
         for (Map.Entry<String, String> h : ex.headers()) {
-            if (headerKey(h.getKey()).equals(key)) {
+            if (sameHeaderName(name, key, h.getKey())) {
                 return h.getValue();
             }
         }
@@ -596,7 +622,7 @@ public final class DefaultRequest implements Request {
         String key = headerKey(name);
         List<String> values = null;
         for (Map.Entry<String, String> h : ex.headers()) {
-            if (headerKey(h.getKey()).equals(key)) {
+            if (sameHeaderName(name, key, h.getKey())) {
                 if (values == null) {
                     values = new ArrayList<>(2);
                 }
