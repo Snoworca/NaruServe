@@ -15,7 +15,7 @@
         "lane-2026-11-14.NaruServe.naruserve-proxy-wave-5",
         "lane-2026-11-14.NaruServe.naruserve-proxy-wave-6"
       ],
-      "note": "workers stopped by the user's pause before any commit; worktrees exist at base, unlocked; re-dispatch both from the same cards"
+      "note": "workers stopped by the user's pause. Their kiwi-coder children kept running: wave-5 left IR-APP-009 implemented but UNCOMMITTED (coder TASK_DONE, 3946/0, queue .kiwi/deferred-srs-mutations.jsonl); wave-6 left uncommitted relay work (DefaultResponse, StaticCacheTest, ResponseRelayTest). Worktrees unlocked at base. On resume: re-dispatch each worker on its card, telling it to inspect and resume from the uncommitted state (kiwi-pm --resume), commit test before implementation, never discard the work blindly."
     },
     "preconditions": [
       "P-DESIGN-FROZEN",
@@ -120,16 +120,16 @@
   "open": [
     {
       "key": "wave-5/s3/lane-2026-11-14.NaruServe.naruserve-proxy-wave-5",
-      "state": "dispatched-interrupted",
+      "state": "interrupted-uncommitted-work",
       "base_sha": "7d1bdffa861ff05a6a4a7eb12f9bb73a0cd80eb1"
     },
     {
       "key": "wave-6/s3/lane-2026-11-14.NaruServe.naruserve-proxy-wave-6",
-      "state": "dispatched-interrupted",
+      "state": "interrupted-uncommitted-work",
       "base_sha": "0e2088bc5c25592fd8e9b7ff10ed7267949b48f8"
     }
   ],
   "blocked_on": null,
   "invariant_digest": "sha256:fe01a9135f40bdb7830275d82ad82ec13f96d0fd061242f129c177bebc771ca0",
-  "written_at": "2026-11-15T17:15:52.870Z"
+  "written_at": "2026-11-15T17:32:31.659Z"
 }
