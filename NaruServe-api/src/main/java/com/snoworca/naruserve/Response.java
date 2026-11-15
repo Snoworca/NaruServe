@@ -3,6 +3,7 @@ package com.snoworca.naruserve;
 import com.snoworca.naruserve.common.ResponseValues;
 import com.snoworca.naruserve.internal.StandardErrors;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import org.jspecify.annotations.Nullable;
 
@@ -15,6 +16,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-COOKIE-001
 // @req IR-STATIC-002
 // @req IR-SSE-001
+// @req IR-HTTP-014
 public interface Response {
 
     /**
@@ -69,6 +71,27 @@ public interface Response {
     Response header(String name, String value);
 
     /**
+     * Adds a header line without replacing a same-name header, as Express {@code res.append} does; returns this
+     * response. The name and value pass the {@link #header} check, and a committed response throws
+     * {@link IllegalStateException} as {@link #header} does. The default throws {@link UnsupportedOperationException}
+     * so response fakes still compile.
+     */
+    // @req IR-HTTP-014
+    default Response append(String name, String value) {
+        throw new UnsupportedOperationException(getClass().getName() + " has no header appender");
+    }
+
+    /**
+     * Registers {@code listener} for the abort of this exchange; a null listener throws
+     * {@link NullPointerException}. The default throws {@link UnsupportedOperationException} so response fakes still
+     * compile.
+     */
+    // @req IR-HTTP-014
+    default void onAbort(Runnable listener) {
+        throw new UnsupportedOperationException(getClass().getName() + " has no abort listener");
+    }
+
+    /**
      * Sends a string as UTF-8 text, a byte array as binary, or any other value through {@link #json}.
      * A null value ends the response without a body. Dispatch uses the actual value, even when declared Object.
      */
@@ -80,6 +103,22 @@ public interface Response {
 
     /** Streams {@code in} as the response body with {@code contentType}; the response takes ownership of {@code in}. */
     void stream(InputStream in, String contentType);
+
+    /**
+     * Streams {@code in} as the response body framed by {@code contentLength} ({@code -1} for an unknown length),
+     * keeping the {@code Content-Type} the app set; the response takes ownership of {@code in} as {@link #stream}
+     * does. The default closes {@code in} and throws {@link UnsupportedOperationException} so response fakes still
+     * compile.
+     */
+    // @req IR-HTTP-014
+    default void relay(InputStream in, long contentLength) {
+        try {
+            in.close();
+        } catch (IOException ignored) {
+            // the stream is released either way; the unsupported call is what the caller learns about
+        }
+        throw new UnsupportedOperationException(getClass().getName() + " has no relay writer");
+    }
 
     /** Ends the response without a body. */
     void end();

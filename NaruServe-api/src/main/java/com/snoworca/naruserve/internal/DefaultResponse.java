@@ -47,6 +47,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-COOKIE-001
 // @req IR-SSE-001
 // @req FR-SSE-001
+// @req IR-HTTP-014
 public final class DefaultResponse implements Response {
 
     private static final int CHUNK = 8192;
@@ -81,6 +82,7 @@ public final class DefaultResponse implements Response {
     private @Nullable SseRegistry sseRegistry;
     private @Nullable DefaultSseClient sseClient;
     private boolean upgraded101;
+    private final List<Runnable> abortListeners = new ArrayList<>();
 
     /** Status 200, no headers, state NEW; {@code headRequest} makes every body bodyless. */
     // @req FR-HTTP-013
@@ -387,6 +389,23 @@ public final class DefaultResponse implements Response {
         return this;
     }
 
+    /** Adds a header line after the {@link #header} check, keeping every earlier same-name line. */
+    // @req IR-HTTP-014
+    @Override
+    public synchronized Response append(String name, String value) {
+        requireNew();
+        checkHeader(name, value);
+        headers.add(new SimpleImmutableEntry<>(name, value));
+        return this;
+    }
+
+    /** Stores {@code listener}; this version does not run it. */
+    // @req IR-HTTP-014
+    @Override
+    public synchronized void onAbort(Runnable listener) {
+        abortListeners.add(Objects.requireNonNull(listener, "listener"));
+    }
+
     /** Records only framework CORS grants, which the standard error response must keep. */
     // @req FR-DX-010
     synchronized void corsHeader(String name, String value) {
@@ -420,20 +439,27 @@ public final class DefaultResponse implements Response {
         corsHeaders.add(new SimpleImmutableEntry<>("Vary", value));
     }
 
-    /** Adds a Vary field without replacing existing cache dimensions or Vary: *. */
+    /**
+     * Adds a Vary field without replacing existing cache dimensions or Vary: *; the dimensions of every Vary line,
+     * including lines added by {@link #append}, are merged into one line.
+     */
     // @req FR-DX-010
+    // @req IR-HTTP-014
     synchronized void vary(String field) {
         requireNew();
         checkHeader(field, "");
         String existing = null;
         for (Map.Entry<String, String> header : headers) {
             if (!header.getKey().equalsIgnoreCase("Vary")) continue;
-            existing = header.getValue();
-            for (String token : existing.split(",")) {
+            String line = header.getValue();
+            for (String token : line.split(",")) {
                 if ("*".equals(token.trim()) || field.equalsIgnoreCase(token.trim())) return;
             }
+            if (!line.trim().isEmpty()) {
+                existing = existing == null ? line : existing + ", " + line;
+            }
         }
-        put("Vary", existing == null || existing.isEmpty() ? field : existing + ", " + field);
+        put("Vary", existing == null ? field : existing + ", " + field);
     }
 
     /**
@@ -533,6 +559,14 @@ public final class DefaultResponse implements Response {
             throw new NullPointerException("contentType");
         }
         startBody(in, 0, contentType, -1);
+    }
+
+    /** The {@link #stream} copy with {@code contentLength} as the framing length and the app's Content-Type kept. */
+    // @req IR-HTTP-014
+    @Override
+    public void relay(InputStream in, long contentLength) {
+        Objects.requireNonNull(in, "in");
+        startBody(in, 0, null, contentLength);
     }
 
     /**
