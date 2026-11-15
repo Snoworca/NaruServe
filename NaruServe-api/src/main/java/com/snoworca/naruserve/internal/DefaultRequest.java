@@ -271,6 +271,16 @@ public final class DefaultRequest implements Request {
         return headerEnumeration().raw;
     }
 
+    /**
+     * The one header-name matching rule of {@link #headerNames()}, {@link #header(String)} and {@link #headers(String)}:
+     * the name lowercased with {@link Locale#ROOT}. Unlike {@link String#equalsIgnoreCase}, it matches a name whose
+     * lowercase has another length (U+0130 lowercases to i + U+0307), so every listed name finds its values.
+     */
+    // @req FR-HTTP-032
+    private static String headerKey(String name) {
+        return name.toLowerCase(Locale.ROOT);
+    }
+
     // @req FR-HTTP-032
     private HeaderEnumeration headerEnumeration() {
         HeaderEnumeration h = headerEnumeration;
@@ -297,7 +307,7 @@ public final class DefaultRequest implements Request {
             Set<String> n = new LinkedHashSet<>();
             List<Map.Entry<String, String>> r = new ArrayList<>(headers.size());
             for (Map.Entry<String, String> e : headers) {
-                n.add(e.getKey().toLowerCase(Locale.ROOT));
+                n.add(headerKey(e.getKey()));
                 r.add(new AbstractMap.SimpleImmutableEntry<>(e.getKey(), e.getValue()));
             }
             names = Collections.unmodifiableSet(n);
@@ -567,10 +577,12 @@ public final class DefaultRequest implements Request {
     }
 
     // @req FR-HTTP-011
+    // @req FR-HTTP-032
     @Override
     public @Nullable String header(String name) {
+        String key = headerKey(name);
         for (Map.Entry<String, String> h : ex.headers()) {
-            if (h.getKey().equalsIgnoreCase(name)) {
+            if (headerKey(h.getKey()).equals(key)) {
                 return h.getValue();
             }
         }
@@ -578,11 +590,13 @@ public final class DefaultRequest implements Request {
     }
 
     // @req FR-HTTP-011
+    // @req FR-HTTP-032
     @Override
     public List<String> headers(String name) {
+        String key = headerKey(name);
         List<String> values = null;
         for (Map.Entry<String, String> h : ex.headers()) {
-            if (h.getKey().equalsIgnoreCase(name)) {
+            if (headerKey(h.getKey()).equals(key)) {
                 if (values == null) {
                     values = new ArrayList<>(2);
                 }
