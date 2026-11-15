@@ -3,6 +3,7 @@ package com.snoworca.naruserve.internal;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import com.snoworca.naruserve.BodyTooLargeException;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.UnsupportedMediaTypeException;
 import java.io.IOException;
@@ -51,7 +52,7 @@ public class StandardErrorsTest {
         assertEquals("Error", StandardErrors.reason(599));
     }
 
-    // SDS-AC-10; FR-APP-006 AC-3, FR-APP-006 AC-4
+    // SDS-AC-10; FR-APP-006 AC-3, FR-APP-006 AC-4 (restated with its successor in FR-APP-027 AC-4 below)
     @Test
     public void sdsAc10_FR_APP_006_AC3_AC4_statusAndMessageOfAnError() {
         assertEquals(400, StandardErrors.statusOf(new HttpException(400)));
@@ -63,6 +64,36 @@ public class StandardErrorsTest {
         assertEquals("Unsupported Media Type", StandardErrors.messageOf(new UnsupportedMediaTypeException(), 415));
         assertEquals("Internal Server Error", StandardErrors.messageOf(new HttpException(500, "leak"), 500));
         assertEquals("Internal Server Error", StandardErrors.messageOf(new RuntimeException("secret"), 500));
+    }
+
+    // FR-APP-027 AC-1: an unwrapped BodyTooLargeException maps to 413 and keeps the reason phrase as its message
+    @Test
+    public void FR_APP_027_AC1_statusOfAnUnwrappedBodyTooLargeExceptionIs413WithTheReasonPhrase() {
+        BodyTooLargeException overrun = new BodyTooLargeException(10);
+        assertEquals(413, StandardErrors.statusOf(overrun));
+        assertEquals("Payload Too Large", StandardErrors.messageOf(overrun, 413));
+        assertEquals("PAYLOAD_TOO_LARGE", StandardErrors.code(StandardErrors.statusOf(overrun)));
+    }
+
+    // FR-APP-027 AC-3: only the unwrapped exception is mapped; a wrapper stays an ordinary 500
+    @Test
+    public void FR_APP_027_AC3_statusOfAnExceptionWrappingABodyTooLargeExceptionStays500() {
+        assertEquals(500, StandardErrors.statusOf(new RuntimeException(new BodyTooLargeException(10))));
+        assertEquals(500, StandardErrors.statusOf(new IOException(new BodyTooLargeException(10))));
+        assertEquals("Internal Server Error",
+                StandardErrors.messageOf(new RuntimeException(new BodyTooLargeException(10)), 500));
+    }
+
+    // FR-APP-027 AC-4: FR-APP-006 AC-4 restated with the change, at the statusOf level
+    @Test
+    public void FR_APP_027_AC4_statusOfMapsHttpExceptionsUnsupportedMediaTypeAndTheOverrunAndOthersTo500() {
+        assertEquals(400, StandardErrors.statusOf(new HttpException(400)));
+        assertEquals(422, StandardErrors.statusOf(new HttpException(422, "name required")));
+        assertEquals(413, StandardErrors.statusOf(new HttpException(413)));
+        assertEquals(415, StandardErrors.statusOf(new UnsupportedMediaTypeException()));
+        assertEquals(413, StandardErrors.statusOf(new BodyTooLargeException(10)));
+        assertEquals(500, StandardErrors.statusOf(new IOException("x")));
+        assertEquals(500, StandardErrors.statusOf(new IllegalStateException("x")));
     }
 
     // SDS-AC-13; FR-APP-006 AC-8

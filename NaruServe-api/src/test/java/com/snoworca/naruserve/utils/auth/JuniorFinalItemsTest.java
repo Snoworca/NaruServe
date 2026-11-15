@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.snoworca.naruserve.BodyTooLargeException;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
@@ -69,6 +70,42 @@ public class JuniorFinalItemsTest {
             ClientResponse page = f.get("/page?page=abc");
             assertEquals(page.text(), 400, page.status());
             assertEquals("page must be a 32-bit integer", message(page));
+        }
+    }
+
+    // FR-APP-027 AC-1 AC-3: in PROD auth's last error layer answers an unwrapped overrun 413 PAYLOAD_TOO_LARGE unlogged,
+    // with the same message as HttpException(413) there, and a wrapped one stays a logged 500 INTERNAL_ERROR
+    @Test
+    public void FR_APP_027_AC1_AC3_prodAnswersAnUnwrappedOverrun413AndAWrappedOne500() {
+        for (boolean appended : new boolean[] {false, true}) {
+            W8 f = fixture();
+            f.routes = w -> {
+                w.app.get("/overrun", (req, res) -> {
+                    throw new BodyTooLargeException(10);
+                });
+                w.app.get("/wrapped", (req, res) -> {
+                    throw new RuntimeException(new BodyTooLargeException(10));
+                });
+                w.app.get("/http413", (req, res) -> {
+                    throw new HttpException(413);
+                });
+            };
+            if (appended) {
+                f.errors = null; // no app.onError: auth appends its error layer at start
+            }
+            f.start(b -> b.permit("/overrun").permit("/wrapped").permit("/http413"));
+            int before = f.logger.count("ERROR");
+            ClientResponse overrun = f.get("/overrun");
+            assertEquals(overrun.text(), 413, overrun.status());
+            assertEquals("PAYLOAD_TOO_LARGE", W8.code(overrun));
+            ClientResponse http413 = f.get("/http413");
+            assertEquals(http413.text(), 413, http413.status());
+            assertEquals(message(http413), message(overrun));
+            assertEquals(before, f.logger.count("ERROR"));
+            ClientResponse wrapped = f.get("/wrapped");
+            assertEquals(wrapped.text(), 500, wrapped.status());
+            assertEquals("INTERNAL_ERROR", W8.code(wrapped));
+            assertEquals(before + 1, f.logger.count("ERROR"));
         }
     }
 
