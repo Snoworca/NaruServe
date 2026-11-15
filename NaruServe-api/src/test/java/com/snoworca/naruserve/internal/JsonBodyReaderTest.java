@@ -6,12 +6,14 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.snoworca.naruserve.BodyTooLargeException;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.JsonBodyAcceptanceTest.TextCodec;
 import com.snoworca.naruserve.spi.JsonCodec;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.TestApp;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -81,7 +83,7 @@ public class JsonBodyReaderTest {
         return adapter.send(r.body(body));
     }
 
-    // SDS-AC-11; FR-JSON-001 AC-9
+    // SDS-AC-11; IR-HTTP-011 AC-8
     @Test
     public void sdsAc11_FR_JSON_001_AC9_httpExceptionInTheCauseChainIsRethrownUnchanged() {
         HttpException timeout = new HttpException(408);
@@ -95,7 +97,7 @@ public class JsonBodyReaderTest {
         }
     }
 
-    // SDS-AC-9; FR-JSON-001 AC-9: a codec that swallows the overrun still gives 413
+    // SDS-AC-9; IR-HTTP-011 AC-8: a codec that swallows the overrun still gives 413
     @Test
     public void sdsAc9_FR_JSON_001_AC9_swallowedOverrunGives413() {
         JsonCodec swallowing = new JsonCodec() {
@@ -145,7 +147,7 @@ public class JsonBodyReaderTest {
         assertEquals(400, send(wrapping, 1048576, "application/json", bad, true, out).status());
     }
 
-    // FR-JSON-001 AC-2: an unchecked codec failure without an HttpException cause stays itself (500)
+    // IR-HTTP-011 AC-9: an unchecked codec failure without an HttpException cause stays itself (500)
     @Test
     public void FR_JSON_001_AC2_uncheckedCodecFailureReachesTheErrorPathUnchanged() {
         IllegalArgumentException bug = new IllegalArgumentException("no such constructor");
@@ -156,7 +158,7 @@ public class JsonBodyReaderTest {
         assertEquals(500, r.status());
     }
 
-    // FR-JSON-001 AC-2: a codec IOException becomes 400 with it as the cause
+    // IR-HTTP-011 AC-9: a codec IOException becomes 400 with it as the cause
     @Test
     public void FR_JSON_001_AC2_codecIOExceptionBecomes400WithItAsCause() {
         IOException malformed = new IOException("malformed");
@@ -207,7 +209,7 @@ public class JsonBodyReaderTest {
         }
     }
 
-    // SDS-AC-9; FR-JSON-001 AC-9: the overrun stays readable after a codec wrapped the failure
+    // SDS-AC-9; IR-HTTP-011 AC-8: the overrun stays readable after a codec wrapped the failure
     @Test
     public void sdsAc9_FR_JSON_001_AC9_limitedStreamRecordsTheOverrun() throws IOException {
         LimitedInputStream in = new LimitedInputStream(new ByteArrayInputStream(new byte[20]), 10, -1);
@@ -219,6 +221,7 @@ public class JsonBodyReaderTest {
             }
             fail("expected BodyTooLargeException");
         } catch (BodyTooLargeException expected) {
+            assertSame(BodyTooLargeException.class, expected.getClass());
             assertTrue(in.overrun());
         }
         LimitedInputStream declared = new LimitedInputStream(new ByteArrayInputStream(new byte[20]), 10, 20);
@@ -226,6 +229,7 @@ public class JsonBodyReaderTest {
             declared.read();
             fail("expected BodyTooLargeException");
         } catch (BodyTooLargeException expected) {
+            assertSame(BodyTooLargeException.class, expected.getClass());
             assertTrue(declared.overrun());
         }
         LimitedInputStream within = new LimitedInputStream(new ByteArrayInputStream(new byte[10]), 10, -1);
@@ -233,5 +237,145 @@ public class JsonBodyReaderTest {
             // drain
         }
         assertFalse(within.overrun());
+    }
+
+    /** True when {@code t}'s cause chain holds the public over-limit exception. */
+    private static boolean overrunInChain(Throwable t) {
+        for (int depth = 0; t != null && depth < 64; t = t.getCause(), depth++) {
+            if (t instanceof BodyTooLargeException) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // IR-HTTP-011 AC-8: an overrun wrapped by the codec (checked or unchecked, as Gson does) is 413 with the public
+    // class in the cause chain, and it reaches onError and the access log like any handler exception
+    @Test
+    public void IR_HTTP_011_AC8_wrappedOverrunIs413AndReachesOnErrorAndTheAccessLog() {
+        for (boolean unchecked : new boolean[] {false, true}) {
+            JsonCodec wrapping = new JsonCodec() {
+                @Override
+                public <T> @Nullable T decode(Reader reader, Type type) throws IOException {
+                    try {
+                        TextCodec.readAll(reader);
+                    } catch (IOException e) {
+                        if (unchecked) {
+                            throw new IllegalStateException("syntax", e);
+                        }
+                        throw new IOException("syntax", e);
+                    }
+                    throw new IOException("unexpected end");
+                }
+
+                @Override
+                public void encode(@Nullable Object value, Writer writer) throws IOException {
+                    writer.write("null");
+                }
+            };
+            RecordingLogger log = new RecordingLogger();
+            java.util.List<Throwable> seen = new java.util.ArrayList<>();
+            InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+            TestApp t = TestApp.create(adapter);
+            t.app().logger(log).jsonCodec(wrapping).jsonLimit(10);
+            t.app().post("/b", (req, res) -> res.send(String.valueOf(req.body(String.class))));
+            t.app().onError((error, req, res) -> seen.add(error));
+            t.start();
+            byte[] body = new byte[100];
+            Arrays.fill(body, (byte) '1');
+            ClientResponse r = adapter.send(ClientRequest.of("POST", "/b").header("Content-Type", "application/json")
+                    .body(body));
+            assertEquals(413, r.status());
+            assertEquals(1, seen.size());
+            HttpException e = (HttpException) seen.get(0);
+            assertEquals(413, e.status());
+            assertEquals("PAYLOAD_TOO_LARGE", e.code());
+            assertTrue(String.valueOf(e.getCause()), overrunInChain(e));
+            assertEquals(log.info().toString(), 1, log.info().size());
+            assertTrue(log.info().get(0), log.info().get(0).startsWith("POST /b 413 "));
+        }
+    }
+
+    // IR-HTTP-011 AC-8: a codec that drops the overrun from the cause chain and throws its own failure still gives
+    // 413, because the overrun is read from the limited stream's state
+    @Test
+    public void IR_HTTP_011_AC8_overrunDroppedFromTheCauseChainIsStill413() {
+        for (boolean unchecked : new boolean[] {false, true}) {
+            JsonCodec dropping = new JsonCodec() {
+                @Override
+                public <T> @Nullable T decode(Reader reader, Type type) throws IOException {
+                    try {
+                        TextCodec.readAll(reader);
+                    } catch (IOException ignored) {
+                        // the overrun is dropped; the codec reports its own failure without a cause
+                    }
+                    if (unchecked) {
+                        throw new IllegalStateException("unexpected end");
+                    }
+                    throw new IOException("unexpected end");
+                }
+
+                @Override
+                public void encode(@Nullable Object value, Writer writer) throws IOException {
+                    writer.write("null");
+                }
+            };
+            RecordingLogger log = new RecordingLogger();
+            java.util.List<Throwable> seen = new java.util.ArrayList<>();
+            InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+            TestApp t = TestApp.create(adapter);
+            t.app().logger(log).jsonCodec(dropping).jsonLimit(10);
+            t.app().post("/b", (req, res) -> res.send(String.valueOf(req.body(String.class))));
+            t.app().onError((error, req, res) -> seen.add(error));
+            t.start();
+            byte[] body = new byte[100];
+            Arrays.fill(body, (byte) '1');
+            ClientResponse r = adapter.send(ClientRequest.of("POST", "/b").header("Content-Type", "application/json")
+                    .body(body));
+            assertEquals(413, r.status());
+            assertEquals(1, seen.size());
+            HttpException e = (HttpException) seen.get(0);
+            assertEquals(413, e.status());
+            assertEquals("PAYLOAD_TOO_LARGE", e.code());
+            assertEquals(log.info().toString(), 1, log.info().size());
+            assertTrue(log.info().get(0), log.info().get(0).startsWith("POST /b 413 "));
+        }
+    }
+
+    // IR-HTTP-011 AC-8: an HttpException in the cause chain (the adapter 408) is the instance onError sees and the
+    // access log records with its own status
+    @Test
+    public void IR_HTTP_011_AC8_causeChainHttpExceptionReachesOnErrorAndTheAccessLog() {
+        HttpException timeout = new HttpException(408);
+        RecordingLogger log = new RecordingLogger();
+        java.util.List<Throwable> seen = new java.util.ArrayList<>();
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        TestApp t = TestApp.create(adapter);
+        t.app().logger(log).jsonCodec(new FailingCodec(new IOException("read failed", timeout)));
+        t.app().post("/b", (req, res) -> res.send(String.valueOf(req.body(String.class))));
+        t.app().onError((error, req, res) -> seen.add(error));
+        t.start();
+        ClientResponse r = adapter.send(ClientRequest.of("POST", "/b").header("Content-Type", "application/json")
+                .header("Content-Length", "2").body("{}".getBytes(StandardCharsets.UTF_8)));
+        assertEquals(408, r.status());
+        assertEquals(1, seen.size());
+        assertSame(timeout, seen.get(0));
+        assertEquals(log.info().toString(), 1, log.info().size());
+        assertTrue(log.info().get(0), log.info().get(0).startsWith("POST /b 408 "));
+    }
+
+    // IR-HTTP-011 AC-9: a codec IOException that is not an overrun is 400 BAD_REQUEST with it as cause, and does not
+    // carry the over-limit class
+    @Test
+    public void IR_HTTP_011_AC9_nonOverrunCodecIOExceptionIs400BadRequest() {
+        IOException malformed = new IOException("malformed");
+        Outcome out = new Outcome();
+        ClientResponse r = send(new FailingCodec(malformed), 10, "application/json",
+                "{}".getBytes(StandardCharsets.UTF_8), false, out);
+        assertEquals(400, r.status());
+        HttpException e = (HttpException) out.thrown.get();
+        assertEquals("BAD_REQUEST", e.code());
+        assertSame(malformed, e.getCause());
+        assertFalse(overrunInChain(e));
     }
 }
