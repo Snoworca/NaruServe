@@ -205,4 +205,38 @@ public class RequestRawHeadersTest {
         assertEquals(Arrays.asList(Arrays.asList("a"), Arrays.asList("b")), s.headersPerName);
         assertEquals(Arrays.asList("a", "b"), single);
     }
+
+    // FR-HTTP-032 AC-6: names X-<U+03A3> and x-<U+03C3> match case-insensitively although Locale.ROOT lowercases the
+    // word-final capital sigma to U+03C2, so headerNames() lists one name and headers(thatName) keeps both values
+    @Test
+    public void FR_HTTP_032_AC6_namesThatMatchCaseInsensitivelyButLowercaseDifferentlyAreOneName() {
+        Seen s = capture("X-\u03a3", "1", "x-\u03c3", "2");
+        assertEquals(1, s.names.size());
+        String name = s.names.iterator().next();
+        List<String> fromRaw = new ArrayList<>();
+        for (Map.Entry<String, String> e : s.raw) {
+            if (e.getKey().equalsIgnoreCase(name)) {
+                fromRaw.add(e.getValue());
+            }
+        }
+        assertEquals(Arrays.asList("1", "2"), fromRaw);
+        assertEquals(Arrays.asList(Arrays.asList("1", "2")), s.headersPerName);
+    }
+
+    // FR-HTTP-011 AC-1: header()/headers() match names case-insensitively, so a header sent as X-<U+03A3> is
+    // found through x-<U+03C3> and X-<U+03C3> even though their Locale.ROOT lowercases differ
+    @Test
+    public void FR_HTTP_011_AC1_headerAndHeadersMatchASigmaNameCaseInsensitively() {
+        TestApp t = TestApp.create();
+        AtomicReference<String> single = new AtomicReference<>();
+        AtomicReference<List<String>> all = new AtomicReference<>();
+        t.app().get("/h", (req, res) -> {
+            single.set(req.header("x-\u03c3"));
+            all.set(req.headers("X-\u03c3"));
+            res.send("ok");
+        });
+        assertEquals(200, t.send("GET", "/h", "X-\u03a3", "1").status());
+        assertEquals("1", single.get());
+        assertEquals(Arrays.asList("1"), all.get());
+    }
 }
