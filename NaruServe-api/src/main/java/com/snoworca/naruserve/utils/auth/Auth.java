@@ -2643,6 +2643,7 @@ public final class Auth implements Middleware, com.snoworca.naruserve.Installabl
 
     /** The error middleware of the auth routers (R30): every failure becomes a JSON error without exception text. */
     // @req FR-AUTH-006
+    // @req FR-APP-027
     private void routerError(Throwable err, Request req, Response res, Next next) {
         if (err instanceof AuthUnavailableException
                 && AuthErrorCode.SECURITY_WRITE_CONFLICT.getCode().equals(((AuthUnavailableException) err).getCode())) {
@@ -2657,6 +2658,10 @@ public final class Auth implements Middleware, com.snoworca.naruserve.Installabl
         } else if (err instanceof HttpException) {
             int status = ((HttpException) err).status();
             respond(req, res, status, coreCode(status), null, null);
+        } else if (err instanceof BodyTooLargeException) {
+            // FR-APP-027: an unwrapped overrun is 413. BodyTooLargeException is an IOException, so this branch must
+            // stay before isStoreFailure, which would otherwise answer it 503 as a store failure.
+            respond(req, res, 413, coreCode(413), null, null);
         } else if (isStoreFailure(err)) {
             logger.error("auth: a store failed in " + req.method() + " " + req.path() + "; answering 503", err);
             respond(req, res, 503, AuthUnavailableException.SERVICE_UNAVAILABLE, null, null);

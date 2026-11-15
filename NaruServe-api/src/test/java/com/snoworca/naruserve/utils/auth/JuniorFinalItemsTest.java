@@ -109,6 +109,47 @@ public class JuniorFinalItemsTest {
         }
     }
 
+    // FR-APP-027 AC-1 AC-3: on an auth.routes() handler an unwrapped overrun is 413 PAYLOAD_TOO_LARGE unlogged, as on an
+    // app route and as HttpException(413) on the auth router, not a 503 store failure; a plain IOException there stays the
+    // logged 503 store failure and a wrapped overrun stays a logged 500 INTERNAL_ERROR
+    @Test
+    public void FR_APP_027_AC1_AC3_authRouterAnswersAnUnwrappedOverrun413() {
+        W8 f = fixture();
+        f.routes = w -> {
+            w.auth.routes().get("/ops/overrun", (req, res) -> {
+                throw new BodyTooLargeException(10);
+            });
+            w.auth.routes().get("/ops/http413", (req, res) -> {
+                throw new HttpException(413);
+            });
+            w.auth.routes().get("/ops/io", (req, res) -> {
+                throw new java.io.IOException("disk gone");
+            });
+            w.auth.routes().get("/ops/wrapped", (req, res) -> {
+                throw new RuntimeException(new BodyTooLargeException(10));
+            });
+        };
+        f.start(b -> b.permitPrefix("/auth/ops"));
+        int before = f.logger.count("ERROR");
+        ClientResponse overrun = f.get("/auth/ops/overrun");
+        assertEquals(overrun.text(), 413, overrun.status());
+        assertEquals("PAYLOAD_TOO_LARGE", W8.code(overrun));
+        ClientResponse http413 = f.get("/auth/ops/http413");
+        assertEquals(http413.text(), 413, http413.status());
+        assertEquals(message(http413), message(overrun));
+        assertEquals(f.logger.lines.toString(), before, f.logger.count("ERROR"));
+        ClientResponse io = f.get("/auth/ops/io");
+        assertEquals(io.text(), 503, io.status());
+        assertEquals("SERVICE_UNAVAILABLE", W8.code(io));
+        assertTrue(f.logger.lines.toString(), f.logger.lines.toString().contains("auth: a store failed in GET /ops/io"));
+        int afterIo = f.logger.count("ERROR");
+        ClientResponse wrapped = f.get("/auth/ops/wrapped");
+        assertEquals(wrapped.text(), 500, wrapped.status());
+        assertEquals("INTERNAL_ERROR", W8.code(wrapped));
+        assertTrue(f.logger.lines.toString(), f.logger.count("ERROR") > afterIo);
+        assertFalse(f.logger.lines.toString(), f.logger.lines.toString().contains("a store failed in GET /ops/wrapped"));
+    }
+
     // OPS-AUTH-033 AC-1: DEV keeps Core's page, whose stack trace helps while developing
     @Test
     public void OPS_AUTH_033_AC1_devKeepsCorePage() {
