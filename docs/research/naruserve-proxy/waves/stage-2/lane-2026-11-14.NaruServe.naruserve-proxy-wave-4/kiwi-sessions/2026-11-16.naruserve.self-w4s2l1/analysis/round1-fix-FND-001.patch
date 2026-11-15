@@ -1,0 +1,75 @@
+diff --git a/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java b/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java
+index a71e5e2..1d44bc5 100644
+--- a/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java
++++ b/NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java
+@@ -283,6 +283,9 @@ public final class Dispatcher implements ExchangeHandler {
+         res.applyDefaultCache(statics.defaultCache());
+         res.sseRegistry(sse);
+         res.listenerLogger(errors.logger); // FR-HTTP-035 AC-4: no HttpExecution hands it over on this path
++        // FR-HTTP-035 AC-7: as HttpExecution.cancel, an adapter-reported disconnect aborts the response (a no-op
++        // once it completed), registered before middleware runs so res.onAbort listeners see it on this path too.
++        ex.onAbort(() -> res.abort(null));
+         // The request ends once the response finished (complete or abort) and the handler chain returned, so a
+         // handler may still save() an upload after res.send(); whichever comes last releases the uploads.
+         AtomicInteger untilEnd = new AtomicInteger(2);
+diff --git a/NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java b/NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java
+index d00671a..1b56aba 100644
+--- a/NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java
++++ b/NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java
+@@ -25,6 +25,8 @@ import java.io.File;
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.io.OutputStream;
++import java.lang.reflect.InvocationTargetException;
++import java.lang.reflect.Proxy;
+ import java.nio.charset.StandardCharsets;
+ import java.util.List;
+ import java.util.Map;
+@@ -608,6 +610,47 @@ public class ResponseOnAbortTest {
+         assertEquals(1, runs.get());
+     }
+ 
++    // FR-HTTP-035 AC-7: on the legacy dispatch path (a WebSocket-upgrade request) an abort the exchange reports
++    // through HttpExchange.onAbort, while middleware runs, runs each res.onAbort listener once and stops the upgrade
++    @Test
++    public void FR_HTTP_035_AC7_legacyUpgradePathExchangeReportedAbortRunsEachListenerOnce() {
++        RecordingExchange rec = new RecordingExchange("GET", "/ws", "Connection", "Upgrade", "Upgrade", "websocket");
++        AtomicInteger upgrades = new AtomicInteger();
++        rec.webSocketScript = (settings, endpoint) -> upgrades.incrementAndGet();
++        AbortListeners aborts = new AbortListeners();
++        HttpExchange ex = (HttpExchange) Proxy.newProxyInstance(HttpExchange.class.getClassLoader(),
++                new Class<?>[] {HttpExchange.class}, (proxy, m, args) -> {
++                    if (m.getName().equals("onAbort")) {
++                        aborts.onAbort((Runnable) args[0]);
++                        return null;
++                    }
++                    try {
++                        return m.invoke(rec, args);
++                    } catch (InvocationTargetException e) {
++                        throw e.getCause();
++                    }
++                });
++        DefaultRestApp app = new DefaultRestApp();
++        AtomicInteger first = new AtomicInteger();
++        AtomicInteger second = new AtomicInteger();
++        AtomicReference<Response> captured = new AtomicReference<>();
++        app.use((req, res, next) -> {
++            captured.set(res);
++            res.onAbort(first::incrementAndGet);
++            res.onAbort(second::incrementAndGet);
++            aborts.abort(); // the adapter reports the client disconnect before the 101
++            aborts.abort();
++            next.run();
++        });
++        app.ws("/ws", (req, ws) -> { });
++        app.freeze();
++        app.dispatcher().handle(ex);
++        assertEquals(1, first.get());
++        assertEquals(1, second.get());
++        assertEquals(ResponseState.ABORTED, stateOf(captured.get()));
++        assertEquals(0, upgrades.get());
++    }
++
+     /** The javadoc block directly above {@code default void onAbort(Runnable listener)}, as one line of prose. */
+     private static String onAbortJavadoc() throws IOException {
+         File source = new File(System.getProperty("user.dir"), "src/main/java/com/snoworca/naruserve/Response.java");

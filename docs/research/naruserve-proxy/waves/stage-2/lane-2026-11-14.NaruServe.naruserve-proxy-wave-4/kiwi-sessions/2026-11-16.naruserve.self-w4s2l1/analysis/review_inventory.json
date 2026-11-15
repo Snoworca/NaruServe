@@ -1,0 +1,304 @@
+{
+  "findings": [
+    {
+      "id": "FND-001",
+      "axis": "P1",
+      "verdict": "keep",
+      "evidence": {
+        "command": "cd /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-4 && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.ProofLegacyOnAbortTest",
+        "output": "ProofLegacyOnAbortTest > legacyUpgradePath_exchangeReportedAbortRunsTheListenerOnce FAILED\n    java.lang.AssertionError: AC-7: an abort the exchange reports through HttpExchange.onAbort runs each res.onAbort listener once expected:<1> but was:<0>\ncontrol_commonHttpPath_exchangeReportedAbortRunsTheListenerOnce PASSED\n2 tests completed, 1 failed",
+        "intent_output": "FR-HTTP-035 AC-7: an abort that an exchange reports through HttpExchange.onAbort (IR-HTTP-009) runs each res.onAbort listener once. The control (common HTTP path, HttpExecution) gives 1; the legacy dispatch path (WebSocket-upgrade request) gives 0.",
+        "proof_test_source": "package com.snoworca.naruserve;\n\nimport static org.junit.Assert.assertEquals;\n\nimport com.snoworca.naruserve.common.AbortListeners;\nimport com.snoworca.naruserve.internal.DefaultRestApp;\nimport com.snoworca.naruserve.spi.HttpExchange;\nimport com.snoworca.naruserve.testing.RecordingExchange;\nimport java.lang.reflect.InvocationTargetException;\nimport java.lang.reflect.Proxy;\nimport java.util.concurrent.atomic.AtomicInteger;\nimport java.util.concurrent.atomic.AtomicReference;\nimport org.junit.Test;\n\n/** Temporary proof: FR-HTTP-035 AC-7 on the legacy (WebSocket-upgrade) dispatch path. */\npublic class ProofLegacyOnAbortTest {\n\n    /** A RecordingExchange that reports aborts through the SPI onAbort, like a real adapter. */\n    private static HttpExchange reporting(RecordingExchange rec, AbortListeners aborts) {\n        return (HttpExchange) Proxy.newProxyInstance(HttpExchange.class.getClassLoader(),\n                new Class<?>[] {HttpExchange.class}, (p, m, a) -> {\n                    if (m.getName().equals(\"onAbort\")) {\n                        aborts.onAbort((Runnable) a[0]);\n                        return null;\n                    }\n                    try {\n                        return m.invoke(rec, a);\n                    } catch (InvocationTargetException e) {\n                        throw e.getCause();\n                    }\n                });\n    }\n\n    private static int run(boolean webSocket) {\n        DefaultRestApp app = new DefaultRestApp();\n        AtomicInteger runs = new AtomicInteger();\n        AbortListeners aborts = new AbortListeners();\n        app.use((req, res, next) -> {\n            res.onAbort(runs::incrementAndGet);\n            aborts.abort(); // the adapter reports the client disconnect through HttpExchange.onAbort\n            next.run();\n        });\n        app.get(\"/h\", (req, res) -> res.send(\"ok\"));\n        app.ws(\"/ws\", (req, ws) -> { });\n        app.freeze();\n        RecordingExchange rec = webSocket\n                ? new RecordingExchange(\"GET\", \"/ws\", \"Connection\", \"Upgrade\", \"Upgrade\", \"websocket\")\n                : new RecordingExchange(\"GET\", \"/h\");\n        rec.webSocketScript = (settings, endpoint) -> { };\n        app.dispatcher().handle(reporting(rec, aborts));\n        return runs.get();\n    }\n\n    @Test\n    public void control_commonHttpPath_exchangeReportedAbortRunsTheListenerOnce() {\n        assertEquals(1, run(false));\n    }\n\n    @Test\n    public void legacyUpgradePath_exchangeReportedAbortRunsTheListenerOnce() {\n        assertEquals(\"AC-7: an abort the exchange reports through HttpExchange.onAbort runs each res.onAbort\"\n                + \" listener once\", 1, run(true));\n    }\n}\n"
+      },
+      "drop_reason": "",
+      "title": "Legacy dispatch path never forwards HttpExchange.onAbort to res.abort, so res.onAbort listeners miss adapter-reported disconnects there",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "line_range": "257-341 (hunk +285)"
+      },
+      "description": "Only HttpExecution.start registers exchange.onAbort(this::cancel), which calls response.abort(null). Dispatcher.handleLegacy, which builds its own DefaultResponse and runs the middleware pipeline for WebSocket-upgrade requests (and upgrade requests whose legacy lookup throws), registers nothing on the exchange. The diff covers this path for AC-4 (res.listenerLogger at line 285) but not for AC-7. A middleware that calls res.onAbort on an upgrade request never sees a disconnect that the adapter reports before the 101: the response proceeds to upgraded() and ends COMPLETED with the listener never run. The proof test shows 1 run on the common path and 0 runs on the legacy path for the same scenario.",
+      "suggested_fix": "In Dispatcher.handleLegacy, right after the DefaultResponse is configured, register `ex.onAbort(() -> res.abort(null));`. abort is a no-op once COMPLETED, so an abort reported after a successful 101 stays harmless. Add a regression test with an exchange that overrides onAbort, run on a ws route with an app.use middleware.",
+      "is_behavioral": true,
+      "tags": [
+        "FR-HTTP-035",
+        "AC-7",
+        "IR-HTTP-009",
+        "legacy-path",
+        "websocket-upgrade"
+      ]
+    },
+    {
+      "id": "FND-002",
+      "axis": "P2",
+      "verdict": "drop",
+      "evidence": {
+        "command": "static reading of DefaultResponse.runTransfer/deliver/sseEnded",
+        "output": "ex.finish() returns, then state STREAMING/COMMITTED -> COMPLETED under the lock; an abort in between sets ABORTED and runs the listeners",
+        "intent_output": "",
+        "proof_test_source": ""
+      },
+      "drop_reason": "Intended and documented: Response.onAbort javadoc states that an abort racing the end of a transfer, after the last byte but before completion was recorded, still ends the response aborted and runs the listener. AC-2 covers a response that completed; this window is before completion is recorded.",
+      "title": "An abort racing ex.finish() runs the listener on a response whose bytes all went out",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "line_range": "750-758, 1028-1050"
+      },
+      "description": "Between ex.finish() returning and the COMPLETED transition, a concurrent res.abort or an adapter-reported abort turns the response ABORTED and runs onAbort listeners.",
+      "suggested_fix": "None required; the behavior is the documented contract.",
+      "is_behavioral": true,
+      "tags": [
+        "FR-HTTP-035",
+        "AC-2",
+        "race"
+      ]
+    },
+    {
+      "id": "FND-003",
+      "axis": "P7",
+      "verdict": "drop",
+      "evidence": {
+        "command": "reading ResponseOnAbortTest.FR_HTTP_035_AC7_exchangeKeepingTheSpiDefaultReportsNoDisconnectButResAbortStillRuns",
+        "output": "SilentExchange.clientClosed only sets a flag that the request body checks; the handler never reads the body",
+        "intent_output": "",
+        "proof_test_source": ""
+      },
+      "drop_reason": "The test does what AC-7 says: an exchange that keeps the SPI default onAbort, the client side closed, no listener run, and res.abort still runs it. That the core makes no I/O that could notice the close is a test-strength remark, not a defect.",
+      "title": "AC-7 'no detection of its own' test closes a client side that nothing reads",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+        "line_range": "583-607"
+      },
+      "description": "The negative half of AC-7 would also pass if the core polled the socket, because the fake exchange only flips a flag.",
+      "suggested_fix": "Optional: have the handler read req.body() after clientClosed to show that the core reports the IOException through the error path and not as an onAbort run.",
+      "is_behavioral": false,
+      "tags": [
+        "FR-HTTP-035",
+        "AC-7",
+        "test-strength"
+      ]
+    },
+    {
+      "id": "FND-004",
+      "axis": "P4",
+      "verdict": "drop",
+      "evidence": {
+        "command": "reading DefaultResponse.onAbort",
+        "output": "listenerLogger().error(\"onAbort listener failed\", failure)",
+        "intent_output": "",
+        "proof_test_source": ""
+      },
+      "drop_reason": "Log message content. AC-4 only requires that the exception be logged through the app logger, and the test shows it is.",
+      "title": "onAbort listener failure log line has no request id",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "line_range": "428-446"
+      },
+      "description": "ErrorPath logs 'request <id> failed'; the onAbort failure line has no correlation id, so a busy log is harder to read.",
+      "suggested_fix": "Optional: include the request id when one is set.",
+      "is_behavioral": false,
+      "tags": [
+        "logging"
+      ]
+    },
+    {
+      "id": "FND-005",
+      "axis": "P5",
+      "verdict": "drop",
+      "evidence": {
+        "command": "reading Response.relay default",
+        "output": "in.close() runs before the UnsupportedOperationException; a null in throws NullPointerException, and a RuntimeException from close propagates instead of the UOE",
+        "intent_output": "",
+        "proof_test_source": ""
+      },
+      "drop_reason": "The package is @NullMarked, so a null in breaks the contract and an NPE is the expected answer. A close() that throws RuntimeException is a broken stream. AC-2's 'throws UnsupportedOperationException' holds for every legal argument.",
+      "title": "Default relay throws NPE/close failure instead of UOE for illegal or broken inputs",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+        "line_range": "126-134"
+      },
+      "description": "The default relay does not guarantee a UOE for a null or broken InputStream.",
+      "suggested_fix": "None required.",
+      "is_behavioral": true,
+      "tags": [
+        "IR-HTTP-014",
+        "AC-2"
+      ]
+    },
+    {
+      "id": "FND-006",
+      "axis": "P4",
+      "verdict": "drop",
+      "evidence": {
+        "command": "reading DefaultResponse.onAbort wrapper",
+        "output": "catch (Throwable failure) { listenerLogger().error(...) }",
+        "intent_output": "",
+        "proof_test_source": ""
+      },
+      "drop_reason": "SafeCallbacks already swallowed an Error before this change (the implementation notes rely on it), so logging an Error as well is strictly more information. No behavior AC is broken.",
+      "title": "Listener wrapper logs and swallows java.lang.Error, not only RuntimeException",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "line_range": "431-437"
+      },
+      "description": "The javadoc names RuntimeException, but the wrapper catches Throwable, so an OutOfMemoryError or StackOverflowError from a listener is logged and swallowed on the aborting thread.",
+      "suggested_fix": "Optional: catch RuntimeException for logging and let SafeCallbacks handle an Error, or document that every Throwable is logged.",
+      "is_behavioral": true,
+      "tags": [
+        "FR-HTTP-035",
+        "AC-4"
+      ]
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-001",
+      "principle": "KISS / avoid needless synchronization",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "line_range": "120-133"
+      },
+      "description": "listenerLogger lazily creates and stores a fallback SafeLogger under the response monitor, which a listener running on the aborting thread then has to take. A final default (or a volatile field set at construction) would remove the getter, the lock and the mutation."
+    },
+    {
+      "id": "CC-002",
+      "principle": "DRY / single place of response wiring",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "line_range": "226-228, 279-285; HttpExecution.java:27"
+      },
+      "description": "The two DefaultResponse construction sites repeat the same setter sequence (mimeTypes, resolverTap, request, applyDefaultCache, sseRegistry). The new listenerLogger call lands in HttpExecution's constructor for one site and inline in handleLegacy for the other. A shared configure step would have kept both paths aligned, and FND-001 is the kind of gap that divergence causes."
+    },
+    {
+      "id": "CC-003",
+      "principle": "DRY",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "line_range": "816-842, 935-946"
+      },
+      "description": "abort() and upgraded() each hand-code 'enter ABORTED, ex.abort(), abortListeners.abort() in finally'. A private helper for the abort tail would keep the listener firing rule in one place."
+    },
+    {
+      "id": "CC-004",
+      "principle": "DRY / test fixture reuse",
+      "location": {
+        "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+        "line_range": "62-176"
+      },
+      "description": "SilentExchange is about 100 lines of hand delegation to RecordingExchange, kept private to one test. A testFixtures delegating exchange, or a java.lang.reflect.Proxy over HttpExchange, would serve the next test that needs an SPI onAbort-reporting exchange."
+    },
+    {
+      "id": "CC-005",
+      "principle": "SRP / class size",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "line_range": "1-1140"
+      },
+      "description": "DefaultResponse is now 1140 lines and mixes header policy, body framing, transfer copy, SSE, WebSocket upgrade end-state and now abort-listener bookkeeping with logger fallback."
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+      "hunks_total": 4,
+      "anchors": [
+        "import java.io.IOException;",
+        "// @req IR-HTTP-014",
+        "default Response append(String name, String value) {",
+        "default void relay(InputStream in, long contentLength) {"
+      ],
+      "findings": [
+        "FND-005"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+      "hunks_total": 16,
+      "anchors": [
+        "import com.snoworca.naruserve.common.SafeCallbacks;",
+        "// @req IR-HTTP-014",
+        "private final AbortListeners abortListeners = new AbortListeners();",
+        "synchronized void listenerLogger(SafeLogger logger) {",
+        "public synchronized Response append(String name, String value) {",
+        "/** Adds a Vary field without replacing existing cache dimensions or Vary: *. */",
+        "    // @req IR-HTTP-014",
+        "existing = header.getValue();",
+        "if (!line.trim().isEmpty()) {",
+        "put(\"Vary\", existing == null ? field : existing + \", \" + field);",
+        "public void relay(InputStream in, long contentLength) {",
+        "* The onAbort listeners run once here, on the aborting thread, after the exchange abort and, unless a running",
+        "    // @req FR-HTTP-035",
+        "abortListeners.abort(); // on this thread, also when the cleanup threw; no listener stops the rest",
+        "* because the connection is already gone aborts instead. No-op when the response already left NEW.",
+        "                abortListeners.abort();"
+      ],
+      "findings": [
+        "FND-002",
+        "FND-004",
+        "FND-006"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "hunks_total": 1,
+      "anchors": [
+        "res.listenerLogger(errors.logger); // FR-HTTP-035 AC-4: no HttpExecution hands it over on this path"
+      ],
+      "findings": [
+        "FND-001"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+      "hunks_total": 1,
+      "anchors": [
+        "response.listenerLogger(errors.logger); // FR-HTTP-035 AC-4: a failing onAbort listener logs to the app"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+      "hunks_total": 3,
+      "anchors": [
+        "// cache, file and download",
+        "\"append(String,String)->Response\", \"onAbort(Runnable)->void\", \"relay(InputStream,long)->void\"),",
+        "private static List<java.lang.reflect.Method> responseAMethods() throws NoSuchMethodException {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "public class ResponseOnAbortTest {"
+      ],
+      "findings": [
+        "FND-003"
+      ]
+    },
+    {
+      "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+      "hunks_total": 4,
+      "anchors": [
+        "import java.io.IOException",
+        "import java.util.concurrent.atomic.AtomicBoolean",
+        "import org.junit.Assert.assertFalse",
+        "res.onAbort { aborted.set(true) }"
+      ],
+      "findings": []
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "by_verdict": {
+      "keep": 1,
+      "drop": 5
+    },
+    "by_axis": {
+      "P1": 1,
+      "P2": 1,
+      "P7": 1,
+      "P4": 2,
+      "P5": 1
+    }
+  }
+}

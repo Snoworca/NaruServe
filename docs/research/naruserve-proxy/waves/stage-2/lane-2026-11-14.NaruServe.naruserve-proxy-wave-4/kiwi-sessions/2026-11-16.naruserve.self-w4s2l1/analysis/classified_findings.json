@@ -1,0 +1,76 @@
+{
+  "immediate_fix": [
+    {
+      "id": "FND-001",
+      "rationale": "Kept and blocking. It violates FR-HTTP-035 AC-7 ('an abort that an exchange reports through HttpExchange.onAbort runs each res.onAbort listener once') on a real call path. Dispatcher.handle sends every WebSocket-upgrade request that matches a ws route (and any upgrade whose lookup throws IllegalArgumentException) to handleLegacy. handleLegacy builds its own DefaultResponse and runs the app.use pipeline, but it never registers ex.onAbort. Only HttpExecution.start does that (exchange.onAbort(this::cancel)). The production adapters TinyHttpdExchange and ServletExchange both override onAbort, so a disconnect they report before the 101 is lost for res.onAbort listeners a middleware registered on that request. The proof test shows 1 run on the common path and 0 on the legacy path. Fix: after the DefaultResponse setup in handleLegacy, register ex.onAbort(() -> res.abort(null)). abort is a no-op once COMPLETED or ABORTED, so a report after a successful 101 stays harmless. Add a regression test (a ws route plus an app.use middleware with an exchange that reports onAbort) that cites FR-HTTP-035 AC-7.",
+      "estimated_complexity": "small",
+      "is_behavioral": true,
+      "tags": ["FR-HTTP-035", "AC-7", "IR-HTTP-009", "legacy-path", "websocket-upgrade"]
+    }
+  ],
+  "declared_limit": [],
+  "kept_tiers": [
+    {
+      "id": "FND-001",
+      "tier": "block",
+      "family": "abort-propagation-dispatch-path-parity",
+      "introduced_by_round": null,
+      "family_action": null
+    }
+  ],
+  "discussion_needed": [],
+  "rejected": [
+    {
+      "id": "FND-002",
+      "rationale": "Re-checked. The Response.onAbort javadoc (Response.java:90) documents this outcome: an abort that races the end of a transfer, after the last byte but before completion was recorded, ends ABORTED and runs the listener. AC-2 covers responses that completed, and this window comes before completion is recorded.",
+      "rejection_category": "already_intended"
+    },
+    {
+      "id": "FND-003",
+      "rationale": "The test does what AC-7's negative half says: an exchange that keeps the SPI default onAbort, the client side closed, no listener run, and res.abort still runs it. The reviewer's point is about test strength, and no defect is shown.",
+      "rejection_category": "dropped"
+    },
+    {
+      "id": "FND-004",
+      "rationale": "This is about log message content. AC-4 requires only that the exception go through the app logger, and the test shows it does. Adding a correlation id is outside the ACs.",
+      "rejection_category": "out_of_scope"
+    },
+    {
+      "id": "FND-005",
+      "rationale": "Re-checked. The package is @NullMarked (package-info.java), so a null `in` breaks the contract and an NPE is the expected answer. A close() that throws RuntimeException is a broken stream. IR-HTTP-014 AC-2's UnsupportedOperationException holds for every legal argument, and IOException from close is ignored as designed.",
+      "rejection_category": "dropped"
+    },
+    {
+      "id": "FND-006",
+      "rationale": "Catching Throwable in the listener wrapper is broader than the RuntimeException that the implementation note names. Before this change SafeCallbacks already swallowed an Error from a listener, so logging it as well adds information and changes no observable outcome. No AC is violated.",
+      "rejection_category": "dropped"
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-001",
+      "decision": "dismissed",
+      "reason": "Conflicts with the existing convention. The lazy console fallback under the response monitor mirrors the sseRegistry fallback in the same class (DefaultResponse:165-168), and FR-HTTP-035's implementation note prescribes it. Allocating eagerly would create a ConsoleLogger per response on every request. The lock is taken only on the rare listener-failure path and is not held while a listener runs."
+    },
+    {
+      "id": "CC-002",
+      "decision": "dismissed",
+      "reason": "Refactors the shared DefaultResponse setup across handleHttp, handleLegacy and HttpExecution, which goes beyond this change. The concrete gap it points at (FND-001) is fixed directly as an immediate_fix."
+    },
+    {
+      "id": "CC-003",
+      "decision": "dismissed",
+      "reason": "The two tails are not the same. abort() wraps the SSE end, ex.abort and a conditional closeInput in its try, while upgraded() wraps only ex.abort after a state flip under the lock. A shared helper would cover about two lines and would risk changing cleanup ordering on the abort path."
+    },
+    {
+      "id": "CC-004",
+      "decision": "dismissed",
+      "reason": "This is speculative reuse. Moving SilentExchange into a testFixtures source set is a cross-module build restructuring. Replacing it with a reflection Proxy gives up the compile-time checking of the explicit delegation. The fixture stays usable in place for the FND-001 regression test."
+    },
+    {
+      "id": "CC-005",
+      "decision": "dismissed",
+      "reason": "Splitting the 1140-line DefaultResponse is a large restructuring that is disproportionate to this change. It has no specific location in this diff."
+    }
+  ]
+}

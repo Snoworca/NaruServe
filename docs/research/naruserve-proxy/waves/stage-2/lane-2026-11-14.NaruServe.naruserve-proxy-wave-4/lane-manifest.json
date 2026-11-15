@@ -1,0 +1,183 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-4",
+ "wave": "wave-4",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-4",
+ "base_sha": "730b55b39b397ba8ad9a44a65342e37e1365b35e",
+ "head_sha": "1b6fb4147b4b5bb576987be828f3fe17d5741264",
+ "commits": [
+  {
+   "sha": "412faf81a68931ca4ce9215b6ba98f8cc4023703",
+   "subject": "test(http): pin append, onAbort and relay on the Response surface",
+   "req": "IR-HTTP-014",
+   "kind": "test"
+  },
+  {
+   "sha": "42137e6a3bcce5702aa30452b53eea36e24008d0",
+   "subject": "feat(http): add append, onAbort and relay to Response",
+   "req": "IR-HTTP-014",
+   "kind": "implementation"
+  },
+  {
+   "sha": "a01ec94bfc1a86c5e7bb5046138ed8f2b97022d2",
+   "subject": "test(http): pin res.onAbort listener behaviour",
+   "req": "FR-HTTP-035",
+   "kind": "test"
+  },
+  {
+   "sha": "d2049d70ea4fadd4820116b8fd45bac174e461e3",
+   "subject": "feat(http): run res.onAbort listeners when a response aborts",
+   "req": "FR-HTTP-035",
+   "kind": "implementation"
+  },
+  {
+   "sha": "83e58c273a1692eca84e39a4a961a950799bfcfe",
+   "subject": "test(http): pin res.onAbort on the legacy WebSocket-upgrade path",
+   "req": "FR-HTTP-035",
+   "kind": "test"
+  },
+  {
+   "sha": "184e89c269f8f9f1b9e90ed03a906ff52000eb02",
+   "subject": "fix(http): abort the legacy-path response on adapter aborts before the upgrade",
+   "req": "FR-HTTP-035",
+   "kind": "implementation"
+  },
+  {
+   "sha": "d8b1c3802303351ebbd7d4cf8c15a7b2153ef3d1",
+   "subject": "test(http): pin exchange aborts reported before the WebSocket onOpen",
+   "req": "FR-HTTP-035",
+   "kind": "review"
+  },
+  {
+   "sha": "1b6fb4147b4b5bb576987be828f3fe17d5741264",
+   "subject": "fix(http): gate legacy-path exchange aborts at the WebSocket onOpen",
+   "req": "FR-HTTP-035",
+   "kind": "review"
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "IR-HTTP-014",
+   "FR-HTTP-035"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-4/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-4/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-4-ir-http-014/lanes/w4s2l1/",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-4/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-4-fr-http-035/lanes/w4s2l1/",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-4/.kiwi/sessions/2026-11-16.naruserve.self-w4s2l1/analysis/report.md",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-4/.kiwi/sessions/2026-11-16.naruserve.self-w4s2l1r2/analysis/report.md"
+ ],
+ "red_evidence": [
+  {
+   "req": "IR-HTTP-014",
+   "test": "HttpApiSurfaceTest IR_HTTP_014_AC1..AC5, sdsAc2_IR_HTTP_001_AC2 (exact set); HttpApiKotlinTest IR-HTTP-014 AC-5",
+   "red_output": "compileTestKotlin: Unresolved reference append/onAbort/relay (HttpApiKotlinTest.kt:221,222,227); HttpApiSurfaceTest 28 tests 5 failed (NoSuchMethodException for AC1/AC2/AC4/AC5, exact-set mismatch for AC-3)"
+  },
+  {
+   "req": "FR-HTTP-035",
+   "test": "ResponseOnAbortTest AC-1,3,4,6,7,8; HttpApiKotlinTest FR-HTTP-035 AC-1",
+   "red_output": "21 tests, 11 failed: expected:<1> but was:<0> (AC-1 x2, AC-3 x2, AC-4 x2, AC-6, AC-7 x2, Kotlin AC-1); AC-8 javadoc sentences missing. AC-2 and AC-5 passed pre-impl (AC-5 delivered by IR-HTTP-014)."
+  },
+  {
+   "req": "FR-HTTP-035",
+   "test": "ResponseOnAbortTest FR_HTTP_035_AC7_legacyUpgradePathExchangeReportedAbortRunsEachListenerOnce (FND-001)",
+   "red_output": "expected:<1> but was:<0> (listener never ran on the legacy upgrade path)"
+  },
+  {
+   "req": "FR-HTTP-035",
+   "test": "ResponseOnAbortTest FR_APP_019_AC8_exchangeReportedAbortDuringAnOpenSessionWritesNoSecondRequestLine (FND-101)",
+   "red_output": "[INFO GET /ws 101 ..., INFO GET /ws 200 aborted ..., INFO WS /ws 1006 ...] expected:<1> but was:<2>"
+  },
+  {
+   "req": "FR-HTTP-035",
+   "test": "ResponseOnAbortTest FR_HTTP_035_AC7_legacyUpgradeAbortReportedBeforeOnOpenAbortsTheResponse (FND-201)",
+   "red_output": "[ERROR request ... failed peer gone before the 101, INFO GET /ws 500 0ms in=0 out=100 ...] expected:<1> but was:<0>"
+  },
+  {
+   "req": "FR-HTTP-035",
+   "test": "ResponseOnAbortTest FR_HTTP_035_AC7_legacyUpgradeAbortReportedBeforeOnOpenRefusesTheLateOpen (FND-202)",
+   "red_output": "[INFO GET /ws 101 ..., INFO WS /ws 1006 ...] expected:<1> but was:<0>"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "gate": "check_review_round round 2: PASS (block 0, record 1, residual 0)",
+  "detail": "Host option A applied. FND-001 fixed (83e58c2/184e89c); FND-101 (2nd GET /ws line during an open session) fixed by gating the abort hook. Re-review over 730b55b..HEAD (run 2026-11-16.naruserve.self-w4s2l1r2): round 1 kept FND-201 (block, introduced by 184e89c: flag set before upgrades.run ignored aborts before onOpen -> 500, no listener) and residual FND-202 (NEW-check/flag race); fixed atomically in d8b1c38/1b6fb41 (DefaultResponse.openSession/abortByExchange under the response lock, session onOpen refuses when aborted first). Round 2: both resolved; FND-301 recorded as declared limit (abort after adapter wrote 101 but before onOpen logs one 'GET /ws 200 ... aborted' line; core cannot observe the adapter-side 101); FND-302 rejected as pre-existing since 730b55b (Error from a ws handler in an open session writes a 2nd GET /ws line) - follow-up; FND-203/204/303 rejected. Clean code: CC-201 resolved, CC-301/302 dismissed. Coverage PASS both rounds.",
+  "declared_limits": [
+   "FND-301"
+  ],
+  "report": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-4/.kiwi/sessions/2026-11-16.naruserve.self-w4s2l1r2/analysis/report.md"
+ },
+ "intentionally_empty": null,
+ "design_refuted": [],
+ "srs_deltas": [
+  {
+   "req": "FR-HTTP-035",
+   "kind": "declared-limitation",
+   "note": "AC-2 race: deliver/runTransfer/sseEnded record COMPLETED only after ex.finish() returns; an abort in that window runs listeners although the body was delivered. Existing FR-HTTP-016 state-machine gap; documented in Response.onAbort javadoc. AC could state that an abort racing completion counts as abnormal.",
+   "evidence": "kiwi-coder review trace; Response.onAbort javadoc"
+  },
+  {
+   "req": "FR-HTTP-035",
+   "kind": "implementation-note-deviation",
+   "note": "Listener wrapper catches Throwable (not only RuntimeException) and logs it; SafeCallbacks already swallowed Error silently.",
+   "evidence": "DefaultResponse.onAbort wrapper (d2049d7)"
+  },
+  {
+   "req": "FR-HTTP-035",
+   "kind": "note",
+   "note": "AC-7 on the legacy WebSocket-upgrade path fixed: 184e89c wires HttpExchange.onAbort to the response, 1b6fb41 gates it atomically at the session onOpen (pre-101 aborts abort the response and run listeners once; aborts during an open session write no second request line).",
+   "evidence": "commits 184e89c, 1b6fb41; ResponseOnAbortTest FR_HTTP_035_AC7_legacy* and FR_APP_019_AC8_exchangeReportedAbortDuringAnOpenSessionWritesNoSecondRequestLine"
+  },
+  {
+   "req": "IR-HTTP-014",
+   "kind": "note",
+   "note": "docs/api lacks res.append/onAbort/relay; owned by OPS-DX-009 (later wave).",
+   "evidence": "kiwi-coder summary"
+  },
+  {
+   "req": "FR-APP-019",
+   "kind": "declared-limitation",
+   "note": "FND-301: an exchange abort reported after the adapter wrote 101 but before WebSocketEndpoint.onOpen logs one 'GET /ws 200 ... aborted' line and no 101 line; the SPI gives no signal that 101 was written before onOpen. AC-3/AC-8 could state this, or an SPI signal could be added.",
+   "evidence": ".kiwi/sessions/2026-11-16.naruserve.self-w4s2l1r2/analysis/classified_findings_iter2.json"
+  },
+  {
+   "req": "FR-APP-019",
+   "kind": "follow-up",
+   "note": "FND-302 (pre-existing since 730b55b): an Error thrown by a ws handler during an open session reaches Dispatcher catch(Error) -> res.abort(e) and writes a 2nd 'GET /ws 200 aborted' line after the 101 line.",
+   "evidence": ".kiwi/sessions/2026-11-16.naruserve.self-w4s2l1r2/analysis/classified_findings_iter2.json"
+  }
+ ],
+ "out_of_lease_paths": [
+  {
+   "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "reason": "Committed in d2049d7: one line res.listenerLogger(errors.logger) in handleLegacy so FR-HTTP-035 AC-4 logs through the app logger on the WebSocket-upgrade path (test FR_HTTP_035_AC4_failedUpgradeFinishRunsListenersAndLogsThroughTheAppLogger). Also touched by the uncommitted review fix. Dispatcher.java is in the stage-2 wave-5 write set. Review fixes: 184e89c registers ex.onAbort in handleLegacy (FR-HTTP-035 AC-7) and 1b6fb41 changes it to res::abortByExchange (removes the pre-upgrade flag)."
+  },
+  {
+   "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultWebSocketSession.java",
+   "reason": "1b6fb41: onOpen asks DefaultResponse.openSession() and refuses the session (no 101/close line, no handler) when the response was aborted first (review FND-201/FND-202)."
+  },
+  {
+   "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java",
+   "reason": "1b6fb41: run passes the response to the session (session.response(res)) for the onOpen gate (review FND-201)."
+  }
+ ],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "check_test_sufficiency IR-HTTP-014 (AC-1..5) and FR-HTTP-035 (AC-1..8) at 1b6fb41: 13/13 ACs cited, passed=true."
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 3936,
+  "failures": 0,
+  "exit_code": 0,
+  "note": "run on tree 1e1c170 (= head_sha 1b6fb41); previous 184e89c 3934/0; baseline 3907/0"
+ },
+ "bootstrap": "not-applicable",
+ "deferred_queue_entries": 29,
+ "notes": "Deferred queue holds 29 entries from kiwi-coder: evidence rows, 1 Code trace link (Dispatcher), and update_status implemented for both requirements (kiwi-pm ran with --no-final, so these come from kiwi-coder, not T-final)."
+}

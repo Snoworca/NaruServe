@@ -1,0 +1,65 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-4-ir-http-014",
+ "base_sha": "730b55b39b397ba8ad9a44a65342e37e1365b35e",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "IR-HTTP-014"
+ ],
+ "req_filter": [
+  "IR-HTTP-014"
+ ],
+ "write_set": [
+  "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+  "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java"
+ ],
+ "started_at": "2026-11-15T14:57:24Z",
+ "last_updated_at": "2026-11-15T15:19:29Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-15T14:57:24Z",
+  "ended_at": "2026-11-15T15:19:29Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-4-ir-http-014",
+  "result_summary": "IR-HTTP-014 implemented; 8 new tests; regression 3915/0",
+  "changed": true,
+  "commit_sha": "42137e6a3bcce5702aa30452b53eea36e24008d0",
+  "commits": [
+   {
+    "req_id": "IR-HTTP-014",
+    "test_sha": "412faf81a68931ca4ce9215b6ba98f8cc4023703",
+    "implementation_sha": "42137e6a3bcce5702aa30452b53eea36e24008d0"
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-15T14:57:24Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "IR-HTTP-014": "evolving"
+  },
+  "status_snapshot": {
+   "IR-HTTP-014": "planned"
+  }
+ },
+ "req_coverage": {
+  "IR-HTTP-014": {
+   "status_at_start": "planned",
+   "status_at_end": "planned",
+   "stability_at_start": "evolving",
+   "all_done": true
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-4/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-4-ir-http-014/lanes/w4s2l1/reports/pm-20261115T151929Z.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": false
+}

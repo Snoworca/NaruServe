@@ -1,0 +1,23 @@
+{
+ "base": {
+  "wave-4": "730b55b39b397ba8ad9a44a65342e37e1365b35e"
+ },
+ "lock_digest": "4fa761e3c27fd1f4b7408b121807662272b5b302c41622e21ad943e63182fcdb",
+ "lock_commit": "ecd67712ecb843d7a03b7d6ea44c945c75696426",
+ "lanes": [
+  {
+   "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-4",
+   "stage": 1,
+   "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-4",
+   "sds": null,
+   "writeSet": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,55 @@
+{
+  "resolved_findings": ["FND-001"],
+  "resolved_evidence": {
+    "FND-001": {
+      "command": "cd /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-4 && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.ResponseOnAbortTest -i",
+      "output": "All 17 ResponseOnAbortTest tests passed, including FR_HTTP_035_AC7_legacyUpgradePathExchangeReportedAbortRunsEachListenerOnce (run together with the temporary proof test, which was the only failure: '18 tests completed, 1 failed'). Dispatcher.handleLegacy:288 now registers ex.onAbort(() -> res.abort(null)) before pipeline.run, matching HttpExecution.start:35. Without the fix the test fails because no listener is registered on the exchange (first=0, upgrades=1)."
+    }
+  },
+  "findings": [
+    {
+      "id": "FND-101",
+      "axis": "correctness/regression (access log, FR-APP-019; WebSocket session lifecycle FR-WS-001)",
+      "verdict": "keep",
+      "evidence": {
+        "command": "cd /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-4 && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.ZzProofFnd101Test -i  (temporary proof test, run once with the change and once with Dispatcher.java:288 temporarily commented out; both files restored/deleted afterwards, git diff against tree 7869050722 is empty)",
+        "output": "WITH change: PROOF state=ABORTED listener=1 exAborts=1 info=[GET /ws 101 0ms in=0 out=0 rid=9e5082aa59a7e304, GET /ws 200 aborted 0ms in=0 out=0 rid=9e5082aa59a7e304, WS /ws 1006 0ms rid=9e5082aa59a7e304] -> java.lang.AssertionError: expected:<1> but was:<2>, BUILD FAILED. WITHOUT the new line: PROOF state=ABORTED listener=1 exAborts=1 info=[GET /ws 101 3ms in=0 out=0 rid=137132df0288f001, WS /ws 1006 0ms rid=137132df0288f001], BUILD SUCCESSFUL.",
+        "intent_output": "A WebSocket request that was upgraded (101 written, session open) writes exactly one request access line, the session's 'GET /ws 101' handshake line, plus its 'WS /ws <code>' close line, also when the adapter aborts the exchange during the session (e.g. TinyHttpdAdapter.stop aborts every tracked exchange; an upgraded TinyHttpdExchange stays tracked and unfinished until webSocket returns).",
+        "proof_test_source": "package com.snoworca.naruserve;\nimport static org.junit.Assert.assertEquals;\nimport com.snoworca.naruserve.common.AbortListeners;\nimport com.snoworca.naruserve.internal.DefaultResponse;\nimport com.snoworca.naruserve.internal.DefaultRestApp;\nimport com.snoworca.naruserve.spi.HttpExchange;\nimport com.snoworca.naruserve.testing.RecordingExchange;\nimport com.snoworca.naruserve.testing.RecordingLogger;\nimport java.io.IOException;\nimport java.lang.reflect.InvocationTargetException;\nimport java.lang.reflect.Proxy;\nimport java.util.concurrent.atomic.AtomicInteger;\nimport java.util.concurrent.atomic.AtomicReference;\nimport org.junit.Test;\npublic class ZzProofFnd101Test {\n  @Test public void adapterAbortDuringAnOpenSessionAfter101() {\n    RecordingExchange rec = new RecordingExchange(\"GET\", \"/ws\", \"Connection\", \"Upgrade\", \"Upgrade\", \"websocket\");\n    AbortListeners aborts = new AbortListeners();\n    rec.webSocketScript = (settings, endpoint) -> {\n      WebSocketDispatchTest.PeerChannel ch = new WebSocketDispatchTest.PeerChannel();\n      ch.open = true;\n      endpoint.onOpen(ch);            // 101 written, session open\n      aborts.abort();                 // adapter stop() aborts the exchange mid-session\n      rec.finishFailure = new IOException(\"aborted\");\n      ch.open = false;\n      endpoint.onClose(1006, \"\");\n    };\n    HttpExchange ex = (HttpExchange) Proxy.newProxyInstance(HttpExchange.class.getClassLoader(), new Class<?>[] {HttpExchange.class}, (proxy, m, args) -> {\n      if (m.getName().equals(\"onAbort\")) { aborts.onAbort((Runnable) args[0]); return null; }\n      try { return m.invoke(rec, args); } catch (InvocationTargetException e) { throw e.getCause(); }\n    });\n    RecordingLogger log = new RecordingLogger();\n    DefaultRestApp app = new DefaultRestApp();\n    app.logger(log);\n    AtomicInteger listener = new AtomicInteger();\n    AtomicReference<Response> captured = new AtomicReference<>();\n    app.use((req, res, next) -> { captured.set(res); res.onAbort(listener::incrementAndGet); next.run(); });\n    app.ws(\"/ws\", (req, ws) -> { });\n    app.freeze();\n    app.dispatcher().handle(ex);\n    System.out.println(\"PROOF state=\" + ((DefaultResponse) captured.get()).state() + \" listener=\" + listener.get() + \" exAborts=\" + rec.aborts.get() + \" info=\" + log.info());\n    assertEquals(log.info().toString(), 1, RecordingLogger.countMatching(log.info(), \"GET /ws .*\"));\n  }\n}"
+      },
+      "drop_reason": "",
+      "title": "Legacy-path ex.onAbort registration aborts an already-upgraded WebSocket response mid-session and writes a spurious 'GET /ws 200 aborted' access line",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+        "line_range": "286-288 (interaction with 303-315 onDone access line and DefaultResponse.upgraded():923-947)"
+      },
+      "description": "HttpExchange.webSocket returns only after the connection closed, and DefaultResponse stays NEW for the whole session because upgraded() runs only after webSocket returns. With the new registration, an adapter-reported abort during an open session (TinyHttpdAdapter.stop aborts every tracked exchange; an upgraded TinyHttpdExchange is tracked and not finished during the session) now calls res.abort(null) while the session is still running: the response goes NEW->ABORTED, ex.abort() is called re-entrantly from inside the adapter's abort callback, onDone fires before the session ended, and because upgraded101 stays false the onDone hook writes a request access line with the never-sent status 200 and 'aborted', duplicating the session's 'GET /ws 101' line for the same rid. Before this change the same scenario ended via upgraded() (upgraded101=true, finish failure -> ABORTED, listeners once) with exactly one request line. Listener count (1) is unchanged; the regression is the extra, wrong access line and the response being terminated while the upgraded session still owns the exchange.",
+      "suggested_fix": "Scope the legacy registration to the pre-101 window: e.g. make the registered callback skip once the upgrade began (a flag set right before upgrades.run / ex.webSocket, or a DefaultResponse 'upgrading' state that abort() from the exchange hook leaves for upgraded() to resolve), or have res.abort from the exchange hook mark upgraded101 when the 101 was already written. Add a regression test like the proof above asserting one 'GET /ws' request line when the exchange reports an abort after onOpen.",
+      "is_behavioral": true,
+      "tags": ["FR-HTTP-035", "AC-7", "FR-APP-019", "FR-WS-001", "websocket", "access-log", "regression"]
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-101",
+      "principle": "Consistency / one way to do one thing in a test class",
+      "location": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java:620-631",
+      "observation": "The new test intercepts HttpExchange.onAbort with a java.lang.reflect.Proxy around RecordingExchange, while the same class already has a hand-written delegating exchange (SilentExchange) for the SPI-default case; two different interception mechanisms for the same seam. A small reusable helper (e.g. an abort-reporting wrapper in testFixtures) would serve both. Not a defect; the test itself is sound (no sleeps, does not mock DefaultResponse/Dispatcher, fails without the fix, asserts once-per-listener and ABORTED and no upgrade)."
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "hunks_total": 1,
+      "anchors": ["        ex.onAbort(() -> res.abort(null));"],
+      "findings": ["FND-101"]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+      "hunks_total": 2,
+      "anchors": ["import java.lang.reflect.Proxy;", "    public void FR_HTTP_035_AC7_legacyUpgradePathExchangeReportedAbortRunsEachListenerOnce() {"],
+      "findings": []
+    }
+  ],
+  "summary": {"total": 1, "by_verdict": {"keep": 1, "drop": 0, "residual": 0}}
+}

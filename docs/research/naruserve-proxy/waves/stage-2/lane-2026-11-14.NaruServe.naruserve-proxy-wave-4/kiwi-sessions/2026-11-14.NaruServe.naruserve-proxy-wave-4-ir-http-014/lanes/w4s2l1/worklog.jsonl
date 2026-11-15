@@ -1,0 +1,16 @@
+{"ts":"2026-11-15T14:57:24Z","event":"pm_boot","req_ids":["IR-HTTP-014"],"lifecycle":"pass"}
+{"ts":"2026-11-16T00:00:00Z","event":"phase_start","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-4-ir-http-014","sds_path":null,"target":"0.12.0","mode":"normal","flags":["--loops 20"]}
+{"ts":"2026-11-16T00:00:00Z","event":"run_start","sds_id":null,"req_ids":["IR-HTTP-014"]}
+{"ts":"2026-11-16T00:10:00Z","event":"tdd_draft_done","iter":1,"file_paths":["NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java","NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt"]}
+{"ts":"2026-11-16T00:15:00Z","event":"tdd_review_done","iter":1,"finding_summary":{"kept":0,"dropped":5}}
+{"ts":"2026-11-16T00:15:00Z","event":"tdd_red_confirmed","exit_code":1,"test_names":["IR_HTTP_014_AC1","IR_HTTP_014_AC2","IR_HTTP_014_AC4","IR_HTTP_014_AC5","sdsAc2_IR_HTTP_001_AC2","IR-HTTP-014 AC-5 Kotlin"]}
+{"ts":"2026-11-16T00:40:00Z","event":"impl_done","iter":1,"files_changed":["NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java","NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java"]}
+{"ts":"2026-11-16T00:45:00Z","event":"formal_review_done","iter":1,"finding_summary":{"kept":0,"dropped":0}}
+{"ts":"2026-11-16T00:50:00Z","event":"prickly_review_done","iter":1,"finding_summary":{"kept":2,"dropped":10}}
+{"ts":"2026-11-16T00:55:00Z","event":"impl_done","iter":2,"files_changed":["NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java","NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java"]}
+{"ts":"2026-11-16T01:20:00Z","event":"test_green","exit_code":0}
+{"ts":"2026-11-16T01:20:00Z","event":"prickly_review_done","iter":2,"finding_summary":{"kept":0,"dropped":12}}
+{"ts":"2026-11-16T01:20:00Z","event":"regression_done","scope":"full","passed":3915,"failed":0}
+{"ts":"2026-11-16T01:20:00Z","event":"mcp_call","tool":"deferred-queue","ok":true,"count":10}
+{"ts":"2026-11-16T01:20:00Z","event":"run_done"}
+{"ts":"2026-11-15T15:19:29Z","event":"pm_done","status":"TASK_DONE"}

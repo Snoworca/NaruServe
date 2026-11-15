@@ -1,0 +1,80 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-4-fr-http-035",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "FR-HTTP-035"
+ ],
+ "write_set": [
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+  "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+  "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+  "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops",
+  "20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "started_at": "2026-11-16T00:00:00Z",
+ "updated_at": "2026-11-16T02:00:00Z",
+ "frozen_at": null,
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "regression_baseline": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "passed": 3915,
+  "failed": 0,
+  "failed_test_ids": [],
+  "head_sha": "42137e6a3bcce5702aa30452b53eea36e24008d0",
+  "captured_at": "lane-provided (IR-HTTP-014 run)"
+ },
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.ResponseOnAbortTest --tests com.snoworca.naruserve.HttpApiKotlinTest",
+  "exit_code": 1,
+  "captured_failure": "21 tests completed, 11 failed: 10 ResponseOnAbortTest (AC-1 x2, AC-3 x2, AC-4 x2, AC-6, AC-7 x2: expected:<1> but was:<0>; AC-8: javadoc lacks the thread/idle phrases) + Kotlin FR-HTTP-035 AC-1 expected:<1> but was:<0>. AC-2 (never-runs) and AC-5 (NPE + void, landed by IR-HTTP-014) pass before implementation.",
+  "timestamp": "2026-11-16T00:00:00Z"
+ },
+ "mcp_call_log": [],
+ "pending_mutations": [],
+ "tool_versions": {
+  "kiwi_coder": "0.1.9",
+  "speckiwi": "5.5.1"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "timestamp": "2026-11-16T02:00:00Z"
+ },
+ "green_evidence_meta": {
+  "targeted": "ResponseOnAbortTest 16/16, HttpApiKotlinTest FR-HTTP-035 AC-1 green"
+ },
+ "regression_summary": {
+  "last_run_at": "2026-11-16T02:00:00Z",
+  "scope": "full",
+  "passed": 3932,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "loop_counters": {
+  "phase1": {
+   "kept": 1,
+   "dropped": 5,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 8,
+   "dropped": 0,
+   "rounds": 3
+  }
+ },
+ "mcp_call_log_note": "19 mutations appended to the deferred queue (17 evidence, 1 trace link, 1 update_status); replay plan inputRefusals=0"
+}

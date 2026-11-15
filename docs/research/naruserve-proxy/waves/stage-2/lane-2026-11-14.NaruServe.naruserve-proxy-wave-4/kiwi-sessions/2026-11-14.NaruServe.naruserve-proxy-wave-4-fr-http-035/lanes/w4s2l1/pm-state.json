@@ -1,0 +1,67 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-4-fr-http-035",
+ "base_sha": "42137e6a3bcce5702aa30452b53eea36e24008d0",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-HTTP-035"
+ ],
+ "req_filter": [
+  "FR-HTTP-035"
+ ],
+ "write_set": [
+  "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+  "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java"
+ ],
+ "started_at": "2026-11-15T15:19:45Z",
+ "last_updated_at": "2026-11-15T15:50:42Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-15T15:19:45Z",
+  "ended_at": "2026-11-15T15:50:42Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-4-fr-http-035",
+  "result_summary": "FR-HTTP-035 implemented; 17 new tests; regression 3932/0",
+  "changed": true,
+  "commit_sha": "d2049d70ea4fadd4820116b8fd45bac174e461e3",
+  "commits": [
+   {
+    "req_id": "FR-HTTP-035",
+    "test_sha": "a01ec94bfc1a86c5e7bb5046138ed8f2b97022d2",
+    "implementation_sha": "d2049d70ea4fadd4820116b8fd45bac174e461e3"
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-15T15:19:45Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-HTTP-035": "evolving"
+  },
+  "status_snapshot": {
+   "FR-HTTP-035": "planned"
+  }
+ },
+ "req_coverage": {
+  "FR-HTTP-035": {
+   "status_at_start": "planned",
+   "status_at_end": "planned",
+   "stability_at_start": "evolving",
+   "all_done": true
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-4/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-4-fr-http-035/lanes/w4s2l1/reports/pm-20261115T155042Z.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": false
+}

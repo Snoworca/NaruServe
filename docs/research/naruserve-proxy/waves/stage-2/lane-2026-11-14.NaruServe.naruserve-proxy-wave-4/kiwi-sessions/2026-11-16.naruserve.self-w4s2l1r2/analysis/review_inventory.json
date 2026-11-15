@@ -1,0 +1,211 @@
+{
+ "findings": [
+  {
+   "id": "FND-201",
+   "axis": "correctness",
+   "severity": "medium",
+   "verdict": "keep",
+   "title": "Legacy upgrade path drops an exchange-reported abort that arrives after upgrading.set(true) but before the 101 (onOpen)",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "line_range": "285-295,337-340"
+   },
+   "description": "184e89c sets `upgrading` before upgrades.run, i.e. before decodeQuery, the Origin check (403), registry.reserve (503) and ex.webSocket. Any HttpExchange.onAbort notification in that window is ignored even though no upgrade has happened yet. When ex.webSocket reports the abort and throws before onOpen, the IOException goes to errors.handle, which commits a 500 on the still-NEW response: the response ends COMPLETED, no res.onAbort listener runs, and the access log writes `GET /ws 500 ... ` without `aborted`. This violates FR-HTTP-035 AC-7 (an exchange-reported abort runs each listener once) and makes the FR-APP-019 line misreport the request. Built-in TinyHttpd masks it only because its commit after its own abort throws (checkNotAborted), which then aborts the response (contrast test passes); an adapter that accepts the error commit, like the RecordingExchange fixture the existing AC-7 legacy test uses, shows the defect. The same window covers the 403 Origin and 503 reserve error responses.",
+   "evidence": {
+    "command": "cd /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-4 && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.ProofFnd201Test' -q",
+    "output": "2 tests completed, 1 failed\npreOnOpenExchangeReportedAbortRunsTheListenerAndEndsTheResponseAborted FAIL: java.lang.AssertionError: state=COMPLETED runs=0 commits=1 status=500 lines=[GET /ws 500 4ms in=0 out=100 rid=780cc70cc1c0a704] expected:<1> but was:<0>",
+    "intent_output": "contrastAdapterRefusingCommitAfterAbortStillEndsAborted PASS (an adapter that refuses the commit after abort, as TinyHttpdExchange does, ends ABORTED with 1 listener run via the commit failure, so the gap only shows for adapters that accept the error commit). Proof source: .kiwi/sessions/2026-11-16.naruserve.self-w4s2l1r2/analysis/proof-FND-201.java"
+   },
+   "drop_reason": null,
+   "suggested_fix": "Stop ignoring the hook from the moment the session is open, not from before upgrades.run: e.g. flip the flag from the session's onOpen (DefaultWebSocketSession.opened()) or pass a callback into WebSocketUpgrade.upgrade that sets it once onOpen ran, so pre-onOpen aborts still call res.abort(null) (then errors.handle/afterFailure is a no-op on an ABORTED response and the line is marked aborted). Add the proof test as a regression test in ResponseOnAbortTest.",
+   "is_behavioral": true,
+   "tags": [
+    "FR-HTTP-035",
+    "AC-7",
+    "FR-APP-019",
+    "legacy-upgrade",
+    "proven"
+   ]
+  },
+  {
+   "id": "FND-202",
+   "axis": "concurrency",
+   "severity": "low",
+   "verdict": "residual",
+   "title": "Check-then-act race between res.state()==NEW and upgrading.set(true) can start an upgrade on an ABORTED response",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "line_range": "337-340"
+   },
+   "description": "The request thread reads res.state()==NEW, then sets upgrading, then calls upgrades.run. An adapter-thread abort landing between the state read and the flag set aborts the response (onDone writes a `GET /ws 200 ... aborted` line) while the request thread still calls ex.webSocket; a permissive exchange would then open a session and its handshake line, giving two GET /ws lines, and res.upgraded() is a no-op. Deciding NEW->upgrading under the response lock would close it. Not proven: there is no exchange call between the check and the set to inject the abort deterministically, and built-in TinyHttpd refuses webSocket after its abort.",
+   "evidence": {
+    "command": "static analysis only (no deterministic injection point between Dispatcher.java:337 and :339)",
+    "output": "not executed",
+    "intent_output": ""
+   },
+   "drop_reason": null,
+   "suggested_fix": "Make the NEW check and the upgrading mark one atomic step (e.g. a DefaultResponse method that returns true and records 'upgrading' under its monitor only while NEW, with the abort hook consulting it).",
+   "is_behavioral": true,
+   "tags": [
+    "FR-APP-019",
+    "race",
+    "unproven"
+   ]
+  },
+  {
+   "id": "FND-203",
+   "axis": "api-contract",
+   "severity": "low",
+   "verdict": "drop",
+   "title": "relay accepts contentLength below -1 silently as an unknown length",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "line_range": "603-609"
+   },
+   "description": "relay(in, -5) goes through startBody, which treats any negative length as unknown framing without validation.",
+   "evidence": {
+    "command": "static analysis",
+    "output": "not executed",
+    "intent_output": ""
+   },
+   "drop_reason": "Relay framing and length validation belong to FR-HTTP-036/037 (later waves), outside the IR-HTTP-014/FR-HTTP-035 guarantee scope.",
+   "suggested_fix": "Validate contentLength >= -1 when FR-HTTP-036/037 land.",
+   "is_behavioral": true,
+   "tags": [
+    "out-of-scope"
+   ]
+  },
+  {
+   "id": "FND-204",
+   "axis": "regression",
+   "severity": "low",
+   "verdict": "drop",
+   "title": "Legacy path still runs middleware when the exchange was already aborted at hook registration",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "line_range": "291-295,335"
+   },
+   "description": "A built-in adapter notifies a registration after an abort at once, so the new hook aborts the response before pipeline.run, yet middleware still runs on an ABORTED response.",
+   "evidence": {
+    "command": "static analysis",
+    "output": "not executed",
+    "intent_output": ""
+   },
+   "drop_reason": "Not a regression: before 184e89c the legacy path ran middleware on an aborted exchange as well; the hook now ends the response ABORTED (no upgrade, one aborted line via late onDone registration), which is the AC-7 behaviour. No AC requires short-circuiting middleware.",
+   "suggested_fix": "None required in this scope.",
+   "is_behavioral": false,
+   "tags": [
+    "not-a-regression"
+   ]
+  }
+ ],
+ "clean_code": [
+  {
+   "id": "CC-201",
+   "principle": "SRP / long method",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "line_range": "257-352"
+   },
+   "description": "handleLegacy now mixes request/response construction, adapter-abort wiring with an upgrade-phase flag, upload-release counting, access-log selection, route/terminal selection and the upgrade call in one ~95-line method; the abort/upgrade-phase gate (the source of FND-201/202) would be clearer and testable as its own small object or a DefaultResponse-owned state."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import java.io.IOException;",
+    "// @req IR-HTTP-014",
+    "     * Adds a header line without replacing a same-name header, as Express {@code res.append} does; returns this",
+    "     * Streams {@code in} as the response body framed by {@code contentLength} ({@code -1} for an unknown length),"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "hunks_total": 16,
+   "anchors": [
+    "import com.snoworca.naruserve.common.AbortListeners;",
+    "// @req IR-HTTP-014",
+    "    private final AbortListeners abortListeners = new AbortListeners();",
+    "    /** The app logger an onAbort listener's RuntimeException goes to; unset means a console logger. */",
+    "    /** Adds a header line after the {@link #header} check, keeping every earlier same-name line. */",
+    "    /** Adds a Vary field without replacing existing cache dimensions or Vary: *. */",
+    "    // @req IR-HTTP-014",
+    "            existing = header.getValue();",
+    "            if (!line.trim().isEmpty()) {",
+    "        put(\"Vary\", existing == null || existing.isEmpty() ? field : existing + \", \" + field);",
+    "    /** The {@link #stream} copy with {@code contentLength} as the framing length and the app's Content-Type kept. */",
+    "     * The onAbort listeners run once here, on the aborting thread, after the exchange abort and, unless a running",
+    "    // @req FR-HTTP-035",
+    "        if (sse != null) {",
+    "     * because the connection is already gone aborts instead. No-op when the response already left NEW.",
+    "            ex.abort();"
+   ],
+   "findings": [
+    "FND-203"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "hunks_total": 2,
+   "anchors": [
+    "        res.listenerLogger(errors.logger); // FR-HTTP-035 AC-4: no HttpExecution hands it over on this path",
+    "                upgrading.set(true);"
+   ],
+   "findings": [
+    "FND-201",
+    "FND-202",
+    "FND-204"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+   "hunks_total": 1,
+   "anchors": [
+    "        response.listenerLogger(errors.logger); // FR-HTTP-035 AC-4: a failing onAbort listener logs to the app"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "    // cache, file and download",
+    "                \"clearCookie(String)->Response\", \"clearCookie(String,Configurer)->Response\"),",
+    "    /** The three methods IR-HTTP-014 adds to Response, in declaration order of the requirement. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+   "hunks_total": 4,
+   "anchors": [
+    "import java.io.IOException",
+    "import java.util.concurrent.atomic.AtomicBoolean",
+    "import org.junit.Assert.assertFalse",
+    "    // IR-HTTP-014 AC-5: append chains as a Response, onAbort takes a trailing lambda for the Runnable and relay takes a"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "diff_range": "730b55b39b397ba8ad9a44a65342e37e1365b35e..184e89c",
+  "files": 7,
+  "hunks": 31,
+  "keep": 1,
+  "residual": 1,
+  "drop": 2,
+  "clean_code": 1,
+  "notes": "FND-201 proven RED with a temporary test (removed); the FND-001/FND-101 fix closes the open-session double line but sets the ignore flag too early, before Origin/reserve/webSocket pre-onOpen failures. No new issues on append/Vary merge, relay delegation, onAbort registration ordering (state read + AbortListeners), abort() finally ordering, or Java 8/API 21 usage. Prior dropped/fixed items not re-raised."
+ }
+}

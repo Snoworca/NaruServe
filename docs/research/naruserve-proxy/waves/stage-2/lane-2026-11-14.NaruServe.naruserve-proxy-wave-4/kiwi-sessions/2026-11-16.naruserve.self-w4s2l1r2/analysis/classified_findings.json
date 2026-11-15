@@ -1,0 +1,50 @@
+{
+  "immediate_fix": [
+    {
+      "id": "FND-201",
+      "rationale": "Blocking: violates FR-HTTP-035 AC-7 (an exchange-reported abort must run each res.onAbort listener once) and makes the FR-APP-019 access line misreport the request (`GET /ws 500` without `aborted`). Introduced by 184e89c (previous run's FND-001/FND-101 fix), which sets `upgrading` before upgrades.run, so the hook ignores aborts reported during decodeQuery, the Origin check (403), registry.reserve (503) and ex.webSocket before onOpen, although no upgrade has happened. Classifier re-ran the proof (temporary copy of proof-FND-201.java, then removed): preOnOpenExchangeReportedAbortRunsTheListenerAndEndsTheResponseAborted FAILS with `state=COMPLETED runs=0 commits=1 status=500 lines=[GET /ws 500 ... ]`; the contrast test passes. Real call path: the public HttpExchange SPI; IR-HTTP-009 AC-4 requires the core to translate a detected abort into its termination path exactly once and the SPI does not require an adapter to refuse a commit after its own reported abort, so a conforming custom adapter (as the RecordingExchange fixture used by the existing AC-7 legacy test) hits it. Built-in TinyHttpd only masks it because checkNotAborted makes the error-path commit fail. Fix hypothesis: drop the pre-upgrades.run `upgrading` flag and gate at the session's onOpen instead, as one atomic step under the DefaultResponse monitor: e.g. a package-private `boolean DefaultResponse.markSessionOpen()` that, synchronized, returns false unless state==NEW and otherwise records `sessionOpen=true`; DefaultWebSocketSession.onOpen (via a callback WebSocketUpgrade.run passes in, since it holds `res`) calls it before writing the handshake line and, on false, closes/aborts the channel without writing the 101 line or running the handler; the Dispatcher hook (or a dedicated `abortByExchange()` on DefaultResponse) is a no-op while `sessionOpen` is set, keeping FND-101 fixed. Pre-onOpen aborts then call res.abort(null) -> ABORTED, listeners run once, errors.handle/afterFailure is a no-op, and onDone writes one `aborted` line. Add the proof as a regression test in ResponseOnAbortTest (plus the 403/503 window variants) and keep the existing FND-101 open-session test green.",
+      "estimated_complexity": "medium",
+      "is_behavioral": true,
+      "tags": ["FR-HTTP-035", "AC-7", "FR-APP-019", "IR-HTTP-009", "legacy-upgrade", "proven", "introduced-by-184e89c"]
+    }
+  ],
+  "declared_limit": [],
+  "kept_tiers": [
+    {
+      "id": "FND-201",
+      "tier": "block",
+      "family": "legacy-upgrade-abort-gating",
+      "introduced_by_round": null,
+      "family_action": null
+    }
+  ],
+  "discussion_needed": [
+    {
+      "id": "FND-202",
+      "rationale": "Residual (unproven by execution; no deterministic injection point between Dispatcher.java:337 and :339), so it cannot be rejected. Reachability: a concurrent adapter-thread abort is real - TinyHttpdAdapter.stop() calls exchange.abort() for every tracked exchange on the stopping thread (TinyHttpdAdapter.java:195, and :49 for exchanges tracked after stop), and TinyHttpdExchange.abort() runs abortListeners.abort() on that thread (TinyHttpdExchange.java:271-284); the HttpExchange.onAbort javadoc and IR-HTTP-009 AC-2/AC-6 explicitly cover forced stop and concurrent abort. But the claimed consequence does not occur on the built-in adapter: the abort makes the response ABORTED with one `GET /ws 200 ... aborted` line, then ex.webSocket -> TinyHttpdFeatures.webSocket -> requireStartable/checkNotAborted throws before 101, the session never opens, and errors.handle on an ABORTED response is a no-op - one line, correct outcome. The double line needs a custom adapter that completes a 101 on a connection it already reported aborted, which is arguably outside the SPI contract. Relation to the FND-201 fix: moving the gate to onOpen with a plain flag removes this exact window (no flag is set before upgrades.run, so such an abort is honoured) but leaves an equivalent check-then-act at onOpen; the atomic variant proposed for FND-201 (markSessionOpen() deciding NEW->session-open under the DefaultResponse monitor and refusing to write the handshake line or run the handler when the response is already ABORTED) closes it fully. Recommendation: let the FND-201 fix use the atomic variant and re-review; if so, FND-202 can be closed as fixed-by-FND-201.",
+      "questions_for_user": [
+        "Should the FND-201 fix be required to use the atomic NEW->session-open step under the DefaultResponse lock (which also closes FND-202), rather than a plain onOpen flag?",
+        "Is a custom adapter that completes a WebSocket 101 after it reported its own abort considered within the HttpExchange SPI contract, or may the framework treat it as non-conforming (making FND-202 a documentation-only item)?"
+      ]
+    }
+  ],
+  "rejected": [
+    {
+      "id": "FND-203",
+      "rationale": "relay contentLength validation (values below -1) belongs to relay framing, FR-HTTP-036/037, which the run declares out of the guarantee scope (only IR-HTTP-014 and FR-HTTP-035 ACs). No IR-HTTP-014 AC requires rejecting such lengths; track it with FR-HTTP-036/037.",
+      "rejection_category": "out_of_scope"
+    },
+    {
+      "id": "FND-204",
+      "rationale": "Not a regression and no AC violation: before 184e89c the legacy path also ran middleware on an already-aborted exchange; with the hook the response now ends ABORTED (no upgrade, one aborted line via the late onDone registration), which is the FR-HTTP-035 AC-7 behaviour. No AC of FR-HTTP-035/IR-HTTP-014 requires short-circuiting middleware on an aborted exchange.",
+      "rejection_category": "not_a_defect"
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-201",
+      "status": "keep",
+      "reason": "Valid SRP/long-method item with a concrete location (Dispatcher.handleLegacy 257-352) and not covered by a prior dismissal (CC-002 was DRY on the response wiring lines 279-285, a different principle). Scope it to the part this diff added: the abort/upgrade-phase gate should live in a small owned unit (DefaultResponse-owned state), which the proposed FND-201 fix already does; re-check after that fix lands and drop it if satisfied. A wider split of the pre-existing handleLegacy body is outside this diff and should not be done in the clean-code round."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+ "iter": 1,
+ "fixes": [
+  {
+   "finding_id": "FND-001",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+     "line_range": "286-288",
+     "loc_changed": 3
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+     "line_range": "30-31,613-652",
+     "loc_changed": 43
+    }
+   ],
+   "test_added": "FR_HTTP_035_AC7_legacyUpgradePathExchangeReportedAbortRunsEachListenerOnce",
+   "red_output": "ResponseOnAbortTest > FR_HTTP_035_AC7_legacyUpgradePathExchangeReportedAbortRunsEachListenerOnce FAILED: java.lang.AssertionError: expected:<1> but was:<0> at ResponseOnAbortTest.java:648 (17 tests completed, 1 failed)",
+   "green_output": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.ResponseOnAbortTest -> BUILD SUCCESSFUL (17 tests, 0 failures)",
+   "module_tests": {
+    "tests": 2978,
+    "failures": 0
+   },
+   "rationale_strip": "handleLegacy now registers ex.onAbort(() -> res.abort(null)) before middleware runs, so adapter-reported disconnects on the WebSocket-upgrade path run res.onAbort listeners (FR-HTTP-035 AC-7).",
+   "rationale_full": "Only HttpExecution.start forwarded HttpExchange.onAbort to the response (via cancel -> response.abort(null)). handleLegacy builds its own DefaultResponse for WebSocket-upgrade requests and registered nothing, so res.onAbort listeners never saw an adapter-reported disconnect there. The fix registers ex.onAbort(() -> res.abort(null)) right after res.listenerLogger(...), i.e. after the response is configured and before pipeline.run, using the same null cause as HttpExecution.cancel. abort is a no-op once the response is COMPLETED or already ABORTED, so a disconnect reported after a successful 101 or a repeated report stays harmless. The regression test drives a ws route with app.use middleware through an HttpExchange proxy over RecordingExchange that routes onAbort to AbortListeners (no mock of Dispatcher/DefaultResponse); the middleware registers two listeners, the exchange reports the abort twice, and the test asserts each listener ran once, the response is ABORTED, and the upgrade script never ran. Red before the fix (0 runs), green after; full NaruServe-api module 2978 tests, 0 failures, 0 errors.",
+   "mock_scan_passed": true,
+   "external_module_touch": false
+  }
+ ]
+}

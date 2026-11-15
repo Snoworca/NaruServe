@@ -1,0 +1,30 @@
+{
+  "immediate_fix": [
+    {
+      "id": "FND-101",
+      "rationale": "Kept and blocking. The round-1 fix created this regression. I checked the call path in the code. TinyHttpdExchange.run tracks the exchange with its owner adapter and retires it only after handler.handle returns. HttpExchange.webSocket (TinyHttpdFeatures.webSocket) runs the whole read loop on that worker, and markUpgraded sets only started=true, so during an open session the exchange stays tracked with aborted=false and finished=false. TinyHttpdAdapter.stop (:195) aborts every tracked exchange after s.stop(grace) returns. That reaches an open session, for example one whose client never answers the 1001 close frame, or any session still open when the deadline passes. TinyHttpdExchange.abort (:271-283) passes its guard and runs abortListeners. The new legacy registration (Dispatcher.handleLegacy:288, ex.onAbort(() -> res.abort(null))) then calls DefaultResponse.abort while the response is still NEW. DefaultResponse.upgraded() runs only after WebSocketUpgrade.upgrade returned (WebSocketUpgrade.run:93-94), so upgraded101 is still false. The response goes NEW->ABORTED and fireDone runs the handleLegacy onDone hook. Because !res.upgraded101(), that hook writes a request access line 'GET /ws 200 aborted' with status 200, which was never sent. The session already wrote its own 'GET /ws 101' line for the same rid. The session's close line follows, and the later res.upgraded() is a no-op because the state is no longer NEW. Before round 1 the same path produced exactly one request line. This breaks the FR-APP-019 access-log contract: the AC-8 decision says an upgraded 101 writes no onDone line, and one request gets one line. It also ends the response, with ex.abort and closeInput, while the upgraded session still owns the exchange. The reviewer's proof test is red with the change and green without it. Fix: limit the legacy registration to the window before the upgrade. Set a flag (or a DefaultResponse 'upgrading' state) right before upgrades.run or ex.webSocket, so an exchange-reported abort after that point does not end the response and upgraded() resolves it as today (finish failure -> ABORTED, listeners run once, upgraded101=true, no request line). FR-HTTP-035 AC-7 must keep holding before the upgrade: keep FR_HTTP_035_AC7_legacyUpgradePathExchangeReportedAbortRunsEachListenerOnce green. Add a regression test like ZzProofFnd101Test that asserts exactly one 'GET /ws' request line and one listener run when the exchange reports an abort after onOpen.",
+      "estimated_complexity": "small",
+      "is_behavioral": true,
+      "tags": ["FR-HTTP-035", "AC-7", "FR-APP-019", "AC-8", "FR-WS-001", "legacy-path", "websocket-upgrade", "access-log", "regression", "introduced-by-round-1"]
+    }
+  ],
+  "declared_limit": [],
+  "kept_tiers": [
+    {
+      "id": "FND-101",
+      "tier": "block",
+      "family": "abort-propagation-dispatch-path-parity",
+      "introduced_by_round": 1,
+      "family_action": null
+    }
+  ],
+  "discussion_needed": [],
+  "rejected": [],
+  "clean_code": [
+    {
+      "id": "CC-101",
+      "decision": "dismissed",
+      "reason": "This is the same suggestion as the dismissed CC-004: a shared abort-reporting test wrapper in testFixtures, or one interception mechanism per test class. Moving it into testFixtures is a cross-module build restructuring. The reviewer states the Proxy-based test is sound and not a defect. The test is likely to be touched again by the FND-101 regression test, which can reuse the same Proxy seam in place. There is no concrete correctness or readability defect at ResponseOnAbortTest.java:620-631."
+    }
+  ]
+}

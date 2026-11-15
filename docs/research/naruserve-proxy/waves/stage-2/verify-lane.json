@@ -1,0 +1,31 @@
+{
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-4": {
+  "head": "1b6fb4147b4b5bb576987be828f3fe17d5741264",
+  "commits": 8,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "gate": "check_review_round round 2: PASS (block 0, record 1, residual 0)",
+   "detail": "Host option A applied. FND-001 fixed (83e58c2/184e89c); FND-101 (2nd GET /ws line during an open session) fixed by gating the abort hook. Re-review over 730b55b..HEAD (run 2026-11-16.naruserve.self-w4s2l1r2): round 1 kept FND-201 (block, introduced by 184e89c: flag set before upgrades.run ignored aborts before onOpen -> 500, no listener) and residual FND-202 (NEW-check/flag race); fixed atomically in d8b1c38/1b6fb41 (DefaultResponse.openSession/abortByExchange under the response lock, session onOpen refuses when aborted first). Round 2: both resolved; FND-301 recorded as declared limit (abort after adapter wrote 101 but before onOpen logs one 'GET /ws 200 ... aborted' line; core cannot observe the adapter-side 101); FND-302 rejected as pre-existing since 730b55b (Error from a ws handler in an open session writes a 2nd GET /ws line) - follow-up; FND-203/204/303 rejected. Clean code: CC-201 resolved, CC-301/302 dismissed. Coverage PASS both rounds.",
+   "declared_limits": [
+    "FND-301"
+   ],
+   "report": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-4/.kiwi/sessions/2026-11-16.naruserve.self-w4s2l1r2/analysis/report.md"
+  },
+  "landed": [
+   "IR-HTTP-014",
+   "FR-HTTP-035"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultWebSocketSession.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java"
+  ],
+  "outside_reason": "FR-HTTP-035 AC-4/AC-7 on the legacy WebSocket-upgrade path (onAbort wiring gated at onOpen); no other lane in stage 2; wave-5 (stage 3) starts from this merge",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "exit 0, 3936 tests, 0 failures",
+  "verdict": "pass"
+ }
+}

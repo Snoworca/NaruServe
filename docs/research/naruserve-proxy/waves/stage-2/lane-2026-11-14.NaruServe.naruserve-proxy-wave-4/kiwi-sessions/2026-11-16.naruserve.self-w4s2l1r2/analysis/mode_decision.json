@@ -1,0 +1,52 @@
+{
+ "mode": "self",
+ "pr_url": null,
+ "pr_number": null,
+ "self_scope": {
+  "source": "base-head",
+  "files": [
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+   "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt"
+  ],
+  "commit_range": "730b55b39b397ba8ad9a44a65342e37e1365b35e..184e89c",
+  "diff_loc": 1148,
+  "excluded_prose": [],
+  "refused_artifacts": [],
+  "unclassified_files": []
+ },
+ "review_denominator": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+   "hunks_total": 4
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "hunks_total": 16
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "hunks_total": 2
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "hunks_total": 3
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+   "hunks_total": 1
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+   "hunks_total": 4
+  }
+ ]
+}

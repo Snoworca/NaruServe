@@ -1,0 +1,12 @@
+{"ts":"2026-11-15T15:19:45Z","event":"pm_boot","req_ids":["FR-HTTP-035"],"lifecycle":"pass"}
+{"ts":"2026-11-16T00:00:00Z","event":"tdd_draft_done","sds_id":null,"iter":1,"file_paths":["NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java","NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt"]}
+{"ts":"2026-11-16T00:00:00Z","event":"tdd_red_confirmed","sds_id":null,"exit_code":1,"test_names":["ResponseOnAbortTest x10","HttpApiKotlinTest FR-HTTP-035 AC-1"]}
+{"event": "tdd_review_done", "iter": 1, "finding_summary": {"kept": 1, "dropped": 5}, "ts": "2026-11-16T02:00:00Z", "sds_id": null}
+{"event": "impl_done", "iter": 1, "files_changed": ["Response.java", "DefaultResponse.java", "HttpExecution.java"], "ts": "2026-11-16T02:00:00Z", "sds_id": null}
+{"event": "prickly_review_done", "iter": 1, "finding_summary": {"kept": 7, "dropped": 9}, "ts": "2026-11-16T02:00:00Z", "sds_id": null}
+{"event": "prickly_review_done", "iter": 2, "finding_summary": {"kept": 1, "dropped": 11}, "ts": "2026-11-16T02:00:00Z", "sds_id": null}
+{"event": "prickly_review_done", "iter": 3, "finding_summary": {"kept": 0, "dropped": 7}, "ts": "2026-11-16T02:00:00Z", "sds_id": null}
+{"event": "test_green", "exit_code": 0, "ts": "2026-11-16T02:00:00Z", "sds_id": null}
+{"event": "regression_done", "scope": "full", "passed": 3932, "failed": 0, "ts": "2026-11-16T02:00:00Z", "sds_id": null}
+{"event": "run_done", "ts": "2026-11-16T02:00:00Z", "sds_id": null}
+{"ts":"2026-11-15T15:50:42Z","event":"pm_done","status":"TASK_DONE"}

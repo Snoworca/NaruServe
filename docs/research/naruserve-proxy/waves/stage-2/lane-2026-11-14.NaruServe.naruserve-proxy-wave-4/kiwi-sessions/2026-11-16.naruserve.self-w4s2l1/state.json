@@ -1,0 +1,121 @@
+{
+ "run_id": "2026-11-16.naruserve.self-w4s2l1",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "started_at": "2026-11-15T15:51:08Z",
+ "mode": "self",
+ "mode_flags": [
+  "--keep-clean-code",
+  "--loops 20",
+  "--no-pipeline-emit"
+ ],
+ "phase": "8",
+ "finding_queue": [
+  "FND-001"
+ ],
+ "fix_iter": 1,
+ "recheck_iter": 1,
+ "clean_code_round": 0,
+ "clean_code_dismissed": [
+  {
+   "id": "CC-001",
+   "reason": "classifier dismissed round 1"
+  },
+  {
+   "id": "CC-002",
+   "reason": "classifier dismissed round 1"
+  },
+  {
+   "id": "CC-003",
+   "reason": "classifier dismissed round 1"
+  },
+  {
+   "id": "CC-004",
+   "reason": "classifier dismissed round 1"
+  },
+  {
+   "id": "CC-005",
+   "reason": "classifier dismissed round 1"
+  },
+  {
+   "id": "CC-101",
+   "reason": "same as CC-004"
+  }
+ ],
+ "clean_code_skip": false,
+ "guarantee_scope": "IR-HTTP-014 (Response append/onAbort/relay surface, default methods, Kotlin coverage) and FR-HTTP-035 (onAbort listener semantics) as written in their acceptance criteria; append full semantics belong to FR-HTTP-033 and relay framing details (defaultCache, 204/304/HEAD, length < -1) to FR-HTTP-036/037 in later waves",
+ "declared_limits": [],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "e7c28f915d212eda36bdb4742153a35119321e77",
+   "scope": "full",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt"
+   ],
+   "tokens_used": 229355,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-001",
+     "tier": "block",
+     "family": "abort-propagation-dispatch-path-parity",
+     "introduced_by_round": null
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "tree_sha": "7869050722c4d3387417052b5bd29df5d5bc7cd8",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java"
+   ],
+   "tokens_used": 191092,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-101",
+     "tier": "block",
+     "family": "abort-propagation-dispatch-path-parity",
+     "introduced_by_round": 1
+    }
+   ]
+  }
+ ],
+ "regression_baseline": {
+  "source": "lane HEAD 42137e6 full build by kiwi-coder (3915/0) and d2049d7 (3932/0); pinned stage baseline 3907/0",
+  "failures": []
+ },
+ "regression_pass": true,
+ "pr_responded": false,
+ "failed": false,
+ "outcome": {
+  "status": "NEEDS_USER",
+  "gate": "fix-induced-defects-majority",
+  "check_review_round": "NEEDS_USER (earlier-fix-majority)",
+  "open_block": [
+   "FND-101"
+  ],
+  "resolved_in_worktree": [
+   "FND-001"
+  ],
+  "record": [],
+  "uncommitted_patch": "analysis/round1-fix-FND-001.patch"
+ }
+}

@@ -1,0 +1,122 @@
+{
+  "round": 2,
+  "trees": {"from": "0c249b4ded4b9ef0aace6db694a1ed4e764ec105", "to": "1e1c1708ddd9834d57fddc6d01ebfd6401db958a"},
+  "regression_run": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --rerun -q ; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-tinyhttpd:test --tests '*WebSocket*' --tests '*Abort*' --rerun -q",
+    "output": "exit 0; NaruServe-api 344 result files, 2981 tests, 0 failures, 0 errors, 0 skipped (incl. ResponseOnAbortTest FR_HTTP_035_AC7_legacyUpgradeAbortReportedBeforeOnOpenAbortsTheResponse and ...RefusesTheLateOpen); NaruServe-tinyhttpd WebSocket/Abort classes 18 result files, 0 failures"
+  },
+  "resolved_findings": ["FND-201", "FND-202"],
+  "resolved_notes": {
+    "FND-201": "Dispatcher.java:290 now registers ex.onAbort(res::abortByExchange); the gate is DefaultResponse.sessionOpen, set only by openSession() from DefaultWebSocketSession.onOpen, so an exchange abort before onOpen aborts the NEW response (listeners once, one 'GET /ws ... aborted' line, no 500). Pinned by ResponseOnAbortTest:760 (adapter throws after the abort) and :793 (permissive adapter still opens), both green.",
+    "FND-202": "The check-then-act window is gone: abort(...,byExchange) and openSession() decide under the same DefaultResponse monitor (DefaultResponse:835-842, :971-977). An abort between Dispatcher:332 state()==NEW and onOpen leaves the response ABORTED, so onOpen refuses (no 101 line, no handler, channel.abort(), no WS close line) and only the aborted request line is written. Pinned by ResponseOnAbortTest:793. An abort after openSession() returned true is ignored by the response (FR-APP-019 AC-8 holds: one 101 line, session close line only)."
+  },
+  "unresolved_findings": [],
+  "findings": [
+    {
+      "id": "FND-301",
+      "verdict": "residual",
+      "title": "Abort reported after the adapter wrote 101 but before onOpen is logged with status 200, not 101",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultWebSocketSession.java", "line_range": "170-176"},
+      "description": "TinyHttpd writes the 101 in CapturingResponse.upgrade (TinyHttpdWebSocket.java:106-118, markUpgraded) before WebSocket.run calls listener.onOpen. An exchange abort in that window (e.g. TinyHttpdAdapter.stop aborting every exchange, TinyHttpdAdapter.java:195) makes DefaultResponse ABORTED while its status is still the default 200, so onOpen refuses and the single request line reads 'GET /ws 200 ... aborted' although the client received 101 on the wire. FR-APP-019 AC-3 says an after-commit abort logs 'its committed status'; whether the adapter-side 101 counts as the core response's commit is not specified. Not proven to break an AC; window is tiny and only reachable through adapter stop.",
+      "evidence": {"command": "static analysis only (no proof test)", "output": "", "intent_output": ""},
+      "drop_reason": "",
+      "suggested_fix": "Either document that a refused open logs the pre-upgrade status, or have the refusal path record status 101 before the aborted line when the adapter reports the 101 as written.",
+      "is_behavioral": true,
+      "tags": ["access-log", "FR-APP-019", "FR-HTTP-035", "unproven", "edge"]
+    },
+    {
+      "id": "FND-302",
+      "verdict": "drop",
+      "title": "Error thrown from a ws handler aborts the NEW response of an open session with a second request line (pre-existing)",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java", "line_range": "339-342"},
+      "description": "opening() catches only Exception from h.handle; an Error escapes onOpen and ex.webSocket (upgrade catches IOException|RuntimeException only), reaching Dispatcher's catch (Error e) { res.abort(e); }. abort(e) is the non-exchange path, so sessionOpen does not gate it, and the still-NEW response writes 'GET /ws 200 ... aborted' after the '101' line.",
+      "evidence": {"command": "static analysis; behaviour identical at HEAD (old upgrading flag also gated only the exchange onAbort lambda)", "output": "", "intent_output": ""},
+      "drop_reason": "Pre-existing and not introduced or touched by this round's diff; Error-path only. Out of round scope.",
+      "suggested_fix": "",
+      "is_behavioral": true,
+      "tags": ["pre-existing", "out-of-scope"]
+    },
+    {
+      "id": "FND-303",
+      "verdict": "drop",
+      "title": "Refused session resource/registry handling",
+      "location": {"file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultWebSocketSession.java", "line_range": "170-181, 268-291"},
+      "description": "Checked: a refused session never stores a channel, never sets opened, never acquires a sender slot or idle watch. onClose on it skips the close line and calls idle.unwatch / sender.release, both null-safe (WebSocketIdleScheduler:66-71, WebSocketSender:217-221); abort()/closeBy()/submit()/isOpen() are null-channel safe; sender.awaitIdle returns at once (WebSocketSender:152-156); registry.remove runs in WebSocketUpgrade.upgrade's finally, so no session-count leak; WebSocketRegistry.awaitDone waits for removal (bounded by the 1 s close wait), it does not block shutdown. res.upgraded() after a refusal is a no-op on ABORTED (DefaultResponse:939-943). TinyHttpd's WebSocket.run catches the IOException from the dropped connection and always delivers onClose (TinyHttpd WebSocket.java run/finally), so the refusal does not reach the error path with TinyHttpd. HttpExecution only calls public abort (byExchange=false) and never upgrades, so it is unaffected. No test weakened (test diff is additions only).",
+      "evidence": {"command": "static analysis + regression run above", "output": "all green", "intent_output": ""},
+      "drop_reason": "No defect found; recorded as coverage of the requested checks.",
+      "suggested_fix": "",
+      "is_behavioral": false,
+      "tags": ["checked-no-defect"]
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-301",
+      "principle": "Temporal coupling / setter injection of a mandatory collaborator",
+      "location": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultWebSocketSession.java:60-61,96-100; WebSocketUpgrade.java:93-95",
+      "description": "The response is a required gate for every production session but is passed by a setter after construction, with a nullable 'null opens unchecked' mode that only non-production callers use. A constructor parameter would make the dependency explicit and remove the forgotten-setter path."
+    },
+    {
+      "id": "CC-302",
+      "principle": "DRY (new test code, distinct from dismissed CC-004 lines 62-176)",
+      "location": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java:760-791 vs 793-853",
+      "description": "The two new tests repeat the same app/logger/middleware setup and the same five aborted-line assertions; a shared helper would keep them in step. Low priority."
+    }
+  ],
+  "clean_code_resolved": ["CC-201"],
+  "clean_code_resolved_notes": {
+    "CC-201": "The abort gate no longer lives in handleLegacy: the AtomicBoolean upgrading, its lambda and upgrading.set(true) are gone (Dispatcher:290 is one line, :333 removed); the decision moved to DefaultResponse.abortByExchange/openSession."
+  },
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+      "hunks_total": 4,
+      "anchors": [
+        "    private boolean sessionOpen;",
+        "    void abortByExchange() {",
+        "            if (state == ResponseState.COMPLETED || state == ResponseState.ABORTED || (byExchange && sessionOpen)) {",
+        "    synchronized boolean openSession() {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultWebSocketSession.java",
+      "hunks_total": 6,
+      "anchors": [
+        "    private volatile boolean refused;",
+        "    void response(DefaultResponse res) {",
+        "    /** Stores the channel and writes the 101 access line before anything else runs, the handler included. */",
+        "    // @req FR-HTTP-035",
+        "        if (r != null && !r.openSession()) {",
+        "        if (!refused) { // a refused open wrote no 101 line, so it writes no close line"
+      ],
+      "findings": ["FND-301", "FND-303", "CC-301"]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+      "hunks_total": 3,
+      "anchors": [
+        "        // Only until the session opens: an abort of the upgraded connection ends the session, whose close line",
+        "        ex.onAbort(res::abortByExchange);",
+        "                upgrading.set(true);"
+      ],
+      "findings": ["FND-302"]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        session.response(res); // FR-HTTP-035 AC-7: onOpen asks res whether an abort came first"
+      ],
+      "findings": ["CC-301"]
+    },
+    {
+      "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "    public void FR_HTTP_035_AC7_legacyUpgradeAbortReportedBeforeOnOpenRefusesTheLateOpen() {"
+      ],
+      "findings": ["CC-302"]
+    }
+  ]
+}

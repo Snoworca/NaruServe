@@ -1,0 +1,13 @@
+{
+ "command": "./gradlew -PtinyHttpdFromMaven=true build",
+ "tree": "1e1c1708ddd9834d57fddc6d01ebfd6401db958a",
+ "tests": 3936,
+ "failures": 0,
+ "errors": 0,
+ "exit_code": 0,
+ "baseline": {
+  "head": "184e89c",
+  "tests": 3934,
+  "failures": 0
+ }
+}

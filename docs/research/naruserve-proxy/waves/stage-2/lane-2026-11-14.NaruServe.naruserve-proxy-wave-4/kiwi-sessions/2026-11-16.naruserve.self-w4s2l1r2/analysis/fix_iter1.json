@@ -1,0 +1,49 @@
+{
+  "iter": 1,
+  "fixes": [
+    {
+      "finding_id": "FND-201",
+      "also_addresses": [
+        "FND-202"
+      ],
+      "files_changed": [
+        {
+          "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+          "line_range": "87-88,819-836,965-978",
+          "loc_changed": 32
+        },
+        {
+          "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultWebSocketSession.java",
+          "line_range": "60-63,96-101,160-176,278-280",
+          "loc_changed": 26
+        },
+        {
+          "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+          "line_range": "286-290,333",
+          "loc_changed": 10
+        },
+        {
+          "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java",
+          "line_range": "93-95",
+          "loc_changed": 4
+        },
+        {
+          "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+          "line_range": "730-854",
+          "loc_changed": 125
+        }
+      ],
+      "tests_added": [
+        "com.snoworca.naruserve.ResponseOnAbortTest.FR_HTTP_035_AC7_legacyUpgradeAbortReportedBeforeOnOpenAbortsTheResponse",
+        "com.snoworca.naruserve.ResponseOnAbortTest.FR_HTTP_035_AC7_legacyUpgradeAbortReportedBeforeOnOpenRefusesTheLateOpen"
+      ],
+      "red_output": "20 tests completed, 2 failed. FR_HTTP_035_AC7_legacyUpgradeAbortReportedBeforeOnOpenAbortsTheResponse :: AssertionError: [ERROR request 0554b9f2f5fbd6c7 failed peer gone before the 101, INFO GET /ws 500 0ms in=0 out=100 rid=0554b9f2f5fbd6c7] expected:<1> but was:<0> | FR_HTTP_035_AC7_legacyUpgradeAbortReportedBeforeOnOpenRefusesTheLateOpen :: AssertionError: [INFO GET /ws 101 0ms in=0 out=0 rid=b858578baea89691, INFO WS /ws 1006 0ms rid=b858578baea89691] expected:<1> but was:<0>",
+      "green_output": "ResponseOnAbortTest: 20 tests, 0 failures, 0 errors (incl. FR_APP_019_AC8_exchangeReportedAbortDuringAnOpenSessionWritesNoSecondRequestLine and FR_HTTP_035_AC7_legacyUpgradePathExchangeReportedAbortRunsEachListenerOnce)",
+      "module_test": "NaruServe-api 2981 tests, 0 failures; NaruServe-tinyhttpd 218 tests, 0 failures",
+      "rationale_strip": "",
+      "rationale_full": "The legacy path ignored exchange-reported aborts from the moment upgrades.run started (upgrading flag), though no 101 exists until the session's onOpen. The gate now sits at onOpen and is decided under the DefaultResponse monitor: DefaultResponse.openSession() (synchronized) returns false unless state==NEW, else sets sessionOpen; the exchange hook is res::abortByExchange, which shares abort's synchronized block and returns when sessionOpen is set, so open-vs-abort is atomic (FND-202 check-then-act removed). WebSocketUpgrade.run hands res to the session (session.response(res)); DefaultWebSocketSession.onOpen asks openSession() first and on false marks itself refused, aborts the channel and returns without the 101 line, opening() or the handler; onClose of a refused session writes no WS close line. Pre-open abort then leaves the response ABORTED (listeners once via abort, one 'GET /ws ... aborted' line from onDone); a webSocket throw before opened() still propagates to errors.handle, which leaves an ABORTED response unchanged; res.upgraded() is a no-op on ABORTED. After a successful openSession the exchange abort is a no-op, keeping FR-APP-019 AC-8.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    }
+  ]
+}

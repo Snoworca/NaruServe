@@ -1,0 +1,46 @@
+{
+  "round": 2,
+  "immediate_fix": [],
+  "declared_limit": [
+    {
+      "id": "FND-301",
+      "rationale": "Proven by execution, no AC breached, and the only divergence (the status token of the access line) is FR-APP-019 behaviour outside the guarantee scope (IR-HTTP-014, FR-HTTP-035). Behaviour: an exchange abort reported after the adapter wrote 101 but before WebSocketEndpoint.onOpen makes res.abortByExchange end the still-NEW response ABORTED; abort() calls fireDone at once (DefaultResponse.java:843-855), so the legacy onDone line (Dispatcher.java:301-311) is written at abort time with res.statusCode() = 200; the later onOpen then sees openSession()==false and refuses (DefaultWebSocketSession.java:170-176): no 101 line, no handler, channel.abort(), no WS close line. Result: one line `GET /ws 200 aborted ...` while the client got 101. Spec reading: (a) FR-HTTP-035 AC-7 requires an exchange-reported abort to run each res.onAbort listener once; the response had not completed, so ending it ABORTED is required, and HEAD's behaviour (abort ignored once `upgrading` was set, 101 line + WS close line, listener never run) broke AC-7 in this window. (b) FR-APP-019 AC-8 / D-430 define the 101 line as written in the endpoint's onOpen for an accepted upgrade; the core does not accept this session (its onOpen refuses), and D-444 says an upgrade that does not reach onOpen takes its ordinary line - the ordinary aborted line of a never-committed core response carries the default status, as for any pre-commit abort. (c) FR-APP-019 AC-3 'committed status' refers to the core response's commit; DefaultResponse never committed (rec.commits == 0) - the 101 was written by the adapter inside HttpExchange.webSocket. (d) The SPI gives the core no way to see the 101 write before onOpen: HttpExchange.webSocket javadoc says only 'the exchange is started once 101 is written', with no started/committed query; WebSocketEndpoint.onOpen ('The handshake completed') is the first signal; HttpExchange.responseStatus() (adapter-generated status) is read only on the HttpExecution path (Dispatcher.ResponseMetrics :522-536), not on the legacy WebSocket path, and TinyHttpd does not override it. Because the line is written at abort time, logging 101 would need the core to defer the access line or a new SPI signal - a design change, not a fix. Not covered by docs either way: docs/api/logging.md:59 covers only upgrades refused 'before 101' (403/426/503). Real path: reachable in principle with TinyHttpd (TinyHttpdAdapter.stop :195 aborts every tracked exchange after s.stop(); TinyHttpdExchange.abort :271-285 still fires listeners on a started, unfinished exchange; CapturingResponse.upgrade -> onCommitted precedes Listener.onOpen, TinyHttpdWebSocket.java:105-145), only in the forced-abort window after the grace deadline, and not reproduced on TinyHttpd by execution. Not a block: no AC is violated and the behaviour is the one FR-HTTP-035 AC-7 and D-444 require of the core; the user may promote it. Follow-up candidate (FR-APP-019 / docs/api/logging.md, not this wave): state that an upgrade whose abort is reported before onOpen logs one ordinary `aborted` line with the pre-upgrade status and no 101/close line, or add an SPI signal for '101 written' if the wire status must be logged.",
+      "evidence": "Temporary proof NaruServe-api/src/test/java/com/snoworca/naruserve/TmpProofFnd301Test.java (deleted after the run; git status back to 5 modified + ?? .kiwi/). RecordingExchange behind a Proxy whose onAbort registers with an AbortListeners; webSocketScript = {wire101=true (adapter wrote 101); aborts.abort() (adapter-reported abort, as TinyHttpdAdapter.stop); endpoint.onOpen(channel); endpoint.onClose(1006,\"\")}; app.use registers res.onAbort counter; app.ws(\"/ws\", ...). Command: ./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.TmpProofFnd301Test' --rerun -q -i. Output: `FND301-PROOF wire101=true runs=1 lines=[GET /ws 200 aborted 2ms in=0 out=0 rid=17be622596d87399]`; the deliberately non-AC assertion `line startsWith \"GET /ws 101 \"` FAILED: `logged status differs from wire 101: GET /ws 200 aborted 2ms in=0 out=0 rid=17be622596d87399`. The AC-derived assertions held: listener ran once (FR-HTTP-035 AC-7), exactly one request line, no 101 line, no WS close line (FR-APP-019 AC-8 refusal clause / D-444). Same sequence is pinned green by ResponseOnAbortTest#FR_HTTP_035_AC7_legacyUpgradeAbortReportedBeforeOnOpenRefusesTheLateOpen (does not pin the 200 token).",
+      "limit_reason": "outside_guarantee_scope"
+    }
+  ],
+  "kept_tiers": [
+    {
+      "id": "FND-301",
+      "tier": "record",
+      "family": "legacy-upgrade-abort-gating",
+      "introduced_by_round": 1,
+      "family_action": "declare-limit"
+    }
+  ],
+  "discussion_needed": [],
+  "rejected": [
+    {
+      "id": "FND-302",
+      "rationale": "Pre-existing, not introduced by this wave. At the wave base 730b55b the same path exists unchanged: DefaultWebSocketSession.opening catches only Exception from h.handle (base :203-205), WebSocketUpgrade.upgrade catches only IOException|RuntimeException around ex.webSocket (base :112) and calls res.upgraded() only after webSocket returns (base :94), and Dispatcher.handleLegacy's catch (Error e) { res.abort(e); ... throw e; } (base :334-337) aborts the still-NEW response, whose onDone (base :295-305) writes `GET /ws 200 aborted` because upgraded101() is false - after the session's 101 line. This round's diff does not touch it: abort(e) is the public non-exchange path (byExchange=false), which sessionOpen intentionally does not gate. Error-only path; outside IR-HTTP-014 / FR-HTTP-035. Follow-up: an FR-APP-019 / FR-WS item to keep an Error from a ws handler from writing a second request line (e.g. check upgraded/sessionOpen before res.abort(e) on the Error path, or catch Error in opening()).",
+      "rejection_category": "out_of_scope"
+    },
+    {
+      "id": "FND-303",
+      "rationale": "No defect: the reviewer's own checklist of the refused-session paths (no channel stored, no sender slot or idle watch, null-safe idle.unwatch/sender.release, registry.remove in upgrade's finally, res.upgraded() no-op on ABORTED, TinyHttpd always delivers onClose, HttpExecution unaffected) found nothing; recorded as coverage only.",
+      "rejection_category": "dropped"
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-301",
+      "status": "dismissed",
+      "reason": "Conflicts with the existing wiring convention: request-scoped collaborators are attached after construction by package-private setters (DefaultResponse.request(req), sseRegistry, listenerLogger, mimeTypes, resolverTap, all called in Dispatcher), and session.response(res) follows it on the single production construction site (WebSocketUpgrade.java:93-94, set on the next line before upgrade). A constructor parameter would not remove the nullable mode: the shared test factory WebSocketSenderTest.session(...) (:237-241, the only other `new DefaultWebSocketSession`, used by DefaultWebSocketSessionTest, WebSocketRegistryTest, WebSocketShutdownTest and others) builds sessions with no response and would pass null. The setter is null-checked (Objects.requireNonNull)."
+    },
+    {
+      "id": "CC-302",
+      "status": "dismissed",
+      "reason": "Matches the class's established style: every ResponseOnAbortTest method builds its own DefaultRestApp/logger/middleware inline (9 such setups) so each AC test reads standalone; the reusable parts are already extracted as reporting(...) and requestLines(...). The two tests differ in the adapter script and in their extra assertions (commits==0 vs handlerRuns/channelEnds/no WS line), so a shared helper would save about 10 lines and hide which AC each assertion pins. Same reasoning as the earlier dismissed test-duplication item CC-004."
+    }
+  ]
+}
