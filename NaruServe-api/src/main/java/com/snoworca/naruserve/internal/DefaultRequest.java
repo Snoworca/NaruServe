@@ -14,12 +14,16 @@ import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.JsonCodec;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jspecify.annotations.Nullable;
 
@@ -50,6 +54,9 @@ public final class DefaultRequest implements Request {
     private @Nullable Type jsonType;
     private @Nullable Object jsonValue;
     private volatile @Nullable Map<String, List<String>> query;
+    private final Object headerLock = new Object();
+    // Built once under headerLock on the first headerNames() or rawHeaders() call.
+    private volatile @Nullable HeaderEnumeration headerEnumeration;
     private volatile Cookie @Nullable [] cookies;
     private final @Nullable ApplicationContext context;
     private final @Nullable JsonCodec codec;
@@ -248,18 +255,54 @@ public final class DefaultRequest implements Request {
         return exchangeInput();
     }
 
-    /** Empty until header enumeration is implemented. */
+    /** The header names lowercased with {@link Locale#ROOT} in first-seen order; built once per request. */
     // @req IR-HTTP-013
+    // @req FR-HTTP-032
     @Override
-    public java.util.Set<String> headerNames() {
-        return Collections.emptySet();
+    public Set<String> headerNames() {
+        return headerEnumeration().names;
     }
 
-    /** Empty until header enumeration is implemented. */
+    /** The adapter's header lines as immutable entries in its order, case and multiplicity; built once per request. */
     // @req IR-HTTP-013
+    // @req FR-HTTP-032
     @Override
     public List<Map.Entry<String, String>> rawHeaders() {
-        return Collections.emptyList();
+        return headerEnumeration().raw;
+    }
+
+    // @req FR-HTTP-032
+    private HeaderEnumeration headerEnumeration() {
+        HeaderEnumeration h = headerEnumeration;
+        if (h == null) {
+            synchronized (headerLock) {
+                h = headerEnumeration;
+                if (h == null) {
+                    h = new HeaderEnumeration(ex.headers());
+                    headerEnumeration = h;
+                }
+            }
+        }
+        return h;
+    }
+
+    /** {@link #headerNames()} and {@link #rawHeaders()} built together from one pass over the adapter's list. */
+    // @req FR-HTTP-032
+    private static final class HeaderEnumeration {
+        final Set<String> names;
+        final List<Map.Entry<String, String>> raw;
+
+        // @req FR-HTTP-032
+        HeaderEnumeration(List<Map.Entry<String, String>> headers) {
+            Set<String> n = new LinkedHashSet<>();
+            List<Map.Entry<String, String>> r = new ArrayList<>(headers.size());
+            for (Map.Entry<String, String> e : headers) {
+                n.add(e.getKey().toLowerCase(Locale.ROOT));
+                r.add(new AbstractMap.SimpleImmutableEntry<>(e.getKey(), e.getValue()));
+            }
+            names = Collections.unmodifiableSet(n);
+            raw = Collections.unmodifiableList(r);
+        }
     }
 
     /** False until the trusted proxy predicate is implemented. */
