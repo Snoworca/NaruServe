@@ -14,12 +14,16 @@ import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.JsonCodec;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jspecify.annotations.Nullable;
 
@@ -50,6 +54,9 @@ public final class DefaultRequest implements Request {
     private @Nullable Type jsonType;
     private @Nullable Object jsonValue;
     private volatile @Nullable Map<String, List<String>> query;
+    private final Object headerLock = new Object();
+    // Built once under headerLock on the first headerNames() or rawHeaders() call.
+    private volatile @Nullable HeaderEnumeration headerEnumeration;
     private volatile Cookie @Nullable [] cookies;
     private final @Nullable ApplicationContext context;
     private final @Nullable JsonCodec codec;
@@ -200,9 +207,13 @@ public final class DefaultRequest implements Request {
         if (input != null) input.close();
     }
 
-    /** The exchange body counted by {@link #body()}; only a reader that took the body calls this. */
+    /**
+     * The exchange body counted by {@link #body()}. The JSON, form and multipart readers call this after taking the
+     * body; the public bodyStream overrides call it directly until the one-read rule applies to them.
+     */
     // @req FR-JSON-001
-    InputStream bodyStream() {
+    // @req IR-HTTP-013
+    InputStream exchangeInput() {
         synchronized (inputLock) {
             if (inputClosed) throw new BodyAlreadyConsumedException("request body is closed");
             if (ownedInput != null) return body.stream(ownedInput);
@@ -228,6 +239,81 @@ public final class DefaultRequest implements Request {
             throw failure;
         }
         return body.stream(input);
+    }
+
+    /** The exchange body; the one-read rule and the raw body limit are not applied yet. */
+    // @req IR-HTTP-013
+    @Override
+    public InputStream bodyStream() {
+        return exchangeInput();
+    }
+
+    /** As {@link #bodyStream()}; {@code maxBytes} is not enforced yet. */
+    // @req IR-HTTP-013
+    @Override
+    public InputStream bodyStream(long maxBytes) {
+        return exchangeInput();
+    }
+
+    /** The header names lowercased with {@link Locale#ROOT} in first-seen order; built once per request. */
+    // @req IR-HTTP-013
+    // @req FR-HTTP-032
+    @Override
+    public Set<String> headerNames() {
+        return headerEnumeration().names;
+    }
+
+    /** The adapter's header lines as immutable entries in its order, case and multiplicity; built once per request. */
+    // @req IR-HTTP-013
+    // @req FR-HTTP-032
+    @Override
+    public List<Map.Entry<String, String>> rawHeaders() {
+        return headerEnumeration().raw;
+    }
+
+    // @req FR-HTTP-032
+    private HeaderEnumeration headerEnumeration() {
+        HeaderEnumeration h = headerEnumeration;
+        if (h == null) {
+            synchronized (headerLock) {
+                h = headerEnumeration;
+                if (h == null) {
+                    h = new HeaderEnumeration(ex.headers());
+                    headerEnumeration = h;
+                }
+            }
+        }
+        return h;
+    }
+
+    /** {@link #headerNames()} and {@link #rawHeaders()} built together from one pass over the adapter's list. */
+    // @req FR-HTTP-032
+    private static final class HeaderEnumeration {
+        final Set<String> names;
+        final List<Map.Entry<String, String>> raw;
+
+        // @req FR-HTTP-032
+        HeaderEnumeration(List<Map.Entry<String, String>> headers) {
+            Set<String> n = new LinkedHashSet<>();
+            List<Map.Entry<String, String>> r = new ArrayList<>(headers.size());
+            for (Map.Entry<String, String> e : headers) {
+                n.add(e.getKey().toLowerCase(Locale.ROOT));
+                r.add(new AbstractMap.SimpleImmutableEntry<>(e.getKey(), e.getValue()));
+            }
+            names = Collections.unmodifiableSet(n);
+            raw = Collections.unmodifiableList(r);
+        }
+    }
+
+    /**
+     * Whether the app's proxy trust setting trusts the socket peer: the same {@link ProxyTrustSetting#trustsPeer}
+     * decision that {@link #remoteAddress()} and {@link #isSecure()} make before they use a forwarding header.
+     */
+    // @req IR-HTTP-013
+    // @req FR-HTTP-034
+    @Override
+    public boolean isFromTrustedProxy() {
+        return proxyTrust.trustsPeer(ex.remoteAddress());
     }
 
     // @req FR-JSON-001
@@ -283,7 +369,7 @@ public final class DefaultRequest implements Request {
         try {
             FormData d = body.sharedParse(() -> {
                 if (urlencoded) {
-                    return FormData.urlencoded(FormBodyReader.read(bodyStream(), contentLength(), formLimit));
+                    return FormData.urlencoded(FormBodyReader.read(exchangeInput(), contentLength(), formLimit));
                 }
                 if (!multipartBody) {
                     return FormData.EMPTY; // unreachable: sharedParse refuses a body that is not UNREAD
@@ -292,7 +378,7 @@ public final class DefaultRequest implements Request {
                 if (boundary == null) {
                     throw new HttpException(400, "multipart/form-data without a valid boundary");
                 }
-                return FormData.multipart(MultipartParser.parse(bodyStream(), contentLength(), boundary, multipart,
+                return FormData.multipart(MultipartParser.parse(exchangeInput(), contentLength(), boundary, multipart,
                         formLimit, spool));
             });
             boolean late;
