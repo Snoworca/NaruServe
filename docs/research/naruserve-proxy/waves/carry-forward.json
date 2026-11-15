@@ -12,6 +12,18 @@
       "owner_requirement": "OPS-DX-008",
       "reason_class": "cross-wave-carry-forward",
       "note": "docs/api/request.md must document bodyStream, headerNames, rawHeaders, isFromTrustedProxy; the run decomposition assigns this documentation to OPS-DX-008 in wave-21, which is not yet dispatched (verify-loop.md §8: carry to a remaining wave). The wave-21 worker must make this red check green; loop P for wave-21 re-checks it."
+    },
+    {
+      "from": "wave-4",
+      "round": 1,
+      "finding": "LP-10",
+      "cites": "C-005",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave4CoreProbeTest.java::C_005_docsApiResponseDocumentsAppendOnAbortAndRelay",
+      "evidence": "LoopPWave4CoreProbeTest > C_005_docsApiResponseDocumentsAppendOnAbortAndRelay FAILED\n    java.lang.AssertionError: res.append missing (LoopPWave4CoreProbeTest.java:260)\n6 tests completed, 1 failed. grep -c 'append(|onAbort(|relay(' docs/api/response.md docs/api/en/response.md -> 0 and 0 at 11ed8c4.",
+      "carried_into": "wave-8",
+      "owner_requirement": "OPS-DX-009",
+      "reason_class": "cross-wave-carry-forward",
+      "note": "docs/api/response.md and docs/api/en/response.md must document Response.append, onAbort and relay; the graph assigns this to OPS-DX-009 in wave-8 (not yet dispatched). The wave-8 worker makes it green; wave-8 loop P re-checks it."
     }
   ]
 }
