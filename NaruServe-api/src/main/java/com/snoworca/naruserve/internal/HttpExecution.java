@@ -24,6 +24,7 @@ final class HttpExecution {
                   ErrorPath errors,Runnable finalHandler,Runnable terminalLog) {
         this.request=request; this.response=response; this.lifecycle=lifecycle; this.errors=errors;
         this.finalHandler=finalHandler; this.terminalLog=terminalLog; this.root=new RouterCursor(router,null,null);
+        response.listenerLogger(errors.logger); // FR-HTTP-035 AC-4: a failing onAbort listener logs to the app
         response.onDone(this::responseDone);
     }
     void start(com.snoworca.naruserve.spi.HttpExchange exchange) {

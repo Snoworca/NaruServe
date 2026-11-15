@@ -8,6 +8,8 @@ import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.ResourceResolver;
 import com.snoworca.naruserve.Response;
 import com.snoworca.naruserve.SseClient;
+import com.snoworca.naruserve.common.AbortListeners;
+import com.snoworca.naruserve.common.SafeCallbacks;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.JsonCodec;
 import java.io.ByteArrayOutputStream;
@@ -82,7 +84,8 @@ public final class DefaultResponse implements Response {
     private @Nullable SseRegistry sseRegistry;
     private @Nullable DefaultSseClient sseClient;
     private boolean upgraded101;
-    private final List<Runnable> abortListeners = new ArrayList<>();
+    private final AbortListeners abortListeners = new AbortListeners();
+    private @Nullable SafeLogger listenerLogger;
 
     /** Status 200, no headers, state NEW; {@code headRequest} makes every body bodyless. */
     // @req FR-HTTP-013
@@ -112,6 +115,21 @@ public final class DefaultResponse implements Response {
     // @req IR-SSE-001
     void sseRegistry(SseRegistry registry) {
         this.sseRegistry = registry;
+    }
+
+    /** The app logger an onAbort listener's RuntimeException goes to; unset means a console logger. */
+    // @req FR-HTTP-035
+    synchronized void listenerLogger(SafeLogger logger) {
+        this.listenerLogger = logger;
+    }
+
+    private synchronized SafeLogger listenerLogger() {
+        SafeLogger logger = listenerLogger;
+        if (logger == null) {
+            logger = new SafeLogger(new ConsoleLogger());
+            listenerLogger = logger;
+        }
+        return logger;
     }
 
     /**
@@ -399,11 +417,32 @@ public final class DefaultResponse implements Response {
         return this;
     }
 
-    /** Stores {@code listener}; this version does not run it. */
+    /**
+     * Runs {@code listener} once when this response ends ABORTED, at once on the calling thread when it already
+     * did, even while the aborting thread is still cleaning up; a failure it throws is logged and the next listener
+     * still runs. No response lock is held while a listener runs.
+     */
     // @req IR-HTTP-014
+    // @req FR-HTTP-035
     @Override
-    public synchronized void onAbort(Runnable listener) {
-        abortListeners.add(Objects.requireNonNull(listener, "listener"));
+    public void onAbort(Runnable listener) {
+        Objects.requireNonNull(listener, "listener");
+        Runnable logged = () -> {
+            try {
+                listener.run();
+            } catch (Throwable failure) {
+                listenerLogger().error("onAbort listener failed", failure);
+            }
+        };
+        boolean ended;
+        synchronized (this) {
+            ended = state == ResponseState.ABORTED;
+        }
+        if (ended) {
+            SafeCallbacks.run(logged); // every entry to ABORTED also runs abortListeners.abort(), so never twice
+        } else {
+            abortListeners.onAbort(logged);
+        }
     }
 
     /** Records only framework CORS grants, which the standard error response must keep. */
@@ -767,9 +806,12 @@ public final class DefaultResponse implements Response {
      * No-op once COMPLETED or ABORTED; otherwise ABORTED, the exchange aborted and a pending stream closed. Safe from
      * any thread: a running copy keeps the input and closes it itself once its read returns, so the input is never
      * closed under a read. An SSE stream ends with cause error, and runs its listeners here when no drain started.
+     * The onAbort listeners run once here, on the aborting thread, after the exchange abort and, unless a running
+     * copy closes the input itself, the input close, also when that cleanup throws.
      */
     // @req FR-HTTP-015
     // @req FR-SSE-004
+    // @req FR-HTTP-035
     @Override
     public void abort(@Nullable Throwable error) {
         boolean copyRunning;
@@ -782,12 +824,16 @@ public final class DefaultResponse implements Response {
             copyRunning = copying;
             sse = sseClient;
         }
-        if (sse != null) {
-            sse.endBy("error"); // wakes a waiting drain, which writes what is queued and ends
-        }
-        ex.abort();
-        if (!copyRunning) {
-            closeInput();
+        try {
+            if (sse != null) {
+                sse.endBy("error"); // wakes a waiting drain, which writes what is queued and ends
+            }
+            ex.abort();
+            if (!copyRunning) {
+                closeInput();
+            }
+        } finally {
+            abortListeners.abort(); // on this thread, also when the cleanup threw; no listener stops the rest
         }
         fireDone(); // a running copy fires it when it ends
         if (sse != null && !sse.drainStarted()) {
@@ -870,7 +916,8 @@ public final class DefaultResponse implements Response {
     /**
      * End state of an upgraded exchange, after {@code HttpExchange.webSocket} returned: NEW becomes COMPLETED with
      * status 101 and the exchange is finished once, without a commit (the adapter wrote the 101). A finish that fails
-     * because the connection is already gone aborts instead. No-op when the response already left NEW.
+     * because the connection is already gone aborts instead, which runs the onAbort listeners. No-op when the
+     * response already left NEW.
      */
     // @req FR-WS-001
     void upgraded() {
@@ -890,7 +937,11 @@ public final class DefaultResponse implements Response {
             synchronized (this) {
                 state = ResponseState.ABORTED;
             }
-            ex.abort();
+            try {
+                ex.abort();
+            } finally {
+                abortListeners.abort();
+            }
         }
         fireDone();
     }

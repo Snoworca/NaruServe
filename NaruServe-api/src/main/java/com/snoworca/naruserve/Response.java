@@ -82,11 +82,24 @@ public interface Response {
     }
 
     /**
-     * Registers {@code listener} for the abort of this exchange; a null listener throws
-     * {@link NullPointerException}. The default throws {@link UnsupportedOperationException} so response fakes still
-     * compile.
+     * Registers {@code listener} to run once when this response ends abnormally before it completed: a client
+     * disconnect the adapter reports through {@link com.snoworca.naruserve.spi.HttpExchange#onAbort} or a call to
+     * {@link #abort}. A response that completes normally never runs it, and a listener registered after the abort
+     * runs at once on the calling thread. A {@link RuntimeException} the listener throws is logged to the app logger
+     * and the remaining listeners and the transfer cleanup still run. A null listener throws
+     * {@link NullPointerException}. An abort that races the end of a transfer, arriving after the last byte went to
+     * the adapter but before the response recorded its completion, still ends the response aborted and runs the
+     * listener.
+     *
+     * <p>The listener may run on a thread other than the request thread: on the thread that calls {@link #abort}, or
+     * on the adapter thread that detected the disconnect. The core adds no detection of its own, so an adapter may
+     * not report a disconnect during an idle period until the next I/O, and an adapter that keeps the SPI default
+     * never reports one.
+     *
+     * <p>The default throws {@link UnsupportedOperationException} so response fakes still compile.
      */
     // @req IR-HTTP-014
+    // @req FR-HTTP-035
     default void onAbort(Runnable listener) {
         throw new UnsupportedOperationException(getClass().getName() + " has no abort listener");
     }

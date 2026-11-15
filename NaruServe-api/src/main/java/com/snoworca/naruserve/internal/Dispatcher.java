@@ -282,6 +282,7 @@ public final class Dispatcher implements ExchangeHandler {
         res.request(req);
         res.applyDefaultCache(statics.defaultCache());
         res.sseRegistry(sse);
+        res.listenerLogger(errors.logger); // FR-HTTP-035 AC-4: no HttpExecution hands it over on this path
         // The request ends once the response finished (complete or abort) and the handler chain returned, so a
         // handler may still save() an upload after res.send(); whichever comes last releases the uploads.
         AtomicInteger untilEnd = new AtomicInteger(2);
