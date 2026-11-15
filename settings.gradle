@@ -18,10 +18,13 @@ include ':NaruServe-kotlin'
 include ':NaruServe-slf4j'
 include ':NaruServe-filelog'
 include ':NaruServe-logcat'
+// @req CON-BUILD-019
+// The reverse proxy module: NaruServe-api only, and no other module depends on it.
+include ':NaruServe-proxy'
 
 // @req FR-BUILD-001
 // The Android library needs an SDK: the first existing directory of local.properties sdk.dir, ANDROID_HOME and
-// ANDROID_SDK_ROOT; without one the other nine modules still build.
+// ANDROID_SDK_ROOT; without one the other modules still build.
 def localProperties = new Properties()
 def localPropertiesFile = new File(settingsDir, 'local.properties')
 if (localPropertiesFile.isFile()) {

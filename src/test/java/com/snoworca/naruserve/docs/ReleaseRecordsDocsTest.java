@@ -31,10 +31,16 @@ public final class ReleaseRecordsDocsTest {
     static final Pattern RUN_LINE = Pattern.compile(
             "^- run ([\\w-]+): command=(.+?); date=(\\d{4}-\\d{2}-\\d{2}); result=(.+)$");
 
-    /** The nine published modules, in the order of naruModules. */
-    static final List<String> MODULES = BuildLayoutTest.MODULES;
+    /**
+     * The JAR modules of the recorded release, in the order of its naruModules. The records describe a release
+     * published before NaruServe-proxy joined the build, so the list is that release's, not BuildLayoutTest.MODULES
+     * (CON-BUILD-019).
+     */
+    static final List<String> MODULES = java.util.Collections.unmodifiableList(Arrays.asList("NaruServe-api",
+            "NaruServe-servlet", "NaruServe-tinyhttpd", "NaruServe-gson", "NaruServe", "NaruServe-kotlin",
+            "NaruServe-slf4j", "NaruServe-filelog", "NaruServe-logcat"));
 
-    /** The published modules of this build: the nine and, when an Android SDK resolved, NaruServe-android. */
+    /** The published modules of the recorded release: its JAR modules and, when an Android SDK resolved, NaruServe-android. */
     static List<String> publishedModules() {
         List<String> modules = new java.util.ArrayList<>(MODULES);
         if (BuildLayoutTest.androidIncluded()) {
@@ -73,7 +79,8 @@ public final class ReleaseRecordsDocsTest {
         return run;
     }
 
-    // SDS-AC-2, SDS-AC-4; FR-REL-001 AC-2, FR-REL-001 AC-4
+    // SDS-AC-2, SDS-AC-4; FR-REL-001 AC-2, FR-REL-001 AC-4; FR-REL-007 AC-1, FR-REL-007 AC-3 (record format, checked on the
+    // recorded release; the record of the next release is written by its release step, not by a build change)
     @Test
     public void fr_REL_001_AC2_AC4_everyReleaseRunHasOneLineWithCommandDateAndResult() throws IOException {
         for (String name : RUN_NAMES) {
@@ -83,7 +90,8 @@ public final class ReleaseRecordsDocsTest {
         }
     }
 
-    // SDS-AC-2; FR-REL-001 AC-2
+    // SDS-AC-2; FR-REL-001 AC-2; FR-REL-007 AC-1 (command, date, file list and component counts of the recorded release's
+    // modules; the next release's record, NaruServe-proxy.cdx.json included, is written by its release step)
     @Test
     public void fr_REL_001_AC2_sbomRunListsNineModuleFilesWithComponentCounts() throws IOException {
         String[] sbom = run("sbom");
@@ -215,7 +223,7 @@ public final class ReleaseRecordsDocsTest {
         }
     }
 
-    // SDS-AC-4; FR-REL-001 AC-4
+    // SDS-AC-4; FR-REL-001 AC-4; FR-REL-007 AC-3 (recorded offline build of the recorded release)
     @Test
     public void fr_REL_001_AC4_offlineBuildRunExitedZero() throws IOException {
         String[] offline = run("offline-build");

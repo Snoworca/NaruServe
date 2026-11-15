@@ -11,8 +11,9 @@ plugins {
 def kotlinVersion = '2.2.0'
 
 // @req CON-BUILD-002
+// @req CON-BUILD-019
 def naruModules = [':NaruServe-api', ':NaruServe-servlet', ':NaruServe-tinyhttpd', ':NaruServe-gson', ':NaruServe',
-                   ':NaruServe-kotlin', ':NaruServe-slf4j', ':NaruServe-filelog', ':NaruServe-logcat']
+                   ':NaruServe-kotlin', ':NaruServe-slf4j', ':NaruServe-filelog', ':NaruServe-logcat', ':NaruServe-proxy']
 def naruProjects = naruModules.collect { project(it) }
 
 // @req CON-BUILD-012
@@ -56,7 +57,7 @@ def configureCompile = { Project p ->
     }
 }
 
-// Main (api/implementation) dependencies of CON-BUILD-006 AC-1; ':' entries are projects.
+// Main (api/implementation) dependencies of CON-BUILD-019 AC-3, the list CON-BUILD-021 points to; ':' entries are projects.
 def mainDependencies = [
     ':NaruServe-api'      : [:],
     ':NaruServe-servlet'  : [api: [':NaruServe-api']],
@@ -64,9 +65,9 @@ def mainDependencies = [
     ':NaruServe-tinyhttpd': [api: [':NaruServe-api'],
                              implementation: ['com.snoworca:tinyhttpd-core:3.1.1',
                                               'com.snoworca:tinyhttpd-websocket:3.1.1']],
-    // api scope: GsonJsonCodec takes a caller-built Gson (CON-BUILD-006 AC-9).
+    // api scope: GsonJsonCodec takes a caller-built Gson (CON-BUILD-021 AC-8).
     ':NaruServe-gson'     : [api: [':NaruServe-api', 'com.google.code.gson:gson:2.14.0']],
-    // api NaruServe-gson: a NaruServe caller compiles against GsonJsonCodec and Gson; no Logcat, any JDK (CON-BUILD-006 AC-9).
+    // api NaruServe-gson: a NaruServe caller compiles against GsonJsonCodec and Gson; no Logcat, any JDK (CON-BUILD-021 AC-8).
     ':NaruServe'          : [api: [':NaruServe-api', ':NaruServe-gson'],
                              implementation: [':NaruServe-tinyhttpd']],
     ':NaruServe-kotlin'   : [api: [':NaruServe', "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"]],
@@ -74,16 +75,19 @@ def mainDependencies = [
     ':NaruServe-slf4j'    : [api: [':NaruServe-api', 'org.slf4j:slf4j-api:1.7.36']],
     ':NaruServe-filelog'  : [api: [':NaruServe-api']],
     ':NaruServe-logcat'   : [api: [':NaruServe-api']],
+    // @req CON-BUILD-019
+    // The proxy uses only the public API; NaruServe, NaruServe-kotlin and NaruServe-android never declare it.
+    ':NaruServe-proxy'    : [api: [':NaruServe-api']],
     // @req FR-BUILD-001
     ':NaruServe-android'  : [api: [':NaruServe', ':NaruServe-logcat']],
 ]
 
-// compileOnly dependencies of CON-BUILD-006 AC-2 besides the nullability library every module gets.
+// compileOnly dependencies of CON-BUILD-021 AC-1 besides the nullability library every module gets.
 def extraCompileOnly = [
     ':NaruServe-servlet': ['javax.servlet:javax.servlet-api:3.1.0', 'javax.websocket:javax.websocket-api:1.1'],
 ]
 
-// @req CON-BUILD-006
+// @req CON-BUILD-021
 // @req CON-BUILD-009
 // @req CON-BUILD-011
 def configureDependencies = { Project p ->
@@ -174,6 +178,7 @@ def moduleDescriptions = [
     'NaruServe-filelog'  : 'NaruServe Logger that writes rotating log files.',
     'NaruServe-slf4j'    : 'NaruServe Logger adapter for SLF4J (JVM only).',
     'NaruServe-servlet'  : 'Runs a NaruServe app on a Servlet 3.1+ container (JVM only).',
+    'NaruServe-proxy'    : 'NaruServe reverse proxy middleware that forwards requests to a backend HTTP server.',
     'NaruServe-android'  : 'NaruServe for Android: the default bundle, the Logcat logger and the INTERNET permission.',
 ]
 def configurePom = { Project p, MavenPublication publication ->
@@ -251,6 +256,12 @@ configure(naruProjects) { p ->
         useJUnit()
     }
 
+    // @req CON-BUILD-019
+    // javadoc fails with "No public or protected classes found to document" on a module whose main sources are only
+    // package-info.java (NaruServe-proxy before its first class); such a module publishes an empty javadoc jar.
+    def mainJava = p.sourceSets.main.java
+    p.tasks.named('javadoc') { onlyIf { mainJava.files.any { it.name != 'package-info.java' } } }
+
     def prefixes = classRefPrefixes(p.path)
     if (!prefixes.isEmpty()) {
         def checkClassReferences = p.tasks.register('checkClassReferences') {
@@ -270,7 +281,7 @@ configure(naruProjects) { p ->
     }
 }
 
-// Test fixtures source set for the in-memory HttpAdapter of a later wave (CON-BUILD-006 AC-8).
+// Test fixtures source set for the in-memory HttpAdapter of a later wave (CON-BUILD-021 AC-7).
 project(':NaruServe-api') {
     apply plugin: 'java-test-fixtures'
     // @req FR-HTTP-001
@@ -611,7 +622,7 @@ dependencies {
     testImplementation rootServletTestDependency
 }
 // @req FR-REL-005
-// checkCentralStaging stages all ten modules from scratch and fails rather than stage nine without the AAR.
+// checkCentralStaging stages every module from scratch and fails rather than stage the JAR modules without the AAR.
 def centralStagingDir = layout.buildDirectory.dir('central-staging')
 def cleanCentralStaging = tasks.register('cleanCentralStaging', Delete) {
     delete centralStagingDir
@@ -620,7 +631,7 @@ def stagedProjects = androidProject != null ? naruProjects + [androidProject] : 
 def publishToCentralStaging = stagedProjects.collect { "${it.path}:publishAllPublicationsToCentralStagingRepository" }
 tasks.register('checkCentralStaging') {
     group = 'publishing'
-    description = 'Publishes the ten modules to build/central-staging and checks the files Maven Central needs.'
+    description = 'Publishes every module to build/central-staging and checks the files Maven Central needs.'
     dependsOn cleanCentralStaging, publishToCentralStaging
     def ids = (naruModules + [':NaruServe-android']).collect { it.substring(1).toLowerCase(Locale.ROOT) }.toSorted()
     def stagedVersion = version
@@ -652,7 +663,7 @@ test {
     useJUnit()
     dependsOn checkDependencyRules
     dependsOn naruModules.collect { "${it}:testClasses" }
-    // con_BUILD_006_AC8 reads this jar.
+    // con_BUILD_006_AC8 and con_BUILD_021_AC7 read this jar.
     dependsOn ':NaruServe-api:testFixturesJar'
     mustRunAfter naruModules.collect { "${it}:check" }
     // The checks read files outside this task's inputs, so never skip them as up to date.
@@ -689,5 +700,6 @@ test {
 
 // @req FR-REL-001
 // @req CON-BUILD-017
+// @req FR-REL-007
 // Release-only tasks (SBOM, vulnerability scan, licenses); a default build never applies or resolves them.
 if (project.hasProperty('release')) { apply from: 'gradle/release.gradle' }

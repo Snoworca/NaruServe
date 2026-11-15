@@ -3,6 +3,7 @@ package com.snoworca.naruserve.build;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
@@ -34,7 +35,9 @@ public class BuildLayoutTest {
 
     public static final List<String> MODULES = Arrays.asList("NaruServe-api", "NaruServe-servlet", "NaruServe-tinyhttpd",
             "NaruServe-gson", "NaruServe", "NaruServe-kotlin", "NaruServe-slf4j", "NaruServe-filelog",
-            "NaruServe-logcat");
+            "NaruServe-logcat", "NaruServe-proxy");
+    /** The reverse proxy module: it depends on NaruServe-api only and no other module includes it (CON-BUILD-019). */
+    public static final String PROXY_MODULE = "NaruServe-proxy";
     /** The Android library (AAR) module, included only when an Android SDK resolves (FR-BUILD-001). */
     public static final String ANDROID_MODULE = "NaruServe-android";
 
@@ -124,6 +127,7 @@ public class BuildLayoutTest {
         packages.put("NaruServe-slf4j", "com.snoworca.naruserve.slf4j");
         packages.put("NaruServe-filelog", "com.snoworca.naruserve.filelog");
         packages.put("NaruServe-logcat", "com.snoworca.naruserve.logcat");
+        packages.put("NaruServe-proxy", "com.snoworca.naruserve.proxy");
         assertEquals(new HashSet<>(MODULES), packages.keySet());
 
         Pattern packageLine = Pattern.compile("(?m)^\\s*package\\s+([\\w.]+)");
@@ -405,7 +409,7 @@ public class BuildLayoutTest {
         }
     }
 
-    // SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-1, body unchanged)
+    // SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-1, body unchanged); FR-REL-007 AC-4
     @Test
     public void con_BUILD_017_AC1_rootBuildFileHoldsPluginsCompileDependenciesAndChecks() throws IOException {
         String build = read(new File(ROOT, "build.gradle"));
@@ -446,7 +450,7 @@ public class BuildLayoutTest {
         }
     }
 
-    // SDS-AC-5, SDS-AC-7; CON-BUILD-017 AC-2, CON-BUILD-014 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-2, body unchanged)
+    // SDS-AC-5, SDS-AC-7; CON-BUILD-017 AC-2, CON-BUILD-014 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-2, body unchanged); FR-REL-007 AC-4
     @Test
     public void con_BUILD_017_AC2_noModuleBuildFile() {
         for (String module : MODULES) {
@@ -456,7 +460,7 @@ public class BuildLayoutTest {
         }
     }
 
-    // SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5
+    // SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5; FR-REL-007 AC-4 (checks the conditional apply of FR-REL-007 AC-2)
     @Test
     public void con_BUILD_017_AC1_onlyReferenceToAnotherScriptIsTheGuardedReleaseApply() throws IOException {
         String build = read(new File(ROOT, "build.gradle"));
@@ -631,6 +635,10 @@ public class BuildLayoutTest {
         }
         assertNotNull("CLAUDE.md has a '- 모듈:' line", moduleLine);
         for (String module : MODULES) {
+            // OPS-BUILD-003 AC-3 expired for 0.12.0; OPS-BUILD-004 AC-1 adds NaruServe-proxy to the module line.
+            if (module.equals(PROXY_MODULE)) {
+                continue;
+            }
             assertTrue("module line names " + module, moduleLine.contains("`" + module + "`"));
         }
         // AC-3: the Android library module, built only when an Android SDK resolves (FR-BUILD-001).
@@ -665,5 +673,379 @@ public class BuildLayoutTest {
                 + "\\s*animalsniffer \\{\\s*sourceSets = \\[sourceSets\\.main\\]\\s*}\\s*dependencies \\{\\s*"
                 + "signature 'net\\.sf\\.androidscents\\.signature:android-api-level-21:[^']+@signature'").matcher(build);
         assertTrue("animal-sniffer API 21 over sourceSets.main of every Android module", sniff.find());
+    }
+    /** The {@code version = '...'} of the root build.gradle, the version the outer build published to staging. */
+    static String buildVersion(String build) {
+        Matcher m = Pattern.compile("(?m)^\\s*version = '([^']+)'").matcher(build);
+        assertTrue("build.gradle sets the version", m.find());
+        return m.group(1);
+    }
+
+    /** The modules the checkDependencyRules report has rows for, without the leading colon. */
+    private static Set<String> reportedModules() throws IOException {
+        Set<String> modules = new TreeSet<>();
+        for (String[] row : dependencyReport()) {
+            modules.add(row[0].substring(1));
+        }
+        return modules;
+    }
+
+    /**
+     * The body of the {@code def <name> = [ ... ]} block of the root build.gradle (closed by a {@code ]} at the start
+     * of a line), with comment lines and all whitespace removed.
+     */
+    static String defBlockCode(String build, String name) {
+        Matcher block = Pattern.compile("def " + name + " = \\[(.*?)\\n\\]", Pattern.DOTALL).matcher(build);
+        assertTrue("build.gradle defines " + name, block.find());
+        StringBuilder code = new StringBuilder();
+        for (String line : block.group(1).split("\n")) {
+            if (!line.trim().startsWith("//")) {
+                code.append(line);
+            }
+        }
+        return code.toString().replaceAll("\\s+", "");
+    }
+
+    /**
+     * The {@code mainDependencies} entries of the root build.gradle: project path to the entry's map literal, with
+     * comment lines and all whitespace removed.
+     */
+    static Map<String, String> mainDependencyEntries(String build) {
+        String text = defBlockCode(build, "mainDependencies");
+        Map<String, String> entries = new LinkedHashMap<>();
+        Matcher key = Pattern.compile("'(:[\\w-]+)':").matcher(text);
+        int from = 0;
+        while (key.find(from)) {
+            int open = key.end();
+            int depth = 0;
+            int end = open;
+            for (; end < text.length(); end++) {
+                char c = text.charAt(end);
+                if (c == '[') {
+                    depth++;
+                } else if (c == ']' && --depth == 0) {
+                    break;
+                }
+            }
+            assertTrue("balanced entry for " + key.group(1) + ": " + text, end < text.length());
+            assertNull("one entry per module: " + key.group(1), entries.put(key.group(1), text.substring(open, end + 1)));
+            from = end + 1;
+        }
+        return entries;
+    }
+
+    // CON-BUILD-019 AC-1: settings.gradle includes NaruServe-proxy unconditionally beside the conditional AAR
+    @Test
+    public void con_BUILD_019_AC1_settingsIncludesTheProxyModuleAndKeepsTheRootName() throws IOException {
+        String settings = read(new File(ROOT, "settings.gradle"));
+        Set<String> included = new TreeSet<>();
+        Matcher m = Pattern.compile("include\\s*\\(?\\s*['\"]:([^'\"]+)['\"]").matcher(settings);
+        while (m.find()) {
+            included.add(m.group(1));
+        }
+        assertTrue(included.toString(), included.contains(PROXY_MODULE));
+        Set<String> expected = new TreeSet<>(Arrays.asList("NaruServe-api", "NaruServe-servlet", "NaruServe-tinyhttpd",
+                "NaruServe-gson", "NaruServe", "NaruServe-kotlin", "NaruServe-slf4j", "NaruServe-filelog",
+                "NaruServe-logcat", PROXY_MODULE, ANDROID_MODULE));
+        assertEquals(expected, included);
+        Matcher android = Pattern.compile("if \\(androidSdk[^)]*\\) \\{\\s*include ':NaruServe-android'").matcher(settings);
+        assertTrue("only NaruServe-android is conditional", android.find());
+        Matcher proxy = Pattern.compile("(?m)^include ':NaruServe-proxy'$").matcher(settings);
+        assertTrue("NaruServe-proxy is included unconditionally", proxy.find());
+        assertTrue("rootProject.name is NaruServe-build",
+                Pattern.compile("rootProject\\.name\\s*=\\s*['\"]NaruServe-build['\"]").matcher(settings).find());
+    }
+
+    // CON-BUILD-019 AC-2: the root build configures NaruServe-proxy through naruModules; the module has no build file
+    @Test
+    public void con_BUILD_019_AC2_rootBuildConfiguresTheProxyModuleLikeTheOtherLibraryModules() throws Exception {
+        String build = read(new File(ROOT, "build.gradle"));
+        String list = ReleaseScriptTextTest.naruModulesList(build);
+        assertTrue(list, list.contains("':NaruServe-proxy'"));
+        File dir = new File(ROOT, PROXY_MODULE);
+        assertTrue(dir + " exists", dir.isDirectory());
+        for (String name : new String[] {"build.gradle", "build.gradle.kts"}) {
+            assertFalse(PROXY_MODULE + "/" + name, new File(dir, name).exists());
+        }
+        // java-library and the dependency configuration: the main and test classpaths, jspecify compile-only, JUnit.
+        Set<String> configurations = new TreeSet<>();
+        for (String[] row : dependencyReport()) {
+            if (row[0].equals(":" + PROXY_MODULE)) {
+                configurations.add(row[1]);
+            }
+        }
+        assertEquals(new TreeSet<>(Arrays.asList("compileClasspath", "runtimeClasspath", "testCompileClasspath",
+                "testRuntimeClasspath")), configurations);
+        assertTrue(components(PROXY_MODULE, "compileClasspath").contains("org.jspecify:jspecify:1.0.0"));
+        assertTrue(components(PROXY_MODULE, "testCompileClasspath").contains("junit:junit:4.13.2"));
+        // Publishing: the generated POM, and the jar, sources and javadoc jars the outer build staged.
+        assertTrue(PublishedPomTest.poms().keySet().toString(), PublishedPomTest.poms().containsKey("naruserve-proxy"));
+        String version = buildVersion(build);
+        File staged = new File(property("naruserve.centralStaging"), "com/snoworca/naruserve/naruserve-proxy/" + version);
+        for (String suffix : new String[] {".jar", "-sources.jar", "-javadoc.jar", ".pom", ".module"}) {
+            File f = new File(staged, "naruserve-proxy-" + version + suffix);
+            assertTrue("staged " + f, f.isFile());
+        }
+    }
+
+    // CON-BUILD-019 AC-3, CON-BUILD-019 AC-5: the main dependencies of every module, NaruServe-proxy on NaruServe-api only
+    @Test
+    public void con_BUILD_019_AC3_AC5_mainDependenciesOfEveryModuleWithTheProxyOnTheApiOnly() throws IOException {
+        Map<String, String> expected = new LinkedHashMap<>();
+        expected.put(":NaruServe-api", "[:]");
+        expected.put(":NaruServe-servlet", "[api:[':NaruServe-api']]");
+        expected.put(":NaruServe-tinyhttpd", "[api:[':NaruServe-api'],implementation:['com.snoworca:tinyhttpd-core:3.1.1',"
+                + "'com.snoworca:tinyhttpd-websocket:3.1.1']]");
+        expected.put(":NaruServe-gson", "[api:[':NaruServe-api','com.google.code.gson:gson:2.14.0']]");
+        expected.put(":NaruServe", "[api:[':NaruServe-api',':NaruServe-gson'],implementation:[':NaruServe-tinyhttpd']]");
+        expected.put(":NaruServe-kotlin", "[api:[':NaruServe',\"org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}\"]]");
+        expected.put(":NaruServe-slf4j", "[api:[':NaruServe-api','org.slf4j:slf4j-api:1.7.36']]");
+        expected.put(":NaruServe-filelog", "[api:[':NaruServe-api']]");
+        expected.put(":NaruServe-logcat", "[api:[':NaruServe-api']]");
+        expected.put(":NaruServe-proxy", "[api:[':NaruServe-api']]");
+        expected.put(":NaruServe-android", "[api:[':NaruServe',':NaruServe-logcat']]");
+        String build = read(new File(ROOT, "build.gradle"));
+        Map<String, String> entries = mainDependencyEntries(build);
+        assertEquals(expected, entries);
+        assertTrue("the Kotlin stdlib version is the build's", build.contains("def kotlinVersion = '2.2.0'"));
+        // AC-5: no other entry, and no runtimeOnly declaration anywhere, names the proxy module.
+        for (Map.Entry<String, String> e : entries.entrySet()) {
+            if (!e.getKey().equals(":" + PROXY_MODULE)) {
+                assertFalse(e.getKey() + " declares NaruServe-proxy: " + e.getValue(), e.getValue().contains("NaruServe-proxy"));
+            }
+        }
+        Matcher declared = Pattern.compile("(?m)^\\s*(api|implementation|runtimeOnly)\\b.*NaruServe-proxy").matcher(build);
+        assertFalse("no main declaration on NaruServe-proxy outside mainDependencies", declared.find());
+    }
+
+    // CON-BUILD-019 AC-4: the proxy runtime classpath is NaruServe-api and nothing else
+    @Test
+    public void con_BUILD_019_AC4_proxyRuntimeClasspathHoldsOnlyTheApi() throws IOException {
+        assertTrue("the dependency report lists " + PROXY_MODULE, reportedModules().contains(PROXY_MODULE));
+        Set<String> runtime = components(PROXY_MODULE, "runtimeClasspath");
+        assertEquals(set("com.snoworca.naruserve:NaruServe-api"), runtime);
+        for (String c : runtime) {
+            for (String banned : new String[] {"com.google.code.gson:", "com.snoworca:tinyhttpd-", "org.jetbrains.kotlin:",
+                    "org.slf4j:", "javax.servlet:", "jakarta.servlet:"}) {
+                assertFalse(c + " on the proxy runtime classpath", c.startsWith(banned));
+            }
+        }
+    }
+
+    // CON-BUILD-019 AC-5: NaruServe, NaruServe-kotlin and NaruServe-android never resolve NaruServe-proxy
+    @Test
+    public void con_BUILD_019_AC5_defaultBundlesNeitherDeclareNorResolveTheProxy() throws IOException {
+        assertTrue("the dependency report lists " + PROXY_MODULE, reportedModules().contains(PROXY_MODULE));
+        String proxy = "com.snoworca.naruserve:" + PROXY_MODULE;
+        for (String module : new String[] {"NaruServe", "NaruServe-kotlin"}) {
+            Set<String> runtime = components(module, "runtimeClasspath");
+            assertFalse(runtime.isEmpty());
+            assertFalse(module + " runtime holds the proxy: " + runtime, runtime.contains(proxy));
+        }
+        if (androidIncluded()) {
+            Set<String> runtime = components(ANDROID_MODULE, "releaseRuntimeClasspath");
+            assertFalse(runtime.isEmpty());
+            assertFalse(ANDROID_MODULE + " runtime holds the proxy: " + runtime, runtime.contains(proxy));
+        }
+        Map<String, String> entries = mainDependencyEntries(read(new File(ROOT, "build.gradle")));
+        for (String module : new String[] {":NaruServe", ":NaruServe-kotlin", ":NaruServe-android"}) {
+            assertNotNull(module + " has a mainDependencies entry", entries.get(module));
+            assertFalse(module + " " + entries.get(module), entries.get(module).contains("NaruServe-proxy"));
+        }
+    }
+
+    // CON-BUILD-019 AC-6: the proxy main classes come from the release 8 compile and are all class file major 52
+    @Test
+    public void con_BUILD_019_AC6_proxyMainClassesAreReleaseEightMajor52() throws IOException {
+        String build = read(new File(ROOT, "build.gradle"));
+        int compile = build.indexOf("def configureCompile = { Project p ->");
+        assertTrue(compile >= 0);
+        assertTrue(build.substring(compile, build.indexOf("\n}\n", compile)).contains("options.release = 8"));
+        Matcher configured = Pattern.compile("configure\\(naruProjects\\) \\{ p ->[^}]*configureCompile\\(p\\)").matcher(build);
+        assertTrue("every naruModules project gets configureCompile", configured.find());
+        List<File> classes = walk(new File(ROOT, PROXY_MODULE + "/build/classes/java/main"), ".class");
+        // javac writes package-info.class only for an annotated package, so an unannotated package-info.java alone leaves
+        // nothing to check here.
+        assertFalse("NaruServe-proxy main output holds class files (a package annotation such as @NullMarked on "
+                + "package-info.java, or a class)", classes.isEmpty());
+        for (File classFile : classes) {
+            assertEquals(classFile.getPath(), 52, majorVersion(classFile));
+        }
+    }
+
+    private static final String JSPECIFY = "org.jspecify:jspecify:1.0.0";
+    private static final String SERVLET_API = "javax.servlet:javax.servlet-api:3.1.0";
+    private static final String WEBSOCKET_API = "javax.websocket:javax.websocket-api:1.1";
+    private static final String NARU_API = "com.snoworca.naruserve:NaruServe-api";
+    private static final String LOGCAT = "com.snoworca.naruserve:NaruServe-logcat";
+
+    /** Components on a compile classpath that the matching runtime classpath lacks: what compileOnly alone brings. */
+    private static Set<String> compileOnlyComponents(String module, String compile, String runtime) throws IOException {
+        Set<String> only = components(module, compile);
+        assertFalse(module + " " + compile + " is reported", only.isEmpty());
+        only.removeAll(components(module, runtime));
+        return only;
+    }
+
+    /** The lines of build text that are code, not comment lines, and name the main {@code compileOnly} configuration. */
+    private static List<String> compileOnlyLines(String build) {
+        List<String> lines = new ArrayList<>();
+        for (String line : build.split("\n")) {
+            String code = line.trim();
+            if (!code.startsWith("//") && Pattern.compile("\\bcompileOnly\\b").matcher(code).find()) {
+                lines.add(code);
+            }
+        }
+        return lines;
+    }
+
+    // CON-BUILD-021 AC-1: jspecify compileOnly in every module, NaruServe-proxy included, the Servlet APIs in NaruServe-servlet only
+    @Test
+    public void con_BUILD_021_AC1_compileOnlyIsTheNullabilityLibraryEverywhereAndTheServletApisInTheServletModule()
+            throws IOException {
+        assertTrue("the dependency report lists every module: " + reportedModules(),
+                reportedModules().containsAll(MODULES));
+        assertTrue(MODULES.contains(PROXY_MODULE));
+        for (String module : MODULES) {
+            Set<String> expected = module.equals("NaruServe-servlet") ? set(JSPECIFY, SERVLET_API, WEBSOCKET_API)
+                    : set(JSPECIFY);
+            assertEquals(module, expected, compileOnlyComponents(module, "compileClasspath", "runtimeClasspath"));
+        }
+        if (androidIncluded()) {
+            assertEquals(ANDROID_MODULE, set(JSPECIFY),
+                    compileOnlyComponents(ANDROID_MODULE, "releaseCompileClasspath", "releaseRuntimeClasspath"));
+        }
+        // The declarations: the nullability library for every module and the extra map holding the Servlet APIs only.
+        String build = read(new File(ROOT, "build.gradle"));
+        assertEquals(Arrays.asList("p.dependencies.add('compileOnly', 'org.jspecify:jspecify:1.0.0')",
+                "extraCompileOnly.getOrDefault(p.path, []).each { p.dependencies.add('compileOnly', it) }",
+                "p.dependencies.add('compileOnly', 'org.jspecify:jspecify:1.0.0')"), compileOnlyLines(build));
+        assertEquals("':NaruServe-servlet':['" + SERVLET_API + "','" + WEBSOCKET_API + "'],",
+                defBlockCode(build, "extraCompileOnly"));
+        Matcher applied = Pattern.compile("configure\\(naruProjects\\) \\{ p ->[^}]*configureDependencies\\(p\\)").matcher(build);
+        assertTrue("every naruModules project, NaruServe-proxy included, gets configureDependencies", applied.find());
+        assertTrue(compileOnlyLines(read(new File(ROOT, "gradle/release.gradle"))).isEmpty());
+    }
+
+    // CON-BUILD-021 AC-2: the runtimeClasspath of NaruServe-api holds no artifact
+    @Test
+    public void con_BUILD_021_AC2_apiRuntimeClasspathHoldsNoArtifact() throws IOException {
+        int rows = 0;
+        for (String[] row : dependencyReport()) {
+            if (row[0].equals(":NaruServe-api") && row[1].equals("runtimeClasspath")) {
+                assertTrue("only the api project itself: " + row[2], row[2].startsWith(NARU_API + ":"));
+                rows++;
+            }
+        }
+        assertEquals("the report holds the api project's own row", 1, rows);
+        assertEquals(set(), components("NaruServe-api", "runtimeClasspath"));
+        assertEquals("[:]", mainDependencyEntries(read(new File(ROOT, "build.gradle"))).get(":NaruServe-api"));
+    }
+
+    // CON-BUILD-021 AC-3: NaruServe-gson declares Gson 2.14.0 as its only external main dependency; jspecify is not main
+    @Test
+    public void con_BUILD_021_AC3_gsonModuleDeclaresOnlyGsonBesidesTheApi() throws IOException {
+        String gson = "com.google.code.gson:gson:2.14.0";
+        assertEquals("[api:[':NaruServe-api','" + gson + "']]",
+                mainDependencyEntries(read(new File(ROOT, "build.gradle"))).get(":NaruServe-gson"));
+        // Gson 2.14.0 brings error_prone_annotations itself; the criterion limits declarations, not transitive edges.
+        assertEquals(set(NARU_API, gson, "com.google.errorprone:error_prone_annotations:2.48.0"),
+                components("NaruServe-gson", "runtimeClasspath"));
+        assertFalse(components("NaruServe-gson", "runtimeClasspath").contains(JSPECIFY));
+    }
+
+    // CON-BUILD-021 AC-4: the two Servlet APIs are compileOnly in NaruServe-servlet and absent from its runtimeClasspath
+    @Test
+    public void con_BUILD_021_AC4_servletApisAreCompileOnlyAndNeverAtRuntime() throws IOException {
+        assertEquals("[api:[':NaruServe-api']]",
+                mainDependencyEntries(read(new File(ROOT, "build.gradle"))).get(":NaruServe-servlet"));
+        assertTrue(components("NaruServe-servlet", "compileClasspath").containsAll(set(SERVLET_API, WEBSOCKET_API)));
+        Set<String> runtime = components("NaruServe-servlet", "runtimeClasspath");
+        assertEquals(set(NARU_API), runtime);
+        for (String c : runtime) {
+            assertFalse(c, c.startsWith("javax.servlet:") || c.startsWith("javax.websocket:"));
+        }
+    }
+
+    // CON-BUILD-021 AC-5: NaruServe-slf4j declares slf4j-api 1.7.36 as its only main dependency besides the api
+    @Test
+    public void con_BUILD_021_AC5_slf4jModuleDeclaresOnlySlf4jApiBesidesTheApi() throws IOException {
+        String slf4j = "org.slf4j:slf4j-api:1.7.36";
+        assertEquals("[api:[':NaruServe-api','" + slf4j + "']]",
+                mainDependencyEntries(read(new File(ROOT, "build.gradle"))).get(":NaruServe-slf4j"));
+        assertEquals(set(NARU_API, slf4j), components("NaruServe-slf4j", "runtimeClasspath"));
+    }
+
+    // CON-BUILD-021 AC-6: NaruServe has no Logcat module; of the published modules, NaruServe-proxy included, only NaruServe-android declares it
+    @Test
+    public void con_BUILD_021_AC6_onlyTheAndroidModuleDeclaresTheLogcatLogger() throws IOException {
+        String build = read(new File(ROOT, "build.gradle"));
+        Map<String, String> entries = mainDependencyEntries(build);
+        assertTrue(entries.containsKey(":" + PROXY_MODULE));
+        Set<String> declaring = new TreeSet<>();
+        for (Map.Entry<String, String> e : entries.entrySet()) {
+            if (e.getValue().contains("':NaruServe-logcat'")) {
+                declaring.add(e.getKey());
+            }
+        }
+        assertEquals(set(":" + ANDROID_MODULE), declaring);
+        Matcher declared = Pattern.compile("(?m)^\\s*(api|implementation|runtimeOnly)\\b.*NaruServe-logcat").matcher(build);
+        assertFalse("no main declaration on NaruServe-logcat outside mainDependencies", declared.find());
+        assertTrue(reportedModules().contains(PROXY_MODULE));
+        for (String module : MODULES) {
+            if (!module.equals("NaruServe-logcat")) {
+                Set<String> runtime = components(module, "runtimeClasspath");
+                assertFalse(module + " runtime holds NaruServe-logcat: " + runtime, runtime.contains(LOGCAT));
+            }
+        }
+        if (androidIncluded()) {
+            assertTrue(components(ANDROID_MODULE, "releaseRuntimeClasspath").contains(LOGCAT));
+        }
+    }
+
+    // CON-BUILD-021 AC-7: java-test-fixtures on NaruServe-api, whose testFixtures source set holds the in-memory HttpAdapter
+    @Test
+    public void con_BUILD_021_AC7_apiAppliesJavaTestFixturesForTheInMemoryAdapter() throws IOException {
+        String build = read(new File(ROOT, "build.gradle"));
+        Matcher applied = Pattern.compile("project\\(':NaruServe-api'\\) \\{\\s*apply plugin: 'java-test-fixtures'")
+                .matcher(build);
+        assertTrue("the root build applies java-test-fixtures to NaruServe-api", applied.find());
+        assertEquals("applied once, to NaruServe-api only", build.indexOf("apply plugin: 'java-test-fixtures'"),
+                build.lastIndexOf("apply plugin: 'java-test-fixtures'"));
+        File adapter = new File(ROOT,
+                "NaruServe-api/src/testFixtures/java/com/snoworca/naruserve/testing/InMemoryHttpAdapter.java");
+        assertTrue(adapter + " exists", adapter.isFile());
+        assertTrue(read(adapter).contains("implements HttpAdapter"));
+        String version = buildVersion(build);
+        File jar = new File(ROOT, "NaruServe-api/build/libs/NaruServe-api-" + version + "-test-fixtures.jar");
+        assertTrue(jar + " is built", jar.isFile());
+    }
+
+    // CON-BUILD-021 AC-8: Gson and GsonJsonCodec reach the compile classpath of NaruServe, NaruServe-kotlin and a NaruServe-only caller
+    @Test
+    public void con_BUILD_021_AC8_gsonIsApiThroughTheBootstrapAndTinyHttpdStaysOffTheKotlinCompileClasspath()
+            throws Exception {
+        String gson = "com.google.code.gson:gson:2.14.0";
+        String gsonModule = "com.snoworca.naruserve:NaruServe-gson";
+        Map<String, String> entries = mainDependencyEntries(read(new File(ROOT, "build.gradle")));
+        assertTrue(entries.get(":NaruServe-gson"), entries.get(":NaruServe-gson").startsWith("[api:[")
+                && entries.get(":NaruServe-gson").contains("'" + gson + "'"));
+        assertTrue(entries.get(":NaruServe"), entries.get(":NaruServe").matches("\\[api:\\[[^\\]]*':NaruServe-gson'.*"));
+        assertTrue(new File(ROOT, "NaruServe-gson/src/main/java/com/snoworca/naruserve/gson/GsonJsonCodec.java").isFile());
+        for (String module : new String[] {"NaruServe", "NaruServe-kotlin"}) {
+            Set<String> compile = components(module, "compileClasspath");
+            assertTrue(module + " " + compile, compile.contains(gson) && compile.contains(gsonModule));
+        }
+        for (String c : components("NaruServe-kotlin", "compileClasspath")) {
+            assertFalse("TinyHttpd on the NaruServe-kotlin compileClasspath: " + c,
+                    c.startsWith("com.snoworca:tinyhttpd-") || c.equals("com.snoworca.naruserve:NaruServe-tinyhttpd"));
+        }
+        // A Maven caller of NaruServe alone: the bootstrap POM carries NaruServe-gson in compile scope, and its POM Gson.
+        Map<String, org.w3c.dom.Element> poms = PublishedPomTest.poms();
+        Map<String, PublishedPomTest.Dep> bootstrap = PublishedPomTest.deps(poms.get("naruserve"));
+        assertEquals(bootstrap.toString(), "compile", bootstrap.get("com.snoworca.naruserve:naruserve-gson").scope);
+        assertEquals(bootstrap.toString(), "runtime", bootstrap.get("com.snoworca.naruserve:naruserve-tinyhttpd").scope);
+        Map<String, PublishedPomTest.Dep> gsonPom = PublishedPomTest.deps(poms.get("naruserve-gson"));
+        assertEquals(gsonPom.toString(), "compile", gsonPom.get("com.google.code.gson:gson").scope);
     }
 }

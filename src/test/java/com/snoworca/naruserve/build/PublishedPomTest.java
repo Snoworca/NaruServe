@@ -143,6 +143,8 @@ public class PublishedPomTest {
                     key.startsWith("javax.servlet:") || key.startsWith("jakarta.servlet:")
                             || key.startsWith("javax.websocket:"));
         }
+        // FR-REL-006 AC-2: the reverse proxy depends on the API alone (fr_REL_006_AC2 checks there is nothing else).
+        assertScope(deps(poms.get("naruserve-proxy")), "naruserve-api", "compile");
         Map<String, Dep> bootstrap = deps(poms.get("naruserve"));
         assertScope(bootstrap, "naruserve-api", "compile");
         assertScope(bootstrap, "naruserve-gson", "compile");
@@ -231,28 +233,59 @@ public class PublishedPomTest {
     @Test
     public void fr_REL_005_AC5_everyPomCarriesTheCentralMetadata() throws Exception {
         for (Map.Entry<String, Element> e : poms().entrySet()) {
-            String id = e.getKey();
-            Element project = e.getValue();
-            assertEquals(id, "com.snoworca.naruserve", text(project, "groupId"));
-            assertEquals(id, VERSION, text(project, "version"));
-            assertEquals(id, id, text(project, "name"));
-            assertFalse(id + " description", text(project, "description").isEmpty());
-            assertEquals(id, "https://github.com/Snoworca/NaruServe", text(project, "url"));
-            NodeList licenses = project.getElementsByTagNameNS("*", "license");
-            assertEquals(id + " licenses", 1, licenses.getLength());
-            assertEquals(id, "BSD 3-Clause License", text((Element) licenses.item(0), "name"));
-            assertEquals(id, "https://github.com/Snoworca/NaruServe/blob/main/LICENSE",
-                    text((Element) licenses.item(0), "url"));
-            NodeList developers = project.getElementsByTagNameNS("*", "developer");
-            assertEquals(id + " developers", 1, developers.getLength());
-            assertEquals(id, "ice3x2", text((Element) developers.item(0), "id"));
-            Element scm = (Element) project.getElementsByTagNameNS("*", "scm").item(0);
-            assertNotNull(id + " scm", scm);
-            assertEquals(id, "scm:git:https://github.com/Snoworca/NaruServe.git", text(scm, "connection"));
-            assertEquals(id, "scm:git:ssh://git@github.com/Snoworca/NaruServe.git", text(scm, "developerConnection"));
-            assertEquals(id, "https://github.com/Snoworca/NaruServe", text(scm, "url"));
-            assertFalse(id + " names no NanoHttpd license", project.getTextContent().contains("NanoHttpd"));
+            assertCentralMetadata(e.getKey(), e.getValue());
         }
+    }
+
+    /** The POM {@code project} of {@code id} carries the coordinates and metadata FR-REL-005 AC-5 requires. */
+    private static void assertCentralMetadata(String id, Element project) {
+        assertEquals(id, "com.snoworca.naruserve", text(project, "groupId"));
+        assertEquals(id, VERSION, text(project, "version"));
+        assertEquals(id, id, text(project, "name"));
+        assertFalse(id + " description", text(project, "description").isEmpty());
+        assertEquals(id, "https://github.com/Snoworca/NaruServe", text(project, "url"));
+        NodeList licenses = project.getElementsByTagNameNS("*", "license");
+        assertEquals(id + " licenses", 1, licenses.getLength());
+        assertEquals(id, "BSD 3-Clause License", text((Element) licenses.item(0), "name"));
+        assertEquals(id, "https://github.com/Snoworca/NaruServe/blob/main/LICENSE",
+                text((Element) licenses.item(0), "url"));
+        NodeList developers = project.getElementsByTagNameNS("*", "developer");
+        assertEquals(id + " developers", 1, developers.getLength());
+        assertEquals(id, "ice3x2", text((Element) developers.item(0), "id"));
+        Element scm = (Element) project.getElementsByTagNameNS("*", "scm").item(0);
+        assertNotNull(id + " scm", scm);
+        assertEquals(id, "scm:git:https://github.com/Snoworca/NaruServe.git", text(scm, "connection"));
+        assertEquals(id, "scm:git:ssh://git@github.com/Snoworca/NaruServe.git", text(scm, "developerConnection"));
+        assertEquals(id, "https://github.com/Snoworca/NaruServe", text(scm, "url"));
+        assertFalse(id + " names no NanoHttpd license", project.getTextContent().contains("NanoHttpd"));
+    }
+
+    // FR-REL-006 AC-1: the outer build generated the naruserve-proxy POM with its coordinates and the Central metadata
+    @Test
+    public void fr_REL_006_AC1_proxyPomCarriesItsCoordinatesNameDescriptionAndCentralMetadata() throws Exception {
+        boolean generated = false;
+        for (String path : System.getProperty("naruserve.pomFiles").split(",")) {
+            generated |= path.replace('\\', '/').endsWith("/NaruServe-proxy/build/publications/maven/pom-default.xml");
+        }
+        assertTrue("generatePomFileForMavenPublication of NaruServe-proxy: " + System.getProperty("naruserve.pomFiles"),
+                generated);
+        Element proxy = poms().get("naruserve-proxy");
+        assertNotNull("naruserve-proxy POM", proxy);
+        assertEquals("com.snoworca.naruserve", text(proxy, "groupId"));
+        assertEquals("naruserve-proxy", text(proxy, "artifactId"));
+        assertEquals(VERSION, text(proxy, "version"));
+        assertEquals("naruserve-proxy", text(proxy, "name"));
+        assertTrue(text(proxy, "description"), text(proxy, "description").contains("proxy"));
+        assertCentralMetadata("naruserve-proxy", proxy);
+    }
+
+    // FR-REL-006 AC-2: the naruserve-proxy POM names naruserve-api in compile scope and no other dependency
+    @Test
+    public void fr_REL_006_AC2_proxyPomDependsOnTheApiAloneInCompileScope() throws Exception {
+        Map<String, Dep> proxy = deps(poms().get("naruserve-proxy"));
+        assertEquals(proxy.toString(), java.util.Collections.singleton("com.snoworca.naruserve:naruserve-api"),
+                proxy.keySet());
+        assertScope(proxy, "naruserve-api", "compile");
     }
 
     // SDS-AC-8; FR-REL-005 AC-4

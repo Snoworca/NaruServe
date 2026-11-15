@@ -67,13 +67,14 @@ public class AuthPlacementTest {
                 "org.slf4j:slf4j-api:1.7.36")), notations);
     }
 
-    // CON-AUTH-001 AC-2: no auth Gradle project; the module list is the one of 0.10.0
+    // CON-AUTH-001 AC-2: no auth Gradle project; the module list is the one of 0.10.0 plus NaruServe-proxy
+    // (CON-BUILD-019 AC-1, CON-BUILD-019 AC-2)
     @Test
     public void CON_AUTH_001_AC2_noNewProject() throws IOException {
         String build = read("build.gradle");
         assertTrue(build.contains("def naruModules = [':NaruServe-api', ':NaruServe-servlet', ':NaruServe-tinyhttpd', "
                 + "':NaruServe-gson', ':NaruServe',\n                   ':NaruServe-kotlin', ':NaruServe-slf4j', "
-                + "':NaruServe-filelog', ':NaruServe-logcat']"));
+                + "':NaruServe-filelog', ':NaruServe-logcat', ':NaruServe-proxy']"));
         String settings = read("settings.gradle");
         TreeSet<String> includes = new TreeSet<>();
         Matcher m = Pattern.compile("include '([^']+)'").matcher(settings);
@@ -82,7 +83,7 @@ public class AuthPlacementTest {
         }
         assertEquals(new TreeSet<>(Arrays.asList(":NaruServe-api", ":NaruServe-servlet", ":NaruServe-tinyhttpd",
                 ":NaruServe-gson", ":NaruServe", ":NaruServe-kotlin", ":NaruServe-slf4j", ":NaruServe-filelog",
-                ":NaruServe-logcat", ":NaruServe-android")), includes);
+                ":NaruServe-logcat", ":NaruServe-proxy", ":NaruServe-android")), includes);
         for (String forbidden : new String[] {"NaruServe-utils", "NaruServe-utils-jdbc", "NaruServe-auth"}) {
             assertFalse(forbidden, settings.contains(forbidden));
             assertFalse(forbidden, new File(ROOT, forbidden).exists());
@@ -111,7 +112,7 @@ public class AuthPlacementTest {
         List<File> others = new ArrayList<>();
         others.add(jar("NaruServe-api", "-test-fixtures"));
         for (String module : new String[] {"NaruServe", "NaruServe-servlet", "NaruServe-tinyhttpd", "NaruServe-gson",
-                "NaruServe-kotlin", "NaruServe-slf4j", "NaruServe-filelog", "NaruServe-logcat"}) {
+                "NaruServe-kotlin", "NaruServe-slf4j", "NaruServe-filelog", "NaruServe-logcat", "NaruServe-proxy"}) {
             others.add(jar(module, ""));
         }
         for (File other : others) {
