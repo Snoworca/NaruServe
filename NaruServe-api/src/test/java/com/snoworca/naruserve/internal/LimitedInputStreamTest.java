@@ -1,12 +1,16 @@
 package com.snoworca.naruserve.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.snoworca.naruserve.BodyTooLargeException;
+import com.snoworca.naruserve.HttpException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import org.junit.Test;
 
 public class LimitedInputStreamTest {
@@ -76,7 +80,7 @@ public class LimitedInputStreamTest {
         assertEquals(-1, in.read());
     }
 
-    // SDS-AC-12; FR-HTTP-020 AC-3
+    // SDS-AC-12; IR-HTTP-011 AC-6, IR-HTTP-011 AC-3
     @Test
     public void sdsAc12_FR_HTTP_020_AC3_bulkReadsReturnTenBytesThenThrowAfterTakingEleven() throws IOException {
         CountingSource source = new CountingSource(100);
@@ -90,13 +94,14 @@ public class LimitedInputStreamTest {
             }
             fail("expected BodyTooLargeException");
         } catch (BodyTooLargeException e) {
+            assertSame(BodyTooLargeException.class, e.getClass());
             assertEquals(10, e.limit());
         }
         assertEquals(10, returned);
         assertEquals(11, source.taken);
     }
 
-    // SDS-AC-12; FR-HTTP-020 AC-3
+    // SDS-AC-12; IR-HTTP-011 AC-6
     @Test
     public void sdsAc12_FR_HTTP_020_AC3_singleByteReadsReturnTenThenThrow() throws IOException {
         CountingSource source = new CountingSource(11);
@@ -108,19 +113,22 @@ public class LimitedInputStreamTest {
             in.read();
             fail("expected BodyTooLargeException");
         } catch (BodyTooLargeException expected) {
+            assertSame(BodyTooLargeException.class, expected.getClass());
+            assertEquals(10, expected.limit());
             assertEquals(11, source.taken);
         }
     }
 
-    // SDS-AC-12; FR-HTTP-020 AC-3
+    // SDS-AC-12; IR-HTTP-011 AC-6, IR-HTTP-011 AC-1
     @Test
     public void sdsAc12_FR_HTTP_020_AC3_overLimitTypeIsADistinctIOException() {
         assertTrue(IOException.class.isAssignableFrom(BodyTooLargeException.class));
         assertEquals(IOException.class, BodyTooLargeException.class.getSuperclass());
         assertTrue(new BodyTooLargeException(10).getMessage().contains("10"));
+        assertEquals("com.snoworca.naruserve.BodyTooLargeException", BodyTooLargeException.class.getName());
     }
 
-    // SDS-AC-12; FR-HTTP-020 AC-3
+    // SDS-AC-12; IR-HTTP-011 AC-6
     @Test
     public void sdsAc12_FR_HTTP_020_AC3_skipCountsTowardTheLimit() throws IOException {
         InputStream in = new LimitedInputStream(new CountingSource(11), 10, -1);
@@ -140,7 +148,7 @@ public class LimitedInputStreamTest {
         }
     }
 
-    // SDS-AC-13; FR-HTTP-020 AC-4
+    // SDS-AC-13; IR-HTTP-011 AC-7, IR-HTTP-011 AC-3
     @Test
     public void sdsAc13_FR_HTTP_020_AC4_declaredLengthOverLimitFailsFirstReadWithoutTouchingSource()
             throws IOException {
@@ -150,6 +158,8 @@ public class LimitedInputStreamTest {
             in.read(new byte[16], 0, 16);
             fail("expected BodyTooLargeException");
         } catch (BodyTooLargeException expected) {
+            assertSame(BodyTooLargeException.class, expected.getClass());
+            assertEquals(10, expected.limit());
             assertEquals(0, source.taken);
         }
         CountingSource single = new CountingSource(11);
@@ -157,7 +167,48 @@ public class LimitedInputStreamTest {
             new LimitedInputStream(single, 10, 11).read();
             fail("expected BodyTooLargeException");
         } catch (BodyTooLargeException expected) {
+            assertSame(BodyTooLargeException.class, expected.getClass());
             assertEquals(0, single.taken);
+        }
+    }
+
+    // IR-HTTP-011 AC-3: the urlencoded form reader answers both overruns 413 with the public class as the cause
+    @Test
+    public void IR_HTTP_011_AC3_formReaderAnswersBothOverruns413ThroughThePublicClass() throws IOException {
+        byte[] eleven = "a=123456789".getBytes(StandardCharsets.US_ASCII);
+        assertEquals(11, eleven.length);
+        for (long declared : new long[] {-1, 11}) {
+            try {
+                FormBodyReader.read(new ByteArrayInputStream(eleven), declared, 10);
+                fail("expected 413 for declared length " + declared);
+            } catch (HttpException e) {
+                assertEquals(413, e.status());
+                assertSame(BodyTooLargeException.class, e.getCause().getClass());
+                assertEquals(10, ((BodyTooLargeException) e.getCause()).limit());
+            }
+        }
+        assertEquals("12345678", FormBodyReader.read(new ByteArrayInputStream("a=12345678".getBytes(
+                StandardCharsets.US_ASCII)), -1, 10).get("a").get(0));
+    }
+
+    // IR-HTTP-011 AC-3: the multipart parser recognises a body overrun through the public class
+    @Test
+    public void IR_HTTP_011_AC3_multipartParserRecognisesTheOverrunThroughThePublicClass() throws IOException {
+        String b = "XyZ";
+        byte[] body = ("--" + b + "\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\n"
+                + "0123456789012345678901234567890123456789\r\n--" + b + "--\r\n").getBytes(StandardCharsets.US_ASCII);
+        MultipartSettings s = new MultipartSettings();
+        s.maxRequestSize(64);
+        assertTrue(body.length > 64);
+        for (long declared : new long[] {-1, body.length}) {
+            try {
+                MultipartParser.parse(new ByteArrayInputStream(body), declared, b, s, 1048576L, new SpoolRegistry());
+                fail("expected 413 for declared length " + declared);
+            } catch (HttpException e) {
+                assertEquals(413, e.status());
+                assertSame(BodyTooLargeException.class, e.getCause().getClass());
+                assertEquals(64, ((BodyTooLargeException) e.getCause()).limit());
+            }
         }
     }
 

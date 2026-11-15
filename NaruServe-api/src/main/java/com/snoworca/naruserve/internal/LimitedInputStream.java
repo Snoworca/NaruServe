@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.BodyTooLargeException;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;

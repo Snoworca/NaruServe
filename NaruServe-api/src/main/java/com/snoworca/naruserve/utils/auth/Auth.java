@@ -6,6 +6,7 @@ import com.snoworca.naruserve.CookieOptions;
 import com.snoworca.naruserve.ErrorHandler;
 import com.snoworca.naruserve.ErrorMiddleware;
 import com.snoworca.naruserve.AppState;
+import com.snoworca.naruserve.BodyTooLargeException;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Logger;
 import com.snoworca.naruserve.Method;
@@ -2642,6 +2643,7 @@ public final class Auth implements Middleware, com.snoworca.naruserve.Installabl
 
     /** The error middleware of the auth routers (R30): every failure becomes a JSON error without exception text. */
     // @req FR-AUTH-006
+    // @req FR-APP-027
     private void routerError(Throwable err, Request req, Response res, Next next) {
         if (err instanceof AuthUnavailableException
                 && AuthErrorCode.SECURITY_WRITE_CONFLICT.getCode().equals(((AuthUnavailableException) err).getCode())) {
@@ -2656,6 +2658,10 @@ public final class Auth implements Middleware, com.snoworca.naruserve.Installabl
         } else if (err instanceof HttpException) {
             int status = ((HttpException) err).status();
             respond(req, res, status, coreCode(status), null, null);
+        } else if (err instanceof BodyTooLargeException) {
+            // FR-APP-027: an unwrapped overrun is 413. BodyTooLargeException is an IOException, so this branch must
+            // stay before isStoreFailure, which would otherwise answer it 503 as a store failure.
+            respond(req, res, 413, coreCode(413), null, null);
         } else if (isStoreFailure(err)) {
             logger.error("auth: a store failed in " + req.method() + " " + req.path() + "; answering 503", err);
             respond(req, res, 503, AuthUnavailableException.SERVICE_UNAVAILABLE, null, null);
@@ -2802,13 +2808,16 @@ public final class Auth implements Middleware, com.snoworca.naruserve.Installabl
     /**
      * OPS-AUTH-033 AC-1: in PROD the auth error layer is the last word, so an app exception never reaches Core's HTML
      * page and its stack trace; a Core HttpException keeps its status and, below 500, its message. Core has already
-     * logged a 500. DEV leaves it to the next layer, where the stack trace helps.
+     * logged a 500. An unwrapped BodyTooLargeException is 413 as in Core's status classification (FR-APP-027). DEV
+     * leaves it to the next layer, where the stack trace helps.
      */
+    // @req FR-APP-027
     private boolean prodAnswer(Throwable err, Request req, Response res) {
         if (mode != AuthMode.PROD || res.isCommitted()) {
             return false;
         }
-        int status = err instanceof HttpException ? ((HttpException) err).status() : 500;
+        int status = err instanceof HttpException ? ((HttpException) err).status()
+                : err instanceof BodyTooLargeException ? 413 : 500;
         if (status < 400 || status > 599) {
             status = 500;
         }

@@ -8,6 +8,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.snoworca.naruserve.BodyTooLargeException;
 import com.snoworca.naruserve.ErrorHandler;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Logger;
@@ -409,7 +410,7 @@ public class ErrorPathTest {
         assertFalse(body.contains("at "));
     }
 
-    // SDS-AC-10; FR-APP-006 AC-3, FR-APP-006 AC-4, FR-APP-005 AC-2
+    // SDS-AC-10; FR-APP-006 AC-3, FR-APP-006 AC-4, FR-APP-005 AC-2 (FR-APP-027 AC-4 below restates AC-4 with the overrun)
     @Test
     public void sdsAc10_FR_APP_006_AC3_AC4_FR_APP_005_AC2_httpExceptionsKeepTheirStatusAndAppMessage() {
         List<Integer> statuses = new ArrayList<>();
@@ -426,6 +427,87 @@ public class ErrorPathTest {
         DispatcherTest.assertError(415, "UNSUPPORTED_MEDIA_TYPE", "Unsupported Media Type", t.send("GET", "/415"));
         DispatcherTest.assertError(500, "INTERNAL_ERROR", "Internal Server Error", t.send("GET", "/500"));
         assertEquals(Arrays.asList(400, 422, 413, 415, 500), statuses);
+    }
+
+    // FR-APP-027 AC-1: an unwrapped overrun escaping the handler is answered 413 PAYLOAD_TOO_LARGE, not logged as a 500
+    @Test
+    public void FR_APP_027_AC1_anUnwrappedBodyTooLargeExceptionIsAnswered413WithTheStandardBody() {
+        BodyTooLargeException overrun = new BodyTooLargeException(10);
+        LegacyHttpHarness t = app();
+        t.app().get("/upload", throwing(overrun));
+        DispatcherTest.assertError(413, "PAYLOAD_TOO_LARGE", "Payload Too Large", t.send("GET", "/upload"));
+        assertEquals(413, StandardErrors.statusOf(overrun));
+        assertEquals(0, log.count("ERROR"));
+    }
+
+    // FR-APP-027 AC-1: the shipped app's common HTTP final answer gives the overrun 413 too and does not log it as a 500
+    @Test
+    public void FR_APP_027_AC1_theCommonHttpFinalAnswerGivesAnEscapedOverrun413AndNoErrorLog() {
+        DefaultRestApp rest = new DefaultRestApp();
+        rest.logger(log);
+        rest.get("/upload", throwing(new BodyTooLargeException(10)));
+        rest.get("/wrapped", throwing(new RuntimeException(new BodyTooLargeException(10))));
+        RecordingExchange overrun = HttpExecutionContractTest.dispatch(rest, "GET", "/upload");
+        assertEquals(413, overrun.status);
+        assertEquals(0, log.count("ERROR"));
+        RecordingExchange wrapped = new RecordingExchange("GET", "/wrapped");
+        rest.dispatcher().handle(wrapped);
+        assertEquals(500, wrapped.status);
+        assertEquals(1, log.count("ERROR"));
+    }
+
+    // FR-APP-027 AC-2: onError gets the thrown overrun itself, unwrapped, and can tell it from HttpException(413)
+    @Test
+    public void FR_APP_027_AC2_onErrorReceivesTheSameUnwrappedBodyTooLargeExceptionInstance() {
+        BodyTooLargeException overrun = new BodyTooLargeException(10);
+        LegacyHttpHarness t = app();
+        t.app().onError(recording);
+        t.app().get("/upload", throwing(overrun));
+        t.app().get("/http413", throwing(new HttpException(413)));
+        DispatcherTest.assertError(413, "PAYLOAD_TOO_LARGE", "Payload Too Large", t.send("GET", "/upload"));
+        assertEquals(1, seen.size());
+        assertSame(overrun, seen.get(0).error);
+        assertTrue(seen.get(0).error instanceof BodyTooLargeException);
+        assertFalse(seen.get(0).error instanceof HttpException);
+        assertEquals(10L, ((BodyTooLargeException) seen.get(0).error).limit());
+        DispatcherTest.assertError(413, "PAYLOAD_TOO_LARGE", "Payload Too Large", t.send("GET", "/http413"));
+        assertEquals(2, seen.size());
+        assertTrue(seen.get(1).error instanceof HttpException);
+        assertFalse(seen.get(1).error instanceof BodyTooLargeException);
+    }
+
+    // FR-APP-027 AC-3: a wrapped overrun is an ordinary exception answered 500 INTERNAL_ERROR and logged
+    @Test
+    public void FR_APP_027_AC3_aRuntimeExceptionWrappingTheOverrunIsAnswered500InternalError() {
+        RuntimeException wrapped = new RuntimeException(new BodyTooLargeException(10));
+        LegacyHttpHarness t = app();
+        t.app().onError(recording);
+        t.app().get("/upload", throwing(wrapped));
+        DispatcherTest.assertError(500, "INTERNAL_ERROR", "Internal Server Error", t.send("GET", "/upload"));
+        assertEquals(1, seen.size());
+        assertSame(wrapped, seen.get(0).error);
+        assertEquals(1, log.count("ERROR"));
+        assertSame(wrapped, log.errors.get(0));
+    }
+
+    // FR-APP-027 AC-4: FR-APP-006 AC-4 restated with the change through the harness
+    @Test
+    public void FR_APP_027_AC4_http400_422_413_415AndTheOverrunKeepTheirStatusAndOthersAre500() {
+        LegacyHttpHarness t = app();
+        t.app().get("/400", throwing(new HttpException(400)));
+        t.app().get("/422", throwing(new HttpException(422, "name required")));
+        t.app().get("/413", throwing(new HttpException(413)));
+        t.app().get("/415", throwing(new UnsupportedMediaTypeException()));
+        t.app().get("/overrun", throwing(new BodyTooLargeException(10)));
+        t.app().get("/io", throwing(new IOException("disk")));
+        t.app().get("/state", throwing(new IllegalStateException("x")));
+        DispatcherTest.assertError(400, "BAD_REQUEST", "Bad Request", t.send("GET", "/400"));
+        DispatcherTest.assertError(422, "UNPROCESSABLE_ENTITY", "name required", t.send("GET", "/422"));
+        DispatcherTest.assertError(413, "PAYLOAD_TOO_LARGE", "Payload Too Large", t.send("GET", "/413"));
+        DispatcherTest.assertError(415, "UNSUPPORTED_MEDIA_TYPE", "Unsupported Media Type", t.send("GET", "/415"));
+        DispatcherTest.assertError(413, "PAYLOAD_TOO_LARGE", "Payload Too Large", t.send("GET", "/overrun"));
+        DispatcherTest.assertError(500, "INTERNAL_ERROR", "Internal Server Error", t.send("GET", "/io"));
+        DispatcherTest.assertError(500, "INTERNAL_ERROR", "Internal Server Error", t.send("GET", "/state"));
     }
 
     // SDS-AC-11; FR-APP-006 AC-6

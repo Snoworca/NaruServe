@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import com.snoworca.naruserve.BodyTooLargeException;
 import com.snoworca.naruserve.HttpException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

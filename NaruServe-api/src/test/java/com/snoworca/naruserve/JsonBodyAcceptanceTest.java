@@ -187,7 +187,7 @@ public class JsonBodyAcceptanceTest {
         assertEquals(0, codec.decodes.get());
     }
 
-    // SDS-AC-8; FR-JSON-001 AC-2
+    // SDS-AC-8; IR-HTTP-011 AC-9
     @Test
     public void sdsAc8_FR_JSON_001_AC2_emptyAndWhitespaceBodiesGive400WithoutCallingTheCodec() {
         assertDefaultError(400, HttpException.class, post("application/json", ""));
@@ -197,7 +197,7 @@ public class JsonBodyAcceptanceTest {
         assertEquals(0, codec.decodes.get());
     }
 
-    // SDS-AC-8; FR-JSON-001 AC-2
+    // SDS-AC-8; IR-HTTP-011 AC-9
     @Test
     public void sdsAc8_FR_JSON_001_AC2_codecIOExceptionGives400() {
         assertDefaultError(400, HttpException.class, post("application/json", "{\"a\":"));
@@ -205,7 +205,7 @@ public class JsonBodyAcceptanceTest {
         assertEquals(2, codec.decodes.get());
     }
 
-    // SDS-AC-8; FR-JSON-001 AC-2: the peeked first char still reaches the codec
+    // SDS-AC-8; IR-HTTP-011 AC-9: the peeked first char still reaches the codec
     @Test
     public void sdsAc8_FR_JSON_001_AC2_leadingWhitespaceAndFirstCharReachTheCodec() {
         ClientResponse r = post("application/json", "  \"abc\"");
@@ -276,5 +276,35 @@ public class JsonBodyAcceptanceTest {
                 assertEquals(path + " " + body, "<null>", r.text());
             }
         }
+    }
+
+    // IR-HTTP-011 AC-4: a chunked JSON body over jsonLimit, wrapped by the codec as Gson does, is 413
+    // PAYLOAD_TOO_LARGE and the overrun is the public BodyTooLargeException in the cause chain
+    @Test
+    public void IR_HTTP_011_AC4_chunkedOverrunIs413PayloadTooLargeThroughThePublicClass() {
+        for (boolean unchecked : new boolean[] {false, true}) {
+            InMemoryHttpAdapter a = new InMemoryHttpAdapter();
+            TestApp app = TestApp.create(a);
+            app.app().jsonCodec(new WrappingCodec(unchecked)).jsonLimit(10);
+            java.util.List<Throwable> seen = new java.util.ArrayList<>();
+            app.app().post("/b", (req, res) -> res.send(String.valueOf(req.body(String.class))));
+            app.app().onError((error, req, res) -> seen.add(error));
+            assertDefaultError(413, HttpException.class, post(app, a, "/b", "application/json", repeat('1', 11), false));
+            assertEquals(1, seen.size());
+            HttpException e = (HttpException) seen.get(0);
+            assertEquals(413, e.status());
+            assertEquals("PAYLOAD_TOO_LARGE", e.code());
+            assertTrue(String.valueOf(e.getCause()), overrunInChain(e));
+        }
+    }
+
+    /** True when {@code t}'s cause chain holds the public over-limit exception; bounded against cyclic chains. */
+    public static boolean overrunInChain(@Nullable Throwable t) {
+        for (int depth = 0; t != null && depth < 64; t = t.getCause(), depth++) {
+            if (t instanceof BodyTooLargeException) {
+                return true;
+            }
+        }
+        return false;
     }
 }
