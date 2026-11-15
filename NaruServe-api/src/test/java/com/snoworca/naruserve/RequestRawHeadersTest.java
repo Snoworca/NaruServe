@@ -23,13 +23,14 @@ import org.junit.Test;
 /** req.headerNames() and req.rawHeaders() over the in-memory adapter (FR-HTTP-032). */
 public class RequestRawHeadersTest {
 
-    /** What a handler saw: two calls of each enumeration and the per-name header lists. */
+    /** What a handler saw: two calls of each enumeration, the per-name header lists and the first value per name. */
     private static final class Seen {
         Set<String> names;
         Set<String> namesAgain;
         List<Map.Entry<String, String>> raw;
         List<Map.Entry<String, String>> rawAgain;
         final List<List<String>> headersPerName = new ArrayList<>();
+        final List<String> firstValuePerName = new ArrayList<>();
     }
 
     /** Sends GET /h with {@code headerPairs} and returns what the handler saw; the response must be 200. */
@@ -44,6 +45,7 @@ public class RequestRawHeadersTest {
             s.rawAgain = req.rawHeaders();
             for (String name : s.names) {
                 s.headersPerName.add(req.headers(name));
+                s.firstValuePerName.add(req.header(name));
             }
             ref.set(s);
             res.send("ok");
@@ -137,7 +139,8 @@ public class RequestRawHeadersTest {
         assertEquals(expectedRaw(), new ArrayList<>(ex.requestHeaders));
     }
 
-    // FR-HTTP-032 AC-4: under the default locale tr-TR, TITLE: x appears in headerNames() as title (Locale.ROOT)
+    // FR-HTTP-032 AC-4: under the default locale tr-TR, TITLE: x appears in headerNames() as title, each character
+    // lowercased by Character.toLowerCase without any locale (the method name keeps its historical LocaleRoot wording)
     @Test
     public void FR_HTTP_032_AC4_namesAreLowercasedWithLocaleRootUnderTurkishDefault() {
         Locale saved = Locale.getDefault();
@@ -180,31 +183,16 @@ public class RequestRawHeadersTest {
         assertEquals(Arrays.asList("1", "2"), s.headersPerName.get(0));
         assertEquals(Arrays.asList("3"), s.headersPerName.get(1));
     }
+
     // FR-HTTP-032 AC-6: a name whose String.toLowerCase is longer than the raw name (U+0130 capital dotted I
     // lowercases to i + U+0307 there) is listed per character as x-id and still finds its values through
     // headers(name) and header(name)
     @Test
     public void FR_HTTP_032_AC6_headersOfANameWhoseLowercaseChangesLengthMatchTheRawEntries() {
-        TestApp t = TestApp.create();
-        AtomicReference<Seen> ref = new AtomicReference<>();
-        List<String> single = new ArrayList<>();
-        t.app().get("/h", (req, res) -> {
-            Seen s = new Seen();
-            s.names = req.headerNames();
-            s.raw = req.rawHeaders();
-            for (String name : s.names) {
-                s.headersPerName.add(req.headers(name));
-                single.add(req.header(name));
-            }
-            ref.set(s);
-            res.send("ok");
-        });
-        assertEquals(200, t.send("GET", "/h", "X-\u0130D", "a", "X-B", "b").status());
-        Seen s = ref.get();
-        assertTrue("handler did not run", s != null);
+        Seen s = capture("X-\u0130D", "a", "X-B", "b");
         assertEquals(Arrays.asList("x-id", "x-b"), new ArrayList<>(s.names));
         assertEquals(Arrays.asList(Arrays.asList("a"), Arrays.asList("b")), s.headersPerName);
-        assertEquals(Arrays.asList("a", "b"), single);
+        assertEquals(Arrays.asList("a", "b"), s.firstValuePerName);
     }
 
     // FR-HTTP-032 AC-6: names X-<U+03A3> and x-<U+03C3> match case-insensitively although Locale.ROOT lowercases the

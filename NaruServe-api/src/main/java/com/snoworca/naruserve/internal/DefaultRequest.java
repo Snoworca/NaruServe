@@ -290,8 +290,12 @@ public final class DefaultRequest implements Request {
 
     /**
      * The one header-name matching rule of {@link #headerNames()}, {@link #header(String)} and {@link #headers(String)}:
-     * two names are the same exactly when {@link String#equalsIgnoreCase} holds. That relation is transitive, so the
-     * groups are well defined and {@code headers(listedName)} returns exactly its group's values.
+     * two names are the same exactly when {@link String#equalsIgnoreCase} holds. That relation is transitive for names
+     * made of BMP characters and well-formed surrogate pairs, which covers every name TinyHttpd (ASCII token characters
+     * only) or a Servlet container (octet-decoded) can deliver, so the groups are well defined and
+     * {@code headers(listedName)} returns exactly its group's values. On JDK 16+ names holding lone surrogates can match
+     * non-transitively, so a value may then be reached through two listed names; this is a declared limit with no real
+     * adapter path.
      */
     // @req FR-HTTP-011
     // @req FR-HTTP-032
