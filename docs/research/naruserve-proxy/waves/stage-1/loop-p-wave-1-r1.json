@@ -1,0 +1,44 @@
+{
+  "wave": "wave-1",
+  "round": 1,
+  "verifier": "loop-p-wave-1-r1",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "CON-BUILD-019 AC-5",
+      "test": "src/test/java/com/snoworca/naruserve/build/LoopPWave1ProbeTest.java::con_BUILD_019_AC5_publishedBundleMetadataNamesNoProxy",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Staged .pom and .module of naruserve, naruserve-kotlin and naruserve-android (Android SDK present) name no naruserve-proxy, at integration head 84c0698 in Maven mode."
+    },
+    {
+      "id": "LP-2",
+      "cites": "CON-BUILD-019 AC-6",
+      "test": "src/test/java/com/snoworca/naruserve/build/LoopPWave1ProbeTest.java::con_BUILD_019_AC6_stagedProxyJarClassesAreMajor52",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "The staged naruserve-proxy JAR holds package-info.class only, major version 52."
+    },
+    {
+      "id": "LP-3",
+      "cites": "FR-REL-006 AC-2",
+      "test": "src/test/java/com/snoworca/naruserve/build/LoopPWave1ProbeTest.java::fr_REL_006_AC2_stagedProxyPomDependsOnTheApiAlone",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "The staged .pom (the file Central receives, not only pom-default.xml) has exactly one dependency, com.snoworca.naruserve:naruserve-api at the build version, compile scope."
+    },
+    {
+      "id": "LP-4",
+      "cites": "PRD-148",
+      "test": "src/test/java/com/snoworca/naruserve/build/LoopPWave1ProbeTest.java::prd148_stagedProxyClassesReferenceNoInternalOrSpi",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "No class of the staged proxy JAR names com/snoworca/naruserve/internal/ or com/snoworca/naruserve/spi/."
+    }
+  ],
+  "summary": { "tests_written": 4, "kept": 0 }
+}
