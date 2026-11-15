@@ -1,0 +1,17 @@
+{
+  "run_id": "2026-11-14.NaruServe.naruserve-proxy",
+  "items": [
+    {
+      "from": "wave-3",
+      "round": 4,
+      "finding": "LP-3",
+      "cites": "C-005",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave3R4Test.java::C_005_requestDocsNameTheNewRequestMethods",
+      "evidence": "org.junit.ComparisonFailure: docs/api/request.md misses expected:<[[]]> but was:<[[bodyStream, headerNames, rawHeaders, isFromTrustedProxy]]> at LoopPWave3R4Test.C_005_requestDocsNameTheNewRequestMethods(LoopPWave3R4Test.java:113)",
+      "carried_into": "wave-21",
+      "owner_requirement": "OPS-DX-008",
+      "reason_class": "cross-wave-carry-forward",
+      "note": "docs/api/request.md must document bodyStream, headerNames, rawHeaders, isFromTrustedProxy; the run decomposition assigns this documentation to OPS-DX-008 in wave-21, which is not yet dispatched (verify-loop.md §8: carry to a remaining wave). The wave-21 worker must make this red check green; loop P for wave-21 re-checks it."
+    }
+  ]
+}
