@@ -180,4 +180,29 @@ public class RequestRawHeadersTest {
         assertEquals(Arrays.asList("1", "2"), s.headersPerName.get(0));
         assertEquals(Arrays.asList("3"), s.headersPerName.get(1));
     }
+    // FR-HTTP-032 AC-6: a name whose Locale.ROOT lowercase is longer than the raw name (U+0130 capital dotted I
+    // lowercases to i + U+0307) still finds its values through headers(name) and header(name)
+    @Test
+    public void FR_HTTP_032_AC6_headersOfANameWhoseLowercaseChangesLengthMatchTheRawEntries() {
+        TestApp t = TestApp.create();
+        AtomicReference<Seen> ref = new AtomicReference<>();
+        List<String> single = new ArrayList<>();
+        t.app().get("/h", (req, res) -> {
+            Seen s = new Seen();
+            s.names = req.headerNames();
+            s.raw = req.rawHeaders();
+            for (String name : s.names) {
+                s.headersPerName.add(req.headers(name));
+                single.add(req.header(name));
+            }
+            ref.set(s);
+            res.send("ok");
+        });
+        assertEquals(200, t.send("GET", "/h", "X-\u0130D", "a", "X-B", "b").status());
+        Seen s = ref.get();
+        assertTrue("handler did not run", s != null);
+        assertEquals(Arrays.asList("x-i\u0307d", "x-b"), new ArrayList<>(s.names));
+        assertEquals(Arrays.asList(Arrays.asList("a"), Arrays.asList("b")), s.headersPerName);
+        assertEquals(Arrays.asList("a", "b"), single);
+    }
 }
