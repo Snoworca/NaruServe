@@ -15,6 +15,7 @@ import com.snoworca.naruserve.internal.ResponseState;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.StreamDrain;
 import com.snoworca.naruserve.spi.UpgradeHandler;
+import com.snoworca.naruserve.spi.WebSocketChannel;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.RecordingExchange;
@@ -25,6 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -606,6 +609,122 @@ public class ResponseOnAbortTest {
         assertEquals(1, runs.get());
         pending.resolve();
         assertEquals(1, runs.get());
+    }
+
+    // FR-HTTP-035 AC-7: on the legacy dispatch path (a WebSocket-upgrade request) an abort the exchange reports
+    // through HttpExchange.onAbort, while middleware runs, runs each res.onAbort listener once and stops the upgrade
+    @Test
+    public void FR_HTTP_035_AC7_legacyUpgradePathExchangeReportedAbortRunsEachListenerOnce() {
+        RecordingExchange rec = new RecordingExchange("GET", "/ws", "Connection", "Upgrade", "Upgrade", "websocket");
+        AtomicInteger upgrades = new AtomicInteger();
+        rec.webSocketScript = (settings, endpoint) -> upgrades.incrementAndGet();
+        AbortListeners aborts = new AbortListeners();
+        HttpExchange ex = (HttpExchange) Proxy.newProxyInstance(HttpExchange.class.getClassLoader(),
+                new Class<?>[] {HttpExchange.class}, (proxy, m, args) -> {
+                    if (m.getName().equals("onAbort")) {
+                        aborts.onAbort((Runnable) args[0]);
+                        return null;
+                    }
+                    try {
+                        return m.invoke(rec, args);
+                    } catch (InvocationTargetException e) {
+                        throw e.getCause();
+                    }
+                });
+        DefaultRestApp app = new DefaultRestApp();
+        AtomicInteger first = new AtomicInteger();
+        AtomicInteger second = new AtomicInteger();
+        AtomicReference<Response> captured = new AtomicReference<>();
+        app.use((req, res, next) -> {
+            captured.set(res);
+            res.onAbort(first::incrementAndGet);
+            res.onAbort(second::incrementAndGet);
+            aborts.abort(); // the adapter reports the client disconnect before the 101
+            aborts.abort();
+            next.run();
+        });
+        app.ws("/ws", (req, ws) -> { });
+        app.freeze();
+        app.dispatcher().handle(ex);
+        assertEquals(1, first.get());
+        assertEquals(1, second.get());
+        assertEquals(ResponseState.ABORTED, stateOf(captured.get()));
+        assertEquals(0, upgrades.get());
+    }
+
+    // FR-APP-019 AC-8: an abort the exchange reports through HttpExchange.onAbort while the upgraded session is open
+    // (an adapter stop after its grace) leaves the 101 handshake line the only GET /ws line, and the response that
+    // completed with the 101 runs no res.onAbort listener (FR-HTTP-035: never for a completed response)
+    @Test
+    public void FR_APP_019_AC8_exchangeReportedAbortDuringAnOpenSessionWritesNoSecondRequestLine() {
+        RecordingExchange rec = new RecordingExchange("GET", "/ws", "Connection", "Upgrade", "Upgrade", "websocket");
+        AbortListeners aborts = new AbortListeners();
+        rec.webSocketScript = (settings, endpoint) -> {
+            endpoint.onOpen(new WebSocketChannel() {
+                volatile boolean open = true;
+
+                @Override
+                public void sendText(String text) { }
+
+                @Override
+                public void sendBinary(byte[] data) { }
+
+                @Override
+                public void ping(byte[] payload) { }
+
+                @Override
+                public void close(int code, String reason) {
+                    open = false;
+                }
+
+                @Override
+                public void abort() {
+                    open = false;
+                }
+
+                @Override
+                public boolean isOpen() {
+                    return open;
+                }
+            });
+            aborts.abort(); // the adapter aborts the open session's socket at its stop deadline
+            endpoint.onClose(1006, "");
+        };
+        HttpExchange ex = (HttpExchange) Proxy.newProxyInstance(HttpExchange.class.getClassLoader(),
+                new Class<?>[] {HttpExchange.class}, (proxy, m, args) -> {
+                    if (m.getName().equals("onAbort")) {
+                        aborts.onAbort((Runnable) args[0]);
+                        return null;
+                    }
+                    try {
+                        return m.invoke(rec, args);
+                    } catch (InvocationTargetException e) {
+                        throw e.getCause();
+                    }
+                });
+        RecordingLogger log = new RecordingLogger();
+        DefaultRestApp app = new DefaultRestApp();
+        app.logger(log);
+        AtomicInteger runs = new AtomicInteger();
+        AtomicReference<Response> captured = new AtomicReference<>();
+        app.use((req, res, next) -> {
+            captured.set(res);
+            res.onAbort(runs::incrementAndGet);
+            next.run();
+        });
+        app.ws("/ws", (req, ws) -> { });
+        app.freeze();
+        app.dispatcher().handle(ex);
+        List<String> requestLines = new java.util.ArrayList<>();
+        for (String line : log.info()) {
+            if (line.startsWith("GET /ws ")) {
+                requestLines.add(line);
+            }
+        }
+        assertEquals(log.lines.toString(), 1, requestLines.size());
+        assertTrue(requestLines.get(0), requestLines.get(0).matches("GET /ws 101 \\d+ms in=0 out=0 rid=[0-9a-f]{16}"));
+        assertEquals(0, runs.get());
+        assertEquals(ResponseState.COMPLETED, stateOf(captured.get()));
     }
 
     /** The javadoc block directly above {@code default void onAbort(Runnable listener)}, as one line of prose. */
