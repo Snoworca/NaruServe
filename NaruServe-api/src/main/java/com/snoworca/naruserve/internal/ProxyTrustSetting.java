@@ -87,13 +87,16 @@ final class ProxyTrustSetting {
     // @req SEC-ENGINE-001
     // @req SEC-ENGINE-002
     String remoteAddress(String peer, List<String> forwardedFor) {
+        if (!trustsPeer(peer)) {
+            return peer;
+        }
         switch (mode) {
             case LEGACY:
                 return ProxyTrust.remoteAddress(forwardedFor.isEmpty() ? null : forwardedFor.get(0), peer);
             case HOPS:
             case CIDRS:
                 List<String> forwarded = entries(forwardedFor);
-                int at = clientIndex(peer, forwarded);
+                int at = clientIndex(forwarded);
                 return at < 0 ? peer : forwarded.get(at);
             default:
                 return peer;
@@ -107,14 +110,14 @@ final class ProxyTrustSetting {
      */
     // @req SEC-ENGINE-003
     boolean isSecure(String peer, boolean exchangeSecure, List<String> forwardedFor, List<String> forwardedProto) {
+        if (!trustsPeer(peer)) {
+            return exchangeSecure;
+        }
         switch (mode) {
             case LEGACY:
                 return ProxyTrust.isSecure(forwardedProto.isEmpty() ? null : forwardedProto.get(0), exchangeSecure);
             case HOPS:
             case CIDRS:
-                if (!peerTrusted(peer)) {
-                    return exchangeSecure;
-                }
                 List<String> protos = entries(forwardedProto);
                 if (protos.isEmpty()) {
                     return exchangeSecure;
@@ -126,7 +129,7 @@ final class ProxyTrustSetting {
                 if (protos.size() != forwarded.size()) {
                     return false;
                 }
-                int fromRight = mode == Mode.HOPS ? hops : forwarded.size() - clientIndex(peer, forwarded);
+                int fromRight = mode == Mode.HOPS ? hops : forwarded.size() - clientIndex(forwarded);
                 if (fromRight < 1 || fromRight > protos.size()) {
                     return false;
                 }
@@ -136,17 +139,33 @@ final class ProxyTrustSetting {
         }
     }
 
-    private boolean peerTrusted(String peer) {
-        return mode == Mode.HOPS ? hops >= 1 : mode == Mode.CIDRS && trusted(peer);
+    /**
+     * Whether this setting trusts the direct socket {@code peer}, so its forwarding headers count: never with no
+     * setting, always under the legacy rule, under hop mode when the count is at least 1 and under CIDR mode when
+     * {@code peer} parses as an IP address inside a listed CIDR. {@code req.isFromTrustedProxy()},
+     * {@link #remoteAddress} and {@link #isSecure} all decide through this one predicate.
+     */
+    // @req FR-HTTP-034
+    boolean trustsPeer(String peer) {
+        switch (mode) {
+            case LEGACY:
+                return true;
+            case HOPS:
+                return hops >= 1;
+            case CIDRS:
+                return trusted(peer);
+            default:
+                return false;
+        }
     }
 
     /**
-     * The index in {@code entries} of the client address, or -1 for the socket peer: hop mode takes the nth entry from
-     * the right (the left-most when there are fewer), CIDR mode the first entry from the right outside every trusted
-     * CIDR (the left-most when all are inside).
+     * The index in {@code entries} of the client address behind a peer {@link #trustsPeer} accepts, or -1 for the
+     * socket peer when there is no entry: hop mode takes the nth entry from the right (the left-most when there are
+     * fewer), CIDR mode the first entry from the right outside every trusted CIDR (the left-most when all are inside).
      */
-    private int clientIndex(String peer, List<String> entries) {
-        if (entries.isEmpty() || !peerTrusted(peer)) {
+    private int clientIndex(List<String> entries) {
+        if (entries.isEmpty()) {
             return -1;
         }
         if (mode == Mode.HOPS) {

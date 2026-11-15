@@ -305,11 +305,15 @@ public final class DefaultRequest implements Request {
         }
     }
 
-    /** False until the trusted proxy predicate is implemented. */
+    /**
+     * Whether the app's proxy trust setting trusts the socket peer: the same {@link ProxyTrustSetting#trustsPeer}
+     * decision that {@link #remoteAddress()} and {@link #isSecure()} make before they use a forwarding header.
+     */
     // @req IR-HTTP-013
+    // @req FR-HTTP-034
     @Override
     public boolean isFromTrustedProxy() {
-        return false;
+        return proxyTrust.trustsPeer(ex.remoteAddress());
     }
 
     // @req FR-JSON-001
