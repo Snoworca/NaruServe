@@ -294,11 +294,17 @@ public class JsonBodyAcceptanceTest {
             HttpException e = (HttpException) seen.get(0);
             assertEquals(413, e.status());
             assertEquals("PAYLOAD_TOO_LARGE", e.code());
-            boolean found = false;
-            for (Throwable c = e; c != null; c = c.getCause()) {
-                found |= c instanceof BodyTooLargeException;
-            }
-            assertTrue(String.valueOf(e.getCause()), found);
+            assertTrue(String.valueOf(e.getCause()), overrunInChain(e));
         }
+    }
+
+    /** True when {@code t}'s cause chain holds the public over-limit exception; bounded against cyclic chains. */
+    public static boolean overrunInChain(@Nullable Throwable t) {
+        for (int depth = 0; t != null && depth < 64; t = t.getCause(), depth++) {
+            if (t instanceof BodyTooLargeException) {
+                return true;
+            }
+        }
+        return false;
     }
 }

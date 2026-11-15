@@ -22,10 +22,20 @@ public final class StandardErrors {
     // @req FR-APP-006
     // @req FR-APP-027
     static int statusOf(Throwable error) {
+        return statusOr(error, 500);
+    }
+
+    /**
+     * The one status classification: {@link HttpException#status()}, 413 for an unwrapped
+     * {@link BodyTooLargeException}, otherwise {@code fallback} for an error the table does not classify.
+     */
+    // @req FR-APP-006
+    // @req FR-APP-027
+    static int statusOr(Throwable error, int fallback) {
         if (error instanceof HttpException) {
             return ((HttpException) error).status();
         }
-        return error instanceof BodyTooLargeException ? 413 : 500;
+        return error instanceof BodyTooLargeException ? 413 : fallback;
     }
 
     /** The app-supplied message of an {@link HttpException}, otherwise the reason phrase; a 500 always the reason. */

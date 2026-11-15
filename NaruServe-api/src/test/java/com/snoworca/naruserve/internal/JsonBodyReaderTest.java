@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.internal;
 
+import static com.snoworca.naruserve.JsonBodyAcceptanceTest.overrunInChain;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -239,16 +240,6 @@ public class JsonBodyReaderTest {
         assertFalse(within.overrun());
     }
 
-    /** True when {@code t}'s cause chain holds the public over-limit exception. */
-    private static boolean overrunInChain(Throwable t) {
-        for (int depth = 0; t != null && depth < 64; t = t.getCause(), depth++) {
-            if (t instanceof BodyTooLargeException) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     // IR-HTTP-011 AC-8: an overrun wrapped by the codec (checked or unchecked, as Gson does) is 413 with the public
     // class in the cause chain, and it reaches onError and the access log like any handler exception
     @Test
@@ -273,26 +264,8 @@ public class JsonBodyReaderTest {
                     writer.write("null");
                 }
             };
-            RecordingLogger log = new RecordingLogger();
-            java.util.List<Throwable> seen = new java.util.ArrayList<>();
-            InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
-            TestApp t = TestApp.create(adapter);
-            t.app().logger(log).jsonCodec(wrapping).jsonLimit(10);
-            t.app().post("/b", (req, res) -> res.send(String.valueOf(req.body(String.class))));
-            t.app().onError((error, req, res) -> seen.add(error));
-            t.start();
-            byte[] body = new byte[100];
-            Arrays.fill(body, (byte) '1');
-            ClientResponse r = adapter.send(ClientRequest.of("POST", "/b").header("Content-Type", "application/json")
-                    .body(body));
-            assertEquals(413, r.status());
-            assertEquals(1, seen.size());
-            HttpException e = (HttpException) seen.get(0);
-            assertEquals(413, e.status());
-            assertEquals("PAYLOAD_TOO_LARGE", e.code());
+            HttpException e = assertOverrunIs413ThroughOnErrorAndTheAccessLog(wrapping);
             assertTrue(String.valueOf(e.getCause()), overrunInChain(e));
-            assertEquals(log.info().toString(), 1, log.info().size());
-            assertTrue(log.info().get(0), log.info().get(0).startsWith("POST /b 413 "));
         }
     }
 
@@ -320,26 +293,35 @@ public class JsonBodyReaderTest {
                     writer.write("null");
                 }
             };
-            RecordingLogger log = new RecordingLogger();
-            java.util.List<Throwable> seen = new java.util.ArrayList<>();
-            InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
-            TestApp t = TestApp.create(adapter);
-            t.app().logger(log).jsonCodec(dropping).jsonLimit(10);
-            t.app().post("/b", (req, res) -> res.send(String.valueOf(req.body(String.class))));
-            t.app().onError((error, req, res) -> seen.add(error));
-            t.start();
-            byte[] body = new byte[100];
-            Arrays.fill(body, (byte) '1');
-            ClientResponse r = adapter.send(ClientRequest.of("POST", "/b").header("Content-Type", "application/json")
-                    .body(body));
-            assertEquals(413, r.status());
-            assertEquals(1, seen.size());
-            HttpException e = (HttpException) seen.get(0);
-            assertEquals(413, e.status());
-            assertEquals("PAYLOAD_TOO_LARGE", e.code());
-            assertEquals(log.info().toString(), 1, log.info().size());
-            assertTrue(log.info().get(0), log.info().get(0).startsWith("POST /b 413 "));
+            assertOverrunIs413ThroughOnErrorAndTheAccessLog(dropping);
         }
+    }
+
+    /**
+     * Posts a 100-byte JSON body over a jsonLimit of 10 through {@code codec} and asserts the 413 PAYLOAD_TOO_LARGE
+     * response, the single HttpException onError saw, and the single 'POST /b 413 ' access-log line.
+     */
+    private static HttpException assertOverrunIs413ThroughOnErrorAndTheAccessLog(JsonCodec codec) {
+        RecordingLogger log = new RecordingLogger();
+        java.util.List<Throwable> seen = new java.util.ArrayList<>();
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        TestApp t = TestApp.create(adapter);
+        t.app().logger(log).jsonCodec(codec).jsonLimit(10);
+        t.app().post("/b", (req, res) -> res.send(String.valueOf(req.body(String.class))));
+        t.app().onError((error, req, res) -> seen.add(error));
+        t.start();
+        byte[] body = new byte[100];
+        Arrays.fill(body, (byte) '1');
+        ClientResponse r = adapter.send(ClientRequest.of("POST", "/b").header("Content-Type", "application/json")
+                .body(body));
+        assertEquals(413, r.status());
+        assertEquals(1, seen.size());
+        HttpException e = (HttpException) seen.get(0);
+        assertEquals(413, e.status());
+        assertEquals("PAYLOAD_TOO_LARGE", e.code());
+        assertEquals(log.info().toString(), 1, log.info().size());
+        assertTrue(log.info().get(0), log.info().get(0).startsWith("POST /b 413 "));
+        return e;
     }
 
     // IR-HTTP-011 AC-8: an HttpException in the cause chain (the adapter 408) is the instance onError sees and the
