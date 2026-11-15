@@ -90,7 +90,9 @@ final class WebSocketUpgrade {
         if (!origins.admits(req.header("Origin"), req.header("Host"), req.isSecure())) {
             throw new HttpException(403);
         }
-        upgrade(ex, new DefaultWebSocketSession(nextId(), rid, this, handler, req));
+        DefaultWebSocketSession session = new DefaultWebSocketSession(nextId(), rid, this, handler, req);
+        session.response(res); // FR-HTTP-035 AC-7: onOpen asks res whether an abort came first
+        upgrade(ex, session);
         res.upgraded();
     }
 

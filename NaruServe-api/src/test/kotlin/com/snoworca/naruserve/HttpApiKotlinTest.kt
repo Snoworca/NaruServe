@@ -3,10 +3,14 @@ package com.snoworca.naruserve
 import com.snoworca.naruserve.routing.RouterPolicy
 import com.snoworca.naruserve.testing.TestApp
 import java.io.ByteArrayInputStream
+import java.io.IOException
 import java.io.InputStream
 import java.lang.reflect.Proxy
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -206,5 +210,46 @@ class HttpApiKotlinTest {
         assertEquals(200, big.status())
         assertEquals("big", big.text())
         assertEquals(5, seen.size)
+    }
+
+    // IR-HTTP-014 AC-5: append chains as a Response, onAbort takes a trailing lambda for the Runnable and relay takes a
+    // Long length; the typed declarations show no platform type, as the package @NullMarked scope that
+    // HttpApiSurfaceTest IR_HTTP_014_AC4 pins for the three methods implies.
+    @Test
+    fun `IR-HTTP-014 AC-5 Kotlin route lambdas call append onAbort and relay without platform types`() {
+        val t = TestApp.create()
+        val aborted = AtomicBoolean()
+        t.app().get("/append") { _, res ->
+            val chained: Response = res.append("Set-Cookie", "a=1").append("Set-Cookie", "b=2")
+            res.onAbort { aborted.set(true) }
+            chained.send("appended")
+        }
+        t.app().get("/relay") { _, res ->
+            val input: InputStream = ByteArrayInputStream(byteArrayOf(1, 2, 3, 4, 5))
+            res.relay(input, 5L)
+        }
+        val appended = t.send("GET", "/append")
+        assertEquals(200, appended.status())
+        assertEquals("appended", appended.text())
+        assertEquals(listOf("a=1", "b=2"),
+            appended.headers().filter { it.key.equals("Set-Cookie", true) }.map { it.value })
+        assertFalse(aborted.get())
+        val relayed = t.send("GET", "/relay")
+        assertEquals(200, relayed.status())
+        assertArrayEquals(byteArrayOf(1, 2, 3, 4, 5), relayed.body())
+    }
+
+    // FR-HTTP-035 AC-1: a Kotlin trailing-lambda listener runs exactly once when the handler aborts twice
+    @Test
+    fun `FR-HTTP-035 AC-1 Kotlin onAbort lambda runs once over two res abort calls`() {
+        val t = TestApp.create()
+        val runs = AtomicInteger()
+        t.app().get("/abort") { _, res ->
+            res.onAbort { runs.incrementAndGet() }
+            res.abort(IOException("x"))
+            res.abort(IOException("x"))
+        }
+        assertTrue(t.send("GET", "/abort").abnormallyClosed())
+        assertEquals(1, runs.get())
     }
 }

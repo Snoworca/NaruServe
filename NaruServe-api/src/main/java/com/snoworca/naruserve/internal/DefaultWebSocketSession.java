@@ -57,6 +57,10 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
     private final AtomicBoolean closed = new AtomicBoolean();
     private volatile @Nullable WebSocketChannel channel;
     private volatile boolean opened;
+    /** The upgrade's response, whose {@link DefaultResponse#openSession} gates onOpen; null opens unchecked. */
+    private volatile @Nullable DefaultResponse response;
+    /** Set when onOpen found the response already aborted: no 101, no handler and no close line. */
+    private volatile boolean refused;
     // The first close the core started: onClose reports this pair whatever code the peer echoed. Guarded by
     // closeLock, not this: user code holds the session and may synchronize on it.
     private final Object closeLock = new Object();
@@ -87,6 +91,12 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
     // @req FR-WS-001
     boolean opened() {
         return opened;
+    }
+
+    /** The response of the upgrade request, asked in {@link #onOpen} before the 101 line is written. */
+    // @req FR-HTTP-035
+    void response(DefaultResponse res) {
+        this.response = Objects.requireNonNull(res, "res");
     }
 
     /** The number of attributes; read by tests to see the map released at close. */
@@ -147,13 +157,23 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
         }
     }
 
-    /** Stores the channel and writes the 101 access line before anything else runs, the handler included. */
+    /**
+     * Stores the channel and writes the 101 access line before anything else runs, the handler included. When the
+     * response was aborted first (an exchange-reported disconnect), the channel is dropped instead and nothing runs.
+     */
     // @req FR-WS-001
     // @req FR-WS-006
     // @req FR-WS-008
     // @req FR-APP-019
+    // @req FR-HTTP-035
     @Override
     public void onOpen(WebSocketChannel channel) {
+        DefaultResponse r = response;
+        if (r != null && !r.openSession()) {
+            refused = true;
+            channel.abort();
+            return;
+        }
         this.channel = channel;
         openNanos = System.nanoTime();
         accessLog.write(req.method().name(), req.rawPath(), 101, false, req.startNanos(), 0, 0, rid);
@@ -255,7 +275,9 @@ final class DefaultWebSocketSession implements WebSocketSession, WebSocketEndpoi
                 reason = sentReason;
             }
         }
-        accessLog.writeClose(req.rawPath(), code, openNanos, rid);
+        if (!refused) { // a refused open wrote no 101 line, so it writes no close line
+            accessLog.writeClose(req.rawPath(), code, openNanos, rid);
+        }
         for (CloseListener l : closeListeners) {
             try {
                 l.onClose(code, reason);

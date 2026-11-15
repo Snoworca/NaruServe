@@ -139,7 +139,7 @@ public class HttpApiSurfaceTest {
     }
 
     // SDS-AC-2; IR-HTTP-001 AC-2; SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8 adds addCookie; IR-STATIC-002 AC-5 adds
-    // cache, file and download
+    // cache, file and download; IR-HTTP-014 AC-3 adds append, onAbort and relay with every earlier signature unchanged
     @Test
     public void sdsAc2_IR_HTTP_001_AC2_responseStatusAndHeaderReturnReceiverWritersReturnVoid() throws Exception {
         assertTrue(Response.class.isInterface());
@@ -159,7 +159,9 @@ public class HttpApiSurfaceTest {
                 "redirect(int,String)->void", "sendStatus(int)->void",
                 // FR-DX-005 AC-1 AC-2 AC-3
                 "cookie(String,String)->Response", "cookie(String,String,Configurer)->Response",
-                "clearCookie(String)->Response", "clearCookie(String,Configurer)->Response"),
+                "clearCookie(String)->Response", "clearCookie(String,Configurer)->Response",
+                // 0.12.0: IR-HTTP-014 AC-3
+                "append(String,String)->Response", "onAbort(Runnable)->void", "relay(InputStream,long)->void"),
                 signatures(Response.class));
         assertEquals(InputStream.class, Response.class.getMethod("stream", InputStream.class, String.class)
                 .getParameterTypes()[0]);
@@ -666,4 +668,170 @@ public class HttpApiSurfaceTest {
         }
     }
 
+    /** The three methods IR-HTTP-014 adds to Response, in declaration order of the requirement. */
+    private static List<java.lang.reflect.Method> responseAMethods() throws NoSuchMethodException {
+        return Arrays.asList(Response.class.getMethod("append", String.class, String.class),
+                Response.class.getMethod("onAbort", Runnable.class),
+                Response.class.getMethod("relay", InputStream.class, long.class));
+    }
+
+    // IR-HTTP-014 AC-1: Response declares append, onAbort and relay with exactly these return types
+    @Test
+    public void IR_HTTP_014_AC1_responseDeclaresAppendOnAbortAndRelayWithTheirReturnTypes() throws Exception {
+        java.lang.reflect.Method append = Response.class.getMethod("append", String.class, String.class);
+        java.lang.reflect.Method onAbort = Response.class.getMethod("onAbort", Runnable.class);
+        java.lang.reflect.Method relay = Response.class.getMethod("relay", InputStream.class, long.class);
+        assertEquals(Response.class, append.getDeclaringClass());
+        assertEquals(Response.class, onAbort.getDeclaringClass());
+        assertEquals(Response.class, relay.getDeclaringClass());
+        assertEquals(Response.class, append.getReturnType());
+        assertEquals(void.class, onAbort.getReturnType());
+        assertEquals(void.class, relay.getReturnType());
+    }
+
+    // IR-HTTP-014 AC-2: default methods throwing UnsupportedOperationException naming the implementing class, the
+    // BareResponse test double compiles unchanged, and DefaultResponse overrides each one publicly
+    @Test
+    public void IR_HTTP_014_AC2_defaultsThrowNamingTheImplementingClassAndDefaultResponseOverrides() throws Exception {
+        Response bare = new BareResponse();
+        String implementing = BareResponse.class.getName();
+        for (java.lang.reflect.Method m : responseAMethods()) {
+            assertTrue(m.toString(), m.isDefault());
+            try {
+                callResponse(m, bare);
+                fail(m + " of a bare Response returned");
+            } catch (UnsupportedOperationException e) {
+                assertNotNull(m.toString(), e.getMessage());
+                assertTrue(m + ": " + e.getMessage(), e.getMessage().startsWith(implementing + " has no "));
+            }
+            java.lang.reflect.Method override = com.snoworca.naruserve.internal.DefaultResponse.class
+                    .getMethod(m.getName(), m.getParameterTypes());
+            assertEquals(m.toString(), com.snoworca.naruserve.internal.DefaultResponse.class,
+                    override.getDeclaringClass());
+            assertTrue(m.toString(), Modifier.isPublic(override.getModifiers()));
+            assertEquals(m.toString(), m.getReturnType(), override.getReturnType());
+        }
+    }
+
+    // IR-HTTP-014 AC-2: the default relay keeps the ownership rule of stream, closing the stream it was given
+    // before it throws
+    @Test
+    public void IR_HTTP_014_AC2_defaultRelayClosesTheStreamItWasGiven() throws Exception {
+        final boolean[] closed = {false};
+        InputStream in = new java.io.ByteArrayInputStream(new byte[] {1, 2, 3}) {
+            @Override
+            public void close() throws IOException {
+                closed[0] = true;
+                super.close();
+            }
+        };
+        try {
+            new BareResponse().relay(in, 3L);
+            fail("the default relay returned");
+        } catch (UnsupportedOperationException e) {
+            assertEquals(BareResponse.class.getName() + " has no relay writer", e.getMessage());
+        }
+        assertTrue("the default relay closed its stream", closed[0]);
+    }
+
+    // IR-HTTP-014 AC-2: the DefaultResponse append override adds Vary lines that the CORS Vary merge keeps, so
+    // every appended dimension and Origin reach the client
+    @Test
+    public void IR_HTTP_014_AC2_appendedVaryLinesSurviveTheCorsVaryMerge() {
+        TestApp t = TestApp.create();
+        t.app().use((req, res, next) -> {
+            res.append("Vary", "Accept").append("Vary", "Accept-Language");
+            next.run();
+        });
+        t.app().cors(o -> o.allowedOrigins("*"));
+        t.app().get("/v", (req, res) -> res.send("v"));
+        InMemoryHttpAdapter.ClientResponse r = t.send("GET", "/v", "Origin", "http://a.example");
+        assertEquals(200, r.status());
+        List<String> tokens = new java.util.ArrayList<>();
+        for (java.util.Map.Entry<String, String> h : r.headers()) {
+            if (h.getKey().equalsIgnoreCase("Vary")) {
+                for (String token : h.getValue().split(",")) {
+                    tokens.add(token.trim());
+                }
+            }
+        }
+        assertEquals(Arrays.asList("Accept", "Accept-Language", "Origin"), tokens);
+    }
+
+    /** Calls one of {@link #responseAMethods} on {@code res}, unwrapping the reflective wrapper of what it throws. */
+    private static void callResponse(java.lang.reflect.Method m, Response res) throws Exception {
+        Object[] args;
+        if (m.getName().equals("append")) {
+            args = new Object[] {"X-A", "1"};
+        } else if (m.getName().equals("onAbort")) {
+            Runnable listener = () -> { };
+            args = new Object[] {listener};
+        } else {
+            args = new Object[] {new java.io.ByteArrayInputStream(new byte[] {1, 2, 3}), 3L};
+        }
+        try {
+            m.invoke(res, args);
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof Exception) {
+                throw (Exception) cause;
+            }
+            throw e;
+        }
+    }
+
+    // IR-HTTP-014 AC-3: header and stream keep their signatures and Response declares no stream(InputStream, long)
+    @Test
+    public void IR_HTTP_014_AC3_headerAndStreamAreUnchangedAndThereIsNoLengthStreamOverload() throws Exception {
+        assertEquals(Response.class, Response.class.getMethod("header", String.class, String.class).getReturnType());
+        assertEquals(void.class, Response.class.getMethod("stream", InputStream.class, String.class).getReturnType());
+        try {
+            Response.class.getMethod("stream", InputStream.class, long.class);
+            fail("Response declares stream(InputStream, long)");
+        } catch (NoSuchMethodException expected) {
+            // relay(InputStream, long) is the length-preserving writer
+        }
+        for (java.lang.reflect.Method m : Response.class.getMethods()) {
+            if (m.getName().equals("stream")) {
+                assertEquals(m.toString(), Arrays.<Class<?>>asList(InputStream.class, String.class),
+                        Arrays.asList(m.getParameterTypes()));
+            }
+        }
+    }
+
+    // IR-HTTP-014 AC-4: none of the three carries @Nullable or @NonNull, and the exact nullable set of
+    // sdsAc3_IR_HTTP_001_AC4_packageNullMarkedAndNullableOnlyOnListedPositions gains no position
+    @Test
+    public void IR_HTTP_014_AC4_theThreeMethodsCarryNoNullnessAnnotation() throws Exception {
+        assertNotNull(Response.class.getPackage().getAnnotation(NullMarked.class));
+        assertFalse(Response.class.isAnnotationPresent(org.jspecify.annotations.NullUnmarked.class));
+        for (java.lang.reflect.Method m : responseAMethods()) {
+            assertFalse(m.toString(), hasNullness(m.getAnnotatedReturnType()));
+            assertFalse(m.toString(), m.isAnnotationPresent(org.jspecify.annotations.NullUnmarked.class));
+            for (AnnotatedType p : m.getAnnotatedParameterTypes()) {
+                assertEquals(m.toString(), 0, p.getAnnotations().length);
+                assertFalse(m.toString(), hasNullness(p));
+            }
+            for (java.lang.annotation.Annotation a : m.getAnnotations()) {
+                String simple = a.annotationType().getSimpleName();
+                assertFalse(m + " " + simple, simple.equals("Nullable") || simple.equals("NonNull")
+                        || simple.equals("Nonnull") || simple.equals("NotNull"));
+            }
+        }
+        for (String position : nullablePositions(Response.class)) {
+            for (java.lang.reflect.Method m : responseAMethods()) {
+                assertFalse(position, position.startsWith("Response." + m.getName() + "["));
+            }
+        }
+    }
+
+    // IR-HTTP-014 AC-5: FR-KT-002, the three names are no Kotlin hard keyword
+    @Test
+    public void IR_HTTP_014_AC5_theThreeNamesAreNoKotlinHardKeyword() throws Exception {
+        assertEquals(Collections.emptyList(),
+                KotlinContractChecks.keywordFailures(Collections.<Class<?>>singletonList(Response.class)));
+        for (java.lang.reflect.Method m : responseAMethods()) {
+            assertTrue(m.getName(), m.getName().matches("[a-z][A-Za-z]*"));
+        }
+    }
 }

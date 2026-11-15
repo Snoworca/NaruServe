@@ -8,6 +8,8 @@ import com.snoworca.naruserve.Method;
 import com.snoworca.naruserve.ResourceResolver;
 import com.snoworca.naruserve.Response;
 import com.snoworca.naruserve.SseClient;
+import com.snoworca.naruserve.common.AbortListeners;
+import com.snoworca.naruserve.common.SafeCallbacks;
 import com.snoworca.naruserve.spi.HttpExchange;
 import com.snoworca.naruserve.spi.JsonCodec;
 import java.io.ByteArrayOutputStream;
@@ -47,6 +49,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-COOKIE-001
 // @req IR-SSE-001
 // @req FR-SSE-001
+// @req IR-HTTP-014
 public final class DefaultResponse implements Response {
 
     private static final int CHUNK = 8192;
@@ -81,6 +84,10 @@ public final class DefaultResponse implements Response {
     private @Nullable SseRegistry sseRegistry;
     private @Nullable DefaultSseClient sseClient;
     private boolean upgraded101;
+    /** Set by {@link #openSession}: the exchange's abort reports now belong to the session. */
+    private boolean sessionOpen;
+    private final AbortListeners abortListeners = new AbortListeners();
+    private @Nullable SafeLogger listenerLogger;
 
     /** Status 200, no headers, state NEW; {@code headRequest} makes every body bodyless. */
     // @req FR-HTTP-013
@@ -110,6 +117,21 @@ public final class DefaultResponse implements Response {
     // @req IR-SSE-001
     void sseRegistry(SseRegistry registry) {
         this.sseRegistry = registry;
+    }
+
+    /** The app logger an onAbort listener's RuntimeException goes to; unset means a console logger. */
+    // @req FR-HTTP-035
+    synchronized void listenerLogger(SafeLogger logger) {
+        this.listenerLogger = logger;
+    }
+
+    private synchronized SafeLogger listenerLogger() {
+        SafeLogger logger = listenerLogger;
+        if (logger == null) {
+            logger = new SafeLogger(new ConsoleLogger());
+            listenerLogger = logger;
+        }
+        return logger;
     }
 
     /**
@@ -387,6 +409,44 @@ public final class DefaultResponse implements Response {
         return this;
     }
 
+    /** Adds a header line after the {@link #header} check, keeping every earlier same-name line. */
+    // @req IR-HTTP-014
+    @Override
+    public synchronized Response append(String name, String value) {
+        requireNew();
+        checkHeader(name, value);
+        headers.add(new SimpleImmutableEntry<>(name, value));
+        return this;
+    }
+
+    /**
+     * Runs {@code listener} once when this response ends ABORTED, at once on the calling thread when it already
+     * did, even while the aborting thread is still cleaning up; a failure it throws is logged and the next listener
+     * still runs. No response lock is held while a listener runs.
+     */
+    // @req IR-HTTP-014
+    // @req FR-HTTP-035
+    @Override
+    public void onAbort(Runnable listener) {
+        Objects.requireNonNull(listener, "listener");
+        Runnable logged = () -> {
+            try {
+                listener.run();
+            } catch (Throwable failure) {
+                listenerLogger().error("onAbort listener failed", failure);
+            }
+        };
+        boolean ended;
+        synchronized (this) {
+            ended = state == ResponseState.ABORTED;
+        }
+        if (ended) {
+            SafeCallbacks.run(logged); // every entry to ABORTED also runs abortListeners.abort(), so never twice
+        } else {
+            abortListeners.onAbort(logged);
+        }
+    }
+
     /** Records only framework CORS grants, which the standard error response must keep. */
     // @req FR-DX-010
     synchronized void corsHeader(String name, String value) {
@@ -420,20 +480,27 @@ public final class DefaultResponse implements Response {
         corsHeaders.add(new SimpleImmutableEntry<>("Vary", value));
     }
 
-    /** Adds a Vary field without replacing existing cache dimensions or Vary: *. */
+    /**
+     * Adds a Vary field without replacing existing cache dimensions or Vary: *; the dimensions of every Vary line,
+     * including lines added by {@link #append}, are merged into one line.
+     */
     // @req FR-DX-010
+    // @req IR-HTTP-014
     synchronized void vary(String field) {
         requireNew();
         checkHeader(field, "");
         String existing = null;
         for (Map.Entry<String, String> header : headers) {
             if (!header.getKey().equalsIgnoreCase("Vary")) continue;
-            existing = header.getValue();
-            for (String token : existing.split(",")) {
+            String line = header.getValue();
+            for (String token : line.split(",")) {
                 if ("*".equals(token.trim()) || field.equalsIgnoreCase(token.trim())) return;
             }
+            if (!line.trim().isEmpty()) {
+                existing = existing == null ? line : existing + ", " + line;
+            }
         }
-        put("Vary", existing == null || existing.isEmpty() ? field : existing + ", " + field);
+        put("Vary", existing == null ? field : existing + ", " + field);
     }
 
     /**
@@ -533,6 +600,14 @@ public final class DefaultResponse implements Response {
             throw new NullPointerException("contentType");
         }
         startBody(in, 0, contentType, -1);
+    }
+
+    /** The {@link #stream} copy with {@code contentLength} as the framing length and the app's Content-Type kept. */
+    // @req IR-HTTP-014
+    @Override
+    public void relay(InputStream in, long contentLength) {
+        Objects.requireNonNull(in, "in");
+        startBody(in, 0, null, contentLength);
     }
 
     /**
@@ -733,27 +808,48 @@ public final class DefaultResponse implements Response {
      * No-op once COMPLETED or ABORTED; otherwise ABORTED, the exchange aborted and a pending stream closed. Safe from
      * any thread: a running copy keeps the input and closes it itself once its read returns, so the input is never
      * closed under a read. An SSE stream ends with cause error, and runs its listeners here when no drain started.
+     * The onAbort listeners run once here, on the aborting thread, after the exchange abort and, unless a running
+     * copy closes the input itself, the input close, also when that cleanup throws.
      */
     // @req FR-HTTP-015
     // @req FR-SSE-004
+    // @req FR-HTTP-035
     @Override
     public void abort(@Nullable Throwable error) {
+        abort(error, false);
+    }
+
+    /**
+     * The exchange's onAbort hook: {@link #abort} with no error, a no-op once {@link #openSession} handed the
+     * connection to the session, decided under the same lock.
+     */
+    // @req FR-HTTP-035
+    // @req FR-APP-019
+    void abortByExchange() {
+        abort(null, true);
+    }
+
+    private void abort(@Nullable Throwable error, boolean byExchange) {
         boolean copyRunning;
         DefaultSseClient sse;
         synchronized (this) {
-            if (state == ResponseState.COMPLETED || state == ResponseState.ABORTED) {
+            if (state == ResponseState.COMPLETED || state == ResponseState.ABORTED || (byExchange && sessionOpen)) {
                 return;
             }
             state = ResponseState.ABORTED;
             copyRunning = copying;
             sse = sseClient;
         }
-        if (sse != null) {
-            sse.endBy("error"); // wakes a waiting drain, which writes what is queued and ends
-        }
-        ex.abort();
-        if (!copyRunning) {
-            closeInput();
+        try {
+            if (sse != null) {
+                sse.endBy("error"); // wakes a waiting drain, which writes what is queued and ends
+            }
+            ex.abort();
+            if (!copyRunning) {
+                closeInput();
+            }
+        } finally {
+            abortListeners.abort(); // on this thread, also when the cleanup threw; no listener stops the rest
         }
         fireDone(); // a running copy fires it when it ends
         if (sse != null && !sse.drainStarted()) {
@@ -836,7 +932,8 @@ public final class DefaultResponse implements Response {
     /**
      * End state of an upgraded exchange, after {@code HttpExchange.webSocket} returned: NEW becomes COMPLETED with
      * status 101 and the exchange is finished once, without a commit (the adapter wrote the 101). A finish that fails
-     * because the connection is already gone aborts instead. No-op when the response already left NEW.
+     * because the connection is already gone aborts instead, which runs the onAbort listeners. No-op when the
+     * response already left NEW.
      */
     // @req FR-WS-001
     void upgraded() {
@@ -856,9 +953,27 @@ public final class DefaultResponse implements Response {
             synchronized (this) {
                 state = ResponseState.ABORTED;
             }
-            ex.abort();
+            try {
+                ex.abort();
+            } finally {
+                abortListeners.abort();
+            }
         }
         fireDone();
+    }
+
+    /**
+     * The session's onOpen gate: false when the response already left NEW (an abort came first), so no 101 may be
+     * reported; else true, and a later exchange-reported abort ends the session, not this response.
+     */
+    // @req FR-HTTP-035
+    // @req FR-APP-019
+    synchronized boolean openSession() {
+        if (state != ResponseState.NEW) {
+            return false;
+        }
+        sessionOpen = true;
+        return true;
     }
 
     /** True once {@link #upgraded} ended this response: the session writes its own access lines. */
