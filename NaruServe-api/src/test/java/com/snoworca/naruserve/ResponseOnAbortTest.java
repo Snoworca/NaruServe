@@ -727,6 +727,131 @@ public class ResponseOnAbortTest {
         assertEquals(ResponseState.COMPLETED, stateOf(captured.get()));
     }
 
+    /** {@code rec} behind a proxy whose onAbort registers with {@code aborts}, so a test reports the disconnect. */
+    private static HttpExchange reporting(RecordingExchange rec, AbortListeners aborts) {
+        return (HttpExchange) Proxy.newProxyInstance(HttpExchange.class.getClassLoader(),
+                new Class<?>[] {HttpExchange.class}, (proxy, m, args) -> {
+                    if (m.getName().equals("onAbort")) {
+                        aborts.onAbort((Runnable) args[0]);
+                        return null;
+                    }
+                    try {
+                        return m.invoke(rec, args);
+                    } catch (InvocationTargetException e) {
+                        throw e.getCause();
+                    }
+                });
+    }
+
+    private static List<String> requestLines(RecordingLogger log, String prefix) {
+        List<String> lines = new java.util.ArrayList<>();
+        for (String line : log.info()) {
+            if (line.startsWith(prefix)) {
+                lines.add(line);
+            }
+        }
+        return lines;
+    }
+
+    // FR-HTTP-035 AC-7 / FR-APP-019 AC-3: the adapter reports the disconnect while writing the 101, before onOpen,
+    // and webSocket throws; no 101 was written, so the response ends ABORTED, the listener runs once and the one
+    // GET /ws line is marked aborted
+    @Test
+    public void FR_HTTP_035_AC7_legacyUpgradeAbortReportedBeforeOnOpenAbortsTheResponse() {
+        RecordingExchange rec = new RecordingExchange("GET", "/ws", "Connection", "Upgrade", "Upgrade", "websocket");
+        AbortListeners aborts = new AbortListeners();
+        rec.webSocketScript = (settings, endpoint) -> {
+            aborts.abort();
+            throw new IOException("peer gone before the 101");
+        };
+        RecordingLogger log = new RecordingLogger();
+        DefaultRestApp app = new DefaultRestApp();
+        app.logger(log);
+        AtomicInteger runs = new AtomicInteger();
+        AtomicReference<Response> captured = new AtomicReference<>();
+        app.use((req, res, next) -> {
+            captured.set(res);
+            res.onAbort(runs::incrementAndGet);
+            next.run();
+        });
+        app.ws("/ws", (req, ws) -> { });
+        app.freeze();
+        app.dispatcher().handle(reporting(rec, aborts));
+        List<String> lines = requestLines(log, "GET /ws ");
+        assertEquals(log.lines.toString(), 1, runs.get());
+        assertEquals(ResponseState.ABORTED, stateOf(captured.get()));
+        assertEquals(log.lines.toString(), 1, lines.size());
+        assertTrue(lines.get(0), lines.get(0).contains("aborted"));
+        assertTrue(lines.get(0), !lines.get(0).startsWith("GET /ws 101 "));
+        assertEquals(0, rec.commits.get());
+    }
+
+    // FR-HTTP-035 AC-7 / FR-APP-019 AC-3 AC-8: the disconnect is reported before onOpen but a permissive adapter
+    // still opens the session; the aborted response wins, so no 101 line is written, the handler never runs, the
+    // channel is dropped and the one GET /ws line is marked aborted
+    @Test
+    public void FR_HTTP_035_AC7_legacyUpgradeAbortReportedBeforeOnOpenRefusesTheLateOpen() {
+        RecordingExchange rec = new RecordingExchange("GET", "/ws", "Connection", "Upgrade", "Upgrade", "websocket");
+        AbortListeners aborts = new AbortListeners();
+        AtomicInteger channelEnds = new AtomicInteger();
+        rec.webSocketScript = (settings, endpoint) -> {
+            aborts.abort();
+            endpoint.onOpen(new WebSocketChannel() {
+                volatile boolean open = true;
+
+                @Override
+                public void sendText(String text) { }
+
+                @Override
+                public void sendBinary(byte[] data) { }
+
+                @Override
+                public void ping(byte[] payload) { }
+
+                @Override
+                public void close(int code, String reason) {
+                    open = false;
+                    channelEnds.incrementAndGet();
+                }
+
+                @Override
+                public void abort() {
+                    open = false;
+                    channelEnds.incrementAndGet();
+                }
+
+                @Override
+                public boolean isOpen() {
+                    return open;
+                }
+            });
+            endpoint.onClose(1006, "");
+        };
+        RecordingLogger log = new RecordingLogger();
+        DefaultRestApp app = new DefaultRestApp();
+        app.logger(log);
+        AtomicInteger runs = new AtomicInteger();
+        AtomicInteger handlerRuns = new AtomicInteger();
+        AtomicReference<Response> captured = new AtomicReference<>();
+        app.use((req, res, next) -> {
+            captured.set(res);
+            res.onAbort(runs::incrementAndGet);
+            next.run();
+        });
+        app.ws("/ws", (req, ws) -> handlerRuns.incrementAndGet());
+        app.freeze();
+        app.dispatcher().handle(reporting(rec, aborts));
+        List<String> lines = requestLines(log, "GET /ws ");
+        assertEquals(log.lines.toString(), 1, runs.get());
+        assertEquals(ResponseState.ABORTED, stateOf(captured.get()));
+        assertEquals(log.lines.toString(), 1, lines.size());
+        assertTrue(lines.get(0), lines.get(0).contains("aborted"));
+        assertTrue(lines.get(0), !lines.get(0).startsWith("GET /ws 101 "));
+        assertEquals(0, handlerRuns.get());
+        assertTrue(log.lines.toString(), channelEnds.get() >= 1);
+        assertEquals(log.lines.toString(), 0, requestLines(log, "WS /ws ").size());
+    }
+
     /** The javadoc block directly above {@code default void onAbort(Runnable listener)}, as one line of prose. */
     private static String onAbortJavadoc() throws IOException {
         File source = new File(System.getProperty("user.dir"), "src/main/java/com/snoworca/naruserve/Response.java");
