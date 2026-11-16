@@ -48,6 +48,12 @@ public final class DefaultRequest implements Request {
     // The exclusive body reader acquires once. Terminal cleanup may race a deferred producer's acquisition.
     private @Nullable InputStream ownedInput;
     private boolean inputAcquiring, inputClosed;
+    private final Object rawLock = new Object();
+    // Guarded by rawLock: the one stream bodyStream handed out and the limit of the call that created it.
+    private @Nullable RawBodyStream raw;
+    private long rawLimit;
+    /** Set first by {@link #closeBody()}; a handed-out body stream reads no more after it. */
+    private volatile boolean released;
     private final Object jsonLock = new Object();
     // Guarded by jsonLock; a non-null type distinguishes a cached JSON null from a failed parse.
     private @Nullable Type jsonType;
@@ -192,7 +198,9 @@ public final class DefaultRequest implements Request {
 
     /** Called once by the common HTTP ownership gate after callbacks and work leases release. */
     // @req FR-APP-023 AC-3
+    // @req FR-HTTP-030
     void closeBody() throws java.io.IOException {
+        released = true; // closes a bodyStream the handler left open; the input below is the one close of the source
         body.close();
         InputStream input;
         boolean acquire;
@@ -209,8 +217,8 @@ public final class DefaultRequest implements Request {
     }
 
     /**
-     * The exchange body counted by {@link #body()}. The JSON, form and multipart readers call this after taking the
-     * body; the public bodyStream overrides call it directly until the one-read rule applies to them.
+     * The exchange body counted by {@link #body()}. The JSON, form, multipart and raw readers call this after taking
+     * the body.
      */
     // @req FR-JSON-001
     // @req IR-HTTP-013
@@ -244,20 +252,138 @@ public final class DefaultRequest implements Request {
 
     /**
      * The exchange body under the app's raw body limit: a read past it throws
-     * {@link com.snoworca.naruserve.BodyTooLargeException}. The one-read rule is not applied yet.
+     * {@link com.snoworca.naruserve.BodyTooLargeException}. Counts as {@code bodyStream(rawBodyLimit)} for the
+     * repeat rule of {@link #rawStream}.
      */
     // @req IR-HTTP-013
     // @req IR-APP-009
+    // @req FR-HTTP-030
     @Override
     public InputStream bodyStream() {
-        return new LimitedInputStream(exchangeInput(), rawBodyLimit, contentLength());
+        return rawStream(rawBodyLimit, true);
     }
 
-    /** As {@link #bodyStream()}; {@code maxBytes} is not enforced yet. */
+    /** As {@link #bodyStream()} under the one-read rule; {@code maxBytes} is not enforced yet. */
     // @req IR-HTTP-013
+    // @req FR-HTTP-030
     @Override
     public InputStream bodyStream(long maxBytes) {
-        return exchangeInput();
+        return rawStream(maxBytes, false);
+    }
+
+    /**
+     * Takes the body for the RAW reader on the first call and returns one {@link RawBodyStream} over the counted
+     * exchange input. A repeated call returns that same stream while none of its bytes was consumed and {@code limit}
+     * is equal; after consumption it throws {@link BodyAlreadyConsumedException}, with another limit
+     * {@link IllegalStateException}. {@code enforce}, or a limit equal to the app's raw body limit, wraps the input in a
+     * {@link LimitedInputStream} of {@code limit}.
+     */
+    // @req FR-HTTP-030
+    private InputStream rawStream(long limit, boolean enforce) {
+        synchronized (rawLock) {
+            RawBodyStream s = raw;
+            if (s != null) {
+                if (s.consumed || released) {
+                    throw new BodyAlreadyConsumedException("request body stream already read, skipped or closed");
+                }
+                if (limit != rawLimit) {
+                    throw new IllegalStateException("bodyStream was already called with limit " + rawLimit
+                            + "; a repeated call must use the same limit, not " + limit);
+                }
+                return s;
+            }
+            body.begin(BodyState.Kind.RAW);
+            InputStream input = exchangeInput();
+            // bodyStream(rawBodyLimit) shares its stream with bodyStream(), so it carries that limit either way.
+            boolean limited = enforce || limit == rawBodyLimit;
+            s = new RawBodyStream(limited ? new LimitedInputStream(input, limit, contentLength()) : input);
+            raw = s;
+            rawLimit = limit;
+            return s;
+        }
+    }
+
+    /**
+     * The stream {@code bodyStream} hands out. A read that returns a byte, a skip that advances and close mark it
+     * consumed; available does not. Its close and the request cleanup only close this view: the exchange input is
+     * closed once, by {@link #closeBody()}.
+     */
+    // @req FR-HTTP-030
+    private final class RawBodyStream extends java.io.FilterInputStream {
+        volatile boolean consumed;
+        private volatile boolean closed;
+
+        RawBodyStream(InputStream source) {
+            super(source);
+        }
+
+        // @req FR-HTTP-030
+        private void ensureOpen() throws java.io.IOException {
+            if (closed || released) {
+                throw new java.io.IOException("request body stream closed");
+            }
+        }
+
+        // @req FR-HTTP-030
+        @Override
+        public int read() throws java.io.IOException {
+            ensureOpen();
+            int b = in.read();
+            if (b >= 0) {
+                consumed = true;
+            }
+            return b;
+        }
+
+        // @req FR-HTTP-030
+        @Override
+        public int read(byte[] b, int off, int len) throws java.io.IOException {
+            ensureOpen();
+            int n = in.read(b, off, len);
+            if (n > 0) {
+                consumed = true;
+            }
+            return n;
+        }
+
+        // @req FR-HTTP-030
+        @Override
+        public long skip(long n) throws java.io.IOException {
+            ensureOpen();
+            long s = in.skip(n);
+            if (s > 0) {
+                consumed = true;
+            }
+            return s;
+        }
+
+        // @req FR-HTTP-030
+        @Override
+        public int available() throws java.io.IOException {
+            ensureOpen();
+            return in.available();
+        }
+
+        @Override
+        public void close() {
+            consumed = true;
+            closed = true;
+        }
+
+        @Override
+        public boolean markSupported() {
+            return false;
+        }
+
+        @Override
+        public synchronized void mark(int readlimit) {
+            // Unsupported: a reset would hand out consumed bytes again.
+        }
+
+        @Override
+        public synchronized void reset() throws java.io.IOException {
+            throw new java.io.IOException("mark/reset not supported");
+        }
     }
 
     /**
