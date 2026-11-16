@@ -607,12 +607,21 @@ public final class DefaultResponse implements Response {
     /**
      * The {@link #stream} copy with {@code contentLength} as the framing length: sends the headers the app set, drops
      * its Content-Length and Transfer-Encoding, adds no Content-Type and never takes the app's {@code defaultCache}.
+     * A non-negative length sends exactly that many bytes (a shorter stream aborts, a longer one is cut there), -1
+     * leaves the framing to the adapter, and a length below -1 closes {@code in} and throws
+     * {@link IllegalArgumentException}. HEAD and 304 keep a non-negative length as Content-Length with no body; 204
+     * sends neither.
      */
     // @req IR-HTTP-014
     // @req FR-HTTP-036
+    // @req FR-HTTP-037
     @Override
     public void relay(InputStream in, long contentLength) {
         Objects.requireNonNull(in, "in");
+        if (contentLength < -1) {
+            closeQuietly(in);
+            throw new IllegalArgumentException("contentLength " + contentLength + " is below -1");
+        }
         startBody(in, 0, null, contentLength, true);
     }
 
@@ -646,9 +655,11 @@ public final class DefaultResponse implements Response {
 
     /**
      * Commits for a body copied from {@code in}: {@code length} -1 is unknown; status 0 keeps the current one;
-     * {@code relay} commits without the app's {@code defaultCache}.
+     * {@code relay} commits without the app's {@code defaultCache}. A 204 never carries Content-Length and a 304 only
+     * from {@code relay}.
      */
     // @req FR-HTTP-036
+    // @req FR-HTTP-037
     private void startBody(InputStream in, int newStatus, @Nullable String contentType, long length, boolean relay) {
         RuntimeException refusal;
         Commit c = null;
@@ -667,7 +678,7 @@ public final class DefaultResponse implements Response {
                 }
                 remove("Content-Length"); // an unknown length leaves the framing to the adapter
                 remove("Transfer-Encoding");
-                if (length >= 0) {
+                if (length >= 0 && status != 204 && (relay || status != 304)) {
                     put("Content-Length", String.valueOf(length));
                 }
                 bodyless = bodyless();
