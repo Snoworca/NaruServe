@@ -194,6 +194,15 @@ public interface RestApp extends HttpRoutes<RestApp> {
     RestApp formLimit(long bytes);
 
     /**
+     * The app-wide limit in bytes of {@link Request#bodyStream()}, {@code 1..1073741824}; default 1048576 (1 MiB),
+     * as the {@code limit} of Express {@code express.raw()}. A read past it throws {@link BodyTooLargeException};
+     * {@link Request#bodyStream(long)} sets the limit for one call instead. Out-of-range values throw
+     * {@link IllegalArgumentException}.
+     */
+    // @req IR-APP-009
+    RestApp rawBodyLimit(long bytes);
+
+    /**
      * Serves the files below {@code dir} under {@code prefix}, like Express {@code app.use(prefix,
      * express.static(dir))}. The prefix must start with {@code /} ({@link IllegalArgumentException}); a trailing
      * {@code /} is ignored. Several calls register several mounts in order; {@code dir} need not exist yet.

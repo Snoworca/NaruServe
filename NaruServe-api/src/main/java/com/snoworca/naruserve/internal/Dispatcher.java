@@ -59,6 +59,8 @@ public final class Dispatcher implements ExchangeHandler {
     private final boolean trustProxy;
     /** The app's proxy trust setting; legacy from the constructor's boolean until DefaultRestApp.freeze sets it. */
     private volatile ProxyTrustSetting proxyTrust;
+    /** The app's raw body limit of req.bodyStream(); DefaultRestApp.freeze sets it before the first request. */
+    private volatile long rawBodyLimit = JsonBodyReader.DEFAULT_LIMIT;
     private final MultipartSettings multipart;
     private final long formLimit;
     private final SpoolRegistry spool;
@@ -213,6 +215,12 @@ public final class Dispatcher implements ExchangeHandler {
         this.proxyTrust = Objects.requireNonNull(setting, "setting");
     }
 
+    /** Replaces the raw body limit both request-construction sites pass; DefaultRestApp.freeze calls it. */
+    // @req IR-APP-009
+    void rawBodyLimit(long bytes) {
+        this.rawBodyLimit = bytes;
+    }
+
     // @req FR-HTTP-027; FR-APP-021; FR-APP-022; FR-APP-023
     private void handleHttp(HttpExchange ex) {
         String rid=RequestIds.next();long start=System.nanoTime();
@@ -222,7 +230,7 @@ public final class Dispatcher implements ExchangeHandler {
         if(!ex.rawPath().startsWith("/")) { automatic(ex,400,null,false,rid,start);return; }
         Method method=methodOf(ex.methodToken());
         DefaultRequest req=new DefaultRequest(ex,method,Collections.emptyMap(),context,codec,jsonLimit,trustProxy,multipart,formLimit,spool,true);
-        req.requestId(rid);req.startNanos(start);req.proxyTrust(proxyTrust);
+        req.requestId(rid);req.startNanos(start);req.proxyTrust(proxyTrust);req.rawBodyLimit(rawBodyLimit);
         DefaultResponse res=new DefaultResponse(ex,method==Method.HEAD,codec);
         res.mimeTypes(statics.mimeTypes());res.resolverTap(statics.resolverTap());res.request(req);
         res.applyDefaultCache(statics.defaultCache());res.sseRegistry(sse);
@@ -276,6 +284,7 @@ public final class Dispatcher implements ExchangeHandler {
         req.requestId(rid);
         req.startNanos(start);
         req.proxyTrust(proxyTrust);
+        req.rawBodyLimit(rawBodyLimit);
         DefaultResponse res = new DefaultResponse(ex, method == Method.HEAD, codec);
         res.mimeTypes(statics.mimeTypes());
         res.resolverTap(statics.resolverTap());

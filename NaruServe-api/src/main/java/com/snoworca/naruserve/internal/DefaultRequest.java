@@ -62,6 +62,8 @@ public final class DefaultRequest implements Request {
     private final long jsonLimit;
     /** The app's proxy trust setting; the Dispatcher sets it before any middleware runs. */
     private volatile ProxyTrustSetting proxyTrust;
+    /** The app's raw body limit of {@link #bodyStream()}; the Dispatcher sets it before any middleware runs. */
+    private volatile long rawBodyLimit = JsonBodyReader.DEFAULT_LIMIT;
     private final MultipartSettings multipart;
     private final long formLimit;
     private final SpoolRegistry spool;
@@ -240,11 +242,15 @@ public final class DefaultRequest implements Request {
         return body.stream(input);
     }
 
-    /** The exchange body; the one-read rule and the raw body limit are not applied yet. */
+    /**
+     * The exchange body under the app's raw body limit: a read past it throws
+     * {@link com.snoworca.naruserve.BodyTooLargeException}. The one-read rule is not applied yet.
+     */
     // @req IR-HTTP-013
+    // @req IR-APP-009
     @Override
     public InputStream bodyStream() {
-        return exchangeInput();
+        return new LimitedInputStream(exchangeInput(), rawBodyLimit, contentLength());
     }
 
     /** As {@link #bodyStream()}; {@code maxBytes} is not enforced yet. */
@@ -536,6 +542,12 @@ public final class DefaultRequest implements Request {
     // @req SEC-ENGINE-003
     void proxyTrust(ProxyTrustSetting setting) {
         this.proxyTrust = Objects.requireNonNull(setting, "setting");
+    }
+
+    /** The app's raw body limit of {@link #bodyStream()}, set by the Dispatcher at request construction. */
+    // @req IR-APP-009
+    void rawBodyLimit(long bytes) {
+        this.rawBodyLimit = bytes;
     }
 
     /** The adapter's peer address, whatever the proxy trust setting and the forwarding headers say. */
