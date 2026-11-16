@@ -79,6 +79,8 @@ public final class DefaultResponse implements Response {
     private FileResponder.@Nullable ResolverTap tap;
     private @Nullable DefaultRequest request;
     private @Nullable CachePolicy defaultCache;
+    /** Assigned by startBody at each body commit, true only for {@link #relay}: begin then skips defaultCache. */
+    private boolean relayed;
     /** Bytes the pending copy must deliver; -1 copies to the end of the input. */
     private long pendingLimit = -1;
     private @Nullable SseRegistry sseRegistry;
@@ -599,15 +601,19 @@ public final class DefaultResponse implements Response {
             closeQuietly(in);
             throw new NullPointerException("contentType");
         }
-        startBody(in, 0, contentType, -1);
+        startBody(in, 0, contentType, -1, false);
     }
 
-    /** The {@link #stream} copy with {@code contentLength} as the framing length and the app's Content-Type kept. */
+    /**
+     * The {@link #stream} copy with {@code contentLength} as the framing length: sends the headers the app set, drops
+     * its Content-Length and Transfer-Encoding, adds no Content-Type and never takes the app's {@code defaultCache}.
+     */
     // @req IR-HTTP-014
+    // @req FR-HTTP-036
     @Override
     public void relay(InputStream in, long contentLength) {
         Objects.requireNonNull(in, "in");
-        startBody(in, 0, null, contentLength);
+        startBody(in, 0, null, contentLength, true);
     }
 
     /**
@@ -635,11 +641,15 @@ public final class DefaultResponse implements Response {
             closeQuietly(in);
             throw e;
         }
-        startBody(in, status, null, length);
+        startBody(in, status, null, length, false);
     }
 
-    /** Commits for a body copied from {@code in}: {@code length} -1 is unknown; status 0 keeps the current one. */
-    private void startBody(InputStream in, int newStatus, @Nullable String contentType, long length) {
+    /**
+     * Commits for a body copied from {@code in}: {@code length} -1 is unknown; status 0 keeps the current one;
+     * {@code relay} commits without the app's {@code defaultCache}.
+     */
+    // @req FR-HTTP-036
+    private void startBody(InputStream in, int newStatus, @Nullable String contentType, long length, boolean relay) {
         RuntimeException refusal;
         Commit c = null;
         boolean bodyless = false;
@@ -661,6 +671,7 @@ public final class DefaultResponse implements Response {
                     put("Content-Length", String.valueOf(length));
                 }
                 bodyless = bodyless();
+                relayed = relay;
                 c = begin(bodyless ? 0 : length, EMPTY);
             }
         }
@@ -1044,11 +1055,15 @@ public final class DefaultResponse implements Response {
         return bodyless() ? begin(0, EMPTY) : begin(body.length, body);
     }
 
-    /** NEW to COMMITTED with a snapshot of status and headers; the caller holds the lock. */
+    /**
+     * NEW to COMMITTED with a snapshot of status and headers; the caller holds the lock. The app's {@code defaultCache}
+     * fills an absent Cache-Control, except on a relayed response.
+     */
+    // @req FR-HTTP-036
     private Commit begin(long length, byte[] body) {
         CachePolicy fallback = defaultCache;
-        if (fallback != null && !hasHeader("Cache-Control")) {
-            put("Cache-Control", fallback.getHeaderValue()); // FR-STATIC-008 AC-5: whatever set it, a value stays
+        if (fallback != null && !relayed && !hasHeader("Cache-Control")) {
+            put("Cache-Control", fallback.getHeaderValue()); // FR-HTTP-036 AC-6: whatever set it, a value stays
         }
         committed = true;
         state = ResponseState.COMMITTED;
