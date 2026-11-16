@@ -213,7 +213,7 @@ public class AppLifecycleGuardTest {
     }
 
     // SDS-AC-4; FR-APP-002 AC-4; CON-APP-002 AC-1; re-pointed to IR-STATIC-001 AC-5: multipart, formLimit, both staticFiles overloads,
-    // defaultCache and mimeTypes().register are refused after listen()
+    // defaultCache and mimeTypes().register are refused after listen(); IR-APP-009 AC-4 adds rawBodyLimit
     @Test
     public void reflectionPartitionsEveryMutationIntoLiveHttpAndGuardedConfiguration() throws Exception {
         // CON-APP-010 AC-3 AC-5; FR-APP-021 AC-3 AC-4: inspect inherited erased-generic registrations too.
@@ -229,7 +229,9 @@ public class AppLifecycleGuardTest {
                 "jsonCodec", "jsonLimit", "server", "trustProxy", "multipart", "formLimit", "staticFiles",
                 "defaultCache", "ws", "webSocket", "sse",
                 // 0.11.0: IR-APP-008 AC-2 (onRegistration) and IR-ENGINE-003 AC-1 (trustProxyHops, trustProxyCidrs)
-                "onRegistration", "trustProxyHops", "trustProxyCidrs"));
+                "onRegistration", "trustProxyHops", "trustProxyCidrs",
+                // 0.12.0: IR-APP-009 AC-4 (rawBodyLimit)
+                "rawBodyLimit"));
         java.util.Set<String> observedHttp = new java.util.TreeSet<>(), observedConfiguration = new java.util.TreeSet<>();
         int checked = 0;
         for (java.lang.reflect.Method m : RestApp.class.getMethods()) {
