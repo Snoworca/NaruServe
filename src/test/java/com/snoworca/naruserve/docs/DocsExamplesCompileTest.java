@@ -1002,4 +1002,33 @@ public final class DocsExamplesCompileTest {
                     compiledPerFile.getOrDefault(page, 0) + skipped);
         }
     }
+
+    // OPS-DX-009 AC-6: every Java block of response.md and en/response.md that calls res.append, res.onAbort,
+    // res.relay or HttpHeaderValues.isFieldValue is compiled, not skipped, and no diagnostic names either page
+    @Test
+    public void OPS_DX_009_AC6_rawResponseJavaBlocksOfBothPagesCompile() throws IOException {
+        List<String> diagnostics = docsDiagnostics();
+        String[] rawMembers = {".append(\"", ".onAbort(", ".relay(", ".isFieldValue("};
+        for (String page : new String[] {"response.md", "en/response.md"}) {
+            List<String> blocks = docs().get(page);
+            assertNotNull("response page " + page, blocks);
+            for (String d : diagnostics) {
+                assertFalse("compile diagnostic on " + page + ": " + d, d.startsWith(page + " #"));
+            }
+            List<String> members = new ArrayList<>();
+            for (int i = 0; i < blocks.size(); i++) {
+                String body = blocks.get(i);
+                for (String member : rawMembers) {
+                    if (body.contains(member)) {
+                        members.add(member);
+                        assertNull("skipped raw response block " + page + " #" + (i + 1), skipFor(page, i + 1, body));
+                    }
+                }
+            }
+            for (String member : rawMembers) {
+                assertTrue(page + " has a compiled Java block calling " + member, members.contains(member));
+            }
+        }
+        assertTrue(String.join("\n", diagnostics), diagnostics.isEmpty());
+    }
 }

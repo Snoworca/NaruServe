@@ -120,8 +120,8 @@ public interface Response {
     /**
      * Streams {@code in} as the response body framed by {@code contentLength} ({@code -1} for an unknown length),
      * keeping the {@code Content-Type} the app set; the response takes ownership of {@code in} as {@link #stream}
-     * does. The default closes {@code in} and throws {@link UnsupportedOperationException} so response fakes still
-     * compile.
+     * does. A relayed response never receives the app's {@link RestApp#defaultCache} policy. The default closes
+     * {@code in} and throws {@link UnsupportedOperationException} so response fakes still compile.
      */
     // @req IR-HTTP-014
     default void relay(InputStream in, long contentLength) {

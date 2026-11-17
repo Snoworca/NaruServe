@@ -1154,18 +1154,10 @@ public final class DefaultResponse implements Response {
         return com.snoworca.naruserve.common.HttpHeaderValues.isToken(s);
     }
 
-    /**
-     * No control character (CR, LF, NUL, DEL, ...) except HTAB, and no char above U+00FF: an adapter writing the
-     * low byte would turn U+010A into LF (cf. Node CVE-2018-12116), so headers stay ISO-8859-1, one byte per char.
-     */
+    /** The header value check; {@link com.snoworca.naruserve.common.HttpHeaderValues#isFieldValue} holds the rule. */
+    // @req IR-HTTP-012
     static boolean isFieldValue(String s) {
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (c < 0x20 && c != '\t' || c == 0x7F || c > 0xFF) {
-                return false;
-            }
-        }
-        return true;
+        return com.snoworca.naruserve.common.HttpHeaderValues.isFieldValue(s);
     }
 
     private static void closeQuietly(InputStream in) {
