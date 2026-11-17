@@ -1,0 +1,191 @@
+{
+  "wave": "wave-10",
+  "round": 1,
+  "verifier": "loop-p-wave-10-r1",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "FR-PROXY-011 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp1_ac6_overSocket_backendAcaoReplacesAppValue",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Over a real TinyHttpd socket (wave tests only check the in-memory adapter): one ACAO with the backend value, X-App kept."
+    },
+    {
+      "id": "LP-2",
+      "cites": "FR-PROXY-011 AC-7",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp2_ac7_overSocket_appCookieAndTwoBackendCookiesGiveThree",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Three Set-Cookie lines over TinyHttpd."
+    },
+    {
+      "id": "LP-3",
+      "cites": "FR-PROXY-011 AC-8",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp3_ac8_overSocket_varyHoldsBothTokens",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Vary holds Origin and Accept-Encoding over TinyHttpd."
+    },
+    {
+      "id": "LP-4",
+      "cites": "FR-PROXY-011 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp4_ac10_overSocket_lowerCaseBackendNameReplacesAppHeaderAndCookiesAppend",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Lower-case backend names replace/append correctly over TinyHttpd."
+    },
+    {
+      "id": "LP-5",
+      "cites": "FR-PROXY-011 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp5_ac2_overSocket_setCookieContentTypeLengthAndBody",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "ASCII Set-Cookie order, Content-Type, Content-Length 5 and body intact over TinyHttpd."
+    },
+    {
+      "id": "LP-6",
+      "cites": "FR-PROXY-011 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp6_ac1_overSocket_statusesUnchangedAnd302NotFollowed",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "200/400/404/500 and 302 (one backend request) over TinyHttpd."
+    },
+    {
+      "id": "LP-7",
+      "cites": "PRD-207",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp7_prd207_uncommonStatusesRelayedUnchangedInMemory",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "17 further statuses (201..599) relayed unchanged in memory."
+    },
+    {
+      "id": "LP-8",
+      "cites": "PRD-207",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp8_prd207_uncommonStatusesRelayedUnchangedOverSocket",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Same 17 statuses relayed unchanged over TinyHttpd."
+    },
+    {
+      "id": "LP-9",
+      "cites": "IR-PROXY-001 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp9_ir001_ac1_overSocket_mountForwardsGet",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "No-option mount forwards GET /api/orders/x over TinyHttpd."
+    },
+    {
+      "id": "LP-10",
+      "cites": "FR-PROXY-011 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp10_ac4_overSocket_noContentTypeForErrorAndEmptyBodies",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "No Content-Type added for 404, empty 500, 204 or chunked 200 over TinyHttpd."
+    },
+    {
+      "id": "LP-11",
+      "cites": "FR-PROXY-002 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp11_fr002_ac5_emptyAndSpacedNamesRejected",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Empty, spaced, colon and non-ASCII names rejected by all four header options."
+    },
+    {
+      "id": "LP-12",
+      "cites": "FR-PROXY-002 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp12_fr002_ac6_responseHeaderRejectsControlValues",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Lone CR, NUL, DEL, LF values rejected."
+    },
+    {
+      "id": "LP-13",
+      "cites": "FR-PROXY-002 AC-8",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp13_fr002_ac8_everySocketTimeoutRoundsAndClamps",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Connect/write conversion, clamp just above Integer.MAX_VALUE ms, nanosecond precision kept."
+    },
+    {
+      "id": "LP-14",
+      "cites": "IR-PROXY-001 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp14_ir001_ac5_headerRuleListsAreNotShared",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Two derivations from one receiver do not share or mutate rule lists; lists unmodifiable."
+    },
+    {
+      "id": "LP-15",
+      "cites": "PRD-87",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp15_prd87_overSocket_duplicateNonCookieLinesKeptInOrder",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Duplicate X-A and Cache-Control lines all reach the client in order over TinyHttpd."
+    },
+    {
+      "id": "LP-16",
+      "cites": "PRD-208",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp16_prd208_overSocket_interimHeadsSkippedFinalStatusRelayed",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "100 and 103 interim heads skipped (Link not leaked); final 201 relayed."
+    },
+    {
+      "id": "LP-17",
+      "cites": "FR-PROXY-011 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp17_ac1_overSocket_304WithContentLengthRelayedPromptly",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "304 carrying Content-Length: 10 and no body relayed promptly with ETag."
+    },
+    {
+      "id": "LP-18",
+      "cites": "PRD-208",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp18_prd208_overSocket_headKeepsContentLength",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "HEAD keeps backend Content-Length with no body. HEAD length is owned by a later proxy requirement (PRD-208 HEAD part), informational only."
+    },
+    {
+      "id": "LP-19",
+      "cites": "FR-PROXY-011 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp19_ac2_overSocket_obsTextHeaderBytesUnchanged",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: HTTP/1.1 200 OK / Set-Cookie: n=cafÃÂ© / X-Name: cafÃÂ© / Content-Type: text/plain; name=Ã© / Content-Length: 2 ... expected:<[cafÃ©]> but was:<[cafÃÂ©]> (client bytes read as ISO-8859-1; backend sent Content-Type 'text/plain; name=' + 0xE9 and the client received 0xC3 0xA9)",
+      "note": "Header values carrying obs-text (bytes 0x80-0xFF, accepted by isFieldValue so not INVALID_RESPONSE per PRD-152) are re-encoded: Proxy.ResponseHead.readLine decodes backend head bytes as ISO-8859-1 chars, then the TinyHttpd adapter writes header chars as UTF-8, so the client gets different bytes than the backend sent. AC-2's 'same Content-Type value' and the Set-Cookie lines break over a real socket. The in-memory adapter hides it (LP-20 green). Fix either side: relay header chars as ISO-8859-1 bytes in the adapter, or have the proxy decline obs-text. Edge case: obs-text is obsolete but legal."
+    },
+    {
+      "id": "LP-20",
+      "cites": "FR-PROXY-011 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp20_ac2_inMemory_obsTextHeaderValuesUnchanged",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "The in-memory adapter keeps obs-text chars, so the wave's in-memory AC-2 test cannot see LP-19."
+    }
+  ],
+  "summary": {
+    "tests_written": 20,
+    "kept": 1
+  }
+}

@@ -38,6 +38,18 @@
       "reason_class": "cross-wave-carry-forward",
       "note": "when documenting res.relay (OPS-DX-009), also state in the Response#relay and RestApp.defaultCache Javadoc that a relayed response never receives defaultCache",
       "closed": "wave-8 (OPS-DX-009 docs; Javadoc in Response/RestApp; loop P r1-r3 pass at b1e9622)"
+    },
+    {
+      "from": "wave-10",
+      "round": 1,
+      "finding": "LP-19",
+      "cites": "FR-PROXY-011 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave10Test.java::lp19_ac2_overSocket_obsTextHeaderBytesUnchanged",
+      "evidence": "java.lang.AssertionError: HTTP/1.1 200 OK / Set-Cookie: n=cafÃÂ© / X-Name: cafÃÂ© / Content-Type: text/plain; name=Ã© / Content-Length: 2 ... expected:<[cafÃ©]> but was:<[cafÃÂ©]> (client bytes read as ISO-8859-1; backend sent Content-Type 'text/plain; name=' + 0xE9 and the client received 0xC3 0xA9)",
+      "carried_into": "wave-17",
+      "owner_requirement": "SEC-PROXY-004",
+      "reason_class": "cross-wave-carry-forward",
+      "note": "SEC-PROXY-004 AC-9 owns backend obs-text header bytes reaching the client byte-for-byte. Over a real TinyHttpd socket the 0xE9 byte arrives as 0xC3 0xA9, because TinyHttpd 3.1.1 writes header chars as UTF-8 (the in-memory adapter keeps them, LP-20 green). Wave-17 must check AC-9 over TinyHttpd; if the library encoding cannot be changed from NaruServe (../TinyHttpd is not modified in this run), state it as an adapter-dependent limit or amend AC-9 through MCP."
     }
   ]
 }
