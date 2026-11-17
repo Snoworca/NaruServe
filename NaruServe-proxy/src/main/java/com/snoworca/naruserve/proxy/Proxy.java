@@ -1,6 +1,5 @@
 package com.snoworca.naruserve.proxy;
 
-import com.snoworca.naruserve.BodyTooLargeException;
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.Middleware;
 import com.snoworca.naruserve.Next;
@@ -9,7 +8,6 @@ import com.snoworca.naruserve.Response;
 import com.snoworca.naruserve.common.HttpHeaderValues;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -17,13 +15,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLSocketFactory;
 import org.jspecify.annotations.Nullable;
@@ -60,6 +60,18 @@ public final class Proxy implements Middleware {
     private static final long CHUNKED_BODY = -1;
     /** The decided request framing when the client sent neither Content-Length nor Transfer-Encoding. */
     private static final long NO_FRAMING_HEADER = -2;
+    /** The framing header of a body sent in the chunked coding. */
+    private static final Map.Entry<String, String> CHUNKED_FRAMING =
+            new SimpleImmutableEntry<>("Transfer-Encoding", "chunked");
+    /** The framing header of an empty body for the methods in {@link #EMPTY_BODY_LENGTH_METHODS}. */
+    private static final Map.Entry<String, String> ZERO_LENGTH_FRAMING =
+            new SimpleImmutableEntry<>("Content-Length", "0");
+    /**
+     * The methods whose bodyless request without length headers is sent with {@code Content-Length: 0}, for
+     * backends that answer 411 to such a request without a length (RFC 9110 §8.6); method tokens are case-sensitive.
+     */
+    private static final Set<String> EMPTY_BODY_LENGTH_METHODS =
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList("POST", "PUT", "PATCH")));
 
     private final Target target;
     private final Options options;
@@ -338,23 +350,28 @@ public final class Proxy implements Middleware {
      */
     // @req IR-PROXY-001
     // @req SEC-PROXY-003
+    // @req FR-PROXY-003
+    // @req FR-PROXY-008
     @Override
     public void handle(Request req, Response res, Next next) throws Exception {
-        // The framing answers (400/501) come first, from the header lines alone, for every target scheme (D-050).
-        long framing = requestBodyLength(req);
+        // The header check (400) and then the framing answers (400/501) come first, from the header lines alone, for
+        // every target scheme (D-050).
+        BackendRequest.checkClientHeaders(req.rawHeaders());
+        long declaredFraming = requestBodyLength(req);
         if (!"http".equals(target.scheme)) {
             // https backends arrive with the TLS requirement (SEC-PROXY-005); until then they are not reached.
             throw new HttpException(502);
         }
         try {
-            forward(req, res, prepare(req, framing));
-        } catch (ClientBodyFailure f) {
+            forward(req, res, prepare(req, declaredFraming));
+        } catch (RequestBodyCopier.ClientBodyFailure f) {
             throw f.forErrorFlow();
         }
     }
 
     // @req IR-PROXY-001
     // @req FR-PROXY-011
+    // @req FR-PROXY-007
     private void forward(Request req, Response res, Outgoing outgoing) {
         Socket socket = new Socket();
         boolean relayed = false;
@@ -363,10 +380,11 @@ public final class Proxy implements Middleware {
             socket.setSoTimeout(readTimeoutMillis());
             OutputStream out = new BufferedOutputStream(socket.getOutputStream());
             out.write(outgoing.head);
-            if (outgoing.bufferedBody != null) {
-                out.write(outgoing.bufferedBody);
-            } else if (outgoing.bodyStream != null) {
-                copyClientBody(outgoing.bodyStream, out, outgoing.contentLength);
+            BodyFraming framing = outgoing.framing;
+            if (framing.chunked) {
+                RequestBodyCopier.copyChunked(outgoing.body, framing.firstByte, out);
+            } else {
+                RequestBodyCopier.copyLength(outgoing.body, out, framing.contentLength);
             }
             out.flush();
             InputStream in = new BufferedInputStream(socket.getInputStream());
@@ -391,53 +409,70 @@ public final class Proxy implements Middleware {
             if (!relayed) {
                 closeQuietly(socket);
             }
-            if (outgoing.bodyStream != null) {
-                closeQuietly(outgoing.bodyStream);
-            }
+            closeQuietly(outgoing.body);
         }
     }
 
     /**
-     * The request line, Host, the forwardable client headers, the framing header and Connection as bytes, for the
-     * {@code framing} {@link #requestBodyLength} decided; a chunked client body is read here and a declared one is
-     * opened here, before any backend connection. The body limit answers here too for a chunked body and for a
-     * Content-Length the core reads as one number; a list form such as {@code 5, 5} is only limited while it is
-     * copied, after the connect (the body limit requirement FR-PROXY-008 closes that).
+     * The request line, Host, the forwardable client headers, the framing header and Connection as bytes, and the
+     * client body stream, for the {@code declaredFraming} {@link #requestBodyLength} decided; all before any backend
+     * connection. The body is taken once through {@code req.bodyStream(n)} for a mount with {@code .bodyLimit(n)} and
+     * {@code req.bodyStream()} otherwise. The framing decision (the pre-read and the list-form 413) lives in
+     * {@link #bodyFraming}. The exceptions {@code req.bodyStream} throws for a body earlier code took pass through
+     * unwrapped, and the body is closed on every failure.
      */
     // @req IR-PROXY-001
     // @req SEC-PROXY-003
-    private Outgoing prepare(Request req, long framing) {
-        StringBuilder head = new StringBuilder();
-        head.append(req.methodToken()).append(' ').append(target.basePath).append(req.originalUrl())
-                .append(" HTTP/1.1\r\n");
-        head.append("Host: ").append(target.authority).append("\r\n");
-        for (Map.Entry<String, String> h : req.rawHeaders()) {
-            String lower = h.getKey().toLowerCase(Locale.ROOT);
-            if (!HeaderRules.REQUEST_NOT_FORWARDED.contains(lower)) {
-                head.append(h.getKey()).append(": ").append(h.getValue()).append("\r\n");
+    // @req FR-PROXY-003
+    // @req FR-PROXY-007
+    // @req FR-PROXY-008
+    private Outgoing prepare(Request req, long declaredFraming) {
+        InputStream body = options.bodyLimit == NO_BODY_LIMIT ? req.bodyStream() : req.bodyStream(options.bodyLimit);
+        try {
+            BodyFraming framing = bodyFraming(req, body, declaredFraming);
+            // The forwarding headers (SEC-PROXY-002) and the .requestHeader values (FR-PROXY-005) fill their D-053 slots.
+            byte[] head = BackendRequest.head(req.methodToken() + " " + target.basePath + req.originalUrl()
+                    + " HTTP/1.1", target.authority, BackendRequest.forwardedClientHeaders(req.rawHeaders()),
+                    Collections.<Map.Entry<String, String>>emptyList(),
+                    Collections.<Map.Entry<String, String>>emptyList(), framing.header);
+            return new Outgoing(head, body, framing);
+        } catch (RuntimeException | Error e) {
+            closeQuietly(body);
+            throw e;
+        }
+    }
+
+    /**
+     * The framing of the body actually sent, for the {@code declaredFraming} {@link #requestBodyLength} decided:
+     * chunked for a chunked body, the same Content-Length for a declared one, and for a request with neither header the
+     * one-byte pre-read decides: no body (with {@code Content-Length: 0} for POST, PUT and PATCH only) when the stream
+     * ends at once, chunked otherwise. The pre-read comes after {@code req.bodyStream} and before the backend connect,
+     * the place of the concurrency slot and the total-timeout watchdog (design D-050, D-056). A declared length over
+     * the {@code .bodyLimit} answers 413 here, before any connection.
+     */
+    // @req SEC-PROXY-003
+    // @req FR-PROXY-007
+    // @req FR-PROXY-008
+    private BodyFraming bodyFraming(Request req, InputStream body, long declaredFraming) {
+        if (declaredFraming == CHUNKED_BODY) {
+            return new BodyFraming(true, 0, -1, CHUNKED_FRAMING);
+        }
+        if (declaredFraming == NO_FRAMING_HEADER) {
+            int first = RequestBodyCopier.preRead(body);
+            if (first >= 0) {
+                return new BodyFraming(true, 0, first, CHUNKED_FRAMING);
             }
+            Map.@Nullable Entry<String, String> emptyBodyHeader =
+                    EMPTY_BODY_LENGTH_METHODS.contains(req.methodToken()) ? ZERO_LENGTH_FRAMING : null;
+            return new BodyFraming(false, 0, -1, emptyBodyHeader);
         }
-        long length;
-        boolean sendLength;
-        byte @Nullable [] buffered = null;
-        if (framing == CHUNKED_BODY) {
-            // The request-body framing requirement (FR-PROXY-007) streams this; until then it is sent with a length.
-            buffered = readClientBody(req.bodyStream());
-            length = buffered.length;
-            sendLength = length > 0;
-        } else if (framing == NO_FRAMING_HEADER) {
-            length = 0;
-            sendLength = false;
-        } else {
-            length = framing;
-            sendLength = true;
+        if (options.bodyLimit != NO_BODY_LIMIT && declaredFraming > options.bodyLimit) {
+            // req.bodyStream answers 413 for a single declared length only; a list such as "2048, 2048"
+            // agrees on one length (SEC-PROXY-003) and is refused here, still before any connection.
+            throw new HttpException(413);
         }
-        if (sendLength) {
-            head.append("Content-Length: ").append(length).append("\r\n");
-        }
-        head.append("Connection: close\r\n\r\n");
-        @Nullable InputStream bodyStream = buffered == null && length > 0 ? req.bodyStream() : null;
-        return new Outgoing(head.toString().getBytes(StandardCharsets.ISO_8859_1), buffered, bodyStream, length);
+        return new BodyFraming(false, declaredFraming, -1,
+                new SimpleImmutableEntry<>("Content-Length", Long.toString(declaredFraming)));
     }
 
     /** {@link #requestBodyLength(List, List)} of the request's Content-Length and Transfer-Encoding field lines. */
@@ -487,44 +522,6 @@ public final class Proxy implements Middleware {
         return length;
     }
 
-    private static byte[] readClientBody(InputStream in) {
-        try {
-            ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            byte[] b = new byte[8192];
-            for (int n; (n = clientRead(in, b, b.length)) >= 0; ) {
-                buf.write(b, 0, n);
-            }
-            return buf.toByteArray();
-        } finally {
-            closeQuietly(in);
-        }
-    }
-
-    private static void copyClientBody(InputStream in, OutputStream out, long length) throws IOException {
-        try {
-            byte[] b = new byte[8192];
-            for (long left = length; left > 0; ) {
-                int n = clientRead(in, b, (int) Math.min(b.length, left));
-                if (n < 0) {
-                    throw new ClientBodyFailure(new EOFException("the client body ended " + left + " bytes early"));
-                }
-                out.write(b, 0, n);
-                left -= n;
-            }
-        } finally {
-            closeQuietly(in);
-        }
-    }
-
-    /** One read of the client body; its IOException is marked as the client's, apart from backend I/O failures. */
-    private static int clientRead(InputStream in, byte[] b, int len) {
-        try {
-            return in.read(b, 0, len);
-        } catch (IOException e) {
-            throw new ClientBodyFailure(e);
-        }
-    }
-
     private static void closeQuietly(InputStream in) {
         try {
             in.close();
@@ -547,37 +544,36 @@ public final class Proxy implements Middleware {
         }
     }
 
-    /** The bytes of a backend request head and how its body follows. */
-    private static final class Outgoing {
-        final byte[] head;
-        /** A chunked client body read in full, or null when the body is copied from the client stream. */
-        final byte @Nullable [] bufferedBody;
-        /** The client body stream of a declared non-zero length, or null. */
-        final @Nullable InputStream bodyStream;
+    /** How the client body is framed to the backend: the coding, the length, the pre-read byte and the header. */
+    private static final class BodyFraming {
+        /** Whether the body is sent in the chunked coding; otherwise exactly {@link #contentLength} bytes are sent. */
+        final boolean chunked;
         final long contentLength;
+        /** The byte the pre-read took from the body and that leads a chunked body, or -1. */
+        final int firstByte;
+        /** The framing header, or null for a body-less request that carries none. */
+        final Map.@Nullable Entry<String, String> header;
 
-        Outgoing(byte[] head, byte @Nullable [] bufferedBody, @Nullable InputStream bodyStream, long contentLength) {
-            this.head = head;
-            this.bufferedBody = bufferedBody;
-            this.bodyStream = bodyStream;
+        BodyFraming(boolean chunked, long contentLength, int firstByte, Map.@Nullable Entry<String, String> header) {
+            this.chunked = chunked;
             this.contentLength = contentLength;
+            this.firstByte = firstByte;
+            this.header = header;
         }
     }
 
-    /** An IOException of the client body, carried past the backend's IOException-to-502 mapping. */
-    private static final class ClientBodyFailure extends RuntimeException {
-        private static final long serialVersionUID = 1L;
-        private final IOException failure;
+    /** The bytes of a backend request head and how the client body follows it. */
+    private static final class Outgoing {
+        final byte[] head;
+        /** The client body stream from {@code req.bodyStream}; closed when the forward ends. */
+        final InputStream body;
+        /** How {@link #body} is framed to the backend. */
+        final BodyFraming framing;
 
-        ClientBodyFailure(IOException failure) {
-            super(failure);
-            this.failure = failure;
-        }
-
-        /** An over-limit body as 413 with the limit exception as cause; any other failure unwrapped. */
-        // @req IR-PROXY-001
-        Exception forErrorFlow() {
-            return failure instanceof BodyTooLargeException ? new HttpException(413, null, failure) : failure;
+        Outgoing(byte[] head, InputStream body, BodyFraming framing) {
+            this.head = head;
+            this.body = body;
+            this.framing = framing;
         }
     }
 
