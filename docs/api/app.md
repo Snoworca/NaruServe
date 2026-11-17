@@ -114,7 +114,7 @@ public interface RouteHandler {
 | `staticFiles(prefix, dir)` | 정적 파일 폴더 마운트 | [정적 파일](static.md) |
 | `staticFiles(prefix, dir, options -> ...)` | 옵션과 함께 마운트 | [정적 파일](static.md) |
 | `mimeTypes()` | 전역 MIME 등록부 | [정적 파일](static.md#mime) |
-| `defaultCache(policy)` | Cache-Control을 지정하지 않은 응답의 기본 정책. `null`이면 생략 | [정적 파일](static.md#서버-기본-정책) |
+| `defaultCache(policy)` | Cache-Control을 지정하지 않은 응답의 기본 정책. `null`이면 생략. `res.relay`로 쓴 응답은 defaultCache를 받지 않는다 | [정적 파일](static.md#서버-기본-정책) |
 | `accessLog(options -> ...)` | 접근 로그 설정 | [로깅](logging.md) |
 | `logger(logger)` | 앱 로거 교체 | [로깅](logging.md) |
 | `logger()` | 현재 앱 로거 | [로깅](logging.md) |

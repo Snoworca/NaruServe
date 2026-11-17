@@ -107,7 +107,7 @@ See [middleware and errors](middleware.md).
 | `sse(options -> ...)` | Heartbeat and send queue options; send reconnect delays per event with `SseEvent.retry(millis)` | [SSE](sse.md) |
 | `staticFiles(prefix, dir[, options])` | Mount a static directory | [Static files](static.md) |
 | `mimeTypes()` | App-wide MIME registry | [MIME](static.md#mime) |
-| `defaultCache(policy)` | Policy for responses without Cache-Control; null omits it | [Default policy](static.md#default-server-policy) |
+| `defaultCache(policy)` | Policy for responses without Cache-Control; null omits it. A response written by `res.relay` never receives defaultCache | [Default policy](static.md#default-server-policy) |
 | `accessLog(options -> ...)` | Access logging | [Logging](logging.md) |
 | `logger(logger)` / `logger()` | Replace / retrieve the app logger | [Logging](logging.md) |
 | `routerPolicy(RouterPolicy)` | Explicit string slash/case policy; retained WS TRACE/CONNECT gates | [Router policy](routing.md#router-policy) |
