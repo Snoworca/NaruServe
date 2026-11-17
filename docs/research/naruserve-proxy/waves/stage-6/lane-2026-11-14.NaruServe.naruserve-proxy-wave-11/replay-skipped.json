@@ -1,0 +1,16 @@
+[
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "allowIncomplete": false,
+   "date": "2026-11-17",
+   "requirementIds": [
+    "SEC-PROXY-003"
+   ],
+   "summary": "[req] SEC-PROXY-003 - proxy reads Content-Length and Transfer-Encoding as lists of all field lines (FramingLists); CL+TE, differing or non-digit CL, TE not ending in one chunked, parameterised or empty codings answer 400 and another coding before chunked 501, all before any backend connection and independent of HTTP version. green=PASS (43/43). files: FramingLists.java, Proxy.java, FramingListsTest.java, ProxyRequestFramingTest.java. AC: SEC-PROXY-003 AC-1..7 PASS (AC-5 chunked wire form to the backend owned by FR-PROXY-007); full build 4184 tests 0 failures",
+   "target": "0.12.0"
+  },
+  "argsHash": "4593a6aaaf1d9f48d8a659063ef759c181736b06",
+  "action": "apply"
+ }
+]

@@ -1,0 +1,36 @@
+{
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-11": {
+  "head": "374669be41f8f59421c4a5ca5e52fce3d851ad47",
+  "commits": 4,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "rounds": 2,
+   "fixed": [
+    "FND-001 (block): https mount answered 502 before the framing checks"
+   ],
+   "clean_code": {
+    "fixed": [
+     "CC-002"
+    ],
+    "dismissed": [
+     "CC-001",
+     "CC-003",
+     "CC-004",
+     "CC-101"
+    ],
+    "unresolved": []
+   }
+  },
+  "landed": [
+   "SEC-PROXY-003"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [],
+  "outside_reason": "",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build: exit 0, 4188 tests, 0 failures",
+  "verdict": "pass"
+ }
+}

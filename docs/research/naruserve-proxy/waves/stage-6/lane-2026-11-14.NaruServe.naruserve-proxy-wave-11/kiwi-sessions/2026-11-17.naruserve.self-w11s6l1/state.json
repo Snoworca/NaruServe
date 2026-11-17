@@ -1,0 +1,94 @@
+{
+ "run_id": "2026-11-17.naruserve.self-w11s6l1",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "mode": "self",
+ "mode_flags": [
+  "--loops 20",
+  "--keep-clean-code",
+  "--no-pipeline-emit",
+  "--req-filter SEC-PROXY-003"
+ ],
+ "phase": "7",
+ "finding_queue": [
+  {
+   "id": "FND-001",
+   "class": "immediate_fix",
+   "status": "resolved",
+   "red": "3 failed: expected:<400>/<501> but was:<502>"
+  }
+ ],
+ "fix_iter": 1,
+ "recheck_iter": 1,
+ "clean_code_round": 2,
+ "clean_code_dismissed": [
+  {
+   "id": "CC-001",
+   "reason": "SEC-PROXY-004 owns response parser adoption"
+  },
+  {
+   "id": "CC-003",
+   "reason": "HeaderRules.java outside lane write set"
+  },
+  {
+   "id": "CC-004",
+   "reason": "shared fixture needs ProxyResponseHeadersTest.java outside write set"
+  },
+  {
+   "id": "CC-101",
+   "reason": "project already uses negative long length sentinels; FR-PROXY-007 reworks this decode next wave"
+  }
+ ],
+ "clean_code_skip": false,
+ "guarantee_scope": "SEC-PROXY-003 request framing checks in NaruServe-proxy (FramingLists parser + Proxy.prepare framing decision) as introduced in 02e627b..HEAD; request header forwarding (FR-PROXY-003), chunked body streaming (FR-PROXY-007), body limit (FR-PROXY-008) and response parsing (SEC-PROXY-004) are owned by later waves",
+ "declared_limits": [],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "83f67bb5fdb1cf8acca0eeb9523699ac2d837b1a",
+   "scope": "full",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/FramingLists.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/FramingListsTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestFramingTest.java"
+   ],
+   "tokens_used": 197762,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-001",
+     "tier": "block",
+     "family": "framing-check-bypassed-by-pre-prepare-guard",
+     "introduced_by_round": null
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "tree_sha": "1d8211597a8caac2b1b5ac06ecd374ed04853a19",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestFramingTest.java"
+   ],
+   "tokens_used": 75670,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  }
+ ],
+ "regression_baseline": {
+  "source": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+  "failing_tests": []
+ },
+ "regression_pass": false,
+ "failed": false
+}

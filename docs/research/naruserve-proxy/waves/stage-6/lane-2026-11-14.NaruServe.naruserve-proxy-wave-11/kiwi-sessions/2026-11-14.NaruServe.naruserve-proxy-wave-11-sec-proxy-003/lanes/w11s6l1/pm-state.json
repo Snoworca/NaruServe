@@ -1,0 +1,53 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-11-sec-proxy-003",
+ "base_sha": "02e627b362a165563e5f169f58bd8d68c47551a7",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "SEC-PROXY-003"
+ ],
+ "req_filter": [
+  "SEC-PROXY-003"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/FramingLists.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/FramingListsTest.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestFramingTest.java"
+ ],
+ "started_at": "2026-11-17T10:43:32Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "changed": true,
+  "commit_sha": "72c533a",
+  "commits": [
+   {
+    "req_id": "SEC-PROXY-003",
+    "test_sha": "8078a09",
+    "implementation_sha": "72c533a"
+   }
+  ],
+  "questions": [],
+  "ended_at": "2026-11-17T10:57:33Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-11-sec-proxy-003",
+  "result_summary": "SEC-PROXY-003 implemented; 43 new tests; full build 4184 tests 0 failures"
+ },
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-17T10:43:32Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "SEC-PROXY-003": "evolving"
+  },
+  "status_snapshot": {
+   "SEC-PROXY-003": "planned"
+  }
+ },
+ "req_coverage": {},
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-11-sec-proxy-003/lanes/w11s6l1/reports/pm-final.md",
+ "last_updated_at": "2026-11-17T10:57:33Z"
+}

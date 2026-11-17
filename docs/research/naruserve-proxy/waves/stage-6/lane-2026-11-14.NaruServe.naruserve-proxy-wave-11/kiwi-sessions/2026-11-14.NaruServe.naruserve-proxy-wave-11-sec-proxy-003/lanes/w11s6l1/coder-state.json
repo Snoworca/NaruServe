@@ -1,0 +1,53 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-11-sec-proxy-003",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "SEC-PROXY-003"
+ ],
+ "spawn_context": "pm-child",
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests com.snoworca.naruserve.proxy.ProxyRequestFramingTest (then FramingListsTest)",
+  "exit_code": 1,
+  "captured_failure": "14/22 ProxyRequestFramingTest failed (e.g. AC1 status expected:<400> but was:<502>; AC4 expected:<501> but was:<502>; AC5 5,5 expected:<200> but was:<400>); FramingListsTest compileTestJava FAILED: package FramingLists does not exist",
+  "timestamp": "2026-11-17T10:50:00Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "timestamp": "2026-11-17T10:58:00Z"
+ },
+ "regression_baseline": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "total": 4141,
+  "failed": 0,
+  "source": "orchestrator pin"
+ },
+ "regression_summary": {
+  "scope": "full",
+  "passed": 4184,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "loop_counters": {
+  "phase1": {
+   "kept": 2,
+   "dropped": 9,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 2,
+   "dropped": 8,
+   "rounds": 1
+  }
+ }
+}

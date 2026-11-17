@@ -1,0 +1,22 @@
+FAIL sec_PROXY_003_AC3_chunkedTwiceInOneLineGives400 :: java.lang.AssertionError: status expected:<400> but was:<502>
+FAIL sec_PROXY_003_AC1_transferEncodingBeforeContentLengthGives400WithoutConnecting :: java.lang.AssertionError: status expected:<400> but was:<502>
+pass sec_PROXY_003_AC5_paddedContentLengthIsForwardedAsOneLine
+FAIL sec_PROXY_003_AC1_contentLengthWithTransferEncodingGives400WithoutConnecting :: java.lang.AssertionError: status expected:<400> but was:<502>
+pass sec_PROXY_003_AC2_contentLengthBeyondALongGives400
+FAIL sec_PROXY_003_AC2_plusSignedContentLengthGives400 :: java.lang.AssertionError: status expected:<400> but was:<502>
+FAIL sec_PROXY_003_AC3_chunkedOnTwoLinesGives400 :: java.lang.AssertionError: status expected:<400> but was:<502>
+pass sec_PROXY_003_AC2_nonNumericContentLengthGives400
+FAIL sec_PROXY_003_AC4_codingBeforeChunkedGives501 :: java.lang.AssertionError: status expected:<501> but was:<502>
+FAIL sec_PROXY_003_AC2_twoDifferingContentLengthLinesGive400 :: java.lang.AssertionError: status expected:<400> but was:<500>
+pass sec_PROXY_003_AC5_upperCaseChunkedIsForwarded
+pass sec_PROXY_003_AC5_numericallyEqualContentLengthLinesAreForwardedAsOneLine
+pass sec_PROXY_003_AC5_chunkedWithEmptyTrailingElementIsForwarded
+FAIL sec_PROXY_003_AC4_codingBeforeChunkedOnSeparateLinesGives501 :: java.lang.AssertionError: status expected:<501> but was:<502>
+FAIL sec_PROXY_003_AC7_framingAnswerDoesNotDependOnTheReportedHttpVersion :: java.lang.AssertionError: HTTP/1.1 expected:<[CL 5 -> 200 / 1, CL 5, 5 -> 200 / 1, CL 5 and 6 -> 400 / 0, CL with TE -> 400 / 0, TE chunked -> 200 / 1, TE gzip -> 400 / 0, TE gzip, chunked -> 501 / 0]> but was:<[CL 5 -> 200 / 1, CL 5, 5 -> 400 / 0, CL 5 and 6 -> 500 / 0, CL with TE -> 200 / 1, TE chunked -> 200 / 1, TE gzip -> 200 / 1, TE gzip, chunked -> 200 / 1]>
+FAIL sec_PROXY_003_AC5_equalContentLengthListIsForwardedAsOneLine :: java.lang.AssertionError: status expected:<200> but was:<400>
+pass sec_PROXY_003_AC2_differingContentLengthListGives400
+FAIL sec_PROXY_003_AC6_parameterisedCodingBeforeChunkedGives501 :: java.lang.AssertionError: status expected:<501> but was:<502>
+pass sec_PROXY_003_AC2_negativeContentLengthGives400
+FAIL sec_PROXY_003_AC6_chunkedWithParameterGives400 :: java.lang.AssertionError: status expected:<400> but was:<502>
+FAIL sec_PROXY_003_AC6_emptyTransferEncodingGives400 :: java.lang.AssertionError: status expected:<400> but was:<502>
+FAIL sec_PROXY_003_AC3_gzipOnlyGives400 :: java.lang.AssertionError: status expected:<400> but was:<502>

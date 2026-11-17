@@ -1,0 +1,143 @@
+diff --git a/NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java b/NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java
+index cd8b8a1..5170d34 100644
+--- a/NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java
++++ b/NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java
+@@ -58,0 +59,4 @@ public final class Proxy implements Middleware {
++    /** The decided request framing of a chunked client body (see {@link #requestBodyLength}). */
++    private static final long CHUNKED_BODY = -1;
++    /** The decided request framing when the client sent neither Content-Length nor Transfer-Encoding. */
++    private static final long NO_FRAMING_HEADER = -2;
+@@ -335,0 +340 @@ public final class Proxy implements Middleware {
++    // @req SEC-PROXY-003
+@@ -337,0 +343,2 @@ public final class Proxy implements Middleware {
++        // The framing answers (400/501) come first, from the header lines alone, for every target scheme (D-050).
++        long framing = requestBodyLength(req);
+@@ -343 +350 @@ public final class Proxy implements Middleware {
+-            forward(req, res, prepare(req));
++            forward(req, res, prepare(req, framing));
+@@ -394,5 +401,5 @@ public final class Proxy implements Middleware {
+-     * The request line, Host, the forwardable client headers, the framing header and Connection as bytes; a chunked
+-     * client body is read here and a declared one is opened here, so the framing checks answer before any backend
+-     * connection. The body limit answers here too for a chunked body and for a Content-Length the core reads as one
+-     * number; a list form such as {@code 5, 5} is only limited while it is copied, after the connect (the body limit
+-     * requirement FR-PROXY-008 closes that).
++     * The request line, Host, the forwardable client headers, the framing header and Connection as bytes, for the
++     * {@code framing} {@link #requestBodyLength} decided; a chunked client body is read here and a declared one is
++     * opened here, before any backend connection. The body limit answers here too for a chunked body and for a
++     * Content-Length the core reads as one number; a list form such as {@code 5, 5} is only limited while it is
++     * copied, after the connect (the body limit requirement FR-PROXY-008 closes that).
+@@ -402 +409 @@ public final class Proxy implements Middleware {
+-    private Outgoing prepare(Request req) {
++    private Outgoing prepare(Request req, long framing) {
+@@ -407,2 +413,0 @@ public final class Proxy implements Middleware {
+-        List<String> contentLengths = new ArrayList<>();
+-        List<String> transferEncodings = new ArrayList<>();
+@@ -411,5 +415,0 @@ public final class Proxy implements Middleware {
+-            if (lower.equals("content-length")) {
+-                contentLengths.add(h.getValue());
+-            } else if (lower.equals("transfer-encoding")) {
+-                transferEncodings.add(h.getValue());
+-            }
+@@ -420 +420,2 @@ public final class Proxy implements Middleware {
+-        long length = requestBodyLength(contentLengths, transferEncodings);
++        long length;
++        boolean sendLength;
+@@ -422 +423 @@ public final class Proxy implements Middleware {
+-        if (!transferEncodings.isEmpty()) {
++        if (framing == CHUNKED_BODY) {
+@@ -425,0 +427,7 @@ public final class Proxy implements Middleware {
++            sendLength = length > 0;
++        } else if (framing == NO_FRAMING_HEADER) {
++            length = 0;
++            sendLength = false;
++        } else {
++            length = framing;
++            sendLength = true;
+@@ -427 +435 @@ public final class Proxy implements Middleware {
+-        if (length > 0 || !contentLengths.isEmpty()) {
++        if (sendLength) {
+@@ -434,0 +443,16 @@ public final class Proxy implements Middleware {
++    /** {@link #requestBodyLength(List, List)} of the request's Content-Length and Transfer-Encoding field lines. */
++    // @req SEC-PROXY-003
++    private static long requestBodyLength(Request req) {
++        List<String> contentLengths = new ArrayList<>();
++        List<String> transferEncodings = new ArrayList<>();
++        for (Map.Entry<String, String> h : req.rawHeaders()) {
++            String lower = h.getKey().toLowerCase(Locale.ROOT);
++            if (lower.equals("content-length")) {
++                contentLengths.add(h.getValue());
++            } else if (lower.equals("transfer-encoding")) {
++                transferEncodings.add(h.getValue());
++            }
++        }
++        return requestBodyLength(contentLengths, transferEncodings);
++    }
++
+@@ -436,4 +460,4 @@ public final class Proxy implements Middleware {
+-     * The declared body length, 0 for no framing header, or -1 for a chunked body; decided from the header lines
+-     * alone, never from the request's HTTP version. Both headers, a Content-Length list that is not one agreed number
+-     * and a Transfer-Encoding list that does not end in a single {@code chunked} answer 400; another coding before
+-     * {@code chunked} answers 501.
++     * The declared body length, {@link #NO_FRAMING_HEADER} for no framing header, or {@link #CHUNKED_BODY} for a
++     * chunked body; decided from the header lines alone, never from the request's HTTP version. Both headers, a
++     * Content-Length list that is not one agreed number and a Transfer-Encoding list that does not end in a single
++     * {@code chunked} answer 400; another coding before {@code chunked} answers 501.
+@@ -449 +473 @@ public final class Proxy implements Middleware {
+-                    return -1;
++                    return CHUNKED_BODY;
+@@ -457 +481 @@ public final class Proxy implements Middleware {
+-            return 0;
++            return NO_FRAMING_HEADER;
+diff --git a/NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestFramingTest.java b/NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestFramingTest.java
+index ecc2380..2b5d5d8 100644
+--- a/NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestFramingTest.java
++++ b/NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestFramingTest.java
+@@ -101,0 +102,14 @@ public class ProxyRequestFramingTest {
++    /**
++     * Sends {@code request} to a proxy whose target is {@code https} on a listener that counts connections; asserts
++     * the status and that none opened. The framing answer comes before the https placeholder (502) of the proxy.
++     */
++    private void assertHttpsAnswersWithoutConnection(int status, ClientRequest request) throws IOException {
++        ConnectionCounter backend = counter();
++        mount(backend.httpsUrl());
++
++        ClientResponse r = adapter.send(request);
++
++        assertEquals("status", status, r.status());
++        assertEquals("backend connections opened", 0, backend.connectionsBeforeSentinel());
++    }
++
+@@ -223,0 +238,28 @@ public class ProxyRequestFramingTest {
++    // ---- https target: the framing answer comes before the https placeholder ----
++
++    // SEC-PROXY-003 AC-1: Content-Length with Transfer-Encoding is 400 for an https target too, without connecting
++    @Test
++    public void sec_PROXY_003_AC1_httpsTargetContentLengthWithTransferEncodingGives400() throws IOException {
++        assertHttpsAnswersWithoutConnection(400,
++                post(HELLO, "Content-Length", "5", "Transfer-Encoding", "chunked"));
++    }
++
++    // SEC-PROXY-003 AC-2: two Content-Length lines 5 and 6 are 400 for an https target too, without connecting
++    @Test
++    public void sec_PROXY_003_AC2_httpsTargetTwoDifferingContentLengthLinesGive400() throws IOException {
++        assertHttpsAnswersWithoutConnection(400, post(HELLO, "Content-Length", "5", "Content-Length", "6"));
++    }
++
++    // SEC-PROXY-003 AC-4: Transfer-Encoding: gzip, chunked is 501 for an https target too, without connecting
++    @Test
++    public void sec_PROXY_003_AC4_httpsTargetCodingBeforeChunkedGives501() throws IOException {
++        assertHttpsAnswersWithoutConnection(501, post(HELLO, "Transfer-Encoding", "gzip, chunked"));
++    }
++
++    // SEC-PROXY-003 AC-2: a well-framed request (Content-Length: 5) to an https target still meets the https
++    // placeholder, 502, until the TLS requirement (SEC-PROXY-005) arrives
++    @Test
++    public void sec_PROXY_003_AC2_httpsTargetWellFramedRequestStillGives502() throws IOException {
++        assertHttpsAnswersWithoutConnection(502, post(HELLO, "Content-Length", "5"));
++    }
++
+@@ -370,0 +413,4 @@ public class ProxyRequestFramingTest {
++        String httpsUrl() {
++            return "https://127.0.0.1:" + server.getLocalPort();
++        }
++

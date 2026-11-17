@@ -1,0 +1,42 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-11",
+ "wave": "wave-11",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-11",
+ "base_sha": "02e627b362a165563e5f169f58bd8d68c47551a7",
+ "head_sha": "374669be41f8f59421c4a5ca5e52fce3d851ad47",
+ "commits": [
+  {"sha": "8078a09c3ad38f37e11988841ba98335b45a733f", "subject": "test(proxy): request framing checks for Content-Length and Transfer-Encoding", "req": "SEC-PROXY-003", "kind": "test"},
+  {"sha": "72c533a5b27077e91cf3f7dd2aac970a2f8d21de", "subject": "feat(proxy): refuse ambiguous request framing before the backend connect", "req": "SEC-PROXY-003", "kind": "implementation"},
+  {"sha": "2b7bfb6cfa4c42c10293c900a386c3ba7c0984e2", "subject": "test(proxy): framing answers for an https target come before the 502 placeholder", "req": "SEC-PROXY-003", "kind": "test"},
+  {"sha": "374669be41f8f59421c4a5ca5e52fce3d851ad47", "subject": "fix(proxy): decide request framing before the https placeholder guard", "req": "SEC-PROXY-003", "kind": "review"}
+ ],
+ "requirements": {"landed": ["SEC-PROXY-003"], "failed": null, "held": []},
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-11/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-11/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-11-sec-proxy-003/lanes/w11s6l1/reports/pm-final.md",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-11/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-11-sec-proxy-003/lanes/w11s6l1/reports/red-ProxyRequestFramingTest.txt",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-11/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-11-sec-proxy-003/lanes/w11s6l1/reports/red-FramingListsTest.txt",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-11/docs/analysis/kiwi-review-fix-loop-2026-11-17.naruserve.self-w11s6l1/report.md"
+ ],
+ "red_evidence": [
+  {"req": "SEC-PROXY-003", "test": "ProxyRequestFramingTest (at 8078a09, before 72c533a)", "red_output": "22 tests completed, 14 failed: AC1 CL+TE expected:<400> but was:<502>; AC2 two CL lines 5/6 expected:<400> but was:<500>; AC3 gzip / chunked,chunked / two chunked lines expected:<400> but was:<502>; AC4 gzip, chunked expected:<501> but was:<502>; AC5 'CL: 5, 5' expected:<200> but was:<400>; AC6 chunked;x=1 / empty TE expected:<400> but was:<502>, gzip;q=1, chunked expected:<501> but was:<502>; AC7 per-version table differed"},
+  {"req": "SEC-PROXY-003", "test": "FramingListsTest (at 8078a09)", "red_output": "compileTestJava FAILED: package/class FramingLists does not exist"},
+  {"req": "SEC-PROXY-003", "test": "ProxyRequestFramingTest https cases (at 2b7bfb6, before 374669b)", "red_output": "26 tests completed, 3 failed: httpsTarget CL+TE / CL 5 and 6 expected:<400> but was:<502>; httpsTarget gzip, chunked expected:<501> but was:<502>"}
+ ],
+ "review_outcome": {"status": "TASK_DONE", "kept_findings": 0, "rounds": 2, "fixed": ["FND-001 (block): https mount answered 502 before the framing checks"], "clean_code": {"fixed": ["CC-002"], "dismissed": ["CC-001", "CC-003", "CC-004", "CC-101"], "unresolved": []}},
+ "intentionally_empty": null,
+ "design_refuted": [],
+ "srs_deltas": [],
+ "declared_limits": [
+  "AC-5 Transfer-Encoding part: TE CHUNKED and 'chunked,' are accepted and forwarded with the body intact, but the proxy still buffers a chunked client body and sends it with Content-Length; the chunked wire form belongs to FR-PROXY-007 AC-3 (wave-12). No failing test committed for it.",
+  "List-form Content-Length (e.g. '5, 5', or lines 5 and 05) skips the core's early 413 check in req.bodyStream(); an over-limit body gets its 413 during the copy after the backend connect. Owned by FR-PROXY-008 (body limit) or the core contentLength() reading.",
+  "AC-7: the core passes no HTTP version to middleware today; the AC-7 test reports HTTP/1.0, 1.1 and 2.0 through a wrapping test adapter.",
+  "Precedence: 'chunked, gzip, chunked' answers 400 (chunked repeated) rather than 501; the SRS leaves the order open and the 400 checks run first.",
+  "Response-side parsing (ResponseHead) still uses its own CL/TE reading; adopting FramingLists belongs to SEC-PROXY-004 (wave-17)."
+ ],
+ "out_of_lease_paths": [],
+ "test_sufficiency": {"gaps": 0, "detail": "check_test_sufficiency ids=[SEC-PROXY-003] on the worktree: AC-1..AC-7 all cited (FramingListsTest, ProxyRequestFramingTest), passed=true"},
+ "regression": {"command": "./gradlew -PtinyHttpdFromMaven=true build", "tests": 4188, "failures": 0, "exit_code": 0},
+ "bootstrap": "not-applicable"
+}

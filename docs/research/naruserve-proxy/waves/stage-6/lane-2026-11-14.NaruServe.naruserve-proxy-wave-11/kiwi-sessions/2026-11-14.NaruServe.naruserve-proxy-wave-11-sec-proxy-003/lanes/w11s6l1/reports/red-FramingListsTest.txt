@@ -1,0 +1,5 @@
+./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.FramingListsTest'
+> Task :NaruServe-proxy:compileTestJava FAILED
+FramingListsTest.java:5: error: package com.snoworca.naruserve.proxy.FramingLists does not exist
+FramingListsTest.java:25: error: cannot find symbol (FramingLists)
+BUILD FAILED (exit 1)
