@@ -216,7 +216,7 @@ public final class DefaultRestApp implements RestApp {
         refuseForeignWatcher();
         synchronized (this) {
             lifecycle.requireConfigurable("jsonLimit");
-            this.jsonLimit = byteLimit("jsonLimit", bytes);
+            this.jsonLimit = LimitedInputStream.byteLimit("jsonLimit", bytes);
             return this;
         }
     }
@@ -296,14 +296,6 @@ public final class DefaultRestApp implements RestApp {
         }
     }
 
-    /** {@code bytes} checked against 1..{@link JsonBodyReader#MAX_LIMIT}, the range of every body limit. */
-    private static long byteLimit(String name, long bytes) {
-        if (bytes < 1 || bytes > JsonBodyReader.MAX_LIMIT) {
-            throw new IllegalArgumentException(name + " must be in 1.." + JsonBodyReader.MAX_LIMIT + " bytes: " + bytes);
-        }
-        return bytes;
-    }
-
     /** The urlencoded form body limit in bytes; 1048576 unless {@link #formLimit(long)} changed it. */
     // @req IR-MULTIPART-001
     public long formLimit() {
@@ -316,7 +308,7 @@ public final class DefaultRestApp implements RestApp {
         refuseForeignWatcher();
         synchronized (this) {
             lifecycle.requireConfigurable("formLimit");
-            this.formLimit = byteLimit("formLimit", bytes);
+            this.formLimit = LimitedInputStream.byteLimit("formLimit", bytes);
             return this;
         }
     }
@@ -333,7 +325,7 @@ public final class DefaultRestApp implements RestApp {
         refuseForeignWatcher();
         synchronized (this) {
             lifecycle.requireConfigurable("rawBodyLimit");
-            this.rawBodyLimit = byteLimit("rawBodyLimit", bytes);
+            this.rawBodyLimit = LimitedInputStream.byteLimit("rawBodyLimit", bytes);
             return this;
         }
     }

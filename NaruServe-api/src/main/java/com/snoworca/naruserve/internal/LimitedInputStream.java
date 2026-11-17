@@ -81,6 +81,18 @@ public final class LimitedInputStream extends FilterInputStream {
         return s;
     }
 
+    /** {@code bytes} checked against 1..{@link JsonBodyReader#MAX_LIMIT}, the range of every body limit. */
+    // @req IR-JSON-002
+    // @req IR-MULTIPART-001
+    // @req IR-APP-009
+    // @req FR-HTTP-031
+    static long byteLimit(String name, long bytes) {
+        if (bytes < 1 || bytes > JsonBodyReader.MAX_LIMIT) {
+            throw new IllegalArgumentException(name + " must be in 1.." + JsonBodyReader.MAX_LIMIT + " bytes: " + bytes);
+        }
+        return bytes;
+    }
+
     @Override
     public boolean markSupported() {
         return false;

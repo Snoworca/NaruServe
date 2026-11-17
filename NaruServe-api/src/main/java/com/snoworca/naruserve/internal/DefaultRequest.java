@@ -273,11 +273,7 @@ public final class DefaultRequest implements Request {
     // @req FR-HTTP-031
     @Override
     public InputStream bodyStream(long maxBytes) {
-        if (maxBytes < 1 || maxBytes > JsonBodyReader.MAX_LIMIT) {
-            throw new IllegalArgumentException("maxBytes must be in 1.." + JsonBodyReader.MAX_LIMIT + " bytes: "
-                    + maxBytes);
-        }
-        return rawStream(maxBytes);
+        return rawStream(LimitedInputStream.byteLimit("maxBytes", maxBytes));
     }
 
     /**
