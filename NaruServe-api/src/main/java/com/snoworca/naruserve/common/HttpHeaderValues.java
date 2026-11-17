@@ -20,6 +20,21 @@ public final class HttpHeaderValues {
         return true;
     }
 
+    /**
+     * Header field value: no control character (CR, LF, NUL, DEL, ...) except HTAB, and no char above U+00FF. An
+     * adapter writing the low byte would turn U+010A into LF (cf. Node CVE-2018-12116), so headers stay ISO-8859-1,
+     * one byte per char. With {@link #isToken} for the name, this is the {@code res.header} check.
+     */
+    // @req IR-HTTP-012
+    public static boolean isFieldValue(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c < 0x20 && c != '\t' || c == 0x7F || c > 0xFF) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     public static String commaSeparated(Iterable<String> values) {
         StringBuilder result = new StringBuilder();
