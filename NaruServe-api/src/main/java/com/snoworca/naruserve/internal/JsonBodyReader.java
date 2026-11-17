@@ -34,7 +34,7 @@ final class JsonBodyReader {
         if (!isJsonType(req.header("Content-Type"))) {
             throw new UnsupportedMediaTypeException();
         }
-        long declared = declaredLength(req.header("Content-Length"));
+        long declared = DeclaredLength.of(req.header("Content-Length"));
         if (declared > limit) {
             throw new HttpException(413);
         }
@@ -83,17 +83,6 @@ final class JsonBodyReader {
             return new HttpException(400, null, e);
         }
         return (RuntimeException) e;
-    }
-
-    private static long declaredLength(@Nullable String value) {
-        if (value == null) {
-            return -1;
-        }
-        try {
-            return Long.parseLong(value.trim());
-        } catch (NumberFormatException e) {
-            return -1; // the adapter frames the body; a bad header never reaches a handler
-        }
     }
 
     /**

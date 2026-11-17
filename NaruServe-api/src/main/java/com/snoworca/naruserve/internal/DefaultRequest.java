@@ -601,17 +601,13 @@ public final class DefaultRequest implements Request {
         }
     }
 
-    /** The Content-Length header, or -1 when absent or not a number (the adapter frames the body). */
+    /**
+     * The Content-Length header as {@link DeclaredLength} reads it: one number or a list of one agreed number, else -1
+     * (the adapter frames the body).
+     */
+    // @req FR-HTTP-031
     private long contentLength() {
-        String v = header("Content-Length");
-        if (v == null) {
-            return -1;
-        }
-        try {
-            return Long.parseLong(v.trim());
-        } catch (NumberFormatException e) {
-            return -1;
-        }
+        return DeclaredLength.of(header("Content-Length"));
     }
 
     // @req FR-MULTIPART-003

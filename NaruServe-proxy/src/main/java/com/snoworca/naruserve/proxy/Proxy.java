@@ -467,8 +467,8 @@ public final class Proxy implements Middleware {
             return new BodyFraming(false, 0, -1, emptyBodyHeader);
         }
         if (options.bodyLimit != NO_BODY_LIMIT && declaredFraming > options.bodyLimit) {
-            // req.bodyStream answers 413 for a single declared length only; a list such as "2048, 2048"
-            // agrees on one length (SEC-PROXY-003) and is refused here, still before any connection.
+            // req.bodyStream(n) already answers 413 for a declared length over n, a list of one agreed length such
+            // as "2048, 2048" (SEC-PROXY-003) included; this guard keeps the refusal before any connection regardless.
             throw new HttpException(413);
         }
         return new BodyFraming(false, declaredFraming, -1,
