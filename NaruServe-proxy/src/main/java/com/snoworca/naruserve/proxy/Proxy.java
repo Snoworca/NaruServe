@@ -352,10 +352,15 @@ public final class Proxy implements Middleware {
     // @req SEC-PROXY-003
     // @req FR-PROXY-003
     // @req FR-PROXY-008
+    // @req SEC-PROXY-001
     @Override
     public void handle(Request req, Response res, Next next) throws Exception {
-        // The header check (400) and then the framing answers (400/501) come first, from the header lines alone, for
-        // every target scheme (D-050).
+        // The request-target check (400) runs on the raw originalUrl() path and query whatever stripPrefix says
+        // (D-052); then the header check (400) and the framing answers (400/501), from the header lines alone, for
+        // every target scheme (D-050). A null message, like every other 400 of the proxy (D-051).
+        if (!PathChecker.isSafeTarget(req.originalUrl())) {
+            throw new HttpException(400);
+        }
         BackendRequest.checkClientHeaders(req.rawHeaders());
         long declaredFraming = requestBodyLength(req);
         if (!"http".equals(target.scheme)) {
