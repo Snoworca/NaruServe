@@ -50,6 +50,18 @@
       "owner_requirement": "SEC-PROXY-004",
       "reason_class": "cross-wave-carry-forward",
       "note": "SEC-PROXY-004 AC-9 owns backend obs-text header bytes reaching the client byte-for-byte. Over a real TinyHttpd socket the 0xE9 byte arrives as 0xC3 0xA9, because TinyHttpd 3.1.1 writes header chars as UTF-8 (the in-memory adapter keeps them, LP-20 green). Wave-17 must check AC-9 over TinyHttpd; if the library encoding cannot be changed from NaruServe (../TinyHttpd is not modified in this run), state it as an adapter-dependent limit or amend AC-9 through MCP."
+    },
+    {
+      "from": "wave-12",
+      "round": 1,
+      "finding": "LP-9",
+      "cites": "FR-PROXY-003 AC-8",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestHeadersTest.java::lp9_forwardingHeadersSitBetweenClientHeadersAndFraming",
+      "evidence": "java.lang.AssertionError: [Host: 127.0.0.1:51528, X-A: 1, Connection: close] expected:<1> but was:<0>",
+      "carried_into": "wave-19",
+      "owner_requirement": "SEC-PROXY-002",
+      "reason_class": "cross-wave-carry-forward",
+      "note": "FR-PROXY-003 AC-8 orders X-Forwarded-For/-Proto/-Host after the client headers, but those lines are produced only by SEC-PROXY-002 (wave-19; X-Forwarded-Host also FR-PROXY-004, wave-13). Wave-12 fills the slot with an empty list, so AC-8 is only partly observable. FR-PROXY-003 stays implemented with AC-8 unchecked; wave-19 re-checks AC-8 with real X-Forwarded-* lines and then promotes FR-PROXY-003 to verified."
     }
   ]
 }

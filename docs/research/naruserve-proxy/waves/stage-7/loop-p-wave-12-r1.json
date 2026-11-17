@@ -1,0 +1,173 @@
+{
+  "wave": "wave-12",
+  "round": 1,
+  "verifier": "loop-p-wave-12-r1",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "FR-PROXY-008 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBodyLimitTest.java::lp1_twoAgreeingContentLengthLinesOverRawBodyLimitAnswer413WithoutConnecting",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Two agreeing Content-Length lines over rawBodyLimit, no .bodyLimit (in-memory): 413, no backend connect."
+    },
+    {
+      "id": "LP-2",
+      "cites": "FR-PROXY-008 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBodyLimitTest.java::lp2_contentLengthListVariantsOverRawBodyLimitAnswer413WithoutConnecting",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "'2048,2048', tab OWS and leading-zero list forms over rawBodyLimit: 413 before connect (DeclaredLength fix holds)."
+    },
+    {
+      "id": "LP-3",
+      "cites": "FR-PROXY-008 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBodyLimitTest.java::lp3_failureOnThePreReadReachesOnErrorUnwrapped",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Unchecked HttpException 408 thrown on the one-byte pre-read reaches onError unwrapped, client 408, no connect."
+    },
+    {
+      "id": "LP-4",
+      "cites": "FR-PROXY-008 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBodyLimitTest.java::lp4_chunkedBodyPassingRawBodyLimitAnswers413WithCause",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Chunked body over app rawBodyLimit on a mount without .bodyLimit: 413, HttpException(413) caused by BodyTooLargeException, backend closed without last chunk."
+    },
+    {
+      "id": "LP-5",
+      "cites": "FR-PROXY-008 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBodyLimitTest.java::lp5_unframedBodyPassingBodyLimitAnswers413WithCause",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Body without length headers (pre-read, forwarded chunked) over .bodyLimit: same 413 wrapping, backend closed."
+    },
+    {
+      "id": "LP-6",
+      "cites": "FR-PROXY-008 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBodyLimitTest.java::lp6_bodyTakenWithALimitThenProxyWithoutLimitAnswers500",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Earlier bodyStream(4096) then proxy without .bodyLimit: IllegalStateException unwrapped, 500, no connect."
+    },
+    {
+      "id": "LP-7",
+      "cites": "FR-PROXY-008 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBodyLimitTest.java::lp7_runtimeExceptionAtTheStartOfAContentLengthBodyReachesOnErrorUnwrapped",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "RuntimeException at byte 0 of a Content-Length body: backend connection closed, exception unwrapped, 500."
+    },
+    {
+      "id": "LP-8",
+      "cites": "FR-PROXY-003 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestHeadersTest.java::lp8_valueWithDelGives400WithoutConnecting",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Header value holding DEL 0x7F: 400 without connect."
+    },
+    {
+      "id": "LP-9",
+      "cites": "FR-PROXY-003 AC-8",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestHeadersTest.java::lp9_forwardingHeadersSitBetweenClientHeadersAndFraming",
+      "verdict": "red",
+      "kept": false,
+      "evidence": "java.lang.AssertionError: [Host: 127.0.0.1:51528, X-A: 1, Connection: close] expected:<1> but was:<0>",
+      "note": "Red: block is [Host, X-A: 1, Connection: close], no X-Forwarded-For/Proto/Host. Not kept: prepare() passes an empty list to the forwarding-header slot by design; the values belong to SEC-PROXY-002 (forwarding headers) and the trusted-proxy work of SEC-PROXY-001/FR-PROXY-004 in a later wave. Re-check AC-8 once that wave lands."
+    },
+    {
+      "id": "LP-10",
+      "cites": "FR-PROXY-003 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestHeadersTest.java::lp10_connectionNamedHeaderBeforeTheConnectionLineIsRemoved",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Headers named by a later lower-case connection line with OWS/tab list are removed even when they came first; only the proxy's Connection: close arrives."
+    },
+    {
+      "id": "LP-11",
+      "cites": "FR-PROXY-007 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestBodyTest.java::lp11_contentLengthListArrivesAsOneContentLengthLine",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Over TinyHttpd, 'Content-Length: 5, 5' arrives as the single line Content-Length: 5 with the 5 bytes."
+    },
+    {
+      "id": "LP-12",
+      "cites": "FR-PROXY-007 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestBodyTest.java::lp12_emptyChunkedBodyArrivesChunked",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Empty chunked body arrives chunked, no Content-Length, zero decoded bytes."
+    },
+    {
+      "id": "LP-13",
+      "cites": "FR-PROXY-007 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestBodyTest.java::lp13_getWithContentLengthZeroKeepsTheLine",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "GET with Content-Length: 0 arrives with Content-Length: 0 and no body."
+    },
+    {
+      "id": "LP-14",
+      "cites": "FR-PROXY-021 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyAccessLogTest.java::lp14_contentLengthListPostLogsIn1000",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Over TinyHttpd, POST with 'Content-Length: 1000, 1000' forwards the body and logs in=1000."
+    },
+    {
+      "id": "LP-15",
+      "cites": "FR-PROXY-021 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyAccessLogTest.java::lp15_oneByteChunksLogIn5000",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "5000-byte body in 1-byte chunks logs in=5000."
+    },
+    {
+      "id": "LP-16",
+      "cites": "FR-JSON-001 AC-4",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/lp/LoopPWave12CoreProbeTest.java::lpc1_jsonDeclaredListHonoursTheLimit",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Core regression probe of the DeclaredLength fix: jsonLimit(10) with '11, 11' gives 413, '10, 10' decodes."
+    },
+    {
+      "id": "LP-17",
+      "cites": "FR-JSON-001 AC-4",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/lp/LoopPWave12CoreProbeTest.java::lpc2_jsonSingleDeclaredLengthStillDecodes",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Core regression probe: a single declared length still decodes."
+    },
+    {
+      "id": "LP-18",
+      "cites": "FR-MULTIPART-002 AC-3",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/lp/LoopPWave12CoreProbeTest.java::lpc3_formDeclaredListHonoursTheLimit",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Core regression probe: urlencoded 1048577 bytes declared as an agreed list gives 413; 1048576 parses."
+    }
+  ],
+  "summary": {
+    "tests_written": 18,
+    "kept": 0
+  }
+}
