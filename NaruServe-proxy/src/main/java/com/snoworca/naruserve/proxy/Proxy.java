@@ -368,6 +368,7 @@ public final class Proxy implements Middleware {
         if (!PathChecker.isSafeTarget(req.originalUrl())) {
             throw new HttpException(400);
         }
+        String requestTarget = requestTarget(req);
         BackendRequest.checkClientHeaders(req.rawHeaders());
         @Nullable String receivedHost = BackendRequest.receivedHost(req.rawHeaders());
         long declaredFraming = requestBodyLength(req);
@@ -376,7 +377,7 @@ public final class Proxy implements Middleware {
             throw new HttpException(502);
         }
         try {
-            forward(req, res, prepare(req, declaredFraming, receivedHost));
+            forward(req, res, prepare(req, requestTarget, declaredFraming, receivedHost));
         } catch (RequestBodyCopier.ClientBodyFailure f) {
             throw f.forErrorFlow();
         }
@@ -442,15 +443,16 @@ public final class Proxy implements Middleware {
     // @req FR-PROXY-007
     // @req FR-PROXY-008
     // @req FR-PROXY-004
-    private Outgoing prepare(Request req, long declaredFraming, @Nullable String receivedHost) {
+    // @req FR-PROXY-006
+    private Outgoing prepare(Request req, String requestTarget, long declaredFraming, @Nullable String receivedHost) {
         InputStream body = options.bodyLimit == NO_BODY_LIMIT ? req.bodyStream() : req.bodyStream(options.bodyLimit);
         try {
             BodyFraming framing = bodyFraming(req, body, declaredFraming);
             String host = backendHost(receivedHost);
             // X-Forwarded-For and X-Forwarded-Proto (SEC-PROXY-002) join X-Forwarded-Host in the forwarding slot, and
             // the .requestHeader values (FR-PROXY-005) fill theirs (D-053).
-            byte[] head = BackendRequest.head(req.methodToken() + " " + target.basePath + req.originalUrl()
-                    + " HTTP/1.1", host, BackendRequest.forwardedClientHeaders(req.rawHeaders()),
+            byte[] head = BackendRequest.head(req.methodToken() + " " + requestTarget + " HTTP/1.1", host,
+                    BackendRequest.forwardedClientHeaders(req.rawHeaders()),
                     BackendRequest.forwardingHeaders(receivedHost),
                     Collections.<Map.Entry<String, String>>emptyList(), framing.header);
             return new Outgoing(head, body, framing);
@@ -458,6 +460,39 @@ public final class Proxy implements Middleware {
             closeQuietly(body);
             throw e;
         }
+    }
+
+    /**
+     * The request target written to the backend: the target's base path followed by the raw {@code url()}, the
+     * remainder after the mount prefix, under {@code .stripPrefix(true)} and by the raw {@code originalUrl()}
+     * otherwise (design D-052). On a mounted request the path of {@code url()} is {@code /} (a request to the mount
+     * path itself) or a suffix of the raw path of {@code originalUrl()} that starts with {@code /}, followed by the
+     * same raw query, so the path and the query go out exactly as the client encoded them and the
+     * {@link PathChecker} check of {@code originalUrl()} covers them. A WebSocket upgrade to an {@code app.ws} route
+     * reaches the middleware without a mount view: its {@code url()} is the percent-decoded full path. The guard
+     * answers 400 before any backend connection when that decoded path differs from the raw one, so decoded
+     * characters never reach the backend request line; the WebSocket upgrade check of FR-PROXY-009, which hands such
+     * requests to {@code next()} first, is what keeps them away from this method altogether.
+     */
+    // @req FR-PROXY-006
+    String requestTarget(Request req) {
+        String original = req.originalUrl();
+        if (!options.stripPrefix) {
+            return target.basePath + original;
+        }
+        String remainder = req.url();
+        int q = original.indexOf('?');
+        String query = q < 0 ? "" : original.substring(q);
+        String originalPath = q < 0 ? original : original.substring(0, q);
+        if (!remainder.endsWith(query)) {
+            throw new HttpException(400);
+        }
+        String remainderPath = remainder.substring(0, remainder.length() - query.length());
+        if (!"/".equals(remainderPath)
+                && (!remainderPath.startsWith("/") || !originalPath.endsWith(remainderPath))) {
+            throw new HttpException(400);
+        }
+        return target.basePath + remainder;
     }
 
     /**
