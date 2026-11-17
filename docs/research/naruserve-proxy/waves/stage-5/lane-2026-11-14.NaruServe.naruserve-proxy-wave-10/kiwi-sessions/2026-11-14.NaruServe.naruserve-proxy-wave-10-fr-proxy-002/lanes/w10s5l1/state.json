@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-10-fr-proxy-002",
+  "sds_path": null,
+  "target": "0.12.0",
+  "req_ids": [
+    "FR-PROXY-002"
+  ],
+  "write_set": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/HeaderRules.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyOptionsTest.java"
+  ],
+  "mode": "normal",
+  "flags": [
+    "--loops 20",
+    "--defer-srs-mutation"
+  ],
+  "spawn_context": "pm-child",
+  "started_at": "2026-11-17T09:43:11Z",
+  "updated_at": "2026-11-17T09:54:23Z",
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "regression_baseline": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true build",
+    "source": "parent pin + caller-stated 4093 tests 0 failures at 32e946f",
+    "failed_test_ids": [],
+    "head_sha": "32e946f"
+  },
+  "red_evidence_meta": {
+    "expected_failures": {
+      "*": "compile error: cannot find symbol readTimeoutMillis/connectTimeoutMillis/writeTimeoutMillis (AC-8); after accessor stub: AssertionError '... should throw IllegalArgumentException' / 'should throw NullPointerException'"
+    }
+  },
+  "mcp_call_log": [
+    {
+      "tool": "deferred-queue",
+      "appended": 10,
+      "queue": ".kiwi/deferred-srs-mutations.jsonl",
+      "replay_plan_inputRefusals": []
+    }
+  ],
+  "pending_mutations": [],
+  "loop_counters": {
+    "phase1": {
+      "kept": 1,
+      "dropped": 7,
+      "rounds": 1
+    },
+    "phase2": {
+      "kept": 4,
+      "dropped": 14,
+      "rounds": 2
+    }
+  },
+  "red_evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests com.snoworca.naruserve.proxy.ProxyOptionsTest",
+    "exit_code": 1,
+    "captured_failure": "compileTestJava: cannot find symbol readTimeoutMillis/connectTimeoutMillis/writeTimeoutMillis; after accessor stub: 24 tests completed, 12 failed (e.g. 'maxConcurrent(0) should throw IllegalArgumentException', 'requestHeader(Host, h) should throw IllegalArgumentException', 'requestHeader(null, x) should throw NullPointerException'); round 2: fr_PROXY_002_AC7_nullValueWinsOverARejectedName failed with IllegalArgumentException",
+    "timestamp": "2026-11-17T09:54:23Z"
+  },
+  "green_evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:check",
+    "exit_code": 0,
+    "timestamp": "2026-11-17T09:54:23Z"
+  },
+  "green_evidence_meta": {
+    "ProxyOptionsTest": 26,
+    "ProxyApiTest": 13,
+    "ProxyKotlinTest": 2
+  },
+  "regression_summary": {
+    "last_run_at": "2026-11-17T09:54:23Z",
+    "scope": "full",
+    "command": "./gradlew -PtinyHttpdFromMaven=true build",
+    "passed": 4119,
+    "failed": 0,
+    "regressed_files": []
+  }
+}

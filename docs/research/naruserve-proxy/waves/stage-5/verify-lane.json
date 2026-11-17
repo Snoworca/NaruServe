@@ -1,0 +1,27 @@
+{
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-10": {
+  "head": "d2eab6827ad934ed87d9fa6ecf92d34680e3fdf4",
+  "commits": 7,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "blocking_kept": 0,
+   "declared_limits": 8,
+   "detail": "3 rounds, check_review_round PASS; 8 out-of-scope red probes recorded as declared limits owned by later waves (SEC-PROXY-004, FR-PROXY-014 wave-17; FR-PROXY-017/REL-PROXY-002 waves 18-19; FR-PROXY-003, FR-PROXY-007 wave-12); 7 clean-code fixes in d2eab68"
+  },
+  "landed": [
+   "IR-PROXY-001",
+   "FR-PROXY-002",
+   "FR-PROXY-011"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [
+   "build.gradle"
+  ],
+  "outside_reason": "test-scope dependencies of NaruServe-proxy (api testFixtures, tinyhttpd) for in-memory and real-socket proxy tests; runtime dependency stays NaruServe-api only (CON-BUILD-021)",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build: exit 0, 4141 tests, 0 failures",
+  "verdict": "pass"
+ }
+}

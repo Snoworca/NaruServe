@@ -1,0 +1,84 @@
+{
+ "findings": [
+  {
+   "id": "FND-001",
+   "verdict": "keep",
+   "axis": "P3",
+   "title": "Backend response with both Content-Length and Transfer-Encoding is relayed (TE wins) instead of 502",
+   "owner": "SEC-PROXY-004 AC-4",
+   "evidence": "probe1: expected 502 but was 200"
+  },
+  {
+   "id": "FND-002",
+   "verdict": "keep",
+   "axis": "P3",
+   "title": "Differing duplicate backend Content-Length lines: last wins, truncated abnormal body",
+   "owner": "SEC-PROXY-004 AC-4",
+   "evidence": "probe2: expected 502 but was 200, abnormal=true"
+  },
+  {
+   "id": "FND-003",
+   "verdict": "keep",
+   "axis": "P7",
+   "title": "Backend head bounded per line and line count, not 64 KiB total",
+   "owner": "SEC-PROXY-004 AC-2",
+   "evidence": "probe3: ~80 KiB head expected 502 but was 200"
+  },
+  {
+   "id": "FND-004",
+   "verdict": "keep",
+   "axis": "P1",
+   "title": "HEAD response with Content-Length: abc gives 502 instead of relaying with -1",
+   "owner": "FR-PROXY-014 AC-6",
+   "evidence": "probe4: expected 200 but was 502"
+  },
+  {
+   "id": "FND-005",
+   "verdict": "keep",
+   "axis": "P2",
+   "title": "writeTimeout and totalTimeout are stored but never applied; stalled backend write hangs",
+   "owner": "FR-PROXY-017, REL-PROXY-002",
+   "evidence": "probe5: no answer after 8000 ms"
+  },
+  {
+   "id": "FND-006",
+   "verdict": "keep",
+   "axis": "P3",
+   "title": "Request side forwards headers named in the client's Connection header",
+   "owner": "FR-PROXY-003",
+   "evidence": "probe6: backend received X-Secret"
+  },
+  {
+   "id": "FND-007",
+   "verdict": "keep",
+   "axis": "P2",
+   "title": "Endless 1xx interim heads not bounded by readTimeout/totalTimeout",
+   "owner": "FR-PROXY-017, REL-PROXY-002",
+   "evidence": "probe7: answered 502 only after 4034 ms when backend closed (total 1 s)"
+  },
+  {
+   "id": "FND-008",
+   "verdict": "keep",
+   "axis": "P7",
+   "title": "Chunked client request body buffered whole and re-framed with Content-Length",
+   "owner": "FR-PROXY-007 AC-3, AC-7",
+   "evidence": "probe8: backend TE=[] CL=[19]"
+  },
+  {
+   "id": "FND-009",
+   "verdict": "drop",
+   "axis": "P4",
+   "title": "Options mutable non-final fields",
+   "owner": "IR-PROXY-001 note",
+   "evidence": "drop: no behavioral defect (final-field publication)"
+  },
+  {
+   "id": "FND-010",
+   "verdict": "drop",
+   "axis": "P3",
+   "title": "describe() prints header rule values",
+   "owner": "-",
+   "evidence": "drop: package-private, test-only"
+  }
+ ]
+}

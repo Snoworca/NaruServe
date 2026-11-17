@@ -1,0 +1,323 @@
+{
+ "run_id": "2026-11-17.naruserve.self-w10review",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "mode": "self",
+ "mode_flags": [
+  "--keep-clean-code",
+  "--no-pipeline-emit",
+  "--loops 20"
+ ],
+ "phase": "8",
+ "self_scope": {
+  "source": "base-head",
+  "commit_range": "aa90b96521e5d3cc782d2791165eaa805f4e456d..04e213f",
+  "excluded_prose": [],
+  "refused_artifacts": [],
+  "unclassified_files": []
+ },
+ "clean_code_round": 3,
+ "clean_code_dismissed": [
+  {
+   "id": "CC-001",
+   "principle": "SRP / class size",
+   "location": "Proxy.java",
+   "reason": "later waves own the extracted classes"
+  },
+  {
+   "id": "CC-003",
+   "principle": "DRY null check",
+   "location": "HeaderRules.java 81-98",
+   "reason": "not valid: serves two call paths and AC-7 ordering"
+  },
+  {
+   "id": "CC-006",
+   "principle": "dead code",
+   "location": "Proxy.writeTimeoutMillis",
+   "reason": "not valid: planned accessor used by AC-8 tests and wave-18"
+  },
+  {
+   "id": "CC-007",
+   "principle": "long method",
+   "location": "Proxy.forward",
+   "reason": "later waves rewrite forward()"
+  },
+  {
+   "id": "R2-CC-001",
+   "principle": "DRY / long parameter list",
+   "location": "Proxy.java Options withX",
+   "reason": "full-arity constructor kept on purpose (omission is a compile error)"
+  },
+  {
+   "id": "R2-CC-003",
+   "principle": "cohesion",
+   "location": "HeaderRules.trimOws",
+   "reason": "new helper file outside write set; later waves own lexing"
+  }
+ ],
+ "clean_code_skip": false,
+ "guarantee_scope": "wave-10 slice of NaruServe-proxy: Proxy public API shape (IR-PROXY-001), option validation (FR-PROXY-002), response status/header copy (FR-PROXY-011). Request header rules, framing smuggling guards, path checks, Location rewrite, fixed headers, TLS, ProxyException, timeouts, retries, concurrency and strict response parsing belong to later waves 11-20 and are outside this guarantee.",
+ "declared_limits": [
+  {
+   "id": "FND-001",
+   "reason": "outside_guarantee_scope; owner SEC-PROXY-004 AC-4 (wave-17)",
+   "evidence": "probe1 CL+TE response: expected 502 but was 200"
+  },
+  {
+   "id": "FND-002",
+   "reason": "outside_guarantee_scope; owner SEC-PROXY-004 AC-4 (wave-17)",
+   "evidence": "probe2 differing CL: expected 502 but was 200"
+  },
+  {
+   "id": "FND-003",
+   "reason": "outside_guarantee_scope; owner SEC-PROXY-004 AC-2 (wave-17)",
+   "evidence": "probe3 ~80 KiB head: expected 502 but was 200"
+  },
+  {
+   "id": "FND-004",
+   "reason": "outside_guarantee_scope; owner FR-PROXY-014 AC-6 (wave-17)",
+   "evidence": "probe4 HEAD with CL abc: expected 200 but was 502"
+  },
+  {
+   "id": "FND-005",
+   "reason": "outside_guarantee_scope; owner FR-PROXY-017, REL-PROXY-002 (waves 18-19)",
+   "evidence": "probe5 stalled backend write: no answer after 8000 ms"
+  },
+  {
+   "id": "FND-006",
+   "reason": "outside_guarantee_scope; owner FR-PROXY-003 (wave-12)",
+   "evidence": "probe6 client Connection-named header forwarded"
+  },
+  {
+   "id": "FND-007",
+   "reason": "outside_guarantee_scope; owner FR-PROXY-017, REL-PROXY-002 (waves 18-19)",
+   "evidence": "probe7 endless 1xx: answered after 4034 ms with total 1 s"
+  },
+  {
+   "id": "FND-008",
+   "reason": "outside_guarantee_scope; owner FR-PROXY-007 AC-3/AC-7 (wave-12)",
+   "evidence": "probe8 chunked client body arrives with CL 19"
+  }
+ ],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "db4a7609a2b7cdd87cb7222b10c35e4aecc3d5ff",
+   "scope": "full",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/HeaderRules.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyApiTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyOptionsTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyResponseHeadersTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/RawBackend.java",
+    "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyKotlinTest.kt",
+    "build.gradle"
+   ],
+   "tokens_used": 246644,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-001",
+     "tier": "record",
+     "family": "response-framing",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-002",
+     "tier": "record",
+     "family": "response-framing",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-003",
+     "tier": "record",
+     "family": "response-framing",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-004",
+     "tier": "record",
+     "family": "response-framing",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-005",
+     "tier": "record",
+     "family": "timeouts",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-006",
+     "tier": "record",
+     "family": "request-headers",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-007",
+     "tier": "record",
+     "family": "timeouts",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-008",
+     "tier": "record",
+     "family": "request-body",
+     "introduced_by_round": null
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "tree_sha": "d5036cf1f60dca03f8b93ac2c80a3b0596717472",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/HeaderRules.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java"
+   ],
+   "tokens_used": 260898,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-001",
+     "tier": "record",
+     "family": "response-framing",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-002",
+     "tier": "record",
+     "family": "response-framing",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-003",
+     "tier": "record",
+     "family": "response-framing",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-004",
+     "tier": "record",
+     "family": "response-framing",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-005",
+     "tier": "record",
+     "family": "timeouts",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-006",
+     "tier": "record",
+     "family": "request-headers",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-007",
+     "tier": "record",
+     "family": "timeouts",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-008",
+     "tier": "record",
+     "family": "request-body",
+     "introduced_by_round": null
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "tree_sha": "a6a63c73a0690494bddb4c72eabe794134fea3b5",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java"
+   ],
+   "tokens_used": 28557,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-001",
+     "tier": "record",
+     "family": "response-framing",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-002",
+     "tier": "record",
+     "family": "response-framing",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-003",
+     "tier": "record",
+     "family": "response-framing",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-004",
+     "tier": "record",
+     "family": "response-framing",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-005",
+     "tier": "record",
+     "family": "timeouts",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-006",
+     "tier": "record",
+     "family": "request-headers",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-007",
+     "tier": "record",
+     "family": "timeouts",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-008",
+     "tier": "record",
+     "family": "request-body",
+     "introduced_by_round": null
+    }
+   ]
+  }
+ ],
+ "regression_baseline": {
+  "source": "full build at 04e213f by the FR-PROXY-011 coder run, plus run pin regression-baseline.json (failing_tests [])",
+  "tests": 4138,
+  "failures": 0
+ },
+ "regression_pass": true,
+ "clean_code_fixed": [
+  "CC-002",
+  "CC-004",
+  "CC-005",
+  "CC-008",
+  "R2-CC-002",
+  "R2-CC-004",
+  "R3-CC-001"
+ ],
+ "clean_code_unresolved": [],
+ "test_sufficiency": "pass",
+ "final_commit": "d2eab68",
+ "status": "TASK_DONE"
+}

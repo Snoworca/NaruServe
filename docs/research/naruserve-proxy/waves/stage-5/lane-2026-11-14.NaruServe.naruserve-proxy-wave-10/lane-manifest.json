@@ -1,0 +1,113 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-10",
+ "wave": "wave-10",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-10",
+ "base_sha": "aa90b96521e5d3cc782d2791165eaa805f4e456d",
+ "head_sha": "d2eab6827ad934ed87d9fa6ecf92d34680e3fdf4",
+ "commits": [
+  {
+   "sha": "32bbd11",
+   "subject": "test(proxy): pin the Proxy API shape and its Kotlin use",
+   "req": "IR-PROXY-001",
+   "kind": "test"
+  },
+  {
+   "sha": "32e946f",
+   "subject": "feat(proxy): add the Proxy middleware with immutable options",
+   "req": "IR-PROXY-001",
+   "kind": "implementation"
+  },
+  {
+   "sha": "99d22f2",
+   "subject": "test(proxy): check Proxy option values at the option call",
+   "req": "FR-PROXY-002",
+   "kind": "test"
+  },
+  {
+   "sha": "6d134fe",
+   "subject": "feat(proxy): validate Proxy option values when they are set",
+   "req": "FR-PROXY-002",
+   "kind": "implementation"
+  },
+  {
+   "sha": "055cf33",
+   "subject": "test(proxy): pin how the proxy relays backend status and headers",
+   "req": "FR-PROXY-011",
+   "kind": "test"
+  },
+  {
+   "sha": "04e213f",
+   "subject": "feat(proxy): copy backend status and response headers",
+   "req": "FR-PROXY-011",
+   "kind": "implementation"
+  },
+  {
+   "sha": "d2eab68",
+   "subject": "refactor(proxy): make proxy options immutable and share the OWS trim",
+   "req": "IR-PROXY-001",
+   "kind": "review"
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "IR-PROXY-001",
+   "FR-PROXY-002",
+   "FR-PROXY-011"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-10/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-10/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-10-ir-proxy-001/lanes/w10s5l1/reports/pm-final.md",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-10/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-10-fr-proxy-002/lanes/w10s5l1/reports/pm-final.md",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-10/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-10-fr-proxy-011/lanes/w10s5l1/reports/pm-final.md",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-10/.kiwi/sessions/2026-11-17.naruserve.self-w10review/analysis/report.md"
+ ],
+ "red_evidence": [
+  {
+   "req": "IR-PROXY-001",
+   "test": "ProxyKotlinTest / ProxyApiTest",
+   "red_output": "compileTestKotlin FAILED: ProxyKotlinTest.kt:32:13 Unresolved reference 'Proxy'"
+  },
+  {
+   "req": "FR-PROXY-002",
+   "test": "ProxyOptionsTest",
+   "red_output": "compileTestJava cannot find symbol readTimeoutMillis; then 12 of 24 failed, e.g. 'maxConcurrent(0) should throw IllegalArgumentException'"
+  },
+  {
+   "req": "FR-PROXY-011",
+   "test": "ProxyResponseHeadersTest",
+   "red_output": "compileTestJava cannot find symbol ResponseHeaderCopier; with a no-op stub 15 of 21 failed (chunked 502, headers/Set-Cookie/Vary not copied)"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "blocking_kept": 0,
+  "declared_limits": 8,
+  "detail": "3 rounds, check_review_round PASS; 8 out-of-scope red probes recorded as declared limits owned by later waves (SEC-PROXY-004, FR-PROXY-014 wave-17; FR-PROXY-017/REL-PROXY-002 waves 18-19; FR-PROXY-003, FR-PROXY-007 wave-12); 7 clean-code fixes in d2eab68"
+ },
+ "intentionally_empty": null,
+ "partially_preexisting": "FR-PROXY-011 AC-1 (x2), AC-4 (x2), AC-5 relay length and AC-9 tests passed before the FR-PROXY-011 implementation (IR-PROXY-001's forwarding already relayed status, added no Content-Type and used the adapter reason phrase); FR-PROXY-002 AC-9 and the null-unit AC-7 case already held after IR-PROXY-001. FR-PROXY-008 AC-1/AC-3/AC-4 may already pass for wave-12 (client body read before connect gives 413).",
+ "design_refuted": [],
+ "srs_deltas": [],
+ "out_of_lease_paths": [
+  {
+   "path": "build.gradle",
+   "reason": "test-scope only block project(':NaruServe-proxy') { testImplementation testFixtures(project(':NaruServe-api')); testImplementation project(':NaruServe-tinyhttpd') } \u2014 proxy tests need an app engine (in-memory adapter, D-070) and a real TinyHttpd socket (FR-PROXY-011 AC-3/AC-9); mainDependencies unchanged, BuildLayoutTest green"
+  }
+ ],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "check_test_sufficiency ids IR-PROXY-001,FR-PROXY-002,FR-PROXY-011 on the worktree: 25/25 ACs cited, passed=true"
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4141,
+  "failures": 0,
+  "exit_code": 0
+ },
+ "bootstrap": "not-applicable"
+}

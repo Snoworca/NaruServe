@@ -1,0 +1,51 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-10-ir-proxy-001",
+ "base_sha": "aa90b96521e5d3cc782d2791165eaa805f4e456d",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "IR-PROXY-001"
+ ],
+ "req_filter": [
+  "IR-PROXY-001"
+ ],
+ "write_set": [
+  "build.gradle",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyApiTest.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/RawBackend.java",
+  "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyKotlinTest.kt"
+ ],
+ "started_at": "2026-11-17T09:17:40Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "changed": true,
+  "commit_sha": "32e946f",
+  "commits": [
+   {
+    "req_id": "IR-PROXY-001",
+    "test_sha": "32bbd11",
+    "implementation_sha": "32e946f"
+   }
+  ],
+  "questions": [],
+  "result_summary": "Proxy API + minimal forwarding; 15 proxy tests; build 4093/0"
+ },
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-17T09:17:40Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "IR-PROXY-001": "evolving"
+  },
+  "status_snapshot": {
+   "IR-PROXY-001": "planned"
+  }
+ },
+ "req_coverage": {},
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-10-ir-proxy-001/lanes/w10s5l1/reports/pm-final.md"
+}

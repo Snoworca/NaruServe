@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-10-fr-proxy-011",
+  "sds_path": null,
+  "target": "0.12.0",
+  "req_ids": [
+    "FR-PROXY-011"
+  ],
+  "write_set": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyResponseHeadersTest.java",
+    "build.gradle"
+  ],
+  "mode": "normal",
+  "flags": [
+    "--loops 20",
+    "--defer-srs-mutation"
+  ],
+  "spawn_context": "pm-child",
+  "updated_at": "2026-11-17T10:11:34Z",
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "loop_counters": {
+    "phase2": {
+      "kept": 3,
+      "dropped": 0,
+      "rounds": 2
+    }
+  },
+  "red_evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*ProxyResponseHeadersTest*'",
+    "exit_code": 1,
+    "captured_failure": "compileTestJava: cannot find symbol ResponseHeaderCopier; with a no-op copier stub 15 of 21 tests failed (chunked backend gave 502, headers not copied); round 2: chunkSizeWithLeadingZerosIsDecoded failed",
+    "timestamp": "2026-11-17T10:11:34Z"
+  },
+  "green_evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:check :test --tests '*BuildLayoutTest*'",
+    "exit_code": 0,
+    "timestamp": "2026-11-17T10:11:34Z"
+  },
+  "regression_summary": {
+    "last_run_at": "2026-11-17T10:11:34Z",
+    "scope": "full",
+    "command": "./gradlew -PtinyHttpdFromMaven=true build",
+    "passed": 4138,
+    "failed": 0
+  }
+}
