@@ -20,9 +20,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -50,6 +48,8 @@ public final class Proxy implements Middleware {
     static final long NO_BODY_LIMIT = -1;
     /** {@link #maxConcurrent()} when no {@code maxConcurrent} is set: no per-mount limit. */
     static final int NO_CONCURRENCY_LIMIT = 0;
+    /** The largest {@code bodyLimit}, the same 1 GiB bound as {@code app.rawBodyLimit}. */
+    static final long MAX_BODY_LIMIT = 1073741824L;
 
     /** The longest status or header line the backend may send. */
     private static final int MAX_LINE = 64 * 1024;
@@ -57,9 +57,7 @@ public final class Proxy implements Middleware {
     private static final int MAX_HEADER_LINES = 1000;
 
     /** Request header names the proxy writes itself or never forwards. */
-    private static final Set<String> NOT_FORWARDED = new HashSet<>(Arrays.asList("connection", "keep-alive",
-            "proxy-connection", "te", "transfer-encoding", "upgrade", "proxy-authenticate", "proxy-authorization",
-            "trailer", "host", "content-length", "expect"));
+    private static final Set<String> NOT_FORWARDED = HeaderRules.REQUEST_NOT_FORWARDED;
 
     private final Target target;
     private final Options options;
@@ -82,7 +80,7 @@ public final class Proxy implements Middleware {
     // @req IR-PROXY-001
     public Proxy connectTimeout(long amount, TimeUnit unit) {
         Options c = options.copy();
-        c.connectTimeoutNanos = unit.toNanos(amount);
+        c.connectTimeoutNanos = positiveNanos(amount, unit, "connectTimeout");
         return new Proxy(target, c);
     }
 
@@ -90,7 +88,7 @@ public final class Proxy implements Middleware {
     // @req IR-PROXY-001
     public Proxy writeTimeout(long amount, TimeUnit unit) {
         Options c = options.copy();
-        c.writeTimeoutNanos = unit.toNanos(amount);
+        c.writeTimeoutNanos = positiveNanos(amount, unit, "writeTimeout");
         return new Proxy(target, c);
     }
 
@@ -98,7 +96,7 @@ public final class Proxy implements Middleware {
     // @req IR-PROXY-001
     public Proxy readTimeout(long amount, TimeUnit unit) {
         Options c = options.copy();
-        c.readTimeoutNanos = unit.toNanos(amount);
+        c.readTimeoutNanos = positiveNanos(amount, unit, "readTimeout");
         return new Proxy(target, c);
     }
 
@@ -106,13 +104,16 @@ public final class Proxy implements Middleware {
     // @req IR-PROXY-001
     public Proxy totalTimeout(long amount, TimeUnit unit) {
         Options c = options.copy();
-        c.totalTimeoutNanos = unit.toNanos(amount);
+        c.totalTimeoutNanos = positiveNanos(amount, unit, "totalTimeout");
         return new Proxy(target, c);
     }
 
     /** How many more attempts a failed request may get (default 0). */
     // @req IR-PROXY-001
     public Proxy retries(int count) {
+        if (count < 0) {
+            throw new IllegalArgumentException("retries must be at least 0, got " + count);
+        }
         Options c = options.copy();
         c.retries = count;
         return new Proxy(target, c);
@@ -122,7 +123,7 @@ public final class Proxy implements Middleware {
     // @req IR-PROXY-001
     public Proxy retryDelay(long amount, TimeUnit unit) {
         Options c = options.copy();
-        c.retryDelayNanos = unit.toNanos(amount);
+        c.retryDelayNanos = nonNegativeNanos(amount, unit, "retryDelay");
         return new Proxy(target, c);
     }
 
@@ -153,6 +154,9 @@ public final class Proxy implements Middleware {
     /** The request body limit in bytes for this mount (default: the app's raw body limit). */
     // @req IR-PROXY-001
     public Proxy bodyLimit(long bytes) {
+        if (bytes < 1 || bytes > MAX_BODY_LIMIT) {
+            throw new IllegalArgumentException("bodyLimit must be within 1.." + MAX_BODY_LIMIT + ", got " + bytes);
+        }
         Options c = options.copy();
         c.bodyLimit = bytes;
         return new Proxy(target, c);
@@ -161,6 +165,9 @@ public final class Proxy implements Middleware {
     /** The most in-flight requests of this proxy and the proxies derived from it (default: no limit). */
     // @req IR-PROXY-001
     public Proxy maxConcurrent(int limit) {
+        if (limit < 1) {
+            throw new IllegalArgumentException("maxConcurrent must be at least 1, got " + limit);
+        }
         Options c = options.copy();
         c.maxConcurrent = limit;
         return new Proxy(target, c);
@@ -169,6 +176,7 @@ public final class Proxy implements Middleware {
     /** Sends {@code value} as request header {@code name} in place of the client's lines of that name. */
     // @req IR-PROXY-001
     public Proxy requestHeader(String name, String value) {
+        HeaderRules.checkRequestRule(name, value, "requestHeader");
         Options c = options.copy();
         c.requestHeaderRules = appended(c.requestHeaderRules, name, value);
         return new Proxy(target, c);
@@ -177,6 +185,7 @@ public final class Proxy implements Middleware {
     /** Drops the client's request header {@code name}. */
     // @req IR-PROXY-001
     public Proxy removeRequestHeader(String name) {
+        HeaderRules.checkRequestRule(name, "removeRequestHeader");
         Options c = options.copy();
         c.requestHeaderRules = appended(c.requestHeaderRules, name, null);
         return new Proxy(target, c);
@@ -185,6 +194,7 @@ public final class Proxy implements Middleware {
     /** Sends {@code value} as response header {@code name} in place of the backend's lines of that name. */
     // @req IR-PROXY-001
     public Proxy responseHeader(String name, String value) {
+        HeaderRules.checkResponseRule(name, value, "responseHeader");
         Options c = options.copy();
         c.responseHeaderRules = appended(c.responseHeaderRules, name, value);
         return new Proxy(target, c);
@@ -193,6 +203,7 @@ public final class Proxy implements Middleware {
     /** Drops the backend's response header {@code name}. */
     // @req IR-PROXY-001
     public Proxy removeResponseHeader(String name) {
+        HeaderRules.checkResponseRule(name, "removeResponseHeader");
         Options c = options.copy();
         c.responseHeaderRules = appended(c.responseHeaderRules, name, null);
         return new Proxy(target, c);
@@ -206,12 +217,43 @@ public final class Proxy implements Middleware {
         return new Proxy(target, c);
     }
 
-    /** The socket factory for an {@code https} target (default: the JDK default factory). */
+    /**
+     * The socket factory for an {@code https} target (default: the JDK default factory). An {@code http} target
+     * accepts the factory and never uses it.
+     */
     // @req IR-PROXY-001
+    // @req FR-PROXY-002
     public Proxy sslSocketFactory(SSLSocketFactory factory) {
+        if (factory == null) {
+            throw new NullPointerException("sslSocketFactory factory");
+        }
         Options c = options.copy();
         c.sslSocketFactory = factory;
         return new Proxy(target, c);
+    }
+
+    /** {@code amount} of {@code unit} in nanoseconds, saturated at Long.MAX_VALUE; the amount must be above 0. */
+    // @req FR-PROXY-002
+    private static long positiveNanos(long amount, TimeUnit unit, String option) {
+        if (unit == null) {
+            throw new NullPointerException(option + " unit");
+        }
+        if (amount <= 0) {
+            throw new IllegalArgumentException(option + " must be above 0, got " + amount + " " + unit);
+        }
+        return unit.toNanos(amount);
+    }
+
+    /** {@code amount} of {@code unit} in nanoseconds, saturated at Long.MAX_VALUE; the amount must be at least 0. */
+    // @req FR-PROXY-002
+    private static long nonNegativeNanos(long amount, TimeUnit unit, String option) {
+        if (unit == null) {
+            throw new NullPointerException(option + " unit");
+        }
+        if (amount < 0) {
+            throw new IllegalArgumentException(option + " must be at least 0, got " + amount + " " + unit);
+        }
+        return unit.toNanos(amount);
     }
 
     // @req IR-PROXY-001
@@ -238,6 +280,24 @@ public final class Proxy implements Middleware {
 
     long totalTimeoutNanos() {
         return options.totalTimeoutNanos;
+    }
+
+    /** The connect timeout as the socket sees it: whole milliseconds, rounded up, within 1..Integer.MAX_VALUE. */
+    // @req FR-PROXY-002
+    int connectTimeoutMillis() {
+        return socketMillis(options.connectTimeoutNanos);
+    }
+
+    /** The write timeout as the socket sees it: whole milliseconds, rounded up, within 1..Integer.MAX_VALUE. */
+    // @req FR-PROXY-002
+    int writeTimeoutMillis() {
+        return socketMillis(options.writeTimeoutNanos);
+    }
+
+    /** The read timeout as the socket sees it: whole milliseconds, rounded up, within 1..Integer.MAX_VALUE. */
+    // @req FR-PROXY-002
+    int readTimeoutMillis() {
+        return socketMillis(options.readTimeoutNanos);
     }
 
     int retries() {
@@ -327,8 +387,8 @@ public final class Proxy implements Middleware {
         Socket socket = new Socket();
         boolean relayed = false;
         try {
-            socket.connect(new InetSocketAddress(target.host, target.port), socketMillis(options.connectTimeoutNanos));
-            socket.setSoTimeout(socketMillis(options.readTimeoutNanos));
+            socket.connect(new InetSocketAddress(target.host, target.port), connectTimeoutMillis());
+            socket.setSoTimeout(readTimeoutMillis());
             OutputStream out = new BufferedOutputStream(socket.getOutputStream());
             out.write(outgoing.head);
             if (outgoing.bufferedBody != null) {
