@@ -1008,6 +1008,7 @@ public final class DocsExamplesCompileTest {
     @Test
     public void OPS_DX_009_AC6_rawResponseJavaBlocksOfBothPagesCompile() throws IOException {
         List<String> diagnostics = docsDiagnostics();
+        String[] rawMembers = {".append(\"", ".onAbort(", ".relay(", ".isFieldValue("};
         for (String page : new String[] {"response.md", "en/response.md"}) {
             List<String> blocks = docs().get(page);
             assertNotNull("response page " + page, blocks);
@@ -1017,14 +1018,14 @@ public final class DocsExamplesCompileTest {
             List<String> members = new ArrayList<>();
             for (int i = 0; i < blocks.size(); i++) {
                 String body = blocks.get(i);
-                for (String member : new String[] {".append(\"", ".onAbort(", ".relay(", ".isFieldValue("}) {
+                for (String member : rawMembers) {
                     if (body.contains(member)) {
                         members.add(member);
                         assertNull("skipped raw response block " + page + " #" + (i + 1), skipFor(page, i + 1, body));
                     }
                 }
             }
-            for (String member : new String[] {".append(\"", ".onAbort(", ".relay(", ".isFieldValue("}) {
+            for (String member : rawMembers) {
                 assertTrue(page + " has a compiled Java block calling " + member, members.contains(member));
             }
         }
