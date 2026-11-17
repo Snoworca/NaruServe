@@ -146,13 +146,18 @@ public class ProxyRequestHeadersTest {
         assertEquals(Collections.singletonList("X-Keep: 1"), linesNamed(got, "X-Keep"));
     }
 
-    // FR-PROXY-003 AC-2: the client's Transfer-Encoding line does not arrive; the framing line is the proxy's own
+    // FR-PROXY-003 AC-2: the client's Transfer-Encoding line does not arrive; the framing line is the proxy's own,
+    // written once in the framing slot before Connection: close (the chunked framing itself is FR-PROXY-007 AC-3)
     @Test
     public void fr_PROXY_003_AC2_clientTransferEncodingDoesNotArrive() throws IOException {
         RawBackend.Received got = forward(request("POST", "Transfer-Encoding", "chunked", "X-Keep", "1").body(HELLO));
 
-        assertEquals(Collections.<String>emptyList(), linesNamed(got, "Transfer-Encoding"));
-        assertEquals(Collections.singletonList("Content-Length: 5"), linesNamed(got, "Content-Length"));
+        List<String> lines = got.headerLines();
+        assertEquals("nothing at the client's Transfer-Encoding position", "X-Keep: 1", lines.get(1));
+        assertEquals(Collections.singletonList("Transfer-Encoding: chunked"), linesNamed(got, "Transfer-Encoding"));
+        assertEquals(Collections.<String>emptyList(), linesNamed(got, "Content-Length"));
+        assertEquals(Arrays.asList("Transfer-Encoding: chunked", "Connection: close"),
+                lines.subList(lines.size() - 2, lines.size()));
         assertEquals(Collections.singletonList("Connection: close"), linesNamed(got, "Connection"));
         assertEquals("hello", new String(got.body, StandardCharsets.ISO_8859_1));
     }
