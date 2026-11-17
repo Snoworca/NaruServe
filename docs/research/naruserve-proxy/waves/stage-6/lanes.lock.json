@@ -1,0 +1,36 @@
+{
+  "lane_cap": 4,
+  "depends": {
+    "2026-11-14.NaruServe.naruserve-proxy-wave-11": []
+  },
+  "declaration": "docs/research/naruserve-proxy/waves/waves.json",
+  "declaration_digests": {
+    "2026-11-14.NaruServe.naruserve-proxy-wave-11": "9e554027014372d61e1602ffc1ccb7df94e77d8016770ceab01cf569375e9516"
+  },
+  "sds_digests": {},
+  "lane_count": 1,
+  "stage_count": 1,
+  "lanes": [
+    {
+      "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-11",
+      "stage": 1,
+      "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-11",
+      "sds": null,
+      "writeSet": [
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/FramingLists.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/FramingListsTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestFramingTest.java"
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "index": 1,
+      "laneIds": [
+        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-11"
+      ]
+    }
+  ],
+  "conflicts": []
+}
