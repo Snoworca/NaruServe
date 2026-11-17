@@ -1,0 +1,21 @@
+{
+ "base": {
+  "wave-11": "02e627b362a165563e5f169f58bd8d68c47551a7"
+ },
+ "lock_digest": "19744435b24a5031911d6bb343bf8065b9bd8aef3f884289274f3494e1f6373e",
+ "lock_commit": "a2c87f2bbad1fdd2c0d1bcc72201177fae9817fc",
+ "lanes": [
+  {
+   "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-11",
+   "stage": 1,
+   "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-11",
+   "sds": null,
+   "writeSet": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/FramingLists.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/FramingListsTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestFramingTest.java"
+   ]
+  }
+ ]
+}
