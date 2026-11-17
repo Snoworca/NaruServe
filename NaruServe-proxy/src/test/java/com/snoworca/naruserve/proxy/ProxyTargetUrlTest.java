@@ -181,6 +181,53 @@ public class ProxyTargetUrlTest {
         assertEquals("target=http://123.example:8081", target("http://123.example:8081"));
     }
 
+    // FR-PROXY-001 AC-2: a name is dot-separated labels of 1..63 characters that do not start or end with '-' and
+    // hold a letter or digit, at most 253 characters in all; an empty label (other than one trailing root dot) is
+    // rejected
+    @Test
+    public void fr_PROXY_001_AC2_degenerateHostNamesAreRejected() {
+        String label64 = repeat('a', 64);
+        assertRejected("http://.", "http://./x", "http://-", "http://-.-", "http://a..b", "http://.h", "http://_",
+                "http://-h", "http://h-", "http://" + label64, "http://" + label64 + ".example", "http://h..",
+                "http://..", "http://__.example", "http://a.-b.example", "http://a.b-.example:8081",
+                "http://" + longName(254));
+    }
+
+    // FR-PROXY-001 AC-2: one trailing root dot, underscores, hyphens inside a label, a 63-character label and a
+    // 253-character name are accepted
+    @Test
+    public void fr_PROXY_001_AC2_wellFormedHostNamesAreAccepted() {
+        String label63 = repeat('a', 63);
+        assertEquals("target=http://h./x", target("http://h./x"));
+        assertEquals("target=http://my_service:8081", target("http://my_service:8081"));
+        assertEquals("target=http://api-1.example.com", target("http://api-1.example.com"));
+        assertEquals("target=http://localhost", target("http://localhost"));
+        assertEquals("target=http://_svc.example", target("http://_svc.example"));
+        assertEquals("target=http://" + label63, target("http://" + label63));
+        assertEquals("target=http://" + longName(253), target("http://" + longName(253)));
+    }
+
+    private static String repeat(char c, int n) {
+        StringBuilder b = new StringBuilder(n);
+        for (int i = 0; i < n; i++) {
+            b.append(c);
+        }
+        return b.toString();
+    }
+
+    /** A host name of exactly {@code length} characters: 'a' labels of up to 63 characters joined by dots. */
+    private static String longName(int length) {
+        StringBuilder b = new StringBuilder(length);
+        while (b.length() < length) {
+            if (b.length() > 0) {
+                b.append('.');
+            }
+            int n = Math.min(63, length - b.length());
+            b.append(repeat('a', n));
+        }
+        return b.toString();
+    }
+
     // FR-PROXY-001 AC-2: a port of 0, 65536, abc and every other non-decimal or out-of-range port is rejected
     @Test
     public void fr_PROXY_001_AC2_badPortIsRejected() {
