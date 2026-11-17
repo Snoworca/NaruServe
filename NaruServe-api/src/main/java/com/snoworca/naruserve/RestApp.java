@@ -220,7 +220,7 @@ public interface RestApp extends HttpRoutes<RestApp> {
 
     /**
      * The {@code Cache-Control} policy for responses that set none themselves; default {@code null}, which adds no
-     * header.
+     * header. A response sent with {@link Response#relay} never receives this policy.
      */
     // @req IR-STATIC-002
     RestApp defaultCache(@Nullable CachePolicy policy);

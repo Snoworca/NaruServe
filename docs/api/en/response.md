@@ -18,6 +18,7 @@ The common HTTP behavior below targets NaruServe 0.11.0.
 |---|---|---|---|
 | `status(code)` | Response | res.status | Default 200; outside 100..999 throws IllegalArgumentException |
 | `header(name, value)` | Response | res.set | Replace case-insensitive same-name headers; invalid token name, controls except tab, or characters above U+00FF throw IllegalArgumentException |
+| `append(name, value)` | Response | `res.append(name, value)` | Add a header line without replacing a same-name header, so headers such as Set-Cookie can go out as several lines; name and value get the header check; see [adding header lines](#adding-header-lines) |
 | `cookie(name, value[, configurer])` | Response | res.cookie | Default Path=/; CookieOptions callback |
 | `clearCookie(name[, configurer])` | Response | res.clearCookie | Max-Age=0 at matching Path/Domain |
 | `addCookie(cookie)` | Response | res.cookie | Append Set-Cookie; see [cookies](cookie.md) |
@@ -37,6 +38,7 @@ Header values use ISO-8859-1, one byte per character. Names must be HTTP tokens:
 | `html(String)` | text/html; charset=UTF-8 | res.send(html) | HTML |
 | `send(Object)` with byte[] | Explicit type or application/octet-stream | res.send(buffer) | Binary |
 | `stream(in, contentType)` | Argument | stream.pipe(res) | Commit headers now; defer an initial copy until the callback chain unwinds; a later call may copy on its calling thread; framework closes the input exactly once on success, failure or abort |
+| `relay(in, contentLength)` | The app's value; none added or changed | None; in Express set Content-Length and `stream.pipe(res)` | Send a stream framed by its known length; owns the input as stream does; see [relaying a stream](#relaying-a-stream-with-its-length) |
 | `file(File)` | File extension | res.sendFile | Range/conditional requests; no Content-Disposition |
 | `download(File, filename)` | File extension | res.download | Content-Disposition: attachment |
 | `end()` | — | res.end | No body |
@@ -44,6 +46,7 @@ Header values use ISO-8859-1, one byte per character. Names must be HTTP tokens:
 | `sendStatus(code)` | text/plain; charset=UTF-8 | `res.sendStatus(code)` | Status with its reason text; empty body for 204, 304 and HEAD |
 | `sse()` | text/event-stream | — | Return SseClient; see [SSE](sse.md) |
 | `abort(error)` | — | res.destroy | Abort connection; harmless after completion/abort |
+| `onAbort(listener)` | — | `res.on('close', ...)` with a `!res.writableFinished` check | Register a listener that runs once when the response ends abnormally; returns void; see [abort notification](#abort-notification) |
 
 Binary sends default to application/octet-stream as Express Buffer sends do. stream transfers input ownership; the caller must not close it before transmission.
 
@@ -152,3 +155,136 @@ app.get("/video") { req, res ->
 ```
 
 Express equivalent: fs.createReadStream(path).pipe(res).
+
+## Adding header lines
+
+`res.append(name, value)` adds a header line and returns the `Response`, as Express `res.append` does. It keeps an existing header of the same name, so headers such as `Set-Cookie` can go out as several lines. The name and value get the same name and value check as `res.header`: a name that is not an HTTP token, or a value with a control character such as CR/LF (tab excepted) or a character above U+00FF, throws `IllegalArgumentException`. After the response was sent it throws `IllegalStateException`, as `res.header` does. `res.header` keeps replacing a header of the same name (Express `res.set`). See [header checks](#header-checks).
+
+```java
+app.get("/login", (req, res) -> {
+    res.append("Set-Cookie", "theme=dark; Path=/")
+       .append("Set-Cookie", "lang=ko; Path=/")   // adds a second line
+       .send("ok");
+});
+```
+
+Kotlin:
+
+```kotlin
+app.get("/login") { req, res ->
+    res.append("Set-Cookie", "theme=dark; Path=/")
+        .append("Set-Cookie", "lang=ko; Path=/")
+        .send("ok")
+}
+```
+
+## Abort notification
+
+`res.onAbort(listener)` registers a listener for a response that ends abnormally before it completed. It returns `void`, and a `null` listener throws `NullPointerException`.
+
+- The listener runs once when the client disconnects or the app calls `res.abort`, and never for a response that completed normally.
+- Should the response be aborted already, a listener registered after the abort runs at once (on the registering thread).
+- The listener may run on a thread other than the request thread: the thread that called `res.abort`, or the adapter thread that detected the disconnect. Keep the state it touches thread-safe.
+- An exception of one listener goes to the app logger, and the other listeners still run.
+- NaruServe adds no disconnect detection of its own; an adapter may report a disconnect during idle time only at the next I/O.
+
+Express counterpart: `res.on('close', () => { if (!res.writableFinished) { ... } })`. Express fires `close` after a normal finish too, hence the `!res.writableFinished` check; `onAbort` runs only for an abnormal end.
+
+```java
+ExecutorService workers = Executors.newCachedThreadPool();
+app.get("/report", (req, res) -> {
+    Future<?> job = workers.submit(() -> {
+        Thread.sleep(5000);                    // a slow job
+        res.send("report");
+        return null;
+    });
+    res.onAbort(() -> job.cancel(true));       // a client that left cancels the job
+});
+```
+
+Kotlin:
+
+```kotlin
+val workers = Executors.newCachedThreadPool()
+app.get("/report") { req, res ->
+    val job = workers.submit(Runnable {
+        Thread.sleep(5000)
+        res.send("report")
+    })
+    res.onAbort { job.cancel(true) }
+}
+```
+
+Custom adapter limit: for `HttpExchange.onAbort` the SPI default checks its argument and does nothing. So with a custom `HttpAdapter` whose exchange does not override it, an `onAbort` listener may never be called when the client disconnects; a call to `res.abort` by the app still runs it. The TinyHttpd and servlet adapters report disconnects.
+
+## Relaying a stream with its length
+
+`res.relay(in, contentLength)` sends a stream framed by a given length. Use it when the app has set every header itself, as a proxy does when it passes on the status, headers and length another server sent. It differs from `res.stream(in, contentType)` as follows.
+
+- It adds or changes no `Content-Type`: a value the app set goes out, and with none the response has none.
+- It sends only the headers set before it besides `Content-Type` and `Content-Length`; a `Content-Length` or `Transfer-Encoding` the app set is dropped and `contentLength` sets the framing again.
+- It applies no `app.defaultCache`.
+- A length of 0 or more sends exactly `contentLength` bytes and aborts when the stream ends early (the connection closes); a longer stream is cut at that length.
+- A length of `-1` sends with an undetermined length; the adapter picks the framing (such as chunked).
+- A length below `-1` throws `IllegalArgumentException` and closes the input.
+- `HEAD` requests and `304` responses keep a non-negative length as `Content-Length` without a body; `204` responses send neither body nor `Content-Length`.
+- It owns the stream as `res.stream` does: NaruServe closes the input once on success, failure or abort, so the app must not close it first.
+
+On a `304` response `res.relay` hands its length to the adapter, and the client sees that `Content-Length` only where the adapter writes it: TinyHttpd 3.1.1 omits it (allowed by RFC 9110 §8.6), and the servlet adapter hands it to the container; a `HEAD` response keeps it on every built-in adapter.
+
+Express has no counterpart; the nearest idiom is `res.set('Content-Length', n)` followed by `upstream.pipe(res)`.
+
+```java
+app.get("/backup", (req, res) -> {
+    File backup = new File("/data/backup.bin");
+    res.type("application/octet-stream");
+    res.relay(new FileInputStream(backup), backup.length());   // NaruServe closes the stream
+});
+```
+
+Kotlin:
+
+```kotlin
+app.get("/backup") { req, res ->
+    val backup = File("/data/backup.bin")
+    res.type("application/octet-stream")
+    res.relay(FileInputStream(backup), backup.length())
+}
+```
+
+## Header checks
+
+`HttpHeaderValues` in the `com.snoworca.naruserve.common` package exposes the header check that `res.header` and `res.append` apply: `HttpHeaderValues.isToken(name)` checks a name and `HttpHeaderValues.isFieldValue(value)` checks a value. Use them to check a value before sending and pick another response instead of an exception.
+
+| Method | Checks | Result |
+|---|---|---|
+| `HttpHeaderValues.isToken(name)` | Header name (HTTP token) | `false` for an empty name or one holding whitespace or `:` |
+| `HttpHeaderValues.isFieldValue(value)` | Header value | `true` for an empty string and for HTAB (tab); `false` for CR, LF, NUL, DEL and any character above U+00FF |
+
+Express has none. The nearest are Node's `http.validateHeaderName` and `http.validateHeaderValue`, which throw instead of returning a boolean.
+
+```java
+import com.snoworca.naruserve.common.HttpHeaderValues;
+
+app.get("/echo", (req, res) -> {
+    String value = req.query("v");
+    if (value == null || !HttpHeaderValues.isFieldValue(value)) {
+        res.status(400).send("bad header value");   // 400 instead of an exception
+        return;
+    }
+    res.header("X-Echo", value).send("ok");
+});
+```
+
+Kotlin:
+
+```kotlin
+app.get("/echo") { req, res ->
+    val value = req.query("v")
+    if (value == null || !HttpHeaderValues.isFieldValue(value)) {
+        res.status(400).send("bad header value")
+    } else {
+        res.header("X-Echo", value).send("ok")
+    }
+}
+```

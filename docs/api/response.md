@@ -18,6 +18,7 @@ res.status(201).header("X-Request-ID", id).json(created);
 |---|---|---|---|
 | `status(code)` | `Response` | `res.status(code)` | 상태 코드. 기본은 `200`. `100`–`999` 밖이면 `IllegalArgumentException` |
 | `header(name, value)` | `Response` | `res.set(name, value)` | 응답 헤더. 같은 이름(대소문자 무시)이 있으면 바꿔 씁니다. 이름이 HTTP 토큰이 아니거나(빈 이름, 공백·`:` 포함 등) 값에 CR/LF·NUL 같은 제어 문자(탭 제외)나 U+00FF를 넘는 문자(헤더는 ISO-8859-1, 한 글자 1바이트)가 있으면 `IllegalArgumentException` |
+| `append(name, value)` | `Response` | `res.append(name, value)` | 헤더 줄을 하나 더합니다. 같은 이름의 헤더를 바꾸지 않으므로 `Set-Cookie` 같은 헤더를 여러 줄 보낼 수 있습니다. 이름과 값은 `header`와 같은 검사를 받습니다. [헤더 줄 더하기](#헤더-줄-더하기) |
 | `cookie(name, value[, configurer])` | `Response` | `res.cookie(...)` | 기본 Path=/인 쿠키. 옵션은 `CookieOptions`로 설정합니다. |
 | `clearCookie(name[, configurer])` | `Response` | `res.clearCookie(...)` | 같은 Path/Domain의 쿠키를 Max-Age=0으로 삭제합니다. |
 | `addCookie(cookie)` | `Response` | `res.cookie(...)` | `Set-Cookie` 추가. [Cookie](cookie.md) |
@@ -35,6 +36,7 @@ res.status(201).header("X-Request-ID", id).json(created);
 | `html(String)` | `text/html; charset=UTF-8` | `res.send('<p>..</p>')` | HTML |
 | `send(Object)` — 바이트 배열 | 직접 지정. 없으면 `application/octet-stream` | `res.send(buffer)` | 바이트 |
 | `stream(InputStream, contentType)` | 인자 | `stream.pipe(res)` | 헤더를 확정하고, 최초 콜백 흐름이 끝난 뒤 복사합니다. 그 이후의 호출은 호출 스레드에서 복사할 수 있습니다. 성공·실패·`abort` 어느 경우든 프레임워크가 입력을 한 번 닫습니다. |
+| `relay(in, contentLength)` | 앱이 정한 값(더하거나 바꾸지 않음) | 없음. Express에서는 `Content-Length`를 정하고 `stream.pipe(res)` | 길이를 아는 스트림을 그 길이로 보냅니다. 입력 소유권은 `stream`과 같습니다. [길이를 아는 스트림 전달](#길이를-아는-스트림-전달) |
 | `file(File)` | 확장자로 결정 | `res.sendFile(path)` | 파일. Range·조건부 요청 지원. Express `res.sendFile`처럼 `Content-Disposition`을 보내지 않습니다 |
 | `download(File, filename)` | 확장자로 결정 | `res.download(path, name)` | `Content-Disposition: attachment` |
 | `end()` | — | `res.end()` | 본문 없이 끝냅니다. |
@@ -42,6 +44,7 @@ res.status(201).header("X-Request-ID", id).json(created);
 | `sendStatus(code)` | `text/plain; charset=UTF-8` | `res.sendStatus(code)` | 상태와 그 설명 텍스트. 204·304·HEAD는 빈 본문 |
 | `sse()` | `text/event-stream` | — | SSE 스트림 시작. `SseClient` 반환. [SSE](sse.md) |
 | `abort(error)` | — | `res.destroy()` | 응답을 비정상 종료합니다(연결 끊기). 이미 끝났거나 끊긴 응답에서는 아무것도 하지 않습니다. |
+| `onAbort(listener)` | — | `res.on('close', ...)`에서 `!res.writableFinished` 확인 | 응답이 비정상 종료될 때 한 번 부를 리스너를 등록합니다. 반환은 `void`. [중단 알림](#중단-알림) |
 
 `send(Object)` — 바이트 배열에 `Content-Type`이 없으면 Express가 `Buffer`에 그러듯 `application/octet-stream`을 씁니다. `stream(InputStream, contentType)`은 스트림의 소유권을 가져가서 성공·실패·`abort` 어느 경우든 닫습니다. [스트림](#스트림)
 
@@ -151,3 +154,136 @@ app.get("/video") { req, res ->
 ```
 
 Express: `fs.createReadStream(path).pipe(res)`.
+
+## 헤더 줄 더하기
+
+`res.append(name, value)`는 Express `res.append`처럼 헤더 줄을 하나 더하고 `Response`를 돌려줍니다. 같은 이름의 헤더가 이미 있어도 지우지 않으므로 `Set-Cookie` 같은 헤더를 여러 줄 보낼 수 있습니다. 이름과 값은 `res.header`와 같은 이름·값 검사를 받아, 이름이 HTTP 토큰이 아니거나 값에 CR/LF 같은 제어 문자(탭 제외)나 U+00FF를 넘는 문자가 있으면 `IllegalArgumentException`입니다. 응답을 보낸 뒤에 부르면 `res.header`처럼 `IllegalStateException`입니다. `res.header`는 같은 이름의 헤더를 바꿔 씁니다(Express `res.set`). [헤더 검사](#헤더-검사)
+
+```java
+app.get("/login", (req, res) -> {
+    res.append("Set-Cookie", "theme=dark; Path=/")
+       .append("Set-Cookie", "lang=ko; Path=/")   // 두 번째 줄을 더합니다
+       .send("ok");
+});
+```
+
+Kotlin:
+
+```kotlin
+app.get("/login") { req, res ->
+    res.append("Set-Cookie", "theme=dark; Path=/")
+        .append("Set-Cookie", "lang=ko; Path=/")
+        .send("ok")
+}
+```
+
+## 중단 알림
+
+`res.onAbort(listener)`는 응답이 정상적으로 끝나기 전에 비정상 종료될 때 부를 리스너를 등록합니다. 반환값은 `void`이고, `null`을 넘기면 `NullPointerException`입니다.
+
+- 클라이언트가 연결을 끊거나 앱이 `res.abort`를 부르면 리스너가 한 번 실행됩니다. 정상적으로 완료된 응답에서는 실행되지 않습니다.
+- 응답이 중단된 뒤에 등록한 리스너는 바로 실행됩니다(등록한 스레드에서).
+- 리스너는 요청 스레드가 아닌 스레드에서 실행될 수 있습니다. `res.abort`를 부른 스레드나 연결 끊김을 감지한 어댑터 스레드입니다. 리스너가 건드리는 상태는 스레드 안전하게 다루세요.
+- 한 리스너가 던진 예외는 앱 로거에 기록되고, 나머지 리스너는 그대로 실행됩니다.
+- NaruServe는 연결 끊김을 따로 감지하지 않습니다. 어댑터는 유휴 시간에 생긴 연결 끊김을 다음 I/O에서야 알릴 수 있습니다.
+
+Express 대응: `res.on('close', () => { if (!res.writableFinished) { ... } })`. Express의 `close`는 정상 완료 뒤에도 오므로 `!res.writableFinished`로 끝나지 않았는지 확인하지만, `onAbort`는 비정상 종료에만 실행됩니다.
+
+```java
+ExecutorService workers = Executors.newCachedThreadPool();
+app.get("/report", (req, res) -> {
+    Future<?> job = workers.submit(() -> {
+        Thread.sleep(5000);                    // 오래 걸리는 작업
+        res.send("report");
+        return null;
+    });
+    res.onAbort(() -> job.cancel(true));       // 클라이언트가 떠나면 작업을 취소합니다
+});
+```
+
+Kotlin:
+
+```kotlin
+val workers = Executors.newCachedThreadPool()
+app.get("/report") { req, res ->
+    val job = workers.submit(Runnable {
+        Thread.sleep(5000)
+        res.send("report")
+    })
+    res.onAbort { job.cancel(true) }
+}
+```
+
+직접 만든 어댑터의 한계: `HttpExchange.onAbort`의 SPI 기본 구현은 인자를 검사하고 아무것도 하지 않습니다. 그래서 직접 만든 `HttpAdapter`의 exchange가 이 메서드를 재정의하지 않으면, 클라이언트가 연결을 끊어도 `onAbort` 리스너가 한 번도 불리지 않을 수 있습니다. 앱이 `res.abort`를 부르면 그때도 실행됩니다. 기본 제공 TinyHttpd 어댑터와 서블릿 어댑터는 연결 끊김을 알립니다.
+
+## 길이를 아는 스트림 전달
+
+`res.relay(in, contentLength)`는 스트림을 정해진 길이로 보냅니다. 다른 서버에서 받은 응답을 상태·헤더·길이 그대로 넘기는 프록시처럼, 앱이 헤더를 모두 정한 본문을 보낼 때 씁니다. `res.stream(in, contentType)`과 다른 점은 다음과 같습니다.
+
+- `Content-Type`을 더하거나 바꾸지 않습니다. 앱이 먼저 정한 값이 있으면 그 값을 보내고, 없으면 보내지 않습니다.
+- `Content-Type`과 `Content-Length` 말고는 `relay`를 부르기 전에 앱이 정한 헤더만 보냅니다. 앱이 정한 `Content-Length`와 `Transfer-Encoding`은 버리고 `contentLength`로 다시 정합니다.
+- `app.defaultCache`를 붙이지 않습니다.
+- `contentLength`가 0 이상이면 정확히 `contentLength` 바이트를 보내고, 스트림이 먼저 끝나면 응답을 중단합니다(연결을 끊습니다). 스트림이 더 길면 그 길이에서 자릅니다.
+- `-1`이면 길이를 정하지 않고 보냅니다. 프레이밍(chunked 등)은 어댑터가 정합니다.
+- `-1`보다 작으면 `IllegalArgumentException`을 던지고 입력을 닫습니다.
+- `HEAD` 요청과 `304` 응답은 0 이상의 길이를 `Content-Length`로 두고 본문은 보내지 않습니다. `204` 응답은 본문도 `Content-Length`도 보내지 않습니다.
+- 스트림 소유권은 `res.stream`과 같습니다. 성공·실패·`abort` 어느 경우든 NaruServe가 입력을 한 번 닫으므로 앱이 미리 닫지 마세요.
+
+`304` 응답에서 `res.relay`는 길이를 어댑터에 넘기고, 클라이언트는 어댑터가 그 `Content-Length`를 쓸 때만 봅니다. TinyHttpd 3.1.1은 `304`에 `Content-Length`를 쓰지 않으며(RFC 9110 §8.6이 허용합니다), 서블릿 어댑터는 길이를 컨테이너에 넘깁니다. `HEAD` 응답은 모든 기본 제공 어댑터에서 `Content-Length`를 유지합니다.
+
+Express에는 대응 API가 없습니다. 가장 가까운 방법은 `res.set('Content-Length', n)` 뒤 `upstream.pipe(res)`입니다.
+
+```java
+app.get("/backup", (req, res) -> {
+    File backup = new File("/data/backup.bin");
+    res.type("application/octet-stream");
+    res.relay(new FileInputStream(backup), backup.length());   // NaruServe가 스트림을 닫습니다
+});
+```
+
+Kotlin:
+
+```kotlin
+app.get("/backup") { req, res ->
+    val backup = File("/data/backup.bin")
+    res.type("application/octet-stream")
+    res.relay(FileInputStream(backup), backup.length())
+}
+```
+
+## 헤더 검사
+
+`com.snoworca.naruserve.common` 패키지의 `HttpHeaderValues`는 `res.header`와 `res.append`가 쓰는 헤더 검사를 공개합니다. 이름은 `HttpHeaderValues.isToken(name)`, 값은 `HttpHeaderValues.isFieldValue(value)`가 검사합니다. 보내기 전에 값을 확인해서 예외 대신 다른 응답을 고를 때 씁니다.
+
+| 메서드 | 검사 대상 | 결과 |
+|---|---|---|
+| `HttpHeaderValues.isToken(name)` | 헤더 이름(HTTP 토큰) | 빈 문자열, 공백·`:`이 든 이름은 `false` |
+| `HttpHeaderValues.isFieldValue(value)` | 헤더 값 | 빈 문자열과 HTAB(탭)은 `true`, CR, LF, NUL, DEL과 U+00FF를 넘는 문자는 `false` |
+
+Express에는 없습니다. 가장 가까운 것은 Node의 `http.validateHeaderName`과 `http.validateHeaderValue`이며, 불리언을 돌려주지 않고 예외를 던집니다.
+
+```java
+import com.snoworca.naruserve.common.HttpHeaderValues;
+
+app.get("/echo", (req, res) -> {
+    String value = req.query("v");
+    if (value == null || !HttpHeaderValues.isFieldValue(value)) {
+        res.status(400).send("bad header value");   // 예외 대신 400
+        return;
+    }
+    res.header("X-Echo", value).send("ok");
+});
+```
+
+Kotlin:
+
+```kotlin
+app.get("/echo") { req, res ->
+    val value = req.query("v")
+    if (value == null || !HttpHeaderValues.isFieldValue(value)) {
+        res.status(400).send("bad header value")
+    } else {
+        res.header("X-Echo", value).send("ok")
+    }
+}
+```
