@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLSocketFactory;
 import org.jspecify.annotations.Nullable;
@@ -55,9 +54,8 @@ public final class Proxy implements Middleware {
     private static final int MAX_LINE = 64 * 1024;
     /** The most header lines one backend response head may hold. */
     private static final int MAX_HEADER_LINES = 1000;
-
-    /** Request header names the proxy writes itself or never forwards. */
-    private static final Set<String> NOT_FORWARDED = HeaderRules.REQUEST_NOT_FORWARDED;
+    /** The most trailer lines one chunked backend response body may end with. */
+    private static final int MAX_TRAILER_LINES = 1000;
 
     private final Target target;
     private final Options options;
@@ -73,39 +71,31 @@ public final class Proxy implements Middleware {
      */
     // @req IR-PROXY-001
     public static Proxy to(String url) {
-        return new Proxy(Target.parse(url), new Options());
+        return new Proxy(Target.parse(url), Options.defaults());
     }
 
     /** The limit for the TCP connect to the backend (default 10 seconds). */
     // @req IR-PROXY-001
     public Proxy connectTimeout(long amount, TimeUnit unit) {
-        Options c = options.copy();
-        c.connectTimeoutNanos = positiveNanos(amount, unit, "connectTimeout");
-        return new Proxy(target, c);
+        return new Proxy(target, options.withConnectTimeoutNanos(positiveNanos(amount, unit, "connectTimeout")));
     }
 
     /** The limit for a backend write that makes no progress (default 60 seconds). */
     // @req IR-PROXY-001
     public Proxy writeTimeout(long amount, TimeUnit unit) {
-        Options c = options.copy();
-        c.writeTimeoutNanos = positiveNanos(amount, unit, "writeTimeout");
-        return new Proxy(target, c);
+        return new Proxy(target, options.withWriteTimeoutNanos(positiveNanos(amount, unit, "writeTimeout")));
     }
 
     /** The limit for the first response byte and between response bytes (default 60 seconds). */
     // @req IR-PROXY-001
     public Proxy readTimeout(long amount, TimeUnit unit) {
-        Options c = options.copy();
-        c.readTimeoutNanos = positiveNanos(amount, unit, "readTimeout");
-        return new Proxy(target, c);
+        return new Proxy(target, options.withReadTimeoutNanos(positiveNanos(amount, unit, "readTimeout")));
     }
 
     /** The limit for a whole proxied request, retries included (default 5 minutes). */
     // @req IR-PROXY-001
     public Proxy totalTimeout(long amount, TimeUnit unit) {
-        Options c = options.copy();
-        c.totalTimeoutNanos = positiveNanos(amount, unit, "totalTimeout");
-        return new Proxy(target, c);
+        return new Proxy(target, options.withTotalTimeoutNanos(positiveNanos(amount, unit, "totalTimeout")));
     }
 
     /** How many more attempts a failed request may get (default 0). */
@@ -114,41 +104,31 @@ public final class Proxy implements Middleware {
         if (count < 0) {
             throw new IllegalArgumentException("retries must be at least 0, got " + count);
         }
-        Options c = options.copy();
-        c.retries = count;
-        return new Proxy(target, c);
+        return new Proxy(target, options.withRetries(count));
     }
 
     /** The wait before each retry (default 200 milliseconds). */
     // @req IR-PROXY-001
     public Proxy retryDelay(long amount, TimeUnit unit) {
-        Options c = options.copy();
-        c.retryDelayNanos = nonNegativeNanos(amount, unit, "retryDelay");
-        return new Proxy(target, c);
+        return new Proxy(target, options.withRetryDelayNanos(nonNegativeNanos(amount, unit, "retryDelay")));
     }
 
     /** Whether a backend 502 or 503 is retried for methods other than bodyless GET, HEAD and OPTIONS (default false). */
     // @req IR-PROXY-001
     public Proxy retryUnsafeMethods(boolean enabled) {
-        Options c = options.copy();
-        c.retryUnsafeMethods = enabled;
-        return new Proxy(target, c);
+        return new Proxy(target, options.withRetryUnsafeMethods(enabled));
     }
 
     /** Whether the mount prefix is removed from the forwarded path (default false: the prefix is kept). */
     // @req IR-PROXY-001
     public Proxy stripPrefix(boolean enabled) {
-        Options c = options.copy();
-        c.stripPrefix = enabled;
-        return new Proxy(target, c);
+        return new Proxy(target, options.withStripPrefix(enabled));
     }
 
     /** Whether the received {@code Host} is sent instead of the target host (default false). */
     // @req IR-PROXY-001
     public Proxy preserveHost(boolean enabled) {
-        Options c = options.copy();
-        c.preserveHost = enabled;
-        return new Proxy(target, c);
+        return new Proxy(target, options.withPreserveHost(enabled));
     }
 
     /** The request body limit in bytes for this mount (default: the app's raw body limit). */
@@ -157,9 +137,7 @@ public final class Proxy implements Middleware {
         if (bytes < 1 || bytes > MAX_BODY_LIMIT) {
             throw new IllegalArgumentException("bodyLimit must be within 1.." + MAX_BODY_LIMIT + ", got " + bytes);
         }
-        Options c = options.copy();
-        c.bodyLimit = bytes;
-        return new Proxy(target, c);
+        return new Proxy(target, options.withBodyLimit(bytes));
     }
 
     /** The most in-flight requests of this proxy and the proxies derived from it (default: no limit). */
@@ -168,53 +146,41 @@ public final class Proxy implements Middleware {
         if (limit < 1) {
             throw new IllegalArgumentException("maxConcurrent must be at least 1, got " + limit);
         }
-        Options c = options.copy();
-        c.maxConcurrent = limit;
-        return new Proxy(target, c);
+        return new Proxy(target, options.withMaxConcurrent(limit));
     }
 
     /** Sends {@code value} as request header {@code name} in place of the client's lines of that name. */
     // @req IR-PROXY-001
     public Proxy requestHeader(String name, String value) {
         HeaderRules.checkRequestRule(name, value, "requestHeader");
-        Options c = options.copy();
-        c.requestHeaderRules = appended(c.requestHeaderRules, name, value);
-        return new Proxy(target, c);
+        return new Proxy(target, options.withRequestHeaderRules(appended(options.requestHeaderRules, name, value)));
     }
 
     /** Drops the client's request header {@code name}. */
     // @req IR-PROXY-001
     public Proxy removeRequestHeader(String name) {
         HeaderRules.checkRequestRule(name, "removeRequestHeader");
-        Options c = options.copy();
-        c.requestHeaderRules = appended(c.requestHeaderRules, name, null);
-        return new Proxy(target, c);
+        return new Proxy(target, options.withRequestHeaderRules(appended(options.requestHeaderRules, name, null)));
     }
 
     /** Sends {@code value} as response header {@code name} in place of the backend's lines of that name. */
     // @req IR-PROXY-001
     public Proxy responseHeader(String name, String value) {
         HeaderRules.checkResponseRule(name, value, "responseHeader");
-        Options c = options.copy();
-        c.responseHeaderRules = appended(c.responseHeaderRules, name, value);
-        return new Proxy(target, c);
+        return new Proxy(target, options.withResponseHeaderRules(appended(options.responseHeaderRules, name, value)));
     }
 
     /** Drops the backend's response header {@code name}. */
     // @req IR-PROXY-001
     public Proxy removeResponseHeader(String name) {
         HeaderRules.checkResponseRule(name, "removeResponseHeader");
-        Options c = options.copy();
-        c.responseHeaderRules = appended(c.responseHeaderRules, name, null);
-        return new Proxy(target, c);
+        return new Proxy(target, options.withResponseHeaderRules(appended(options.responseHeaderRules, name, null)));
     }
 
     /** Whether a same-origin backend {@code Location} is rewritten to a path under the mount (default true). */
     // @req IR-PROXY-001
     public Proxy rewriteLocation(boolean enabled) {
-        Options c = options.copy();
-        c.rewriteLocation = enabled;
-        return new Proxy(target, c);
+        return new Proxy(target, options.withRewriteLocation(enabled));
     }
 
     /**
@@ -227,9 +193,7 @@ public final class Proxy implements Middleware {
         if (factory == null) {
             throw new NullPointerException("sslSocketFactory factory");
         }
-        Options c = options.copy();
-        c.sslSocketFactory = factory;
-        return new Proxy(target, c);
+        return new Proxy(target, options.withSslSocketFactory(factory));
     }
 
     /** {@code amount} of {@code unit} in nanoseconds, saturated at Long.MAX_VALUE; the amount must be above 0. */
@@ -446,7 +410,7 @@ public final class Proxy implements Middleware {
             } else if (lower.equals("transfer-encoding")) {
                 transferEncoding = true;
             }
-            if (!NOT_FORWARDED.contains(lower)) {
+            if (!HeaderRules.REQUEST_NOT_FORWARDED.contains(lower)) {
                 head.append(h.getKey()).append(": ").append(h.getValue()).append("\r\n");
             }
         }
@@ -568,46 +532,151 @@ public final class Proxy implements Middleware {
         }
     }
 
-    /** The configured values; a fresh copy is filled by each option call and never changed after it is published. */
+    /**
+     * The configured option values. Immutable: every field is final and set by the one constructor, so a
+     * {@code withX} copy that omits an argument does not compile. The compiler does not catch arguments of the same
+     * type swapped by position, so each {@code withX} must pass the fields in constructor order and change only its
+     * own position.
+     */
     private static final class Options {
-        long connectTimeoutNanos = DEFAULT_CONNECT_TIMEOUT_NANOS;
-        long writeTimeoutNanos = DEFAULT_WRITE_TIMEOUT_NANOS;
-        long readTimeoutNanos = DEFAULT_READ_TIMEOUT_NANOS;
-        long totalTimeoutNanos = DEFAULT_TOTAL_TIMEOUT_NANOS;
-        int retries;
-        long retryDelayNanos = DEFAULT_RETRY_DELAY_NANOS;
-        boolean retryUnsafeMethods;
-        boolean stripPrefix;
-        boolean preserveHost;
-        long bodyLimit = NO_BODY_LIMIT;
-        int maxConcurrent = NO_CONCURRENCY_LIMIT;
-        List<Map.Entry<String, @Nullable String>> requestHeaderRules = Collections.emptyList();
-        List<Map.Entry<String, @Nullable String>> responseHeaderRules = Collections.emptyList();
-        boolean rewriteLocation = true;
-        @Nullable SSLSocketFactory sslSocketFactory;
+        final long connectTimeoutNanos;
+        final long writeTimeoutNanos;
+        final long readTimeoutNanos;
+        final long totalTimeoutNanos;
+        final int retries;
+        final long retryDelayNanos;
+        final boolean retryUnsafeMethods;
+        final boolean stripPrefix;
+        final boolean preserveHost;
+        final long bodyLimit;
+        final int maxConcurrent;
+        final List<Map.Entry<String, @Nullable String>> requestHeaderRules;
+        final List<Map.Entry<String, @Nullable String>> responseHeaderRules;
+        final boolean rewriteLocation;
+        final @Nullable SSLSocketFactory sslSocketFactory;
 
         // @req IR-PROXY-001
-        Options copy() {
-            Options c = new Options();
-            c.connectTimeoutNanos = connectTimeoutNanos;
-            c.writeTimeoutNanos = writeTimeoutNanos;
-            c.readTimeoutNanos = readTimeoutNanos;
-            c.totalTimeoutNanos = totalTimeoutNanos;
-            c.retries = retries;
-            c.retryDelayNanos = retryDelayNanos;
-            c.retryUnsafeMethods = retryUnsafeMethods;
-            c.stripPrefix = stripPrefix;
-            c.preserveHost = preserveHost;
-            c.bodyLimit = bodyLimit;
-            c.maxConcurrent = maxConcurrent;
-            c.requestHeaderRules = requestHeaderRules;
-            c.responseHeaderRules = responseHeaderRules;
-            c.rewriteLocation = rewriteLocation;
-            c.sslSocketFactory = sslSocketFactory;
-            return c;
+        private Options(long connectTimeoutNanos, long writeTimeoutNanos, long readTimeoutNanos, long totalTimeoutNanos,
+                int retries, long retryDelayNanos, boolean retryUnsafeMethods, boolean stripPrefix,
+                boolean preserveHost, long bodyLimit, int maxConcurrent,
+                List<Map.Entry<String, @Nullable String>> requestHeaderRules,
+                List<Map.Entry<String, @Nullable String>> responseHeaderRules, boolean rewriteLocation,
+                @Nullable SSLSocketFactory sslSocketFactory) {
+            this.connectTimeoutNanos = connectTimeoutNanos;
+            this.writeTimeoutNanos = writeTimeoutNanos;
+            this.readTimeoutNanos = readTimeoutNanos;
+            this.totalTimeoutNanos = totalTimeoutNanos;
+            this.retries = retries;
+            this.retryDelayNanos = retryDelayNanos;
+            this.retryUnsafeMethods = retryUnsafeMethods;
+            this.stripPrefix = stripPrefix;
+            this.preserveHost = preserveHost;
+            this.bodyLimit = bodyLimit;
+            this.maxConcurrent = maxConcurrent;
+            this.requestHeaderRules = requestHeaderRules;
+            this.responseHeaderRules = responseHeaderRules;
+            this.rewriteLocation = rewriteLocation;
+            this.sslSocketFactory = sslSocketFactory;
+        }
+
+        /** Every option at its default. */
+        // @req IR-PROXY-001
+        static Options defaults() {
+            return new Options(DEFAULT_CONNECT_TIMEOUT_NANOS, DEFAULT_WRITE_TIMEOUT_NANOS, DEFAULT_READ_TIMEOUT_NANOS,
+                    DEFAULT_TOTAL_TIMEOUT_NANOS, 0, DEFAULT_RETRY_DELAY_NANOS, false, false, false, NO_BODY_LIMIT,
+                    NO_CONCURRENCY_LIMIT, Collections.emptyList(), Collections.emptyList(), true, null);
+        }
+
+        Options withConnectTimeoutNanos(long v) {
+            return new Options(v, writeTimeoutNanos, readTimeoutNanos, totalTimeoutNanos, retries, retryDelayNanos,
+                    retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, maxConcurrent, requestHeaderRules,
+                    responseHeaderRules, rewriteLocation, sslSocketFactory);
+        }
+
+        Options withWriteTimeoutNanos(long v) {
+            return new Options(connectTimeoutNanos, v, readTimeoutNanos, totalTimeoutNanos, retries, retryDelayNanos,
+                    retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, maxConcurrent, requestHeaderRules,
+                    responseHeaderRules, rewriteLocation, sslSocketFactory);
+        }
+
+        Options withReadTimeoutNanos(long v) {
+            return new Options(connectTimeoutNanos, writeTimeoutNanos, v, totalTimeoutNanos, retries, retryDelayNanos,
+                    retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, maxConcurrent, requestHeaderRules,
+                    responseHeaderRules, rewriteLocation, sslSocketFactory);
+        }
+
+        Options withTotalTimeoutNanos(long v) {
+            return new Options(connectTimeoutNanos, writeTimeoutNanos, readTimeoutNanos, v, retries, retryDelayNanos,
+                    retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, maxConcurrent, requestHeaderRules,
+                    responseHeaderRules, rewriteLocation, sslSocketFactory);
+        }
+
+        Options withRetries(int v) {
+            return new Options(connectTimeoutNanos, writeTimeoutNanos, readTimeoutNanos, totalTimeoutNanos, v,
+                    retryDelayNanos, retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, maxConcurrent,
+                    requestHeaderRules, responseHeaderRules, rewriteLocation, sslSocketFactory);
+        }
+
+        Options withRetryDelayNanos(long v) {
+            return new Options(connectTimeoutNanos, writeTimeoutNanos, readTimeoutNanos, totalTimeoutNanos, retries, v,
+                    retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, maxConcurrent, requestHeaderRules,
+                    responseHeaderRules, rewriteLocation, sslSocketFactory);
+        }
+
+        Options withRetryUnsafeMethods(boolean v) {
+            return new Options(connectTimeoutNanos, writeTimeoutNanos, readTimeoutNanos, totalTimeoutNanos, retries,
+                    retryDelayNanos, v, stripPrefix, preserveHost, bodyLimit, maxConcurrent, requestHeaderRules,
+                    responseHeaderRules, rewriteLocation, sslSocketFactory);
+        }
+
+        Options withStripPrefix(boolean v) {
+            return new Options(connectTimeoutNanos, writeTimeoutNanos, readTimeoutNanos, totalTimeoutNanos, retries,
+                    retryDelayNanos, retryUnsafeMethods, v, preserveHost, bodyLimit, maxConcurrent, requestHeaderRules,
+                    responseHeaderRules, rewriteLocation, sslSocketFactory);
+        }
+
+        Options withPreserveHost(boolean v) {
+            return new Options(connectTimeoutNanos, writeTimeoutNanos, readTimeoutNanos, totalTimeoutNanos, retries,
+                    retryDelayNanos, retryUnsafeMethods, stripPrefix, v, bodyLimit, maxConcurrent, requestHeaderRules,
+                    responseHeaderRules, rewriteLocation, sslSocketFactory);
+        }
+
+        Options withBodyLimit(long v) {
+            return new Options(connectTimeoutNanos, writeTimeoutNanos, readTimeoutNanos, totalTimeoutNanos, retries,
+                    retryDelayNanos, retryUnsafeMethods, stripPrefix, preserveHost, v, maxConcurrent,
+                    requestHeaderRules, responseHeaderRules, rewriteLocation, sslSocketFactory);
+        }
+
+        Options withMaxConcurrent(int v) {
+            return new Options(connectTimeoutNanos, writeTimeoutNanos, readTimeoutNanos, totalTimeoutNanos, retries,
+                    retryDelayNanos, retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, v, requestHeaderRules,
+                    responseHeaderRules, rewriteLocation, sslSocketFactory);
+        }
+
+        Options withRequestHeaderRules(List<Map.Entry<String, @Nullable String>> v) {
+            return new Options(connectTimeoutNanos, writeTimeoutNanos, readTimeoutNanos, totalTimeoutNanos, retries,
+                    retryDelayNanos, retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, maxConcurrent, v,
+                    responseHeaderRules, rewriteLocation, sslSocketFactory);
+        }
+
+        Options withResponseHeaderRules(List<Map.Entry<String, @Nullable String>> v) {
+            return new Options(connectTimeoutNanos, writeTimeoutNanos, readTimeoutNanos, totalTimeoutNanos, retries,
+                    retryDelayNanos, retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, maxConcurrent,
+                    requestHeaderRules, v, rewriteLocation, sslSocketFactory);
+        }
+
+        Options withRewriteLocation(boolean v) {
+            return new Options(connectTimeoutNanos, writeTimeoutNanos, readTimeoutNanos, totalTimeoutNanos, retries,
+                    retryDelayNanos, retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, maxConcurrent,
+                    requestHeaderRules, responseHeaderRules, v, sslSocketFactory);
+        }
+
+        Options withSslSocketFactory(@Nullable SSLSocketFactory v) {
+            return new Options(connectTimeoutNanos, writeTimeoutNanos, readTimeoutNanos, totalTimeoutNanos, retries,
+                    retryDelayNanos, retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, maxConcurrent,
+                    requestHeaderRules, responseHeaderRules, rewriteLocation, v);
         }
     }
-
     /**
      * The backend origin and base path of {@link #to}. Only the shape needed to connect is read here; the full URL
      * grammar and its rejections belong to the target URL requirement (FR-PROXY-001).
@@ -745,7 +814,7 @@ public final class Proxy implements Middleware {
                         throw new IOException("malformed header line");
                     }
                     String name = line.substring(0, colon);
-                    String value = ResponseHeaderCopier.trimOws(line.substring(colon + 1));
+                    String value = HeaderRules.trimOws(line.substring(colon + 1));
                     if (!HttpHeaderValues.isToken(name) || !HttpHeaderValues.isFieldValue(value)) {
                         throw new IOException("malformed header line");
                     }
@@ -776,7 +845,7 @@ public final class Proxy implements Middleware {
         private static boolean lastCodingIsChunked(String transferEncoding) {
             String[] codings = transferEncoding.split(",", -1);
             for (int i = codings.length - 1; i >= 0; i--) {
-                String coding = ResponseHeaderCopier.trimOws(codings[i]);
+                String coding = HeaderRules.trimOws(codings[i]);
                 if (!coding.isEmpty()) {
                     return coding.equalsIgnoreCase("chunked");
                 }
@@ -859,7 +928,7 @@ public final class Proxy implements Middleware {
             started = true;
             String line = ResponseHead.readLine(in);
             int semi = line.indexOf(';');
-            String digits = ResponseHeaderCopier.trimOws(semi < 0 ? line : line.substring(0, semi));
+            String digits = HeaderRules.trimOws(semi < 0 ? line : line.substring(0, semi));
             if (digits.isEmpty()) {
                 throw new IOException("malformed chunk size");
             }
@@ -885,7 +954,7 @@ public final class Proxy implements Middleware {
                 return true;
             }
             for (int lines = 0; !ResponseHead.readLine(in).isEmpty(); lines++) {
-                if (lines >= MAX_HEADER_LINES) {
+                if (lines >= MAX_TRAILER_LINES) {
                     throw new IOException("too many trailer lines");
                 }
             }

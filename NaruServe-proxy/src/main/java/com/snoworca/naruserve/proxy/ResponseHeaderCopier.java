@@ -51,26 +51,12 @@ final class ResponseHeaderCopier {
                 continue;
             }
             for (String token : line.getValue().split(",", -1)) {
-                String trimmed = trimOws(token);
+                String trimmed = HeaderRules.trimOws(token);
                 if (!trimmed.isEmpty()) {
                     names.add(trimmed.toLowerCase(Locale.ROOT));
                 }
             }
         }
         return names;
-    }
-
-    /** {@code s} without leading and trailing spaces and horizontal tabs (RFC 9110 OWS). */
-    // @req FR-PROXY-011
-    static String trimOws(String s) {
-        int start = 0;
-        int end = s.length();
-        while (start < end && (s.charAt(start) == ' ' || s.charAt(start) == '\t')) {
-            start++;
-        }
-        while (end > start && (s.charAt(end - 1) == ' ' || s.charAt(end - 1) == '\t')) {
-            end--;
-        }
-        return s.substring(start, end);
     }
 }

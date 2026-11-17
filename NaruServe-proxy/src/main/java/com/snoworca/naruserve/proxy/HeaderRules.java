@@ -112,6 +112,20 @@ final class HeaderRules {
         }
     }
 
+    /** {@code s} without leading and trailing spaces and horizontal tabs (RFC 9110 OWS). */
+    // @req FR-PROXY-011
+    static String trimOws(String s) {
+        int start = 0;
+        int end = s.length();
+        while (start < end && (s.charAt(start) == ' ' || s.charAt(start) == '\t')) {
+            start++;
+        }
+        while (end > start && (s.charAt(end - 1) == ' ' || s.charAt(end - 1) == '\t')) {
+            end--;
+        }
+        return s.substring(start, end);
+    }
+
     private static Set<String> names(String... lowerCaseNames) {
         return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(lowerCaseNames)));
     }
