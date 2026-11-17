@@ -73,21 +73,26 @@ public final class Proxy implements Middleware {
     private static final Set<String> EMPTY_BODY_LENGTH_METHODS =
             Collections.unmodifiableSet(new HashSet<>(Arrays.asList("POST", "PUT", "PATCH")));
 
-    private final Target target;
+    private final TargetUrl target;
     private final Options options;
 
-    private Proxy(Target target, Options options) {
+    private Proxy(TargetUrl target, Options options) {
         this.target = target;
         this.options = options;
     }
 
     /**
      * A proxy to {@code url}, an {@code http} or {@code https} origin with an optional base path, for example
-     * {@code Proxy.to("http://127.0.0.1:8081")}; every option has its default.
+     * {@code Proxy.to("http://127.0.0.1:8081")}; every option has its default. The URL is checked here: {@code null}
+     * throws {@code NullPointerException} and every other URL throws {@code IllegalArgumentException}: one with
+     * a query, a fragment or user information, another scheme, a host that is not an ASCII name, a dotted-quad IPv4
+     * literal or a bracketed IPv6 literal without a zone id, a port outside {@code 1..65535}, or a base path that
+     * fails the request path checks once its trailing slashes are removed.
      */
     // @req IR-PROXY-001
+    // @req FR-PROXY-001
     public static Proxy to(String url) {
-        return new Proxy(Target.parse(url), Options.defaults());
+        return new Proxy(TargetUrl.parse(url), Options.defaults());
     }
 
     /** The limit for the TCP connect to the backend (default 10 seconds). */
@@ -727,85 +732,6 @@ public final class Proxy implements Middleware {
                     requestHeaderRules, responseHeaderRules, rewriteLocation, v);
         }
     }
-    /**
-     * The backend origin and base path of {@link #to}. Only the shape needed to connect is read here; the full URL
-     * grammar and its rejections belong to the target URL requirement (FR-PROXY-001).
-     */
-    private static final class Target {
-        final String scheme;
-        /** The authority as written, used as the Host value. */
-        final String authority;
-        /** The host to connect to, without IPv6 brackets. */
-        final String host;
-        final int port;
-        /** The base path without trailing slashes; empty for none. */
-        final String basePath;
-
-        private Target(String scheme, String authority, String host, int port, String basePath) {
-            this.scheme = scheme;
-            this.authority = authority;
-            this.host = host;
-            this.port = port;
-            this.basePath = basePath;
-        }
-
-        // @req IR-PROXY-001
-        static Target parse(String url) {
-            if (url == null) {
-                throw new NullPointerException("url");
-            }
-            int sep = url.indexOf("://");
-            if (sep <= 0) {
-                throw new IllegalArgumentException("not an http or https URL");
-            }
-            String scheme = url.substring(0, sep).toLowerCase(Locale.ROOT);
-            if (!scheme.equals("http") && !scheme.equals("https")) {
-                throw new IllegalArgumentException("not an http or https URL");
-            }
-            String rest = url.substring(sep + 3);
-            int slash = rest.indexOf('/');
-            String authority = slash < 0 ? rest : rest.substring(0, slash);
-            String basePath = slash < 0 ? "" : rest.substring(slash);
-            while (basePath.endsWith("/")) {
-                basePath = basePath.substring(0, basePath.length() - 1);
-            }
-            String host;
-            String port = null;
-            if (authority.startsWith("[")) {
-                int close = authority.indexOf(']');
-                if (close < 0) {
-                    throw new IllegalArgumentException("unclosed IPv6 literal");
-                }
-                host = authority.substring(1, close);
-                if (close + 1 < authority.length()) {
-                    if (authority.charAt(close + 1) != ':') {
-                        throw new IllegalArgumentException("bad authority");
-                    }
-                    port = authority.substring(close + 2);
-                }
-            } else {
-                int colon = authority.lastIndexOf(':');
-                host = colon < 0 ? authority : authority.substring(0, colon);
-                port = colon < 0 ? null : authority.substring(colon + 1);
-            }
-            if (host.isEmpty()) {
-                throw new IllegalArgumentException("no host");
-            }
-            int portNumber = scheme.equals("https") ? 443 : 80;
-            if (port != null) {
-                try {
-                    portNumber = Integer.parseInt(port);
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("bad port");
-                }
-                if (portNumber < 1 || portNumber > 65535) {
-                    throw new IllegalArgumentException("bad port");
-                }
-            }
-            return new Target(scheme, authority, host, portNumber, basePath);
-        }
-    }
-
     /**
      * The status, header lines and framing headers of one backend response head, interim 1xx heads skipped. Every
      * header line must have a token name and a value {@code res.header} accepts, or the head is unreadable.
