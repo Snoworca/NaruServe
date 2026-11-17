@@ -1,0 +1,41 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-ops-dx-009",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "OPS-DX-009"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "regression_baseline": {
+  "source": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+  "failed_test_ids": []
+ },
+ "started_at": "2026-11-17T07:46:06Z",
+ "updated_at": "2026-11-17T08:00:37Z",
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.RawResponseDocsKotlinTest :test --tests com.snoworca.naruserve.docs.DocsExamplesCompileTest --rerun --continue",
+  "exit_code": 1,
+  "captured_failure": "9 failed: AC-1..AC-7 docs tests (missing heading), carry-forward Javadoc test, OPS_DX_009_AC6 Java compile test",
+  "timestamp": "2026-11-17T08:00:37Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests RawResponseDocsKotlinTest --tests KotlinDocsMarkersTest --tests HttpDocsTest :test --tests 'com.snoworca.naruserve.docs.*' --rerun",
+  "exit_code": 0,
+  "timestamp": "2026-11-17T08:00:37Z"
+ },
+ "regression_summary": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "scope": "full",
+  "passed": 4041,
+  "failed": 0
+ }
+}

@@ -1,0 +1,71 @@
+{
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-7": {
+  "head": "1e74c5851762ce0978de2e23891215f5450c8614",
+  "commits": 3,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0
+  },
+  "landed": [
+   "FR-ENGINE-013"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [],
+  "outside_reason": "",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "exit 0, 4026 tests, 0 failures",
+  "verdict": "pass"
+ },
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-8": {
+  "head": "354f5ad4b25482079294b0985de0c17dac73ad6d",
+  "commits": 7,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "blocking_kept": 0,
+   "declared_limits": [
+    "FND-002 CRLF checkout breaks docs-test section lookup (repo LF-only)",
+    "FND-202 AC-4 text scan cannot see getChars/regex copies; backed by U+0000..U+017F sweeps at all three value-check sites",
+    "FND-301 declared-limit comment overstates sweeps beyond U+017F (AC-4 range)"
+   ],
+   "rounds": 4,
+   "check_review_round": "PASS",
+   "notes": "Rounds 2 and 3 hit fix-induced-defects-majority; per the brief the lead's recommended family_action (single-rule, then declare-limit) was applied by an independent fixer with tests first and the review re-run; round 4 PASS. Clean code: CC-001/CC-002 fixed, CC-003..005 dismissed. Analysis under .kiwi/analysis (docs/analysis is outside the write set)."
+  },
+  "landed": [
+   "IR-HTTP-012",
+   "FR-HTTP-033",
+   "OPS-DX-009"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+   "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java"
+  ],
+  "outside_reason": "one Javadoc sentence each (relay never receives defaultCache), carried forward to wave-8 from the wave-6 worker review; no other lane of stage 4 holds these files",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "exit 0, 4056 tests, 0 failures",
+  "verdict": "pass"
+ },
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-9": {
+  "head": "9378d6b722161db844e59d0c398f80a91ac9d2c3",
+  "commits": 2,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "detail": "round 1: 0 kept, 1 dropped (equivalent mutant), 1 residual FND-002 (AC-5 fixed-sleep window) resolved by applying the recommended fix (event-ordered wait, proven by late-run mutation); round 2: 0 kept, FND-002 resolved, residual RES-1 (a listener scheduled on another thread after retire would escape any black-box wait; no such path exists in the adapter) recorded as a declared test-design limit; clean code: imports, constant placement/reuse fixed, redundant AC-2 contiguity assertion and helper ordering note dismissed (removing an assertion would weaken the test)."
+  },
+  "landed": [
+   "FR-SVL-010"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [],
+  "outside_reason": "",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "exit 0, 4030 tests, 0 failures",
+  "verdict": "pass"
+ }
+}

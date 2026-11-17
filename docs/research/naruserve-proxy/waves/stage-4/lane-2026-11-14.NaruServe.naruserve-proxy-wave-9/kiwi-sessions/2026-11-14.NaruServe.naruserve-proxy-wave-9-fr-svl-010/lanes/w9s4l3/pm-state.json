@@ -1,0 +1,55 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-9-fr-svl-010",
+ "base_sha": "c2a554ff053c34f488ec5e513413c970abd67368",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-SVL-010"
+ ],
+ "req_filter": [
+  "FR-SVL-010"
+ ],
+ "write_set": [
+  "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawAccessTest.java"
+ ],
+ "started_at": "2026-11-17T07:24:38Z",
+ "last_updated_at": "2026-11-17T07:37:36Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-17T07:24:38Z",
+  "ended_at": "2026-11-17T07:37:36Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-9-fr-svl-010",
+  "result_summary": "11 tests pin AC-1..5 (all met at base); no implementation change; regression 4030/0",
+  "changed": true,
+  "commit_sha": null,
+  "commits": [
+   {
+    "req_id": "FR-SVL-010",
+    "test_sha": "b4e341cbad70943765d2cee31ff622f0b68ac504",
+    "implementation_sha": null
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-17T07:24:38Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-SVL-010": "evolving"
+  },
+  "status_snapshot": {
+   "FR-SVL-010": "planned"
+  }
+ },
+ "req_coverage": {},
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-9-fr-svl-010/lanes/w9s4l3/reports/pm-final.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": null
+}

@@ -1,0 +1,92 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-7",
+ "wave": "wave-7",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-7",
+ "base_sha": "02be199bde5257600b8ddfc28d6c06a783c8cdfa",
+ "head_sha": "1e74c5851762ce0978de2e23891215f5450c8614",
+ "commits": [
+  {
+   "sha": "0066d615631eba8685173235cf157393e4dc9a63",
+   "subject": "test(tinyhttpd): pin raw request access over real sockets and the FQN exception mapping",
+   "req": "FR-ENGINE-013",
+   "kind": "test"
+  },
+  {
+   "sha": "6c502cd4b70fe444da3321b02d633f24e8a0a8d3",
+   "subject": "fix(tinyhttpd): name TinyHttpd's BodyTooLargeException by its fully qualified name",
+   "req": "FR-ENGINE-013",
+   "kind": "implementation"
+  },
+  {
+   "sha": "1e74c5851762ce0978de2e23891215f5450c8614",
+   "subject": "refactor(tinyhttpd): tidy the FR-ENGINE-013 tests and the FQN rationale",
+   "req": "FR-ENGINE-013",
+   "kind": "review"
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "FR-ENGINE-013"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-7/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-7/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-7-fr-engine-013/lanes/w7s4l1/reports/pm-20261117T074124Z.md",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-7/.kiwi/sessions/2026-11-17.naruserve.self-w7-0745/analysis/report.md"
+ ],
+ "red_evidence": [
+  {
+   "req": "FR-ENGINE-013",
+   "test": "TinyHttpdBodyStreamTest#FR_ENGINE_013_AC4_moduleSourcesNameTinyHttpdsBodyTooLargeExceptionOnlyByFullyQualifiedName",
+   "red_output": "AssertionError: single-type or on-demand imports of TinyHttpd's BodyTooLargeException package expected:<[]> but was:<[src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java: import com.snoworca.tinyhttpd.http.BodyTooLargeException;]>"
+  },
+  {
+   "req": "FR-ENGINE-013",
+   "test": "RawRequestSocketTest#FR_ENGINE_013_AC1_headerNamesAndRawHeadersFollowWireOrderAndCase",
+   "red_output": "green at base (behaviour pin)"
+  },
+  {
+   "req": "FR-ENGINE-013",
+   "test": "RawRequestSocketTest#FR_ENGINE_013_AC2_chunkedBodyStreamYieldsTheDechunkedPayloadOnly / gzipBodyStreamYieldsTheCompressedBytesAsSent",
+   "red_output": "green at base (behaviour pin)"
+  },
+  {
+   "req": "FR-ENGINE-013",
+   "test": "RawRequestSocketTest#FR_ENGINE_013_AC3_unreadBodyStreamOf32KiBKeepsTheKeepAliveConnectionUsable",
+   "red_output": "green at base (behaviour pin)"
+  },
+  {
+   "req": "FR-ENGINE-013",
+   "test": "TinyHttpdBodyStreamTest#FR_ENGINE_013_AC4_tinyHttpdBodyTooLargeExceptionMapsTo413KeepingTheCause",
+   "red_output": "green at base (behaviour pin)"
+  },
+  {
+   "req": "FR-ENGINE-013",
+   "test": "RawRequestSocketTest#FR_ENGINE_013_AC5_chunkedBodyOverRawBodyLimitEscapingTheHandlerGives413StandardBody",
+   "red_output": "green at base (behaviour pin)"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0
+ },
+ "intentionally_empty": null,
+ "behaviour_pins": "AC-1, AC-2, AC-3, AC-5 and the AC-4 mapping test were already met at base and are committed as pinning tests; only the AC-4 FQN source guard was red before the implementation commit.",
+ "design_refuted": [],
+ "srs_deltas": [],
+ "out_of_lease_paths": [],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "check_test_sufficiency ids=[FR-ENGINE-013] in the worktree: AC-1..AC-5 all cited, passed=true"
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4026,
+  "failures": 0,
+  "exit_code": 0
+ },
+ "bootstrap": "not-applicable"
+}

@@ -1,0 +1,11 @@
+{"event":"phase_start","ts":"2026-11-17T07:26:02Z","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-8-ir-http-012","target":"0.12.0","mode":"normal"}
+{"event":"run_start","ts":"2026-11-17T07:26:02Z","req_ids":["IR-HTTP-012"]}
+{"event":"tdd_draft_done","ts":"2026-11-17T07:26:52Z","iter":1,"file_paths":["NaruServe-api/src/test/java/com/snoworca/naruserve/common/HttpHeaderValuesTest.java","NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpHeaderValuesKotlinTest.kt"]}
+{"event":"tdd_red_confirmed","ts":"2026-11-17T07:26:52Z","exit_code":1,"signal":"compileTestKotlin: Unresolved reference 'isFieldValue' (HttpHeaderValuesKotlinTest.kt:11); compileTestJava: cannot find symbol HttpHeaderValuesTest.java:36-52"}
+{"event": "tdd_review_done", "iter": 1, "finding_summary": {"kept": 1, "dropped": 5}, "note": "kept: AC-4 'only through' structural gap -> added delegation source-check test", "ts": "2026-11-17T07:34:48Z"}
+{"event": "impl_done", "iter": 1, "files_changed": ["NaruServe-api/src/main/java/com/snoworca/naruserve/common/HttpHeaderValues.java", "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java"], "ts": "2026-11-17T07:34:48Z"}
+{"event": "formal_review_done", "iter": 1, "finding_summary": {"kept": 0, "dropped": 0}, "note": "mock-scan none; build exit 0; coverage --tests passed AC-1..5; callers: DefaultResponse delegate + public API", "ts": "2026-11-17T07:34:48Z"}
+{"event": "prickly_review_done", "iter": 1, "finding_summary": {"kept": 0, "dropped": 8}, "ts": "2026-11-17T07:34:48Z"}
+{"event": "test_green", "exit_code": 0, "ts": "2026-11-17T07:34:48Z"}
+{"event": "regression_done", "scope": "full", "passed": 4024, "failed": 0, "ts": "2026-11-17T07:34:48Z"}
+{"event": "run_done", "green": true, "regression": "pass", "ts": "2026-11-17T07:34:48Z"}

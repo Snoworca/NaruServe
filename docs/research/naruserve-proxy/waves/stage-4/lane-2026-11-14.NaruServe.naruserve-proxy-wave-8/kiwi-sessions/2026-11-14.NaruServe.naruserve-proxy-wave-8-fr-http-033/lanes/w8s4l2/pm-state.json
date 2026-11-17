@@ -1,0 +1,56 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-fr-http-033",
+ "base_sha": "f8f910c9a1e1cf88762598a9fbe46ebbb9a3b863",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-HTTP-033"
+ ],
+ "req_filter": [
+  "FR-HTTP-033"
+ ],
+ "write_set": [
+  "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseAppendTest.java"
+ ],
+ "started_at": "2026-11-17T07:35:42Z",
+ "last_updated_at": "2026-11-17T07:42:17Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-17T07:35:42Z",
+  "ended_at": "2026-11-17T07:42:17Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-fr-http-033",
+  "result_summary": "FR-HTTP-033 behaviour pin: 6 tests green at base; append already met via IR-HTTP-014; mutation-checked; full build 4031/0",
+  "changed": true,
+  "commit_sha": null,
+  "commits": [
+   {
+    "req_id": "FR-HTTP-033",
+    "test_sha": "d527571",
+    "implementation_sha": null
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-17T07:35:42Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-HTTP-033": "evolving"
+  },
+  "status_snapshot": {
+   "FR-HTTP-033": "planned"
+  }
+ },
+ "req_coverage": {},
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-8-fr-http-033/lanes/w8s4l2/reports/pm-2026-11-17T074217Z.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": null,
+ "intentionally_empty": "FR-HTTP-033 implementation commit intentionally empty: DefaultResponse.append (IR-HTTP-014) already meets AC-1..AC-6 at base"
+}

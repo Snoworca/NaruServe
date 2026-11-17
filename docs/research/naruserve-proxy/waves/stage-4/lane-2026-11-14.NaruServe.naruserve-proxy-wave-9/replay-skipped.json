@@ -1,0 +1,16 @@
+[
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "allowIncomplete": false,
+   "date": "2026-11-17",
+   "requirementIds": [
+    "FR-SVL-010"
+   ],
+   "summary": "[req] FR-SVL-010 \u2014 servlet adapter raw access conformance pinned by ServletRawAccessTest on embedded Jetty 9.4 (headerNames/rawHeaders grouping, bodyStream raw bytes, relay framing, onAbort). green=PASS (11/11). files: NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawAccessTest.java. AC: FR-SVL-010 AC-1..5 PASS (behaviour pins, no production change). regression 4030/0 failures.",
+   "target": "0.12.0"
+  },
+  "argsHash": "3a048325963a89ab587fd20bfd95864f792c5108",
+  "action": "apply"
+ }
+]

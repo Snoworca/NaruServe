@@ -1,0 +1,42 @@
+[
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-17",
+   "summary": "[req] IR-HTTP-012 \u2014 public HttpHeaderValues.isFieldValue; DefaultResponse value check delegates. green=PASS (6/6). files: common/HttpHeaderValues.java, internal/DefaultResponse.java, common/HttpHeaderValuesTest.java, HttpHeaderValuesKotlinTest.kt. AC: IR-HTTP-012 AC-1..5 PASS",
+   "requirementIds": [
+    "IR-HTTP-012"
+   ],
+   "target": "0.12.0",
+   "scope": "HTTP"
+  },
+  "argsHash": "eb901b6f0ba4b453be5d625d2223bbf5163d47ea",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-17",
+   "summary": "[req] FR-HTTP-033 - res.append adds a header line under the res.header check (behaviour pin - already met at base by the IR-HTTP-014 DefaultResponse.append; no production change). green=PASS (6/6). files: test ResponseAppendTest.java. AC: FR-HTTP-033 AC-1..6 PASS",
+   "requirementIds": [
+    "FR-HTTP-033"
+   ],
+   "target": "0.12.0"
+  },
+  "argsHash": "f8ccabf8688844c97792957d6d43af9c874ade54",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-17",
+   "summary": "[req] OPS-DX-009 - response.md and en/response.md document res.append, res.onAbort with the custom-adapter limit, res.relay with the 304 Content-Length per adapter, and HttpHeaderValues.isFieldValue next to isToken, with Express counterparts and Java and Kotlin examples; Response#relay and RestApp#defaultCache Javadocs say a relayed response never receives defaultCache. green=PASS (13/13). files: docs/api/response.md, docs/api/en/response.md, Response.java, RestApp.java, test RawResponseDocsKotlinTest.kt, DocsExamplesCompileTest.java. AC: OPS-DX-009 AC-1..7 PASS",
+   "requirementIds": [
+    "OPS-DX-009"
+   ],
+   "target": "0.12.0"
+  },
+  "argsHash": "4956767ad10db2ff18d82d8bac1d1e9df22c21e7",
+  "action": "apply"
+ }
+]

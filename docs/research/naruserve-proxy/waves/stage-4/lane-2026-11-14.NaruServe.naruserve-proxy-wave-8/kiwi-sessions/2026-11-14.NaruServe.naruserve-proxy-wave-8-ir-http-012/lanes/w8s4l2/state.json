@@ -1,0 +1,67 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-ir-http-012",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "IR-HTTP-012"
+ ],
+ "write_set": [
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/common/HttpHeaderValues.java",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+  "NaruServe-api/src/test/java/com/snoworca/naruserve/common/HttpHeaderValuesTest.java",
+  "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpHeaderValuesKotlinTest.kt"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "started_at": "2026-11-17T07:26:02Z",
+ "updated_at": "2026-11-17T07:34:48Z",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "regression_baseline": {
+  "source": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4",
+  "failed_test_ids": [],
+  "passed": 3829,
+  "failed": 0
+ },
+ "mcp_call_log": [],
+ "pending_mutations": "deferred to .kiwi/deferred-srs-mutations.jsonl (10 calls)",
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.common.HttpHeaderValuesTest --tests com.snoworca.naruserve.HttpHeaderValuesKotlinTest",
+  "exit_code": 1,
+  "captured_failure": "compileTestKotlin FAILED: HttpHeaderValuesKotlinTest.kt:11:44 Unresolved reference 'isFieldValue'; compileTestJava FAILED: HttpHeaderValuesTest.java:36-52 cannot find symbol; delegation test vs pre-change DefaultResponse: irHttp012Ac4_defaultResponseValueCheckDelegatesWithoutARuleOfItsOwn AssertionError",
+  "timestamp": "2026-11-17T07:34:48Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests ...HttpHeaderValuesTest --tests ...HttpHeaderValuesKotlinTest --tests ...DefaultResponseTest --tests '*MimeType*' --tests '*Header*'",
+  "exit_code": 0,
+  "timestamp": "2026-11-17T07:34:48Z"
+ },
+ "regression_summary": {
+  "last_run_at": "2026-11-17T07:34:48Z",
+  "scope": "full",
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "passed": 4024,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "loop_counters": {
+  "phase1": {
+   "kept": 1,
+   "dropped": 5,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 0,
+   "dropped": 8,
+   "rounds": 0
+  }
+ }
+}

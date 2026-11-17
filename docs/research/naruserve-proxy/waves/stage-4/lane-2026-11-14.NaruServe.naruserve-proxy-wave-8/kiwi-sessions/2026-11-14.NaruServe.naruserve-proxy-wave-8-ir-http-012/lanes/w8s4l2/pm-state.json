@@ -1,0 +1,58 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-ir-http-012",
+ "base_sha": "464cd315771a48acd743889ceca7cf690a01fbce",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "IR-HTTP-012"
+ ],
+ "req_filter": [
+  "IR-HTTP-012"
+ ],
+ "write_set": [
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/common/HttpHeaderValues.java",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+  "NaruServe-api/src/test/java/com/snoworca/naruserve/common/HttpHeaderValuesTest.java",
+  "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpHeaderValuesKotlinTest.kt"
+ ],
+ "started_at": "2026-11-17T07:24:42Z",
+ "last_updated_at": "2026-11-17T07:35:32Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-17T07:24:42Z",
+  "ended_at": "2026-11-17T07:35:32Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-ir-http-012",
+  "result_summary": "IR-HTTP-012: public HttpHeaderValues.isFieldValue, DefaultResponse delegates; 6 tests red->green; full build 4024/0",
+  "changed": true,
+  "commit_sha": "f8f910c",
+  "commits": [
+   {
+    "req_id": "IR-HTTP-012",
+    "test_sha": "5f9e46d",
+    "implementation_sha": "f8f910c"
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-17T07:24:42Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "IR-HTTP-012": "evolving"
+  },
+  "status_snapshot": {
+   "IR-HTTP-012": "planned"
+  }
+ },
+ "req_coverage": {},
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-8-ir-http-012/lanes/w8s4l2/reports/pm-2026-11-17T073532Z.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": null
+}

@@ -1,0 +1,148 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-8",
+ "wave": "wave-8",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-8",
+ "base_sha": "464cd315771a48acd743889ceca7cf690a01fbce",
+ "head_sha": "354f5ad4b25482079294b0985de0c17dac73ad6d",
+ "commits": [
+  {
+   "sha": "5f9e46d6f4d1b3e81c37664a94ed8957b2f982e3",
+   "subject": "test(http): pin the public HttpHeaderValues.isFieldValue predicate",
+   "req": "IR-HTTP-012",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "f8f910c9a1e1cf88762598a9fbe46ebbb9a3b863",
+   "subject": "feat(http): make HttpHeaderValues.isFieldValue the public header value predicate",
+   "req": "IR-HTTP-012",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "d527571a0983822290d7a07ed4582850fe10db13",
+   "subject": "test(http): pin res.append header-line semantics end to end",
+   "req": "FR-HTTP-033",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "0fd2fe0a511b01f17335959d0fedd404adac480e",
+   "subject": "test(docs): pin the raw response API sections of response.md",
+   "req": "OPS-DX-009",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "8b178a63b40a3f82b918d15640f0c4bc47ed3c60",
+   "subject": "docs(api): document res.append, res.onAbort, res.relay and isFieldValue",
+   "req": "OPS-DX-009",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "1c0488f38d5fa2c87f20fc6d36a883f78c5a4a98",
+   "subject": "test(http): check isFieldValue delegation by scoped rule and value sweeps",
+   "req": "IR-HTTP-012",
+   "kind": "review",
+   "missing_trailers": false
+  },
+  {
+   "sha": "354f5ad4b25482079294b0985de0c17dac73ad6d",
+   "subject": "refactor(docs): share the raw response member list in the OPS-DX-009 compile test",
+   "req": "OPS-DX-009",
+   "kind": "review",
+   "missing_trailers": false
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "IR-HTTP-012",
+   "FR-HTTP-033",
+   "OPS-DX-009"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-8/.kiwi/deferred-srs-mutations.jsonl",
+ "deferred_queue_notes": "29 mutations (IR-HTTP-012 10, FR-HTTP-033 9, OPS-DX-009 10 after drop). The OPS-DX-009 kiwi-coder appended update_status implemented; the PM removed it (--no-final: promotion belongs to the host) into .kiwi/deferred-srs-mutations.dropped.jsonl. IR-HTTP-012 AC-4 evidence line numbers in HttpHeaderValuesTest.java predate review commit 1c0488f (tests were rewritten/extended there); host should re-anchor evidence to 1c0488f.",
+ "reports": [
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-8/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-8-ir-http-012/lanes/w8s4l2/reports",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-8/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-8-fr-http-033/lanes/w8s4l2/reports",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-8/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-8-ops-dx-009/lanes/w8s4l2/reports",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-8/.kiwi/analysis/kiwi-review-fix-loop-2026-11-17.naruserve.self-w8review/report.md"
+ ],
+ "red_evidence": [
+  {
+   "req": "IR-HTTP-012",
+   "test": "HttpHeaderValuesKotlinTest AC-5 / HttpHeaderValuesTest AC-1..AC-4",
+   "red_output": "compileTestKotlin FAILED: Unresolved reference 'isFieldValue'; compileTestJava FAILED: cannot find symbol isFieldValue"
+  },
+  {
+   "req": "FR-HTTP-033",
+   "test": "ResponseAppendTest AC-1..AC-6",
+   "red_output": "none at base (behaviour pin); mutation-verified: add->put fails AC-1/2/3, no checkHeader fails AC-4/5, no requireNew fails AC-6"
+  },
+  {
+   "req": "OPS-DX-009",
+   "test": "RawResponseDocsKotlinTest + DocsExamplesCompileTest.OPS_DX_009_AC6",
+   "red_output": "12 tests, 8 failed (missing sections / 'response.md lacks append(' / relay Javadoc lacks defaultCache sentence); DocsExamplesCompileTest 29 tests, 1 failed"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "blocking_kept": 0,
+  "declared_limits": [
+   "FND-002 CRLF checkout breaks docs-test section lookup (repo LF-only)",
+   "FND-202 AC-4 text scan cannot see getChars/regex copies; backed by U+0000..U+017F sweeps at all three value-check sites",
+   "FND-301 declared-limit comment overstates sweeps beyond U+017F (AC-4 range)"
+  ],
+  "rounds": 4,
+  "check_review_round": "PASS",
+  "notes": "Rounds 2 and 3 hit fix-induced-defects-majority; per the brief the lead's recommended family_action (single-rule, then declare-limit) was applied by an independent fixer with tests first and the review re-run; round 4 PASS. Clean code: CC-001/CC-002 fixed, CC-003..005 dismissed. Analysis under .kiwi/analysis (docs/analysis is outside the write set)."
+ },
+ "intentionally_empty": [
+  {
+   "req": "FR-HTTP-033",
+   "kind": "implementation",
+   "reason": "DefaultResponse.append (added for IR-HTTP-014) already met AC-1..AC-6 at base; tests committed as a behaviour pin (d527571)"
+  }
+ ],
+ "design_refuted": [],
+ "carry_forward_closed": [
+  {
+   "finding": "LP-10 / C-005",
+   "by": "8b178a6",
+   "evidence": "docs/api/response.md and en document append(, onAbort(, relay(; asserted by RawResponseDocsKotlinTest"
+  },
+  {
+   "finding": "FR-HTTP-036 AC-5 Javadoc",
+   "by": "8b178a6",
+   "evidence": "Response#relay and RestApp#defaultCache Javadoc state a relayed response never receives defaultCache; asserted by RawResponseDocsKotlinTest"
+  }
+ ],
+ "srs_deltas": [],
+ "out_of_lease_paths": [
+  {
+   "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+   "reason": "carry-forward FR-HTTP-036 AC-5: Javadoc sentence only (relayed response never receives defaultCache)"
+  },
+  {
+   "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+   "reason": "carry-forward FR-HTTP-036 AC-5: Javadoc sentence only (relayed response never receives defaultCache)"
+  }
+ ],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "speckiwi coverage --tests --ids IR-HTTP-012,FR-HTTP-033,OPS-DX-009: passed=true, requirement gaps []"
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4056,
+  "failures": 0,
+  "exit_code": 0
+ },
+ "bootstrap": "not-applicable"
+}

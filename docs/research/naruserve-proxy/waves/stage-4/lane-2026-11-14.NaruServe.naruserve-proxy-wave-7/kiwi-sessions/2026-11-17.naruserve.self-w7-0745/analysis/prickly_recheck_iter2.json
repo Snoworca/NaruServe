@@ -1,0 +1,46 @@
+{
+  "findings": [],
+  "clean_code": [],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+      "hunks_total": 1,
+      "anchors": [
+        "     * {@code com.snoworca.naruserve.BodyTooLargeException} (FR-ENGINE-013 AC-4)."
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawRequestSocketTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "        assertEquals(Arrays.asList(\"x-a\", \"x-b\"), xNames);"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java",
+      "hunks_total": 3,
+      "anchors": [
+        "import static org.junit.Assert.assertFalse;",
+        "    // qualified name so it cannot be confused with the public com.snoworca.naruserve.BodyTooLargeException",
+        "            assertFalse(root.getAbsolutePath(), sources.isEmpty());"
+      ],
+      "findings": []
+    }
+  ],
+  "resolved_findings": ["CC-003", "CC-004", "CC-005"],
+  "summary": {
+    "round": 2,
+    "scope": "git diff -U0 HEAD (3 files, 5 hunks)",
+    "kept": 0,
+    "dropped": 0,
+    "residual": 0,
+    "clean_code": 0,
+    "checks": {
+      "a_test_strength": "CC-003: the remaining assertEquals(Arrays.asList(\"host\", \"x-a\", \"x-b\", \"connection\"), names.get()) is an exact, ordered List.equals check, strictly stronger than the removed filtered [x-a, x-b] check; it still proves x-a iterates before x-b, lowercase folding, and dedup of X-A/x-a. rawHeaders() wire order/case assertion unchanged. CC-005: assertFalse(msg, sources.isEmpty()) is logically identical to assertTrue(msg, !sources.isEmpty()); AC-4 vacuity guard preserved. AC-4 413 construction test untouched.",
+      "b_comment_accuracy": "Both reworded comments are accurate: the TinyHttpd exception is referenced only by FQN (map() uses instanceof com.snoworca.tinyhttpd.http.BodyTooLargeException; no import exists), which is what avoids confusion with com.snoworca.naruserve.BodyTooLargeException. The old 'cannot shadow' wording was imprecise; new wording no longer makes a Java-scoping claim. The AC-4 reference in the javadoc is correct.",
+      "c_new_issues": "None. ArrayList/Arrays/List imports in RawRequestSocketTest remain used (lines 22-24 used at 52-65); assertFalse import in TinyHttpdBodyStreamTest is used; assertTrue still used elsewhere so its import stays valid. No line exceeds 120 chars in the three files."
+    }
+  }
+}

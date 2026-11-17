@@ -1,0 +1,20 @@
+{
+  "immediate_fix": [],
+  "declared_limit": [],
+  "discussion_needed": [],
+  "rejected": [
+    {"id": "FND-001", "rationale": "Drop sound: wording-only issue in a Javadoc/test comment; the code names TinyHttpd's exception by FQN as AC-4 requires and the 413 mapping is unchanged. The inaccurate wording is handled as clean-code item CC-004.", "rejection_category": "dropped"},
+    {"id": "FND-002", "rationale": "Drop sound: execution probe showed keep-alive holds up to 65536 bytes and closes at 65537; AC-3 fixes the 32768-byte case the test uses. No AC is broken; the extra boundary case is optional.", "rejection_category": "dropped"},
+    {"id": "FND-003", "rationale": "Drop sound: suspected RST race after early 413 not reproduced in 300 probe iterations and 10 full reruns; Http helpers tolerate a reset after bytes were read.", "rejection_category": "dropped"},
+    {"id": "FND-004", "rationale": "Drop sound: textual import scan is narrow, but together with the instanceof-FQN check and the constructed-exception mapping test it still proves AC-4; no realistic AC-4-breaking regression escapes it.", "rejection_category": "dropped"},
+    {"id": "FND-005", "rationale": "Drop sound: module-relative src/ paths follow existing test convention (Wave7CsrfTest, Wave12ThrottleTest, PasswordHashersTest) and work under the mandated Gradle build.", "rejection_category": "dropped"}
+  ],
+  "kept_tiers": [],
+  "clean_code": [
+    {"id": "CC-001", "decision": "dismissed", "reason": "Conflicts with project convention and the AC itself: FR-ENGINE-013 AC-4 explicitly requires a test constructing the TinyHttpd exception that asserts the 413 mapping, and per-requirement AC-citing tests are kept even when they overlap older tests (FR-ENGINE-005 AC-1 at line 59).", "instruction": ""},
+    {"id": "CC-002", "decision": "dismissed", "reason": "The fix (moving readOneResponse/readAll into the shared RawTargetSocketTest.Http helper and deduplicating ShutdownSocketTest/NaruServe-api tests) requires touching files outside the lane write set.", "instruction": ""},
+    {"id": "CC-003", "decision": "fix", "reason": "Valid: the x- filter loop and its assertEquals are fully implied by the exact headerNames() assertEquals at line 63 and add no checking power; file is in the write set.", "instruction": "In RawRequestSocketTest.FR_ENGINE_013_AC1_headerNamesAndRawHeadersFollowWireOrderAndCase, delete the '// only the X- headers, as named by the AC' comment, the xNames list/loop (lines 66-72) and the assertEquals(Arrays.asList(\"x-a\", \"x-b\"), xNames) at line 73; keep the exact full-list assertions."},
+    {"id": "CC-004", "decision": "fix", "reason": "Valid: in TinyHttpdBodyStream.java the public com.snoworca.naruserve.BodyTooLargeException could not shadow a single-type import (JLS 6.4.1), so the stated rationale is inaccurate; both affected files are in the write set.", "instruction": "Replace the 'cannot shadow it' rationale in TinyHttpdBodyStream.java Javadoc (lines 37-38) and the TinyHttpdBodyStreamTest.java comment (lines 126-127) with: named in full so code that also uses com.snoworca.naruserve.BodyTooLargeException cannot confuse the two (FR-ENGINE-013 AC-4); no code change."},
+    {"id": "CC-005", "decision": "fix", "reason": "Valid readability improvement at a precise location in a write-set file.", "instruction": "In TinyHttpdBodyStreamTest.java line 139 replace assertTrue(root.getAbsolutePath(), !sources.isEmpty()) with assertFalse(root.getAbsolutePath(), sources.isEmpty()) and add the static import org.junit.Assert.assertFalse if missing."}
+  ]
+}

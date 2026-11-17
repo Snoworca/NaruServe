@@ -1,0 +1,8 @@
+{"event":"phase_start","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-9-fr-svl-010","target":"0.12.0","mode":"normal"}
+{"event":"tdd_draft_done","iter":1,"file_paths":["NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawAccessTest.java"]}
+{"event":"tdd_red_confirmed","exit_code":0,"note":"all ACs pinned green at base; mutation probe shows teeth"}
+{"event":"tdd_review_done","iter":1,"finding_summary":{"kept":1,"dropped":7},"note":"kept S1: AC-1 only tried add(); fixed with set/remove/clear/iterator.remove"}
+{"event":"impl_done","iter":1,"files_changed":[],"note":"no production change: all ACs met at base"}
+{"event":"test_green","exit_code":0}
+{"event":"regression_done","scope":"full","passed":4030,"failed":0}
+{"event":"run_done","green":true,"regression":"pass"}

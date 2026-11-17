@@ -1,0 +1,156 @@
+{
+ "run_id": "2026-11-17.naruserve.self-w8review",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "started_at": "2026-11-17T08:01:45Z",
+ "mode": "self",
+ "mode_flags": [
+  "--keep-clean-code",
+  "--loops 20",
+  "--no-pipeline-emit"
+ ],
+ "phase": "7",
+ "finding_queue": [],
+ "fix_iter": 3,
+ "recheck_iter": 3,
+ "clean_code_round": 1,
+ "clean_code_dismissed": [
+  "CC-003",
+  "CC-004",
+  "CC-005"
+ ],
+ "clean_code_skip": false,
+ "guarantee_scope": "wave-8 lane window 464cd31..HEAD: public HttpHeaderValues.isFieldValue + DefaultResponse delegation (IR-HTTP-012), res.append pin tests (FR-HTTP-033), response.md raw-response docs tests + relay/defaultCache Javadoc (OPS-DX-009)",
+ "declared_limits": [
+  {
+   "id": "FND-002",
+   "reason": "no_real_call_path: CRLF checkout breaks docs-section lookup; repo is LF-only, CI ubuntu, sibling docs tests share convention",
+   "evidence": "scratch port of section(): CRLF 0/4 sections found, LF 4/4"
+  },
+  {
+   "id": "FND-202",
+   "reason": "outside_guarantee_scope: text scan cannot see getChars/regex/Pattern/CharBuffer copies; behavioural sweeps at all three value-check sites cover differing rules on U+0000..U+017F",
+   "evidence": "round-3 reviewer probes P1/P2; fixer mutations M1-M5"
+  },
+  {
+   "id": "FND-301",
+   "reason": "outside_guarantee_scope: AC-4 fixes the sweep range at U+0000..U+017F; a copy differing only above U+017F passes; the declared-limit comment's 'any differing copy' overstates by that range",
+   "evidence": "round-4 mutation accepting U+2028 at all three sites: 17/17 tests pass"
+  }
+ ],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "1816573ff2bac9fb8275e19a459bdb4f55843d6e",
+   "scope": "full",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/common/HttpHeaderValues.java",
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseAppendTest.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/common/HttpHeaderValuesTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpHeaderValuesKotlinTest.kt",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawResponseDocsKotlinTest.kt",
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java"
+   ],
+   "tokens_used": 301732,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-001",
+     "tier": "block",
+     "family": "brittle-source-inspection-test",
+     "introduced_by_round": null
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "tree_sha": "b8b5b4cac850fcb7e09352337c895d0fc88f2579",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/common/HttpHeaderValues.java",
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/common/HttpHeaderValuesTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java"
+   ],
+   "tokens_used": 265436,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-101",
+     "tier": "block",
+     "family": "brittle-source-inspection-test",
+     "introduced_by_round": 1
+    },
+    {
+     "id": "FND-102",
+     "tier": "block",
+     "family": "brittle-source-inspection-test",
+     "introduced_by_round": 1
+    }
+   ],
+   "verdict": "NEEDS_USER fix-induced-defects-majority (2/2); recommended family_action single-rule applied per worker brief"
+  },
+  {
+   "round": 3,
+   "tree_sha": "11cb799b4d9d4dff28d7e30500c03513155212ba",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/common/HttpHeaderValuesTest.java"
+   ],
+   "tokens_used": 274596,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-201",
+     "tier": "block",
+     "family": "brittle-source-inspection-test",
+     "introduced_by_round": 2
+    },
+    {
+     "id": "FND-202",
+     "tier": "record",
+     "family": "brittle-source-inspection-test",
+     "introduced_by_round": 2
+    }
+   ],
+   "family_action": "declare-limit",
+   "verdict": "NEEDS_USER fix-induced-defects-majority (1/1 block); recommended declare-limit applied per worker brief"
+  },
+  {
+   "round": 4,
+   "tree_sha": "9529613007a5923038203dccf2528ca181b81f12",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/common/HttpHeaderValuesTest.java"
+   ],
+   "tokens_used": 101297,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-301",
+     "tier": "record",
+     "family": "brittle-source-inspection-test",
+     "introduced_by_round": 3
+    }
+   ]
+  }
+ ],
+ "regression_baseline": "pinned:/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json (0 failing / 3829)",
+ "regression_pass": false,
+ "pr_responded": false,
+ "failed": false
+}

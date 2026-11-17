@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-fr-http-033",
+  "sds_path": null,
+  "target": "0.12.0",
+  "req_ids": [
+    "FR-HTTP-033"
+  ],
+  "write_set": [
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseAppendTest.java"
+  ],
+  "mode": "normal",
+  "flags": [
+    "--loops 20",
+    "--defer-srs-mutation"
+  ],
+  "spawn_context": "pm-child",
+  "started_at": "2026-11-17T07:41:47Z",
+  "updated_at": "2026-11-17T07:41:47Z",
+  "frozen_at": null,
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "behaviour_pin": true,
+  "behaviour_pin_note": "already met at base by IR-HTTP-014 implementation (DefaultResponse.append); no production change",
+  "loop_counters": {
+    "phase1": {
+      "kept": 0,
+      "dropped": 4,
+      "rounds": 1
+    },
+    "phase2": {
+      "kept": 0,
+      "dropped": 0,
+      "rounds": 0
+    }
+  },
+  "red_evidence": null,
+  "red_evidence_meta": {
+    "note": "no red: all 6 tests passed at base f8f910c. Sensitivity proven by temporary mutations of DefaultResponse.append (reverted): put-instead-of-add fails AC-1/2/3; no checkHeader fails AC-4/5; no requireNew fails AC-6"
+  },
+  "green_evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.ResponseAppendTest",
+    "exit_code": 0,
+    "timestamp": "2026-11-17T07:41:47Z"
+  },
+  "green_evidence_meta": {
+    "tests": 6,
+    "failures": 0
+  },
+  "regression_baseline": {
+    "source": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+    "total_tests": 3829,
+    "failing_tests": [],
+    "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4"
+  },
+  "regression_summary": {
+    "last_run_at": "2026-11-17T07:41:47Z",
+    "scope": "full",
+    "command": "./gradlew -PtinyHttpdFromMaven=true build",
+    "exit_code": 0,
+    "passed": 4031,
+    "failed": 0,
+    "regressed_files": []
+  },
+  "mcp_call_log_deferred_to": ".kiwi/deferred-srs-mutations.jsonl",
+  "deferred_mutations_appended": 9,
+  "pending_mutations": []
+}

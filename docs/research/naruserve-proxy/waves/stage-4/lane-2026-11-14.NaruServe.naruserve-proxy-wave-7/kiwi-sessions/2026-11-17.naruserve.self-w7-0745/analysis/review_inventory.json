@@ -1,0 +1,219 @@
+{
+  "findings": [
+    {
+      "id": "FND-001",
+      "axis": "P8",
+      "verdict": "drop",
+      "evidence": {
+        "command": "javac in scratchpad/shadow: package pub.adapter; import pub.*; import eng.E; (e instanceof E) with classes pub.E and eng.E; java pub.adapter.M",
+        "output": "eng other",
+        "intent_output": "A single-type import of TinyHttpd's exception is never shadowed by the public com.snoworca.naruserve.BodyTooLargeException (JLS 6.4.1); the stated rationale is inaccurate, but the FQN form is what AC-4 mandates and behavior is unchanged."
+      },
+      "drop_reason": "Comment/rationale wording only; the code meets AC-4 and the mapping is correct.",
+      "title": "Javadoc says the public class 'cannot shadow it' but a single-type import could not have been shadowed anyway",
+      "location": {
+        "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+        "line_range": "37-38"
+      },
+      "description": "The added Javadoc (and the matching AC-4 test comment at TinyHttpdBodyStreamTest.java:126-127) justifies the FQN by shadowing. In a com.snoworca.naruserve.tinyhttpd source, the public class is only visible through an import, and a single-type import of TinyHttpd's class wins over any on-demand import. The FQN is really needed only in files that use both classes (the test).",
+      "suggested_fix": "Reword: 'named in full so files that also use com.snoworca.naruserve.BodyTooLargeException cannot confuse the two (FR-ENGINE-013 AC-4)'.",
+      "is_behavioral": false,
+      "tags": [
+        "comment",
+        "AC-4"
+      ]
+    },
+    {
+      "id": "FND-002",
+      "axis": "P1",
+      "verdict": "drop",
+      "evidence": {
+        "command": "Temporary ScratchW7ProbeTest.drainBoundary (content at /private/tmp/claude-501/-Users-beom-work-git-NaruServe/e9062f5a-947b-47f3-bb41-f7450f2a1a14/scratchpad/ScratchW7ProbeTest.java, copied into NaruServe-tinyhttpd/src/test/... then deleted): handler calls req.bodyStream() without reading/closing; pipelined second GET on the same socket; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-tinyhttpd:test --tests '*ScratchW7ProbeTest.drainBoundary' -i",
+        "output": "CL 32768 -> 200 | 201; CL 60000 -> 200 | 201; CL 65536 -> 200 | 201; CL 65537 -> 200 | <no second response>; CL 70000 / 200000 -> <no second response>; CHUNKED 32768 / 65000 -> 200 | 201",
+        "intent_output": "The keep-alive guarantee holds right up to TinyHttpd's default maxDrainBytes (65536) and the connection is closed just above it, so the requirement bound is met and the AC-3 test's mechanism does detect an undrained body."
+      },
+      "drop_reason": "Suspected gap disproven by execution: the AC-3 test only uses 32768 bytes (as the AC fixes), and the 65536 bound stated in the requirement also holds.",
+      "title": "AC-3 test exercises only 32768 bytes; requirement bound 'up to maxDrainBytes' not covered by the test",
+      "location": {
+        "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawRequestSocketTest.java",
+        "line_range": "125-170"
+      },
+      "description": "The requirement text says the connection stays usable for an unread body of up to the default maxDrainBytes; the test uses 32768 only. Probing 65536/65537 showed correct behavior on both sides of the bound.",
+      "suggested_fix": "Optional: add a 65536-byte case to pin the upper bound.",
+      "is_behavioral": true,
+      "tags": [
+        "AC-3",
+        "boundary"
+      ]
+    },
+    {
+      "id": "FND-003",
+      "axis": "P3",
+      "verdict": "drop",
+      "evidence": {
+        "command": "(a) for i in 1..10: ./gradlew -PtinyHttpdFromMaven=true :NaruServe-tinyhttpd:test --tests '*RawRequestSocketTest' --tests '*TinyHttpdBodyStreamTest' --rerun; (b) ScratchW7ProbeTest.ac5Repeat: 300 sequential chunked 2048-byte requests against rawBodyLimit(1024) with Connection: close",
+        "output": "(a) 10/10 runs: RawRequestSocketTest tests=5 failures=0 errors=0, TinyHttpdBodyStreamTest tests=6 failures=0 errors=0; (b) PROBE AC5 bad=0/300",
+        "intent_output": "No RST-before-response or timing flake observed in the 413 path where the server answers before consuming the whole chunked body."
+      },
+      "drop_reason": "Suspected flakiness (early 413 + close with unread request bytes could reset the client socket) not reproduced in 300 iterations and 10 reruns.",
+      "title": "AC-5 socket test may race a TCP reset after an early 413",
+      "location": {
+        "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawRequestSocketTest.java",
+        "line_range": "172-199"
+      },
+      "description": "The server answers 413 after reading 1025 of 2048 body bytes; a close with unread receive data could RST the client before it reads the response. Not reproduced; Http.send/readAll also tolerate a reset once bytes were read.",
+      "suggested_fix": "None needed.",
+      "is_behavioral": false,
+      "tags": [
+        "flakiness",
+        "AC-5"
+      ]
+    },
+    {
+      "id": "FND-004",
+      "axis": "P2",
+      "verdict": "drop",
+      "evidence": {
+        "command": "Static reading of TinyHttpdBodyStreamTest.java:129-152 plus the mapping test at 157-171",
+        "output": "Scan flags only exact trimmed lines 'import com.snoworca.tinyhttpd.http.BodyTooLargeException;' or 'import com.snoworca.tinyhttpd.http.*;'; separately asserts TinyHttpdBodyStream.java contains 'instanceof com.snoworca.tinyhttpd.http.BodyTooLargeException'.",
+        "intent_output": "A regression to a simple-name reference requires one of the two flagged import forms (no same-package class of that name exists), and a regression to the NaruServe class is caught by the constructed-exception 413 mapping test, so AC-4 is not vacuously satisfied."
+      },
+      "drop_reason": "Textual scan is narrow and over-strict (bans any on-demand import of the TinyHttpd http package), but no regression it misses that would break AC-4 could be constructed.",
+      "title": "AC-4 source scan is a textual line match",
+      "location": {
+        "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java",
+        "line_range": "129-152"
+      },
+      "description": "The scan relies on exact formatting of import lines and also rejects a legitimate wildcard import used for other TinyHttpd types. Combined with the mapping test it still proves AC-4.",
+      "suggested_fix": "Optional: describe the wildcard ban as deliberate in the assertion message.",
+      "is_behavioral": false,
+      "tags": [
+        "AC-4",
+        "test-design"
+      ]
+    },
+    {
+      "id": "FND-005",
+      "axis": "P7",
+      "verdict": "drop",
+      "evidence": {
+        "command": "grep -rln 'new File(\"src/' NaruServe*/src/test; grep -n workingDir build.gradle",
+        "output": "Wave7CsrfTest, Wave12ThrottleTest, PasswordHashersTest already read sources by module-relative paths; Gradle runs tests with workingDir = project dir.",
+        "intent_output": "The relative 'src/main/java' path works under the mandated Gradle build and follows existing convention; it fails only when an IDE runs the test from another working dir, which the test reports via assertTrue(root.isDirectory())."
+      },
+      "drop_reason": "Existing project convention; works under the only supported build tool.",
+      "title": "AC-4 scan depends on the test working directory",
+      "location": {
+        "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java",
+        "line_range": "134-138"
+      },
+      "description": "new File(\"src/main/java\") is resolved against the JVM working dir.",
+      "suggested_fix": "None required.",
+      "is_behavioral": false,
+      "tags": [
+        "convention"
+      ]
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-001",
+      "principle": "DRY (duplicate test assertion)",
+      "location": {
+        "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java",
+        "line_range": "59, 157-163"
+      },
+      "description": "FR_ENGINE_013_AC4_tinyHttpdBodyTooLargeExceptionMapsTo413KeepingTheCause re-asserts exactly what assertMapped(413, new com.snoworca.tinyhttpd.http.BodyTooLargeException(\"too large\")) at line 59 already checks (status 413, same cause); only the NaruServe-exception rethrow half is new."
+    },
+    {
+      "id": "CC-002",
+      "principle": "DRY (duplicated helper)",
+      "location": {
+        "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawRequestSocketTest.java",
+        "line_range": "226-251"
+      },
+      "description": "readOneResponse duplicates ShutdownSocketTest.readOneResponse (ShutdownSocketTest.java:196-215) with a different algorithm; both belong in the shared RawTargetSocketTest.Http helper. The byte[] readAll at 207-214 likewise duplicates readAll helpers in NaruServe-api tests (RequestBodyStreamTest, StartApiTest, MultipartParserTest)."
+    },
+    {
+      "id": "CC-003",
+      "principle": "Redundant code (dead assertion)",
+      "location": {
+        "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawRequestSocketTest.java",
+        "line_range": "66-74"
+      },
+      "description": "The x- name filter loop and its assertion are implied by the exact full-list assertEquals at line 63; it adds no checking power."
+    },
+    {
+      "id": "CC-004",
+      "principle": "Misleading comment",
+      "location": {
+        "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+        "line_range": "37-38"
+      },
+      "description": "'cannot shadow it' rationale is inaccurate for this file (see FND-001); same wording in TinyHttpdBodyStreamTest.java:126-127."
+    },
+    {
+      "id": "CC-005",
+      "principle": "Readability (negated assertion)",
+      "location": {
+        "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java",
+        "line_range": "139"
+      },
+      "description": "assertTrue(msg, !sources.isEmpty()) reads better as assertFalse(msg, sources.isEmpty())."
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+      "hunks_total": 4,
+      "anchors": [
+        "import com.snoworca.tinyhttpd.http.BodyTooLargeException;",
+        "     * rethrown as is. TinyHttpd's BodyTooLargeException is named in full, so the public",
+        "    // @req FR-ENGINE-013",
+        "        if (e instanceof com.snoworca.tinyhttpd.http.BodyTooLargeException) {"
+      ],
+      "findings": [
+        "FND-001"
+      ]
+    },
+    {
+      "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawRequestSocketTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "public class RawRequestSocketTest {"
+      ],
+      "findings": [
+        "FND-002",
+        "FND-003"
+      ]
+    },
+    {
+      "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java",
+      "hunks_total": 5,
+      "anchors": [
+        "import com.snoworca.tinyhttpd.http.BodyTooLargeException;",
+        "import java.io.File;",
+        "import java.nio.file.Files;",
+        "        assertMapped(413, new com.snoworca.tinyhttpd.http.BodyTooLargeException(\"too large\"));",
+        "    public void FR_ENGINE_013_AC4_moduleSourcesNameTinyHttpdsBodyTooLargeExceptionOnlyByFullyQualifiedName()"
+      ],
+      "findings": [
+        "FND-004",
+        "FND-005"
+      ]
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "by_verdict": {
+      "drop": 5
+    },
+    "by_axis": {
+      "P8": 1,
+      "P1": 1,
+      "P3": 1,
+      "P2": 1,
+      "P7": 1
+    }
+  }
+}

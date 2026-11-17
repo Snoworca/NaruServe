@@ -1,0 +1,84 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-9",
+ "wave": "wave-9",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-9",
+ "base_sha": "c2a554ff053c34f488ec5e513413c970abd67368",
+ "head_sha": "9378d6b722161db844e59d0c398f80a91ac9d2c3",
+ "commits": [
+  {
+   "sha": "b4e341cbad70943765d2cee31ff622f0b68ac504",
+   "subject": "test(servlet): pin raw access conformance on embedded Jetty",
+   "req": "FR-SVL-010",
+   "kind": "test"
+  },
+  {
+   "sha": "9378d6b722161db844e59d0c398f80a91ac9d2c3",
+   "subject": "test(servlet): order the AC-5 onAbort checks after the exchange retires",
+   "req": "FR-SVL-010",
+   "kind": "review"
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "FR-SVL-010"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-9/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-9-fr-svl-010/lanes/w9s4l3/reports/pm-final.md",
+  ".kiwi/analysis/kiwi-review-fix-loop-2026-11-17.naruserve.self-w9/"
+ ],
+ "red_evidence": [
+  {
+   "req": "FR-SVL-010",
+   "test": "ServletRawAccessTest#FR_SVL_010_AC1_*",
+   "red_output": "pin: green at base; mutation (snapshotHeaders output reversed; DefaultRequest rawHeaders modifiable) -> FAILED"
+  },
+  {
+   "req": "FR-SVL-010",
+   "test": "ServletRawAccessTest#FR_SVL_010_AC2_* (2)",
+   "red_output": "pin: green at base; mutation (reversed / sorted name order, no per-name dedupe) -> FAILED"
+  },
+  {
+   "req": "FR-SVL-010",
+   "test": "ServletRawAccessTest#FR_SVL_010_AC3_* (2)",
+   "red_output": "pin: green at base; mutation (requestBody flips a byte) -> FAILED"
+  },
+  {
+   "req": "FR-SVL-010",
+   "test": "ServletRawAccessTest#FR_SVL_010_AC4_* (4)",
+   "red_output": "pin: green at base; mutation (head() drops CL on 304/HEAD, default Content-Type, forced CL on 204) -> FAILED"
+  },
+  {
+   "req": "FR-SVL-010",
+   "test": "ServletRawAccessTest#FR_SVL_010_AC5_* (2)",
+   "red_output": "pin: green at base; mutation (finish() fires abortListeners; late listener run before retire) -> FAILED"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "detail": "round 1: 0 kept, 1 dropped (equivalent mutant), 1 residual FND-002 (AC-5 fixed-sleep window) resolved by applying the recommended fix (event-ordered wait, proven by late-run mutation); round 2: 0 kept, FND-002 resolved, residual RES-1 (a listener scheduled on another thread after retire would escape any black-box wait; no such path exists in the adapter) recorded as a declared test-design limit; clean code: imports, constant placement/reuse fixed, redundant AC-2 contiguity assertion and helper ordering note dismissed (removing an assertion would weaken the test)."
+ },
+ "intentionally_empty": {
+  "part": "implementation commit for FR-SVL-010",
+  "reason": "All five acceptance criteria already held at base c2a554f (behaviour pin); ServletExchange.java needed no change, so the lane has test and review commits only."
+ },
+ "design_refuted": [],
+ "srs_deltas": [],
+ "out_of_lease_paths": [],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "check_test_sufficiency ids=[FR-SVL-010] on the worktree: AC-1..AC-5 all cited in ServletRawAccessTest.java, passed=true"
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4030,
+  "failures": 0,
+  "exit_code": 0
+ },
+ "bootstrap": "not-applicable"
+}

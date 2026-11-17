@@ -1,0 +1,4 @@
+{"event":"phase_start","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-8-ops-dx-009","target":"0.12.0","mode":"normal"}
+{"event":"run_start","req_ids":["OPS-DX-009"]}
+{"event":"tdd_red_confirmed","exit_code":1,"command":"./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.RawResponseDocsKotlinTest :test --tests com.snoworca.naruserve.docs.DocsExamplesCompileTest --rerun --continue","failed":9,"ts":"2026-11-17T07:48:39Z"}
+{"event":"run_done","green":true,"regression":"pass"}

@@ -1,0 +1,94 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-9-fr-svl-010",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "FR-SVL-010"
+ ],
+ "write_set": [
+  "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java",
+  "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawAccessTest.java"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "started_at": "2026-11-17T00:00:00Z",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "regression_baseline": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "failed": 0,
+  "failed_test_ids": [],
+  "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4",
+  "source": "--regression-baseline pin"
+ },
+ "mcp_call_log": [],
+ "pending_mutations": "deferred to .kiwi/deferred-srs-mutations.jsonl (13 calls, replay plan inputRefusals=[])",
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-servlet:test --tests '*ServletRawAccessTest*'",
+  "exit_code": 0,
+  "captured_failure": "none: 11/11 green at base c2a554f; every AC is a behaviour pin",
+  "timestamp": "2026-11-17T07:40:00Z"
+ },
+ "red_evidence_meta": {
+  "pins": [
+   "AC-1",
+   "AC-2",
+   "AC-3",
+   "AC-4",
+   "AC-5"
+  ],
+  "mutation_probe": [
+   {
+    "mutation": "snapshotHeaders reverses output; head() drops Content-Length on non-200; finish() fires abortListeners",
+    "failed": [
+     "AC1 headerNames...",
+     "AC2 container order",
+     "AC2 given order",
+     "AC4 304",
+     "AC5 never on normal"
+    ],
+    "result": "11 tests, 5 failed"
+   },
+   {
+    "mutation": "requestBody flips a byte; head() drops Content-Length on HEAD",
+    "failed": [
+     "AC3 json",
+     "AC3 gzip",
+     "AC4 HEAD"
+    ],
+    "result": "11 tests, 3 failed"
+   }
+  ]
+ },
+ "updated_at": "2026-11-17T08:00:00Z",
+ "loop_counters": {
+  "phase1": {
+   "kept": 1,
+   "dropped": 7,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 0,
+   "dropped": 0,
+   "rounds": 0
+  }
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-servlet:test --tests '*ServletRawAccessTest*'",
+  "exit_code": 0,
+  "timestamp": "2026-11-17T07:50:00Z"
+ },
+ "regression_summary": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "scope": "full",
+  "passed": 4030,
+  "failed": 0,
+  "regressed_files": []
+ }
+}

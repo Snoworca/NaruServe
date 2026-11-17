@@ -1,0 +1,8 @@
+{"event": "phase_start", "ts": "2026-11-17T07:41:47Z", "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-fr-http-033"}
+{"event": "run_start", "ts": "2026-11-17T07:41:47Z", "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-fr-http-033"}
+{"event": "tdd_draft_done", "ts": "2026-11-17T07:41:47Z", "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-fr-http-033", "iter": 1, "file_paths": ["NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseAppendTest.java"]}
+{"event": "tdd_review_done", "ts": "2026-11-17T07:41:47Z", "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-fr-http-033", "iter": 1, "finding_summary": {"kept": 0, "dropped": 4}}
+{"event": "tdd_red_confirmed", "ts": "2026-11-17T07:41:47Z", "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-fr-http-033", "exit_code": 0, "note": "behaviour pin - no red; mutation sensitivity check passed"}
+{"event": "test_green", "ts": "2026-11-17T07:41:47Z", "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-fr-http-033", "exit_code": 0}
+{"event": "regression_done", "ts": "2026-11-17T07:41:47Z", "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-fr-http-033", "scope": "full", "passed": 4031, "failed": 0}
+{"event": "run_done", "ts": "2026-11-17T07:41:47Z", "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-8-fr-http-033", "green": true, "regression": "pass"}

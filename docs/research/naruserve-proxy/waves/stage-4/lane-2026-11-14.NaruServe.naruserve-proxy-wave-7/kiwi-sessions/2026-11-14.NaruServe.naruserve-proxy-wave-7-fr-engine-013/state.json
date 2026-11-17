@@ -1,0 +1,72 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-7-fr-engine-013",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "FR-ENGINE-013"
+ ],
+ "write_set": [
+  "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+  "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+  "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawRequestSocketTest.java",
+  "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "started_at": "2026-11-17T07:30:00Z",
+ "updated_at": "2026-11-17T07:45:00Z",
+ "frozen_at": null,
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "regression_baseline": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "failed": 0,
+  "failed_test_ids": [],
+  "total": 3829,
+  "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4",
+  "source": "--regression-baseline pin"
+ },
+ "mcp_call_log": [],
+ "pending_mutations": [],
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-tinyhttpd:test --tests RawRequestSocketTest --tests TinyHttpdBodyStreamTest",
+  "exit_code": 1,
+  "captured_failure": "FR_ENGINE_013_AC4_mainSources...: expected:<[]> but was:<[src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java: import com.snoworca.tinyhttpd.http.BodyTooLargeException;]>",
+  "timestamp": "2026-11-17T07:31:00Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-tinyhttpd:test",
+  "exit_code": 0,
+  "timestamp": "2026-11-17T07:40:00Z"
+ },
+ "regression_summary": {
+  "scope": "full",
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "passed": 4026,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "loop_counters": {
+  "phase1": {
+   "kept": 0,
+   "dropped": 7,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 2,
+   "dropped": 8,
+   "rounds": 2
+  }
+ },
+ "pending_mutations_queue": ".kiwi/deferred-srs-mutations.jsonl",
+ "deferred_mutations_appended": 10
+}

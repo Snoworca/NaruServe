@@ -1,0 +1,74 @@
+{
+ "run_id": "2026-11-17.naruserve.self-w7-0745",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "started_at": "2026-11-17T07:45:00Z",
+ "mode": "self",
+ "mode_flags": [
+  "--keep-clean-code",
+  "--loops 20",
+  "--no-pipeline-emit"
+ ],
+ "phase": "8",
+ "finding_queue": [],
+ "fix_iter": 0,
+ "recheck_iter": 0,
+ "clean_code_round": 1,
+ "clean_code_dismissed": [
+  {
+   "id": "CC-001",
+   "principle": "DRY",
+   "location": "TinyHttpdBodyStreamTest.java:59,157-163",
+   "reason": "AC-4 requires its own constructing test; per-requirement test convention"
+  },
+  {
+   "id": "CC-002",
+   "principle": "DRY",
+   "location": "RawRequestSocketTest.java:226-251",
+   "reason": "fix requires files outside the lane write set"
+  }
+ ],
+ "clean_code_skip": false,
+ "guarantee_scope": "FR-ENGINE-013 AC-1..AC-5 over the TinyHttpd adapter: TinyHttpdBodyStream FQN mapping and the new real-socket/raw-request tests in NaruServe-tinyhttpd; diff 02be199..HEAD",
+ "declared_limits": [],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "b54cee14b5f48c95a78b89e9b78519b3e6b40a13",
+   "scope": "full",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawRequestSocketTest.java",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java"
+   ],
+   "tokens_used": 101995,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  },
+  {
+   "round": 2,
+   "tree_sha": "c5968fd8b169a4ac5f0ad6300a24c92308e7de41",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawRequestSocketTest.java",
+    "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java"
+   ],
+   "tokens_used": 66747,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  }
+ ],
+ "regression_baseline": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+ "regression_pass": true,
+ "pr_responded": false,
+ "failed": false
+}
