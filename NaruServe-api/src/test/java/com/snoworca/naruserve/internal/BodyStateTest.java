@@ -245,10 +245,10 @@ public class BodyStateTest {
         assertEquals("m", new BodyAlreadyConsumedException("m").getMessage());
     }
 
-    // SDS-AC-11; FR-HTTP-019 AC-5, re-pointed by IR-JSON-002 AC-8: body(Class) and body(TypeRef) are the JSON readers;
-    // re-pointed by IR-MULTIPART-002 AC-6: form, file, files and parts are the only other readers, of the FORM kind;
-    // IR-HTTP-013 AC-1: bodyStream() and bodyStream(long) are exactly the InputStream-returning readers (their body
-    // ownership is FR-HTTP-030 AC-11)
+    // FR-HTTP-030 AC-11 (re-pointed from FR-HTTP-019 AC-5, IR-JSON-002 AC-8 and IR-MULTIPART-002 AC-6): body(Class)
+    // and body(TypeRef) are the JSON readers; form, file, files and parts are the FORM-kind readers; bodyStream() and
+    // bodyStream(long) are exactly the InputStream-returning readers and take the body through the RAW kind of
+    // BodyState; no byte[], text or other raw reader exists on Request
     @Test
     public void sdsAc11_FR_HTTP_019_AC5_requestHasNoPublicBodyReadingMethod() {
         List<String> bodyNames = Arrays.asList("json", "text", "bytes", "stream", "inputStream", "raw");
@@ -282,5 +282,31 @@ public class BodyStateTest {
         }
         assertFalse(Modifier.isPublic(body.getModifiers()));
         assertSame(BodyState.class, body.getReturnType());
+        assertBodyStreamTakesRaw(r -> r.bodyStream());
+        assertBodyStreamTakesRaw(r -> r.bodyStream(2048L));
+    }
+
+    private interface RawTake {
+        java.io.InputStream take(DefaultRequest r) throws IOException;
+    }
+
+    /** The take returns a stream and leaves the request's BodyState PARSING by a RAW reader, before any read. */
+    private static void assertBodyStreamTakesRaw(RawTake take) {
+        LifecycleExchange ex = new LifecycleExchange("POST", "/raw", "abc".getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                "Content-Length", "3");
+        DefaultRequest req = new DefaultRequest(ex, com.snoworca.naruserve.Method.POST,
+                java.util.Collections.<String, String>emptyMap());
+        try {
+            assertTrue(take.take(req) != null);
+        } catch (IOException e) {
+            throw new AssertionError(e);
+        }
+        assertEquals(BodyState.State.PARSING, req.body().state());
+        try {
+            req.body().begin(BodyState.Kind.JSON);
+            fail("expected BodyAlreadyConsumedException after a bodyStream take");
+        } catch (BodyAlreadyConsumedException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("by a RAW reader"));
+        }
     }
 }

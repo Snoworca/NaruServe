@@ -249,7 +249,8 @@ public class HttpApiSurfaceTest {
     }
 
     // SDS-AC-3; IR-HTTP-001 AC-4; IR-HTTP-005 AC-5; SDS-AC-11 (wave 5-3); FR-COOKIE-002 AC-8; IR-MULTIPART-002 AC-6;
-    // IR-STATIC-002 AC-5: the parameter of defaultCache is the only new RestApp @Nullable position
+    // IR-STATIC-002 AC-5: the parameter of defaultCache is the only new RestApp @Nullable position;
+    // IR-APP-009 AC-5: rawBodyLimit adds no @Nullable position, so RestApp still has exactly defaultCache p0
     @Test
     public void sdsAc3_IR_HTTP_001_AC4_packageNullMarkedAndNullableOnlyOnListedPositions() throws Exception {
         assertNotNull(Request.class.getPackage().getAnnotation(NullMarked.class));
@@ -334,7 +335,8 @@ public class HttpApiSurfaceTest {
 
     // SDS-AC-6; IR-HTTP-005 AC-1, AC-2, AC-3, AC-5; IR-APP-002 AC-2 (wave 4 SDS-AC-5: re-pointed to the wave 4 set);
     // SDS-AC-3 of docs/sds/2026-10-19.naruserve.naruserve-v1-wave-5-4.sds.md; IR-ENGINE-001 AC-7: the wave 5 set;
-    // IR-STATIC-002 AC-5: the wave 6 set; IR-APP-008 AC-5 and IR-ENGINE-003 AC-5: the 0.11.0 set
+    // IR-STATIC-002 AC-5: the wave 6 set; IR-APP-008 AC-5 and IR-ENGINE-003 AC-5: the 0.11.0 set;
+    // IR-APP-009 AC-5: the 0.11.0 set plus rawBodyLimit(long)->RestApp
     @Test
     public void sdsAc6_IR_HTTP_005_AC1_AC2_AC3_AC5_IR_APP_002_AC2_restAppDeclaresExactlyTheWave4Methods() {
         assertTrue(RestApp.class.isInterface());
@@ -387,7 +389,9 @@ public class HttpApiSurfaceTest {
                 "registrations()->List", "onRegistration(RegistrationListener)->RestApp",
                 // 0.11.0: IR-ENGINE-003 AC-5 (C6b)
                 "trustProxyHops(int)->RestApp", "trustProxyCidrs(String[])->RestApp", "trustProxy()->boolean",
-                "trustProxyHops()->int", "trustProxyCidrs()->List"), signatures(RestApp.class));
+                "trustProxyHops()->int", "trustProxyCidrs()->List",
+                // 0.12.0: IR-APP-009 AC-5
+                "rawBodyLimit(long)->RestApp"), signatures(RestApp.class));
         // CON-APP-010 AC-5; FR-APP-021 AC-3: inherited methods are checked exhaustively below.
         assertEquals(Arrays.<Class<?>>asList(HttpRoutes.class), Arrays.asList(RestApp.class.getInterfaces()));
         assertEquals("com.snoworca.naruserve.HttpRoutes<com.snoworca.naruserve.RestApp>",

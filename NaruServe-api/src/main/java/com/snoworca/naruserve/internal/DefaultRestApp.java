@@ -113,6 +113,7 @@ public final class DefaultRestApp implements RestApp {
     private volatile long jsonLimit = JsonBodyReader.DEFAULT_LIMIT;
     private volatile MultipartSettings multipartSettings = new MultipartSettings();
     private volatile long formLimit = 1048576L;
+    private volatile long rawBodyLimit = JsonBodyReader.DEFAULT_LIMIT;
     private volatile DefaultWebSocketOptions webSocketOptions = new DefaultWebSocketOptions();
     /** The copy freeze took for the upgrade step; null before freeze. */
     volatile @Nullable DefaultWebSocketOptions frozenWebSocketOptions;
@@ -215,7 +216,7 @@ public final class DefaultRestApp implements RestApp {
         refuseForeignWatcher();
         synchronized (this) {
             lifecycle.requireConfigurable("jsonLimit");
-            this.jsonLimit = byteLimit("jsonLimit", bytes);
+            this.jsonLimit = LimitedInputStream.byteLimit("jsonLimit", bytes);
             return this;
         }
     }
@@ -295,14 +296,6 @@ public final class DefaultRestApp implements RestApp {
         }
     }
 
-    /** {@code bytes} checked against 1..{@link JsonBodyReader#MAX_LIMIT}, the range of every body limit. */
-    private static long byteLimit(String name, long bytes) {
-        if (bytes < 1 || bytes > JsonBodyReader.MAX_LIMIT) {
-            throw new IllegalArgumentException(name + " must be in 1.." + JsonBodyReader.MAX_LIMIT + " bytes: " + bytes);
-        }
-        return bytes;
-    }
-
     /** The urlencoded form body limit in bytes; 1048576 unless {@link #formLimit(long)} changed it. */
     // @req IR-MULTIPART-001
     public long formLimit() {
@@ -315,7 +308,24 @@ public final class DefaultRestApp implements RestApp {
         refuseForeignWatcher();
         synchronized (this) {
             lifecycle.requireConfigurable("formLimit");
-            this.formLimit = byteLimit("formLimit", bytes);
+            this.formLimit = LimitedInputStream.byteLimit("formLimit", bytes);
+            return this;
+        }
+    }
+
+    /** The raw body limit of {@code req.bodyStream()} in bytes; 1048576 unless {@link #rawBodyLimit(long)} changed it. */
+    // @req IR-APP-009
+    public long rawBodyLimit() {
+        return rawBodyLimit;
+    }
+
+    // @req IR-APP-009
+    @Override
+    public RestApp rawBodyLimit(long bytes) {
+        refuseForeignWatcher();
+        synchronized (this) {
+            lifecycle.requireConfigurable("rawBodyLimit");
+            this.rawBodyLimit = LimitedInputStream.byteLimit("rawBodyLimit", bytes);
             return this;
         }
     }
@@ -1329,6 +1339,7 @@ public final class DefaultRestApp implements RestApp {
                     new WebSocketUpgrade(ws, jsonCodec(), safe, sender, idle, registry, accessLog),
                     streams);
             dispatcher.proxyTrust(proxyTrust);
+            dispatcher.rawBodyLimit(rawBodyLimit());
             dispatcher.commonHttp(http,lifecycle);
             webSocketRegistry = registry;
             sseRegistry = streams;
