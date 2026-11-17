@@ -357,13 +357,13 @@ public final class Proxy implements Middleware {
         // The header check (400) and then the framing answers (400/501) come first, from the header lines alone, for
         // every target scheme (D-050).
         BackendRequest.checkClientHeaders(req.rawHeaders());
-        long framing = requestBodyLength(req);
+        long declaredFraming = requestBodyLength(req);
         if (!"http".equals(target.scheme)) {
             // https backends arrive with the TLS requirement (SEC-PROXY-005); until then they are not reached.
             throw new HttpException(502);
         }
         try {
-            forward(req, res, prepare(req, framing));
+            forward(req, res, prepare(req, declaredFraming));
         } catch (RequestBodyCopier.ClientBodyFailure f) {
             throw f.forErrorFlow();
         }
@@ -380,10 +380,11 @@ public final class Proxy implements Middleware {
             socket.setSoTimeout(readTimeoutMillis());
             OutputStream out = new BufferedOutputStream(socket.getOutputStream());
             out.write(outgoing.head);
-            if (outgoing.chunked) {
-                RequestBodyCopier.copyChunked(outgoing.body, outgoing.firstByte, out);
+            BodyFraming framing = outgoing.framing;
+            if (framing.chunked) {
+                RequestBodyCopier.copyChunked(outgoing.body, framing.firstByte, out);
             } else {
-                RequestBodyCopier.copyLength(outgoing.body, out, outgoing.contentLength);
+                RequestBodyCopier.copyLength(outgoing.body, out, framing.contentLength);
             }
             out.flush();
             InputStream in = new BufferedInputStream(socket.getInputStream());
@@ -414,56 +415,64 @@ public final class Proxy implements Middleware {
 
     /**
      * The request line, Host, the forwardable client headers, the framing header and Connection as bytes, and the
-     * client body stream, for the {@code framing} {@link #requestBodyLength} decided; all before any backend
+     * client body stream, for the {@code declaredFraming} {@link #requestBodyLength} decided; all before any backend
      * connection. The body is taken once through {@code req.bodyStream(n)} for a mount with {@code .bodyLimit(n)} and
-     * {@code req.bodyStream()} otherwise. The framing header is the one for the body actually sent: chunked for a
-     * chunked body, the same Content-Length for a declared one, and for a request with neither header the one-byte
-     * pre-read decides: no body (with {@code Content-Length: 0} for POST, PUT and PATCH only) when the stream ends at
-     * once, chunked otherwise. The pre-read comes after {@code req.bodyStream} and before the backend connect, the
-     * place of the concurrency slot and the total-timeout watchdog (design D-050, D-056). A declared length over the
-     * {@code .bodyLimit} answers 413 here, before any connection; the exceptions {@code req.bodyStream} throws for a
-     * body earlier code took pass through unwrapped.
+     * {@code req.bodyStream()} otherwise. The framing decision (the pre-read and the list-form 413) lives in
+     * {@link #bodyFraming}. The exceptions {@code req.bodyStream} throws for a body earlier code took pass through
+     * unwrapped, and the body is closed on every failure.
      */
     // @req IR-PROXY-001
     // @req SEC-PROXY-003
     // @req FR-PROXY-003
     // @req FR-PROXY-007
     // @req FR-PROXY-008
-    private Outgoing prepare(Request req, long framing) {
+    private Outgoing prepare(Request req, long declaredFraming) {
         InputStream body = options.bodyLimit == NO_BODY_LIMIT ? req.bodyStream() : req.bodyStream(options.bodyLimit);
         try {
-            boolean chunked;
-            long length = 0;
-            int first = -1;
-            Map.@Nullable Entry<String, String> framingHeader;
-            if (framing == CHUNKED_BODY) {
-                chunked = true;
-                framingHeader = CHUNKED_FRAMING;
-            } else if (framing == NO_FRAMING_HEADER) {
-                first = RequestBodyCopier.preRead(body);
-                chunked = first >= 0;
-                framingHeader = chunked ? CHUNKED_FRAMING
-                        : EMPTY_BODY_LENGTH_METHODS.contains(req.methodToken()) ? ZERO_LENGTH_FRAMING : null;
-            } else {
-                if (options.bodyLimit != NO_BODY_LIMIT && framing > options.bodyLimit) {
-                    // req.bodyStream answers 413 for a single declared length only; a list such as "2048, 2048"
-                    // agrees on one length (SEC-PROXY-003) and is refused here, still before any connection.
-                    throw new HttpException(413);
-                }
-                chunked = false;
-                length = framing;
-                framingHeader = new SimpleImmutableEntry<>("Content-Length", Long.toString(length));
-            }
+            BodyFraming framing = bodyFraming(req, body, declaredFraming);
             // The forwarding headers (SEC-PROXY-002) and the .requestHeader values (FR-PROXY-005) fill their D-053 slots.
             byte[] head = BackendRequest.head(req.methodToken() + " " + target.basePath + req.originalUrl()
                     + " HTTP/1.1", target.authority, BackendRequest.forwardedClientHeaders(req.rawHeaders()),
                     Collections.<Map.Entry<String, String>>emptyList(),
-                    Collections.<Map.Entry<String, String>>emptyList(), framingHeader);
-            return new Outgoing(head, body, chunked, length, first);
+                    Collections.<Map.Entry<String, String>>emptyList(), framing.header);
+            return new Outgoing(head, body, framing);
         } catch (RuntimeException | Error e) {
             closeQuietly(body);
             throw e;
         }
+    }
+
+    /**
+     * The framing of the body actually sent, for the {@code declaredFraming} {@link #requestBodyLength} decided:
+     * chunked for a chunked body, the same Content-Length for a declared one, and for a request with neither header the
+     * one-byte pre-read decides: no body (with {@code Content-Length: 0} for POST, PUT and PATCH only) when the stream
+     * ends at once, chunked otherwise. The pre-read comes after {@code req.bodyStream} and before the backend connect,
+     * the place of the concurrency slot and the total-timeout watchdog (design D-050, D-056). A declared length over
+     * the {@code .bodyLimit} answers 413 here, before any connection.
+     */
+    // @req SEC-PROXY-003
+    // @req FR-PROXY-007
+    // @req FR-PROXY-008
+    private BodyFraming bodyFraming(Request req, InputStream body, long declaredFraming) {
+        if (declaredFraming == CHUNKED_BODY) {
+            return new BodyFraming(true, 0, -1, CHUNKED_FRAMING);
+        }
+        if (declaredFraming == NO_FRAMING_HEADER) {
+            int first = RequestBodyCopier.preRead(body);
+            if (first >= 0) {
+                return new BodyFraming(true, 0, first, CHUNKED_FRAMING);
+            }
+            Map.@Nullable Entry<String, String> emptyBodyHeader =
+                    EMPTY_BODY_LENGTH_METHODS.contains(req.methodToken()) ? ZERO_LENGTH_FRAMING : null;
+            return new BodyFraming(false, 0, -1, emptyBodyHeader);
+        }
+        if (options.bodyLimit != NO_BODY_LIMIT && declaredFraming > options.bodyLimit) {
+            // req.bodyStream answers 413 for a single declared length only; a list such as "2048, 2048"
+            // agrees on one length (SEC-PROXY-003) and is refused here, still before any connection.
+            throw new HttpException(413);
+        }
+        return new BodyFraming(false, declaredFraming, -1,
+                new SimpleImmutableEntry<>("Content-Length", Long.toString(declaredFraming)));
     }
 
     /** {@link #requestBodyLength(List, List)} of the request's Content-Length and Transfer-Encoding field lines. */
@@ -535,23 +544,36 @@ public final class Proxy implements Middleware {
         }
     }
 
+    /** How the client body is framed to the backend: the coding, the length, the pre-read byte and the header. */
+    private static final class BodyFraming {
+        /** Whether the body is sent in the chunked coding; otherwise exactly {@link #contentLength} bytes are sent. */
+        final boolean chunked;
+        final long contentLength;
+        /** The byte the pre-read took from the body and that leads a chunked body, or -1. */
+        final int firstByte;
+        /** The framing header, or null for a body-less request that carries none. */
+        final Map.@Nullable Entry<String, String> header;
+
+        BodyFraming(boolean chunked, long contentLength, int firstByte, Map.@Nullable Entry<String, String> header) {
+            this.chunked = chunked;
+            this.contentLength = contentLength;
+            this.firstByte = firstByte;
+            this.header = header;
+        }
+    }
+
     /** The bytes of a backend request head and how the client body follows it. */
     private static final class Outgoing {
         final byte[] head;
         /** The client body stream from {@code req.bodyStream}; closed when the forward ends. */
         final InputStream body;
-        /** Whether the body is sent in the chunked coding; otherwise exactly {@link #contentLength} bytes are sent. */
-        final boolean chunked;
-        final long contentLength;
-        /** The byte the pre-read took from {@link #body} and that leads a chunked body, or -1. */
-        final int firstByte;
+        /** How {@link #body} is framed to the backend. */
+        final BodyFraming framing;
 
-        Outgoing(byte[] head, InputStream body, boolean chunked, long contentLength, int firstByte) {
+        Outgoing(byte[] head, InputStream body, BodyFraming framing) {
             this.head = head;
             this.body = body;
-            this.chunked = chunked;
-            this.contentLength = contentLength;
-            this.firstByte = firstByte;
+            this.framing = framing;
         }
     }
 
