@@ -4,7 +4,9 @@ import com.snoworca.naruserve.common.HttpHeaderValues;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -110,6 +112,27 @@ final class HeaderRules {
             // The value is not echoed: it may hold a credential or the control characters that made it invalid.
             throw new IllegalArgumentException(option + ": the header value holds a character a header cannot carry");
         }
+    }
+
+    /**
+     * The lower-case names listed in every {@code Connection} line of {@code lines}: comma-separated elements, OWS
+     * trimmed, names compared case-insensitively. Only token elements count, so the case folding sees ASCII only.
+     */
+    // @req FR-PROXY-003
+    static Set<String> connectionNames(List<Map.Entry<String, String>> lines) {
+        Set<String> names = new HashSet<>();
+        for (Map.Entry<String, String> line : lines) {
+            if (!line.getKey().equalsIgnoreCase("Connection")) {
+                continue;
+            }
+            for (String element : line.getValue().split(",", -1)) {
+                String name = trimOws(element);
+                if (HttpHeaderValues.isToken(name)) {
+                    names.add(name.toLowerCase(Locale.ROOT));
+                }
+            }
+        }
+        return names;
     }
 
     /** {@code s} without leading and trailing spaces and horizontal tabs (RFC 9110 OWS). */

@@ -17,7 +17,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -338,9 +337,12 @@ public final class Proxy implements Middleware {
      */
     // @req IR-PROXY-001
     // @req SEC-PROXY-003
+    // @req FR-PROXY-003
     @Override
     public void handle(Request req, Response res, Next next) throws Exception {
-        // The framing answers (400/501) come first, from the header lines alone, for every target scheme (D-050).
+        // The header check (400) and then the framing answers (400/501) come first, from the header lines alone, for
+        // every target scheme (D-050).
+        BackendRequest.checkClientHeaders(req.rawHeaders());
         long framing = requestBodyLength(req);
         if (!"http".equals(target.scheme)) {
             // https backends arrive with the TLS requirement (SEC-PROXY-005); until then they are not reached.
@@ -406,17 +408,8 @@ public final class Proxy implements Middleware {
      */
     // @req IR-PROXY-001
     // @req SEC-PROXY-003
+    // @req FR-PROXY-003
     private Outgoing prepare(Request req, long framing) {
-        StringBuilder head = new StringBuilder();
-        head.append(req.methodToken()).append(' ').append(target.basePath).append(req.originalUrl())
-                .append(" HTTP/1.1\r\n");
-        head.append("Host: ").append(target.authority).append("\r\n");
-        for (Map.Entry<String, String> h : req.rawHeaders()) {
-            String lower = h.getKey().toLowerCase(Locale.ROOT);
-            if (!HeaderRules.REQUEST_NOT_FORWARDED.contains(lower)) {
-                head.append(h.getKey()).append(": ").append(h.getValue()).append("\r\n");
-            }
-        }
         long length;
         boolean sendLength;
         byte @Nullable [] buffered = null;
@@ -432,12 +425,15 @@ public final class Proxy implements Middleware {
             length = framing;
             sendLength = true;
         }
-        if (sendLength) {
-            head.append("Content-Length: ").append(length).append("\r\n");
-        }
-        head.append("Connection: close\r\n\r\n");
+        Map.@Nullable Entry<String, String> framingHeader =
+                sendLength ? new SimpleImmutableEntry<>("Content-Length", Long.toString(length)) : null;
+        // The forwarding headers (SEC-PROXY-002) and the .requestHeader values (FR-PROXY-005) fill their D-053 slots.
+        byte[] head = BackendRequest.head(req.methodToken() + " " + target.basePath + req.originalUrl() + " HTTP/1.1",
+                target.authority, BackendRequest.forwardedClientHeaders(req.rawHeaders()),
+                Collections.<Map.Entry<String, String>>emptyList(),
+                Collections.<Map.Entry<String, String>>emptyList(), framingHeader);
         @Nullable InputStream bodyStream = buffered == null && length > 0 ? req.bodyStream() : null;
-        return new Outgoing(head.toString().getBytes(StandardCharsets.ISO_8859_1), buffered, bodyStream, length);
+        return new Outgoing(head, buffered, bodyStream, length);
     }
 
     /** {@link #requestBodyLength(List, List)} of the request's Content-Length and Transfer-Encoding field lines. */
