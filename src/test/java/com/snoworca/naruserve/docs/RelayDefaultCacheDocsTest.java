@@ -44,4 +44,13 @@ public final class RelayDefaultCacheDocsTest {
         assertRelayException("en/response.md Default cache policy",
                 section(doc("en/response.md"), "### Default cache policy"));
     }
+
+    // FR-HTTP-036 AC-5: the defaultCache(policy) rows of app.md and en/app.md
+    @Test
+    public void FR_HTTP_036_AC5_appDefaultCacheRowStatesRelayException() throws IOException {
+        assertRelayException("app.md defaultCache(policy) row",
+                String.join(" | ", row(doc("app.md"), "`defaultCache(policy)`")));
+        assertRelayException("en/app.md defaultCache(policy) row",
+                String.join(" | ", row(doc("en/app.md"), "`defaultCache(policy)`")));
+    }
 }
