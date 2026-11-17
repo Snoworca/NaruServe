@@ -1,6 +1,7 @@
 package com.snoworca.naruserve.tinyhttpd;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -10,10 +11,10 @@ import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.testing.NoLeftoverThreads;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.tinyhttpd.RawTargetSocketTest.Http;
-import com.snoworca.tinyhttpd.http.BodyTooLargeException;
 import com.snoworca.tinyhttpd.http.ContentLengthExceededException;
 import com.snoworca.tinyhttpd.http.MalformedBodyException;
 import com.snoworca.tinyhttpd.http.TruncatedBodyException;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -21,6 +22,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Rule;
@@ -53,7 +57,7 @@ public class TinyHttpdBodyStreamTest {
     // SDS-AC-1; FR-ENGINE-005 AC-1
     @Test
     public void sdsAc1_FR_ENGINE_005_AC1_constructedBodyExceptionsMapToStatusesKeepingTheCause() throws IOException {
-        assertMapped(413, new BodyTooLargeException("too large"));
+        assertMapped(413, new com.snoworca.tinyhttpd.http.BodyTooLargeException("too large"));
         assertMapped(408, new SocketTimeoutException("slow"));
         assertMapped(400, new TruncatedBodyException("short"));
         assertMapped(400, new MalformedBodyException("bad chunk"));
@@ -117,6 +121,71 @@ public class TinyHttpdBodyStreamTest {
             fail("ContentLengthExceededException must not become a client status");
         } catch (IOException e) {
             assertSame(overrun, e);
+        }
+    }
+
+    // FR-ENGINE-013 AC-4: the module's sources, main and test, name TinyHttpd's BodyTooLargeException only by its fully
+    // qualified name so it cannot be confused with the public com.snoworca.naruserve.BodyTooLargeException
+    @Test
+    public void FR_ENGINE_013_AC4_moduleSourcesNameTinyHttpdsBodyTooLargeExceptionOnlyByFullyQualifiedName()
+            throws IOException {
+        String fqn = "com.snoworca.tinyhttpd.http.BodyTooLargeException";
+        List<String> offenders = new ArrayList<>();
+        for (String dir : new String[] {"src/main/java", "src/test/java"}) {
+            File root = new File(dir);
+            assertTrue(root.getAbsolutePath(), root.isDirectory());
+            List<File> sources = new ArrayList<>();
+            collectJava(root, sources);
+            assertFalse(root.getAbsolutePath(), sources.isEmpty());
+            for (File f : sources) {
+                for (String line : read(f).split("\\r?\\n")) {
+                    String t = line.trim();
+                    if (t.equals("import " + fqn + ";") || t.equals("import com.snoworca.tinyhttpd.http.*;")) {
+                        offenders.add(f.getPath() + ": " + t);
+                    }
+                }
+            }
+        }
+        assertEquals("single-type or on-demand imports of TinyHttpd's BodyTooLargeException package",
+                new ArrayList<String>(), offenders);
+        File adapterStream = new File("src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java");
+        assertTrue("TinyHttpdBodyStream names " + fqn, read(adapterStream).contains("instanceof " + fqn));
+    }
+
+    // FR-ENGINE-013 AC-4; FR-ENGINE-005 AC-1: a constructed TinyHttpd BodyTooLargeException still maps to HttpException
+    // 413 with the original as cause, while NaruServe's own public BodyTooLargeException is not this mapping's input
+    @Test
+    public void FR_ENGINE_013_AC4_tinyHttpdBodyTooLargeExceptionMapsTo413KeepingTheCause() throws IOException {
+        com.snoworca.tinyhttpd.http.BodyTooLargeException original =
+                new com.snoworca.tinyhttpd.http.BodyTooLargeException("too large");
+        HttpException mapped = TinyHttpdBodyStream.map(original);
+        assertEquals(413, mapped.status());
+        assertSame(original, mapped.getCause());
+
+        com.snoworca.naruserve.BodyTooLargeException own = new com.snoworca.naruserve.BodyTooLargeException(1024);
+        try {
+            TinyHttpdBodyStream.map(own);
+            fail("NaruServe's BodyTooLargeException is not a TinyHttpd body error of the adapter");
+        } catch (IOException e) {
+            assertSame(own, e);
+        }
+    }
+
+    private static String read(File f) throws IOException {
+        return new String(Files.readAllBytes(f.toPath()), StandardCharsets.UTF_8);
+    }
+
+    private static void collectJava(File dir, List<File> out) {
+        File[] children = dir.listFiles();
+        if (children == null) {
+            return;
+        }
+        for (File c : children) {
+            if (c.isDirectory()) {
+                collectJava(c, out);
+            } else if (c.getName().endsWith(".java")) {
+                out.add(c);
+            }
         }
     }
 
