@@ -318,11 +318,13 @@ project(':NaruServe-gson') {
     }
 }
 
-// Proxy tests drive a real app over the in-memory adapter with JDK-built backends (D-070).
+// Proxy tests drive a real app over the in-memory adapter with JDK-built backends (D-070), and over a real
+// TinyHttpd socket where the adapter's own status line and framing are observed (D-059, FR-PROXY-011 AC-3, AC-9).
 project(':NaruServe-proxy') {
     // @req IR-PROXY-001
     dependencies {
         testImplementation testFixtures(project(':NaruServe-api'))
+        testImplementation project(':NaruServe-tinyhttpd')
     }
 }
 
