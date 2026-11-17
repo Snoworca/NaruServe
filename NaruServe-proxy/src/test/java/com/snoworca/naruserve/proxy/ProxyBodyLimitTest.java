@@ -188,6 +188,42 @@ public class ProxyBodyLimitTest {
         assertEquals("backend connections opened", 0, backend.connectionsBeforeSentinel());
     }
 
+    // FR-PROXY-008 AC-1: on a mount without .bodyLimit the Content-Length list 2048, 2048 (one agreed length) over the
+    // app's rawBodyLimit answers 413 and no backend connection is opened: req.bodyStream() refuses it before any read
+    // (FR-HTTP-031 AC-4), not only after the copy passed the limit
+    @Test
+    public void fr_PROXY_008_AC1_contentLengthListOverTheAppRawBodyLimitAnswers413WithoutConnecting()
+            throws IOException {
+        ObservingBackend backend = observingBackend();
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        RestApp a = app(adapter, new StubJsonCodec());
+        a.rawBodyLimit(1024);
+        a.use("/api", Proxy.to(backend.url()));
+        captureErrors(a).listen(0);
+
+        ClientResponse r = adapter.send(request("POST", new byte[2048], "Content-Length", "2048, 2048"));
+
+        assertEquals("status", 413, r.status());
+        assertEquals("backend connections opened", 0, backend.connectionsBeforeSentinel());
+    }
+
+    // FR-PROXY-008 AC-1: over a TinyHttpd socket, which frames "Content-Length: 2048, 2048" as 2048 bytes, the list over
+    // the app's rawBodyLimit on a mount without .bodyLimit answers 413 and no backend connection is opened
+    @Test(timeout = 30000)
+    public void fr_PROXY_008_AC1_contentLengthListOverTheAppRawBodyLimitOverASocketAnswers413WithoutConnecting()
+            throws IOException {
+        ObservingBackend backend = observingBackend();
+        RestApp a = app(new TinyHttpdAdapter(), new StubJsonCodec());
+        a.rawBodyLimit(1024);
+        a.use("/api", Proxy.to(backend.url()));
+        int port = captureErrors(a).listen(0).port();
+
+        String response = exchange(port, "POST /api/x HTTP/1.1\r\nContent-Length: 2048, 2048", new byte[2048]);
+
+        assertTrue(response, response.startsWith("HTTP/1.1 413 "));
+        assertEquals("backend connections opened", 0, backend.connectionsBeforeSentinel());
+    }
+
     // FR-PROXY-008 AC-1: over a TinyHttpd socket a Content-Length over .bodyLimit(n) answers 413 and no backend
     // connection is opened
     @Test(timeout = 30000)

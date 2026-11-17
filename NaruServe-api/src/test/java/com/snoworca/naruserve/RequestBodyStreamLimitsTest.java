@@ -347,11 +347,16 @@ public class RequestBodyStreamLimitsTest {
      * itself did: {@code "returned"} or the exception it threw. Returns {outcome, exchange}.
      */
     private static Object[] declared(long rawBodyLimit, int length, Take take) {
+        return declared(rawBodyLimit, length, String.valueOf(length), take);
+    }
+
+    /** {@link #declared(long, int, Take)} with the Content-Length field value {@code contentLength} as sent. */
+    private static Object[] declared(long rawBodyLimit, int length, String contentLength, Take take) {
         DefaultRestApp app = new DefaultRestApp();
         if (rawBodyLimit > 0) {
             app.rawBodyLimit(rawBodyLimit);
         }
-        CountingExchange ex = new CountingExchange(pattern(length), "Content-Length", String.valueOf(length));
+        CountingExchange ex = new CountingExchange(pattern(length), "Content-Length", contentLength);
         List<Object> seen = Collections.synchronizedList(new ArrayList<>());
         long[] readsAtCall = {-1};
         app.post("/p", (req, res) -> {
@@ -401,6 +406,69 @@ public class RequestBodyStreamLimitsTest {
         assertEquals("returned", declared(1024, 1025, r -> r.bodyStream(2048L))[0]);
         assertEquals("returned", declared(1024, 1024, Request::bodyStream)[0]);
         assertEquals("returned", declared(-1, 1024, r -> r.bodyStream(1024L))[0]);
+    }
+
+    // FR-HTTP-031 AC-4: a Content-Length list of one agreed value, such as "2048, 2048" (RFC 9112 section 6.3 item 5,
+    // accepted and framed as 2048 bytes by TinyHttpd), is that declared length: over the app's rawBodyLimit the
+    // bodyStream() call itself throws HttpException 413 before any byte is read from the adapter's request input
+    @Test
+    public void FR_HTTP_031_AC4_aContentLengthListOfOneAgreedValueOverTheLimitThrows413OnTheCall() {
+        assert413BeforeAnyRead(declared(1024, 2048, "2048, 2048", Request::bodyStream));
+        assert413BeforeAnyRead(declared(1024, 2048, "2048,2048", Request::bodyStream));
+        assert413BeforeAnyRead(declared(1024, 2048, "2048 ,\t2048, 2048", Request::bodyStream));
+        assert413BeforeAnyRead(declared(-1, 2048, "2048, 2048", r -> r.bodyStream(1024L)));
+    }
+
+    /**
+     * Dispatches one POST of {@code body} with the Content-Length field value {@code contentLength} to an app with
+     * the given rawBodyLimit whose handler drains {@code req.bodyStream()}.
+     */
+    private static Drained drainWithContentLength(long rawBodyLimit, byte[] body, String contentLength) {
+        DefaultRestApp app = new DefaultRestApp();
+        app.rawBodyLimit(rawBodyLimit);
+        CountingExchange ex = new CountingExchange(body, "Content-Length", contentLength);
+        List<Object> seen = Collections.synchronizedList(new ArrayList<>());
+        app.post("/p", (req, res) -> {
+            try {
+                seen.add(drain(req.bodyStream(), false));
+            } catch (Throwable t) {
+                seen.add(t);
+            }
+            res.send("ack");
+        });
+        app.freeze();
+        app.dispatcher().handle(ex);
+        assertEquals(1, seen.size());
+        Object o = seen.get(0);
+        if (!(o instanceof Drained)) {
+            throw new AssertionError("taking or draining the stream threw " + o, (Throwable) o);
+        }
+        return (Drained) o;
+    }
+
+    // FR-HTTP-031 AC-4: a list of one agreed value under the limit is that declared length: "5, 5" ends the body
+    // after 5 bytes, as a single "5" does
+    @Test
+    public void FR_HTTP_031_AC4_aContentLengthListOfOneAgreedValueUnderTheLimitReadsThatLength() {
+        byte[] body = pattern(10);
+        Drained d = drainWithContentLength(1024, body, "5, 5");
+        assertTrue(String.valueOf(d.tooLarge), d.tooLarge == null);
+        assertArrayEquals(Arrays.copyOf(body, 5), d.bytes);
+    }
+
+    // FR-HTTP-031 AC-4: a list whose values differ and a value that is not a number still count as no declared length,
+    // as before: the call is not refused for them and the stream reads to the end of the input under the limit
+    @Test
+    public void FR_HTTP_031_AC4_aDisagreeingListOrANonNumberStillCountsAsUndeclared() {
+        byte[] body = pattern(10);
+        for (String bad : new String[] {"5, 6", "abc", "5,", ", 5", "5, abc"}) {
+            Drained d = drainWithContentLength(1024, body, bad);
+            assertTrue(bad + ": " + d.tooLarge, d.tooLarge == null);
+            assertArrayEquals(bad, body, d.bytes);
+        }
+        // undeclared, so a disagreeing list over the limit is not refused by the call itself
+        assertEquals("returned", declared(1024, 2048, "2048, 2049", Request::bodyStream)[0]);
+        assertEquals("returned", declared(1024, 2048, "abc", Request::bodyStream)[0]);
     }
 
     // FR-HTTP-031 AC-4: the 413 of the call leaves the body taken, as req.body(...) does for its own 413, so neither
