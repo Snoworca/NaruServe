@@ -392,50 +392,75 @@ public final class Proxy implements Middleware {
 
     /**
      * The request line, Host, the forwardable client headers, the framing header and Connection as bytes; a chunked
-     * client body is read here and a declared one is opened here, so the body limit answers before any backend
-     * connection.
+     * client body is read here and a declared one is opened here, so the framing checks answer before any backend
+     * connection. The body limit answers here too for a chunked body and for a Content-Length the core reads as one
+     * number; a list form such as {@code 5, 5} is only limited while it is copied, after the connect (the body limit
+     * requirement FR-PROXY-008 closes that).
      */
     // @req IR-PROXY-001
+    // @req SEC-PROXY-003
     private Outgoing prepare(Request req) {
         StringBuilder head = new StringBuilder();
         head.append(req.methodToken()).append(' ').append(target.basePath).append(req.originalUrl())
                 .append(" HTTP/1.1\r\n");
         head.append("Host: ").append(target.authority).append("\r\n");
-        @Nullable String contentLength = null;
-        boolean transferEncoding = false;
+        List<String> contentLengths = new ArrayList<>();
+        List<String> transferEncodings = new ArrayList<>();
         for (Map.Entry<String, String> h : req.rawHeaders()) {
             String lower = h.getKey().toLowerCase(Locale.ROOT);
             if (lower.equals("content-length")) {
-                contentLength = h.getValue().trim();
+                contentLengths.add(h.getValue());
             } else if (lower.equals("transfer-encoding")) {
-                transferEncoding = true;
+                transferEncodings.add(h.getValue());
             }
             if (!HeaderRules.REQUEST_NOT_FORWARDED.contains(lower)) {
                 head.append(h.getKey()).append(": ").append(h.getValue()).append("\r\n");
             }
         }
+        long length = requestBodyLength(contentLengths, transferEncodings);
         byte @Nullable [] buffered = null;
-        long length = 0;
-        if (transferEncoding) {
+        if (!transferEncodings.isEmpty()) {
             // The request-body framing requirement (FR-PROXY-007) streams this; until then it is sent with a length.
             buffered = readClientBody(req.bodyStream());
             length = buffered.length;
-        } else if (contentLength != null) {
-            try {
-                length = Long.parseLong(contentLength);
-            } catch (NumberFormatException e) {
-                throw new HttpException(400);
-            }
-            if (length < 0) {
-                throw new HttpException(400);
-            }
         }
-        if (length > 0 || contentLength != null) {
+        if (length > 0 || !contentLengths.isEmpty()) {
             head.append("Content-Length: ").append(length).append("\r\n");
         }
         head.append("Connection: close\r\n\r\n");
         @Nullable InputStream bodyStream = buffered == null && length > 0 ? req.bodyStream() : null;
         return new Outgoing(head.toString().getBytes(StandardCharsets.ISO_8859_1), buffered, bodyStream, length);
+    }
+
+    /**
+     * The declared body length, 0 for no framing header, or -1 for a chunked body; decided from the header lines
+     * alone, never from the request's HTTP version. Both headers, a Content-Length list that is not one agreed number
+     * and a Transfer-Encoding list that does not end in a single {@code chunked} answer 400; another coding before
+     * {@code chunked} answers 501.
+     */
+    // @req SEC-PROXY-003
+    private static long requestBodyLength(List<String> contentLengths, List<String> transferEncodings) {
+        if (!contentLengths.isEmpty() && !transferEncodings.isEmpty()) {
+            throw new HttpException(400);
+        }
+        if (!transferEncodings.isEmpty()) {
+            switch (FramingLists.transferEncoding(transferEncodings)) {
+                case CHUNKED:
+                    return -1;
+                case UNSUPPORTED:
+                    throw new HttpException(501);
+                default:
+                    throw new HttpException(400);
+            }
+        }
+        if (contentLengths.isEmpty()) {
+            return 0;
+        }
+        long length = FramingLists.contentLength(contentLengths);
+        if (length == FramingLists.INVALID_LENGTH) {
+            throw new HttpException(400);
+        }
+        return length;
     }
 
     private static byte[] readClientBody(InputStream in) {
