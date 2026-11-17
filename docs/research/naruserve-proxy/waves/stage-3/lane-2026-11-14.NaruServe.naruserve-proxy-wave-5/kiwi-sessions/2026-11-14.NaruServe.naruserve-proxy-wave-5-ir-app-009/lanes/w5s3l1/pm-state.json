@@ -1,0 +1,42 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-5-ir-app-009",
+ "base_sha": "7d1bdffa861ff05a6a4a7eb12f9bb73a0cd80eb1",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "IR-APP-009"
+ ],
+ "req_filter": [
+  "IR-APP-009"
+ ],
+ "write_set": [],
+ "started_at": "2026-11-15T17:14:41Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "IR-APP-009",
+    "test_sha": "bd404f9",
+    "implementation_sha": "368d0ec"
+   }
+  ],
+  "questions": [],
+  "changed": true,
+  "commit_sha": "368d0ec",
+  "result_summary": "resumed: committed by lane worker after coder TASK_DONE"
+ },
+ "lifecycle_gate_state": {
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "IR-APP-009": "evolving"
+  },
+  "status_snapshot": {
+   "IR-APP-009": "planned"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": []
+}

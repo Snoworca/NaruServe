@@ -1,0 +1,144 @@
+{
+  "id": "FR-ENGINE-014",
+  "title": "TinyHttpd conformance of res.onAbort and res.relay over real sockets",
+  "type": "functional",
+  "target": "0.12.0",
+  "status": "planned",
+  "scope": "ENGINE",
+  "filePath": "docs/spec/06.engine-adapter.srs.md",
+  "headingLine": 2018,
+  "metadata": {
+    "Type": "functional",
+    "Target": "0.12.0",
+    "Status": "planned",
+    "Priority": "high",
+    "Tags": "0.12.0, feasibility:high, request-a, tinyhttpd, adapter-conformance, relay, abort",
+    "Risk": "medium",
+    "Stability": "evolving",
+    "Verification Method": "test",
+    "GitHub Issue": "-",
+    "Related Docs": "-"
+  },
+  "acceptanceCriteria": [
+    {
+      "id": "AC-1",
+      "text": "Over a real TinyHttpd socket, when the client closes its connection while a `res.relay(in, -1)` or `res.stream(...)` transfer from a slow source is still copying, a listener registered with `res.onAbort` runs exactly once.",
+      "checked": false,
+      "line": 2044
+    },
+    {
+      "id": "AC-2",
+      "text": "Over a real TinyHttpd socket, a listener registered on a response that completes normally is never run, also after the client closes the connection once the response was read.",
+      "checked": false,
+      "line": 2045
+    },
+    {
+      "id": "AC-3",
+      "text": "Over a real TinyHttpd socket, a handler that sets no `Content-Type` and calls `res.relay(in, 5)` with a 5-byte stream gives the client a response with no `Content-Type` header, `Content-Length: 5` and the 5 body bytes.",
+      "checked": false,
+      "line": 2046
+    },
+    {
+      "id": "AC-4",
+      "text": "Over a real TinyHttpd socket, `res.relay(in, -1)` gives a response without `Content-Length` whose complete body the client reads under the framing TinyHttpd chooses.",
+      "checked": false,
+      "line": 2047
+    },
+    {
+      "id": "AC-5",
+      "text": "Over a real TinyHttpd socket, `res.relay(in, 5)` answers a `HEAD` request with `Content-Length: 5` and no body bytes, answers a `304` response with no body bytes and no `Content-Length` (TinyHttpd 3.1.1 never writes `Content-Length` on a 304, `ExchangeResponse.commit` at commit `e73cd5d`, which RFC 9110 §8.6 allows), and a `204` response with neither, and the next request on the same keep-alive connection is served normally.",
+      "checked": false,
+      "line": 2048
+    },
+    {
+      "id": "AC-6",
+      "text": "Over a real TinyHttpd socket, `res.relay(in, 5)` with a stream that ends after 3 bytes closes the connection before 5 body bytes arrive, so the client sees a truncated response rather than a complete one.",
+      "checked": false,
+      "line": 2049
+    }
+  ],
+  "verificationEvidence": [],
+  "traceLinks": [
+    {
+      "type": "Code",
+      "reference": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+      "relation": "implements",
+      "notes": "trace_intent=addition_site; abort notification and committed headers",
+      "line": 2060
+    },
+    {
+      "type": "Requirement",
+      "reference": "FR-HTTP-035",
+      "relation": "depends_on",
+      "notes": "res.onAbort behaviour",
+      "line": 2061
+    },
+    {
+      "type": "Requirement",
+      "reference": "FR-HTTP-036",
+      "relation": "depends_on",
+      "notes": "relay headers",
+      "line": 2062
+    },
+    {
+      "type": "Requirement",
+      "reference": "FR-HTTP-037",
+      "relation": "depends_on",
+      "notes": "relay framing",
+      "line": 2063
+    },
+    {
+      "type": "Requirement",
+      "reference": "IR-HTTP-009",
+      "relation": "extends",
+      "notes": "built-in TinyHttpd exchange reports detected aborts",
+      "line": 2064
+    }
+  ],
+  "changeNotes": [
+    {
+      "date": "2026-11-14",
+      "change": "Created",
+      "reason": "add-requirement",
+      "line": 2078
+    }
+  ],
+  "tags": [
+    "0.12.0",
+    "feasibility:high",
+    "request-a",
+    "tinyhttpd",
+    "adapter-conformance",
+    "relay",
+    "abort"
+  ],
+  "relatedDocs": [],
+  "evidenceReferences": [],
+  "traceReferences": [
+    "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdExchange.java",
+    "FR-HTTP-035",
+    "FR-HTTP-036",
+    "FR-HTTP-037",
+    "IR-HTTP-009"
+  ],
+  "blockStartLine": 2018,
+  "blockEndLine": 2079,
+  "sectionLines": {
+    "Requirement": 2033,
+    "Rationale": 2037,
+    "Acceptance Criteria": 2042,
+    "Verification Evidence": 2051,
+    "Trace Links": 2056,
+    "Research / Analysis": 2066,
+    "Implementation Notes": 2070,
+    "Change Notes": 2074
+  },
+  "priority": "high",
+  "risk": "medium",
+  "stability": "evolving",
+  "newWorkCandidate": true,
+  "requirement": "The system shall make the TinyHttpd adapter run `res.onAbort` listeners once when the client disconnects during a response and never after a normally completed one, and put `res.relay` responses on the wire with exactly the `Content-Type` the app set, the `Content-Length` taken from the length argument except on a `304`, where TinyHttpd 3.1.1 writes no `Content-Length` (PRD-271), the bodyless `HEAD`, `204` and `304` rules of FR-HTTP-037 and an aborted connection when the relayed stream ends early.",
+  "rationale": "AC-1 ← PRD-189; fills: PRD-189 / hole / for AC-1, AC-2, the in-memory adapter never reports an abort, so client-disconnect behaviour is tested over real TinyHttpd sockets (design D-069); AC-2 ← PRD-189; AC-3 ← PRD-190, PRD-38; fills: PRD-29 / hole / for AC-3, AC-4, AC-5, AC-6, the per-adapter wire behaviour of request A belongs to the adapter scopes (design D-004); AC-4 ← PRD-41, PRD-190; AC-5 ← PRD-190 (design D-031); AC-6 ← PRD-41, PRD-190.\n- [2026-11-14] AC-5 ← PRD-271. TinyHttpd 3.1.1 writes no Content-Length on a 304 and is not changed by this target (PRD U-2), so the TinyHttpd criterion states that behaviour.",
+  "research": "- -",
+  "implementationNotes": "- `TinyHttpdExchange` already registers and fires abort listeners through `AbortListeners` (`:267-283`) and adds committed headers verbatim (`:186-206`); check that TinyHttpd does not add its own `Content-Type` when none is set and keeps a `Content-Length` header on a `HEAD` response. TinyHttpd 3.1.1 drops the `Content-Length` of a `304` in `ExchangeResponse.commit` (commit `e73cd5d`), which AC-5 records as the expected TinyHttpd behaviour (PRD-271); do not work around it in the adapter. Socket tests follow the `RestApp.builder().httpAdapter(new TinyHttpdAdapter())...listen(0)` pattern with raw `Socket` clients."
+}

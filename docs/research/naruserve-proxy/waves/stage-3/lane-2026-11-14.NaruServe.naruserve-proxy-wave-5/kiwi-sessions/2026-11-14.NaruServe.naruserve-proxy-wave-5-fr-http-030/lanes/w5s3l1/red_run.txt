@@ -1,0 +1,34 @@
+FAIL FR_HTTP_030_AC10_handlerCloseStillClosesTheAdapterInputExactlyOnce | java.lang.AssertionError: expected:<1> but was:<2>
+FAIL FR_HTTP_030_AC10_partlyReadUnclosedStreamIsClosedOnceInRequestCleanup | java.lang.AssertionError: the returned stream still reads after the request cleanup: 100
+FAIL FR_HTTP_030_AC10_unreadUnclosedStreamIsClosedOnceInRequestCleanup | java.lang.AssertionError: the returned stream still reads after the request cleanup: 97
+FAIL FR_HTTP_030_AC3_bodyAfterBodyStreamWasReadThrows | java.lang.AssertionError: body(Map.class) after bodyStream() was read gave {text="a":1}}
+FAIL FR_HTTP_030_AC3_bodyStreamAfterJsonBodyWasReadThrows | java.lang.AssertionError: bodyStream() after body(Map.class) gave com.snoworca.naruserve.internal.LimitedInputStream@4738a206
+FAIL FR_HTTP_030_AC4_bareBodyStreamTakesTheBodyForEveryContentType | java.lang.AssertionError: bodyStream() JSON: body(Map.class) gave {text={"a":1}}
+FAIL FR_HTTP_030_AC4_bareBodyStreamWithLimitTakesTheBodyForEveryContentType | java.lang.AssertionError: bodyStream(4096) JSON: body(Map.class) gave {text={"a":1}}
+FAIL FR_HTTP_030_AC6_repeatWithoutBodyReturnsSameStreamAndOtherLimitThrowsIllegalState | java.lang.AssertionError: expected same:<com.snoworca.naruserve.internal.LimitedInputStream@53aac487> was not:<com.snoworca.naruserve.internal.LimitedInputStream@52b1beb6>
+FAIL FR_HTTP_030_AC7_bodyStreamCountsAsBodyStreamOfTheRawBodyLimit | java.lang.AssertionError: expected same:<com.snoworca.naruserve.internal.LimitedInputStream@3ee37e5a> was not:<com.snoworca.naruserve.internal.BodyState$1@2ea41516>
+FAIL FR_HTTP_030_AC7_bodyStreamOfTheRawBodyLimitThenBareCallReturnsTheSameObject | java.lang.AssertionError: expected same:<com.snoworca.naruserve.internal.BodyState$1@4d02f94e> was not:<com.snoworca.naruserve.internal.LimitedInputStream@2b48a640>
+FAIL FR_HTTP_030_AC8_afterOneByteEveryFurtherCallThrowsWhateverTheLimit | java.lang.AssertionError: bodyStream() after a read gave com.snoworca.naruserve.internal.LimitedInputStream@53ce1329
+FAIL FR_HTTP_030_AC9_arrayReadReturningBytesConsumes | java.lang.AssertionError: bodyStream() after read(byte[]) gave com.snoworca.naruserve.internal.LimitedInputStream@71a8adcf
+FAIL FR_HTTP_030_AC9_availableDoesNotConsume | java.lang.AssertionError: expected same:<com.snoworca.naruserve.internal.LimitedInputStream@4efac082> was not:<com.snoworca.naruserve.internal.LimitedInputStream@6bd61f98>
+FAIL FR_HTTP_030_AC9_closeConsumes | java.lang.AssertionError: bodyStream() after close() gave com.snoworca.naruserve.internal.LimitedInputStream@7c711375
+FAIL FR_HTTP_030_AC9_operationsThatReturnNoByteDoNotConsume | java.lang.AssertionError: expected same:<com.snoworca.naruserve.internal.LimitedInputStream@2a54a73f> was not:<com.snoworca.naruserve.internal.LimitedInputStream@16a0ee18>
+FAIL FR_HTTP_030_AC9_skipThatAdvancesConsumes | java.lang.AssertionError: bodyStream() after skip(3) gave com.snoworca.naruserve.internal.LimitedInputStream@73e9cf30
+FAIL sdsAc11_FR_HTTP_019_AC5_requestHasNoPublicBodyReadingMethod | java.lang.AssertionError: expected:<PARSING> but was:<UNREAD>
+pass FR_HTTP_030_AC1_binaryBodyWithAll256ByteValuesIsReturnedExactly | 
+pass FR_HTTP_030_AC1_gzipBodyIsReturnedStillCompressed | 
+pass FR_HTTP_030_AC1_jsonBodyWithSpacesAndLineBreaksIsReturnedExactly | 
+pass FR_HTTP_030_AC1_urlencodedBodyIsReturnedExactly | 
+pass FR_HTTP_030_AC2_requestWithoutBodyGetsNonNullEmptyStream | 
+pass FR_HTTP_030_AC5_formAndPartsOnJsonLeaveTheBodyForBodyStream | 
+pass sdsAc10_FR_HTTP_019_AC4_concurrentSharedParseWaitsAndGetsTheSameResult | 
+pass sdsAc10_FR_HTTP_019_AC4_failedParserLeavesConsumedWithoutCache | 
+pass sdsAc10_FR_HTTP_019_AC4_repeatedSharedParseReturnsTheSameObjectParsedOnce | 
+pass sdsAc10_FR_HTTP_019_AC4_sharedParseAndBeginExcludeEachOther | 
+pass sdsAc10_FR_HTTP_019_AC4_sharedParseWhileAnotherReaderIsParsingThrows | 
+pass sdsAc11_FR_HTTP_019_AC1_exceptionIsPublicUncheckedInRootPackage | 
+pass sdsAc11_FR_HTTP_019_AC2_closeDoesNotWaitForARunningParser | 
+pass sdsAc11_FR_HTTP_019_AC2_completeAfterCloseKeepsClosed | 
+pass sdsAc11_FR_HTTP_019_AC2_stateMovesUnreadParsingConsumedAndCloseFromAny | 
+pass sdsAc9_FR_HTTP_019_AC3_beginWhileParsingThrowsNamingParsing | 
+pass sdsAc9_FR_HTTP_019_AC3_secondReadOfAnyKindAfterAFirstReadThrows | 

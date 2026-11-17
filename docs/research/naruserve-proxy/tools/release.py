@@ -1,7 +1,7 @@
-# usage: release.py <stage> <json applied counts {wave:n}>  — journals replay result, removes worktrees, journals release
+# usage: release.py <stage> <json applied counts {wave:n}> [json skipped list]  — journals replay result, removes worktrees, journals release
 import sys; sys.path.insert(0,__file__.rsplit('/',1)[0]); from common import *
 s=int(sys.argv[1]); applied=json.loads(sys.argv[2]); SD=f"{WR}waves/stage-{s}"; P=json.load(open(f"{SD}/prep.json"))
-app({"event":"result","verb":"replay-deferred-mutations","stage":s,"wave":"all","proof":{"kind":"fs-exists","ref":f"kiwi/orchestrator/{R}/replay-applied.jsonl"},"outputs":{"applied":applied,"skipped":[]}})
+app({"event":"result","verb":"replay-deferred-mutations","stage":s,"wave":"all","proof":{"kind":"fs-exists","ref":f"kiwi/orchestrator/{R}/replay-applied.jsonl"},"outputs":{"applied":applied,"skipped":json.loads(sys.argv[3]) if len(sys.argv)>3 else []}})
 rel=[]
 for l in P['lanes']:
   w=l['wave'].replace(R+'-',''); wt=f".claude/worktrees/naruserve-proxy-{w}"

@@ -1,0 +1,49 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-6",
+ "wave": "wave-6",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-6",
+ "base_sha": "0e2088bc5c25592fd8e9b7ff10ed7267949b48f8",
+ "head_sha": "ca0fdf4d20243b7b109ff5759cf730567827014f",
+ "commits": [
+  {"sha": "0aa184b0be895b79378a00b20157ff4301e925e3", "subject": "test(api): pin res.relay framing and defaultCache exclusion", "req": "FR-HTTP-036", "kind": "test"},
+  {"sha": "b3ed4ae97cff11fd680dcbb45bdf9385c9a0c79d", "subject": "feat(api): res.relay never receives the app's defaultCache", "req": "FR-HTTP-036", "kind": "implementation"},
+  {"sha": "fd364b6f0e11f8257f5d1ac05ec5defca39fa58d", "subject": "test(api): pin res.relay framing, bodyless rules and stream ownership", "req": "FR-HTTP-037", "kind": "test"},
+  {"sha": "1974d8c00211abb06d0d719381cafe6d4c26f5b7", "subject": "feat(api): res.relay rejects lengths below -1 and drops length on 204", "req": "FR-HTTP-037", "kind": "implementation"},
+  {"sha": "906c2bce6c9c98b992d020fdf64b8b3cfcc1a0c9", "subject": "test(tinyhttpd): pin raw relay socket behaviour over TinyHttpd 3.1.1", "req": "FR-ENGINE-014", "kind": "test"},
+  {"sha": "ca0fdf4d20243b7b109ff5759cf730567827014f", "subject": "refactor(api): pass the relay flag to begin instead of a field", "req": "FR-HTTP-036, FR-ENGINE-014", "kind": "review"}
+ ],
+ "requirements": {"landed": ["FR-HTTP-036", "FR-HTTP-037", "FR-ENGINE-014"], "failed": null, "held": []},
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-6/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-6-fr-http-036/lanes/w6s3l2/",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-6-fr-http-037/lanes/w6s3l2/",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-6-fr-engine-014/lanes/w6s3l2/",
+  ".kiwi/sessions/2026-11-17.naruserve.self-w6s3l2/analysis/report.md"
+ ],
+ "red_evidence": [
+  {"req": "FR-HTTP-036", "test": "ResponseRelayTest.FR_HTTP_036_AC5_relayNeverReceivesDefaultCache", "red_output": "expected null, but was:<no-cache>"},
+  {"req": "FR-HTTP-036", "test": "ResponseRelayTest.FR_HTTP_036_AC5_bodylessRelayTakesNoDefaultCache", "red_output": "expected null, but was:<no-cache>"},
+  {"req": "FR-HTTP-036", "test": "StaticCacheTest.FR_HTTP_036_AC6_defaultCacheRuleWithTheRelayException", "red_output": "expected null, but was:<no-cache> (StaticCacheTest.java:149)"},
+  {"req": "FR-HTTP-037", "test": "ResponseRelayFramingTest.FR_HTTP_037_AC4_lengthBelowMinusOneThrowsAndClosesTheStream", "red_output": "AssertionError: expected IllegalArgumentException for -2 (ResponseRelayFramingTest.java:157)"},
+  {"req": "FR-HTTP-037", "test": "ResponseRelayFramingTest.FR_HTTP_037_AC4_handlerSeesTheRefusal", "red_output": "expected:<1> but was:<0>"},
+  {"req": "FR-HTTP-037", "test": "ResponseRelayFramingTest.FR_HTTP_037_AC6_status204SendsNoLengthAndNoBody", "red_output": "expected null, but was:<5>"},
+  {"req": "FR-HTTP-037", "test": "ResponseRelayFramingTest.FR_HTTP_037_AC6_status204CommitsNoContentLengthHeader", "red_output": "AssertionError at ex.committed(\"Content-Length\").isEmpty()"}
+ ],
+ "review_outcome": {"status": "TASK_DONE", "kept_findings": 0, "blocking_kept": 0, "declared_limits": 0, "residual": 0, "rounds": 2, "check_review_round": "PASS (round 1 full, round 2 since-prev)", "clean_code": "2 rounds: CC-001, CC-005 fixed in ca0fdf4; CC-002, CC-003, CC-004, CC-101 dismissed; 0 unresolved", "run_id": "2026-11-17.naruserve.self-w6s3l2"},
+ "intentionally_empty": [
+  {"req": "FR-ENGINE-014", "commit_kind": "implementation", "reason": "TinyHttpd 3.1.1 and the existing adapter already meet AC-1..AC-6; RawResponseSocketTest (906c2bc, 7 tests) was green before any change (behaviour pins, red only under mutation probes), so no production change and no implementation commit."}
+ ],
+ "design_refuted": [],
+ "srs_deltas": [
+  {"req": "FR-HTTP-036", "kind": "behaviour-pin", "detail": "AC-1..AC-4 already held via IR-HTTP-014 relay; tests kept as behaviour pins (green before implementation)."},
+  {"req": "FR-HTTP-037", "kind": "behaviour-pin", "detail": "AC-1,2,3,5,7,8,9 already held; pins. relay(in,-2) on a committed response throws IllegalArgumentException (argument check first, like res.stream), stream closed either way."},
+  {"req": "FR-ENGINE-014", "kind": "behaviour-pin", "detail": "All AC-1..AC-6 already hold over TinyHttpd 3.1.1; RawResponseSocketTest (7 tests) are pins; DW-1 'red before implementation' cannot apply since no implementation change is needed."},
+  {"req": "FR-HTTP-036,FR-HTTP-037", "kind": "doc-gap", "detail": "Response#relay javadoc (Response.java) and RestApp.defaultCache javadoc should state relay never receives defaultCache, IAE for length < -1, HEAD/204/304 rules; docs/api has no relay entry and docs/api static.md/response.md/defaults.md (+en) still say defaultCache fills every response without Cache-Control (review FND-001, outside write set; OPS-DX-009, later wave)."},
+  {"req": "FR-HTTP-036,FR-HTTP-037,FR-ENGINE-014", "kind": "queue-note", "detail": "kiwi-coder queued update_status implemented + add_completed_work for all three reqs although kiwi-pm ran --no-final; host replay should gate these on post-merge verification."}
+ ],
+ "out_of_lease_paths": [],
+ "test_sufficiency": {"gaps": 0, "detail": "check_test_sufficiency (workspaceRoot=worktree) passed: FR-HTTP-036 AC-1..6, FR-HTTP-037 AC-1..9, FR-ENGINE-014 AC-1..6 all cited; no fill needed."},
+ "regression": {"command": "./gradlew -PtinyHttpdFromMaven=true build", "tests": 3969, "failures": 0, "exit_code": 0, "head": "ca0fdf4d20243b7b109ff5759cf730567827014f"},
+ "bootstrap": "not-applicable"
+}

@@ -1,0 +1,296 @@
+{
+ "findings": [
+  {
+   "id": "FND-001",
+   "axis": "P5",
+   "verdict": "drop",
+   "evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.ScratchReviewRawBodyTest' (probe inAfterOverrun: bodyStream(1024) on a 5000-byte chunked body, read until BodyTooLargeException, then res.send)",
+    "output": "PROBE-C status=200 log=[POST /p 200 0ms in=1025 out=2 rid=...]; tests=3 failures=0",
+    "intent_output": "FR-APP-028 asks in= to count the bytes read through bodyStream on the same BodyState counting path as the other readers; no AC fixes the value after an overrun."
+   },
+   "drop_reason": "in=1025 (limit+1) counts the one probe byte LimitedInputStream takes from the wire to detect the overrun. That is the shared BodyState counting path FR-APP-028 asks for, and the JSON reader logs the same value. No AC is violated.",
+   "title": "Access log in= after an overrun is limit+1, not the 1024 bytes handed to the handler",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+    "line_range": "105-111"
+   },
+   "description": "After an overrun through bodyStream(1024), the access log shows in=1025 because the probe byte is counted.",
+   "suggested_fix": "None needed. If wanted, document in FR-APP-019 that in= includes the overrun probe byte.",
+   "is_behavioral": true,
+   "tags": [
+    "FR-APP-028",
+    "access-log"
+   ]
+  },
+  {
+   "id": "FND-002",
+   "axis": "P4",
+   "verdict": "drop",
+   "evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.ScratchReviewRawBodyTest' (probe escaped413OfTheCallHasTheStandardBody: rawBodyLimit(1024), Content-Length 1025, handler lets bodyStream()'s HttpException escape)",
+    "output": "PROBE-A status=413 body= ; test passed",
+    "intent_output": "FR-HTTP-031 AC-4: the bodyStream call throws HttpException 413 before any byte is read."
+   },
+   "drop_reason": "Status 413 is correct. The empty body comes from the harness StubJsonCodec, which cannot encode the error map; the same happens for every standard error under that codec. Not a defect.",
+   "title": "413 from a declared length over the limit reaches the client",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "line_range": "308-312"
+   },
+   "description": "Checked that an unhandled HttpException 413 thrown by bodyStream() becomes a 413 response.",
+   "suggested_fix": "",
+   "is_behavioral": true,
+   "tags": [
+    "FR-HTTP-031"
+   ]
+  },
+  {
+   "id": "FND-003",
+   "axis": "P2",
+   "verdict": "drop",
+   "evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.ScratchReviewRawBodyTest' (probe concurrentCallsGetTheSameStream: 16 concurrent req.bodyStream() calls from 8 threads in one handler)",
+    "output": "all 16 futures returned the same object; test passed",
+    "intent_output": "FR-HTTP-030 AC-6/AC-7: a repeated call with an equal limit before consumption returns the same object."
+   },
+   "drop_reason": "No race found. rawLock serializes creation, the lock order is rawLock -> BodyState -> inputLock, and closeBody never takes rawLock, so there is no cycle.",
+   "title": "Concurrent bodyStream() calls",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "line_range": "293-318"
+   },
+   "description": "Checked the thread safety of rawStream's repeat rule under contention.",
+   "suggested_fix": "",
+   "is_behavioral": true,
+   "tags": [
+    "FR-HTTP-030"
+   ]
+  },
+  {
+   "id": "FND-004",
+   "axis": "P5",
+   "verdict": "drop",
+   "evidence": {
+    "command": "grep -n -i 'transfer-encoding\\|content-length' /Users/beom/work/git/TinyHttpd/core/src/main/java/com/snoworca/tinyhttpd/server/RequestParser.java",
+    "output": "205: throw new ParseError(400, \"both Transfer-Encoding and Content-Length\"); 228: conflicting Content-Length; 249/255: invalid Content-Length",
+    "intent_output": "FR-HTTP-031: the declared Content-Length decides the early 413 and caps the stream."
+   },
+   "drop_reason": "contentLength() trusts the first Content-Length header, and with both TE and CL it would cap a chunked body at CL. TinyHttpd rejects TE+CL, conflicting CL and invalid CL with 400 before dispatch, and the JSON reader has the same pre-existing behavior.",
+   "title": "Content-Length plus Transfer-Encoding could truncate the raw stream",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "line_range": "609-619"
+   },
+   "description": "Possible request-smuggling-style truncation if an adapter passed both headers through.",
+   "suggested_fix": "",
+   "is_behavioral": true,
+   "tags": [
+    "FR-HTTP-031",
+    "security"
+   ]
+  },
+  {
+   "id": "FND-005",
+   "axis": "P7",
+   "verdict": "drop",
+   "evidence": {
+    "command": "read NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawBodyLimitKotlinTest.kt",
+    "output": "val chained: RestApp = app.rawBodyLimit(512L shl 20).jsonLimit(1024L) also compiles when the result is the platform type RestApp!",
+    "intent_output": "IR-APP-009 AC-6: chained call without a platform type."
+   },
+   "drop_reason": "The Kotlin test alone cannot tell RestApp from RestApp!, but its comment says so, and RawBodyLimitTest.IR_APP_009_AC6_rawBodyLimitCarriesNoNullnessEscape pins the @NullMarked scope by reflection. The pair covers the AC.",
+   "title": "Kotlin AC-6 test does not by itself tell a platform type apart",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawBodyLimitKotlinTest.kt",
+    "line_range": "15-22"
+   },
+   "description": "A test-quality concern; it is covered by the Java companion test.",
+   "suggested_fix": "",
+   "is_behavioral": false,
+   "tags": [
+    "IR-APP-009"
+   ]
+  }
+ ],
+ "clean_code": [
+  {
+   "id": "CC-001",
+   "principle": "DRY / single source of truth",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "line_range": "276-279"
+   },
+   "description": "bodyStream(long) repeats the 1..MAX_LIMIT range check and message that DefaultRestApp.byteLimit (DefaultRestApp.java:300-305) already has; the two can drift apart."
+  },
+  {
+   "id": "CC-002",
+   "principle": "DRY / one default in one place",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "line_range": "63"
+   },
+   "description": "The rawBodyLimit default 1048576 is set in three places: DefaultRestApp.java:116, Dispatcher.java:63 and DefaultRequest.java:72. All three borrow JsonBodyReader.DEFAULT_LIMIT, so the raw limit is coupled to a constant named for the JSON reader."
+  },
+  {
+   "id": "CC-003",
+   "principle": "Temporal coupling",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+    "line_range": "218-222"
+   },
+   "description": "rawBodyLimit reaches Dispatcher and DefaultRequest through post-construction setters (as proxyTrust does), while jsonLimit and formLimit go through the constructors. Forgetting a setter at a new construction site silently falls back to the default."
+  },
+  {
+   "id": "CC-004",
+   "principle": "Duplication",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestBodyStreamTest.java",
+    "line_range": "434-473"
+   },
+   "description": "InputExchange (RequestBodyStreamTest) and CountingExchange (RequestBodyStreamLimitsTest.java:305-345) are near-identical HttpExchange delegates to RecordingExchange. They could share one test helper."
+  },
+  {
+   "id": "CC-005",
+   "principle": "Duplication",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "line_range": "385-400"
+   },
+   "description": "RawBodyStream repeats the markSupported/mark/reset refusal that its LimitedInputStream source already has."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+   "hunks_total": 1,
+   "anchors": [
+    "     * The app-wide limit in bytes of {@link Request#bodyStream()}, {@code 1..1073741824}; default 1048576 (1 MiB),"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+   "hunks_total": 12,
+   "anchors": [
+    "    // Guarded by rawLock: the one stream bodyStream handed out and the limit of the call that created it.",
+    "    /** The app's raw body limit of {@link #bodyStream()}; the Dispatcher sets it before any middleware runs. */",
+    "    // @req FR-HTTP-030",
+    "        released = true; // closes a bodyStream the handler left open; the input below is the one close of the source",
+    "     * The exchange body counted by {@link #body()}. The JSON, form, multipart and raw readers call this after taking",
+    "     * {@link com.snoworca.naruserve.BodyTooLargeException}. Counts as {@code bodyStream(rawBodyLimit)} for the",
+    "    // @req IR-APP-009",
+    "        return rawStream(rawBodyLimit);",
+    "     * As {@link #bodyStream()} with {@code maxBytes} as the limit of this call only. {@code maxBytes} outside",
+    "    // @req FR-HTTP-031",
+    "     * {@code limit} throws {@link HttpException} 413 from this call, before the exchange input is touched, and leaves",
+    "    /** The app's raw body limit of {@link #bodyStream()}, set by the Dispatcher at request construction. */"
+   ],
+   "findings": [
+    "FND-002",
+    "FND-003",
+    "FND-004"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "hunks_total": 3,
+   "anchors": [
+    "    private volatile long rawBodyLimit = JsonBodyReader.DEFAULT_LIMIT;",
+    "    /** The raw body limit of {@code req.bodyStream()} in bytes; 1048576 unless {@link #rawBodyLimit(long)} changed it. */",
+    "            dispatcher.rawBodyLimit(rawBodyLimit());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "hunks_total": 4,
+   "anchors": [
+    "    /** The app's raw body limit of req.bodyStream(); DefaultRestApp.freeze sets it before the first request. */",
+    "    /** Replaces the raw body limit both request-construction sites pass; DefaultRestApp.freeze calls it. */",
+    "        req.requestId(rid);req.startNanos(start);req.proxyTrust(proxyTrust);req.rawBodyLimit(rawBodyLimit);",
+    "        req.rawBodyLimit(rawBodyLimit);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "    // IR-APP-009 AC-5: rawBodyLimit adds no @Nullable position, so RestApp still has exactly defaultCache p0",
+    "    // IR-STATIC-002 AC-5: the wave 6 set; IR-APP-008 AC-5 and IR-ENGINE-003 AC-5: the 0.11.0 set;",
+    "                \"trustProxyHops()->int\", \"trustProxyCidrs()->List\"), signatures(RestApp.class));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RawBodyAccessLogTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "    // FR-APP-028 AC-2: reading 4 bytes of a 10-byte body through bodyStream(2048) logs in=4, not the Content-Length"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RawBodyLimitTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "    // IR-APP-009 AC-6: rawBodyLimit stays inside the package @NullMarked scope with no nullness annotation, so Kotlin"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestBodyStreamLimitsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    " * The size limits of {@code req.bodyStream()} and {@code req.bodyStream(long)}: the app's rawBodyLimit, the per-call"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestBodyStreamTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "    private static List<Object> probe(long rawBodyLimit, byte @Nullable [] body, Probe probe, String... headerPairs) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "    // defaultCache and mimeTypes().register are refused after listen(); IR-APP-009 AC-4 adds rawBodyLimit",
+    "                \"onRegistration\", \"trustProxyHops\", \"trustProxyCidrs\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "    // SDS-AC-11; FR-HTTP-019 AC-5, re-pointed by IR-JSON-002 AC-8: body(Class) and body(TypeRef) are the JSON readers;",
+    "        LifecycleExchange ex = new LifecycleExchange(\"POST\", \"/raw\", \"abc\".getBytes(java.nio.charset.StandardCharsets.UTF_8),"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawBodyLimitKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "    // IR-APP-009 AC-6: rawBodyLimit chains into jsonLimit from Kotlin and returns the receiver; that the result is"
+   ],
+   "findings": [
+    "FND-005"
+   ]
+  }
+ ],
+ "summary": {
+  "total": 5,
+  "by_verdict": {
+   "keep": 0,
+   "drop": 5,
+   "residual": 0
+  },
+  "notes": "No proven defect. In-scope suites pass in Maven mode (RequestBodyStreamLimitsTest 14, RequestBodyStreamTest 23, RawBodyAccessLogTest 3, RawBodyLimitTest 9, RawBodyLimitKotlinTest 1, HttpApiSurfaceTest 30, AppLifecycleGuardTest 8, BodyStateTest 12; 0 failures). The scratch probe ScratchReviewRawBodyTest ran (3/3 pass) and was deleted; git status shows no src changes."
+ }
+}

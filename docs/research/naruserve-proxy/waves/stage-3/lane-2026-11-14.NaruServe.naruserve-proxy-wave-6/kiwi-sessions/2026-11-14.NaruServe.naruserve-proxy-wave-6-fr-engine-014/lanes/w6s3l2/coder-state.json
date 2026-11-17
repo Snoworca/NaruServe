@@ -1,0 +1,49 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-6-fr-engine-014",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "FR-ENGINE-014"
+ ],
+ "spawn_context": "pm-child",
+ "phase": "phase-3.1",
+ "failed": false,
+ "next_resume_hint": "phase-3.1 (regression)",
+ "write_set": [
+  "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawResponseSocketTest.java"
+ ],
+ "red_evidence": null,
+ "red_evidence_meta": {
+  "note": "no test was red before an implementation change: every AC already holds over TinyHttpd 3.1.1, so the tests are behaviour pins. Mutation probes (restored afterwards) turned them red: a default Content-Type in TinyHttpdExchange.commit failed AC3; swallowing write failures in TinyHttpdExchange.writeBody plus firing abort listeners in finish failed AC1 (both), AC2, AC4, AC5. The independent verifier killed a DefaultResponse mutation per AC (AC-1..AC-6)."
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-tinyhttpd:test --tests com.snoworca.naruserve.tinyhttpd.RawResponseSocketTest --rerun",
+  "exit_code": 0,
+  "timestamp": "2026-11-16T19:46:02Z"
+ },
+ "green_evidence_meta": {
+  "reruns": "6 local + 20 by the verifier, 0 failures"
+ },
+ "regression_summary": {
+  "scope": "incomplete",
+  "note": "full build blocked: host ephemeral ports exhausted (macOS uptime 49d23h, TIME_WAIT sockets never expire, 23795 stuck; connect() -> EADDRNOTAVAIL, Gradle client cannot reach its daemon). NaruServe-api suite ran 3007/3007 green in the partial run before exhaustion; NaruServe-tinyhttpd full suite not run.",
+  "passed": null,
+  "failed": null,
+  "regressed_files": []
+ },
+ "loop_counters": {
+  "phase1": {
+   "kept": 0,
+   "dropped": 5,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 0,
+   "dropped": 0,
+   "rounds": 0
+  }
+ },
+ "pending_mutations_file": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-6-fr-engine-014/lanes/w6s3l2/pending-deferred-mutations.jsonl",
+ "updated_at": "2026-11-16T19:46:02Z"
+}

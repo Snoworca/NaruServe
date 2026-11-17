@@ -1,0 +1,283 @@
+{
+ "findings": [
+  {
+   "id": "FND-001",
+   "axis": "P7",
+   "verdict": "drop",
+   "evidence": {
+    "command": "grep -rn relay docs/api; grep -rn defaultCache docs/api",
+    "output": "relay: no matches; defaultCache: static.md:156 'Cache-Control을 정하지 않은 응답에 붙일 정책' (no relay exception), defaults.md:97, response.md:120",
+    "intent_output": "FR-HTTP-036 AC-5/AC-6: a relayed response never receives defaultCache"
+   },
+   "drop_reason": "Non-behavioural documentation drift; no AC covers docs/api and Response.java / docs/api are outside the review range. Flagged for the docs step, not a keep.",
+   "title": "Public contract docs not updated for relay: Response.relay javadoc and docs/api defaultCache text contradict the new relay behaviour",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "line_range": "607-625 (internal javadoc only); Response.java:119-134; docs/api/static.md:156, docs/api/response.md:120, docs/api/defaults.md:97, docs/api/en/*"
+   },
+   "description": "The relay exception to defaultCache, the IllegalArgumentException for contentLength < -1 and the 204/304 framing rules are documented only on the internal DefaultResponse javadoc. The public Response.relay javadoc says nothing about them, docs/api has no relay entry at all (grep -rn relay docs/api returns nothing), and docs/api/static.md:156 / response.md:120 / defaults.md:97 still state that defaultCache fills every response without Cache-Control. CLAUDE.md requires docs/api to change with the API.",
+   "suggested_fix": "Document relay (Express analogue, Java/Kotlin examples) in docs/api/response.md (+en), add the relay exception to the defaultCache paragraphs, and add @throws IllegalArgumentException plus the defaultCache/204 rules to Response.relay javadoc.",
+   "is_behavioral": false,
+   "tags": [
+    "docs",
+    "contract"
+   ]
+  },
+  {
+   "id": "FND-002",
+   "axis": "P1",
+   "verdict": "drop",
+   "evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.zzprobe.*' -i (temporary RelayProbeTest under NaruServe-api/src/test/java/com/snoworca/naruserve/zzprobe, deleted afterwards)",
+    "output": "PROBE committedBad IllegalArgumentException closes=1",
+    "intent_output": "FR-HTTP-037 AC-4 (length < -1 -> IAE, stream closed) and AC-8 (committed -> ISE, stream closed); the ACs do not order the two"
+   },
+   "drop_reason": "Both ACs hold in their own conditions; the overlap is unspecified, and argument-first validation matches res.stream (null contentType -> NPE before the state check). Stream ownership is honoured.",
+   "title": "relay(in, <-1) on an already committed response throws IllegalArgumentException, not IllegalStateException",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "line_range": "619-625"
+   },
+   "description": "Argument validation runs before the state check, so a bad length on a committed response reports IllegalArgumentException; the stream is still closed once.",
+   "suggested_fix": "None required; optionally state the precedence in the javadoc.",
+   "is_behavioral": true,
+   "tags": [
+    "ordering"
+   ]
+  },
+  {
+   "id": "FND-003",
+   "axis": "P6",
+   "verdict": "drop",
+   "evidence": {
+    "command": "",
+    "output": "",
+    "intent_output": ""
+   },
+   "drop_reason": "Cannot flake toward failure (green path never depends on the sleep); it only bounds detection of a hypothetical async eager copy.",
+   "title": "AC-7 test relies on Thread.sleep(50) inside the handler",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseRelayFramingTest.java",
+    "line_range": "242-273"
+   },
+   "description": "pause(50) only gives an asynchronous eager copy time to read; the decisive check (handlerReturned at first read) is deterministic for a synchronous eager copy.",
+   "suggested_fix": "Optionally replace the pause with a latch the source awaits.",
+   "is_behavioral": false,
+   "tags": [
+    "timing"
+   ]
+  },
+  {
+   "id": "FND-004",
+   "axis": "P6",
+   "verdict": "drop",
+   "evidence": {
+    "command": "",
+    "output": "",
+    "intent_output": ""
+   },
+   "drop_reason": "AC-6 only requires the connection to close before 5 body bytes arrive; the looser check still pins that intent.",
+   "title": "FR-ENGINE-014 AC-6 test also passes when the server sends no head at all",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawResponseSocketTest.java",
+    "line_range": "333-357"
+   },
+   "description": "The else-branch accepts a connection closed before any head; a server that refuses the request outright would also pass.",
+   "suggested_fix": "Optionally assert the head arrives (TinyHttpd 3.1.1 commits before the copy) to pin Content-Length: 5 on the wire.",
+   "is_behavioral": false,
+   "tags": [
+    "weak-assertion"
+   ]
+  },
+  {
+   "id": "FND-005",
+   "axis": "P6",
+   "verdict": "drop",
+   "evidence": {
+    "command": "",
+    "output": "",
+    "intent_output": ""
+   },
+   "drop_reason": "Abort is fired before closeInput in runTransfer, so the latch already orders the normal case; the window is a reasonable bound for an absence check.",
+   "title": "settlesAt uses a fixed 300 ms window to prove onAbort never/only once runs",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawResponseSocketTest.java",
+    "line_range": "163-173"
+   },
+   "description": "A listener fired later than 300 ms after the source closes would be missed (false pass), not a flake.",
+   "suggested_fix": "None; an absence assertion needs a bounded window.",
+   "is_behavioral": false,
+   "tags": [
+    "timing"
+   ]
+  },
+  {
+   "id": "FND-006",
+   "axis": "P8",
+   "verdict": "drop",
+   "evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.zzprobe.*' -i (temporary RelayProbeTest under NaruServe-api/src/test/java/com/snoworca/naruserve/zzprobe, deleted afterwards)",
+    "output": "PROBE 205 status=205 cl=5 body=5 abn=false headers=Content-Length:5;",
+    "intent_output": "No AC covers 205; every writer behaves the same way"
+   },
+   "drop_reason": "Pre-existing behaviour shared by send/stream; not introduced by this diff and outside FR-HTTP-036/037/FR-ENGINE-014.",
+   "title": "relay on status 205 sends the body and Content-Length",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "line_range": "681-686"
+   },
+   "description": "205 Reset Content is not bodyless in bodyless(); relay sends 5 bytes.",
+   "suggested_fix": "Out of scope; if wanted, a separate requirement for 205 across all writers.",
+   "is_behavioral": true,
+   "tags": [
+    "out-of-scope"
+   ]
+  },
+  {
+   "id": "FND-007",
+   "axis": "P3",
+   "verdict": "drop",
+   "evidence": {
+    "command": "",
+    "output": "",
+    "intent_output": ""
+   },
+   "drop_reason": "Unproven: the suite is green and t.send returns after completion; no race was observed.",
+   "title": "CountingInputStream.closes/bytesRead are plain fields read by the test thread",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseRelayFramingTest.java",
+    "line_range": "31-68"
+   },
+   "description": "If the in-memory adapter ran runTransfer on another thread, the reads would lack a happens-before edge.",
+   "suggested_fix": "Use AtomicInteger/AtomicLong as RawResponseSocketTest does.",
+   "is_behavioral": false,
+   "tags": [
+    "test-threading"
+   ]
+  }
+ ],
+ "clean_code": [
+  {
+   "id": "CC-001",
+   "principle": "Avoid temporal coupling / explicit dependencies",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "line_range": "82-83, 685, 1069-1077"
+   },
+   "description": "begin() decides whether to apply defaultCache from the relayed field that startBody sets immediately before calling it; the policy is passed through mutable instance state instead of a begin parameter (e.g. begin(length, body, applyDefaultCache)), and the field outlives its only use."
+  },
+  {
+   "id": "CC-002",
+   "principle": "Flag argument / single responsibility",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "line_range": "604, 625, 653, 656-686"
+   },
+   "description": "startBody gained a fifth, boolean parameter that switches two unrelated policies (Content-Length retention on 304 and the defaultCache bypass); three call sites now pass bare true/false literals."
+  },
+  {
+   "id": "CC-003",
+   "principle": "DRY (test helpers)",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseRelayTest.java",
+    "line_range": "142-150"
+   },
+   "description": "ResponseRelayTest.count(...) and ResponseRelayFramingTest.values(...) (ResponseRelayFramingTest.java:415-423) are the same case-insensitive header scan written twice in the same package."
+  },
+  {
+   "id": "CC-004",
+   "principle": "DRY (test helpers)",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawResponseSocketTest.java",
+    "line_range": "74-140"
+   },
+   "description": "readHead/readExactly/readToEof/readChunked/readLine re-implement raw HTTP parsing that other socket tests (SseSocketTest, LoadIsolatedSocketTest, ShutdownIsolatedSocketTest, RawWebSocketClient) and RawTargetSocketTest.Http.readAll already carry; belongs in the shared Http helper."
+  },
+  {
+   "id": "CC-005",
+   "principle": "DRY",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawResponseSocketTest.java",
+    "line_range": "225-231, 310-316"
+   },
+   "description": "Two anonymous close-counting ByteArrayInputStream subclasses with the same shape; a small named helper would do."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "hunks_total": 11,
+   "anchors": [
+    "    private boolean relayed;",
+    "        startBody(in, 0, contentType, -1, false);",
+    "     * {@link IllegalArgumentException}. HEAD and 304 keep a non-negative length as Content-Length with no body; 204",
+    "    // @req FR-HTTP-037",
+    "            throw new IllegalArgumentException(\"contentLength \" + contentLength + \" is below -1\");",
+    "        startBody(in, status, null, length, false);",
+    "    private void startBody(InputStream in, int newStatus, @Nullable String contentType, long length) {",
+    "                if (length >= 0 && status != 204 && (relay || status != 304)) {",
+    "                relayed = relay;",
+    "     * fills an absent Cache-Control, except on a relayed response.",
+    "        if (fallback != null && !relayed && !hasHeader(\"Cache-Control\")) {"
+   ],
+   "findings": [
+    "FND-001",
+    "FND-002",
+    "FND-006"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseRelayFramingTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class ResponseRelayFramingTest {"
+   ],
+   "findings": [
+    "FND-003",
+    "FND-007"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseRelayTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class ResponseRelayTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticCacheTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "import java.io.ByteArrayInputStream;",
+    "    public void FR_HTTP_036_AC6_defaultCacheRuleWithTheRelayException() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawResponseSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class RawResponseSocketTest {"
+   ],
+   "findings": [
+    "FND-004",
+    "FND-005"
+   ]
+  }
+ ],
+ "summary": {
+  "total": 7,
+  "by_verdict": {
+   "drop": 7
+  },
+  "by_axis": {
+   "P7": 1,
+   "P1": 1,
+   "P6": 3,
+   "P8": 1,
+   "P3": 1
+  },
+  "notes": "All 5 reviewed test classes pass (./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.ResponseRelay*' --tests 'com.snoworca.naruserve.StaticCacheTest' :NaruServe-tinyhttpd:test --tests '...RawResponseSocketTest' -> BUILD SUCCESSFUL). Extra probes passed: relay(in,0) -> Content-Length 0, COMPLETED, closed once, unread; lowercase content-length/transfer-encoding are dropped; HEAD relay with a throwing stream -> COMPLETED, Content-Length 5. No keep or residual findings."
+ }
+}

@@ -1,0 +1,52 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-6-fr-http-036",
+ "base_sha": "0e2088bc5c25592fd8e9b7ff10ed7267949b48f8",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-HTTP-036"
+ ],
+ "req_filter": [
+  "FR-HTTP-036"
+ ],
+ "write_set": [],
+ "started_at": "2026-11-15T17:15:07Z",
+ "last_updated_at": "2026-11-16T19:08:13Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-15T17:15:07Z",
+  "ended_at": "2026-11-16T19:08:13Z",
+  "coder_run_id": null,
+  "result_summary": "kiwi-coder TASK_DONE; AC-5/AC-6 red then green; committed by resumed worker",
+  "changed": true,
+  "commit_sha": "b3ed4ae",
+  "commits": [
+   {
+    "req_id": "FR-HTTP-036",
+    "test_sha": "0aa184b",
+    "implementation_sha": "b3ed4ae"
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-15T17:15:07Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-HTTP-036": "evolving"
+  },
+  "status_snapshot": {
+   "FR-HTTP-036": "planned"
+  }
+ },
+ "req_coverage": {},
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": null,
+ "doculight_viewer_id": null
+}

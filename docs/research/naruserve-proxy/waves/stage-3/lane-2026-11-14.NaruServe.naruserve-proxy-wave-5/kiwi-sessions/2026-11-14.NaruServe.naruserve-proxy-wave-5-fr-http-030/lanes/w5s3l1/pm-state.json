@@ -1,0 +1,52 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-5-fr-http-030",
+ "base_sha": "368d0eceafa601eac1e24ea9564bfdd30f9ed4c6",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-HTTP-030"
+ ],
+ "req_filter": [
+  "FR-HTTP-030"
+ ],
+ "write_set": [
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+  "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestBodyStreamTest.java",
+  "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java"
+ ],
+ "started_at": "2026-11-16T19:08:15Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-16T19:08:15Z",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "FR-HTTP-030",
+    "test_sha": "0faa171",
+    "implementation_sha": "5e686f6"
+   }
+  ],
+  "questions": [],
+  "changed": true,
+  "ended_at": "2026-11-16T19:33:16Z",
+  "commit_sha": "5e686f6",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-5-fr-http-030",
+  "result_summary": "TASK_DONE; 3969 tests 0 failures; review kept 1 fixed"
+ },
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-16T19:08:15Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-HTTP-030": "evolving"
+  },
+  "status_snapshot": {
+   "FR-HTTP-030": "planned"
+  }
+ },
+ "req_coverage": {},
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-5/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-5-fr-http-030/lanes/w5s3l1/reports/pm-report.md"
+}

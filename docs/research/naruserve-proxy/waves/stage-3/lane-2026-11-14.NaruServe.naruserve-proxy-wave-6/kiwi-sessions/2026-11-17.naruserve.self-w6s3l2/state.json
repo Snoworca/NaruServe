@@ -1,0 +1,99 @@
+{
+  "run_id": "2026-11-17.naruserve.self-w6s3l2",
+  "skill": "kiwi-review-fix-loop",
+  "schema_version": "1.0.0",
+  "started_at": "2026-11-17T06:28:00Z",
+  "mode": "self",
+  "mode_flags": [
+    "--keep-clean-code",
+    "--no-pipeline-emit",
+    "--loops 20"
+  ],
+  "phase": "8",
+  "finding_queue": [],
+  "fix_iter": 1,
+  "recheck_iter": 1,
+  "clean_code_round": 2,
+  "clean_code_dismissed": [
+    {
+      "id": "CC-002",
+      "principle": "flag argument",
+      "location": "DefaultResponse.java startBody",
+      "reason": "one meaning (relay) on a private documented method; carried into begin by the CC-001 fix"
+    },
+    {
+      "id": "CC-003",
+      "principle": "duplication",
+      "location": "ResponseRelayTest/ResponseRelayFramingTest header-scan helpers",
+      "reason": "project convention: each test class keeps its own private header helper; sharing needs a utility outside the write set"
+    },
+    {
+      "id": "CC-004",
+      "principle": "duplication",
+      "location": "RawResponseSocketTest raw-HTTP readers",
+      "reason": "project convention for socket tests; reuse needs edits outside the write set"
+    },
+    {
+      "id": "CC-101",
+      "principle": "flag argument",
+      "location": "DefaultResponse.java:1071 begin (callers 172,1063)",
+      "reason": "same principle as dismissed CC-002; the boolean is the explicit form the accepted CC-001 fix asked for; reviewer recommended no action"
+    }
+  ],
+  "clean_code_skip": false,
+  "guarantee_scope": "FR-HTTP-036, FR-HTTP-037, FR-ENGINE-014: res.relay framing in DefaultResponse and TinyHttpd relay/onAbort socket conformance (lane write set)",
+  "declared_limits": [],
+  "limits": {
+    "round_cap": 20,
+    "token_budget": null
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "tree_sha": "d7169879352a9ef5142cb35b3124195cba24b2b6",
+      "scope": "full",
+      "scope_widen_reason": null,
+      "files": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseRelayFramingTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseRelayTest.java",
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticCacheTest.java",
+        "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawResponseSocketTest.java"
+      ],
+      "tokens_used": 121635,
+      "residual_count": 0,
+      "coverage_passed": true,
+      "findings": []
+    },
+    {
+      "round": 2,
+      "tree_sha": "48c9bc4f1c96096d7a4cbaa6d6fe7483d06ecafb",
+      "scope": "since-prev",
+      "scope_widen_reason": null,
+      "files": [
+        "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawResponseSocketTest.java"
+      ],
+      "tokens_used": 76209,
+      "residual_count": 0,
+      "coverage_passed": true,
+      "findings": []
+    }
+  ],
+  "regression_baseline": {
+    "source": "self-capture before review fixes",
+    "head": "906c2bce6c9c98b992d020fdf64b8b3cfcc1a0c9",
+    "command": "./gradlew -PtinyHttpdFromMaven=true build",
+    "tests": 3969,
+    "failures": 0
+  },
+  "regression_pass": true,
+  "pr_responded": false,
+  "failed": false,
+  "regression_final": {
+    "head": "ca0fdf4d20243b7b109ff5759cf730567827014f",
+    "tests": 3969,
+    "failures": 0,
+    "new_failures": 0
+  }
+}

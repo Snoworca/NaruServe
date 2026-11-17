@@ -1,0 +1,5 @@
+{"schema_version":"1.0.0","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-5-fr-app-028","sds_path":null,"target":"0.12.0","req_ids":["FR-APP-028"],"spawn_context":"pm-child","phase":"done","failed":false,
+"red_evidence":{"command":"javac + JUnitCore com.snoworca.naruserve.RawBodyAccessLogTest at HEAD 5e686f6 (gradle blocked)","exit_code":0,"captured_failure":"none: OK (3 tests) without production change; mutant (rawStream reads ex.requestBody() uncounted) fails 3/3 with in=0","timestamp":"2026-11-16T19:40:00Z"},
+"green_evidence":{"command":"javac + JUnitCore com.snoworca.naruserve.RawBodyAccessLogTest","exit_code":0,"timestamp":"2026-11-16T19:40:00Z"},
+"regression_summary":{"scope":"api-java-tests-via-JUnitCore","passed":2743,"failed":38,"note":"38 failures all need Gradle-provided naruserve.apiJar/NARU_TEST_AUTH_SECRET/jar layout; full ./gradlew build blocked by host ephemeral-port exhaustion (uptime 49d23h, 23795 TIME_WAIT never expiring)"},
+"next_resume_hint":null}

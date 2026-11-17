@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.snoworca.naruserve.StaticCacheTest" tests="6" skipped="0" failures="1" errors="0" timestamp="2026-11-15T17:18:03.021Z" hostname="Sungbeomui-Macmini.local" time="0.025">
+  <properties/>
+  <testcase name="FR_STATIC_008_AC3_patternsOnARootMount" classname="com.snoworca.naruserve.StaticCacheTest" time="0.007"/>
+  <testcase name="FR_HTTP_036_AC6_defaultCacheRuleWithTheRelayException" classname="com.snoworca.naruserve.StaticCacheTest" time="0.009">
+    <failure message="java.lang.AssertionError: expected null, but was:&lt;no-cache&gt;" type="java.lang.AssertionError">java.lang.AssertionError: expected null, but was:&lt;no-cache&gt;
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotNull(Assert.java:756)
+	at org.junit.Assert.assertNull(Assert.java:738)
+	at org.junit.Assert.assertNull(Assert.java:748)
+	at com.snoworca.naruserve.StaticCacheTest.FR_HTTP_036_AC6_defaultCacheRuleWithTheRelayException(StaticCacheTest.java:149)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.rules.ExternalResource$1.evaluate(ExternalResource.java:54)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.runTestClass(JUnitTestClassExecutor.java:112)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.execute(JUnitTestClassExecutor.java:58)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.execute(JUnitTestClassExecutor.java:40)
+	at org.gradle.api.internal.tasks.testing.junit.AbstractJUnitTestClassProcessor.processTestClass(AbstractJUnitTestClassProcessor.java:54)
+	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.processTestClass(SuiteTestClassProcessor.java:53)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:36)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:24)
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:92)
+	at jdk.proxy1/jdk.proxy1.$Proxy4.processTestClass(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$2.run(TestWorker.java:183)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:132)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+</failure>
+  </testcase>
+  <testcase name="FR_STATIC_008_AC2_lastResCacheBeforeCommitWins" classname="com.snoworca.naruserve.StaticCacheTest" time="0.002"/>
+  <testcase name="FR_STATIC_008_AC1_policyHeaderValues" classname="com.snoworca.naruserve.StaticCacheTest" time="0.0"/>
+  <testcase name="sdsAc4_FR_STATIC_008_AC5_defaultCacheFillsOnlyAnEmptyCacheControl" classname="com.snoworca.naruserve.StaticCacheTest" time="0.005"/>
+  <testcase name="sdsAc3_FR_STATIC_008_AC4_patternsAreMountRelative" classname="com.snoworca.naruserve.StaticCacheTest" time="0.002"/>
+  <system-out><![CDATA[2026-11-16T02:18:03.027+0900 INFO GET /index.html 200 1ms in=0 out=1 rid=51df6cbc414eb30f
+2026-11-16T02:18:03.027+0900 INFO GET / 200 0ms in=0 out=1 rid=8a3feed2f60be3fd
+2026-11-16T02:18:03.027+0900 INFO GET /docs/a.html 200 0ms in=0 out=1 rid=e225fe513d7d8a47
+2026-11-16T02:18:03.028+0900 INFO GET /assets/app.js 200 0ms in=0 out=1 rid=3dd2ff22243da97a
+2026-11-16T02:18:03.030+0900 INFO GET /json 200 0ms in=0 out=1 rid=b0ade678b08d4388
+2026-11-16T02:18:03.030+0900 INFO GET /plain.txt 200 0ms in=0 out=1 rid=fc6656404d922b2f
+2026-11-16T02:18:03.030+0900 INFO GET /relay 200 0ms in=0 out=1 rid=f16ab886d21b38e3
+2026-11-16T02:18:03.031+0900 INFO GET /json 200 0ms in=0 out=1 rid=ac387de44e8ec103
+2026-11-16T02:18:03.031+0900 INFO GET /plain.txt 200 0ms in=0 out=1 rid=0863571ab4f21c70
+2026-11-16T02:18:03.032+0900 INFO GET /missing 404 0ms in=0 out=146 rid=ddd10ffa72242a56
+2026-11-16T02:18:03.035+0900 INFO GET /boom 500 2ms in=0 out=7344 rid=3c3143154927f1aa
+2026-11-16T02:18:03.035+0900 INFO GET /plain.txt 200 0ms in=0 out=1 rid=dc63f47bbdd6fe47
+2026-11-16T02:18:03.036+0900 INFO GET /plain.txt 304 0ms in=0 out=0 rid=1f268fae546342bf
+2026-11-16T02:18:03.036+0900 INFO GET /store 200 0ms in=0 out=1 rid=61b01b07ca1f507c
+2026-11-16T02:18:03.036+0900 INFO GET /header 200 0ms in=0 out=1 rid=7ae29b1421b5ca9a
+2026-11-16T02:18:03.036+0900 INFO GET /pat.css 200 0ms in=0 out=1 rid=71a4d2def6108805
+2026-11-16T02:18:03.037+0900 INFO GET /relay 200 0ms in=0 out=1 rid=f1fc46a85a122af5
+2026-11-16T02:18:03.039+0900 INFO GET /one 200 0ms in=0 out=1 rid=16a808d3ab0430c0
+2026-11-16T02:18:03.039+0900 INFO GET /two 200 0ms in=0 out=1 rid=24eb9e3c089da9c6
+2026-11-16T02:18:03.040+0900 INFO GET /json 200 0ms in=0 out=1 rid=2eca72b44821dee8
+2026-11-16T02:18:03.040+0900 INFO GET /plain.txt 200 0ms in=0 out=1 rid=4ed16c9257d863ba
+2026-11-16T02:18:03.041+0900 INFO GET /missing 404 0ms in=0 out=146 rid=9fe156245615a6d0
+2026-11-16T02:18:03.041+0900 INFO GET /json 200 0ms in=0 out=1 rid=44acda5a47b32595
+2026-11-16T02:18:03.042+0900 INFO GET /plain.txt 200 0ms in=0 out=1 rid=666274fd30599ab3
+2026-11-16T02:18:03.042+0900 INFO GET /missing 404 0ms in=0 out=146 rid=84f795842c656204
+2026-11-16T02:18:03.042+0900 INFO GET /plain.txt 200 0ms in=0 out=1 rid=bb1907f638fcbcb8
+2026-11-16T02:18:03.042+0900 INFO GET /plain.txt 304 0ms in=0 out=0 rid=d90207629fdab52a
+2026-11-16T02:18:03.043+0900 INFO GET /store 200 0ms in=0 out=1 rid=4fe9427356d9a043
+2026-11-16T02:18:03.043+0900 INFO GET /header 200 0ms in=0 out=1 rid=2427bfee6f7bba54
+2026-11-16T02:18:03.043+0900 INFO GET /pat.css 200 0ms in=0 out=1 rid=dcfb84eb320ca926
+2026-11-16T02:18:03.044+0900 INFO GET /plain.txt 200 0ms in=0 out=1 rid=c849819c09b37296
+2026-11-16T02:18:03.045+0900 INFO GET /static/assets/x.js 200 0ms in=0 out=1 rid=67ab49338ebb3469
+2026-11-16T02:18:03.046+0900 INFO GET /static/y.js 200 0ms in=0 out=1 rid=cb07e397f899ce68
+2026-11-16T02:18:03.046+0900 INFO GET /static/a/b.css 200 0ms in=0 out=1 rid=cdee126bcb732011
+]]></system-out>
+  <system-err><![CDATA[2026-11-16T02:18:03.032+0900 ERROR request 3c3143154927f1aa failed
+java.lang.IllegalStateException: boom
+	at com.snoworca.naruserve.StaticCacheTest.lambda$relayMatrix$9(StaticCacheTest.java:159)
+	at com.snoworca.naruserve.internal.TerminalMiddleware.handle(TerminalMiddleware.java:24)
+	at com.snoworca.naruserve.internal.HttpExecution.callback(HttpExecution.java:140)
+	at com.snoworca.naruserve.internal.HttpExecution.access$500(HttpExecution.java:9)
+	at com.snoworca.naruserve.internal.HttpExecution$RouteCursor.advance(HttpExecution.java:317)
+	at com.snoworca.naruserve.internal.HttpExecution$RouterCursor.dispatch(HttpExecution.java:221)
+	at com.snoworca.naruserve.internal.HttpExecution$RouterCursor.lambda$advance$2(HttpExecution.java:215)
+	at com.snoworca.naruserve.internal.HttpExecution$Parameters.advance(HttpExecution.java:277)
+	at com.snoworca.naruserve.internal.HttpExecution$RouterCursor.advance(HttpExecution.java:216)
+	at com.snoworca.naruserve.internal.HttpExecution$Continue.lambda$run$0(HttpExecution.java:333)
+	at com.snoworca.naruserve.internal.AppLifecycle.withRequest(AppLifecycle.java:148)
+	at com.snoworca.naruserve.internal.HttpExecution.submit(HttpExecution.java:107)
+	at com.snoworca.naruserve.internal.HttpExecution.access$800(HttpExecution.java:9)
+	at com.snoworca.naruserve.internal.HttpExecution$Continue.run(HttpExecution.java:333)
+	at com.snoworca.naruserve.internal.DefaultRestApp.lambda$addStatic$1(DefaultRestApp.java:356)
+	at com.snoworca.naruserve.internal.HttpExecution.callback(HttpExecution.java:140)
+	at com.snoworca.naruserve.internal.HttpExecution.access$500(HttpExecution.java:9)
+	at com.snoworca.naruserve.internal.HttpExecution$RouterCursor.dispatch(HttpExecution.java:235)
+	at com.snoworca.naruserve.internal.HttpExecution$RouterCursor.lambda$advance$2(HttpExecution.java:215)
+	at com.snoworca.naruserve.internal.HttpExecution$Parameters.advance(HttpExecution.java:277)
+	at com.snoworca.naruserve.internal.HttpExecution$RouterCursor.advance(HttpExecution.java:216)
+	at com.snoworca.naruserve.internal.HttpExecution.lambda$start$1(HttpExecution.java:36)
+	at com.snoworca.naruserve.internal.AppLifecycle.withRequest(AppLifecycle.java:148)
+	at com.snoworca.naruserve.internal.HttpExecution.submit(HttpExecution.java:111)
+	at com.snoworca.naruserve.internal.HttpExecution.start(HttpExecution.java:36)
+	at com.snoworca.naruserve.internal.Dispatcher.handleHttp(Dispatcher.java:254)
+	at com.snoworca.naruserve.internal.Dispatcher.handle(Dispatcher.java:191)
+	at com.snoworca.naruserve.internal.GatedExchangeHandler.lambda$handle$0(GatedExchangeHandler.java:46)
+	at com.snoworca.naruserve.internal.AppLifecycle.withRequest(AppLifecycle.java:148)
+	at com.snoworca.naruserve.internal.GatedExchangeHandler.handle(GatedExchangeHandler.java:46)
+	at com.snoworca.naruserve.testing.InMemoryHttpAdapter.send(InMemoryHttpAdapter.java:170)
+	at com.snoworca.naruserve.testing.TestApp.send(TestApp.java:77)
+	at com.snoworca.naruserve.StaticCacheTest.FR_HTTP_036_AC6_defaultCacheRuleWithTheRelayException(StaticCacheTest.java:136)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.rules.ExternalResource$1.evaluate(ExternalResource.java:54)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.runTestClass(JUnitTestClassExecutor.java:112)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.execute(JUnitTestClassExecutor.java:58)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.execute(JUnitTestClassExecutor.java:40)
+	at org.gradle.api.internal.tasks.testing.junit.AbstractJUnitTestClassProcessor.processTestClass(AbstractJUnitTestClassProcessor.java:54)
+	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.processTestClass(SuiteTestClassProcessor.java:53)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:36)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:24)
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:92)
+	at jdk.proxy1/jdk.proxy1.$Proxy4.processTestClass(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$2.run(TestWorker.java:183)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:132)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+]]></system-err>
+</testsuite>

@@ -1,0 +1,64 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-5-fr-http-031",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "FR-HTTP-031"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "regression_baseline": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4",
+  "failed_test_ids": [],
+  "passed": 3829,
+  "failed": 0,
+  "pinned_from": "docs/research/naruserve-proxy/waves/regression-baseline.json"
+ },
+ "mcp_call_log": [],
+ "pending_mutations": [],
+ "write_set": [
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+  "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestBodyStreamLimitsTest.java"
+ ],
+ "loop_counters": {
+  "phase1": {
+   "kept": 0,
+   "dropped": 4,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 1,
+   "dropped": 8,
+   "rounds": 1
+  }
+ },
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests com.snoworca.naruserve.RequestBodyStreamLimitsTest",
+  "exit_code": 1,
+  "captured_failure": "13 tests completed, 8 failed (see analysis/red_run.txt)",
+  "timestamp": "2026-11-17T06:40:00Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test",
+  "exit_code": 0,
+  "timestamp": "2026-11-17T07:15:00Z"
+ },
+ "regression_summary": {
+  "scope": "full",
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "passed": 3985,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "deferred_mutations_appended": 7
+}

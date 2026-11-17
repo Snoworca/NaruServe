@@ -1,0 +1,11 @@
+{"event":"phase_start","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-5-fr-http-031","target":"0.12.0","mode":"normal","ts":"2026-11-17T06:30:00Z"}
+{"event":"run_start","req_ids":["FR-HTTP-031"],"ts":"2026-11-17T06:30:00Z"}
+{"event":"tdd_draft_done","iter":1,"file_paths":["NaruServe-api/src/test/java/com/snoworca/naruserve/RequestBodyStreamLimitsTest.java"],"ts":"2026-11-17T06:40:00Z"}
+{"event":"tdd_review_done","iter":1,"finding_summary":{"kept":0,"dropped":4},"ts":"2026-11-17T06:50:00Z"}
+{"event":"tdd_red_confirmed","exit_code":1,"failed":8,"total":13,"ts":"2026-11-17T06:50:00Z"}
+{"event": "impl_done", "iter": 1, "files_changed": ["NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java"], "ts": "2026-11-17T07:25:00Z"}
+{"event": "formal_review_done", "iter": 1, "finding_summary": {"kept": 0, "dropped": 0}, "ts": "2026-11-17T07:25:00Z"}
+{"event": "prickly_review_done", "iter": 1, "finding_summary": {"kept": 1, "dropped": 8}, "resolved": "added FR_HTTP_031_AC4_the413OfTheCallLeavesTheBodyConsumed", "ts": "2026-11-17T07:25:00Z"}
+{"event": "test_green", "exit_code": 0, "ts": "2026-11-17T07:25:00Z"}
+{"event": "regression_done", "scope": "full", "passed": 3985, "failed": 0, "ts": "2026-11-17T07:25:00Z"}
+{"event": "run_done", "green": true, "regression": "pass", "ts": "2026-11-17T07:25:00Z"}

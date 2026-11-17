@@ -1,0 +1,10 @@
+{"event":"phase_start","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-5-ir-app-009","target":"0.12.0","mode":"normal"}
+{"event":"run_start","req_ids":["IR-APP-009"]}
+{"event":"tdd_draft_done","iter":1,"file_paths":["NaruServe-api/src/test/java/com/snoworca/naruserve/RawBodyLimitTest.java","NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawBodyLimitKotlinTest.kt","NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java","NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java"]}
+{"event": "tdd_review_done", "iter": 1, "finding_summary": {"kept": 3, "dropped": 7}}
+{"event": "tdd_red_confirmed", "exit_code": 1}
+{"event": "impl_done", "iter": 1}
+{"event": "prickly_review_done", "iter": 1, "finding_summary": {"kept": 0, "dropped": 11}}
+{"event": "test_green", "exit_code": 0}
+{"event": "regression_done", "scope": "full", "passed": 3946, "failed": 0}
+{"event": "run_done"}

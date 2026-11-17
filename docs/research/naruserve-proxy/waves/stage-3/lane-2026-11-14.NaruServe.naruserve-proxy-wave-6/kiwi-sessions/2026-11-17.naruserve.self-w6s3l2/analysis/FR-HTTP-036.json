@@ -1,0 +1,135 @@
+{
+  "id": "FR-HTTP-036",
+  "title": "res.relay leaves Content-Type to the app, frames from its length argument and adds no defaultCache",
+  "type": "functional",
+  "target": "0.12.0",
+  "status": "planned",
+  "scope": "HTTP",
+  "filePath": "docs/spec/04.http-core.srs.md",
+  "headingLine": 5524,
+  "metadata": {
+    "Type": "functional",
+    "Target": "0.12.0",
+    "Status": "planned",
+    "Priority": "high",
+    "Tags": "0.12.0, feasibility:high, request-a, response, relay, cache",
+    "Risk": "medium",
+    "Stability": "evolving",
+    "Verification Method": "test",
+    "GitHub Issue": "-",
+    "Related Docs": "-"
+  },
+  "acceptanceCriteria": [
+    {
+      "id": "AC-1",
+      "text": "A handler that sets no `Content-Type` and calls `res.relay(in, 5)` with a 5-byte stream makes the client receive no `Content-Type` header, `Content-Length: 5` and the 5 body bytes.",
+      "checked": false,
+      "line": 5549
+    },
+    {
+      "id": "AC-2",
+      "text": "A `Content-Type` the app set before the call (for example `res.header(\"Content-Type\", \"application/x-custom\")`) is sent exactly as set, with no charset or other change.",
+      "checked": false,
+      "line": 5550
+    },
+    {
+      "id": "AC-3",
+      "text": "A `Content-Length` or `Transfer-Encoding` header the app set before the call (`res.header(\"Content-Length\", \"99\")`, `res.header(\"Transfer-Encoding\", \"chunked\")`) is dropped, and the framing comes only from the `contentLength` argument.",
+      "checked": false,
+      "line": 5551
+    },
+    {
+      "id": "AC-4",
+      "text": "Headers set before the call through `res.header`, `res.append` and `res.addCookie` are sent as set, and the header list the in-memory adapter receives at commit equals those headers plus `Content-Length` when the length is sent, with no other header added by the core.",
+      "checked": false,
+      "line": 5552
+    },
+    {
+      "id": "AC-5",
+      "text": "In an app with `app.defaultCache(CachePolicy.noCache())`, a response sent with `res.relay` carries no `Cache-Control`, while a `Cache-Control` the app set with `res.header` or `res.cache` before `relay` is sent as set.",
+      "checked": false,
+      "line": 5553
+    },
+    {
+      "id": "AC-6",
+      "text": "Restating FR-STATIC-008 AC-5 with the change: with the default `defaultCache(null)` a JSON route and a static file without a matching pattern send no `Cache-Control`; with `defaultCache(CachePolicy.noCache())` every response that holds no `Cache-Control` at commit, error and `304` responses included, sends `Cache-Control: no-cache`, while `res.cache(noStore())`, `res.header(\"Cache-Control\", \"max-age=5\")`, a matching `options.cache` pattern and a global middleware's `res.header(\"Cache-Control\", \"private\")` keep their own value; a response written by `res.relay` is the one exception and never receives the `defaultCache` value.",
+      "checked": false,
+      "line": 5554
+    }
+  ],
+  "verificationEvidence": [],
+  "traceLinks": [
+    {
+      "type": "Code",
+      "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+      "relation": "implements",
+      "notes": "trace_intent=addition_site; relay header handling and defaultCache bypass",
+      "line": 5565
+    },
+    {
+      "type": "Requirement",
+      "reference": "IR-HTTP-014",
+      "relation": "depends_on",
+      "notes": "declares relay on Response",
+      "line": 5566
+    },
+    {
+      "type": "Requirement",
+      "reference": "FR-STATIC-008",
+      "relation": "extends",
+      "notes": "re_stated_from: FR-STATIC-008#AC-5",
+      "line": 5567
+    },
+    {
+      "type": "Requirement",
+      "reference": "FR-HTTP-014",
+      "relation": "extends",
+      "notes": "relay is a body writer beside stream that keeps the length and sets no Content-Type",
+      "line": 5568
+    }
+  ],
+  "changeNotes": [
+    {
+      "date": "2026-11-14",
+      "change": "Created",
+      "reason": "add-requirement",
+      "line": 5582
+    }
+  ],
+  "tags": [
+    "0.12.0",
+    "feasibility:high",
+    "request-a",
+    "response",
+    "relay",
+    "cache"
+  ],
+  "relatedDocs": [],
+  "evidenceReferences": [],
+  "traceReferences": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "IR-HTTP-014",
+    "FR-STATIC-008",
+    "FR-HTTP-014"
+  ],
+  "blockStartLine": 5524,
+  "blockEndLine": 5583,
+  "sectionLines": {
+    "Requirement": 5539,
+    "Rationale": 5543,
+    "Acceptance Criteria": 5547,
+    "Verification Evidence": 5556,
+    "Trace Links": 5561,
+    "Research / Analysis": 5570,
+    "Implementation Notes": 5574,
+    "Change Notes": 5578
+  },
+  "priority": "high",
+  "risk": "medium",
+  "stability": "evolving",
+  "newWorkCandidate": true,
+  "requirement": "The system shall make `res.relay(in, contentLength)` send only the headers the app set before the call plus the framing taken from `contentLength` — never adding or changing `Content-Type`, dropping any app-set `Content-Length` and `Transfer-Encoding` — and never apply the app's `defaultCache` policy to a relayed response, while every other response keeps the `defaultCache` rule of FR-STATIC-008.",
+  "rationale": "AC-1 ← PRD-38, PRD-190, PRD-3 (design D-029); AC-2 ← PRD-38 (design D-029); AC-3 ← PRD-38 (design D-029); AC-4 ← PRD-39; AC-5 ← PRD-40, PRD-190 (design D-030); AC-6 ← PRD-40 (design D-030). Adding the app's cache policy to a relayed response would change the meaning of the upstream response, and `stream(in, contentType)` forces a `Content-Type` and drops the length, which is why decision 17 adds a separately named writer.",
+  "research": "- -",
+  "implementationNotes": "- `relay` can reuse `DefaultResponse.startBody` with `contentType == null` (which already removes `Content-Length` and `Transfer-Encoding` and puts the length when it is non-negative), but `begin()` (`:933-938`) applies `defaultCache` whenever no `Cache-Control` is set, so relay needs a flag that skips it (code map risk R-3). FR-STATIC-008 AC-5 is expired with this requirement as successor; its other criteria stay as verified."
+}

@@ -1,0 +1,50 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-6-fr-engine-014",
+ "base_sha": "1974d8c",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-ENGINE-014"
+ ],
+ "req_filter": [
+  "FR-ENGINE-014"
+ ],
+ "write_set": [
+  "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawResponseSocketTest.java"
+ ],
+ "started_at": "2026-11-16T19:20:52Z",
+ "last_updated_at": "2026-11-16T19:47:52Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "blocked",
+  "started_at": "2026-11-16T19:20:52Z",
+  "ended_at": null,
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-6-fr-engine-014",
+  "result_summary": "NEEDS_USER (host environment): RawResponseSocketTest 7/7 green targeted, all ACs behaviour pins, no prod change; full regression blocked by port exhaustion",
+  "changed": true,
+  "commit_sha": null,
+  "commits": [],
+  "questions": [
+   "Full regression cannot run on this host: macOS uptime 50d (tcp_now overflow), ~23800 TIME_WAIT sockets never drain, loopback connect() fails EADDRNOTAVAIL, Gradle client cannot reach its daemon. Needs host reboot (or another host), then rerun build, commit RawResponseSocketTest (test commit), append pending-deferred-mutations.jsonl."
+  ],
+  "attempts": 1
+ },
+ "last_question": "Full regression cannot run on this host: macOS uptime 50d (tcp_now overflow), ~23800 TIME_WAIT sockets never drain, loopback connect() fails EADDRNOTAVAIL, Gradle client cannot reach its daemon. Needs host reboot (or another host), then rerun build, commit RawResponseSocketTest (test commit), append pending-deferred-mutations.jsonl.",
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-16T19:20:52Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-ENGINE-014": "evolving"
+  },
+  "status_snapshot": {
+   "FR-ENGINE-014": "planned"
+  }
+ },
+ "req_coverage": {},
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": null,
+ "doculight_viewer_id": null
+}

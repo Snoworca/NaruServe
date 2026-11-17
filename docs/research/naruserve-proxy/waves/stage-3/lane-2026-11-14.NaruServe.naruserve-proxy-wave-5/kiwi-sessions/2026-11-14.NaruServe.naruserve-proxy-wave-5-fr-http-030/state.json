@@ -1,0 +1,58 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-5-fr-http-030",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "FR-HTTP-030"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "updated_at": "2026-11-16T19:31:12Z",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "loop_counters": {
+  "phase1": {
+   "kept": 0,
+   "dropped": 0,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 1,
+   "dropped": 8,
+   "rounds": 1
+  }
+ },
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests RequestBodyStreamTest --tests internal.BodyStateTest",
+  "exit_code": 1,
+  "captured_failure": "17 of 34 failed (see lanes/w5s3l1/red_run.txt); round 2: FR_HTTP_030_AC7_sharedStreamKeepsTheRawBodyLimitWhicheverCallCameFirst expected:<[tooLarge 4096 4096]> but was:<[eof 10000]>",
+  "timestamp": "2026-11-16T19:31:12Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "timestamp": "2026-11-16T19:31:12Z"
+ },
+ "regression_baseline": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "passed": 3946,
+  "failed": 0,
+  "head_sha": "368d0eceafa601eac1e24ea9564bfdd30f9ed4c6"
+ },
+ "regression_summary": {
+  "last_run_at": "2026-11-16T19:31:12Z",
+  "scope": "full",
+  "passed": 3969,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "mcp_call_log": [],
+ "pending_mutations": [],
+ "deferred_queue_appended": 27
+}

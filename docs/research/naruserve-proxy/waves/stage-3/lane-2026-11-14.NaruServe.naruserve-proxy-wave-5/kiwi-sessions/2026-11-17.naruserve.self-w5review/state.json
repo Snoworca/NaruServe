@@ -1,0 +1,63 @@
+{
+ "run_id": "2026-11-17.naruserve.self-w5review",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "started_at": "2026-11-17T07:45:00Z",
+ "mode": "self",
+ "mode_flags": [
+  "--keep-clean-code",
+  "--loops 20",
+  "--no-pipeline-emit"
+ ],
+ "phase": "8",
+ "finding_queue": [],
+ "fix_iter": 0,
+ "recheck_iter": 0,
+ "clean_code_round": 3,
+ "clean_code_dismissed": [
+  {
+   "id": "CC-002",
+   "reason": "single constant JsonBodyReader.DEFAULT_LIMIT, same as jsonLimit wiring"
+  },
+  {
+   "id": "CC-003",
+   "reason": "post-construction setters follow proxyTrust convention"
+  },
+  {
+   "id": "CC-004",
+   "reason": "different input types; sharing needs a new file"
+  },
+  {
+   "id": "CC-005",
+   "reason": "deliberate defensive mark/reset refusal"
+  },
+  {
+   "id": "CC-008",
+   "reason": "both fixes need JsonBodyReader.java outside the lane write set"
+  }
+ ],
+ "clean_code_skip": false,
+ "guarantee_scope": "NaruServe-api body readers: req.bodyStream()/bodyStream(long), app.rawBodyLimit, BodyState RAW, access-log in= counting; base 7d1bdff..HEAD",
+ "declared_limits": [],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "c862bd89037b7e7c8c24480a0d8b539ee6c1a23b",
+   "scope": "full",
+   "scope_widen_reason": null,
+   "files": [],
+   "tokens_used": 139901,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  }
+ ],
+ "regression_baseline": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+ "regression_pass": true,
+ "pr_responded": false,
+ "failed": false
+}

@@ -1,0 +1,52 @@
+{
+  "findings": [],
+  "clean_code": [
+    {
+      "id": "CC-007",
+      "principle": "Traceability accuracy (@req must name the requirement whose AC the code implements)",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+        "line_range": "88"
+      },
+      "description": "The moved byteLimit carries `// @req IR-HTTP-013`, but IR-HTTP-013 (docs/spec/04.http-core.srs.md:4932) only declares bodyStream/bodyStream(long)/headerNames/rawHeaders/isFromTrustedProxy on the Request interface (AC-1 is about method declarations and generic return types); it says nothing about a 1..1073741824 range. The range of bodyStream(long) is FR-HTTP-031 AC-3 (04.http-core.srs.md:5155, AC-3 line 'bodyStream(0), (-1), (1073741825) throw IllegalArgumentException'; its implementation note names byteLimit() explicitly). The other three tags are justified: IR-JSON-002 AC-2 (jsonLimit range + message naming jsonLimit and 1..1073741824), IR-MULTIPART-001 AC-4 (formLimit 1..1073741824, IAE naming the setting), IR-APP-009 AC-3 (rawBodyLimit 0/-1/1073741825 rejected). The original private DefaultRestApp.byteLimit at HEAD had no @req tags at all, so these tags are new and the wrong one is introduced by this diff.",
+      "suggested_fix": "Replace `// @req IR-HTTP-013` with `// @req FR-HTTP-031` on LimitedInputStream.byteLimit (keep IR-JSON-002, IR-MULTIPART-001, IR-APP-009)."
+    },
+    {
+      "id": "CC-008",
+      "principle": "Acyclic dependencies / cohesion (helper should live with the constant it checks)",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+        "line_range": "84-94"
+      },
+      "description": "The fix for CC-006 put the range check on LimitedInputStream rather than next to MAX_LIMIT on JsonBodyReader (which CC-006 suggested). JsonBodyReader already depends on LimitedInputStream (JsonBodyReader.java:40 `new LimitedInputStream(...)`); LimitedInputStream now depends back on JsonBodyReader.MAX_LIMIT in both the code and the javadoc {@link}, creating a source-level cycle between the two internal classes (the constant is inlined by javac, so not a runtime issue). It also puts an app-configuration argument validator ('<name> must be in 1..1073741824 bytes') on a stream class whose class doc and @req (FR-HTTP-020, FR-JSON-001) describe read-time overrun behaviour, and whose own constructor applies a different rule ('body limit must be positive'). Low priority; behaviour is unaffected.",
+      "suggested_fix": "Either move byteLimit to JsonBodyReader beside MAX_LIMIT (callers: DefaultRestApp x3, DefaultRequest.bodyStream(long)), or move MAX_LIMIT (the cross-body-limit bound) onto LimitedInputStream and have JsonBodyReader reference it, so the dependency runs one way."
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+      "hunks_total": 1,
+      "anchors": ["        return rawStream(LimitedInputStream.byteLimit(\"maxBytes\", maxBytes));"],
+      "findings": ["CC-007"]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+      "hunks_total": 4,
+      "anchors": [
+        "            this.jsonLimit = LimitedInputStream.byteLimit(\"jsonLimit\", bytes);",
+        "    private static long byteLimit(String name, long bytes) {",
+        "            this.formLimit = LimitedInputStream.byteLimit(\"formLimit\", bytes);",
+        "            this.rawBodyLimit = LimitedInputStream.byteLimit(\"rawBodyLimit\", bytes);"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+      "hunks_total": 1,
+      "anchors": ["    static long byteLimit(String name, long bytes) {"],
+      "findings": ["CC-007", "CC-008"]
+    }
+  ],
+  "resolved": ["CC-006"],
+  "summary": {"total": 0, "by_verdict": {}}
+}

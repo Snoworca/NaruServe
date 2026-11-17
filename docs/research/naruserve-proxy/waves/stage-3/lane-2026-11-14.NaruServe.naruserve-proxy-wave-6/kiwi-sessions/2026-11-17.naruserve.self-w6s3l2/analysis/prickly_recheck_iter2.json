@@ -1,0 +1,88 @@
+{
+  "findings": [
+    {
+      "id": "FND-101",
+      "axis": "behaviour-preservation",
+      "verdict": "drop",
+      "evidence": {
+        "command": "git show 906c2bc:NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java | grep -n 'begin(\\|relayed'; grep -n 'ResponseState.NEW\\|committed = false' DefaultResponse.java; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test :NaruServe-tinyhttpd:test --tests '*RawResponseSocketTest*' -q",
+        "output": "Old: relayed assigned only in startBody (line 685) right before begin; other begin sites (SSE HEAD line 174, prepare line 1066) read relayed. Only NEW-reset is the SSE eventStream refusal path (line 197), reachable only from STREAMING, never after a relay commit (startBody requires NEW and leaves COMMITTED). So relayed was always false at the SSE/prepare sites; new code passes false there and relay at startBody. Tests: NaruServe-api 3007 tests 0 failures 0 errors; NaruServe-tinyhttpd 7 tests (RawResponseSocketTest) 0 failures.",
+        "intent_output": "Mutation check: startBody begin(..., false) -> 3 failures (ResponseRelayTest FR_HTTP_036_AC5_relayNeverReceivesDefaultCache, FR_HTTP_036_AC5_bodylessRelayTakesNoDefaultCache, StaticCacheTest FR_HTTP_036_AC6_defaultCacheRuleWithTheRelayException: expected null but was no-cache); begin(..., true) -> 3 failures (StaticCacheTest FR_HTTP_036_AC6..., FR_STATIC_008_AC5..., KotlinDocsExamplesKotlinTest FR-KT-004 AC-2: expected no-cache but was null). File restored with git checkout; the argument is pinned in both directions."
+      },
+      "drop_reason": "Suspected stale-flag divergence (old field could leak across a state reset) disproved: no path resets to NEW after a relay commit; full suites green and mutations of the new argument are caught both ways.",
+      "title": "relay flag moved from field to begin argument: defaultCache decision unchanged at every call site",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+        "line_range": "172,683,1063,1071-1074"
+      },
+      "description": "Checked all three begin call sites (SSE HEAD head commit, startBody, prepare) for the same defaultCache decision as before the refactor. Equivalent.",
+      "is_behavioral": true,
+      "tags": ["FR-HTTP-036", "FR-HTTP-037", "refactor", "no-regression"]
+    },
+    {
+      "id": "FND-102",
+      "axis": "test-semantics",
+      "verdict": "drop",
+      "evidence": {
+        "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-tinyhttpd:test --tests '*RawResponseSocketTest*' -q",
+        "output": "TEST-com.snoworca.naruserve.tinyhttpd.RawResponseSocketTest.xml: 7 tests, 0 failures, 0 errors, 0 skipped",
+        "intent_output": "hello(Runnable) builds a fresh ByteArrayInputStream(\"hello\") per call inside the handler, as the anonymous classes did; close() runs onClose each time (CountDownLatch.countDown / AtomicInteger.incrementAndGet via method refs), the same per-close side effect as before."
+      },
+      "drop_reason": "Helper is semantically identical to the two anonymous streams it replaced (per-request instance, same bytes, same per-close counting); tests pass.",
+      "title": "hello(Runnable onClose) helper keeps AC-2 / AC-5 close-counting semantics",
+      "location": {
+        "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawResponseSocketTest.java",
+        "line_range": "73-81,236,316"
+      },
+      "description": "FR-ENGINE-014 AC-2 (relayClosed latch of 2) and AC-5 (closes counter) still count every close of every per-request source.",
+      "is_behavioral": false,
+      "tags": ["FR-ENGINE-014", "test-refactor"]
+    }
+  ],
+  "resolved_findings": [],
+  "clean_code": [
+    {
+      "id": "CC-101",
+      "principle": "Flag argument / boolean-literal call sites (Clean Code F3, readability)",
+      "location": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:1071 (callers 172, 1063)",
+      "note": "begin(long, byte[], boolean relay) now takes a boolean flag; callers pass bare literals begin(0, EMPTY, false). Same principle as dismissed CC-002 but at begin, introduced by this round. Low value: begin is private, the flag only toggles one guard, and the alternative (a field) was what this round removed. Optional; recommend no action.",
+      "severity": "low"
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+      "hunks_total": 7,
+      "anchors": [
+        "private boolean relayed;",
+        "head = begin(0, EMPTY, false);",
+        "c = begin(bodyless ? 0 : length, EMPTY, relay);",
+        "return bodyless() ? begin(0, EMPTY, false) : begin(body.length, body, false);",
+        "* fills an absent Cache-Control, except when {@code relay} is true ({@link #relay}).",
+        "private Commit begin(long length, byte[] body, boolean relay) {",
+        "if (fallback != null && !relay && !hasHeader(\"Cache-Control\")) {"
+      ],
+      "findings": ["FND-101"]
+    },
+    {
+      "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawResponseSocketTest.java",
+      "hunks_total": 3,
+      "anchors": [
+        "private static InputStream hello(Runnable onClose) {",
+        "res.relay(hello(relayClosed::countDown), 5);",
+        "res.relay(hello(closes::incrementAndGet), 5);"
+      ],
+      "findings": ["FND-102"]
+    }
+  ],
+  "summary": {
+    "keep": 0,
+    "residual": 0,
+    "drop": 2,
+    "clean_code": 1,
+    "behaviour_preserved": true,
+    "tests": "NaruServe-api 3007/0 failures; NaruServe-tinyhttpd RawResponseSocketTest 7/0 failures",
+    "mutation": "begin relay argument at startBody mutated to false and to true: 3 failures each, then restored",
+    "worktree_clean": true
+  }
+}

@@ -1,0 +1,147 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-5",
+ "wave": "wave-5",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-5",
+ "base_sha": "7d1bdffa861ff05a6a4a7eb12f9bb73a0cd80eb1",
+ "head_sha": "d5c6591996ba78cbc34cee5d3f9dfb5017c03957",
+ "commits": [
+  {
+   "sha": "bd404f9",
+   "subject": "test: pin app.rawBodyLimit and the 1 MiB default limit of req.bodyStream()",
+   "req": "IR-APP-009",
+   "kind": "test"
+  },
+  {
+   "sha": "368d0ec",
+   "subject": "feat: add app.rawBodyLimit and enforce it on req.bodyStream()",
+   "req": "IR-APP-009",
+   "kind": "implementation"
+  },
+  {
+   "sha": "0faa171",
+   "subject": "test: pin the one-read rule and cleanup of req.bodyStream()",
+   "req": "FR-HTTP-030",
+   "kind": "test"
+  },
+  {
+   "sha": "5e686f6",
+   "subject": "feat: take the body through BodyState RAW in req.bodyStream()",
+   "req": "FR-HTTP-030",
+   "kind": "implementation"
+  },
+  {
+   "sha": "82b055c",
+   "subject": "test(app): pin the access log in= count of bytes read through req.bodyStream()",
+   "req": "FR-APP-028",
+   "kind": "test"
+  },
+  {
+   "sha": "9060d39",
+   "subject": "test(http): pin the size limits of req.bodyStream() and bodyStream(long)",
+   "req": "FR-HTTP-031",
+   "kind": "test"
+  },
+  {
+   "sha": "82850b3",
+   "subject": "feat(http): enforce the per-call limit and the early 413 in req.bodyStream(long)",
+   "req": "FR-HTTP-031",
+   "kind": "implementation"
+  },
+  {
+   "sha": "d5c6591",
+   "subject": "refactor(http): share one body-limit range check between the app and bodyStream(long)",
+   "req": "FR-HTTP-031,IR-APP-009",
+   "kind": "review"
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "IR-APP-009",
+   "FR-HTTP-030",
+   "FR-APP-028",
+   "FR-HTTP-031"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-5/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-5-ir-app-009/lanes/w5s3l1/",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-5-fr-http-030/lanes/w5s3l1/",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-5-fr-app-028/lanes/w5s3l1/",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-5-fr-http-031/lanes/w5s3l1/",
+  ".kiwi/sessions/2026-11-17.naruserve.self-w5review/analysis/"
+ ],
+ "red_evidence": [
+  {
+   "req": "IR-APP-009",
+   "test": "RawBodyLimitTest, RawBodyLimitKotlinTest, HttpApiSurfaceTest, AppLifecycleGuardTest",
+   "red_output": "Kotlin: Unresolved reference 'rawBodyLimit'; IR_APP_009_AC2/AC1 expected:<[tooLarge 1048576 1048576]> but was:<[eof 1048577]> (commit bd404f9)"
+  },
+  {
+   "req": "FR-HTTP-030",
+   "test": "RequestBodyStreamTest, BodyStateTest",
+   "red_output": "AC-6/AC-7 expected same LimitedInputStream; AC-8/AC-9 no throw after read/skip/close; AC-10 read after cleanup; AC-11 expected PARSING but was UNREAD (commit 0faa171)"
+  },
+  {
+   "req": "FR-APP-028",
+   "test": "RawBodyAccessLogTest",
+   "red_output": "Not red against any commit in the window: bodyStream() already read through the counted exchangeInput() at base 7d1bdff. Discrimination by mutant (rawStream reads uncounted ex.requestBody()): 3/3 fail - AC-1 expected:<1000> but was:<0>; AC-2 expected:<4> but was:<0>; AC-3 in=0 vs in=1000. Test-only commit 82b055c, no implementation commit."
+  },
+  {
+   "req": "FR-HTTP-031",
+   "test": "RequestBodyStreamLimitsTest",
+   "red_output": "13 tests, 8 failed: AC-4 'the bodyStream call itself must throw HttpException 413, got returned'; AC-3 'bodyStream(0) returned'; AC-2 'expected BodyTooLargeException after 1024 bytes, read 1025 bytes to the end'; AC-5 'read to the end expected:<413> but was:<200>'. AC-1 and the chunked AC-5 test were already green (guards, mutant-checked) (commit 9060d39)"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "detail": "Round 1 over 12 files/34 hunks: 0 keep, 0 residual, 5 drop; coverage anchors verified; check_review_round PASS. Clean-code rounds 3/3: CC-001, CC-006, CC-007 fixed (d5c6591); CC-002..005 and CC-008 dismissed (CC-008: LimitedInputStream<->JsonBodyReader.MAX_LIMIT source cycle, fix needs JsonBodyReader.java outside the write set)."
+ },
+ "intentionally_empty": null,
+ "design_refuted": [],
+ "srs_deltas": [
+  {
+   "req": "FR-APP-028",
+   "kind": "already-satisfied",
+   "evidence": "All AC tests pass at base 7d1bdff; behavior came from the earlier exchangeInput() counting path. Red only under mutant. No implementation commit."
+  },
+  {
+   "req": "FR-HTTP-031",
+   "ac": "AC-5",
+   "kind": "clarification",
+   "evidence": "Default route-error body is HTML and never contains the string PAYLOAD_TOO_LARGE; the code comes from StandardErrors.code(413). AC-5 wording should say the code is the StandardErrors table value, not wire text."
+  },
+  {
+   "req": "FR-HTTP-031",
+   "ac": "AC-4",
+   "kind": "clarification",
+   "evidence": "Unstated choice pinned by FR_HTTP_031_AC4_the413OfTheCallLeavesTheBodyConsumed: the 413 thrown by the call leaves the body consumed (as JsonBodyReader does); an out-of-range maxBytes takes nothing (FR_HTTP_031_AC3_aRefusedArgumentTakesNothing). Consider recording both in the AC text."
+  },
+  {
+   "req": "FR-APP-028",
+   "kind": "note",
+   "evidence": "After an overrun via bodyStream(1024) the access log reports in=1025 (limit + the one probe byte LimitedInputStream reads), same as the JSON reader; no AC fixes this value."
+  }
+ ],
+ "out_of_lease_paths": [],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "check_test_sufficiency ids=IR-APP-009,FR-HTTP-030,FR-APP-028,FR-HTTP-031 (workspaceRoot=worktree): passed, every AC cited, 0 gaps."
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 3986,
+  "failures": 0,
+  "exit_code": 0
+ },
+ "bootstrap": "not-applicable",
+ "notes": [
+  "Resumed after host reboot. Pre-reboot commits bd404f9..5e686f6 have no conventional scope in their subjects; history not rewritten.",
+  "Commit d5c6591 carries two REQ trailers.",
+  "Deferred queue now holds 54 lines (FR-APP-028 lines 44-47, FR-HTTP-031 lines 48-54).",
+  "Request.java javadoc for bodyStream(long) does not mention the IllegalArgumentException range or the 413, and docs/api has no bodyStream entry; both predate this lane and are outside its write set."
+ ]
+}

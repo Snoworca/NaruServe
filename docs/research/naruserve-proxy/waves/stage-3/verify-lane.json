@@ -1,0 +1,51 @@
+{
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-5": {
+  "head": "d5c6591996ba78cbc34cee5d3f9dfb5017c03957",
+  "commits": 8,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "detail": "Round 1 over 12 files/34 hunks: 0 keep, 0 residual, 5 drop; coverage anchors verified; check_review_round PASS. Clean-code rounds 3/3: CC-001, CC-006, CC-007 fixed (d5c6591); CC-002..005 and CC-008 dismissed (CC-008: LimitedInputStream<->JsonBodyReader.MAX_LIMIT source cycle, fix needs JsonBodyReader.java outside the write set)."
+  },
+  "landed": [
+   "IR-APP-009",
+   "FR-HTTP-030",
+   "FR-APP-028",
+   "FR-HTTP-031"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [],
+  "outside_reason": "",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "exit 0, 3986 tests, 0 failures",
+  "verdict": "pass"
+ },
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-6": {
+  "head": "ca0fdf4d20243b7b109ff5759cf730567827014f",
+  "commits": 6,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "blocking_kept": 0,
+   "declared_limits": 0,
+   "residual": 0,
+   "rounds": 2,
+   "check_review_round": "PASS (round 1 full, round 2 since-prev)",
+   "clean_code": "2 rounds: CC-001, CC-005 fixed in ca0fdf4; CC-002, CC-003, CC-004, CC-101 dismissed; 0 unresolved",
+   "run_id": "2026-11-17.naruserve.self-w6s3l2"
+  },
+  "landed": [
+   "FR-HTTP-036",
+   "FR-HTTP-037",
+   "FR-ENGINE-014"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [],
+  "outside_reason": "",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "exit 0, 3969 tests, 0 failures",
+  "verdict": "pass"
+ }
+}

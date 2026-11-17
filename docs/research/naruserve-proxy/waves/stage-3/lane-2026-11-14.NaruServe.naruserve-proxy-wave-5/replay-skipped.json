@@ -1,0 +1,54 @@
+[
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-16",
+   "summary": "[req] IR-APP-009 \u2014 app.rawBodyLimit(bytes) with range 1..1073741824 default 1 MiB and NEW-state guard; req.bodyStream() reads under it. green=PASS (RawBodyLimitTest 9/9 RawBodyLimitKotlinTest 1/1 HttpApiSurfaceTest AppLifecycleGuardTest). AC: IR-APP-009 AC-1..6 PASS. regression 3946 tests 0 failures",
+   "requirementIds": [
+    "IR-APP-009"
+   ],
+   "target": "0.12.0"
+  },
+  "argsHash": "2e72cc5861b63f0883c7393cfdbf429a10990640",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-17",
+   "summary": "[req] FR-HTTP-030 - req.bodyStream()/bodyStream(long) return the raw body under the one-read rule (RAW kind of BodyState; same object for an unconsumed repeat with equal limit; read/skip/close consume; cleanup closes a left-open stream and the adapter input once). green=PASS (RequestBodyStreamTest 23/23 BodyStateTest 12/12). AC: FR-HTTP-030 AC-1..11 PASS. regression 3969 tests 0 failures",
+   "requirementIds": [
+    "FR-HTTP-030"
+   ],
+   "target": "0.12.0"
+  },
+  "argsHash": "1a187a3642a812700c17385bc65f766a2bafc67f",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-17",
+   "summary": "[req] FR-APP-028 - access log in= counts bytes read through req.bodyStream()/bodyStream(long); already satisfied by the FR-HTTP-030 counted exchangeInput path, test-only change. green=PASS (RawBodyAccessLogTest 3/3; a mutant reading the uncounted adapter input fails 3/3). AC: FR-APP-028 AC-1..3 PASS",
+   "requirementIds": [
+    "FR-APP-028"
+   ],
+   "target": "0.12.0"
+  },
+  "argsHash": "ddd6e75a39cad02d9f5e6b0f17554bb5524bf4a6",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-17",
+   "summary": "[req] FR-HTTP-031 - req.bodyStream(long) validates 1..1073741824 and enforces its own limit; bodyStream()/bodyStream(long) throw HttpException 413 from the call for a declared Content-Length over the limit in force before reading. green=PASS (RequestBodyStreamLimitsTest 14/14; full build 0 failures). files: NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java, NaruServe-api/src/test/java/com/snoworca/naruserve/RequestBodyStreamLimitsTest.java. AC: FR-HTTP-031 AC-1..5 PASS",
+   "requirementIds": [
+    "FR-HTTP-031"
+   ],
+   "target": "0.12.0"
+  },
+  "argsHash": "efd75136b1ab332284ae9d6e81a097114d5cc75c",
+  "action": "apply"
+ }
+]

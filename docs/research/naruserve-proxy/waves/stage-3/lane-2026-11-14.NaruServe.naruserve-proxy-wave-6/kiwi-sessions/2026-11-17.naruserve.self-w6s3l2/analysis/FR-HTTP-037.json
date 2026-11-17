@@ -1,0 +1,161 @@
+{
+  "id": "FR-HTTP-037",
+  "title": "res.relay sends exactly contentLength bytes, keeps the length on HEAD and 304, and owns its stream like res.stream",
+  "type": "functional",
+  "target": "0.12.0",
+  "status": "planned",
+  "scope": "HTTP",
+  "filePath": "docs/spec/04.http-core.srs.md",
+  "headingLine": 5584,
+  "metadata": {
+    "Type": "functional",
+    "Target": "0.12.0",
+    "Status": "planned",
+    "Priority": "high",
+    "Tags": "0.12.0, feasibility:high, request-a, response, relay, body",
+    "Risk": "medium",
+    "Stability": "evolving",
+    "Verification Method": "test",
+    "GitHub Issue": "-",
+    "Related Docs": "-"
+  },
+  "acceptanceCriteria": [
+    {
+      "id": "AC-1",
+      "text": "`res.relay(in, 5)` with a stream that ends after 3 bytes aborts the response after the commit: the adapter sees the connection closed abnormally and the response state is `ABORTED`.",
+      "checked": false,
+      "line": 5610
+    },
+    {
+      "id": "AC-2",
+      "text": "`res.relay(in, 5)` with a stream holding 8 bytes sends exactly 5 body bytes, closes the stream and completes the response normally (state `COMPLETED`, no abort).",
+      "checked": false,
+      "line": 5611
+    },
+    {
+      "id": "AC-3",
+      "text": "`res.relay(in, -1)` commits with unknown length and no `Content-Length` header, leaves the framing to the adapter and copies the stream to its end.",
+      "checked": false,
+      "line": 5612
+    },
+    {
+      "id": "AC-4",
+      "text": "`res.relay(in, -2)` and `res.relay(in, Long.MIN_VALUE)` throw `IllegalArgumentException` and close the stream they were given.",
+      "checked": false,
+      "line": 5613
+    },
+    {
+      "id": "AC-5",
+      "text": "For a `HEAD` request and for a response whose status is `304`, `res.relay(in, 5)` commits `Content-Length: 5` with no body bytes to the adapter (the in-memory test adapter delivers that header to the client), closes the stream without reading it and completes normally; `res.relay(in, -1)` there commits no `Content-Length` and no body; whether a client receives the `Content-Length` of a `304` is the adapter's choice (RFC 9110 §8.6 makes it optional; FR-SVL-010 and FR-ENGINE-014 state the built-in adapters).",
+      "checked": false,
+      "line": 5614
+    },
+    {
+      "id": "AC-6",
+      "text": "For a response whose status is `204`, `res.relay(in, 5)` sends neither a body nor a `Content-Length` header, closes the stream without reading it and completes normally.",
+      "checked": false,
+      "line": 5615
+    },
+    {
+      "id": "AC-7",
+      "text": "`res.relay` commits and returns without reading the stream to its end, the copy runs after the handler returns, and a handler that returns right after `relay` observes the call return before the input is read to its end.",
+      "checked": false,
+      "line": 5616
+    },
+    {
+      "id": "AC-8",
+      "text": "The response closes the relayed stream exactly once after a successful copy, after a read failure and after `res.abort(...)` during the transfer, the caller not closing it, and a `relay` call on an already committed response throws `IllegalStateException` and closes the stream it was given, as `res.stream` does.",
+      "checked": false,
+      "line": 5617
+    },
+    {
+      "id": "AC-9",
+      "text": "Restating FR-HTTP-017 AC-1 with the change: `res.status(204).send(\"x\")` yields `204` with zero body bytes, and for every body writer other than `relay` a `204` or `304` response commits with length 0, adds no `Content-Length` header and drops the body bytes; `relay` alone keeps a non-negative length as `Content-Length` on `304` in the headers it commits to the adapter.",
+      "checked": false,
+      "line": 5618
+    }
+  ],
+  "verificationEvidence": [],
+  "traceLinks": [
+    {
+      "type": "Code",
+      "reference": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+      "relation": "implements",
+      "notes": "trace_intent=addition_site; relay framing in startBody and runTransfer",
+      "line": 5629
+    },
+    {
+      "type": "Requirement",
+      "reference": "IR-HTTP-014",
+      "relation": "depends_on",
+      "notes": "declares relay on Response",
+      "line": 5630
+    },
+    {
+      "type": "Requirement",
+      "reference": "FR-HTTP-036",
+      "relation": "depends_on",
+      "notes": "relay header handling",
+      "line": 5631
+    },
+    {
+      "type": "Requirement",
+      "reference": "FR-HTTP-017",
+      "relation": "extends",
+      "notes": "re_stated_from: FR-HTTP-017#AC-1",
+      "line": 5632
+    },
+    {
+      "type": "Requirement",
+      "reference": "FR-HTTP-014",
+      "relation": "extends",
+      "notes": "same copy-after-return and stream ownership as res.stream (AC-5, AC-7)",
+      "line": 5633
+    }
+  ],
+  "changeNotes": [
+    {
+      "date": "2026-11-14",
+      "change": "Created",
+      "reason": "add-requirement",
+      "line": 5647
+    }
+  ],
+  "tags": [
+    "0.12.0",
+    "feasibility:high",
+    "request-a",
+    "response",
+    "relay",
+    "body"
+  ],
+  "relatedDocs": [],
+  "evidenceReferences": [],
+  "traceReferences": [
+    "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "IR-HTTP-014",
+    "FR-HTTP-036",
+    "FR-HTTP-017",
+    "FR-HTTP-014"
+  ],
+  "blockStartLine": 5584,
+  "blockEndLine": 5648,
+  "sectionLines": {
+    "Requirement": 5599,
+    "Rationale": 5603,
+    "Acceptance Criteria": 5608,
+    "Verification Evidence": 5620,
+    "Trace Links": 5625,
+    "Research / Analysis": 5635,
+    "Implementation Notes": 5639,
+    "Change Notes": 5643
+  },
+  "priority": "high",
+  "risk": "medium",
+  "stability": "evolving",
+  "newWorkCandidate": true,
+  "requirement": "The system shall make `res.relay(in, contentLength)` send exactly `contentLength` bytes when the length is non-negative and a body is sent — aborting the response when the stream ends early and stopping at the length when the stream holds more — send an unknown-length body for `-1`, reject a length below `-1` with `IllegalArgumentException`, send no body for a `HEAD` request or a `204` or `304` response (keeping a non-negative length as `Content-Length` for `HEAD` and `304` and sending none for `204`), and copy the body after the handler returns while owning and closing the stream exactly as `res.stream` does.",
+  "rationale": "AC-1 ← PRD-41, PRD-190; AC-2 ← PRD-41; fills: PRD-41 / hole / for AC-2, the request does not say what happens to bytes beyond the length (design D-032); AC-3 ← PRD-41, PRD-190; AC-4 ← PRD-41, PRD-190 (design D-033); AC-5 ← PRD-190; fills: PRD-41 / contradiction / for AC-5, AC-6, a bodyless HEAD or 304 relay with a positive length would otherwise abort under the exact-length rule (design D-031); AC-6 ← PRD-190 (design D-031); AC-7 ← PRD-42 (design D-034); AC-8 ← PRD-42 (design D-034); AC-9 ← PRD-190 (design D-031). RFC 9110 §8.6 lets a `HEAD` or `304` response carry the `Content-Length` of the represented body and forbids it on `204`; `res.send` drops it on `304` (`DefaultResponse.java:925`), which is the difference AC-9 records.\n- [2026-11-14] AC-5 ← PRD-271; AC-9 ← PRD-271. The user decided (PRD U-2) that the Content-Length of a 304 sent through relay is adapter-dependent: the core commits it, TinyHttpd 3.1.1 omits it.",
+  "research": "- -",
+  "implementationNotes": "- `startBody` (`:567-627`) puts `Content-Length` whenever the length is non-negative, also on `204`, and `runTransfer` (`:636-688`) aborts when the source ends before the committed length and closes the input in `finally`; relay needs the `204` drop, the surplus stop (read at most `contentLength` bytes, then close and finish) and the bodyless close for `HEAD`/`204`/`304` (code map risk R-3). FR-HTTP-017 AC-1 is expired with this requirement as successor; FR-HTTP-017 AC-2 to AC-4 stay true (they use `send` and automatic `204`s)."
+}

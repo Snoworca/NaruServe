@@ -1,0 +1,61 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-5-ir-app-009",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "IR-APP-009"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "started_at": "2026-11-16T00:00:00Z",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "regression_baseline": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4",
+  "failed": 0,
+  "failed_test_ids": [],
+  "source": "parent pin"
+ },
+ "mcp_call_log": [],
+ "pending_mutations": [
+  "deferred to .kiwi/deferred-srs-mutations.jsonl (16 calls, replay plan inputRefusals=0)"
+ ],
+ "updated_at": "2026-11-16T00:00:00Z",
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests RawBodyLimitTest --tests RawBodyLimitKotlinTest --tests HttpApiSurfaceTest --tests AppLifecycleGuardTest",
+  "exit_code": 1,
+  "captured_failure": "compileTestKotlin: Unresolved reference 'rawBodyLimit'; HttpApiSurfaceTest restAppDeclaresExactlyTheWave4Methods and AppLifecycleGuardTest reflectionPartitions... AssertionError (set lacks rawBodyLimit); after the config method only: AC-2 expected tooLarge 1048576 1048576 but was eof 1048577; configured limit expected tooLarge 10 10 but was eof 11",
+  "timestamp": "2026-11-16T00:00:00Z"
+ },
+ "green_evidence": {
+  "command": "same targeted tests",
+  "exit_code": 0,
+  "timestamp": "2026-11-16T00:00:00Z"
+ },
+ "regression_summary": {
+  "scope": "full",
+  "passed": 3946,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "loop_counters": {
+  "phase1": {
+   "kept": 3,
+   "dropped": 7,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 0,
+   "dropped": 11,
+   "rounds": 0
+  }
+ }
+}

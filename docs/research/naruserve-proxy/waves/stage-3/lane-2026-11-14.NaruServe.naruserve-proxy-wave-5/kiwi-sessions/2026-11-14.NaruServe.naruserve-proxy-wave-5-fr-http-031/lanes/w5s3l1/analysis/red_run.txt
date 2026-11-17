@@ -1,0 +1,14 @@
+13 8 0
+FAIL FR_HTTP_031_AC4_bodyStreamLongCallThrows413ForADeclaredLengthOverTheArgument :: java.lang.AssertionError: the bodyStream call itself must throw HttpException 413, got returned
+PASS FR_HTTP_031_AC2_bodyStreamOf2MiBReadsA1Point5MiBBodyAboveTheAppLimit
+FAIL FR_HTTP_031_AC4_bodyStreamCallThrows413ForADeclaredLengthOverTheRawBodyLimit :: java.lang.AssertionError: the bodyStream call itself must throw HttpException 413, got returned
+PASS FR_HTTP_031_AC5_anEscapedOverrunOfAChunkedBodyIsAnswered413WithTheStandardBody
+PASS FR_HTTP_031_AC1_rawBodyLimitHandsOutTheFirst1024BytesThenThrowsOnByte1025
+FAIL FR_HTTP_031_AC3_outOfRangeLimitsThrowIllegalArgumentException :: java.lang.AssertionError: bodyStream(0) returned
+FAIL FR_HTTP_031_AC3_aRefusedArgumentTakesNothing :: java.lang.AssertionError: taking or draining the stream threw java.lang.AssertionError: bodyStream(0) must throw
+FAIL FR_HTTP_031_AC3_theEndsOfTheRangeAreAccepted :: java.lang.AssertionError: expected BodyTooLargeException after 1 bytes, read 2 bytes to the end
+FAIL FR_HTTP_031_AC2_bodyStreamOf1024ThrowsOnTheReadOfByte1025 :: java.lang.AssertionError: expected BodyTooLargeException after 1024 bytes, read 1025 bytes to the end
+PASS FR_HTTP_031_AC1_aBodyOfExactlyTheLimitReadsToItsEnd
+PASS FR_HTTP_031_AC4_aDeclaredLengthWithinTheLimitInForceIsNotRefused
+FAIL FR_HTTP_031_AC2_perCallLimitsLeaveTheAppLimitOfLaterRequestsUnchanged :: java.lang.AssertionError: expected BodyTooLargeException after 1024 bytes, read 1572864 bytes to the end
+FAIL FR_HTTP_031_AC5_anEscapedOverrunOfTheCallLimitIsAnswered413 :: java.lang.AssertionError: read to the end expected:<413> but was:<200>

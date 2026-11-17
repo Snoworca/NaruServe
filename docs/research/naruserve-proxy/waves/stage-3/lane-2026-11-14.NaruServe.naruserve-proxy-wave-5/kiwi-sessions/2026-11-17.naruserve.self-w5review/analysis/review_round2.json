@@ -1,0 +1,50 @@
+{
+  "findings": [
+    {
+      "id": "FND-R2-001",
+      "axis": "P1",
+      "verdict": "drop",
+      "evidence": {
+        "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.ScratchReviewByteLimitMessageTest' (scratch, deleted after: bodyStream(0|-1|1073741825|Long.MIN_VALUE|Long.MAX_VALUE) inside a handler, exact class and message) ; then --rerun --tests RequestBodyStreamLimitsTest RawBodyLimitTest RequestBodyStreamTest",
+        "output": "SCRATCH [java.lang.IllegalArgumentException|maxBytes must be in 1..1073741824 bytes: 0, ...: -1, ...: 1073741825, ...: -9223372036854775808, ...: 9223372036854775807] BUILD SUCCESSFUL; RequestBodyStreamLimitsTest 14/0/0, RawBodyLimitTest 9/0/0, RequestBodyStreamTest 23/0/0 (incl. FR_HTTP_031_AC3_outOfRangeLimitsThrowIllegalArgumentException, FR_HTTP_031_AC3_theEndsOfTheRangeAreAccepted, FR_HTTP_031_AC3_aRefusedArgumentTakesNothing)",
+        "intent_output": "FR-HTTP-031 AC-3: bodyStream(0), (-1), (1073741825) throw IllegalArgumentException; (1) and (1073741824) are accepted; a refused argument takes nothing from the body."
+      },
+      "drop_reason": "Behaviour preserved: same exception type, byte-identical message (name argument is \"maxBytes\"), and the check still runs before rawStream because byteLimit is evaluated as rawStream's argument. No public signature changed (byteLimit went private -> package-private on a class in the internal package). No defect.",
+      "title": "bodyStream(long) delegation to DefaultRestApp.byteLimit keeps the AC-3 contract",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+        "line_range": "276"
+      },
+      "description": "Checked exception type, exact message, range ends and the take-nothing-before-check ordering after the CC-001 refactor.",
+      "is_behavioral": true,
+      "tags": ["FR-HTTP-031", "CC-001"]
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-006",
+      "principle": "Cohesion / dependency direction",
+      "location": {
+        "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+        "line_range": "299-305"
+      },
+      "description": "The shared body-limit range check now serves DefaultRequest too but still lives on DefaultRestApp, so the request class reaches into the app class for a pure validation helper while the bound itself (MAX_LIMIT) is owned by JsonBodyReader. A static helper next to MAX_LIMIT (e.g. on JsonBodyReader) would keep the check with its constant and avoid the Request -> RestApp dependency. Low priority; optional."
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+      "hunks_total": 1,
+      "anchors": ["        return rawStream(DefaultRestApp.byteLimit(\"maxBytes\", maxBytes));"],
+      "findings": ["FND-R2-001"]
+    },
+    {
+      "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+      "hunks_total": 1,
+      "anchors": ["    static long byteLimit(String name, long bytes) {"],
+      "findings": ["CC-006"]
+    }
+  ],
+  "resolved": ["CC-001"],
+  "summary": {"total": 1, "by_verdict": {"drop": 1}}
+}
