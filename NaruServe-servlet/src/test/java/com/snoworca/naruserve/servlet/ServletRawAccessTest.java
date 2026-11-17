@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.snoworca.naruserve.RestApp;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -12,13 +13,16 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -34,6 +38,9 @@ import org.junit.Test;
  */
 public class ServletRawAccessTest {
 
+    /** The deadline of {@link #drain}; a drained shutdown returns well before it. */
+    private static final long STOP_SECONDS = 5;
+
     @Rule
     public final ContainerRule container = new ContainerRule();
 
@@ -45,7 +52,7 @@ public class ServletRawAccessTest {
         volatile boolean rawFrozen;
     }
 
-    private static void captureHeaders(com.snoworca.naruserve.RestApp app, Seen seen) {
+    private static void captureHeaders(RestApp app, Seen seen) {
         app.get("/h", (req, res) -> {
             Set<String> names = req.headerNames();
             List<Map.Entry<String, String>> raw = req.rawHeaders();
@@ -56,7 +63,7 @@ public class ServletRawAccessTest {
             nameEdits.add(() -> names.remove(names.iterator().next()));
             nameEdits.add(names::clear);
             nameEdits.add(() -> {
-                java.util.Iterator<String> it = names.iterator();
+                Iterator<String> it = names.iterator();
                 it.next();
                 it.remove();
             });
@@ -132,7 +139,7 @@ public class ServletRawAccessTest {
             lower.add(n.toLowerCase(Locale.ROOT));
         }
         assertEquals("headerNames " + seen.names, 2, seen.names.size());
-        assertEquals("headerNames " + seen.names, new HashSet<>(java.util.Arrays.asList("x-a", "x-b")),
+        assertEquals("headerNames " + seen.names, new HashSet<>(Arrays.asList("x-a", "x-b")),
                 new HashSet<>(lower));
 
         List<String> values = new ArrayList<>();
@@ -140,9 +147,9 @@ public class ServletRawAccessTest {
             values.add(e.getValue());
         }
         Collections.sort(values);
-        assertEquals("rawHeaders " + seen.raw, java.util.Arrays.asList("1", "2", "3"), values);
-        assertEquals("rawHeaders " + seen.raw, java.util.Arrays.asList("1", "2"), valuesOf(seen.raw, "x-a"));
-        assertEquals("rawHeaders " + seen.raw, java.util.Arrays.asList("3"), valuesOf(seen.raw, "x-b"));
+        assertEquals("rawHeaders " + seen.raw, Arrays.asList("1", "2", "3"), values);
+        assertEquals("rawHeaders " + seen.raw, Arrays.asList("1", "2"), valuesOf(seen.raw, "x-a"));
+        assertEquals("rawHeaders " + seen.raw, Arrays.asList("3"), valuesOf(seen.raw, "x-b"));
         assertTrue("headerNames() accepted a modification", seen.namesFrozen);
         assertTrue("rawHeaders() accepted a modification", seen.rawFrozen);
     }
@@ -167,7 +174,7 @@ public class ServletRawAccessTest {
                 groupOrder(seen.raw));
         // Each name appears as one contiguous run: no name after collapsing runs repeats.
         assertEquals("non-contiguous name in " + seen.raw, dedupe(groupOrder(seen.raw)), groupOrder(seen.raw));
-        assertEquals(java.util.Arrays.asList("1", "2"), valuesOf(seen.raw, "x-a"));
+        assertEquals(Arrays.asList("1", "2"), valuesOf(seen.raw, "x-a"));
         List<String> lowerExpected = new ArrayList<>();
         for (String n : expected) {
             lowerExpected.add(n.toLowerCase(Locale.ROOT));
@@ -183,7 +190,7 @@ public class ServletRawAccessTest {
         container.filter((req, res, chain) -> chain.doFilter(new HttpServletRequestWrapper((HttpServletRequest) req) {
             @Override
             public Enumeration<String> getHeaderNames() {
-                List<String> fixed = new ArrayList<>(java.util.Arrays.asList("X-B", "x-a", "X-A"));
+                List<String> fixed = new ArrayList<>(Arrays.asList("X-B", "x-a", "X-A"));
                 for (String n : Collections.list(super.getHeaderNames())) {
                     if (!n.equalsIgnoreCase("x-a") && !n.equalsIgnoreCase("x-b")) {
                         fixed.add(n);
@@ -207,7 +214,7 @@ public class ServletRawAccessTest {
         expected.add(new SimpleImmutableEntry<>("x-a", "1"));
         expected.add(new SimpleImmutableEntry<>("x-a", "2"));
         assertEquals(expected, xs);
-        assertEquals(java.util.Arrays.asList("x-b", "x-a"), seen.names.subList(0, 2));
+        assertEquals(Arrays.asList("x-b", "x-a"), seen.names.subList(0, 2));
     }
 
     // FR-SVL-010 AC-3: bodyStream() returns exactly the bytes of a JSON body with spaces and line breaks.
@@ -253,7 +260,7 @@ public class ServletRawAccessTest {
         return out.toByteArray();
     }
 
-    private static void relayRoutes(com.snoworca.naruserve.RestApp app) {
+    private static void relayRoutes(RestApp app) {
         app.get("/relay", (req, res) -> res.relay(new ByteArrayInputStream("hello".getBytes(StandardCharsets.US_ASCII)), 5));
         app.get("/relay304", (req, res) -> res.status(304)
                 .relay(new ByteArrayInputStream("hello".getBytes(StandardCharsets.US_ASCII)), 5));
@@ -304,12 +311,42 @@ public class ServletRawAccessTest {
         assertEquals(0, r.body.length);
     }
 
+    /**
+     * Counts down once the container's call into the app servlet for the next request has returned or thrown,
+     * after the exchange's afterHandler; install it before {@link SharedApp#onJetty}.
+     */
+    private CountDownLatch servedOnce() {
+        CountDownLatch served = new CountDownLatch(1);
+        container.filter((req, res, chain) -> {
+            try {
+                chain.doFilter(req, res);
+            } finally {
+                served.countDown();
+            }
+        });
+        return served;
+    }
+
+    /**
+     * Shuts {@code app} down and asserts it drained before the deadline. The servlet adapter's stop waits until no
+     * admitted request is in flight, and an exchange leaves the count only when it retires, after its completion and
+     * cleanup ran; so any listener run that completion or cleanup would cause has happened when this returns.
+     */
+    private static void drain(RestApp app) {
+        long start = System.nanoTime();
+        app.shutdown(STOP_SECONDS, TimeUnit.SECONDS);
+        long took = System.nanoTime() - start;
+        assertTrue("shutdown reached its deadline, so an exchange never retired (" + took / 1000000 + " ms)",
+                took < TimeUnit.SECONDS.toNanos(STOP_SECONDS));
+    }
+
     // FR-SVL-010 AC-5: an onAbort listener runs exactly once when the handler calls res.abort(...).
     @Test
     public void FR_SVL_010_AC5_onAbortRunsOnceOnAbort() throws Exception {
         AtomicInteger runs = new AtomicInteger();
         AtomicInteger handled = new AtomicInteger();
-        SharedApp.onJetty(container, "/*", app -> app.get("/abort", (req, res) -> {
+        CountDownLatch served = servedOnce();
+        RestApp restApp = SharedApp.onJetty(container, "/*", app -> app.get("/abort", (req, res) -> {
             res.onAbort(runs::incrementAndGet);
             res.abort(new IllegalStateException("upstream gone"));
             res.abort(new IllegalStateException("second abort"));
@@ -322,7 +359,10 @@ public class ServletRawAccessTest {
         }
         assertTrue("handler did not run", SharedApp.until(() -> handled.get() == 1, 5, TimeUnit.SECONDS));
         assertTrue("onAbort never ran", SharedApp.until(() -> runs.get() >= 1, 5, TimeUnit.SECONDS));
-        Thread.sleep(200);
+        // Count only once the servlet call ended and the exchange retired, so a duplicate run from the container's
+        // completion or the adapter's cleanup of this exchange cannot fall after the check.
+        assertTrue("servlet call did not end", served.await(STOP_SECONDS, TimeUnit.SECONDS));
+        drain(restApp);
         assertEquals("onAbort runs", 1, runs.get());
     }
 
@@ -331,7 +371,8 @@ public class ServletRawAccessTest {
     public void FR_SVL_010_AC5_onAbortNeverRunsOnNormalCompletion() throws Exception {
         AtomicInteger runs = new AtomicInteger();
         AtomicInteger handled = new AtomicInteger();
-        SharedApp.onJetty(container, "/*", app -> app.get("/ok", (req, res) -> {
+        CountDownLatch served = servedOnce();
+        RestApp restApp = SharedApp.onJetty(container, "/*", app -> app.get("/ok", (req, res) -> {
             res.onAbort(runs::incrementAndGet);
             res.send("ok");
             handled.incrementAndGet();
@@ -341,8 +382,10 @@ public class ServletRawAccessTest {
         assertEquals("ok", r.text());
         assertEquals("2", r.header("Content-Length"));
         assertTrue("handler did not return", SharedApp.until(() -> handled.get() == 1, 5, TimeUnit.SECONDS));
-        // A listener that would run late (on container completion or cleanup) gets time to show itself.
-        Thread.sleep(300);
+        // A listener that would run late (on container completion or cleanup) has run once the servlet call ended
+        // and the exchange retired, and so does one the app's shutdown would wrongly run for a finished exchange.
+        assertTrue("servlet call did not end", served.await(STOP_SECONDS, TimeUnit.SECONDS));
+        drain(restApp);
         assertEquals("onAbort runs", 0, runs.get());
     }
 }
