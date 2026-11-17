@@ -56,6 +56,10 @@ public final class Proxy implements Middleware {
     private static final int MAX_HEADER_LINES = 1000;
     /** The most trailer lines one chunked backend response body may end with. */
     private static final int MAX_TRAILER_LINES = 1000;
+    /** The decided request framing of a chunked client body (see {@link #requestBodyLength}). */
+    private static final long CHUNKED_BODY = -1;
+    /** The decided request framing when the client sent neither Content-Length nor Transfer-Encoding. */
+    private static final long NO_FRAMING_HEADER = -2;
 
     private final Target target;
     private final Options options;
@@ -333,14 +337,17 @@ public final class Proxy implements Middleware {
      * the client body is the client's and reaches the error flow as itself, an over-limit body as 413.
      */
     // @req IR-PROXY-001
+    // @req SEC-PROXY-003
     @Override
     public void handle(Request req, Response res, Next next) throws Exception {
+        // The framing answers (400/501) come first, from the header lines alone, for every target scheme (D-050).
+        long framing = requestBodyLength(req);
         if (!"http".equals(target.scheme)) {
             // https backends arrive with the TLS requirement (SEC-PROXY-005); until then they are not reached.
             throw new HttpException(502);
         }
         try {
-            forward(req, res, prepare(req));
+            forward(req, res, prepare(req, framing));
         } catch (ClientBodyFailure f) {
             throw f.forErrorFlow();
         }
@@ -391,19 +398,51 @@ public final class Proxy implements Middleware {
     }
 
     /**
-     * The request line, Host, the forwardable client headers, the framing header and Connection as bytes; a chunked
-     * client body is read here and a declared one is opened here, so the framing checks answer before any backend
-     * connection. The body limit answers here too for a chunked body and for a Content-Length the core reads as one
-     * number; a list form such as {@code 5, 5} is only limited while it is copied, after the connect (the body limit
-     * requirement FR-PROXY-008 closes that).
+     * The request line, Host, the forwardable client headers, the framing header and Connection as bytes, for the
+     * {@code framing} {@link #requestBodyLength} decided; a chunked client body is read here and a declared one is
+     * opened here, before any backend connection. The body limit answers here too for a chunked body and for a
+     * Content-Length the core reads as one number; a list form such as {@code 5, 5} is only limited while it is
+     * copied, after the connect (the body limit requirement FR-PROXY-008 closes that).
      */
     // @req IR-PROXY-001
     // @req SEC-PROXY-003
-    private Outgoing prepare(Request req) {
+    private Outgoing prepare(Request req, long framing) {
         StringBuilder head = new StringBuilder();
         head.append(req.methodToken()).append(' ').append(target.basePath).append(req.originalUrl())
                 .append(" HTTP/1.1\r\n");
         head.append("Host: ").append(target.authority).append("\r\n");
+        for (Map.Entry<String, String> h : req.rawHeaders()) {
+            String lower = h.getKey().toLowerCase(Locale.ROOT);
+            if (!HeaderRules.REQUEST_NOT_FORWARDED.contains(lower)) {
+                head.append(h.getKey()).append(": ").append(h.getValue()).append("\r\n");
+            }
+        }
+        long length;
+        boolean sendLength;
+        byte @Nullable [] buffered = null;
+        if (framing == CHUNKED_BODY) {
+            // The request-body framing requirement (FR-PROXY-007) streams this; until then it is sent with a length.
+            buffered = readClientBody(req.bodyStream());
+            length = buffered.length;
+            sendLength = length > 0;
+        } else if (framing == NO_FRAMING_HEADER) {
+            length = 0;
+            sendLength = false;
+        } else {
+            length = framing;
+            sendLength = true;
+        }
+        if (sendLength) {
+            head.append("Content-Length: ").append(length).append("\r\n");
+        }
+        head.append("Connection: close\r\n\r\n");
+        @Nullable InputStream bodyStream = buffered == null && length > 0 ? req.bodyStream() : null;
+        return new Outgoing(head.toString().getBytes(StandardCharsets.ISO_8859_1), buffered, bodyStream, length);
+    }
+
+    /** {@link #requestBodyLength(List, List)} of the request's Content-Length and Transfer-Encoding field lines. */
+    // @req SEC-PROXY-003
+    private static long requestBodyLength(Request req) {
         List<String> contentLengths = new ArrayList<>();
         List<String> transferEncodings = new ArrayList<>();
         for (Map.Entry<String, String> h : req.rawHeaders()) {
@@ -413,30 +452,15 @@ public final class Proxy implements Middleware {
             } else if (lower.equals("transfer-encoding")) {
                 transferEncodings.add(h.getValue());
             }
-            if (!HeaderRules.REQUEST_NOT_FORWARDED.contains(lower)) {
-                head.append(h.getKey()).append(": ").append(h.getValue()).append("\r\n");
-            }
         }
-        long length = requestBodyLength(contentLengths, transferEncodings);
-        byte @Nullable [] buffered = null;
-        if (!transferEncodings.isEmpty()) {
-            // The request-body framing requirement (FR-PROXY-007) streams this; until then it is sent with a length.
-            buffered = readClientBody(req.bodyStream());
-            length = buffered.length;
-        }
-        if (length > 0 || !contentLengths.isEmpty()) {
-            head.append("Content-Length: ").append(length).append("\r\n");
-        }
-        head.append("Connection: close\r\n\r\n");
-        @Nullable InputStream bodyStream = buffered == null && length > 0 ? req.bodyStream() : null;
-        return new Outgoing(head.toString().getBytes(StandardCharsets.ISO_8859_1), buffered, bodyStream, length);
+        return requestBodyLength(contentLengths, transferEncodings);
     }
 
     /**
-     * The declared body length, 0 for no framing header, or -1 for a chunked body; decided from the header lines
-     * alone, never from the request's HTTP version. Both headers, a Content-Length list that is not one agreed number
-     * and a Transfer-Encoding list that does not end in a single {@code chunked} answer 400; another coding before
-     * {@code chunked} answers 501.
+     * The declared body length, {@link #NO_FRAMING_HEADER} for no framing header, or {@link #CHUNKED_BODY} for a
+     * chunked body; decided from the header lines alone, never from the request's HTTP version. Both headers, a
+     * Content-Length list that is not one agreed number and a Transfer-Encoding list that does not end in a single
+     * {@code chunked} answer 400; another coding before {@code chunked} answers 501.
      */
     // @req SEC-PROXY-003
     private static long requestBodyLength(List<String> contentLengths, List<String> transferEncodings) {
@@ -446,7 +470,7 @@ public final class Proxy implements Middleware {
         if (!transferEncodings.isEmpty()) {
             switch (FramingLists.transferEncoding(transferEncodings)) {
                 case CHUNKED:
-                    return -1;
+                    return CHUNKED_BODY;
                 case UNSUPPORTED:
                     throw new HttpException(501);
                 default:
@@ -454,7 +478,7 @@ public final class Proxy implements Middleware {
             }
         }
         if (contentLengths.isEmpty()) {
-            return 0;
+            return NO_FRAMING_HEADER;
         }
         long length = FramingLists.contentLength(contentLengths);
         if (length == FramingLists.INVALID_LENGTH) {
