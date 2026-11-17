@@ -99,6 +99,20 @@ public class ProxyRequestFramingTest {
         assertEquals("backend connections opened", 0, backend.connectionsBeforeSentinel());
     }
 
+    /**
+     * Sends {@code request} to a proxy whose target is {@code https} on a listener that counts connections; asserts
+     * the status and that none opened. The framing answer comes before the https placeholder (502) of the proxy.
+     */
+    private void assertHttpsAnswersWithoutConnection(int status, ClientRequest request) throws IOException {
+        ConnectionCounter backend = counter();
+        mount(backend.httpsUrl());
+
+        ClientResponse r = adapter.send(request);
+
+        assertEquals("status", status, r.status());
+        assertEquals("backend connections opened", 0, backend.connectionsBeforeSentinel());
+    }
+
     /** Sends {@code request} to a recording backend; asserts it arrived with one {@code Content-Length: 5} line. */
     private void assertForwardedWithSingleLengthFive(ClientRequest request) throws IOException {
         RawBackend backend = okBackend();
@@ -219,6 +233,34 @@ public class ProxyRequestFramingTest {
     public void sec_PROXY_003_AC4_codingBeforeChunkedOnSeparateLinesGives501() throws IOException {
         assertRefusedWithoutConnection(501,
                 post(HELLO, "Transfer-Encoding", "gzip", "Transfer-Encoding", "chunked"));
+    }
+
+    // ---- https target: the framing answer comes before the https placeholder ----
+
+    // SEC-PROXY-003 AC-1: Content-Length with Transfer-Encoding is 400 for an https target too, without connecting
+    @Test
+    public void sec_PROXY_003_AC1_httpsTargetContentLengthWithTransferEncodingGives400() throws IOException {
+        assertHttpsAnswersWithoutConnection(400,
+                post(HELLO, "Content-Length", "5", "Transfer-Encoding", "chunked"));
+    }
+
+    // SEC-PROXY-003 AC-2: two Content-Length lines 5 and 6 are 400 for an https target too, without connecting
+    @Test
+    public void sec_PROXY_003_AC2_httpsTargetTwoDifferingContentLengthLinesGive400() throws IOException {
+        assertHttpsAnswersWithoutConnection(400, post(HELLO, "Content-Length", "5", "Content-Length", "6"));
+    }
+
+    // SEC-PROXY-003 AC-4: Transfer-Encoding: gzip, chunked is 501 for an https target too, without connecting
+    @Test
+    public void sec_PROXY_003_AC4_httpsTargetCodingBeforeChunkedGives501() throws IOException {
+        assertHttpsAnswersWithoutConnection(501, post(HELLO, "Transfer-Encoding", "gzip, chunked"));
+    }
+
+    // SEC-PROXY-003 AC-2: a well-framed request (Content-Length: 5) to an https target still meets the https
+    // placeholder, 502, until the TLS requirement (SEC-PROXY-005) arrives
+    @Test
+    public void sec_PROXY_003_AC2_httpsTargetWellFramedRequestStillGives502() throws IOException {
+        assertHttpsAnswersWithoutConnection(502, post(HELLO, "Content-Length", "5"));
     }
 
     // ---- AC-5 ----
@@ -366,6 +408,10 @@ public class ProxyRequestFramingTest {
 
         String url() {
             return "http://127.0.0.1:" + server.getLocalPort();
+        }
+
+        String httpsUrl() {
+            return "https://127.0.0.1:" + server.getLocalPort();
         }
 
         /**
