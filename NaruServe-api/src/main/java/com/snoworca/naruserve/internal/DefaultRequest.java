@@ -258,28 +258,39 @@ public final class DefaultRequest implements Request {
     // @req IR-HTTP-013
     // @req IR-APP-009
     // @req FR-HTTP-030
+    // @req FR-HTTP-031
     @Override
     public InputStream bodyStream() {
-        return rawStream(rawBodyLimit, true);
+        return rawStream(rawBodyLimit);
     }
 
-    /** As {@link #bodyStream()} under the one-read rule; {@code maxBytes} is not enforced yet. */
+    /**
+     * As {@link #bodyStream()} with {@code maxBytes} as the limit of this call only. {@code maxBytes} outside
+     * {@code 1..1073741824} throws {@link IllegalArgumentException} before the body is taken.
+     */
     // @req IR-HTTP-013
     // @req FR-HTTP-030
+    // @req FR-HTTP-031
     @Override
     public InputStream bodyStream(long maxBytes) {
-        return rawStream(maxBytes, false);
+        if (maxBytes < 1 || maxBytes > JsonBodyReader.MAX_LIMIT) {
+            throw new IllegalArgumentException("maxBytes must be in 1.." + JsonBodyReader.MAX_LIMIT + " bytes: "
+                    + maxBytes);
+        }
+        return rawStream(maxBytes);
     }
 
     /**
      * Takes the body for the RAW reader on the first call and returns one {@link RawBodyStream} over the counted
-     * exchange input. A repeated call returns that same stream while none of its bytes was consumed and {@code limit}
-     * is equal; after consumption it throws {@link BodyAlreadyConsumedException}, with another limit
-     * {@link IllegalStateException}. {@code enforce}, or a limit equal to the app's raw body limit, wraps the input in a
-     * {@link LimitedInputStream} of {@code limit}.
+     * exchange input, limited to {@code limit} bytes by a {@link LimitedInputStream}. A declared Content-Length over
+     * {@code limit} throws {@link HttpException} 413 from this call, before the exchange input is touched, and leaves
+     * the body consumed as the JSON reader does. A repeated call returns that same stream while none of its bytes was
+     * consumed and {@code limit} is equal; after consumption it throws {@link BodyAlreadyConsumedException}, with
+     * another limit {@link IllegalStateException}.
      */
     // @req FR-HTTP-030
-    private InputStream rawStream(long limit, boolean enforce) {
+    // @req FR-HTTP-031
+    private InputStream rawStream(long limit) {
         synchronized (rawLock) {
             RawBodyStream s = raw;
             if (s != null) {
@@ -293,10 +304,12 @@ public final class DefaultRequest implements Request {
                 return s;
             }
             body.begin(BodyState.Kind.RAW);
-            InputStream input = exchangeInput();
-            // bodyStream(rawBodyLimit) shares its stream with bodyStream(), so it carries that limit either way.
-            boolean limited = enforce || limit == rawBodyLimit;
-            s = new RawBodyStream(limited ? new LimitedInputStream(input, limit, contentLength()) : input);
+            long declared = contentLength();
+            if (declared > limit) {
+                body.complete();
+                throw new HttpException(413);
+            }
+            s = new RawBodyStream(new LimitedInputStream(exchangeInput(), limit, declared));
             raw = s;
             rawLimit = limit;
             return s;
