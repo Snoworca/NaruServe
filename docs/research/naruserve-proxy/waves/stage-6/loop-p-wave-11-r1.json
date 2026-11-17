@@ -1,0 +1,155 @@
+{
+  "wave": "wave-11",
+  "round": 1,
+  "verifier": "loop-p-wave-11-r1",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "SEC-PROXY-003 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp1_tiny_equalContentLengthListForwardedAsFive",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Real TinyHttpd: Content-Length: 5, 5 forwarded as one Content-Length: 5 line with body hello."
+    },
+    {
+      "id": "LP-2",
+      "cites": "SEC-PROXY-003 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp2_tiny_paddedContentLengthForwardedAsFive",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Real TinyHttpd: padded Content-Length forwarded as Content-Length: 5."
+    },
+    {
+      "id": "LP-3",
+      "cites": "SEC-PROXY-003 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp3_tiny_numericallyEqualLinesForwardedAsFive",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Real TinyHttpd: lines 5 and 05 forwarded as one Content-Length: 5."
+    },
+    {
+      "id": "LP-4",
+      "cites": "SEC-PROXY-003 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp4_tiny_upperCaseChunkedForwarded",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Real TinyHttpd: Transfer-Encoding: CHUNKED body reaches the backend intact (wire form to the backend is FR-PROXY-007)."
+    },
+    {
+      "id": "LP-5",
+      "cites": "SEC-PROXY-003 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp5_tiny_chunkedTrailingCommaForwarded",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Real TinyHttpd: Transfer-Encoding: chunked, body reaches the backend intact."
+    },
+    {
+      "id": "LP-6",
+      "cites": "SEC-PROXY-003 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp6_tiny_clWithTe400",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Real TinyHttpd: CL+TE 400, no backend request (adapter refuses first, FR-ENGINE-003 AC-6)."
+    },
+    {
+      "id": "LP-7",
+      "cites": "SEC-PROXY-003 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp7_tiny_contentLengthCases400",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Real TinyHttpd: all five AC-2 Content-Length cases give 400 with no backend request."
+    },
+    {
+      "id": "LP-8",
+      "cites": "SEC-PROXY-003 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp8_tiny_transferEncodingCases400",
+      "verdict": "red",
+      "kept": false,
+      "evidence": "expected:<[Transfer-Encoding: gzip -> 400/0, Transfer-Encoding: chunked, chunked -> 400/0, Transfer-Encoding: chunked\\nTransfer-Encoding: chunked -> 400/0]> but was:<[Transfer-Encoding: gzip -> 400/0, Transfer-Encoding: chunked, chunked -> 501/0, Transfer-Encoding: chunked\\nTransfer-Encoding: chunked -> 501/0]>",
+      "note": "Not a proxy defect: a recording middleware mounted before the proxy never saw these requests, so TinyHttpd answers 501 itself before dispatch for 'chunked, chunked' and two 'chunked' lines (no backend connection). The proxy check gives 400 for the same headers through the in-memory adapter (ProxyRequestFramingTest AC-3 tests). Status on the default TinyHttpd stack is the adapter's choice; owner is the TinyHttpd adapter framing (FR-ENGINE-003 / engine-adapter scope), not SEC-PROXY-003, whose implementation notes accept adapter-first answers."
+    },
+    {
+      "id": "LP-9",
+      "cites": "SEC-PROXY-003 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp9_tiny_gzipChunked501",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Real TinyHttpd: gzip, chunked gives 501 with no backend request."
+    },
+    {
+      "id": "LP-10",
+      "cites": "SEC-PROXY-003 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp10_tiny_ac6Cases",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Real TinyHttpd: chunked;x=1 400, empty TE 400, gzip;q=1, chunked 501, no backend request."
+    },
+    {
+      "id": "LP-11",
+      "cites": "SEC-PROXY-003 AC-7",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp11_tiny_versionIndependent",
+      "verdict": "red",
+      "kept": false,
+      "evidence": "expected:<[Transfer-Encoding: gzip -> 400/0, Transfer-Encoding: gzip, chunked -> 501/0, Content-Length: 5, 6 -> 400/0]> but was:<[Transfer-Encoding: gzip -> 400/0, Transfer-Encoding: gzip, chunked -> 400/0, Content-Length: 5, 6 -> 400/0]>",
+      "note": "Not a proxy defect: for HTTP/1.0 with 'Transfer-Encoding: gzip, chunked' TinyHttpd answers 400 before dispatch (recording middleware never reached), while HTTP/1.1 reaches the proxy and gets 501. AC-7 binds the proxy to the headers the adapter reports, and PRD-68 leaves HTTP/1.0 Transfer-Encoding handling to the adapter; owner is the TinyHttpd adapter (engine-adapter scope). The proxy's own version independence is green through the in-memory adapter (ProxyRequestFramingTest AC-7)."
+    },
+    {
+      "id": "LP-12",
+      "cites": "SEC-PROXY-003 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp12_mem_tabPaddedContentLengthForwarded",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "In-memory: HTAB OWS around Content-Length trimmed, forwarded as Content-Length: 5."
+    },
+    {
+      "id": "LP-13",
+      "cites": "SEC-PROXY-003 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp13_mem_gzipEmptyChunked501",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "In-memory: 'gzip, ,chunked' ignores the empty element and gives 501."
+    },
+    {
+      "id": "LP-14",
+      "cites": "SEC-PROXY-003 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp14_mem_lowerCaseNames400",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "In-memory: header names matched case-insensitively; content-length + TRANSFER-ENCODING gives 400."
+    },
+    {
+      "id": "LP-15",
+      "cites": "SEC-PROXY-003 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp15_mem_contentLengthTrailingComma400",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "In-memory: 'Content-Length: 5,' (empty element is not digits) gives 400."
+    },
+    {
+      "id": "LP-16",
+      "cites": "SEC-PROXY-003 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave11Test.java (scratch, removed)::lp16_mem_chunkedGzipChunked400",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "In-memory: 'chunked, gzip, chunked' repeats chunked and gives 400, not 501."
+    }
+  ],
+  "summary": {
+    "tests_written": 16,
+    "kept": 0
+  }
+}
