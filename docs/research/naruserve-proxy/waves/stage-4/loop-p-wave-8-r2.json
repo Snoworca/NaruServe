@@ -1,0 +1,65 @@
+{
+  "wave": "wave-8",
+  "round": 2,
+  "verifier": "loop-p-wave-8-r2",
+  "head": "1969ab2",
+  "diff_window": "464cd31..354f5ad + 2da6d2b + 1969ab2",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "C-005",
+      "test": "src/test/java/com/snoworca/naruserve/docs/LpWave8R2DocsProbeTest.java::appMethodTableDefaultCacheRowStatesRelayException",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: app.md defaultCache row omits the relay exception: `defaultCache(policy)` | Cache-Control을 지정하지 않은 응답의 기본 정책. `null`이면 생략 | [정적 파일](static.md#서버-기본-정책) (LpWave8R2DocsProbeTest.java:16; 43 tests completed, 1 failed). en/app.md:110 has the same gap: 'Policy for responses without Cache-Control; null omits it'.",
+      "note": "docs/api/app.md:117 and docs/api/en/app.md:110 describe app.defaultCache as the policy for every response without Cache-Control and do not state that res.relay never receives it. The fix commit 1969ab2 covered static, defaults and response pages only. This row sits outside the three pages the task names in parentheses, but it is a place that describes app.defaultCache. Drop it if the parenthetical list is the full scope."
+    },
+    {
+      "id": "LP-2",
+      "cites": "FR-HTTP-033 AC-1",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LpWave8R2SocketProbeTest.java::setCookieAppendsReachClientOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Over a real TinyHttpd socket, the client gets two appended Set-Cookie lines in order."
+    },
+    {
+      "id": "LP-3",
+      "cites": "FR-HTTP-033 AC-2",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LpWave8R2SocketProbeTest.java::headerThenAppendSendsBothLinesOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "header X:1 then append X:2 reaches the client as two lines over TinyHttpd, so the adapter does not merge them."
+    },
+    {
+      "id": "LP-4",
+      "cites": "OPS-DX-009 AC-4",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LpWave8R2SocketProbeTest.java::relayWithoutContentTypeSendsNoContentTypeAndNoDefaultCacheOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Checks the documented claim over a real socket: no Content-Type, no Cache-Control under defaultCache(noCache), Content-Length 5."
+    },
+    {
+      "id": "LP-5",
+      "cites": "OPS-DX-009 AC-4",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LpWave8R2SocketProbeTest.java::relayLongerStreamIsCutAtTheLengthOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Checks the documented claim that a longer stream is cut at contentLength."
+    },
+    {
+      "id": "LP-6",
+      "cites": "OPS-DX-009 AC-2",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LpWave8R2OnAbortProbeTest.java::onAbortDocClaims",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Checks the documented onAbort claims: no call after a normal completion (even with a later res.abort), a single call on a double abort, and a run at once when the listener is registered after the abort."
+    }
+  ],
+  "regression": "Green with --rerun at 1969ab2: HttpHeaderValuesTest 17, ResponseAppendTest 6, HttpHeaderValuesKotlinTest 1, RawResponseDocsKotlinTest 12, KotlinDocsMarkersTest 14; root :test DocsExamplesCompileTest, RelayDefaultCacheDocsTest and GuideConsistencyDocsTest green (43 tests, the only failure is LP-1). Inspected: the Response#relay and RestApp#defaultCache Javadoc state the relay exception (FR-HTTP-036 AC-5 docs part met); the relay exception text is present in static, defaults and response pages in ko and en.",
+  "summary": { "tests_written": 6, "kept": 1 }
+}

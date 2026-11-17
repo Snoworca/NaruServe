@@ -1,0 +1,48 @@
+{
+  "wave": "wave-8",
+  "round": 1,
+  "verifier": "loop-p-wave-8-r1",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "FR-HTTP-033 AC-1",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LpWave8ProbeTest.java::appendedSetCookieLinesReachARealClient",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Two appended Set-Cookie lines (a=1, b=2) reach a raw socket client over TinyHttpd in order; the wave's test uses only the in-memory adapter."
+    },
+    {
+      "id": "LP-2",
+      "cites": "FR-HTTP-033 AC-2",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LpWave8ProbeTest.java::headerThenAppendSendsBothLinesOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Over a real TinyHttpd socket header/header sends one X: 2 line and header/append sends X: 1 then X: 2 (TinyHttpdExchange.commit uses addHeader per entry; ServletExchange uses addHeader for every non-Content-Length header)."
+    },
+    {
+      "id": "LP-3",
+      "cites": "OPS-DX-009 AC-4",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LpWave8ProbeTest.java::relayDropsAnAppendedContentLengthAndSendsOnlyItsOwn",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Documented relay fact holds with res.append: two appended Content-Length lines are dropped (remove() drops every same-name line), only Content-Length: 5 goes out, appended X-Up lines both survive, body is 'hello'."
+    },
+    {
+      "id": "LP-4",
+      "cites": "C-005",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LpWave8DocsProbeTest.java::defaultCacheDocsStateTheRelayException",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: docs/api/static.md 서버 기본 정책 omits the relay exception: ### 서버 기본 정책 `app.defaultCache(policy)`는 `Cache-Control`을 정하지 않은 응답에 붙일 정책입니다. ... 프레임워크 자신 중 무엇이든 `Cache-Control`을 이미 정했으면 그 값을 그대로 둡니다. ... (LpWave8DocsProbeTest.java:30; 1 test completed, 1 failed)",
+      "note": "Adjacent to the carried-forward FR-HTTP-036 AC-5 item: the Javadocs of Response#relay and RestApp.defaultCache now state the relay exception, and response.md's relay section says relay applies no defaultCache, but the docs/api page that defines app.defaultCache (static.md '서버 기본 정책', which app.md links as the defaultCache doc; same gap in en/static.md 'Default server policy', and in defaults.md / en/defaults.md Cache-Control rows and the response.md '기본 캐시 정책' paragraph) still says the policy fills every response without Cache-Control, with no relay exception. Low severity: one sentence per page."
+    }
+  ],
+  "carry_forward": {
+    "C-005 response.md documents append/onAbort/relay": "met — docs/api/response.md and docs/api/en/response.md each have a method-table row plus a section for res.append (Express res.append), res.onAbort (Express res.on('close') + !res.writableFinished, SPI-default limit), res.relay (Express has none; nearest idiom given) and HttpHeaderValues.isFieldValue (Node validateHeaderValue nearest), each with one Java and one Kotlin block; Java blocks compile in DocsExamplesCompileTest (no skip), Kotlin blocks carry response.md#4..#7 markers run in RawResponseDocsKotlinTest. Stated facts checked against DefaultResponse (append/header/onAbort/relay/startBody/begin).",
+    "FR-HTTP-036 AC-5 Javadoc": "met — Response#relay Javadoc: 'A relayed response never receives the app's {@link RestApp#defaultCache} policy.'; RestApp.defaultCache Javadoc: 'A response sent with {@link Response#relay} never receives this policy.'; code matches (begin(..., relay=true) skips defaultCache). The user-facing docs/api defaultCache pages are the remaining gap (LP-4)."
+  },
+  "summary": { "tests_written": 4, "kept": 1 }
+}

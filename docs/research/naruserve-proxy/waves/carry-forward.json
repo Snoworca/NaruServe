@@ -23,7 +23,8 @@
       "carried_into": "wave-8",
       "owner_requirement": "OPS-DX-009",
       "reason_class": "cross-wave-carry-forward",
-      "note": "docs/api/response.md and docs/api/en/response.md must document Response.append, onAbort and relay; the graph assigns this to OPS-DX-009 in wave-8 (not yet dispatched). The wave-8 worker makes it green; wave-8 loop P re-checks it."
+      "note": "docs/api/response.md and docs/api/en/response.md must document Response.append, onAbort and relay; the graph assigns this to OPS-DX-009 in wave-8 (not yet dispatched). The wave-8 worker makes it green; wave-8 loop P re-checks it.",
+      "closed": "wave-8 (OPS-DX-009 docs; Javadoc in Response/RestApp; loop P r1-r3 pass at b1e9622)"
     },
     {
       "from": "wave-6",
@@ -35,7 +36,8 @@
       "carried_into": "wave-8",
       "owner_requirement": "OPS-DX-009",
       "reason_class": "cross-wave-carry-forward",
-      "note": "when documenting res.relay (OPS-DX-009), also state in the Response#relay and RestApp.defaultCache Javadoc that a relayed response never receives defaultCache"
+      "note": "when documenting res.relay (OPS-DX-009), also state in the Response#relay and RestApp.defaultCache Javadoc that a relayed response never receives defaultCache",
+      "closed": "wave-8 (OPS-DX-009 docs; Javadoc in Response/RestApp; loop P r1-r3 pass at b1e9622)"
     }
   ]
 }

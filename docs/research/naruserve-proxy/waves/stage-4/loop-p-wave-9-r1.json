@@ -1,0 +1,111 @@
+{
+  "wave": "wave-9",
+  "round": 1,
+  "verifier": "loop-p-wave-9-r1",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "PRD-189",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave9Test.java::lp1_onAbortAfterAbortRunsOnce",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "listener registered after res.abort runs once on the servlet adapter"
+    },
+    {
+      "id": "LP-2",
+      "cites": "PRD-189",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave9Test.java::lp2_throwingListenerDoesNotStopNext",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "a throwing onAbort listener does not stop the next one"
+    },
+    {
+      "id": "LP-3",
+      "cites": "FR-SVL-010 AC-4",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave9Test.java::lp3_relayLongerStreamSendsExactlyFive",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "relay(in of 11 bytes, 5): Content-Length 5, no Content-Type, exactly 'hello'"
+    },
+    {
+      "id": "LP-4",
+      "cites": "PRD-41",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave9Test.java::lp4_relayShortStreamAborts",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "short stream under relay(in,5) aborts (onAbort runs, client never gets 5 bytes)"
+    },
+    {
+      "id": "LP-5",
+      "cites": "PRD-15",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave9Test.java::lp5_chunkedBodyDechunked",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "chunked request body returned de-chunked byte-exact (first run red from a mis-sized chunk in the probe itself; corrected, green)"
+    },
+    {
+      "id": "LP-6",
+      "cites": "FR-SVL-010 AC-3",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave9Test.java::lp6_largeBodyExact",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "~300 KB JSON with spaces/CRLF/tabs returned byte-exact"
+    },
+    {
+      "id": "LP-7",
+      "cites": "PRD-40",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave9Test.java::lp7_relayNoDefaultCache",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "relay adds no Cache-Control under defaultCache(noStore)"
+    },
+    {
+      "id": "LP-8",
+      "cites": "PRD-41",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave9Test.java::lp8_relayUnknownLength",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "relay(in,-1): no Content-Length, no Content-Type, every byte"
+    },
+    {
+      "id": "LP-9",
+      "cites": "FR-SVL-010 AC-5",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave9Test.java::lp9_relayCompletionNoAbort",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "normal completion through relay (GET and HEAD) never runs onAbort, checked after shutdown drain"
+    },
+    {
+      "id": "LP-10",
+      "cites": "PRD-189",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave9Test.java::lp10_clientDisconnectRunsOnAbortOnce",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "client reset mid relay(-1) runs onAbort exactly once"
+    },
+    {
+      "id": "LP-11",
+      "cites": "FR-SVL-010 AC-1",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave9Test.java::lp11_rawHeaderEntryRefusesSetValue",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "rawHeaders() entry setValue throws UnsupportedOperationException"
+    }
+  ],
+  "summary": {
+    "tests_written": 11,
+    "kept": 0,
+    "context": "Diff c2a554f..9378d6b is test-only (ServletRawAccessTest, 11 tests). Read against the amended AC-1 (00e7ecf): the wave tests check every clause of AC-1..AC-5 with adequate assertions. At head 3a7726d, ServletRawAccessTest and the full :NaruServe-servlet:test (186 tests incl. probes, 0 failures) are green in Maven mode."
+  }
+}

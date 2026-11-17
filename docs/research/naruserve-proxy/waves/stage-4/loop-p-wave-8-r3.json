@@ -1,0 +1,13 @@
+{
+  "wave": "wave-8",
+  "round": 3,
+  "verifier": "loop-p-wave-8-r3",
+  "rows": [
+    {"id": "LP-1", "cites": "FR-HTTP-033 AC-1", "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LpWave8R3AppendSocketTest.java::FR_HTTP_033_AC1_twoAppendedSetCookieLinesReachARealTinyHttpdClientInOrder", "verdict": "green", "kept": false, "evidence": "", "note": "Two res.append Set-Cookie lines reach a raw socket client over real TinyHttpd 3.1.1 as a=1 then b=2."},
+    {"id": "LP-2", "cites": "FR-HTTP-033 AC-2", "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LpWave8R3AppendSocketTest.java::FR_HTTP_033_AC2_headerThenAppendSendsBothLinesWhileHeaderTwiceSendsOneOverTinyHttpd", "verdict": "green", "kept": false, "evidence": "", "note": "header then append of a non-cookie name keeps both lines on the wire (TinyHttpd addHeader does not coalesce); header twice sends one line X-Probe: 2."},
+    {"id": "LP-3", "cites": "FR-HTTP-033 AC-2", "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LpWave8R3AppendServletTest.java::FR_HTTP_033_AC2_headerThenAppendSendsBothLinesOnJetty", "verdict": "green", "kept": false, "evidence": "", "note": "Servlet adapter on Jetty 9.4 keeps header then append as two X-Probe lines in order."},
+    {"id": "LP-4", "cites": "C-005", "test": "src/test/java/com/snoworca/naruserve/docs/LpWave8R3DefaultCacheProseTest.java::C_005_everyProseDescriptionOfDefaultCacheStatesTheRelayException", "verdict": "green", "kept": false, "evidence": "", "note": "Scans every prose paragraph, list item and table row outside code fences in docs/api/*.md and docs/api/en/*.md that names defaultCache (app, static, defaults, response, ko and en); each states the res.relay exception."},
+    {"id": "LP-5", "cites": "FR-HTTP-036 AC-5", "test": "src/test/java/com/snoworca/naruserve/docs/LpWave8R3DefaultCacheProseTest.java::FR_HTTP_036_AC5_relayAndDefaultCacheJavadocStateTheException", "verdict": "green", "kept": false, "evidence": "", "note": "Response#relay Javadoc says a relayed response never receives RestApp#defaultCache; RestApp#defaultCache Javadoc says a response sent with Response#relay never receives it."}
+  ],
+  "summary": {"tests_written": 5, "kept": 0}
+}

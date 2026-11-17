@@ -1,0 +1,92 @@
+{
+  "wave": "wave-7",
+  "round": 1,
+  "verifier": "loop-p-wave-7-r1",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "FR-ENGINE-013 AC-2",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LoopPWave7Test.java::lp1_gzipChunkedBodyYieldsCompressedBytes",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "gzip body with chunked framing: bodyStream yields the compressed bytes de-chunked (green: no defect)"
+    },
+    {
+      "id": "LP-2",
+      "cites": "PRD-178",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LoopPWave7Test.java::lp2_binaryBodyAllByteValuesExact",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "binary body with all byte values via Content-Length is returned exactly (green: no defect)"
+    },
+    {
+      "id": "LP-3",
+      "cites": "PRD-183",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LoopPWave7Test.java::lp3_partlyReadBodyKeepsKeepAliveUsable",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "32 KiB body read for one byte then left unclosed; next keep-alive request served 201 (green: no defect)"
+    },
+    {
+      "id": "LP-4",
+      "cites": "PRD-19",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LoopPWave7Test.java::lp4_unreadChunkedBodyKeepsKeepAliveUsable",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "32 KiB chunked body left unread; next keep-alive request served 201 (green: no defect)"
+    },
+    {
+      "id": "LP-5",
+      "cites": "PRD-181",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LoopPWave7Test.java::lp5_headerEnumerationIsImmutable",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "headerNames/rawHeaders/entry mutations throw UnsupportedOperationException over TinyHttpd (green: no defect)"
+    },
+    {
+      "id": "LP-6",
+      "cites": "PRD-23",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LoopPWave7Test.java::lp6_chunkedBodyAtLimitIsAccepted",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "chunked body of exactly rawBodyLimit accepted; one byte more gives 413 (green: no defect)"
+    },
+    {
+      "id": "LP-7",
+      "cites": "FR-ENGINE-013 AC-5",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LoopPWave7Test.java::lp7_singleByteReadsOverLimitGive413",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "single-byte read() loop over the limit: escaping BodyTooLargeException gives 413 standard body (green: no defect)"
+    },
+    {
+      "id": "LP-8",
+      "cites": "FR-ENGINE-013 AC-1",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LoopPWave7Test.java::lp8_headerCasesCollapse",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "three case variants of one name collapse to one lowercase name in first-seen order; rawHeaders keeps all six lines with case (green: no defect)"
+    },
+    {
+      "id": "LP-9",
+      "cites": "FR-ENGINE-013 AC-3",
+      "test": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/LoopPWave7Test.java::lp9_unreadBodyAtMaxDrainBytesKeepsKeepAlive",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "unread 65536-byte body (= default maxDrainBytes) still leaves keep-alive usable (green: no defect)"
+    }
+  ],
+  "summary": {
+    "tests_written": 9,
+    "kept": 0
+  }
+}
