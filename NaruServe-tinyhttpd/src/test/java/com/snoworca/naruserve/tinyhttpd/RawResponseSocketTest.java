@@ -70,6 +70,16 @@ public class RawResponseSocketTest {
         }
     }
 
+    /** A "hello" source that runs onClose each time it is closed. */
+    private static InputStream hello(Runnable onClose) {
+        return new ByteArrayInputStream("hello".getBytes(StandardCharsets.US_ASCII)) {
+            @Override
+            public void close() {
+                onClose.run();
+            }
+        };
+    }
+
     /** Reads one response head up to and including the blank line; fails on EOF before it. */
     static String readHead(InputStream in) throws IOException {
         StringBuilder head = new StringBuilder();
@@ -223,12 +233,7 @@ public class RawResponseSocketTest {
         });
         app.get("/relay", (req, res) -> {
             res.onAbort(aborts::incrementAndGet);
-            res.relay(new ByteArrayInputStream("hello".getBytes(StandardCharsets.US_ASCII)) {
-                @Override
-                public void close() {
-                    relayClosed.countDown();
-                }
-            }, 5);
+            res.relay(hello(relayClosed::countDown), 5);
         });
         int port = app.listen(0).port();
         for (int round = 0; round < 2; round++) {
@@ -308,12 +313,7 @@ public class RawResponseSocketTest {
             if (code != null) {
                 res.status(Integer.parseInt(code));
             }
-            res.relay(new ByteArrayInputStream("hello".getBytes(StandardCharsets.US_ASCII)) {
-                @Override
-                public void close() {
-                    closes.incrementAndGet();
-                }
-            }, 5);
+            res.relay(hello(closes::incrementAndGet), 5);
         });
         app.get("/next", (req, res) -> res.send("next"));
         int port = app.listen(0).port();

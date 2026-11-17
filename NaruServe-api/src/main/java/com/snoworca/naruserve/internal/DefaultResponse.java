@@ -79,8 +79,6 @@ public final class DefaultResponse implements Response {
     private FileResponder.@Nullable ResolverTap tap;
     private @Nullable DefaultRequest request;
     private @Nullable CachePolicy defaultCache;
-    /** Assigned by startBody at each body commit, true only for {@link #relay}: begin then skips defaultCache. */
-    private boolean relayed;
     /** Bytes the pending copy must deliver; -1 copies to the end of the input. */
     private long pendingLimit = -1;
     private @Nullable SseRegistry sseRegistry;
@@ -171,7 +169,7 @@ public final class DefaultResponse implements Response {
             }
             reg = sseRegistry;
             if (headRequest) {
-                head = begin(0, EMPTY);
+                head = begin(0, EMPTY, false);
             } else {
                 committed = true;
                 state = ResponseState.STREAMING;
@@ -682,8 +680,7 @@ public final class DefaultResponse implements Response {
                     put("Content-Length", String.valueOf(length));
                 }
                 bodyless = bodyless();
-                relayed = relay;
-                c = begin(bodyless ? 0 : length, EMPTY);
+                c = begin(bodyless ? 0 : length, EMPTY, relay);
             }
         }
         if (refusal != null) {
@@ -1063,17 +1060,17 @@ public final class DefaultResponse implements Response {
             put("Content-Length", String.valueOf(body.length));
         }
         // HEAD: commit length 0 (no body bytes) while the header keeps the GET length, per HttpExchange.commit.
-        return bodyless() ? begin(0, EMPTY) : begin(body.length, body);
+        return bodyless() ? begin(0, EMPTY, false) : begin(body.length, body, false);
     }
 
     /**
      * NEW to COMMITTED with a snapshot of status and headers; the caller holds the lock. The app's {@code defaultCache}
-     * fills an absent Cache-Control, except on a relayed response.
+     * fills an absent Cache-Control, except when {@code relay} is true ({@link #relay}).
      */
     // @req FR-HTTP-036
-    private Commit begin(long length, byte[] body) {
+    private Commit begin(long length, byte[] body, boolean relay) {
         CachePolicy fallback = defaultCache;
-        if (fallback != null && !relayed && !hasHeader("Cache-Control")) {
+        if (fallback != null && !relay && !hasHeader("Cache-Control")) {
             put("Cache-Control", fallback.getHeaderValue()); // FR-HTTP-036 AC-6: whatever set it, a value stays
         }
         committed = true;
