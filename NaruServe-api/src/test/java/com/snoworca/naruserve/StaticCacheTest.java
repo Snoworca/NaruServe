@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.TestApp;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -115,5 +116,54 @@ public class StaticCacheTest {
 
         TestApp mw = matrix(CachePolicy.noCache(), true);
         assertEquals("private", mw.send("GET", "/plain.txt").header("Cache-Control"));
+    }
+
+    // FR-HTTP-036 AC-6: FR-STATIC-008 AC-5 restated; defaultCache fills every response without Cache-Control at
+    // commit, error and 304 responses included, keeps every value already set, and never touches a relayed response
+    @Test
+    public void FR_HTTP_036_AC6_defaultCacheRuleWithTheRelayException() throws IOException {
+        TestApp off = relayMatrix(null, false);
+        assertNull(off.send("GET", "/json").header("Cache-Control"));
+        assertNull(off.send("GET", "/plain.txt").header("Cache-Control"));
+        assertNull(off.send("GET", "/stream").header("Cache-Control"));
+        assertNull(off.send("GET", "/relay").header("Cache-Control"));
+
+        TestApp on = relayMatrix(CachePolicy.noCache(), false);
+        assertEquals("no-cache", on.send("GET", "/json").header("Cache-Control"));
+        assertEquals("no-cache", on.send("GET", "/plain.txt").header("Cache-Control"));
+        ClientResponse missing = on.send("GET", "/missing");
+        assertEquals(404, missing.status());
+        assertEquals("no-cache", missing.header("Cache-Control"));
+        ClientResponse failed = on.send("GET", "/boom");
+        assertEquals(500, failed.status());
+        assertEquals("no-cache", failed.header("Cache-Control"));
+        String etag = on.send("GET", "/plain.txt").header("ETag");
+        ClientResponse notModified = on.send("GET", "/plain.txt", "If-None-Match", etag);
+        assertEquals(304, notModified.status());
+        assertEquals("no-cache", notModified.header("Cache-Control"));
+        assertEquals("no-store", on.send("GET", "/store").header("Cache-Control"));
+        assertEquals("max-age=5", on.send("GET", "/header").header("Cache-Control"));
+        assertEquals("public, max-age=3600", on.send("GET", "/pat.css").header("Cache-Control"));
+        ClientResponse streamed = on.send("GET", "/stream");
+        assertEquals("S", streamed.text());
+        assertEquals("no-cache", streamed.header("Cache-Control"));
+        ClientResponse relayed = on.send("GET", "/relay");
+        assertEquals(200, relayed.status());
+        assertEquals("R", relayed.text());
+        assertNull(relayed.header("Cache-Control"));
+
+        TestApp mw = relayMatrix(CachePolicy.noCache(), true);
+        assertEquals("private", mw.send("GET", "/plain.txt").header("Cache-Control"));
+        assertEquals("private", mw.send("GET", "/relay").header("Cache-Control"));
+    }
+
+    private TestApp relayMatrix(CachePolicy defaultCache, boolean middleware) throws IOException {
+        TestApp t = matrix(defaultCache, middleware);
+        t.app().get("/boom", (req, res) -> {
+            throw new IllegalStateException("boom");
+        });
+        t.app().get("/stream", (req, res) -> res.stream(new ByteArrayInputStream(new byte[] {'S'}), "text/plain"));
+        t.app().get("/relay", (req, res) -> res.relay(new ByteArrayInputStream(new byte[] {'R'}), 1));
+        return t;
     }
 }

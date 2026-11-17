@@ -169,7 +169,7 @@ public final class DefaultResponse implements Response {
             }
             reg = sseRegistry;
             if (headRequest) {
-                head = begin(0, EMPTY);
+                head = begin(0, EMPTY, false);
             } else {
                 committed = true;
                 state = ResponseState.STREAMING;
@@ -599,15 +599,28 @@ public final class DefaultResponse implements Response {
             closeQuietly(in);
             throw new NullPointerException("contentType");
         }
-        startBody(in, 0, contentType, -1);
+        startBody(in, 0, contentType, -1, false);
     }
 
-    /** The {@link #stream} copy with {@code contentLength} as the framing length and the app's Content-Type kept. */
+    /**
+     * The {@link #stream} copy with {@code contentLength} as the framing length: sends the headers the app set, drops
+     * its Content-Length and Transfer-Encoding, adds no Content-Type and never takes the app's {@code defaultCache}.
+     * A non-negative length sends exactly that many bytes (a shorter stream aborts, a longer one is cut there), -1
+     * leaves the framing to the adapter, and a length below -1 closes {@code in} and throws
+     * {@link IllegalArgumentException}. HEAD and 304 keep a non-negative length as Content-Length with no body; 204
+     * sends neither.
+     */
     // @req IR-HTTP-014
+    // @req FR-HTTP-036
+    // @req FR-HTTP-037
     @Override
     public void relay(InputStream in, long contentLength) {
         Objects.requireNonNull(in, "in");
-        startBody(in, 0, null, contentLength);
+        if (contentLength < -1) {
+            closeQuietly(in);
+            throw new IllegalArgumentException("contentLength " + contentLength + " is below -1");
+        }
+        startBody(in, 0, null, contentLength, true);
     }
 
     /**
@@ -635,11 +648,17 @@ public final class DefaultResponse implements Response {
             closeQuietly(in);
             throw e;
         }
-        startBody(in, status, null, length);
+        startBody(in, status, null, length, false);
     }
 
-    /** Commits for a body copied from {@code in}: {@code length} -1 is unknown; status 0 keeps the current one. */
-    private void startBody(InputStream in, int newStatus, @Nullable String contentType, long length) {
+    /**
+     * Commits for a body copied from {@code in}: {@code length} -1 is unknown; status 0 keeps the current one;
+     * {@code relay} commits without the app's {@code defaultCache}. A 204 never carries Content-Length and a 304 only
+     * from {@code relay}.
+     */
+    // @req FR-HTTP-036
+    // @req FR-HTTP-037
+    private void startBody(InputStream in, int newStatus, @Nullable String contentType, long length, boolean relay) {
         RuntimeException refusal;
         Commit c = null;
         boolean bodyless = false;
@@ -657,11 +676,11 @@ public final class DefaultResponse implements Response {
                 }
                 remove("Content-Length"); // an unknown length leaves the framing to the adapter
                 remove("Transfer-Encoding");
-                if (length >= 0) {
+                if (length >= 0 && status != 204 && (relay || status != 304)) {
                     put("Content-Length", String.valueOf(length));
                 }
                 bodyless = bodyless();
-                c = begin(bodyless ? 0 : length, EMPTY);
+                c = begin(bodyless ? 0 : length, EMPTY, relay);
             }
         }
         if (refusal != null) {
@@ -1041,14 +1060,18 @@ public final class DefaultResponse implements Response {
             put("Content-Length", String.valueOf(body.length));
         }
         // HEAD: commit length 0 (no body bytes) while the header keeps the GET length, per HttpExchange.commit.
-        return bodyless() ? begin(0, EMPTY) : begin(body.length, body);
+        return bodyless() ? begin(0, EMPTY, false) : begin(body.length, body, false);
     }
 
-    /** NEW to COMMITTED with a snapshot of status and headers; the caller holds the lock. */
-    private Commit begin(long length, byte[] body) {
+    /**
+     * NEW to COMMITTED with a snapshot of status and headers; the caller holds the lock. The app's {@code defaultCache}
+     * fills an absent Cache-Control, except when {@code relay} is true ({@link #relay}).
+     */
+    // @req FR-HTTP-036
+    private Commit begin(long length, byte[] body, boolean relay) {
         CachePolicy fallback = defaultCache;
-        if (fallback != null && !hasHeader("Cache-Control")) {
-            put("Cache-Control", fallback.getHeaderValue()); // FR-STATIC-008 AC-5: whatever set it, a value stays
+        if (fallback != null && !relay && !hasHeader("Cache-Control")) {
+            put("Cache-Control", fallback.getHeaderValue()); // FR-HTTP-036 AC-6: whatever set it, a value stays
         }
         committed = true;
         state = ResponseState.COMMITTED;
