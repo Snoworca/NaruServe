@@ -3,16 +3,16 @@
   "run_id": "2026-11-14.NaruServe.naruserve-proxy",
   "run_contract": "docs/research/naruserve-proxy/00.run-contract.md@sha256:5d8815eadd0bdaa17f0f73ff8c5b6c80fd8d476b0533ab90a74db8ac3a013dce",
   "position": {
-    "wave": 11,
-    "stage": 6,
+    "wave": 12,
+    "stage": 7,
     "phase": "readiness"
   },
   "next_action": {
     "verb": "derive-readiness",
     "args": {
-      "stage": 6,
+      "stage": 7,
       "waves": [
-        "wave-11"
+        "wave-12"
       ]
     },
     "preconditions": [
@@ -132,10 +132,17 @@
         "kind": "git-trailer",
         "ref": "f9c9b80 Orch-Run=2026-11-14.NaruServe.naruserve-proxy Orch-Verb=promote-requirements"
       }
+    },
+    {
+      "key": "stage-6-closed",
+      "proof": {
+        "kind": "git-trailer",
+        "ref": "97177ac Orch-Run=2026-11-14.NaruServe.naruserve-proxy Orch-Verb=promote-requirements"
+      }
     }
   ],
   "open": [],
   "blocked_on": null,
   "invariant_digest": "sha256:5581ac1e6af03c052a61c14ba66fa47bc9b98d0a18d46e31d2bffe92e7a37547",
-  "written_at": "2026-11-17T10:42:04.378Z"
+  "written_at": "2026-11-17T11:32:42.054Z"
 }
