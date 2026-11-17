@@ -1,0 +1,21 @@
+{
+  "wave": "wave-5",
+  "round": 1,
+  "verifier": "loop-p-wave-5-r1",
+  "diff_window": "7d1bdff..da225ec",
+  "head": "eb63fe5",
+  "rows": [
+    {"id": "LP-1", "cites": "FR-HTTP-030 AC-10", "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave5Test.java::LP1_FR_HTTP_030_AC10_failingHandlerStillReleasesStreamAndInputOnce", "verdict": "green", "kept": false, "evidence": "", "note": "A handler that takes bodyStream(), reads one byte and throws: the adapter input is closed exactly once and the saved stream throws IOException after the cleanup (error path covered too)."},
+    {"id": "LP-2", "cites": "FR-HTTP-031 AC-1", "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave5Test.java::LP2_FR_HTTP_031_AC1_skipNeverPassesTheLimit", "verdict": "green", "kept": false, "evidence": "", "note": "skip() never advances past rawBodyLimit(1024) on an undeclared 1025-byte body; the crossing call throws BodyTooLargeException limit 1024. Observation only (no AC covers it): the access log for this request shows in=1025 because the LimitedInputStream probe byte goes through the BodyState counting stream; the JSON reader counts the same way."},
+    {"id": "LP-3", "cites": "FR-APP-028 AC-2", "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave5Test.java::LP3_FR_APP_028_AC2_singleByteReadsThenCloseLogIn4", "verdict": "green", "kept": false, "evidence": "", "note": "Four single-byte read() calls through bodyStream(2048) of a 10-byte Content-Length body, then close(): in=4 (close and cleanup do not drain into the counter)."},
+    {"id": "LP-4", "cites": "IR-APP-009 AC-4", "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave5Test.java::LP4_IR_APP_009_AC4_lateCallChangesNothing", "verdict": "green", "kept": false, "evidence": "", "note": "rawBodyLimit(10) and rawBodyLimit(0) after listen both throw IllegalStateException (guard before range check); the app keeps 1048576 and a 2000-byte body reads to its end."},
+    {"id": "LP-5", "cites": "FR-HTTP-030 AC-6", "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave5Test.java::LP5_FR_HTTP_030_AC6_contentLengthZeroIsARequestWithoutABody", "verdict": "green", "kept": false, "evidence": "", "note": "A Content-Length: 0 request: first read -1, a second bodyStream() is the same object, bodyStream(2048) throws IllegalStateException."}
+  ],
+  "summary": {"tests_written": 5, "kept": 0},
+  "notes": [
+    "Command: ./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.LoopPWave5Test' in a detached scratch worktree at eb63fe5: 5 tests, 0 failures.",
+    "Reviewed without a red finding: rawStream ordering (consumed/released before the limit check, 413 before exchangeInput, body.complete on 413), RawBodyStream consumption rules, closeBody release, the Dispatcher wiring at both request construction sites, the shared byteLimit range check, and the surface/lifecycle/BodyState test re-points.",
+    "docs/api has no rawBodyLimit/bodyStream text yet (C-005). The wave graph schedules it as OPS-DX-008 in wave-21, so this is not recorded as a wave-5 finding.",
+    "Real-adapter behaviour (TinyHttpd chunked/gzip/drain, servlet) is scheduled in FR-ENGINE-013 (wave-7) and FR-SVL-010 (wave-9), so it was not probed here."
+  ]
+}

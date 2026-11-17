@@ -24,6 +24,18 @@
       "owner_requirement": "OPS-DX-009",
       "reason_class": "cross-wave-carry-forward",
       "note": "docs/api/response.md and docs/api/en/response.md must document Response.append, onAbort and relay; the graph assigns this to OPS-DX-009 in wave-8 (not yet dispatched). The wave-8 worker makes it green; wave-8 loop P re-checks it."
+    },
+    {
+      "from": "wave-6",
+      "round": 0,
+      "finding": "worker-srs-delta",
+      "cites": "FR-HTTP-036 AC-5",
+      "test": null,
+      "evidence": "wave-6 worker review: Response#relay Javadoc and RestApp.defaultCache Javadoc still say defaultCache applies to every response without Cache-Control",
+      "carried_into": "wave-8",
+      "owner_requirement": "OPS-DX-009",
+      "reason_class": "cross-wave-carry-forward",
+      "note": "when documenting res.relay (OPS-DX-009), also state in the Response#relay and RestApp.defaultCache Javadoc that a relayed response never receives defaultCache"
     }
   ]
 }
