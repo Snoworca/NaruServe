@@ -11,8 +11,9 @@ import java.nio.charset.StandardCharsets;
 /**
  * Streams the client request body to the backend through one fixed-size buffer, never holding the whole body
  * (FR-PROXY-007): exactly the declared bytes of a {@code Content-Length} body, or the chunked coding of a body whose
- * length is not known. A failure while reading the client body is thrown as {@link ClientBodyFailure}, so the caller
- * can tell it from a backend write failure.
+ * length is not known. Any exception while reading the client body, checked or not (an adapter body stream may throw
+ * the unchecked {@link HttpException}), is thrown as {@link ClientBodyFailure}, so the caller can tell it from a
+ * backend failure (design D-057).
  */
 // @req FR-PROXY-007
 final class RequestBodyCopier {
@@ -28,10 +29,11 @@ final class RequestBodyCopier {
      * at once and no body is sent.
      */
     // @req FR-PROXY-007
+    // @req FR-PROXY-008
     static int preRead(InputStream in) {
         try {
             return in.read();
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             throw new ClientBodyFailure(e);
         }
     }
@@ -89,27 +91,32 @@ final class RequestBodyCopier {
         out.write('\n');
     }
 
-    /** One read of the client body; its IOException is marked as the client's, apart from backend I/O failures. */
+    /** One read of the client body; any exception it throws is marked as the client's, apart from backend failures. */
+    // @req FR-PROXY-008
     private static int clientRead(InputStream in, byte[] b, int off, int len) {
         try {
             return in.read(b, off, len);
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             throw new ClientBodyFailure(e);
         }
     }
 
-    /** An IOException of the client body, carried past the backend's IOException-to-502 mapping. */
+    /**
+     * An exception of the client body (an IOException, or an unchecked one such as {@link HttpException}), carried
+     * past the backend's IOException-to-502 mapping to the error flow.
+     */
     static final class ClientBodyFailure extends RuntimeException {
         private static final long serialVersionUID = 1L;
-        private final IOException failure;
+        private final Exception failure;
 
-        ClientBodyFailure(IOException failure) {
+        ClientBodyFailure(Exception failure) {
             super(failure);
             this.failure = failure;
         }
 
         /** An over-limit body as 413 with the limit exception as cause; any other failure unwrapped. */
         // @req IR-PROXY-001
+        // @req FR-PROXY-008
         Exception forErrorFlow() {
             return failure instanceof BodyTooLargeException ? new HttpException(413, null, failure) : failure;
         }

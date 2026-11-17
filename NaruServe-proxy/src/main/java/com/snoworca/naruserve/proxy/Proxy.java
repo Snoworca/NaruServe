@@ -351,6 +351,7 @@ public final class Proxy implements Middleware {
     // @req IR-PROXY-001
     // @req SEC-PROXY-003
     // @req FR-PROXY-003
+    // @req FR-PROXY-008
     @Override
     public void handle(Request req, Response res, Next next) throws Exception {
         // The header check (400) and then the framing answers (400/501) come first, from the header lines alone, for
@@ -419,12 +420,15 @@ public final class Proxy implements Middleware {
      * chunked body, the same Content-Length for a declared one, and for a request with neither header the one-byte
      * pre-read decides: no body (with {@code Content-Length: 0} for POST, PUT and PATCH only) when the stream ends at
      * once, chunked otherwise. The pre-read comes after {@code req.bodyStream} and before the backend connect, the
-     * place of the concurrency slot and the total-timeout watchdog (design D-050, D-056).
+     * place of the concurrency slot and the total-timeout watchdog (design D-050, D-056). A declared length over the
+     * {@code .bodyLimit} answers 413 here, before any connection; the exceptions {@code req.bodyStream} throws for a
+     * body earlier code took pass through unwrapped.
      */
     // @req IR-PROXY-001
     // @req SEC-PROXY-003
     // @req FR-PROXY-003
     // @req FR-PROXY-007
+    // @req FR-PROXY-008
     private Outgoing prepare(Request req, long framing) {
         InputStream body = options.bodyLimit == NO_BODY_LIMIT ? req.bodyStream() : req.bodyStream(options.bodyLimit);
         try {
@@ -441,6 +445,11 @@ public final class Proxy implements Middleware {
                 framingHeader = chunked ? CHUNKED_FRAMING
                         : EMPTY_BODY_LENGTH_METHODS.contains(req.methodToken()) ? ZERO_LENGTH_FRAMING : null;
             } else {
+                if (options.bodyLimit != NO_BODY_LIMIT && framing > options.bodyLimit) {
+                    // req.bodyStream answers 413 for a single declared length only; a list such as "2048, 2048"
+                    // agrees on one length (SEC-PROXY-003) and is refused here, still before any connection.
+                    throw new HttpException(413);
+                }
                 chunked = false;
                 length = framing;
                 framingHeader = new SimpleImmutableEntry<>("Content-Length", Long.toString(length));
