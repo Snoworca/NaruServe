@@ -1,0 +1,41 @@
+{
+  "lane_cap": 4,
+  "depends": {
+    "2026-11-14.NaruServe.naruserve-proxy-wave-13": []
+  },
+  "declaration": "docs/research/naruserve-proxy/waves/waves.json",
+  "declaration_digests": {
+    "2026-11-14.NaruServe.naruserve-proxy-wave-13": "c1c25eefc2f044c14d51cff1f52655903c770a28a0c2b1470a96b2e7612afae3"
+  },
+  "sds_digests": {},
+  "lane_count": 1,
+  "stage_count": 1,
+  "lanes": [
+    {
+      "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-13",
+      "stage": 1,
+      "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-13",
+      "sds": null,
+      "writeSet": [
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/PathChecker.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/PathCheckerTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyHostHeaderTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyPathChecksTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestTargetTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTargetUrlTest.java"
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "index": 1,
+      "laneIds": [
+        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-13"
+      ]
+    }
+  ],
+  "conflicts": []
+}
