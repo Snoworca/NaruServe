@@ -1,0 +1,76 @@
+{
+ "immediate_fix": [],
+ "declared_limit": [],
+ "discussion_needed": [],
+ "rejected": [
+  {
+   "id": "FND-001",
+   "rationale": "A probe run disproved it: the TinyHttpd chunked stream throws when the client body is cut short, so copyChunked never writes the last chunk and the backend receives 0 bytes.",
+   "rejection_category": "dropped"
+  },
+  {
+   "id": "FND-002",
+   "rationale": "A probe run disproved it: a chunked body over the app rawBodyLimit, with no .bodyLimit, answers 413 with a BodyTooLargeException cause.",
+   "rejection_category": "dropped"
+  },
+  {
+   "id": "FND-003",
+   "rationale": "A probe run disproved it: a body with no length headers goes through req.bodyStream(n), which enforces .bodyLimit, and the request answers 413.",
+   "rejection_category": "dropped"
+  },
+  {
+   "id": "FND-004",
+   "rationale": "Reading the code disproved it: RawBodyStream.close() cannot throw, so closing the body in the finally block never hides the forward result, and the body is closed exactly once on every path.",
+   "rejection_category": "dropped"
+  },
+  {
+   "id": "FND-005",
+   "rationale": "A test-robustness nit only: the 50 ms sleep can let a late duplicate line slip through, but the test cannot fail on correct code, and it checks the line format and in= value the ACs require.",
+   "rejection_category": "dropped"
+  },
+  {
+   "id": "FND-006",
+   "rationale": "An efficiency nit only: small chunks from a slow client add framing bytes, but memory stays at one 8 KiB buffer, the bytes are correct and no AC is affected.",
+   "rejection_category": "dropped"
+  }
+ ],
+ "kept_tiers": [],
+ "clean_code": [
+  {
+   "id": "CC-001",
+   "decision": "dismissed",
+   "reason": "The helpers in RawBackend.java (readHead, readLine, readChunked and others) are private, so reusing them means editing RawBackend.java. Sharing the copies among the four in-set test classes needs a new shared support file. Both are outside this lane's write set, and having one test class call another test class's helpers would couple the tests. Leave it for a later cleanup that owns the test-support files.",
+   "fix_instruction": ""
+  },
+  {
+   "id": "CC-002",
+   "decision": "dismissed",
+   "reason": "One merged delegating adapter would have to replace VersionReportingAdapter in ProxyRequestFramingTest.java and would have to live in a new shared test file. Both are outside the lane write set. Merging only the two in-set test doubles would still need a shared file.",
+   "fix_instruction": ""
+  },
+  {
+   "id": "CC-003",
+   "decision": "fix",
+   "reason": "This is valid and stays inside Proxy.java. prepare() mixes three jobs: taking the body stream, deciding the framing (four mutable locals across three branches) and building the head. Pulling out the framing decision makes prepare() shorter and lets later waves add head content without touching the framing logic.",
+   "fix_instruction": "In NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java, add a private static final nested class `BodyFraming` with final fields `boolean chunked`, `long contentLength`, `int firstByte` and `Map.@Nullable Entry<String, String> header`, set by one constructor in that order. Add an instance method `private BodyFraming bodyFraming(Request req, InputStream body, long framing)` that contains the current three-branch logic exactly: (1) CHUNKED_BODY gives (true, 0, -1, CHUNKED_FRAMING). (2) NO_FRAMING_HEADER calls RequestBodyCopier.preRead(body) and gives (first >= 0, 0, first, chunked ? CHUNKED_FRAMING : EMPTY_BODY_LENGTH_METHODS.contains(req.methodToken()) ? ZERO_LENGTH_FRAMING : null). (3) Any other value runs the options.bodyLimit check that throws HttpException(413), together with its existing comment, then gives (false, framing, -1, new SimpleImmutableEntry<>(\"Content-Length\", Long.toString(framing))). Move the matching @req tags (SEC-PROXY-003, FR-PROXY-007, FR-PROXY-008) onto the new method as well. In prepare(), keep the bodyStream selection and the try/catch(RuntimeException | Error) that calls closeQuietly(body). Inside the try, call `BodyFraming f = bodyFraming(req, body, framing);` before building the head. That way a preRead failure or the 413 still closes the body, and the order (pre-read and 413 before any connect) stays the same. Pass f.header to BackendRequest.head, and build `new Outgoing(head, body, f.chunked, f.contentLength, f.firstByte)`. Leave the Outgoing fields and forward() unchanged. Keep the prepare() javadoc and update it only to say the framing decision lives in bodyFraming. Change no public API and no tests. Run :NaruServe-proxy:test and animal-sniffer afterwards."
+  },
+  {
+   "id": "CC-004",
+   "decision": "dismissed",
+   "reason": "This goes against the fixed design. D-053 sets the backend head layout with explicit slots for the forwarding headers (SEC-PROXY-002) and the .requestHeader values (FR-PROXY-005), and later waves fill them. The code comment already says so. BackendRequest is package-private, so this is not public API surface. Removing the parameters now would only force those waves to add them back and change the call sites.",
+   "fix_instruction": ""
+  },
+  {
+   "id": "CC-005",
+   "decision": "dismissed",
+   "reason": "The finding is not quite accurate: firstByte = -1 is a real chunked-mode value (a CHUNKED_BODY request has no pre-read), not just a filler. The field javadocs document how each field is used. In Java 8, a tagged union would add subclasses or instanceof checks to forward() with no change in behaviour. CC-003 already cleans up how the values are built.",
+   "fix_instruction": ""
+  },
+  {
+   "id": "CC-006",
+   "decision": "dismissed",
+   "reason": "This names a whole file with no specific location. Splitting the 1016-line middleware class widely now would conflict with the later waves that extend Proxy.java heavily. This wave already moved BackendRequest and RequestBodyCopier out, and CC-003 pulls out the framing decision, which is the in-scope part. Moving the forward loop or the response stream classes into new files would also go outside the lane write set.",
+   "fix_instruction": ""
+  }
+ ]
+}

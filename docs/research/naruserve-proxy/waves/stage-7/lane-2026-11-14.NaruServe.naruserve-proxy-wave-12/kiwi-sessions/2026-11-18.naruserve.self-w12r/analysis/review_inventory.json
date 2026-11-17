@@ -1,0 +1,322 @@
+{
+ "findings": [
+  {
+   "id": "FND-001",
+   "axis": "P4",
+   "verdict": "drop",
+   "evidence": {
+    "command": "cd /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-12 && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ReviewProbeW12Test' -i",
+    "output": "PROBE tail=a\\r\\n12345 backend got=[]\nPROBE tail=5\\r\\n12345\\r\\n backend got=[]\nBUILD SUCCESSFUL (both probe tests passed)",
+    "intent_output": "Probe source (deleted). It is a TinyHttpd app with Proxy.to(rawBackend) at /api. A client writes 'POST /api/x HTTP/1.1\\r\\nHost: 127.0.0.1\\r\\nTransfer-Encoding: chunked\\r\\n\\r\\n' + tail and then closes its socket. tail is either 'a\\r\\n12345' (cut inside chunk data) or '5\\r\\n12345\\r\\n' (cut between chunks). The backend thread reads all bytes until EOF. The probe asserts assertFalse(got.contains(\"\\r\\n0\\r\\n\\r\\n\")). The TinyHttpd chunked stream throws on truncation, so copyChunked never writes LAST_CHUNK. The BufferedOutputStream is dropped and socket.close() runs, so the backend received 0 bytes and the request was never completed."
+   },
+   "drop_reason": "Disproved by execution. A truncated chunked client body is never completed at the backend.",
+   "title": "Suspected: a truncated chunked client body could be re-framed as a complete request (smuggling or integrity risk)",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RequestBodyCopier.java",
+    "line_range": "64-80"
+   },
+   "description": "Suspicion: copyChunked writes the last chunk when the client stream returns -1. If the adapter reported a truncated chunked body as EOF, the backend would see a complete but shortened request. The probe shows the TinyHttpd stream throws instead, so the backend gets nothing.",
+   "suggested_fix": "None needed.",
+   "is_behavioral": true,
+   "tags": [
+    "security",
+    "framing"
+   ],
+   "in_guarantee_scope": true,
+   "real_call_path": true
+  },
+  {
+   "id": "FND-002",
+   "axis": "P1",
+   "verdict": "drop",
+   "evidence": {
+    "command": "same probe run (ReviewProbeW12Test.chunkedOverTheAppRawBodyLimitAnswers413WithBodyTooLargeCause)",
+    "output": "PROBE appLimit chunked response=HTTP/1.1 413 Content Too Large errors=[com.snoworca.naruserve.HttpException] cause=com.snoworca.naruserve.BodyTooLargeException: request body exceeds the limit of 1024 bytes",
+    "intent_output": "Probe source (deleted). A TinyHttpd RestApp with g.rawBodyLimit(1024), g.use(\"/api\", Proxy.to(backend.url())) without .bodyLimit, and g.onError recording errors. A 4096-byte chunked POST is sent as 8 chunks of 0x200 bytes. The probe asserts the response starts with 'HTTP/1.1 413 '."
+   },
+   "drop_reason": "Disproved by execution. The app rawBodyLimit applies to chunked bodies and gives 413 with a BodyTooLargeException cause.",
+   "title": "Suspected: a chunked body over the app rawBodyLimit (no .bodyLimit) does not answer 413",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "432-468"
+   },
+   "description": "FR-PROXY-008 says 'bodyLimit or rawBodyLimit gives 413'. The tests cover a chunked body only with .bodyLimit (AC-3). The probe shows the rawBodyLimit path behaves the same way.",
+   "suggested_fix": "None needed. A regression test for this path could be added.",
+   "is_behavioral": true,
+   "tags": [
+    "limits"
+   ],
+   "in_guarantee_scope": true,
+   "real_call_path": true
+  },
+  {
+   "id": "FND-003",
+   "axis": "P1",
+   "verdict": "drop",
+   "evidence": {
+    "command": "same probe run (ReviewProbeW12Test.noLengthBodyOverTheMountLimitAnswers413)",
+    "output": "PROBE noLength over bodyLimit status=413",
+    "intent_output": "Probe source (deleted). An InMemoryHttpAdapter app with Proxy.to(backend).bodyLimit(10) at /api. ClientRequest.of(\"POST\",\"/api/x\").body(new byte[100]) is sent with no length headers. The probe asserts status == 413."
+   },
+   "drop_reason": "Disproved by execution. The pre-read and chunked copy of a body without length headers are limited by .bodyLimit and give 413.",
+   "title": "Suspected: a body without length headers (pre-read path) escapes .bodyLimit",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "442-446"
+   },
+   "description": "The NO_FRAMING_HEADER branch pre-reads one byte and then streams chunked. The probe shows the limited stream from req.bodyStream(n) still enforces the limit.",
+   "suggested_fix": "None needed.",
+   "is_behavioral": true,
+   "tags": [
+    "limits"
+   ],
+   "in_guarantee_scope": true,
+   "real_call_path": true
+  },
+  {
+   "id": "FND-004",
+   "axis": "P2",
+   "verdict": "drop",
+   "evidence": {
+    "command": "sed -n 300,400p NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "output": "RawBodyStream.close() { consumed = true; closed = true; } (declares no exception and cannot throw)",
+    "intent_output": "forward() calls closeQuietly(outgoing.body) in finally after res.relay. A RuntimeException from close() would mask the result, but the stream's close() cannot throw."
+   },
+   "drop_reason": "Disproved by reading the code. RawBodyStream.close() never throws, so the body is closed exactly once (in prepare's catch or in forward's finally) with nothing masked.",
+   "title": "Suspected: an exception from the client body close() in the finally block masks the forward result",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "406-412"
+   },
+   "description": "Resource-handling check. The socket closes when the response is not relayed, and the body closes once on every path.",
+   "suggested_fix": "None needed.",
+   "is_behavioral": true,
+   "tags": [
+    "resource"
+   ],
+   "in_guarantee_scope": true,
+   "real_call_path": true
+  },
+  {
+   "id": "FND-005",
+   "axis": "P6",
+   "verdict": "drop",
+   "evidence": {
+    "command": "sed -n 135,142p NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyAccessLogTest.java",
+    "output": "RecordingLogger.awaitMatching(log::info, regex, 1); Thread.sleep(50); List<String> found = ...; assertEquals(found.toString(), 1, found.size());",
+    "intent_output": "The 'exactly one line' check depends on a 50 ms sleep. A late duplicate line would be missed (false pass), but the test cannot fail when the code is correct."
+   },
+   "drop_reason": "Test-robustness nit only. It cannot fail on correct code, and the ACs need the line format and in= value, which the test checks.",
+   "title": "The access log 'exactly one line' check relies on a fixed 50 ms sleep",
+   "location": {
+    "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyAccessLogTest.java",
+    "line_range": "134-141"
+   },
+   "description": "The duplicate-line detection is timing-based and weak.",
+   "suggested_fix": "Assert the count after a deterministic point, such as after the response was fully read and app.shutdown(), instead of sleeping.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ],
+   "in_guarantee_scope": true,
+   "real_call_path": false
+  },
+  {
+   "id": "FND-006",
+   "axis": "P5",
+   "verdict": "drop",
+   "evidence": {
+    "command": "sed -n 64,92p NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RequestBodyCopier.java",
+    "output": "while (true) { int n = clientRead(in, b, held, b.length - held); ... writeChunk(out, b, held + n); held = 0; }",
+    "intent_output": "Each client read becomes one backend chunk. A client that trickles 1 byte per read produces about 6 bytes of framing per body byte. Memory stays bounded at one 8 KiB buffer, so streaming (AC-7) holds."
+   },
+   "drop_reason": "Efficiency nit with no AC impact. Memory stays bounded and the bytes are correct.",
+   "title": "One backend chunk per client read can produce tiny chunks for trickling clients",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RequestBodyCopier.java",
+    "line_range": "64-80"
+   },
+   "description": "Framing overhead only.",
+   "suggested_fix": "Optional: fill the buffer while available() > 0 before emitting a chunk.",
+   "is_behavioral": false,
+   "tags": [
+    "performance"
+   ],
+   "in_guarantee_scope": true,
+   "real_call_path": true
+  }
+ ],
+ "clean_code": [
+  {
+   "id": "CC-001",
+   "principle": "DRY (duplicated test helpers)",
+   "location": {
+    "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestBodyTest.java",
+    "line_range": "147-200,560-600"
+   },
+   "description": "exchange/readToEnd/chunkedCoding/randomBytes/readHead/readLine are copied almost verbatim into ProxyAccessLogTest.java:81-125, ProxyBodyLimitTest.java:135-141,456-500, ProxyRequestHeadersTest.java:404-430 and RawBackend.java:163-230. They should live in one shared test-support class next to RawBackend."
+  },
+  {
+   "id": "CC-002",
+   "principle": "DRY (duplicated SPI test doubles)",
+   "location": {
+    "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBodyLimitTest.java",
+    "line_range": "685-851"
+   },
+   "description": "FailingBodyAdapter/FailingBodyExchange repeat the delegating HttpAdapter/HttpExchange boilerplate of StepRecordingAdapter/StepRecordingExchange (ProxyRequestBodyTest.java:769-925) and VersionReportingAdapter (ProxyRequestFramingTest.java:453+). A single delegating adapter with an input-stream hook would replace all three."
+  },
+  {
+   "id": "CC-003",
+   "principle": "Single Responsibility / function size",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "432-468"
+   },
+   "description": "prepare() takes the body stream, does the pre-read, decides the framing header, enforces the list-form body limit, builds the request line and assembles the head. Moving the framing decision (chunked/length/first/framingHeader) into a small value-returning helper would shorten it and remove the four mutable locals."
+  },
+  {
+   "id": "CC-004",
+   "principle": "Speculative generality (YAGNI)",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "458-461"
+   },
+   "description": "BackendRequest.head(...) takes six parameters, two of which (forwardingHeaders, requestHeaderValues) are always passed Collections.emptyList() as placeholders for later waves (SEC-PROXY-002, FR-PROXY-005). This is an unused API surface until those waves land."
+  },
+  {
+   "id": "CC-005",
+   "principle": "Tagged union via flags (data clump)",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "539-557"
+   },
+   "description": "Outgoing carries chunked, contentLength and firstByte. Only contentLength matters in length mode and only firstByte in chunked mode, and the unused field carries a sentinel (0 or -1)."
+  },
+  {
+   "id": "CC-006",
+   "principle": "Class size / mixed responsibilities",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "1-1016"
+   },
+   "description": "Proxy.java is 1016 lines and mixes the option builder, request framing decisions, forwarding I/O and response body stream classes. This wave moved some code out (BackendRequest, RequestBodyCopier), but the framing decision and the forward loop still sit in the public middleware class."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class BackendRequest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/HeaderRules.java",
+   "hunks_total": 3,
+   "anchors": [
+    "import java.util.List;",
+    "import java.util.Map;",
+    "static Set<String> connectionNames(List<Map.Entry<String, String>> lines) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+   "hunks_total": 25,
+   "anchors": [
+    "import com.snoworca.naruserve.BodyTooLargeException;",
+    "import java.io.ByteArrayOutputStream;",
+    "import java.nio.charset.StandardCharsets;",
+    "import java.util.Arrays;",
+    "import java.util.HashSet;",
+    "import java.util.Set;",
+    "private static final Map.Entry<String, String> CHUNKED_FRAMING =",
+    "// @req FR-PROXY-003",
+    "BackendRequest.checkClientHeaders(req.rawHeaders());",
+    "} catch (ClientBodyFailure f) {",
+    "// @req FR-PROXY-007",
+    "if (outgoing.bufferedBody != null) {",
+    "if (outgoing.bodyStream != null) {",
+    "* The request line, Host, the forwardable client headers, the framing header and Connection as bytes, for the",
+    "// @req FR-PROXY-008",
+    "StringBuilder head = new StringBuilder();",
+    "byte[] head = BackendRequest.head(req.methodToken() + \" \" + target.basePath + req.originalUrl()",
+    "boolean sendLength;",
+    "private static byte[] readClientBody(InputStream in) {",
+    "/** The bytes of a backend request head and how its body follows. */",
+    "final byte @Nullable [] bufferedBody;",
+    "final int firstByte;",
+    "Outgoing(byte[] head, byte @Nullable [] bufferedBody, @Nullable InputStream bodyStream, long contentLength) {",
+    "this.bufferedBody = bufferedBody;",
+    "private static final class ClientBodyFailure extends RuntimeException {"
+   ],
+   "findings": [
+    "FND-002",
+    "FND-003",
+    "FND-004"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RequestBodyCopier.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class RequestBodyCopier {"
+   ],
+   "findings": [
+    "FND-001",
+    "FND-006"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyAccessLogTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class ProxyAccessLogTest {"
+   ],
+   "findings": [
+    "FND-005"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBodyLimitTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class ProxyBodyLimitTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestBodyTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class ProxyRequestBodyTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestHeadersTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class ProxyRequestHeadersTest {"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 6,
+  "by_verdict": {
+   "keep": 0,
+   "drop": 6,
+   "residual": 0
+  },
+  "by_axis": {
+   "P1": 2,
+   "P2": 1,
+   "P4": 1,
+   "P5": 1,
+   "P6": 1
+  }
+ },
+ "probe_deleted": true
+}

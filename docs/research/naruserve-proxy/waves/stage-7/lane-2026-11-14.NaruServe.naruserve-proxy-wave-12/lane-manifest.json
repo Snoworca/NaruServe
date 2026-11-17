@@ -1,0 +1,191 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-12",
+ "wave": "wave-12",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-12",
+ "base_sha": "09770ae178a7ce1f2d89af427790717b862075fe",
+ "head_sha": "805c466afe20c94758eff544186c194dd7c170bf",
+ "commits": [
+  {
+   "sha": "e0f49acc74d59d065f238ecc4e10193e365d48e9",
+   "subject": "test(proxy): cover request header forwarding to the backend",
+   "req": "FR-PROXY-003",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "8750fac30fa62d80dbf95083ee6c67aaf290e953",
+   "subject": "feat(proxy): forward client request headers in received order",
+   "req": "FR-PROXY-003",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "4423ce1796a24c6e7f863b5ba99004baa87f89fb",
+   "subject": "test(proxy): cover streamed request body framing to the backend",
+   "req": "FR-PROXY-007",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "7a21931c1e4fb6233b8d9f8516b1c38ed19ab828",
+   "subject": "feat(proxy): stream the request body to the backend",
+   "req": "FR-PROXY-007",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "40dd190f2f1c5bdf8a06d564921f7b638b6aa253",
+   "subject": "test(proxy): cover the request body limit and client body failures",
+   "req": "FR-PROXY-008",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "2015f2c5f6e550c01b44cbfcb5ed32ff7a9e54a1",
+   "subject": "feat(proxy): enforce the mount body limit before the backend connect",
+   "req": "FR-PROXY-008",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "865386d0c36de9a80a70619b291305daa61c9170",
+   "subject": "test(proxy): pin proxied requests in the access log",
+   "req": "FR-PROXY-021",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "805c466afe20c94758eff544186c194dd7c170bf",
+   "subject": "refactor(proxy): move the request body framing decision out of prepare",
+   "req": "FR-PROXY-007, FR-PROXY-008",
+   "kind": "review",
+   "missing_trailers": false
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "FR-PROXY-003",
+   "FR-PROXY-007",
+   "FR-PROXY-008",
+   "FR-PROXY-021"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-12/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-12/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-003/lanes/w12s7l1",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-12/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-007/lanes/w12s7l1",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-12/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-008/lanes/w12s7l1",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-12/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-021/lanes/w12s7l1",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-12/.kiwi/sessions/2026-11-18.naruserve.self-w12r/analysis/report.md"
+ ],
+ "red_evidence": [
+  {
+   "req": "FR-PROXY-003",
+   "test": "ProxyRequestHeadersTest::fr_PROXY_003_AC2_headerNamedInConnectionDoesNotArrive",
+   "red_output": "expected:<[]> but was:<[X-Hop: secret]>"
+  },
+  {
+   "req": "FR-PROXY-003",
+   "test": "ProxyRequestHeadersTest::fr_PROXY_003_AC4_cookieLinesMergeAtTheFirstCookiePosition",
+   "red_output": "expected:<[X-Before: 0, Cookie: a=1; b=2, X-Mid: m, X-After: 9]> but was:<[X-Before: 0, Cookie: a=1, X-Mid: m, Cookie: b=2, X-After: 9]>"
+  },
+  {
+   "req": "FR-PROXY-003",
+   "test": "ProxyRequestHeadersTest::fr_PROXY_003_AC6_nameWithSpaceGives400WithoutConnecting",
+   "red_output": "status expected:<400> but was:<502>"
+  },
+  {
+   "req": "FR-PROXY-003",
+   "test": "ProxyRequestHeadersTest::fr_PROXY_003_AC8_backendHeaderBlockLayout",
+   "red_output": "expected:<[Cookie: a=1; b=2, X-A: 1, X-B: 2]> but was:<[Cookie: a=1, X-A: 1, X-Hop: h]>"
+  },
+  {
+   "req": "FR-PROXY-007",
+   "test": "ProxyRequestBodyTest::fr_PROXY_007_AC2_bodylessPostPutPatchArriveWithContentLengthZero",
+   "red_output": "expected:<[Content-Length: 0]> but was:<[]>"
+  },
+  {
+   "req": "FR-PROXY-007",
+   "test": "ProxyRequestBodyTest::fr_PROXY_007_AC3_chunkedRequestArrivesChunkedWithoutContentLength",
+   "red_output": "expected:<[Transfer-Encoding: chunked]> but was:<[Content-Length: 5]>"
+  },
+  {
+   "req": "FR-PROXY-007",
+   "test": "ProxyRequestBodyTest::fr_PROXY_007_AC5_bodyWithoutLengthHeadersArrivesChunked",
+   "red_output": "expected:<[Transfer-Encoding: chunked]> but was:<[]>"
+  },
+  {
+   "req": "FR-PROXY-007",
+   "test": "ProxyRequestBodyTest::fr_PROXY_007_AC7_oneGibChunkedBodyThroughA64MiBHeap",
+   "red_output": "response: HTTP/1.1 413 Content Too Large ... expected:<0> but was:<1>"
+  },
+  {
+   "req": "FR-PROXY-007",
+   "test": "ProxyRequestBodyTest::fr_PROXY_007_AC8_preReadRunsAfterBodyStreamAndBeforeTheBackendConnect",
+   "red_output": "expected:<[bodyStream, preRead, connect]> but was:<[connect, bodyStream]>"
+  },
+  {
+   "req": "FR-PROXY-008",
+   "test": "ProxyBodyLimitTest::fr_PROXY_008_AC1_contentLengthListOverTheBodyLimitAnswers413WithoutConnecting",
+   "red_output": "backend connections opened expected:<0> but was:<1> (re-confirmed at 7a21931 without the impl change)"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "rounds": 3,
+  "dropped": 6,
+  "clean_code_fixed": [
+   "CC-003",
+   "R2-CC-001",
+   "R2-CC-002",
+   "CC-W12R3-001"
+  ],
+  "clean_code_dismissed": [
+   "CC-001",
+   "CC-002",
+   "CC-004",
+   "CC-005",
+   "CC-006"
+  ],
+  "review_commit": "805c466"
+ },
+ "intentionally_empty": {
+  "FR-PROXY-021": "all three ACs held at base: the proxy reads the body only through req.bodyStream, so the access log counts in= without proxy code; test commit 865386d only, no implementation commit",
+  "partial_green_at_base": "FR-PROXY-003 AC-1/3/5/7, FR-PROXY-007 AC-1/4/6, FR-PROXY-008 AC-2..5 held at base and are pinned by tests"
+ },
+ "design_refuted": [],
+ "srs_deltas": [
+  {
+   "req": "FR-PROXY-008",
+   "ac": "AC-1",
+   "owner": "FR-HTTP-031 (NaruServe-api DefaultRequest.contentLength)",
+   "text": "A Content-Length list form (e.g. '2048, 2048', accepted by TinyHttpd 3.1.1) over the app rawBodyLimit on a mount WITHOUT .bodyLimit gets 413 only after the backend connect (the copy stops with BodyTooLargeException, backend connection closed), because the core parses only a single number as the declared length and the public API exposes no rawBodyLimit accessor; with .bodyLimit(n) the proxy refuses the list form before connecting. Fix belongs to the core declared-length 413 (FR-HTTP-031/D-014) reading the agreed list value.",
+   "evidence": "kiwi-coder FR-PROXY-008 temporary probe over TinyHttpd (removed); ProxyBodyLimitTest::fr_PROXY_008_AC1_contentLengthListOverTheBodyLimitAnswers413WithoutConnecting covers the .bodyLimit case"
+  }
+ ],
+ "declared_limits": [
+  "FR-PROXY-003 AC-8: X-Forwarded-* and .requestHeader slots of BackendRequest.head are empty until SEC-PROXY-002 / FR-PROXY-005; tests pin Host first, client headers, framing header + Connection: close last.",
+  "FR-PROXY-003 AC-6: the header check is currently first in handle(); earlier D-050 checks (upgrade, method, CONNECT/TRACE, target) come with FR-PROXY-010/006/SEC-PROXY-001; multiple-Host 400 with FR-PROXY-004.",
+  "FR-PROXY-007 AC-8: slot and watchdog steps (FR-PROXY-019, FR-PROXY-017, REL-PROXY-001/002) must be inserted between the pre-read and the connect and extend the order test.",
+  "Client X-Forwarded-*/Forwarded lines are forwarded as client headers until SEC-PROXY-002.",
+  "HeaderRules.connectionNames and ResponseHeaderCopier.connectionNames are two Connection-list parsers (the latter outside this write set).",
+  "FR-PROXY-021 AC-3 compares the 502 log line with out= masked (dev-mode error page size differs); the 502 body content is FR-PROXY-015."
+ ],
+ "out_of_lease_paths": [],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "check_test_sufficiency ids FR-PROXY-003/007/008/021 in the worktree: passed, every AC cited (003: 8/8, 007: 8/8, 008: 5/5, 021: 3/3)"
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4249,
+  "failures": 0,
+  "exit_code": 0
+ },
+ "bootstrap": "not-applicable",
+ "notes": "Coordinator-resumed after an API login expiry: FR-PROXY-008 uncommitted work was kept, its test was confirmed red at 7a21931 without the impl change, then committed tests-first. The Agent tool ran subagents in the background; the worker waited for each in foreground polling slices. The existing assertion of ProxyRequestHeadersTest::fr_PROXY_003_AC2_clientTransferEncodingDoesNotArrive (this lane's own test) was changed in the FR-PROXY-007 test commit 4423ce1 to expect the proxy's own chunked framing as FR-PROXY-007 AC-3 requires (stricter, not weakened). Deferred queue lines: 77"
+}

@@ -1,0 +1,65 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-003",
+ "base_sha": "09770ae178a7ce1f2d89af427790717b862075fe",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-003"
+ ],
+ "req_filter": [
+  "FR-PROXY-003"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestHeadersTest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/HeaderRules.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java"
+ ],
+ "started_at": "2026-11-17T11:34:13Z",
+ "last_updated_at": "2026-11-17T11:46:46Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-17T11:34:13Z",
+  "ended_at": "2026-11-17T11:46:46Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-003",
+  "result_summary": "Header check 400, Connection-named removal, Cookie merge, D-053 head layout; module 133/0, full 4211/0",
+  "changed": true,
+  "commit_sha": "8750fac",
+  "commits": [
+   {
+    "req_id": "FR-PROXY-003",
+    "test_sha": "e0f49ac",
+    "implementation_sha": "8750fac"
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-17T11:34:13Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-PROXY-003": "evolving"
+  },
+  "status_snapshot": {
+   "FR-PROXY-003": "planned"
+  }
+ },
+ "req_coverage": {
+  "FR-PROXY-003": {
+   "status_at_start": "planned",
+   "status_at_end": "planned",
+   "all_done": true,
+   "note": "--no-final: promotion left to the orchestrator"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-003/lanes/w12s7l1/reports/pm-2026-11-17T114646Z.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": null
+}

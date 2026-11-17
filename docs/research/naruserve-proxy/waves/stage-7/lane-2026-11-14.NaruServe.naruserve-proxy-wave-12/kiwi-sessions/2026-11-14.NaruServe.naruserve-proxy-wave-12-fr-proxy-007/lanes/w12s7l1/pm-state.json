@@ -1,0 +1,65 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-007",
+ "base_sha": "8750fac30fa62d80dbf95083ee6c67aaf290e953",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-007"
+ ],
+ "req_filter": [
+  "FR-PROXY-007"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestBodyTest.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestHeadersTest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RequestBodyCopier.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java"
+ ],
+ "started_at": "2026-11-17T11:47:03Z",
+ "last_updated_at": "2026-11-17T11:58:21Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-17T11:47:03Z",
+  "ended_at": "2026-11-17T11:58:21Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-007",
+  "result_summary": "Streamed body via RequestBodyCopier, chunked/CL/pre-read framing, 1 GiB in 64 MiB; module 153/0, full 4231/0",
+  "changed": true,
+  "commit_sha": "7a21931",
+  "commits": [
+   {
+    "req_id": "FR-PROXY-007",
+    "test_sha": "4423ce1",
+    "implementation_sha": "7a21931"
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-17T11:47:03Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-PROXY-007": "evolving"
+  },
+  "status_snapshot": {
+   "FR-PROXY-007": "planned"
+  }
+ },
+ "req_coverage": {
+  "FR-PROXY-007": {
+   "status_at_start": "planned",
+   "status_at_end": "planned",
+   "all_done": true,
+   "note": "--no-final: promotion left to the orchestrator"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-007/lanes/w12s7l1/reports/pm-2026-11-17T115821Z.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": null
+}

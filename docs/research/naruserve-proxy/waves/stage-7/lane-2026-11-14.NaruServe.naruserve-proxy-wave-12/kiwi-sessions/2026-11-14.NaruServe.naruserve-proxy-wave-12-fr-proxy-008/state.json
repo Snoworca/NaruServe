@@ -1,0 +1,45 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-008",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-008"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RequestBodyCopier.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBodyLimitTest.java"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops",
+  "20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests com.snoworca.naruserve.proxy.ProxyBodyLimitTest",
+  "exit_code": 1,
+  "captured_failure": "fr_PROXY_008_AC1_contentLengthListOverTheBodyLimitAnswers413WithoutConnecting: backend connections opened expected:<0> but was:<1> (14 tests, 1 failed)",
+  "timestamp": "2026-11-17T12:04:49Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test",
+  "exit_code": 0,
+  "timestamp": "2026-11-17T12:06:00Z"
+ },
+ "regression_summary": {
+  "scope": "full",
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "passed": 4245,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "pending_mutations": [],
+ "mcp_call_log_ref": ".kiwi/deferred-srs-mutations.jsonl"
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-021",
+  "sds_path": null,
+  "target": "0.12.0",
+  "req_ids": [
+    "FR-PROXY-021"
+  ],
+  "write_set": [
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyAccessLogTest.java"
+  ],
+  "mode": "normal",
+  "flags": [
+    "--loops 20",
+    "--defer-srs-mutation"
+  ],
+  "spawn_context": "pm-child",
+  "phase": "done",
+  "next_resume_hint": null,
+  "failed": false,
+  "red_evidence": null,
+  "green_at_base": true,
+  "green_evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test",
+    "exit_code": 0,
+    "timestamp": "2026-11-18T00:00:00Z"
+  },
+  "regression_baseline": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true build",
+    "head_sha": "2015f2c5f6e550c01b44cbfcb5ed32ff7a9e54a1",
+    "failed_test_ids": [],
+    "source": "pinned regression-baseline.json + lane head"
+  },
+  "regression_summary": {
+    "scope": "full",
+    "passed": 4249,
+    "failed": 0,
+    "regressed_files": []
+  },
+  "pending_mutations": [],
+  "mcp_call_log_ref": ".kiwi/deferred-srs-mutations.jsonl"
+}

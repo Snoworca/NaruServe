@@ -1,0 +1,64 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-008",
+ "base_sha": "7a21931c1e4fb6233b8d9f8516b1c38ed19ab828",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-008"
+ ],
+ "req_filter": [
+  "FR-PROXY-008"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBodyLimitTest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RequestBodyCopier.java"
+ ],
+ "started_at": "2026-11-17T11:58:22Z",
+ "last_updated_at": "2026-11-17T17:18:03Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-17T11:58:22Z",
+  "ended_at": "2026-11-17T17:18:03Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-008",
+  "result_summary": "List-form CL over bodyLimit 413 before connect; client read RuntimeException carried unwrapped; module 167/0, full 4245/0",
+  "changed": true,
+  "commit_sha": "2015f2c",
+  "commits": [
+   {
+    "req_id": "FR-PROXY-008",
+    "test_sha": "40dd190",
+    "implementation_sha": "2015f2c"
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-17T11:58:22Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-PROXY-008": "evolving"
+  },
+  "status_snapshot": {
+   "FR-PROXY-008": "planned"
+  }
+ },
+ "req_coverage": {
+  "FR-PROXY-008": {
+   "status_at_start": "planned",
+   "status_at_end": "planned",
+   "all_done": true,
+   "note": "--no-final: promotion left to the orchestrator"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-12-fr-proxy-008/lanes/w12s7l1/reports/pm-2026-11-17T171803Z.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": null
+}

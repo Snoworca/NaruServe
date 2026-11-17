@@ -1,0 +1,88 @@
+{
+ "run_id": "2026-11-18.naruserve.self-w12r",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "started_at": "2026-11-17T17:22:19Z",
+ "mode": "self",
+ "mode_flags": [
+  "--keep-clean-code",
+  "--no-pipeline-emit",
+  "--loops 20"
+ ],
+ "phase": "8",
+ "finding_queue": [],
+ "fix_iter": 0,
+ "recheck_iter": 0,
+ "clean_code_round": 3,
+ "clean_code_dismissed": [
+  {
+   "id": "CC-001",
+   "reason": "The helpers in RawBackend.java (readHead, readLine, readChunked and others) are private, so reusing them means editing RawBackend.java. Sharing the copies among the four in-set test classes needs a new shared support file. Both are outside this lane's write set, and having one test class call another test class's helpers would couple the tests. Leave it for a later cleanup that owns the test-support files."
+  },
+  {
+   "id": "CC-002",
+   "reason": "One merged delegating adapter would have to replace VersionReportingAdapter in ProxyRequestFramingTest.java and would have to live in a new shared test file. Both are outside the lane write set. Merging only the two in-set test doubles would still need a shared file."
+  },
+  {
+   "id": "CC-004",
+   "reason": "This goes against the fixed design. D-053 sets the backend head layout with explicit slots for the forwarding headers (SEC-PROXY-002) and the .requestHeader values (FR-PROXY-005), and later waves fill them. The code comment already says so. BackendRequest is package-private, so this is not public API surface. Removing the parameters now would only force those waves to add them back and change the call sites."
+  },
+  {
+   "id": "CC-005",
+   "reason": "The finding is not quite accurate: firstByte = -1 is a real chunked-mode value (a CHUNKED_BODY request has no pre-read), not just a filler. The field javadocs document how each field is used. In Java 8, a tagged union would add subclasses or instanceof checks to forward() with no change in behaviour. CC-003 already cleans up how the values are built."
+  },
+  {
+   "id": "CC-006",
+   "reason": "This names a whole file with no specific location. Splitting the 1016-line middleware class widely now would conflict with the later waves that extend Proxy.java heavily. This wave already moved BackendRequest and RequestBodyCopier out, and CC-003 pulls out the framing decision, which is the in-scope part. Moving the forward loop or the response stream classes into new files would also go outside the lane write set."
+  }
+ ],
+ "clean_code_skip": false,
+ "guarantee_scope": "NaruServe-proxy request-side forwarding of wave-12: FR-PROXY-003, FR-PROXY-007, FR-PROXY-008, FR-PROXY-021 within 09770ae..HEAD; later-wave requirements (FR-PROXY-004/005/006/009/010/015-020, SEC-PROXY-001/002/004/005, REL-PROXY-001/002) are outside",
+ "declared_limits": [],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "c86d1629fc514faf174e3471717897cc25ca8fae",
+   "scope": "full",
+   "scope_widen_reason": null,
+   "files": 8,
+   "tokens_used": 153330,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  },
+  {
+   "round": 2,
+   "tree_sha": "fd09b48ba106a34440a6cba12a8f53759ac2f7e9",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": 1,
+   "tokens_used": 66778,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  },
+  {
+   "round": 3,
+   "tree_sha": "2af6c54dbb72a947a5538bff356869bf9034b22e",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": 1,
+   "tokens_used": 67452,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  }
+ ],
+ "regression_baseline": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json (failing_tests: [])",
+ "regression_pass": true,
+ "pr_responded": false,
+ "failed": false,
+ "base": "09770ae",
+ "head": "865386d",
+ "round1_tree_sha": "c86d1629fc514faf174e3471717897cc25ca8fae"
+}
