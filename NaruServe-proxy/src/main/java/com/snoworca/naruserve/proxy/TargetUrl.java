@@ -8,8 +8,9 @@ import java.util.Locale;
  *
  * <p>Accepted: the scheme {@code http} or {@code https} in any letter case, {@code ://}, a required host, an optional
  * {@code :port} of decimal digits in {@code 1..65535}, and an optional base path starting with {@code /}. The host is
- * a name of ASCII letters, digits, {@code -}, {@code .} and {@code _}; a dotted-quad IPv4 literal (a name whose last
- * label is a number must be one); or a bracketed IPv6 literal without a zone id. The base path loses every trailing
+ * a name of dot-separated labels of ASCII letters, digits, {@code -} and {@code _} (see {@link #isHostName}); a
+ * dotted-quad IPv4 literal (a name whose last label is a number must be one); or a bracketed IPv6 literal without a
+ * zone id. The base path loses every trailing
  * {@code /} and must then pass {@link PathChecker#isSafePath}. A query, a fragment and user information are refused.
  * {@code null} throws {@code NullPointerException}; every other refusal throws {@code IllegalArgumentException}.
  */
@@ -18,7 +19,10 @@ final class TargetUrl {
 
     /** {@code http} or {@code https}, lower case. */
     final String scheme;
-    /** The authority as written in the URL (host literal and the port when one was written). */
+    /**
+     * The authority as written in the URL (host literal and the port when one was written), used only by
+     * {@code Proxy.describe()}; the {@code Host} value comes from {@link #hostHeader()}.
+     */
     final String authority;
     /** The host as written, IPv6 brackets kept: the form a {@code Host} header carries. */
     final String hostLiteral;
@@ -93,7 +97,7 @@ final class TargetUrl {
                 throw new IllegalArgumentException("not an ASCII host name or IPv4 literal");
             }
         }
-        int port = portText == null ? ("https".equals(scheme) ? 443 : 80) : parsePort(portText);
+        int port = portText == null ? defaultPort(scheme) : parsePort(portText);
         int end = basePath.length();
         while (end > 0 && basePath.charAt(end - 1) == '/') {
             end--;
@@ -111,8 +115,12 @@ final class TargetUrl {
      */
     // @req FR-PROXY-004
     String hostHeader() {
-        int defaultPort = "https".equals(scheme) ? 443 : 80;
-        return port == defaultPort ? hostLiteral : hostLiteral + ":" + port;
+        return port == defaultPort(scheme) ? hostLiteral : hostLiteral + ":" + port;
+    }
+
+    /** The default port of {@code scheme}: 443 for {@code https}, 80 for {@code http}. */
+    private static int defaultPort(String scheme) {
+        return "https".equals(scheme) ? 443 : 80;
     }
 
     /** One to five ASCII decimal digits spelling {@code 1..65535}; {@code Integer.parseInt} would take a sign. */
@@ -135,22 +143,50 @@ final class TargetUrl {
     }
 
     /**
-     * A non-empty name of ASCII letters, digits, {@code -}, {@code .} and {@code _}. A name whose last label (one
-     * trailing dot aside) is a number, decimal or {@code 0x} hexadecimal, must be a dotted-quad IPv4 literal:
-     * resolvers read {@code 4294967295}, {@code 127.1} or {@code 0x7f.1} as addresses too.
+     * One or more dot-separated labels (see {@link #isLabel}), at most 253 characters, optionally followed by one
+     * trailing root dot; any other empty label (a leading dot, {@code ..}) is refused. A name whose last label (the
+     * root dot aside) is a number, decimal or {@code 0x} hexadecimal, must be a dotted-quad IPv4 literal: resolvers
+     * read {@code 4294967295}, {@code 127.1} or {@code 0x7f.1} as addresses too.
      */
     private static boolean isHostName(String s) {
-        for (int i = 0; i < s.length(); i++) {
+        int end = s.endsWith(".") ? s.length() - 1 : s.length();
+        if (end == 0 || end > 253) {
+            return false;
+        }
+        int start = 0;
+        while (true) {
+            int dot = s.indexOf('.', start);
+            int labelEnd = dot < 0 ? end : dot;
+            if (!isLabel(s, start, labelEnd)) {
+                return false;
+            }
+            if (labelEnd == end) {
+                return !isNumber(s, start, end) || isIpv4(s);
+            }
+            start = labelEnd + 1;
+        }
+    }
+
+    /**
+     * Whether {@code s[start, end)} is 1..63 ASCII letters, digits, {@code -} and {@code _}, holding at least one
+     * letter or digit and neither starting nor ending with {@code -}.
+     */
+    private static boolean isLabel(String s, int start, int end) {
+        int length = end - start;
+        if (length < 1 || length > 63 || s.charAt(start) == '-' || s.charAt(end - 1) == '-') {
+            return false;
+        }
+        boolean alphanumeric = false;
+        for (int i = start; i < end; i++) {
             char c = s.charAt(i);
             boolean digit = c >= '0' && c <= '9';
             boolean letter = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-            if (!digit && !letter && c != '-' && c != '.' && c != '_') {
+            if (!digit && !letter && c != '-' && c != '_') {
                 return false;
             }
+            alphanumeric |= digit || letter;
         }
-        int end = s.endsWith(".") ? s.length() - 1 : s.length();
-        int start = s.lastIndexOf('.', end - 1) + 1;
-        return !isNumber(s, start, end) || isIpv4(s);
+        return alphanumeric;
     }
 
     /** Whether {@code s[start, end)} is a non-empty run of decimal digits or {@code 0x} and hexadecimal digits. */
