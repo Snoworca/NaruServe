@@ -121,7 +121,7 @@ app.get("/export", (req, res) -> {
 
 ### Default cache policy
 
-app.defaultCache(policy) supplies Cache-Control only if the response has none. Default null adds nothing; existing response or framework cache headers remain unchanged. See [server policy](static.md#default-server-policy).
+app.defaultCache(policy) supplies Cache-Control only if the response has none. Default null adds nothing; existing response or framework cache headers remain unchanged. A response written by `res.relay` never receives the `defaultCache` policy. See [server policy](static.md#default-server-policy).
 
 ```java
 app.defaultCache(CachePolicy.noCache());

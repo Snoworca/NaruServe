@@ -147,7 +147,7 @@ res.cache(CachePolicy.noCache()).json(mapOf("version" to "1.0"))
 
 ### Default server policy
 
-app.defaultCache(policy) applies only to responses without Cache-Control. Default null adds nothing, avoiding an implicit cache-behavior change. At commit, any existing response cache/header value, matched mount pattern or framework cache policy remains unchanged.
+app.defaultCache(policy) applies only to responses without Cache-Control. Default null adds nothing, avoiding an implicit cache-behavior change. At commit, any existing response cache/header value, matched mount pattern or framework cache policy remains unchanged. A response written by `res.relay` never receives the `defaultCache` policy.
 
 ```java
 app.defaultCache(CachePolicy.noStore());   // no-store for responses without an explicit policy

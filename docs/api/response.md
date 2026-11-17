@@ -120,7 +120,7 @@ app.get("/export", (req, res) -> {
 
 ### 기본 캐시 정책
 
-`cache(policy)`를 부르지 않은 응답에 붙일 `Cache-Control`은 `app.defaultCache(policy)`로 정합니다. 기본값은 `null`이라 아무 헤더도 붙이지 않고, 응답이 이미 `Cache-Control`을 가지고 있으면 그 값을 둡니다. [서버 기본 정책](static.md#서버-기본-정책)
+`cache(policy)`를 부르지 않은 응답에 붙일 `Cache-Control`은 `app.defaultCache(policy)`로 정합니다. 기본값은 `null`이라 아무 헤더도 붙이지 않고, 응답이 이미 `Cache-Control`을 가지고 있으면 그 값을 둡니다. `res.relay`로 쓴 응답에는 `defaultCache` 정책을 붙이지 않습니다. [서버 기본 정책](static.md#서버-기본-정책)
 
 ```java
 app.defaultCache(CachePolicy.noCache());

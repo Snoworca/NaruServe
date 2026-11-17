@@ -94,7 +94,7 @@ Pong timeout은 Ping 주기와 같습니다. TinyHttpd의 `WebSocketListener`에
 | SPA fallback | 꺼짐 | `options.spaFallback(true)`. 켜도 `/api/`, `/ws/` 아래에는 동작하지 않습니다. |
 | 숨김 파일(`.env`, `.git`) | 차단 | — |
 | 심볼릭 링크 | 차단 | `options.allowSymlinks(true)`로 허용합니다. 허용해도 링크의 실제 대상이 마운트 루트 밖이면 `404`입니다. |
-| `Cache-Control` | 붙이지 않음 | `app.defaultCache(policy)`로 정하면 `Cache-Control`이 없는 응답에 붙습니다. `res.cache`, `res.header`, `options.cache`가 정한 값은 그대로 둡니다. |
+| `Cache-Control` | 붙이지 않음 | `app.defaultCache(policy)`로 정하면 `Cache-Control`이 없는 응답에 붙습니다. `res.cache`, `res.header`, `options.cache`가 정한 값은 그대로 둡니다. `res.relay`로 쓴 응답에는 `defaultCache` 정책을 붙이지 않습니다. |
 | `X-Content-Type-Options` | 파일 응답·공통 finalhandler HTML·공통 자동 OPTIONS에 `nosniff` | 일반 `send`·JSON 응답에는 자동으로 추가하지 않음 |
 | 공통 HTTP 기본 오류 | Java `Throwable` 클래스·메시지·스택을 이스케이프한 HTML | 상세 정보가 기본으로 노출됩니다. 응답을 직접 작성하는 오류 핸들러로 바꾸세요 |
 | 접근 로그의 민감 값 | 기록하지 않음 | 바꾸지 않는 것을 권장 |

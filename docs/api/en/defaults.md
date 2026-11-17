@@ -94,7 +94,7 @@ The defaults were checked with JVM load tests (T26: 60 WebSockets and 60 SSE str
 | SPA fallback | Off | `options.spaFallback(true)`; `/api/` and `/ws/` remain excluded |
 | Hidden files (`.env`, `.git`) | Blocked | — |
 | Symbolic links | Blocked | `options.allowSymlinks(true)`; targets outside the mount root still return `404` |
-| `Cache-Control` | Absent | `app.defaultCache(policy)` fills responses without it; values from `res.cache`, `res.header` or `options.cache` stay intact |
+| `Cache-Control` | Absent | `app.defaultCache(policy)` fills responses without it; values from `res.cache`, `res.header` or `options.cache` stay intact; a response written by `res.relay` never receives the `defaultCache` policy |
 | `X-Content-Type-Options` | `nosniff` on file responses, common finalhandler HTML and automatic common OPTIONS | Ordinary `send`/JSON responses do not add it automatically |
 | Default common HTTP errors | Escaped HTML containing the Java `Throwable` class, message and stack | Register an error handler that writes your chosen response; details are exposed by default |
 | Sensitive access-log values | Omitted | Keep this policy |

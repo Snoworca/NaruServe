@@ -153,7 +153,7 @@ res.cache(CachePolicy.noCache()).json(mapOf("version" to "1.0"))
 
 ### 서버 기본 정책
 
-`app.defaultCache(policy)`는 `Cache-Control`을 정하지 않은 응답에 붙일 정책입니다. 기본값은 `null`이고, 그때는 `Cache-Control`을 붙이지 않습니다. 응답을 보내는 순간 `res.cache`, `res.header`, 맞는 `options.cache` 패턴, 프레임워크 자신 중 무엇이든 `Cache-Control`을 이미 정했으면 그 값을 그대로 둡니다. 기본값을 `null`로 둔 이유는 프레임워크가 앱 모르게 캐시 동작을 바꾸지 않게 하려는 것입니다.
+`app.defaultCache(policy)`는 `Cache-Control`을 정하지 않은 응답에 붙일 정책입니다. 기본값은 `null`이고, 그때는 `Cache-Control`을 붙이지 않습니다. 응답을 보내는 순간 `res.cache`, `res.header`, 맞는 `options.cache` 패턴, 프레임워크 자신 중 무엇이든 `Cache-Control`을 이미 정했으면 그 값을 그대로 둡니다. `res.relay`로 쓴 응답은 예외라서 `defaultCache` 정책을 붙이지 않습니다. 기본값을 `null`로 둔 이유는 프레임워크가 앱 모르게 캐시 동작을 바꾸지 않게 하려는 것입니다.
 
 ```java
 app.defaultCache(CachePolicy.noStore());   // no-store for responses without an explicit policy
