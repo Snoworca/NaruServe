@@ -1,0 +1,54 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy",
+ "wave": "wave-8",
+ "wave_number": 8,
+ "stage": 4,
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-8",
+ "lane_index": 2,
+ "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-8",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-8",
+ "base_sha": "464cd315771a48acd743889ceca7cf690a01fbce",
+ "lane_plan": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/stage-4/lanes.lock.json",
+ "write_set": [
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/common/HttpHeaderValues.java",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+  "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseAppendTest.java",
+  "NaruServe-api/src/test/java/com/snoworca/naruserve/common/HttpHeaderValuesTest.java",
+  "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpHeaderValuesKotlinTest.kt",
+  "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawResponseDocsKotlinTest.kt",
+  "docs/api/en/response.md",
+  "docs/api/response.md",
+  "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java"
+ ],
+ "requirements": [
+  "IR-HTTP-012",
+  "FR-HTTP-033",
+  "OPS-DX-009"
+ ],
+ "node_title": "res.append, public isFieldValue, response docs",
+ "done_when": [
+  {
+   "id": "DW-1",
+   "text": "Every live acceptance criterion of IR-HTTP-012, FR-HTTP-033, OPS-DX-009 is cited by a test that was red before its implementation commit and is green now."
+  },
+  {
+   "id": "DW-2",
+   "text": "./gradlew -PtinyHttpdFromMaven=true build passes with no failing test beyond the P.4 baseline (none)."
+  }
+ ],
+ "verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build",
+ "regression_baseline": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+ "queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-8/.kiwi/deferred-srs-mutations.jsonl",
+ "manifest": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-8/.kiwi/lane-manifest.json",
+ "trailers": {
+  "Orch-Run": "2026-11-14.NaruServe.naruserve-proxy",
+  "Orch-Wave": "8",
+  "Orch-Stage": "4",
+  "Orch-Lane": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-8"
+ },
+ "kiwi_pm_args": "--req-filter {REQ} --run-id 2026-11-14.NaruServe.naruserve-proxy-wave-8-{req} --session-suffix w8s4l2 --no-final --no-pipeline-emit --commit-lane-work --defer-srs-mutation /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-8/.kiwi/deferred-srs-mutations.jsonl --regression-baseline /Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json --loops 20",
+ "review_args": "--base 464cd315771a48acd743889ceca7cf690a01fbce --head HEAD --req-filter IR-HTTP-012,FR-HTTP-033,OPS-DX-009 --no-pipeline-emit --keep-clean-code --loops 20",
+ "prd": "/Users/beom/work/git/NaruServe/docs/prd/2026-11-14.naruserve-proxy.prd.md",
+ "design": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/design/00.design.md",
+ "brief": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/00.worker-brief.md"
+}

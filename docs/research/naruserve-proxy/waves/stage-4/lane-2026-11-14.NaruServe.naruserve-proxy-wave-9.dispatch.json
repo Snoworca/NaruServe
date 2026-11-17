@@ -1,0 +1,45 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy",
+ "wave": "wave-9",
+ "wave_number": 9,
+ "stage": 4,
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-9",
+ "lane_index": 3,
+ "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-9",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-9",
+ "base_sha": "c2a554ff053c34f488ec5e513413c970abd67368",
+ "lane_plan": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/stage-4/lanes.lock.json",
+ "write_set": [
+  "NaruServe-servlet/src/main/java/com/snoworca/naruserve/servlet/ServletExchange.java",
+  "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawAccessTest.java"
+ ],
+ "requirements": [
+  "FR-SVL-010"
+ ],
+ "node_title": "Servlet adapter conformance for raw access",
+ "done_when": [
+  {
+   "id": "DW-1",
+   "text": "Every live acceptance criterion of FR-SVL-010 is cited by a test that was red before its implementation commit and is green now."
+  },
+  {
+   "id": "DW-2",
+   "text": "./gradlew -PtinyHttpdFromMaven=true build passes with no failing test beyond the P.4 baseline (none)."
+  }
+ ],
+ "verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build",
+ "regression_baseline": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+ "queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-9/.kiwi/deferred-srs-mutations.jsonl",
+ "manifest": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-9/.kiwi/lane-manifest.json",
+ "trailers": {
+  "Orch-Run": "2026-11-14.NaruServe.naruserve-proxy",
+  "Orch-Wave": "9",
+  "Orch-Stage": "4",
+  "Orch-Lane": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-9"
+ },
+ "kiwi_pm_args": "--req-filter {REQ} --run-id 2026-11-14.NaruServe.naruserve-proxy-wave-9-{req} --session-suffix w9s4l3 --no-final --no-pipeline-emit --commit-lane-work --defer-srs-mutation /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-9/.kiwi/deferred-srs-mutations.jsonl --regression-baseline /Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json --loops 20",
+ "review_args": "--base c2a554ff053c34f488ec5e513413c970abd67368 --head HEAD --req-filter FR-SVL-010 --no-pipeline-emit --keep-clean-code --loops 20",
+ "prd": "/Users/beom/work/git/NaruServe/docs/prd/2026-11-14.naruserve-proxy.prd.md",
+ "design": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/design/00.design.md",
+ "brief": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/00.worker-brief.md"
+}
