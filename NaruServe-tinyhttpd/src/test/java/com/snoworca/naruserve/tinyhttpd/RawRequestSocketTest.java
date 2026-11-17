@@ -64,14 +64,6 @@ public class RawRequestSocketTest {
         assertEquals(Arrays.asList("host", "x-a", "x-b", "connection"), names.get());
         assertEquals(Arrays.asList(entry("Host", "127.0.0.1"), entry("X-A", "1"), entry("x-a", "2"),
                 entry("X-B", "3"), entry("Connection", "close")), raw.get());
-        // only the X- headers, as named by the AC
-        List<String> xNames = new ArrayList<>();
-        for (String n : names.get()) {
-            if (n.startsWith("x-")) {
-                xNames.add(n);
-            }
-        }
-        assertEquals(Arrays.asList("x-a", "x-b"), xNames);
     }
 
     // FR-ENGINE-013 AC-2: a chunked body read through bodyStream() is exactly the de-chunked payload, without

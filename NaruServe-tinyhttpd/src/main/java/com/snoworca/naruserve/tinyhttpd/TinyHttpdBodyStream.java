@@ -34,8 +34,8 @@ final class TinyHttpdBodyStream extends FilterInputStream {
     /**
      * {@link HttpException} 413, 408 or 400 for a size overrun, a read timeout or a truncated or malformed body, the
      * original kept as cause; any other exception, such as the response-side ContentLengthExceededException, is
-     * rethrown as is. TinyHttpd's BodyTooLargeException is named in full, so the public
-     * {@code com.snoworca.naruserve.BodyTooLargeException} cannot shadow it.
+     * rethrown as is. TinyHttpd's BodyTooLargeException is named in full so it cannot be confused with the public
+     * {@code com.snoworca.naruserve.BodyTooLargeException} (FR-ENGINE-013 AC-4).
      */
     // @req FR-ENGINE-005
     // @req FR-ENGINE-013

@@ -1,6 +1,7 @@
 package com.snoworca.naruserve.tinyhttpd;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -124,7 +125,7 @@ public class TinyHttpdBodyStreamTest {
     }
 
     // FR-ENGINE-013 AC-4: the module's sources, main and test, name TinyHttpd's BodyTooLargeException only by its fully
-    // qualified name, so the public com.snoworca.naruserve.BodyTooLargeException cannot shadow it
+    // qualified name so it cannot be confused with the public com.snoworca.naruserve.BodyTooLargeException
     @Test
     public void FR_ENGINE_013_AC4_moduleSourcesNameTinyHttpdsBodyTooLargeExceptionOnlyByFullyQualifiedName()
             throws IOException {
@@ -135,7 +136,7 @@ public class TinyHttpdBodyStreamTest {
             assertTrue(root.getAbsolutePath(), root.isDirectory());
             List<File> sources = new ArrayList<>();
             collectJava(root, sources);
-            assertTrue(root.getAbsolutePath(), !sources.isEmpty());
+            assertFalse(root.getAbsolutePath(), sources.isEmpty());
             for (File f : sources) {
                 for (String line : read(f).split("\\r?\\n")) {
                     String t = line.trim();
