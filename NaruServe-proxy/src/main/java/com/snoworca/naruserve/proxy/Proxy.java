@@ -358,22 +358,25 @@ public final class Proxy implements Middleware {
     // @req FR-PROXY-003
     // @req FR-PROXY-008
     // @req SEC-PROXY-001
+    // @req FR-PROXY-004
     @Override
     public void handle(Request req, Response res, Next next) throws Exception {
         // The request-target check (400) runs on the raw originalUrl() path and query whatever stripPrefix says
-        // (D-052); then the header check (400) and the framing answers (400/501), from the header lines alone, for
-        // every target scheme (D-050). A null message, like every other 400 of the proxy (D-051).
+        // (D-052); then the header check and the multiple-Host check (400) and the framing answers (400/501), from
+        // the header lines alone, for every target scheme (D-050). A null message, like every other 400 of the
+        // proxy (D-051).
         if (!PathChecker.isSafeTarget(req.originalUrl())) {
             throw new HttpException(400);
         }
         BackendRequest.checkClientHeaders(req.rawHeaders());
+        @Nullable String receivedHost = BackendRequest.receivedHost(req.rawHeaders());
         long declaredFraming = requestBodyLength(req);
         if (!"http".equals(target.scheme)) {
             // https backends arrive with the TLS requirement (SEC-PROXY-005); until then they are not reached.
             throw new HttpException(502);
         }
         try {
-            forward(req, res, prepare(req, declaredFraming));
+            forward(req, res, prepare(req, declaredFraming, receivedHost));
         } catch (RequestBodyCopier.ClientBodyFailure f) {
             throw f.forErrorFlow();
         }
@@ -429,27 +432,41 @@ public final class Proxy implements Middleware {
      * connection. The body is taken once through {@code req.bodyStream(n)} for a mount with {@code .bodyLimit(n)} and
      * {@code req.bodyStream()} otherwise. The framing decision (the pre-read and the list-form 413) lives in
      * {@link #bodyFraming}. The exceptions {@code req.bodyStream} throws for a body earlier code took pass through
-     * unwrapped, and the body is closed on every failure.
+     * unwrapped, and the body is closed on every failure. {@code Host} is the received one ({@code receivedHost},
+     * null for none) under {@code .preserveHost(true)} and the target host otherwise; the received one also goes out
+     * as {@code X-Forwarded-Host}.
      */
     // @req IR-PROXY-001
     // @req SEC-PROXY-003
     // @req FR-PROXY-003
     // @req FR-PROXY-007
     // @req FR-PROXY-008
-    private Outgoing prepare(Request req, long declaredFraming) {
+    // @req FR-PROXY-004
+    private Outgoing prepare(Request req, long declaredFraming, @Nullable String receivedHost) {
         InputStream body = options.bodyLimit == NO_BODY_LIMIT ? req.bodyStream() : req.bodyStream(options.bodyLimit);
         try {
             BodyFraming framing = bodyFraming(req, body, declaredFraming);
-            // The forwarding headers (SEC-PROXY-002) and the .requestHeader values (FR-PROXY-005) fill their D-053 slots.
+            String host = backendHost(receivedHost);
+            // X-Forwarded-For and X-Forwarded-Proto (SEC-PROXY-002) join X-Forwarded-Host in the forwarding slot, and
+            // the .requestHeader values (FR-PROXY-005) fill theirs (D-053).
             byte[] head = BackendRequest.head(req.methodToken() + " " + target.basePath + req.originalUrl()
-                    + " HTTP/1.1", target.authority, BackendRequest.forwardedClientHeaders(req.rawHeaders()),
-                    Collections.<Map.Entry<String, String>>emptyList(),
+                    + " HTTP/1.1", host, BackendRequest.forwardedClientHeaders(req.rawHeaders()),
+                    BackendRequest.forwardingHeaders(receivedHost),
                     Collections.<Map.Entry<String, String>>emptyList(), framing.header);
             return new Outgoing(head, body, framing);
         } catch (RuntimeException | Error e) {
             closeQuietly(body);
             throw e;
         }
+    }
+
+    /**
+     * The {@code Host} value written to the backend: {@code receivedHost} under {@code .preserveHost(true)} when the
+     * client sent one, and {@link TargetUrl#hostHeader} of the target otherwise.
+     */
+    // @req FR-PROXY-004
+    String backendHost(@Nullable String receivedHost) {
+        return options.preserveHost && receivedHost != null ? receivedHost : target.hostHeader();
     }
 
     /**

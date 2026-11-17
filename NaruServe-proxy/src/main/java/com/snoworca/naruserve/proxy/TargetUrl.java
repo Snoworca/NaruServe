@@ -105,6 +105,16 @@ final class TargetUrl {
         return new TargetUrl(scheme, authority, hostLiteral, host, port, basePath);
     }
 
+    /**
+     * The {@code Host} value for this target: {@link #hostLiteral} (IPv6 brackets kept), followed by {@code :port}
+     * only when {@link #port} is not the default of {@link #scheme} (80 for {@code http}, 443 for {@code https}).
+     */
+    // @req FR-PROXY-004
+    String hostHeader() {
+        int defaultPort = "https".equals(scheme) ? 443 : 80;
+        return port == defaultPort ? hostLiteral : hostLiteral + ":" + port;
+    }
+
     /** One to five ASCII decimal digits spelling {@code 1..65535}; {@code Integer.parseInt} would take a sign. */
     private static int parsePort(String s) {
         if (s.isEmpty() || s.length() > 5) {
