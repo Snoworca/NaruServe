@@ -1,6 +1,9 @@
 package com.snoworca.naruserve.common;
 
-/** Shared HTTP header list formatting without platform-dependent String.join. */
+/**
+ * Shared HTTP header helpers: the public header name and value predicates ({@link #isToken}, {@link #isFieldValue})
+ * that {@code res.header} validates with, and list formatting without platform-dependent String.join.
+ */
 // @req FR-DX-010
 public final class HttpHeaderValues {
     private HttpHeaderValues() { }
