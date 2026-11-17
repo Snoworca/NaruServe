@@ -318,6 +318,14 @@ project(':NaruServe-gson') {
     }
 }
 
+// Proxy tests drive a real app over the in-memory adapter with JDK-built backends (D-070).
+project(':NaruServe-proxy') {
+    // @req IR-PROXY-001
+    dependencies {
+        testImplementation testFixtures(project(':NaruServe-api'))
+    }
+}
+
 // The reified Request.body extension tests drive an app over the in-memory adapter (IR-KT-002 AC-1).
 project(':NaruServe-kotlin') {
     // @req IR-KT-002
