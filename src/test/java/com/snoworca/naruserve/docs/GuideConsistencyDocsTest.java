@@ -132,7 +132,7 @@ public class GuideConsistencyDocsTest {
         assertEquals(String.join("\n", found), new ArrayList<String>(), found);
     }
 
-    // OPS-DX-007 AC-3; OPS-DX-011 AC-2; OPS-DX-010 AC-12: every guide pair starts with the same navigation line shape,
+    // OPS-DX-011 AC-2; OPS-DX-007 AC-3; OPS-DX-010 AC-12: every guide pair starts with the same navigation line shape,
     // for the 18 pairs of 0.11.0 and proxy.md
     @Test
     public void OPS_DX_007_AC3_everyGuideHasTheSameNavigationLine() throws IOException {
@@ -142,6 +142,64 @@ public class GuideConsistencyDocsTest {
         for (String page : pages) {
             assertEquals(page, "[English](en/" + page + ") | [문서 목록](README.md)", ko(page).split("\n")[2]);
             assertEquals("en/" + page, "[한국어](../" + page + ") | [API index](README.md)", en(page).split("\n")[2]);
+        }
+    }
+
+    /** The guide pages of 0.11.0, README.md excluded; the pages a later release adds are listed by their own test. */
+    static final List<String> PAGES_0_11_0 = Arrays.asList("app.md", "auth.md", "cookie.md", "defaults.md",
+            "express-migration.md", "json.md", "kotlin.md", "lifecycle.md", "logging.md", "middleware.md",
+            "multipart.md", "request.md", "response.md", "routing.md", "servlet.md", "sse.md", "static.md",
+            "websocket.md");
+
+    // OPS-DX-011 AC-2: the guide pairs are the 18 of 0.11.0 and proxy.md, each page has its English counterpart,
+    // and every pair starts with the same navigation line shape
+    @Test
+    public void OPS_DX_011_AC2_theNineteenGuidePairsAreThoseOf0110AndProxy() throws IOException {
+        List<String> expected = new ArrayList<>(PAGES_0_11_0);
+        expected.add("proxy.md");
+        java.util.Collections.sort(expected);
+        assertEquals("guide pages of docs/api", expected, pages());
+        String[] english = new File(ReadmeDocsTest.root(), "docs/api/en").list((d, n) -> n.endsWith(".md") && !n.equals("README.md"));
+        assertTrue("docs/api/en lists its guides", english != null);
+        List<String> en = new ArrayList<>(Arrays.asList(english));
+        java.util.Collections.sort(en);
+        assertEquals("guide pages of docs/api/en", expected, en);
+        for (String page : expected) {
+            assertEquals(page, "[English](en/" + page + ") | [문서 목록](README.md)", ko(page).split("\n")[2]);
+            assertEquals("en/" + page, "[한국어](../" + page + ") | [API index](README.md)", en(page).split("\n")[2]);
+        }
+    }
+
+    /** The page entries of the top-level {@code nav} list of a MkDocs configuration, in order (titles dropped). */
+    static List<String> nav(String config) throws IOException {
+        String text = ReadmeDocsTest.read(config);
+        int start = text.indexOf("\nnav:\n");
+        assertTrue(config + " has a top-level nav", start >= 0);
+        List<String> out = new ArrayList<>();
+        for (String l : text.substring(start + "\nnav:\n".length()).split("\n")) {
+            if (!l.startsWith("  - ")) {
+                break;
+            }
+            String entry = l.substring(4).trim();
+            int colon = entry.indexOf(": ");
+            out.add(colon >= 0 ? entry.substring(colon + 2).trim() : entry);
+        }
+        return out;
+    }
+
+    // OPS-DX-011 AC-1: mkdocs.yml and mkdocs.en.yml list every guide page, proxy.md included, in their nav, before the
+    // external Javadoc entry, so the strict site builds have no page left out of the navigation
+    @Test
+    public void OPS_DX_011_AC1_bothSiteNavigationsListEveryGuidePageIncludingProxy() throws IOException {
+        for (String config : new String[] {"mkdocs.yml", "mkdocs.en.yml"}) {
+            List<String> entries = nav(config);
+            assertEquals(config + " starts its nav with README.md", "README.md", entries.get(0));
+            assertTrue(config + " ends its nav with the Javadoc link", entries.get(entries.size() - 1).startsWith("https://javadoc.io/"));
+            for (String page : pages()) {
+                assertTrue(config + " nav lists " + page, entries.contains(page));
+            }
+            assertTrue(config + " nav lists proxy.md", entries.contains("proxy.md"));
+            assertEquals(config + " lists each guide once", new java.util.TreeSet<>(entries).size(), entries.size());
         }
     }
 

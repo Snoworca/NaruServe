@@ -108,17 +108,57 @@ public final class ReadmeDocsTest {
         }
     }
 
-    // SDS-AC-9; OPS-REL-001 AC-1: the nine JAR modules and NaruServe-android
+    /** The version of the published release the READMEs install. */
+    static final String PUBLISHED_VERSION = "0.11.0";
+
+    /** The publication record of {@link #PUBLISHED_VERSION}. */
+    static final String PUBLISHED_RECORD = "docs/release/verification/central-0.11.0.md";
+
+    /** The artifactIds the published release staged, read from the Staging row of its publication record. */
+    static Set<String> publishedArtifacts() throws IOException {
+        String staging = null;
+        for (String l : read(PUBLISHED_RECORD).split("\n")) {
+            if (l.startsWith("| Staging |")) {
+                staging = l;
+            }
+        }
+        assertNotNull(PUBLISHED_RECORD + " has a Staging row", staging);
+        Set<String> out = new TreeSet<>();
+        Matcher m = Pattern.compile("`(naruserve[\\w-]*)`").matcher(staging);
+        while (m.find()) {
+            out.add(m.group(1));
+        }
+        return out;
+    }
+
+    /** The coordinates ({@code group:artifactId}) of the module table rows of {@code docs/api/README.md}. */
+    static Set<String> apiModuleTable(String path) throws IOException {
+        Set<String> table = new TreeSet<>();
+        Matcher row = Pattern.compile("(?m)^\\| `[\\w-]+` \\| `(com\\.snoworca\\.naruserve:[\\w-]+)` \\|")
+                .matcher(read(path));
+        while (row.find()) {
+            table.add(row.group(1));
+        }
+        return table;
+    }
+
+    // SDS-AC-9; OPS-REL-001 AC-1; OPS-DX-011 AC-5: README.md lists the coordinates of the module table rows the published
+    // release contains (the nine JAR modules and NaruServe-android of 0.11.0) and of no other row, plus the install lines
     @Test
     public void ops_REL_001_AC1_readmeListsTheTenCoordinatesOfTheApiModuleTableAndTheInstallLines()
             throws IOException {
+        Set<String> published = publishedArtifacts();
         Set<String> table = new TreeSet<>();
-        Matcher row = Pattern.compile("(?m)^\\| `[\\w-]+` \\| `(com\\.snoworca\\.naruserve:[\\w-]+)` \\|")
-                .matcher(read("docs/api/README.md"));
-        while (row.find()) {
-            table.add(row.group(1) + ":0.11.0");
+        Set<String> unpublished = new TreeSet<>();
+        for (String c : apiModuleTable("docs/api/README.md")) {
+            if (published.contains(c.substring(c.indexOf(':') + 1))) {
+                table.add(c + ":" + PUBLISHED_VERSION);
+            } else {
+                unpublished.add(c);
+            }
         }
-        assertEquals("module table rows of docs/api/README.md", 10, table.size());
+        assertEquals("module table rows of docs/api/README.md that " + PUBLISHED_VERSION + " contains", 10, table.size());
+        assertEquals("every module the release staged has a row: " + published, published.size(), table.size());
         assertTrue(table.toString(), table.contains("com.snoworca.naruserve:naruserve-android:0.11.0"));
         String readme = read("README.md");
         Set<String> listed = new TreeSet<>();
@@ -127,9 +167,99 @@ public final class ReadmeDocsTest {
             listed.add(coordinate.group());
         }
         assertEquals(table, listed);
+        for (String c : unpublished) {
+            assertFalse("README.md shows a versioned coordinate of the unpublished " + c,
+                    Pattern.compile(Pattern.quote(c) + ":[0-9]").matcher(readme).find());
+        }
         for (String part : new String[] {"publishToMavenLocal", "mavenLocal()",
                 "implementation 'com.snoworca.naruserve:naruserve:0.11.0'"}) {
             assertTrue("README.md holds " + part, readme.contains(part));
+        }
+    }
+
+    // OPS-DX-011 AC-5: the module table holds NaruServe-proxy, a module the published release does not contain, so the
+    // README coordinates are the published rows only and neither README gives naruserve-proxy a version
+    @Test
+    public void OPS_DX_011_AC5_proxyRowIsInTheTableButNotAmongThePublishedCoordinates() throws IOException {
+        assertTrue("docs/api/README.md has the naruserve-proxy row",
+                apiModuleTable("docs/api/README.md").contains("com.snoworca.naruserve:naruserve-proxy"));
+        assertFalse(PUBLISHED_RECORD + " does not stage naruserve-proxy", publishedArtifacts().contains("naruserve-proxy"));
+        for (String f : new String[] {"README.md", "README.ko.md"}) {
+            // the READMEs install published artifacts only; any form of a naruserve-proxy dependency (colon
+            // coordinate, Gradle map notation, a version variable) names the artifactId, so none may appear
+            assertFalse(f + " names the unpublished artifact naruserve-proxy", read(f).contains("naruserve-proxy"));
+        }
+    }
+
+    /** The backticked module names ({@code NaruServe} or {@code NaruServe-x}) of a line. */
+    static Set<String> moduleNames(String line) {
+        Set<String> out = new TreeSet<>();
+        Matcher m = Pattern.compile("`(NaruServe(?:-[\\w]+)?)`").matcher(line);
+        while (m.find()) {
+            out.add(m.group(1));
+        }
+        return out;
+    }
+
+    /** The one line of {@code text} that starts with {@code prefix}. */
+    static String row(String where, String text, String prefix) {
+        String found = null;
+        for (String l : text.split("\n")) {
+            if (l.startsWith(prefix)) {
+                assertTrue(where + ": one line starts with " + prefix, found == null);
+                found = l;
+            }
+        }
+        assertNotNull(where + ": a line starts with " + prefix, found);
+        return found;
+    }
+
+    // OPS-DX-011 AC-3: both API indexes have a NaruServe-proxy module row (coordinate, NaruServe-api only, API 21,
+    // proxy.md link) and count ten modules built without an Android SDK
+    @Test
+    public void OPS_DX_011_AC3_apiIndexesHaveTheProxyRowAndCountTenModulesWithoutAnSdk() throws IOException {
+        String[][] cases = {
+            {"docs/api/README.md", "`NaruServe-api`에만 의존", "지원(API 21+)", "SDK가 없으면 경고만 내고 나머지 열 모듈을 빌드합니다",
+                "아홉 모듈"},
+            {"docs/api/en/README.md", "depends only on `NaruServe-api`", "Supported (API 21+)",
+                "Without an SDK, it warns and builds the other ten modules", "nine modules"}};
+        for (String[] c : cases) {
+            String doc = read(c[0]);
+            String line = row(c[0], doc, "| `NaruServe-proxy` | `com.snoworca.naruserve:naruserve-proxy` |");
+            for (String part : new String[] {c[1], "](proxy.md)"}) {
+                assertTrue(c[0] + " proxy row lacks " + part + ": " + line, line.contains(part));
+            }
+            assertTrue(c[0] + " proxy row ends with " + c[2] + ": " + line, line.endsWith("| " + c[2] + " |"));
+            assertEquals(c[0] + " proxy row names no module besides NaruServe-api: " + line,
+                    new TreeSet<>(Arrays.asList("NaruServe-api", "NaruServe-proxy")), moduleNames(line));
+            assertTrue(c[0] + " counts ten modules built without an Android SDK", doc.contains(c[3]));
+            assertFalse(c[0] + " still counts nine modules", doc.contains(c[4]));
+        }
+    }
+
+    // OPS-DX-011 AC-4: both READMEs name NaruServe-proxy in their module tables with its contents and a link to
+    // docs/api/proxy.md, state that 0.11.0 does not contain it and show no Maven Central coordinate for it
+    @Test
+    public void OPS_DX_011_AC4_readmesNameTheProxyModuleWithoutAPublishedCoordinate() throws IOException {
+        String[][] cases = {
+            {"README.md", "reverse proxy middleware", "depends only on `NaruServe-api`", "| Not in 0.11.0;",
+                "Without an SDK, the ten JAR modules still build.", "nine JAR modules"},
+            {"README.ko.md", "리버스 프록시 미들웨어", "`NaruServe-api`에만 의존", "| 0.11.0에는 없음.",
+                "SDK가 없어도 열 JAR 모듈을 빌드합니다.", "아홉 JAR 모듈"}};
+        for (String[] c : cases) {
+            String doc = read(c[0]);
+            // the source build counts NaruServe-proxy among the JAR modules built without an Android SDK
+            assertTrue(c[0] + " counts ten JAR modules built without an Android SDK", doc.contains(c[4]));
+            assertFalse(c[0] + " still counts nine JAR modules", doc.contains(c[5]));
+            String line = row(c[0], doc, "| `NaruServe-proxy` |");
+            for (String part : new String[] {c[1], c[2], c[3], "](docs/api/proxy.md)"}) {
+                assertTrue(c[0] + " proxy row lacks " + part + ": " + line, line.contains(part));
+            }
+            assertFalse(c[0] + " proxy row shows a coordinate: " + line, line.contains("com.snoworca.naruserve:"));
+            assertEquals(c[0] + " proxy row names no module besides NaruServe-api: " + line,
+                    new TreeSet<>(Arrays.asList("NaruServe-api", "NaruServe-proxy")), moduleNames(line));
+            assertFalse(c[0] + " proxy row gives a version to the artifact: " + line,
+                    Pattern.compile("naruserve-proxy:[0-9]").matcher(line).find());
         }
     }
 
