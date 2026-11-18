@@ -5,10 +5,12 @@ import java.util.List;
 /**
  * Reads the {@code Content-Length} and {@code Transfer-Encoding} field lines of one message as comma-joined lists
  * (design D-054, D-073): elements are split on commas and trimmed of optional whitespace. The request framing checks
- * use it now; the backend response parser is to adopt the same reading with the response framing requirement
- * (SEC-PROXY-004). What an invalid list answers is the caller's choice.
+ * (SEC-PROXY-003) and the backend response parser ({@link ResponseParser#framing}, SEC-PROXY-004) share this reading.
+ * What an invalid list answers is the caller's choice: 400 or 501 for a request, {@code INVALID_RESPONSE} for a
+ * response.
  */
 // @req SEC-PROXY-003
+// @req SEC-PROXY-004
 final class FramingLists {
 
     /** What {@link #contentLength} returns for a list that is not one agreed length. */
