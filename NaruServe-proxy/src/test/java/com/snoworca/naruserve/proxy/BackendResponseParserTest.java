@@ -374,6 +374,67 @@ public class BackendResponseParserTest {
         assertNoError();
     }
 
+    // SEC-PROXY-004, RFC 9112 §6.1 (review FND-001): an HTTP/1.0 response carrying Transfer-Encoding has faulty
+    // framing, so HTTP/1.0 200 with Transfer-Encoding: chunked is 502 INVALID_RESPONSE and its chunks are not decoded
+    @Test(timeout = 30000)
+    public void sec_PROXY_004_transferEncodingOnHttp10ResponseIsInvalidResponse() throws IOException {
+        ClientResponse r = get("HTTP/1.0 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\n");
+
+        assertEquals("status (body: " + r.text() + ")", 502, r.status());
+        assertSame(ProxyException.Kind.INVALID_RESPONSE, onlyProxyError().kind());
+    }
+
+    // SEC-PROXY-004, RFC 9112 §6.1 (review FND-001): the framing is faulty even when a Content-Length is present, so
+    // HTTP/1.0 200 with Transfer-Encoding: chunked and Content-Length: 5 is 502 INVALID_RESPONSE
+    @Test(timeout = 30000)
+    public void sec_PROXY_004_transferEncodingWithContentLengthOnHttp10ResponseIsInvalidResponse()
+            throws IOException {
+        assertGetIsInvalidResponse("HTTP/1.0 200 OK\r\nTransfer-Encoding: chunked\r\nContent-Length: 5\r\n\r\nhello");
+    }
+
+    // SEC-PROXY-004, RFC 9112 §6.1 (review FND-001): a response to HEAD stays bodyless first, so HTTP/1.0 with
+    // Transfer-Encoding: chunked is no error
+    @Test(timeout = 30000)
+    public void sec_PROXY_004_headResponseOverHttp10WithTransferEncodingIsNoError() throws IOException {
+        ClientResponse r = request("HEAD", "HTTP/1.0 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n");
+
+        assertEquals(200, r.status());
+        assertEquals(0, r.body().length);
+        assertNoError();
+    }
+
+    // SEC-PROXY-004, RFC 9112 §6.1 (review FND-001): a 204 and a 304 stay bodyless first, so HTTP/1.0 with
+    // Transfer-Encoding: chunked is no error
+    @Test(timeout = 30000)
+    public void sec_PROXY_004_noContentOverHttp10WithTransferEncodingIsNoError() throws IOException {
+        ClientResponse r = get("HTTP/1.0 204 No Content\r\nTransfer-Encoding: chunked\r\n\r\n");
+
+        assertEquals(204, r.status());
+        assertEquals(0, r.body().length);
+        assertNoError();
+    }
+
+    // SEC-PROXY-004, RFC 9112 §6.1 (review FND-001): see above, for a 304
+    @Test(timeout = 30000)
+    public void sec_PROXY_004_notModifiedOverHttp10WithTransferEncodingIsNoError() throws IOException {
+        ClientResponse r = get("HTTP/1.0 304 Not Modified\r\nTransfer-Encoding: chunked\r\n\r\n");
+
+        assertEquals(304, r.status());
+        assertEquals(0, r.body().length);
+        assertNoError();
+    }
+
+    // SEC-PROXY-004, RFC 9112 §6.1 (review FND-001): an HTTP/1.0 response without Transfer-Encoding and without
+    // Content-Length is still read until the backend closes
+    @Test(timeout = 30000)
+    public void sec_PROXY_004_http10ResponseWithoutFramingHeadersIsReadUntilClose() throws IOException {
+        ClientResponse r = get("HTTP/1.0 200 OK\r\n\r\nhello");
+
+        assertEquals(200, r.status());
+        assertEquals("hello", r.text());
+        assertNoError();
+    }
+
     // ---------------------------------------------------------------------------------------------------------------
     // AC-6: interim responses
 
