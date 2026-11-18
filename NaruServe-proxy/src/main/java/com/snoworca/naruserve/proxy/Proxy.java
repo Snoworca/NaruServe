@@ -540,10 +540,10 @@ public final class Proxy implements Middleware {
      * after a backend 502 or 503, only when {@link RetryPolicy#retriesStatus} allows it, the retried response's header
      * block having been read and its connection closed before the wait. Each retry waits {@code .retryDelay} first;
      * when that wait would end past the total deadline, or no retry is left, the last failure is thrown, or the last
-     * 502 or 503 returned for relaying unchanged. A deadline that already fired is never retried, and nothing is
-     * retried on an interrupted thread, which cannot wait the delay: an interrupted wait after a connect failure throws
-     * that failure, and one after a closed 502 or 503, whose response is gone, throws an {@link HttpException} of that
-     * status to the error flow; the interrupt status is kept for the caller. Every connection belongs to
+     * 502 or 503 returned for relaying unchanged; every such decision follows {@link #retryAllowed}. A wait that is
+     * interrupted ends the retries: after a connect failure that failure is thrown, and after a closed 502 or 503,
+     * whose response is gone, the kind of a deadline that fired or else an {@link HttpException} of that status goes
+     * to the error flow; the interrupt status is kept for the caller. Every connection belongs to
      * {@code exchange}, which closes the current one on release, and to its one slot (FR-PROXY-019).
      */
     // @req FR-PROXY-018
@@ -555,15 +555,13 @@ public final class Proxy implements Middleware {
             throws IOException {
         long deadlineNanos = startNanos + options.totalTimeoutNanos;
         for (int retry = 0; ; retry++) {
-            // A thread interrupted before this decision, pending or during the attempt, cannot wait the delay.
-            boolean retryLeft = retry < options.retries && !Thread.currentThread().isInterrupted();
             Socket plain;
             try {
                 plain = BackendClient.connect(target, connectTimeoutMillis(), exchange);
             } catch (ProxyException e) {
                 // A connect ended by a fired deadline fails as a closed socket: that is the deadline's, never retried.
-                if (retryLeft && exchange.firedKind() == null && RetryPolicy.retriesConnectFailure(e)
-                        && retryWaitFits(startNanos) && waitRetryDelay()) {
+                if (RetryPolicy.retriesConnectFailure(e) && retryAllowed(retry, exchange, startNanos)
+                        && waitRetryDelay()) {
                     continue;
                 }
                 throw e;
@@ -580,14 +578,16 @@ public final class Proxy implements Middleware {
             // A malformed head or framing is a ProxyException INVALID_RESPONSE, which passes the caller's catch. After
             // a failed write the response the backend may have left on the socket is read instead (FR-PROXY-015).
             ResponseParser.Head head = writeFailure == null ? ResponseParser.read(in) : earlyResponse(in, writeFailure);
-            if (retryLeft && writeFailure == null && exchange.firedKind() == null
+            if (writeFailure == null
                     && RetryPolicy.retriesStatus(head.status, req.methodToken(), outgoing.framing.bodyless(),
                             options.retryUnsafeMethods)
-                    && retryWaitFits(startNanos)) {
+                    && retryAllowed(retry, exchange, startNanos)) {
                 // The header block was read; the rest of the response is dropped with its connection, before the wait.
                 closeQuietly(socket);
                 if (!waitRetryDelay()) {
-                    // Interrupted: no further attempt, and the closed response can only be answered by its status.
+                    // Interrupted during the wait: no further attempt. A deadline that fired keeps its own kind;
+                    // otherwise the closed response can only be answered by its status.
+                    throwIfFired(exchange);
                     throw new HttpException(head.status);
                 }
                 continue;
@@ -597,13 +597,17 @@ public final class Proxy implements Middleware {
     }
 
     /**
-     * Whether the {@code .retryDelay} wait before a retry, starting now, ends no later than the total deadline of the
-     * request started at {@code startNanos}; when it does not, the last failure stands without waiting (FR-PROXY-018).
+     * The one rule every retry decision applies after the failure it answers, at the moment it is made (FR-PROXY-018):
+     * a retry is left after {@code retry} retries, no deadline has fired, the thread is not interrupted, since it
+     * could not wait the delay, and the {@code .retryDelay} wait starting now ends no later than the total deadline of
+     * the request started at {@code startNanos}. Otherwise the last failure, or the last 502 or 503, stands.
      */
     // @req FR-PROXY-018
     // @req FR-PROXY-017
-    private boolean retryWaitFits(long startNanos) {
-        return RetryPolicy.waitFits(startNanos, System.nanoTime(), options.totalTimeoutNanos, options.retryDelayNanos);
+    private boolean retryAllowed(int retry, ProxyExchange exchange, long startNanos) {
+        return retry < options.retries && exchange.firedKind() == null && !Thread.currentThread().isInterrupted()
+                && RetryPolicy.waitFits(startNanos, System.nanoTime(), options.totalTimeoutNanos,
+                        options.retryDelayNanos);
     }
 
     /**
