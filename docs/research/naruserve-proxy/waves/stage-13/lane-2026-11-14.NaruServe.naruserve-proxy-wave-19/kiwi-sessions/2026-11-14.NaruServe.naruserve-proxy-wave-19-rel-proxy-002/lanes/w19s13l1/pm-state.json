@@ -1,0 +1,51 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-19-rel-proxy-002",
+ "base_sha": "f4ad767a323c1903c55cf55ee5ae5b22162e0a1d",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "REL-PROXY-002"
+ ],
+ "req_filter": [
+  "REL-PROXY-002"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/WatchdogTest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TlsConnector.java"
+ ],
+ "started_at": "2026-11-18T12:26:59Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "REL-PROXY-002",
+    "test_sha": "b50c0da",
+    "implementation_sha": "f90395b"
+   }
+  ],
+  "changed": true,
+  "ended_at": "2026-11-18T12:46:52Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-19-rel-proxy-002",
+  "result_summary": "TLS handshake deadline moved onto ProxyExchange.Scheduler.INSTANCE; WatchdogTest AC-1..AC-9; :NaruServe-proxy:check 549 tests 0 failures",
+  "commit_sha": "f90395b"
+ },
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-18T12:26:59Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "REL-PROXY-002": "evolving"
+  },
+  "status_snapshot": {
+   "REL-PROXY-002": "planned"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-19-rel-proxy-002/lanes/w19s13l1/reports/pm-2026-11-18T124652Z.md",
+ "last_updated_at": "2026-11-18T12:46:52Z"
+}

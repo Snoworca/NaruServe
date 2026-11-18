@@ -1,0 +1,101 @@
+{
+ "run_id": "2026-11-18.naruserve.self-w19r1",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "started_at": "2026-11-18T13:14:20Z",
+ "mode": "self",
+ "mode_flags": [
+  "--keep-clean-code",
+  "--loops 20",
+  "--no-pipeline-emit"
+ ],
+ "phase": "8",
+ "finding_queue": [],
+ "fix_iter": 0,
+ "recheck_iter": 1,
+ "clean_code_round": 2,
+ "clean_code_dismissed": [
+  {
+   "id": "CC-002",
+   "reason": "outside lane write set (HeaderRules.java)"
+  },
+  {
+   "id": "CC-003",
+   "reason": "outside lane write set (new IpLiterals.java)"
+  },
+  {
+   "id": "CC-004",
+   "reason": "project convention D-046 package-private test accessors"
+  },
+  {
+   "id": "CC-005",
+   "reason": "outside lane write set / module test-class convention"
+  }
+ ],
+ "clean_code_skip": false,
+ "guarantee_scope": "NaruServe-proxy package-private proxy internals and public Proxy middleware behaviour for REL-PROXY-002, SEC-PROXY-002, FR-PROXY-005 (and FR-PROXY-003 AC-8) over the public NaruServe-api Request/Response contract; Java 8 / Android API 21",
+ "declared_limits": [
+  {
+   "id": "FND-001",
+   "reason": "no_real_call_path: WatchdogTest AC-4/AC-6 read JVM-global Scheduler.INSTANCE state in the shared test JVM; no existing test leaves a reservation pending",
+   "evidence": "ReviewProbeOrderTest: reservations in the scheduler queue expected:<0> but was:<1>"
+  }
+ ],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "990a5f798fbe0e8a9945e0209d2bf59b0748a5d3",
+   "scope": "full",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TlsConnector.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyFixedRequestHeadersTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyForwardedHeadersTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyHostHeaderTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/WatchdogTest.java"
+   ],
+   "tokens_used": 240000,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-001",
+     "tier": "record",
+     "family": "test-isolation/shared-jvm-singleton-state",
+     "introduced_by_round": null
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "tree_sha": "dcad4b639993fb3517a8d585e9e77bd32601c8ac",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java"
+   ],
+   "tokens_used": 74000,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-001",
+     "tier": "record",
+     "family": "test-isolation/shared-jvm-singleton-state",
+     "introduced_by_round": null
+    }
+   ]
+  }
+ ],
+ "regression_baseline": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json (0 failing; integration head 4627 tests 0 failures)",
+ "regression_pass": true,
+ "pr_responded": false,
+ "failed": false
+}

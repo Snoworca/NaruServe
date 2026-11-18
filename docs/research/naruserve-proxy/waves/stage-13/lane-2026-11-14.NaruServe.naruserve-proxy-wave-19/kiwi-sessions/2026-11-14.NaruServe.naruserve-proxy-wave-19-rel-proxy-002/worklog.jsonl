@@ -1,0 +1,4 @@
+{"event":"tdd_red_confirmed","req":"REL-PROXY-002","failed":["AC2","AC3","AC4"],"compile_red":["AC1","AC2","AC6"]}
+{"event":"test_green","req":"REL-PROXY-002","exit_code":0}
+{"event":"prickly_review_done","req":"REL-PROXY-002","kept":2,"dropped":3,"resolved":"AC-9 and AC-5 tests strengthened; mutation check fire->SSLSocket fails AC-7x2 and AC-9"}
+{"event":"run_done","req":"REL-PROXY-002","regression":"pass"}

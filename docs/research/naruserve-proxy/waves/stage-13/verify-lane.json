@@ -1,0 +1,46 @@
+{
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-19": {
+  "head": "9f318e252fef0b9bce65ee0f9493cc2ea6e8d56c",
+  "commits": 7,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "declared_limits": [
+    {
+     "id": "FND-001",
+     "reason": "WatchdogTest AC-4/AC-6 read JVM-global Scheduler.INSTANCE state in the shared test JVM; order-dependent only if another test leaks a reservation, which none does (no real call path)"
+    }
+   ],
+   "rejected": 2,
+   "clean_code": {
+    "fixed": [
+     "CC-001"
+    ],
+    "dismissed": [
+     "CC-002",
+     "CC-003",
+     "CC-004",
+     "CC-005"
+    ],
+    "unresolved": []
+   },
+   "rounds": 2,
+   "coverage_note": "5 hunks consisting only of an identical '// @req X' line cannot take distinct whole-line anchors; substring anchors accepted for those hunks only"
+  },
+  "landed": [
+   "REL-PROXY-002",
+   "SEC-PROXY-002",
+   "FR-PROXY-005"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [
+   "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TlsConnector.java",
+   "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyHostHeaderTest.java"
+  ],
+  "outside_reason": "TLS handshake watchdog moved onto ProxyExchange.Scheduler (carried wave-18 item, REL-PROXY-002); ProxyHostHeaderTest exact-match expectations gain the X-Forwarded-For and -Proto lines SEC-PROXY-002 adds",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build (4678 tests, 0 failures)",
+  "verdict": "pass"
+ }
+}

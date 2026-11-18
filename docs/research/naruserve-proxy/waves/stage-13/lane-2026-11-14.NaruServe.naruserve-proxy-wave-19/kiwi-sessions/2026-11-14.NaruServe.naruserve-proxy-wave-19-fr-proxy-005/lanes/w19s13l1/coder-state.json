@@ -1,0 +1,5 @@
+{"schema_version":"1.0.0","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-19-fr-proxy-005","target":"0.12.0","req_ids":["FR-PROXY-005"],"spawn_context":"pm-child","phase":"done","failed":false,
+"red_evidence":{"command":"./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests com.snoworca.naruserve.proxy.ProxyFixedRequestHeadersTest","exit_code":1,"captured_failure":"15 tests completed, 15 failed (see red-ProxyFixedRequestHeadersTest.xml)","timestamp":"2026-11-18"},
+"green_evidence":{"command":"./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:check","exit_code":0,"timestamp":"2026-11-18"},
+"loop_counters":{"phase1":{"kept":1,"dropped":0,"rounds":1},"phase2":{"kept":0,"dropped":4,"rounds":0}},
+"regression_summary":{"scope":"impacted-only (NaruServe-proxy:check)","passed":587,"failed":0},"queued_mutations":14}

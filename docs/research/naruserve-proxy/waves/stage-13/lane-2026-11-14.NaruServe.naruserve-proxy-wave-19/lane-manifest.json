@@ -1,0 +1,170 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-19",
+ "wave": "wave-19",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-19",
+ "base_sha": "f4ad767a323c1903c55cf55ee5ae5b22162e0a1d",
+ "head_sha": "9f318e252fef0b9bce65ee0f9493cc2ea6e8d56c",
+ "commits": [
+  {
+   "sha": "b50c0dacdd8830f9ecb55a0d882105e9ff12ea35",
+   "subject": "test(proxy): watchdog scheduler tests for one shared daemon thread",
+   "req": "REL-PROXY-002",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "f90395bf7445d6859badce84edfd75cf36d2ae56",
+   "subject": "fix(proxy): run the TLS handshake deadline on the shared watchdog",
+   "req": "REL-PROXY-002",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "21c3251a35c75f8a2de7c88fd48282ff9d983757",
+   "subject": "test(proxy): X-Forwarded-* trust rules and the backend header layout",
+   "req": "SEC-PROXY-002",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "cd1032773dde9acaebec7442ca7aebb4a75dec38",
+   "subject": "fix(proxy): write X-Forwarded-* from the trust setting and drop client copies",
+   "req": "SEC-PROXY-002",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "5698f0d5bd96393d74802db3d166c32f5c95fd44",
+   "subject": "test(proxy): fixed request headers and the full backend header block",
+   "req": "FR-PROXY-005",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "bef4c19a315f63f637fb60dbe458d8c87b8ab274",
+   "subject": "feat(proxy): apply requestHeader and removeRequestHeader to the backend request",
+   "req": "FR-PROXY-005",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "9f318e252fef0b9bce65ee0f9493cc2ea6e8d56c",
+   "subject": "refactor(proxy): resolve response header rules through the shared helpers",
+   "req": "FR-PROXY-005",
+   "kind": "review",
+   "missing_trailers": false
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "REL-PROXY-002",
+   "SEC-PROXY-002",
+   "FR-PROXY-005"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-19/.kiwi/deferred-srs-mutations.jsonl",
+ "deferred_queue_note": "40 calls (evidence for every AC of the three requirements, 2+2 FR-PROXY-003 AC-8 evidence rows with no status change, trace links, update_status implemented x3); speckiwi orchestrate replay plan: ok, inputRefusals=0",
+ "reports": [
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-19/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-19-rel-proxy-002/lanes/w19s13l1",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-19/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-19-sec-proxy-002/lanes/w19s13l1",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-19/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-19-fr-proxy-005/lanes/w19s13l1",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-19/docs/analysis/kiwi-review-fix-loop-2026-11-18.naruserve.self-w19r1/report.md"
+ ],
+ "red_evidence": [
+  {
+   "req": "REL-PROXY-002",
+   "test": "WatchdogTest.rel_PROXY_002_AC2/AC3/AC4",
+   "red_output": "watchdog threads while 20 requests were in flight: [naruserve-proxy-watchdog, naruserve-proxy-tls-watchdog]; naruserve-proxy-tls-watchdog context class loader expected null but was AppClassLoader; [naruserve-proxy-tls-watchdog] still alive 32.4 s after the last request; AC-1/AC-6 compile red (executorIfCreated/queuedReservations missing)"
+  },
+  {
+   "req": "SEC-PROXY-002",
+   "test": "ProxyForwardedHeadersTest (19 of 21 red)",
+   "red_output": "AC-7 expected:<[gw.example]> but was:<[attacker, gw.example]>; AC-4 expected:<[X-Forwarded-For: 1.2.3.4, 5.6.7.8, 10.1.2.3]> but was two client lines; FR-PROXY-003 AC-8 whole-block test red with client forwarding headers in the client section"
+  },
+  {
+   "req": "FR-PROXY-005",
+   "test": "ProxyFixedRequestHeadersTest (15 of 15 red)",
+   "red_output": "AC-1 expected:<[X-Gateway-Source: gateway]> but was:<[x-gateway-source: spoofed, X-GATEWAY-SOURCE: spoofed-too]>; AC-4 expected:<[X-A: 2]> but was:<[X-A: client]>; AC-5 expected:<[Via: 1.1 gw]> but was:<[]>"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "declared_limits": [
+   {
+    "id": "FND-001",
+    "reason": "WatchdogTest AC-4/AC-6 read JVM-global Scheduler.INSTANCE state in the shared test JVM; order-dependent only if another test leaks a reservation, which none does (no real call path)"
+   }
+  ],
+  "rejected": 2,
+  "clean_code": {
+   "fixed": [
+    "CC-001"
+   ],
+   "dismissed": [
+    "CC-002",
+    "CC-003",
+    "CC-004",
+    "CC-005"
+   ],
+   "unresolved": []
+  },
+  "rounds": 2,
+  "coverage_note": "5 hunks consisting only of an identical '// @req X' line cannot take distinct whole-line anchors; substring anchors accepted for those hunks only"
+ },
+ "intentionally_empty": null,
+ "already_holding_at_base": [
+  {
+   "req": "REL-PROXY-002",
+   "acs": [
+    "AC-5",
+    "AC-7",
+    "AC-8",
+    "AC-9"
+   ],
+   "note": "cited tests green at base; AC-1/AC-6 green once the accessors existed (compile red only)"
+  },
+  {
+   "req": "SEC-PROXY-002",
+   "acs": [
+    "AC-9"
+   ],
+   "note": "Host/X-Forwarded-Host already came only from rawHeaders"
+  }
+ ],
+ "design_refuted": [],
+ "srs_deltas": [],
+ "carried_items": {
+  "wave-12 LP-9": "closed: FR-PROXY-003 AC-8 whole-block exact tests with real X-Forwarded-* lines (ProxyForwardedHeadersTest) and with .requestHeader values (ProxyFixedRequestHeadersTest); FR-PROXY-003 AC-8 evidence queued, status left to host",
+  "wave-13 LP-10": "closed: client Forwarded, X-Forwarded-For/-Proto/-Host, X-Real-IP, X-Forwarded-Port, X-Forwarded-Prefix dropped; SEC-PROXY-002 AC-1/AC-7 tests",
+  "wave-18 srs-delta REL-PROXY-002": "closed: TlsConnector handshake deadline now on ProxyExchange.Scheduler.INSTANCE, its own executor removed; ProxyTlsTest CONNECT_TIMEOUT/TOTAL_TIMEOUT green"
+ },
+ "out_of_lease_paths": [
+  {
+   "path": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TlsConnector.java",
+   "reason": "carried wave-18 item: the TLS handshake watchdog had to move onto ProxyExchange.Scheduler.INSTANCE; executor and factory removed, handshake semantics unchanged"
+  },
+  {
+   "path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyHostHeaderTest.java",
+   "reason": "fr_PROXY_004_AC1_xForwardedHostTakesTheForwardingSlot exact header block now also lists X-Forwarded-For and X-Forwarded-Proto (required by SEC-PROXY-002 / D-053); still exact match, not weakened"
+  }
+ ],
+ "not_created": [
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Watchdog.java (scheduler kept as ProxyExchange.Scheduler)"
+ ],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "speckiwi coverage --tests --ids REL-PROXY-002,SEC-PROXY-002,FR-PROXY-005,FR-PROXY-003: every AC cited, passed=true"
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4678,
+  "failures": 0,
+  "exit_code": 0
+ },
+ "bootstrap": "not-applicable",
+ "subagent_execution_note": "The harness ran every Agent call asynchronously; the worker polled each subagent transcript to completion inside its own turn and ran the build to completion before writing this manifest, so no background work was left pending."
+}

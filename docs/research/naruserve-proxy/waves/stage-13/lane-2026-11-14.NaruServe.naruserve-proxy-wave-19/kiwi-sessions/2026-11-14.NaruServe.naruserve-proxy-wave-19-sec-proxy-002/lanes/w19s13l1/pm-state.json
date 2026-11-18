@@ -1,0 +1,51 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-19-sec-proxy-002",
+ "base_sha": "f90395bf7445d6859badce84edfd75cf36d2ae56",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "SEC-PROXY-002"
+ ],
+ "req_filter": [
+  "SEC-PROXY-002"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyForwardedHeadersTest.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyHostHeaderTest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java"
+ ],
+ "started_at": "2026-11-18T12:47:04Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "SEC-PROXY-002",
+    "test_sha": "21c3251",
+    "implementation_sha": "cd10327"
+   }
+  ],
+  "changed": true,
+  "ended_at": "2026-11-18T13:05:54Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-19-sec-proxy-002",
+  "result_summary": "X-Forwarded-* trust rules; client forwarding headers dropped; LP-9/LP-10 closed; :NaruServe-proxy:check 572 tests 0 failures",
+  "commit_sha": "cd10327"
+ },
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-18T12:47:04Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "SEC-PROXY-002": "evolving"
+  },
+  "status_snapshot": {
+   "SEC-PROXY-002": "planned"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-19-sec-proxy-002/lanes/w19s13l1/reports/pm-2026-11-18T130554Z.md",
+ "last_updated_at": "2026-11-18T13:05:54Z"
+}

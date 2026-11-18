@@ -1,0 +1,50 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-19-fr-proxy-005",
+ "base_sha": "cd1032773dde9acaebec7442ca7aebb4a75dec38",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-005"
+ ],
+ "req_filter": [
+  "FR-PROXY-005"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyFixedRequestHeadersTest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java"
+ ],
+ "started_at": "2026-11-18T13:06:02Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "FR-PROXY-005",
+    "test_sha": "5698f0d",
+    "implementation_sha": "bef4c19"
+   }
+  ],
+  "changed": true,
+  "ended_at": "2026-11-18T13:13:55Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-19-fr-proxy-005",
+  "result_summary": "requestHeader/removeRequestHeader applied, later call wins; full block test for FR-PROXY-003 AC-8; :NaruServe-proxy:check 587 tests 0 failures",
+  "commit_sha": "bef4c19"
+ },
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-18T13:06:02Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-PROXY-005": "evolving"
+  },
+  "status_snapshot": {
+   "FR-PROXY-005": "planned"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-19-fr-proxy-005/lanes/w19s13l1/reports/pm-2026-11-18T131355Z.md",
+ "last_updated_at": "2026-11-18T13:13:55Z"
+}

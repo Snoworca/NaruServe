@@ -1,0 +1,16 @@
+{
+ "verdict": "pass",
+ "scope": {
+  "ids": [
+   "REL-PROXY-002",
+   "SEC-PROXY-002",
+   "FR-PROXY-005",
+   "FR-PROXY-003"
+  ],
+  "source": "--req-filter (+FR-PROXY-003 AC-8 carried)"
+ },
+ "gaps_initial": 0,
+ "gaps_final": 0,
+ "fill_added_tests": [],
+ "tool": "speckiwi coverage --tests --ids ... --json (worktree cwd)"
+}
