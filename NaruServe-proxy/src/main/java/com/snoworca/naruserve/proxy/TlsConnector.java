@@ -11,7 +11,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSocket;
@@ -22,9 +21,12 @@ import org.jspecify.annotations.Nullable;
  * Layers TLS over a connected plain socket for an {@code https} target (SEC-PROXY-005): the factory's
  * {@code createSocket(plain, host, port, true)}, so SNI carries the target host; the handshake with {@code SO_TIMEOUT}
  * set to the connect timeout and under the total-timeout watchdog; the certificate chain checked by the factory's
- * trust managers and the host name checked through {@code SSLParameters.setEndpointIdentificationAlgorithm("HTTPS")},
- * called by reflection where the method exists (Android API 24 and the JDK), and through the held
- * {@link HostnameVerifier} otherwise and, on Android, also after it. Nothing turns either check off.
+ * trust managers; and the host name checked after every handshake, on every runtime, by the held
+ * {@link HostnameVerifier} (the built-in {@link CertificateHostnames} matcher on the session's peer leaf
+ * certificate), whatever the factory or its socket did with {@code SSLParameters}, with
+ * {@code SSLParameters.setEndpointIdentificationAlgorithm("HTTPS")} also set by reflection where the method exists
+ * (Android API 24 and the JDK) as a second layer. {@code HttpsURLConnection.getDefaultHostnameVerifier()}, which
+ * rejects every host on a JVM, is never used. Nothing turns either check off.
  */
 // @req SEC-PROXY-005
 final class TlsConnector {
@@ -36,36 +38,23 @@ final class TlsConnector {
     private static final @Nullable Method SET_ENDPOINT_IDENTIFICATION = endpointIdentificationMethod(
             "setEndpointIdentificationAlgorithm", String.class);
 
-    /**
-     * {@code SSLParameters.getEndpointIdentificationAlgorithm}, looked up by reflection for the same reason, to read
-     * back what the socket kept; {@code null} where it is absent.
-     */
-    private static final @Nullable Method GET_ENDPOINT_IDENTIFICATION = endpointIdentificationMethod(
-            "getEndpointIdentificationAlgorithm");
+    /** The built-in certificate host name matcher, the held verifier unless a test injects another. */
+    private static final HostnameVerifier BUILT_IN_VERIFIER = new CertificateHostnames();
 
     /** The watchdog thread that closes the plain socket of a handshake past the total-timeout deadline. */
     private static final ScheduledThreadPoolExecutor WATCHDOG = watchdog();
 
     /**
-     * Package-private test switch: {@code false} skips the reflective endpoint identification, so the
-     * {@link HostnameVerifier} path that runs where the method is absent can be tested on the JDK (AC-6).
+     * Package-private test switch: {@code false} skips the reflective endpoint identification, as on Android before
+     * API 24, so the held verifier is the only host name check (AC-6).
      */
     static volatile boolean endpointIdentification = true;
 
     /**
-     * Package-private test seam: a verifier used in place of {@link HttpsURLConnection#getDefaultHostnameVerifier()}
-     * on the fallback path; the JDK's default verifier rejects every host, so it cannot be the test oracle (AC-6).
+     * Package-private test seam: a verifier used in place of the built-in {@link CertificateHostnames} matcher, so a
+     * test can observe the call and force either answer (AC-6, AC-9).
      */
     static volatile @Nullable HostnameVerifier hostnameVerifier;
-
-    /**
-     * Whether the held {@link HostnameVerifier} also runs after a handshake the endpoint identification checked:
-     * {@code true} on Android, where the platform applies the identification only through its own trust managers and
-     * not to an app's plain {@code X509TrustManager} given through {@code .sslSocketFactory}; {@code false} on the JDK,
-     * which wraps such a trust manager with the check and whose default verifier rejects every host. Package-private
-     * so a test can switch the Android behaviour on.
-     */
-    static volatile boolean verifyAfterIdentification = androidRuntime(System.getProperty("java.vm.name"));
 
     private TlsConnector() {
     }
@@ -84,9 +73,12 @@ final class TlsConnector {
         try {
             plain.setSoTimeout(connectTimeoutMillis);
             SSLSocket ssl = (SSLSocket) f.createSocket(plain, host, port, true);
-            boolean identified = endpointIdentification(ssl);
+            endpointIdentification(ssl);
             ssl.startHandshake();
-            if ((!identified || verifyAfterIdentification) && !verifier().verify(host, ssl.getSession())) {
+            // The proxy's own check runs whatever the identification did: a factory may handshake inside createSocket,
+            // its trust manager may skip the endpoint check, or its socket may keep the parameters without applying
+            // them (AC-9).
+            if (!verifier().verify(host, ssl.getSession())) {
                 throw new SSLPeerUnverifiedException("the backend certificate does not match the target host");
             }
             if (watchdog.disarm()) {
@@ -113,42 +105,33 @@ final class TlsConnector {
         }
     }
 
-    /** The verifier of the fallback path: the injected one, else {@link HttpsURLConnection}'s default. */
+    /** The held host name check: the injected verifier, else the built-in {@link CertificateHostnames} matcher. */
     static HostnameVerifier verifier() {
         HostnameVerifier v = hostnameVerifier;
-        return v != null ? v : HttpsURLConnection.getDefaultHostnameVerifier();
+        return v != null ? v : BUILT_IN_VERIFIER;
     }
 
-    /** Whether {@code vmName}, the {@code java.vm.name} system property, names the Android runtime. */
-    static boolean androidRuntime(@Nullable String vmName) {
-        return "Dalvik".equals(vmName);
-    }
-
-    /** Whether this runtime has {@code SSLParameters.set/getEndpointIdentificationAlgorithm}. */
+    /** Whether this runtime has {@code SSLParameters.setEndpointIdentificationAlgorithm}. */
     static boolean endpointIdentificationAvailable() {
-        return SET_ENDPOINT_IDENTIFICATION != null && GET_ENDPOINT_IDENTIFICATION != null;
+        return SET_ENDPOINT_IDENTIFICATION != null;
     }
 
     /**
-     * Turns on the "HTTPS" endpoint identification of {@code ssl}, so its handshake checks the certificate against
-     * the host given to {@code createSocket}; {@code true} only when the socket's parameters read back "HTTPS"
-     * afterwards. {@code false} when the methods are absent, switched off, or not applicable, or when the socket
-     * dropped the algorithm (a delegating {@code SSLSocket} that keeps the base {@code setSSLParameters}), so the
-     * caller verifies the host itself.
+     * Turns on the "HTTPS" endpoint identification of {@code ssl} where the method exists and the test switch is on,
+     * so the handshake also checks the certificate against the host given to {@code createSocket}. This is only the
+     * second layer: whether the socket kept or applied it, {@link #layer} runs the held verifier after the handshake.
      */
-    private static boolean endpointIdentification(SSLSocket ssl) {
+    private static void endpointIdentification(SSLSocket ssl) {
         Method set = SET_ENDPOINT_IDENTIFICATION;
-        Method get = GET_ENDPOINT_IDENTIFICATION;
-        if (!endpointIdentification || set == null || get == null) {
-            return false;
+        if (!endpointIdentification || set == null) {
+            return;
         }
         try {
             SSLParameters params = ssl.getSSLParameters();
             set.invoke(params, "HTTPS");
             ssl.setSSLParameters(params);
-            return "HTTPS".equals(get.invoke(ssl.getSSLParameters()));
         } catch (IllegalAccessException | InvocationTargetException | RuntimeException e) {
-            return false;
+            // the held verifier still checks the host
         }
     }
 
