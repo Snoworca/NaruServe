@@ -11,11 +11,14 @@ import java.util.Map;
  * the target's and whose path equals the target base path or continues it with {@code /}, loses its origin and base
  * path to the client-side prefix; the rest of the reference (the path after the base path, the query and the
  * fragment) is kept as received and an empty resulting path becomes {@code /}. Every other value is left unchanged:
- * relative references, other origins, other paths and values the {@code Proxy.to} host and port grammar refuses.
+ * relative references, other origins, other paths and values whose host and port the {@code Proxy.to} grammar
+ * refuses.
  *
- * <p>The origin is parsed by hand with the grammar of {@link TargetUrl#parse}, not {@code java.net.URI}: the scheme
- * and host compare case-insensitively and an omitted port is 80 for {@code http} and 443 for {@code https}
- * (RFC 3986 §6.2.2.1). The base path compares on the raw characters, so {@code /basement} does not continue
+ * <p>The origin is parsed by hand with the grammar of {@link TargetUrl#parse}, not {@code java.net.URI}, after the
+ * user information (everything up to the last {@code @} of the authority) is dropped and an empty port ({@code :}
+ * ending the authority) is read as omitted, as RFC 3986 §3.2 and §6.2.3 have it: the origin is the scheme, host and
+ * port alone. The scheme and host compare case-insensitively and an omitted port is 80 for {@code http} and 443 for
+ * {@code https} (RFC 3986 §6.2.2.1). The base path compares on the raw characters, so {@code /basement} does not continue
  * {@code /base} and percent-encodings are not decoded. The result never carries an origin: it holds no part of the
  * received {@code Host} or {@code X-Forwarded-Host}, and a resulting path a client would read as a network-path
  * reference (two leading slashes or backslashes, tabs and line breaks skipped) gets a leading {@code /.}, so it stays
@@ -77,10 +80,17 @@ final class LocationRewriter {
         while (authorityEnd < location.length() && "/?#".indexOf(location.charAt(authorityEnd)) < 0) {
             authorityEnd++;
         }
+        // The origin is the scheme, host and port alone: user information (up to the last '@', RFC 3986 §3.2.1) is
+        // dropped and an empty port is the omitted one (RFC 3986 §3.2.3), so neither hides the target's origin.
+        String authority = location.substring(authorityStart, authorityEnd);
+        authority = authority.substring(authority.lastIndexOf('@') + 1);
+        if (authority.endsWith(":")) {
+            authority = authority.substring(0, authority.length() - 1);
+        }
         TargetUrl origin;
         try {
             // The authority holds no '/', '?' or '#', so the parse sees a scheme and an authority without a path.
-            origin = TargetUrl.parse(scheme + "://" + location.substring(authorityStart, authorityEnd));
+            origin = TargetUrl.parse(scheme + "://" + authority);
         } catch (IllegalArgumentException notAnHttpOrigin) {
             return location;
         }
