@@ -112,25 +112,25 @@ public final class Proxy implements Middleware {
     /** The limit for the TCP connect to the backend (default 10 seconds). */
     // @req IR-PROXY-001
     public Proxy connectTimeout(long amount, TimeUnit unit) {
-        return new Proxy(target, options.withConnectTimeoutNanos(positiveNanos(amount, unit, "connectTimeout")));
+        return derived(options.withConnectTimeoutNanos(positiveNanos(amount, unit, "connectTimeout")));
     }
 
     /** The limit for a backend write that makes no progress (default 60 seconds). */
     // @req IR-PROXY-001
     public Proxy writeTimeout(long amount, TimeUnit unit) {
-        return new Proxy(target, options.withWriteTimeoutNanos(positiveNanos(amount, unit, "writeTimeout")));
+        return derived(options.withWriteTimeoutNanos(positiveNanos(amount, unit, "writeTimeout")));
     }
 
     /** The limit for the first response byte and between response bytes (default 60 seconds). */
     // @req IR-PROXY-001
     public Proxy readTimeout(long amount, TimeUnit unit) {
-        return new Proxy(target, options.withReadTimeoutNanos(positiveNanos(amount, unit, "readTimeout")));
+        return derived(options.withReadTimeoutNanos(positiveNanos(amount, unit, "readTimeout")));
     }
 
     /** The limit for a whole proxied request, retries included (default 5 minutes). */
     // @req IR-PROXY-001
     public Proxy totalTimeout(long amount, TimeUnit unit) {
-        return new Proxy(target, options.withTotalTimeoutNanos(positiveNanos(amount, unit, "totalTimeout")));
+        return derived(options.withTotalTimeoutNanos(positiveNanos(amount, unit, "totalTimeout")));
     }
 
     /** How many more attempts a failed request may get (default 0). */
@@ -139,31 +139,31 @@ public final class Proxy implements Middleware {
         if (count < 0) {
             throw new IllegalArgumentException("retries must be at least 0, got " + count);
         }
-        return new Proxy(target, options.withRetries(count));
+        return derived(options.withRetries(count));
     }
 
     /** The wait before each retry (default 200 milliseconds). */
     // @req IR-PROXY-001
     public Proxy retryDelay(long amount, TimeUnit unit) {
-        return new Proxy(target, options.withRetryDelayNanos(nonNegativeNanos(amount, unit, "retryDelay")));
+        return derived(options.withRetryDelayNanos(nonNegativeNanos(amount, unit, "retryDelay")));
     }
 
     /** Whether a backend 502 or 503 is retried for methods other than bodyless GET, HEAD and OPTIONS (default false). */
     // @req IR-PROXY-001
     public Proxy retryUnsafeMethods(boolean enabled) {
-        return new Proxy(target, options.withRetryUnsafeMethods(enabled));
+        return derived(options.withRetryUnsafeMethods(enabled));
     }
 
     /** Whether the mount prefix is removed from the forwarded path (default false: the prefix is kept). */
     // @req IR-PROXY-001
     public Proxy stripPrefix(boolean enabled) {
-        return new Proxy(target, options.withStripPrefix(enabled));
+        return derived(options.withStripPrefix(enabled));
     }
 
     /** Whether the received {@code Host} is sent instead of the target host (default false). */
     // @req IR-PROXY-001
     public Proxy preserveHost(boolean enabled) {
-        return new Proxy(target, options.withPreserveHost(enabled));
+        return derived(options.withPreserveHost(enabled));
     }
 
     /** The request body limit in bytes for this mount (default: the app's raw body limit). */
@@ -172,7 +172,7 @@ public final class Proxy implements Middleware {
         if (bytes < 1 || bytes > MAX_BODY_LIMIT) {
             throw new IllegalArgumentException("bodyLimit must be within 1.." + MAX_BODY_LIMIT + ", got " + bytes);
         }
-        return new Proxy(target, options.withBodyLimit(bytes));
+        return derived(options.withBodyLimit(bytes));
     }
 
     /** The most in-flight requests of this proxy and the proxies derived from it (default: no limit). */
@@ -181,21 +181,21 @@ public final class Proxy implements Middleware {
         if (limit < 1) {
             throw new IllegalArgumentException("maxConcurrent must be at least 1, got " + limit);
         }
-        return new Proxy(target, options.withMaxConcurrent(limit));
+        return derived(options.withMaxConcurrent(limit));
     }
 
     /** Sends {@code value} as request header {@code name} in place of the client's lines of that name. */
     // @req IR-PROXY-001
     public Proxy requestHeader(String name, String value) {
         HeaderRules.checkRequestRule(name, value, "requestHeader");
-        return new Proxy(target, options.withRequestHeaderRules(appended(options.requestHeaderRules, name, value)));
+        return derived(options.withRequestHeaderRules(appended(options.requestHeaderRules, name, value)));
     }
 
     /** Drops the client's request header {@code name}. */
     // @req IR-PROXY-001
     public Proxy removeRequestHeader(String name) {
         HeaderRules.checkRequestRule(name, "removeRequestHeader");
-        return new Proxy(target, options.withRequestHeaderRules(appended(options.requestHeaderRules, name, null)));
+        return derived(options.withRequestHeaderRules(appended(options.requestHeaderRules, name, null)));
     }
 
     /**
@@ -206,7 +206,7 @@ public final class Proxy implements Middleware {
     // @req IR-PROXY-001
     public Proxy responseHeader(String name, String value) {
         HeaderRules.checkResponseRule(name, value, "responseHeader");
-        return new Proxy(target, options.withResponseHeaderRules(appended(options.responseHeaderRules, name, value)));
+        return derived(options.withResponseHeaderRules(appended(options.responseHeaderRules, name, value)));
     }
 
     /**
@@ -217,13 +217,13 @@ public final class Proxy implements Middleware {
     // @req IR-PROXY-001
     public Proxy removeResponseHeader(String name) {
         HeaderRules.checkResponseRule(name, "removeResponseHeader");
-        return new Proxy(target, options.withResponseHeaderRules(appended(options.responseHeaderRules, name, null)));
+        return derived(options.withResponseHeaderRules(appended(options.responseHeaderRules, name, null)));
     }
 
     /** Whether a same-origin backend {@code Location} is rewritten to a path under the mount (default true). */
     // @req IR-PROXY-001
     public Proxy rewriteLocation(boolean enabled) {
-        return new Proxy(target, options.withRewriteLocation(enabled));
+        return derived(options.withRewriteLocation(enabled));
     }
 
     /**
@@ -236,7 +236,7 @@ public final class Proxy implements Middleware {
         if (factory == null) {
             throw new NullPointerException("sslSocketFactory factory");
         }
-        return new Proxy(target, options.withSslSocketFactory(factory));
+        return derived(options.withSslSocketFactory(factory));
     }
 
     /** {@code amount} of {@code unit} in nanoseconds, saturated at Long.MAX_VALUE; the amount must be above 0. */
@@ -271,10 +271,15 @@ public final class Proxy implements Middleware {
         return Collections.unmodifiableList(out);
     }
 
+    /** The proxy an option method returns: this target and watchdog with {@code next} as its options. */
+    // @req IR-PROXY-001
+    private Proxy derived(Options next) {
+        return new Proxy(target, next, watchdog);
+    }
+
     /**
      * Package-private test seam: this proxy with {@code watchdog} as its total-timeout watchdog, so a test can record
-     * the reservations and their cancels (REL-PROXY-001). The option methods return proxies with the default watchdog,
-     * so a test calls this last.
+     * the reservations and their cancels (REL-PROXY-001). The option methods called after it keep the watchdog.
      */
     // @req REL-PROXY-001
     Proxy withWatchdog(ProxyExchange.Watchdog watchdog) {
@@ -491,16 +496,7 @@ public final class Proxy implements Middleware {
             }
             // The adapter writes its own reason phrase for the status (D-059); the backend phrase is not kept.
             res.status(head.status);
-            // A removed name's backend lines are skipped, so an app value of it stays and the rewrite never sees them.
-            List<Map.Entry<String, String>> copied =
-                    ResponseHeaderCopier.copy(head.headers, options.hiddenResponseNames, res);
-            // The Location rewrite follows the copy and comes before the .responseHeader values (FR-PROXY-012).
-            if (options.rewriteLocation) {
-                LocationRewriter.apply(copied, target, options.stripPrefix ? req.baseUrl() : "", res);
-            }
-            for (Map.Entry<String, String> fixed : options.fixedResponseHeaders) {
-                res.header(fixed.getKey(), fixed.getValue());
-            }
+            applyResponseHeaders(req, res, head);
             long length = head.status == 204 || head.transferEncoding != null ? -1 : head.contentLength;
             InputStream body = chunked ? new ChunkedBodyStream(in, socket) : new SocketBodyStream(in, socket);
             // From here the relayed body owns the exchange: the first of its close and the abort notification ends it
@@ -518,6 +514,26 @@ public final class Proxy implements Middleware {
                 exchange.release();
             }
             closeQuietly(outgoing.body);
+        }
+    }
+
+    /**
+     * Sets the response headers of {@code res} from the backend {@code head} in this order: the backend header copy,
+     * then the {@code Location} rewrite, then the {@code .responseHeader} values (FR-PROXY-012).
+     */
+    // @req FR-PROXY-011
+    // @req FR-PROXY-013
+    // @req FR-PROXY-012
+    private void applyResponseHeaders(Request req, Response res, ResponseHead head) {
+        // A removed name's backend lines are skipped, so an app value of it stays and the rewrite never sees them.
+        List<Map.Entry<String, String>> copied =
+                ResponseHeaderCopier.copy(head.headers, options.hiddenResponseNames, res);
+        // The Location rewrite follows the copy and comes before the .responseHeader values (FR-PROXY-012).
+        if (options.rewriteLocation) {
+            LocationRewriter.apply(copied, target, options.stripPrefix ? req.baseUrl() : "", res);
+        }
+        for (Map.Entry<String, String> fixed : options.fixedResponseHeaders) {
+            res.header(fixed.getKey(), fixed.getValue());
         }
     }
 

@@ -207,9 +207,9 @@ public class ProxyExchangeTest {
 
     // ---- AC-3 ----
 
-    /** The three orders in which the relayed stream's close and the abort notification may reach the exchange. */
+    /** The four ways the relayed stream's close and the abort notification may end the exchange. */
     private enum EndOrder {
-        CLOSE_TWICE, CLOSE_AFTER_ABORT, ABORT_AFTER_CLOSE
+        CLOSE_TWICE, CLOSE_AFTER_ABORT, ABORT_AFTER_CLOSE, ABORT_ALONE
     }
 
     // REL-PROXY-001 AC-3: driving the relayed stream, close() twice returns the slot once, cancels the watchdog
@@ -270,7 +270,14 @@ public class ProxyExchangeTest {
                 break;
             case CLOSE_AFTER_ABORT:
                 abortListener.run();
+                // REL-PROXY-001 AC-3: the abort notification, before any close() of the relayed stream, has already
+                // ended the exchange: the slot is back, the reservation cancelled and the backend socket closed
+                assertAbortAloneEndedTheExchange(order, p, reservation, backend);
                 relayed.close();
+                break;
+            case ABORT_ALONE:
+                abortListener.run();
+                assertAbortAloneEndedTheExchange(order, p, reservation, backend);
                 break;
             default:
                 relayed.close();
@@ -282,6 +289,91 @@ public class ProxyExchangeTest {
         assertEquals(order + ": reservation cancels", 1, reservation.cancels.get());
         await(order + ": the backend observed its connection closed", backend.closedByProxy);
         assertEquals(order + ": watchdog reservations", 1, watchdog.reservationCount());
+    }
+
+    /**
+     * What the onAbort notification alone must have done when it is the first end of the exchange, before anything
+     * closed the relayed stream: the stream does not close the socket here, so a closed backend connection is the
+     * proxy's own release (REL-PROXY-001 AC-3).
+     */
+    private static void assertAbortAloneEndedTheExchange(EndOrder order, Proxy p, RecordingReservation reservation,
+            HoldingBackend backend) throws InterruptedException {
+        assertEquals(order + ": counter right after the abort notification", 0, p.concurrencyCounter().get());
+        assertEquals(order + ": reservation cancels right after the abort notification", 1,
+                reservation.cancels.get());
+        await(order + ": the abort notification alone closed the backend connection", backend.closedByProxy);
+    }
+
+    // REL-PROXY-001 AC-3: the onAbort notification with no close() of the relayed stream at all returns the slot once,
+    // cancels the watchdog reservation once and closes the backend socket by itself
+    @Test(timeout = 60000)
+    public void rel_PROXY_001_AC3_theAbortNotificationAloneEndsTheExchange() throws Exception {
+        driveRelayedEnd(EndOrder.ABORT_ALONE);
+    }
+
+    // REL-PROXY-001 AC-3: when res.abort runs while the relay copy is blocked reading a backend that sends nothing more,
+    // the slot is back at once and the backend observes its connection closed within 3 s; the core keeps the input
+    // of a running copy open, so only the proxy's abort listener can close the backend socket here
+    @Test(timeout = 60000)
+    public void rel_PROXY_001_AC3_anAbortDuringABlockedRelayCopyClosesTheBackend() throws Exception {
+        HoldingBackend backend = backend(HoldingBackend.Mode.HEAD_THEN_HOLD);
+        RecordingWatchdog watchdog = new RecordingWatchdog();
+        Proxy p = Proxy.to(backend.url()).maxConcurrent(1).withWatchdog(watchdog);
+        AtomicReference<Response> resRef = new AtomicReference<>();
+        Mounted m = app();
+        m.app.use("/api", (req, res, next) -> {
+            resRef.set(res);
+            p.handle(req, res, next);
+        });
+        m.start();
+
+        Future<ClientResponse> f = m.adapter.submit(ClientRequest.of("GET", "/api/x"));
+
+        awaitBlockedRelayCopy();
+        assertEquals("the relay holds its slot", 1, p.concurrencyCounter().get());
+        RecordingReservation reservation = watchdog.only();
+        assertEquals("the relay keeps its reservation", 0, reservation.cancels.get());
+        assertFalse("the backend connection is still open", backend.closedByProxy.await(100, TimeUnit.MILLISECONDS));
+        Response res = resRef.get();
+        assertNotNull("the request reached the proxy", res);
+
+        res.abort(null);
+
+        assertEquals("counter right after res.abort", 0, p.concurrencyCounter().get());
+        assertEquals("reservation cancels right after res.abort", 1, reservation.cancels.get());
+        assertTrue("the backend observed its connection closed within 3 s of res.abort",
+                backend.closedByProxy.await(3, TimeUnit.SECONDS));
+        f.cancel(true);
+        assertEquals("counter after the client gave up", 0, p.concurrencyCounter().get());
+        assertEquals("reservation cancels after the client gave up", 1, reservation.cancels.get());
+    }
+
+    /**
+     * Waits until some thread runs the core's relay copy and is inside a socket read below it: the copy holds the
+     * input of the response, so an abort from now on leaves the input to the copy.
+     */
+    private static void awaitBlockedRelayCopy() throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(WAIT_SECONDS);
+        while (System.nanoTime() < deadline) {
+            for (StackTraceElement[] stack : Thread.getAllStackTraces().values()) {
+                boolean inCopy = false;
+                boolean inSocketRead = false;
+                for (StackTraceElement e : stack) {
+                    if (e.getClassName().endsWith(".DefaultResponse") && e.getMethodName().equals("runTransfer")) {
+                        inCopy = true;
+                    }
+                    if (e.getClassName().contains("Socket") && e.getMethodName().toLowerCase(Locale.ROOT)
+                            .contains("read")) {
+                        inSocketRead = true;
+                    }
+                }
+                if (inCopy && inSocketRead) {
+                    return;
+                }
+            }
+            Thread.sleep(5);
+        }
+        fail("no relay copy blocked in a backend read within " + WAIT_SECONDS + "s");
     }
 
     // ---- AC-4 ----
@@ -387,6 +479,26 @@ public class ProxyExchangeTest {
         assertEquals("counter", 0, p.concurrencyCounter().get());
         assertEquals("watchdog reservations", 0, watchdog.reservationCount());
         assertEquals("backend connections", 0, backend.connections.get());
+    }
+
+    // REL-PROXY-001: the watchdog installed through the package-private seam survives the option methods called after
+    // it, so a forwarded request reserves the installed watchdog for the total timeout set last
+    @Test(timeout = 60000)
+    public void rel_PROXY_001_aWatchdogSurvivesLaterOptionMethods() throws Exception {
+        HoldingBackend backend = backend(HoldingBackend.Mode.ANSWER_OK);
+        RecordingWatchdog watchdog = new RecordingWatchdog();
+        Proxy p = Proxy.to(backend.url()).withWatchdog(watchdog).retries(0).maxConcurrent(1)
+                .totalTimeout(7, TimeUnit.SECONDS);
+        Mounted m = app();
+        m.app.use("/api", p);
+        m.start();
+
+        ClientResponse r = m.adapter.send(ClientRequest.of("GET", "/api/x"));
+
+        assertEquals("status", 200, r.status());
+        assertEquals("watchdog reservations", 1, watchdog.reservationCount());
+        assertEquals("the reservation is for the total timeout set after the watchdog",
+                TimeUnit.SECONDS.toNanos(7), watchdog.only().totalTimeoutNanos);
     }
 
     private static void assertRefused(Mounted m, Proxy p, int status, ClientRequest request) {
