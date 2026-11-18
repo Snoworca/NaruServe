@@ -1069,4 +1069,28 @@ public final class DocsExamplesCompileTest {
         }
         assertTrue(String.join("\n", diagnostics), diagnostics.isEmpty());
     }
+
+    // OPS-DX-010 AC-12: every Java block of proxy.md and en/proxy.md compiles against NaruServe-proxy on the root test
+    // classpath; none sits on the skip list and no diagnostic names either page
+    @Test
+    public void OPS_DX_010_AC12_proxyJavaBlocksOfBothPagesCompile() throws IOException {
+        List<String> diagnostics = docsDiagnostics();
+        for (String page : new String[] {"proxy.md", "en/proxy.md"}) {
+            List<String> blocks = docs().get(page);
+            assertNotNull("proxy page " + page, blocks);
+            assertTrue(page + " holds Java blocks", blocks.size() >= 5);
+            for (String d : diagnostics) {
+                assertFalse("compile diagnostic on " + page + ": " + d, d.startsWith(page + " #"));
+            }
+            boolean importsProxy = false;
+            for (int i = 0; i < blocks.size(); i++) {
+                assertNull("skipped proxy block " + page + " #" + (i + 1), skipFor(page, i + 1, blocks.get(i)));
+                importsProxy |= blocks.get(i).contains("import com.snoworca.naruserve.proxy.Proxy;");
+            }
+            assertTrue(page + " has a compiled block importing Proxy", importsProxy);
+            assertEquals("every Java block of " + page + " is compiled", blocks.size(),
+                    compiledPerFile.getOrDefault(page, 0).intValue());
+        }
+        assertTrue(String.join("\n", diagnostics), diagnostics.isEmpty());
+    }
 }

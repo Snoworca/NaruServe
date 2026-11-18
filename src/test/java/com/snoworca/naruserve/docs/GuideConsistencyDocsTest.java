@@ -132,11 +132,13 @@ public class GuideConsistencyDocsTest {
         assertEquals(String.join("\n", found), new ArrayList<String>(), found);
     }
 
-    // OPS-DX-007 AC-3: every guide pair starts with the same navigation line shape
+    // OPS-DX-007 AC-3; OPS-DX-011 AC-2; OPS-DX-010 AC-12: every guide pair starts with the same navigation line shape,
+    // for the 18 pairs of 0.11.0 and proxy.md
     @Test
     public void OPS_DX_007_AC3_everyGuideHasTheSameNavigationLine() throws IOException {
         List<String> pages = pages();
-        assertEquals("18 guide pairs besides README.md", 18, pages.size());
+        assertEquals("19 guide pairs besides README.md (the 18 of 0.11.0 and proxy.md)", 19, pages.size());
+        assertTrue("proxy.md is a guide pair", pages.contains("proxy.md"));
         for (String page : pages) {
             assertEquals(page, "[English](en/" + page + ") | [문서 목록](README.md)", ko(page).split("\n")[2]);
             assertEquals("en/" + page, "[한국어](../" + page + ") | [API index](README.md)", en(page).split("\n")[2]);
