@@ -51,8 +51,6 @@ public class LocationRewriterTest {
     // FR-PROXY-013 AC-2: a value the Proxy.to host and port grammar refuses is left unchanged
     @Test
     public void fr_PROXY_013_AC2_valuesOutsideTheTargetGrammarAreUnchanged() {
-        assertEquals("http://u@h/x", rewrite("http://h", "", "http://u@h/x"));
-        assertEquals("http://h:/x", rewrite("http://h", "", "http://h:/x"));
         assertEquals("http://h:0x50/x", rewrite("http://h", "", "http://h:0x50/x"));
         assertEquals("ftp://h/x", rewrite("http://h", "", "ftp://h/x"));
         assertEquals("http:/x", rewrite("http://h", "", "http:/x"));
@@ -136,6 +134,34 @@ public class LocationRewriterTest {
                 rewrite("http://127.0.0.1:9/base", "", "http://127.0.0.1:9/base//evil.example/x"));
         assertEquals("/.//evil.example/x", rewrite("http://h", "", "//h//evil.example/x"));
         assertFalse(rewrite("http://127.0.0.1:9/base", "", "http://127.0.0.1:9/base/x").contains("127.0.0.1"));
+    }
+
+    // FR-PROXY-013 AC-8: user information does not hide the target origin; the result carries neither it nor the
+    // origin, while user information in front of another host leaves the value unchanged
+    @Test
+    public void fr_PROXY_013_AC8_userInformationDoesNotHideTheTargetOrigin() {
+        assertEquals("/api/orders/x", rewrite("http://127.0.0.1:8080", "", "http://u@127.0.0.1:8080/api/orders/x"));
+        assertEquals("/api/orders/x",
+                rewrite("http://127.0.0.1:8080", "", "//u:pw@127.0.0.1:8080/api/orders/x"));
+        assertEquals("/x", rewrite("http://h", "", "http://u@h/x"));
+        assertEquals("/x", rewrite("http://h", "", "http://a@b@h/x"));
+        assertEquals("/p/x?q", rewrite("http://h/base", "/p", "http://u:pw@h/base/x?q"));
+        assertEquals("http://u@other.example/x", rewrite("http://h", "", "http://u@other.example/x"));
+        assertEquals("http://h@other.example/x", rewrite("http://h", "", "http://h@other.example/x"));
+        assertEquals("//u@other.example/x", rewrite("http://h", "", "//u@other.example/x"));
+        assertFalse(rewrite("http://127.0.0.1:8080", "", "http://u:pw@127.0.0.1:8080/x").contains("pw"));
+    }
+
+    // FR-PROXY-013 AC-8: an empty port is the omitted default port, and the result carries no origin
+    @Test
+    public void fr_PROXY_013_AC8_emptyPortIsTheDefaultPort() {
+        assertEquals("/x", rewrite("http://h", "", "http://h:/x"));
+        assertEquals("/x", rewrite("https://h", "", "https://h:/x"));
+        assertEquals("/x", rewrite("http://h", "", "//h:/x"));
+        assertEquals("/x", rewrite("http://h", "", "http://u@h:/x"));
+        assertEquals("/x", rewrite("http://[::1]", "", "http://[::1]:/x"));
+        assertEquals("http://h:/x", rewrite("http://h:8080", "", "http://h:/x"));
+        assertEquals("http://h::/x", rewrite("http://h", "", "http://h::/x"));
     }
 
     // FR-PROXY-013 AC-9: a network-path reference is resolved against the target scheme

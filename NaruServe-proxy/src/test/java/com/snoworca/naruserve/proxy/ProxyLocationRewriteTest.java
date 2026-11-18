@@ -231,6 +231,18 @@ public class ProxyLocationRewriteTest {
         assertEquals(Collections.singletonList("/.//evil.example/x"), locations(r));
     }
 
+    // FR-PROXY-013 AC-8: user information in front of the target authority does not keep the backend origin in the
+    // Location the client receives
+    @Test
+    public void fr_PROXY_013_AC8_userInformationDoesNotLeakTheBackendOrigin() throws IOException {
+        RawBackend backend = redirecting("http://u@" + ORIGIN + "/api/orders/x");
+        app.use("/api/orders", Proxy.to(backend.url()));
+
+        ClientResponse r = send("/api/orders/start");
+
+        assertEquals(Collections.singletonList("/api/orders/x"), locations(r));
+    }
+
     // FR-PROXY-013 AC-9: a network-path Location of the target authority becomes a path; another authority stays
     @Test
     public void fr_PROXY_013_AC9_networkPathLocationIsResolvedAgainstTheTargetScheme() throws IOException {
