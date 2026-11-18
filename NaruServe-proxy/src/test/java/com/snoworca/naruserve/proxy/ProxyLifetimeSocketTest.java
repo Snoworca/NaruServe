@@ -143,7 +143,7 @@ public class ProxyLifetimeSocketTest {
                     .header("Transfer-Encoding", "chunked").body(over));
             assertEquals("chunked request " + i + " over the body limit", 413, r.status());
         }
-        assertEquals("connections of the over-limit requests", 20, backend.connections.get());
+        awaitConnections("connections of the over-limit requests", backend.connections, 20);
 
         backend.mode = LifetimeBackend.Mode.SILENT;
         for (int i = 0; i < 20; i++) {
@@ -151,7 +151,7 @@ public class ProxyLifetimeSocketTest {
             assertEquals("read timeout " + i + " answered by onError", 200, r.status());
             assertEquals("timed out", r.text());
         }
-        assertEquals("connections after the read timeouts", 40, backend.connections.get());
+        awaitConnections("connections after the read timeouts", backend.connections, 40);
 
         backend.mode = LifetimeBackend.Mode.ANSWER_OK;
         ClientResponse restored = adapter.send(ClientRequest.of("GET", "/api/restored"));
@@ -194,6 +194,19 @@ public class ProxyLifetimeSocketTest {
             }
             Thread.sleep(5);
         }
+    }
+
+    /**
+     * Waits until {@code connections} reaches {@code expected}: a proxy connect returns once the kernel accepted it, a
+     * moment before the backend's accept loop counts it.
+     */
+    private static void awaitConnections(String what, AtomicInteger connections, int expected)
+            throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(WAIT_SECONDS);
+        while (connections.get() < expected && System.nanoTime() < deadline) {
+            Thread.sleep(5);
+        }
+        assertEquals(what, expected, connections.get());
     }
 
     /** Writes {@code raw} to 127.0.0.1:{@code port} and reads the response as ISO-8859-1 until the server closes. */

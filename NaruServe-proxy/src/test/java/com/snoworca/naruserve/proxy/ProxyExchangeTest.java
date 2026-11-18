@@ -183,6 +183,19 @@ public class ProxyExchangeTest {
         assertTrue(what, latch.await(WAIT_SECONDS, TimeUnit.SECONDS));
     }
 
+    /**
+     * Waits until {@code connections} reaches {@code expected}: a proxy connect returns once the kernel accepted it, a
+     * moment before the backend's accept loop counts it.
+     */
+    private static void awaitConnections(String what, AtomicInteger connections, int expected)
+            throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(WAIT_SECONDS);
+        while (connections.get() < expected && System.nanoTime() < deadline) {
+            Thread.sleep(5);
+        }
+        assertEquals(what, expected, connections.get());
+    }
+
     private static ClientResponse answered(String what, Future<ClientResponse> f) throws Exception {
         try {
             return f.get(WAIT_SECONDS, TimeUnit.SECONDS);
@@ -303,7 +316,7 @@ public class ProxyExchangeTest {
 
         assertTrue("an HttpException reached onError: " + seen.error, seen.error instanceof HttpException);
         assertEquals("status", 413, ((HttpException) seen.error).status());
-        assertEquals("the proxy connected before the body passed the limit", 1, backend.connections.get());
+        awaitConnections("the proxy connected before the body passed the limit", backend.connections, 1);
         assertEquals("counter when onError ran", 0, seen.counter);
         assertEquals("watchdog reservations", 1, watchdog.reservationCount());
         assertEquals("reservation cancels when onError ran", 1, seen.cancels);
