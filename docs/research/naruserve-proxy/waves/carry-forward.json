@@ -62,6 +62,18 @@
       "owner_requirement": "SEC-PROXY-002",
       "reason_class": "cross-wave-carry-forward",
       "note": "FR-PROXY-003 AC-8 orders X-Forwarded-For/-Proto/-Host after the client headers, but those lines are produced only by SEC-PROXY-002 (wave-19; X-Forwarded-Host also FR-PROXY-004, wave-13). Wave-12 fills the slot with an empty list, so AC-8 is only partly observable. FR-PROXY-003 stays implemented with AC-8 unchecked; wave-19 re-checks AC-8 with real X-Forwarded-* lines and then promotes FR-PROXY-003 to verified."
+    },
+    {
+      "from": "wave-13",
+      "round": 1,
+      "finding": "LP-10",
+      "cites": "FR-PROXY-004 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave13Test.java::fr_PROXY_004_AC1_clientXForwardedHostObservation",
+      "evidence": "java.lang.AssertionError: expected:<[127.0.0.1]> but was:<[attacker, 127.0.0.1]>",
+      "carried_into": "wave-19",
+      "owner_requirement": "SEC-PROXY-002",
+      "reason_class": "later-wave-observation",
+      "note": "kept:false in wave-13 (not owned there): a client-sent X-Forwarded-Host is forwarded ahead of the proxy's own line. SEC-PROXY-002 drops other forwarding headers; the wave-19 worker must drop it and wave-19 loop P re-checks it together with FR-PROXY-003 AC-8."
     }
   ]
 }

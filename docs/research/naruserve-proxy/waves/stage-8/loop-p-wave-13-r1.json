@@ -1,0 +1,146 @@
+{
+  "wave": "wave-13",
+  "round": 1,
+  "verifier": "loop-p-wave-13-r1",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "SEC-PROXY-001 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave13Test.java::sec_PROXY_001_AC1_rejectionsOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "All 28 AC-1..AC-7 rejected targets (raw bytes incl. backslash, 0x01, 0x7F, 0xE9, 0xFF, %zz, trailing %) sent over a real default TinyHttpd socket get 400; backend saw 0 requests."
+    },
+    {
+      "id": "LP-2",
+      "cites": "SEC-PROXY-001 AC-9",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave13Test.java::sec_PROXY_001_AC9_rejectionsOverTinyHttpdWithStripPrefix",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Same 28 targets under stripPrefix(true) over TinyHttpd: all 400, 0 backend requests."
+    },
+    {
+      "id": "LP-3",
+      "cites": "SEC-PROXY-001 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave13Test.java::sec_PROXY_001_AC6_allowedCharactersByteForByteOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "?x=1&y=%ED%95%9C, @:!$ in path and query, trailing slash, @evil.example and %20/%3B arrive with the identical request line over TinyHttpd."
+    },
+    {
+      "id": "LP-4",
+      "cites": "FR-PROXY-006 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave13Test.java::fr_PROXY_006_AC2_stripPrefixOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Base /base + stripPrefix(true) over TinyHttpd: /q%20x?a=%41&b=+&c, /?x=1 for the mount path, /query; raw remainder kept."
+    },
+    {
+      "id": "LP-5",
+      "cites": "FR-PROXY-004 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave13Test.java::fr_PROXY_004_AC4_noHostOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "HTTP/1.0 without Host under preserveHost(true) over TinyHttpd: backend Host is the target 127.0.0.1:port, no X-Forwarded-Host."
+    },
+    {
+      "id": "LP-6",
+      "cites": "FR-PROXY-004 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave13Test.java::fr_PROXY_004_AC5_twoHostLinesOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "'Host' and 'host' lines over TinyHttpd: 400, 0 backend requests."
+    },
+    {
+      "id": "LP-7",
+      "cites": "FR-PROXY-001 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave13Test.java::fr_PROXY_001_AC2_acceptedEdgeForms",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "[::1] connect host without brackets, HTTPS default port 443, trailing root dot, ::ffff:1.2.3.4, 1:2:3:4:5:6:7::, 63-char label all accepted."
+    },
+    {
+      "id": "LP-8",
+      "cites": "FR-PROXY-001 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave13Test.java::fr_PROXY_001_AC2_rejectedEdgeForms",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "23 malformed URLs (empty/signed port, unclosed/garbage IPv6, 64-char label, leading/trailing '-', a..b, [1.2.3.4], [], [:::1], 9 groups, backslash, %, spaces, bad scheme separators, unencoded zone id) all throw IllegalArgumentException."
+    },
+    {
+      "id": "LP-9",
+      "cites": "FR-PROXY-004 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave13Test.java::fr_PROXY_004_AC4_emptyHostOverTinyHttpd",
+      "verdict": "red",
+      "kept": false,
+      "evidence": "java.lang.AssertionError: HTTP/1.1 421 Misdirected Request ... {\"error\":{\"code\":\"HTTP_421\",\"message\":\"Misdirected Request\",...}}",
+      "note": "Not a wave defect: TinyHttpd's default host allowlist answers 421 before middleware for an empty Host, the same adapter defence SEC-PROXY-001 AC-8 accepts; the proxy never runs. The proxy's own empty-Host rule is shown over the in-memory adapter (ProxyHostHeaderTest fr_PROXY_004_AC4_anEmptyHostCountsAsNoHost) and HTTP/1.0 no-Host over TinyHttpd is green (LP-5)."
+    },
+    {
+      "id": "LP-10",
+      "cites": "FR-PROXY-004 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave13Test.java::fr_PROXY_004_AC1_clientXForwardedHostObservation",
+      "verdict": "red",
+      "kept": false,
+      "evidence": "java.lang.AssertionError: expected:<[127.0.0.1]> but was:<[attacker, 127.0.0.1]>",
+      "note": "Observation for a later wave: a client-sent X-Forwarded-Host is passed through ahead of the proxy's own line. Removing or replacing client forwarding headers belongs to SEC-PROXY-002 / FR-PROXY-003 AC-8, open until wave-19 (FR-PROXY-003 change note). AC-1 itself (the backend gets X-Forwarded-Host: <received Host>) holds."
+    },
+    {
+      "id": "LP-11",
+      "cites": "SEC-PROXY-001 AC-1",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave13ServletTest.java::sec_PROXY_001_AC1_rejectionsOverServlet",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "The same 28 targets over the servlet adapter on Jetty 9.4: all 400, no backend connection."
+    },
+    {
+      "id": "LP-12",
+      "cites": "SEC-PROXY-001 AC-9",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave13ServletTest.java::sec_PROXY_001_AC9_rejectionsOverServletWithStripPrefix",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "The same 28 targets under stripPrefix(true) on Jetty: all 400, no backend connection."
+    },
+    {
+      "id": "LP-13",
+      "cites": "SEC-PROXY-001 AC-6",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave13ServletTest.java::sec_PROXY_001_AC6_allowedCharactersByteForByteOverServlet",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Allowed characters arrive byte for byte in the backend request line over the servlet adapter."
+    },
+    {
+      "id": "LP-14",
+      "cites": "FR-PROXY-006 AC-2",
+      "test": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/LoopPWave13ServletTest.java::fr_PROXY_006_AC2_stripPrefixOverServlet",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "stripPrefix(true) + /base over the servlet adapter: /base/q%20x?a=%41&b=+&c and /base/?x=1."
+    },
+    {
+      "id": "LP-15",
+      "cites": "C-001",
+      "test": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:animalsnifferMain",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Not a test: an API-21 animal-sniffer check of the wave's main code. It passed (BUILD SUCCESSFUL)."
+    }
+  ],
+  "summary": {
+    "tests_written": 14,
+    "kept": 0
+  }
+}
