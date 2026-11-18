@@ -578,6 +578,23 @@ public class ProxyTlsTest {
         assertEquals(Collections.singletonList("sslSocketFactory[class javax.net.ssl.SSLSocketFactory]"), tls);
     }
 
+    // SEC-PROXY-005 AC-8: host name verification stays on with an .sslSocketFactory whose SSLSocket is a delegate
+    // that keeps SSLSocket's base getSSLParameters/setSSLParameters, which drop the endpoint identification
+    // algorithm: the backend whose certificate names another host still gives 502 CONNECT_FAILED with no request
+    // bytes sent
+    @Test(timeout = 30000)
+    public void sec_PROXY_005_AC8_hostNameCheckStaysOnWithADelegatingSocket() throws IOException {
+        TlsBackend backend = tlsBackend(otherHostServer);
+        mount(Proxy.to("https://localhost:" + backend.port())
+                .sslSocketFactory(new DelegatingFactory(trustingClient.getSocketFactory())));
+
+        ClientResponse r = get();
+
+        assertEquals("status (request bytes the backend read: " + backend.requestBytes() + ")", 502, r.status());
+        assertSame(ProxyException.Kind.CONNECT_FAILED, onlyProxyError().kind());
+        assertEquals("request bytes the backend read", 0, backend.requestBytes());
+    }
+
     // ---- backends ----
 
     /** Counts accepted connections; a sentinel connection makes the count deterministic (FIFO accept queue). */
@@ -806,6 +823,193 @@ public class ProxyTlsTest {
         @Override
         public String[] getSupportedCipherSuites() {
             return delegate.getSupportedCipherSuites();
+        }
+    }
+
+    /**
+     * Wraps each layered socket of a real factory in a {@link DelegatingSocket}, which keeps {@link SSLSocket}'s
+     * base {@code getSSLParameters}/{@code setSSLParameters}.
+     */
+    private static final class DelegatingFactory extends SSLSocketFactory {
+        private final SSLSocketFactory delegate;
+
+        DelegatingFactory(SSLSocketFactory delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
+            return new DelegatingSocket((SSLSocket) delegate.createSocket(s, host, port, autoClose));
+        }
+
+        @Override
+        public Socket createSocket(String host, int port) throws IOException {
+            throw new IOException("not a layering createSocket");
+        }
+
+        @Override
+        public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
+            throw new IOException("not a layering createSocket");
+        }
+
+        @Override
+        public Socket createSocket(InetAddress host, int port) throws IOException {
+            throw new IOException("not a layering createSocket");
+        }
+
+        @Override
+        public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort)
+                throws IOException {
+            throw new IOException("not a layering createSocket");
+        }
+
+        @Override
+        public String[] getDefaultCipherSuites() {
+            return delegate.getDefaultCipherSuites();
+        }
+
+        @Override
+        public String[] getSupportedCipherSuites() {
+            return delegate.getSupportedCipherSuites();
+        }
+    }
+
+    /**
+     * Delegates the abstract {@link SSLSocket} methods and the stream, timeout and close methods to a real socket,
+     * and does not override {@code getSSLParameters}/{@code setSSLParameters}: the base versions carry only the
+     * cipher suites, protocols and client-auth flags, so an endpoint identification algorithm set through them is
+     * dropped silently.
+     */
+    private static final class DelegatingSocket extends SSLSocket {
+        private final SSLSocket d;
+
+        DelegatingSocket(SSLSocket d) {
+            this.d = d;
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return d.getInputStream();
+        }
+
+        @Override
+        public OutputStream getOutputStream() throws IOException {
+            return d.getOutputStream();
+        }
+
+        @Override
+        public synchronized void close() throws IOException {
+            d.close();
+        }
+
+        @Override
+        public boolean isConnected() {
+            return d.isConnected();
+        }
+
+        @Override
+        public boolean isClosed() {
+            return d.isClosed();
+        }
+
+        @Override
+        public synchronized void setSoTimeout(int timeout) throws java.net.SocketException {
+            d.setSoTimeout(timeout);
+        }
+
+        @Override
+        public synchronized int getSoTimeout() throws java.net.SocketException {
+            return d.getSoTimeout();
+        }
+
+        @Override
+        public String[] getSupportedCipherSuites() {
+            return d.getSupportedCipherSuites();
+        }
+
+        @Override
+        public String[] getEnabledCipherSuites() {
+            return d.getEnabledCipherSuites();
+        }
+
+        @Override
+        public void setEnabledCipherSuites(String[] suites) {
+            d.setEnabledCipherSuites(suites);
+        }
+
+        @Override
+        public String[] getSupportedProtocols() {
+            return d.getSupportedProtocols();
+        }
+
+        @Override
+        public String[] getEnabledProtocols() {
+            return d.getEnabledProtocols();
+        }
+
+        @Override
+        public void setEnabledProtocols(String[] protocols) {
+            d.setEnabledProtocols(protocols);
+        }
+
+        @Override
+        public SSLSession getSession() {
+            return d.getSession();
+        }
+
+        @Override
+        public void addHandshakeCompletedListener(javax.net.ssl.HandshakeCompletedListener listener) {
+            d.addHandshakeCompletedListener(listener);
+        }
+
+        @Override
+        public void removeHandshakeCompletedListener(javax.net.ssl.HandshakeCompletedListener listener) {
+            d.removeHandshakeCompletedListener(listener);
+        }
+
+        @Override
+        public void startHandshake() throws IOException {
+            d.startHandshake();
+        }
+
+        @Override
+        public void setUseClientMode(boolean mode) {
+            d.setUseClientMode(mode);
+        }
+
+        @Override
+        public boolean getUseClientMode() {
+            return d.getUseClientMode();
+        }
+
+        @Override
+        public void setNeedClientAuth(boolean need) {
+            d.setNeedClientAuth(need);
+        }
+
+        @Override
+        public boolean getNeedClientAuth() {
+            return d.getNeedClientAuth();
+        }
+
+        @Override
+        public void setWantClientAuth(boolean want) {
+            d.setWantClientAuth(want);
+        }
+
+        @Override
+        public boolean getWantClientAuth() {
+            return d.getWantClientAuth();
+        }
+
+        @Override
+        public void setEnableSessionCreation(boolean flag) {
+            d.setEnableSessionCreation(flag);
+        }
+
+        @Override
+        public boolean getEnableSessionCreation() {
+            return d.getEnableSessionCreation();
         }
     }
 
