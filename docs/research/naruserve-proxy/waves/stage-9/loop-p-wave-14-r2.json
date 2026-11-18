@@ -1,0 +1,62 @@
+{
+  "wave": "wave-14",
+  "round": 2,
+  "verifier": "loop-p-wave-14-r2",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "SEC-PROXY-005 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsTest.java::lp14r2_1_hostNameCheckStaysOnWithAChainOnlyExtendedTrustManager",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: status (request bytes the backend read: 65) expected:<502> but was:<200> at ProxyTlsTest.lp14r2_1_hostNameCheckStaysOnWithAChainOnlyExtendedTrustManager(ProxyTlsTest.java:666)",
+      "note": "A private-CA .sslSocketFactory whose trust manager is an X509ExtendedTrustManager that checks the chain (delegating to the PKIX manager's two-argument checkServerTrusted) but not the endpoint: the JDK does not wrap an X509ExtendedTrustManager, so setEndpointIdentificationAlgorithm(\"HTTPS\") reads back but checks nothing, and TlsConnector skips its HostnameVerifier off Android (verifyAfterIdentification=false). The other.example certificate reaches the backend for target localhost: host name verification is off with the option, against PRD-165."
+    },
+    {
+      "id": "LP-2",
+      "cites": "SEC-PROXY-005 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsTest.java::lp14r2_2_aDelegatingPrivateCaFactoryReachesTheGoodBackend",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: status (errors: [com.snoworca.naruserve.proxy.ProxyException]) expected:<200> but was:<502> at ProxyTlsTest.lp14r2_2_aDelegatingPrivateCaFactoryReachesTheGoodBackend(ProxyTlsTest.java:681)",
+      "note": "Fail-closed side of the 32cda82 fix: with the AC-8 DelegatingFactory (base get/setSSLParameters) over the private-CA context, the identification does not read back, so TlsConnector falls to HttpsURLConnection.getDefaultHostnameVerifier(), which rejects every host on the JDK. A correct certificate for localhost therefore never reaches the backend on a JVM; every delegating private-CA factory is unusable there."
+    },
+    {
+      "id": "LP-3",
+      "cites": "SEC-PROXY-005 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsTest.java::lp14r2_3_hostNameCheckStaysOnWithAnEagerHandshakeFactory",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: status (request bytes the backend read: 65) expected:<502> but was:<200> at ProxyTlsTest.lp14r2_3_hostNameCheckStaysOnWithAnEagerHandshakeFactory(ProxyTlsTest.java:696)",
+      "note": "A private-CA factory that calls startHandshake() inside createSocket(plain, host, port, true) and returns the JDK SSLSocket: TlsConnector sets the identification after the handshake already ran, the parameters read back \"HTTPS\", the second startHandshake is a no-op, and the other.example certificate is accepted for target localhost."
+    },
+    {
+      "id": "LP-4",
+      "cites": "SEC-PROXY-005 AC-8",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsTest.java::lp14r2_4_hostNameCheckStaysOnWithAParameterCachingDelegate",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: status (request bytes the backend read: 65) expected:<502> but was:<200> at ProxyTlsTest.lp14r2_4_hostNameCheckStaysOnWithAParameterCachingDelegate(ProxyTlsTest.java:716)",
+      "note": "Variant of r1 LP-2 that defeats the read-back of 32cda82: a delegating SSLSocket that keeps the SSLParameters it was given (so getSSLParameters reads back \"HTTPS\") while the base setSSLParameters applies only protocols/cipher suites to the real socket. Host name verification ends up off with no option. Root cause shared with LP-1/LP-3: on the JDK the proxy never checks the session's peer certificate against the host itself."
+    },
+    {
+      "id": "LP-5",
+      "cites": "PRD-148",
+      "test": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java::lp14r2_5_proxyMainReferencingTheAuthInternalPackageFails",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: [> Task :NaruServe-proxy:checkClassReferences ... BUILD SUCCESSFUL in 5s] expected:<FAILED> but was:<SUCCESS> at BuildChecksTest.lp14r2_5_proxyMainReferencingTheAuthInternalPackageFails(BuildChecksTest.java:667)",
+      "note": "A NaruServe-proxy main class referencing com.snoworca.naruserve.utils.auth.internal.Base64Url (public class of an internal package of NaruServe-api) passes checkClassReferences: the proxy prefix list forbids only com/snoworca/naruserve/internal/ and spi/. PRD-148 says the proxy does not depend on internal packages; CON-BUILD-020 AC-4 names only the two top-level prefixes, so this is a gap between PRD-148 and the SRS wording rather than an AC-4 violation."
+    },
+    {
+      "id": "LP-6",
+      "cites": "OPS-BUILD-004 AC-2",
+      "test": "./gradlew -PtinyHttpdFromMaven=true build --continue (at 6799d73, no added tests)",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "BUILD SUCCESSFUL in 5m 44s; 4958 test cases across module and root test results, 0 failures, 0 skipped. Runtime classpath of :NaruServe-proxy is project :NaruServe-api only and the generated POM declares naruserve-api only (CON-BUILD-020 / PRD-148 dependency side green). The existing handshake-timeout CONNECT_TIMEOUT, SNI, AC-5 watchdog and IP-literal tests pass (20 pre-existing ProxyTlsTest cases green); no EADDRNOTAVAIL."
+    }
+  ],
+  "summary": {"tests_written": 5, "kept": 5}
+}
