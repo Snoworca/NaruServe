@@ -1,0 +1,60 @@
+{
+  "lane_cap": 4,
+  "depends": {
+    "2026-11-14.NaruServe.naruserve-proxy-wave-14": [],
+    "2026-11-14.NaruServe.naruserve-proxy-wave-15": []
+  },
+  "declaration": "docs/research/naruserve-proxy/waves/waves.json",
+  "declaration_digests": {
+    "2026-11-14.NaruServe.naruserve-proxy-wave-14": "163801d6bb949304fa249713998fcbb1904ab41618b02e6fe60a73575c472d34",
+    "2026-11-14.NaruServe.naruserve-proxy-wave-15": "62cdeb8f7fef6b3eb3e3275f511cdabe1e4f5c85d26700ad063928dea3e7795d"
+  },
+  "sds_digests": {},
+  "lane_count": 2,
+  "stage_count": 1,
+  "lanes": [
+    {
+      "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-14",
+      "stage": 1,
+      "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-14",
+      "sds": null,
+      "writeSet": [
+        "CLAUDE.md",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyException.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TlsConnector.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExceptionTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsTest.java",
+        "build.gradle",
+        "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+        "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java"
+      ]
+    },
+    {
+      "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-15",
+      "stage": 1,
+      "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-15",
+      "sds": null,
+      "writeSet": [
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/LocationRewriter.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LocationRewriterTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyFixedResponseHeadersTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyLocationRewriteTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyMethodTest.java"
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "index": 1,
+      "laneIds": [
+        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-14",
+        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-15"
+      ]
+    }
+  ],
+  "conflicts": []
+}
