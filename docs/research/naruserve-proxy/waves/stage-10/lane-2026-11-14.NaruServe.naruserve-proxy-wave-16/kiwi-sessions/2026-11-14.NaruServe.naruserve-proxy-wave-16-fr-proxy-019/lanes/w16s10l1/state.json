@@ -1,0 +1,5 @@
+{"schema_version":"1.0.0","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-16-fr-proxy-019","sds_path":null,"target":"0.12.0","req_ids":["FR-PROXY-019"],"spawn_context":"pm-child","phase":"done","failed":false,"next_resume_hint":null,
+"red_evidence":{"command":"./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*ProxyConcurrencyTest' --tests '*ProxyCheckOrderTest'","exit_code":1,"captured_failure":"compile: cannot find symbol concurrencyCounter()/ConcurrencyLimiter (11 errors); behavioral run with accessor lines removed: 17 tests, 5 failed - AC1/AC2/AC3/AC8 'was not answered within 10s' and FR-PROXY-010 AC6 clean contrast expected 503","timestamp":"2026-11-18T07:25:00Z"},
+"green_evidence":{"command":"./gradlew -PtinyHttpdFromMaven=true build","exit_code":0,"timestamp":"2026-11-18T07:50:00Z"},
+"regression_summary":{"scope":"full","passed":4498,"failed":0,"regressed_files":[]},
+"commits":["63721a7","c3fc49f"]}

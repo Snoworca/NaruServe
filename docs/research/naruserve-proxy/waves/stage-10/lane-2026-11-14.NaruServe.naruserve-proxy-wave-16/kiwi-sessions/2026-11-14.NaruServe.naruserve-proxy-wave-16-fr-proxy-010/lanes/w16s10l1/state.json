@@ -1,0 +1,275 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-16-fr-proxy-010",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-010"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "started_at": "2026-11-18T07:22:27Z",
+ "updated_at": "2026-11-18T07:22:27Z",
+ "frozen_at": null,
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "loop_counters": {
+  "phase1": {
+   "kept": 0,
+   "dropped": 3,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 0,
+   "dropped": 0,
+   "rounds": 0
+  }
+ },
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests com.snoworca.naruserve.proxy.ProxyCheckOrderTest",
+  "exit_code": 0,
+  "captured_failure": "none on base: all ACs already hold (no implementation change). Mutation red: framing-before-path/header -> AC-3/AC-4 got 501; 405 message 'no' -> AC-7 message not null; upgrade after path -> AC-1 got 400; bodyStream before framing -> AC-5 got 413/500",
+  "timestamp": "2026-11-18T07:22:27Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "timestamp": "2026-11-18T07:22:27Z"
+ },
+ "regression_baseline": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "failed_test_ids": [],
+  "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4",
+  "source": "pinned"
+ },
+ "regression_summary": {
+  "last_run_at": "2026-11-18T07:22:27Z",
+  "scope": "full",
+  "passed": 4485,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "mcp_call_log": [
+  {
+   "tool": "update_status",
+   "args": {
+    "id": "FR-PROXY-010",
+    "status": "in_progress"
+   },
+   "args_hash": "67b115450af1c140cc30a21e0450f77f8dd2e82b",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-18T07:22:27Z",
+   "req": "FR-PROXY-010",
+   "ts": "2026-11-18T07:22:27Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:118",
+    "covers": "AC-1",
+    "notes": "FR-PROXY-010 AC-1 fr_PROXY_010_AC1_anUpgradeToAnEmptySegmentPathGoesToNextBeforeThePathCheck PASS (full build 4485 tests 0 failures)"
+   },
+   "args_hash": "c83835530db6ab98db68eb86fa1fb8852dcb0c10",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-18T07:22:27Z",
+   "req": "FR-PROXY-010",
+   "ts": "2026-11-18T07:22:27Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:138",
+    "covers": "AC-2",
+    "notes": "FR-PROXY-010 AC-2 fr_PROXY_010_AC2_traceToADotDotPathIs405BeforeThePathCheck PASS (full build 4485 tests 0 failures)"
+   },
+   "args_hash": "c1094c806b65525e4a397156e2890063f8ab1713",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-18T07:22:27Z",
+   "req": "FR-PROXY-010",
+   "ts": "2026-11-18T07:22:27Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:157",
+    "covers": "AC-3",
+    "notes": "FR-PROXY-010 AC-3 fr_PROXY_010_AC3_anEncodedDotDotPathWithAnUnsupportedCodingIs400BeforeTheFramingCheck PASS (full build 4485 tests 0 failures)"
+   },
+   "args_hash": "481488d89cbd7b79499eaaabc286c214fd4abd82",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-18T07:22:27Z",
+   "req": "FR-PROXY-010",
+   "ts": "2026-11-18T07:22:27Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:178",
+    "covers": "AC-4",
+    "notes": "FR-PROXY-010 AC-4 fr_PROXY_010_AC4_aNulHeaderValueWithAnUnsupportedCodingIs400BeforeTheFramingCheck PASS (full build 4485 tests 0 failures)"
+   },
+   "args_hash": "cf5d0f8542b7db82d7664835d024e7a07f2f6c65",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-18T07:22:27Z",
+   "req": "FR-PROXY-010",
+   "ts": "2026-11-18T07:22:27Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:199",
+    "covers": "AC-5",
+    "notes": "FR-PROXY-010 AC-5 fr_PROXY_010_AC5_conflictingLengthsOverTheBodyLimitAre400BeforeBodyStream PASS (full build 4485 tests 0 failures)"
+   },
+   "args_hash": "f3f6cf2fe88809ce4421c12e404eefb04ffe0bf5",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-18T07:22:27Z",
+   "req": "FR-PROXY-010",
+   "ts": "2026-11-18T07:22:27Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:216",
+    "covers": "AC-5",
+    "notes": "FR-PROXY-010 AC-5 fr_PROXY_010_AC5_anUnsupportedCodingOnABodyAlreadyReadIs501BeforeBodyStream PASS (full build 4485 tests 0 failures)"
+   },
+   "args_hash": "38a0a46b22f838a53e1a6b7d34f430090edca5c8",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-18T07:22:27Z",
+   "req": "FR-PROXY-010",
+   "ts": "2026-11-18T07:22:27Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:238",
+    "covers": "AC-6",
+    "notes": "FR-PROXY-010 AC-6 fr_PROXY_010_AC6_bodyStreamAnswersComeBeforeTheConcurrencySlot PASS (full build 4485 tests 0 failures); forward guard - concurrency slot lands with FR-PROXY-019"
+   },
+   "args_hash": "0e7bc4f07a7141b580ab3d23d08dd5a6f42e8b41",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-18T07:22:27Z",
+   "req": "FR-PROXY-010",
+   "ts": "2026-11-18T07:22:27Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:317",
+    "covers": "AC-7",
+    "notes": "FR-PROXY-010 AC-7 fr_PROXY_010_AC7_ownAnswersReachOnErrorAsPlainHttpExceptionsWithANullMessage PASS (full build 4485 tests 0 failures)"
+   },
+   "args_hash": "36c8bf863a57a61e6d859ac34029bc1345a34db8",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-18T07:22:27Z",
+   "req": "FR-PROXY-010",
+   "ts": "2026-11-18T07:22:27Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:359",
+    "covers": "AC-7",
+    "notes": "FR-PROXY-010 AC-7 fr_PROXY_010_AC7_withoutOnErrorTheDefaultResponseCarriesTheReasonPhrase PASS (full build 4485 tests 0 failures)"
+   },
+   "args_hash": "2e92a7e804f0bbf9a08a44c4865e658ccbb522a9",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-18T07:22:27Z",
+   "req": "FR-PROXY-010",
+   "ts": "2026-11-18T07:22:27Z",
+   "deferred": true
+  },
+  {
+   "tool": "update_status",
+   "args": {
+    "id": "FR-PROXY-010",
+    "status": "implemented"
+   },
+   "args_hash": "bf3ce9725bba9f8b7319555354caca0b024e8cdc",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-18T07:22:27Z",
+   "req": "FR-PROXY-010",
+   "ts": "2026-11-18T07:22:27Z",
+   "deferred": true
+  },
+  {
+   "tool": "add_completed_work",
+   "args": {
+    "date": "2026-11-18",
+    "summary": "[req] FR-PROXY-010 - proxy check order and plain HttpException answers; base Proxy.handle order already held, tests added in ProxyCheckOrderTest. green=PASS (9/9). AC: FR-PROXY-010 AC-1..7 PASS (AC-6 forward guard until FR-PROXY-019)",
+    "requirementIds": [
+     "FR-PROXY-010"
+    ],
+    "target": "0.12.0",
+    "scope": "PROXY"
+   },
+   "args_hash": "cc8c893e21d02bb3f2b3f198309c50131aa42e5d",
+   "ok": null,
+   "response_hash": null,
+   "dry_run": false,
+   "called_at": "2026-11-18T07:22:27Z",
+   "req": "FR-PROXY-010",
+   "ts": "2026-11-18T07:22:27Z",
+   "deferred": true
+  }
+ ],
+ "pending_mutations": []
+}

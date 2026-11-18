@@ -1,0 +1,44 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-16-rel-proxy-001",
+ "base_sha": "c3fc49f2845ed805059164b6c1524aa15f83a33d",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "REL-PROXY-001"
+ ],
+ "req_filter": [
+  "REL-PROXY-001"
+ ],
+ "write_set": [],
+ "started_at": "2026-11-18T07:39:59Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "changed": true,
+  "commit_sha": "869dcd7",
+  "commits": [
+   {
+    "req_id": "REL-PROXY-001",
+    "test_sha": "d6bb7a6",
+    "implementation_sha": "cd8ea3d"
+   }
+  ],
+  "questions": [],
+  "result_summary": "4508 tests 0 failures; red: compile + 3 AC-3 failures"
+ },
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-18T07:39:59Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "REL-PROXY-001": "evolving"
+  },
+  "status_snapshot": {
+   "REL-PROXY-001": "planned"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-16-rel-proxy-001/lanes/w16s10l1/reports/pm-final.md"
+}

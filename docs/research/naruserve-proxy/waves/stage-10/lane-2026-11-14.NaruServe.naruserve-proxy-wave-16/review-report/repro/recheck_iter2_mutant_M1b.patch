@@ -1,0 +1,29 @@
+diff --git a/NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java b/NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java
+index c549ea7..e4d4758 100644
+--- a/NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java
++++ b/NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java
+@@ -532,7 +532,7 @@ public final class Proxy implements Middleware {
+             res.onAbort(new Runnable() {
+                 @Override
+                 public void run() {
+-                    exchange.release();
++                    exchange.releaseKeepingSocket();
+                 }
+             });
+         } catch (UnsupportedOperationException noListeners) {
+diff --git a/NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java b/NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java
+index 760ac41..1cd67f9 100644
+--- a/NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java
++++ b/NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java
+@@ -117,6 +117,11 @@ final class ProxyExchange {
+         }
+     }
+ 
++    void releaseKeepingSocket() {
++        socket = null;
++        release();
++    }
++
+     private static void closeQuietly(Socket s) {
+         try {
+             s.close();

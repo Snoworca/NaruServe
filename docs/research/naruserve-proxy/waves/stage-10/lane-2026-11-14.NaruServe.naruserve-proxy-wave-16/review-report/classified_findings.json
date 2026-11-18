@@ -1,0 +1,77 @@
+{
+  "immediate_fix": [
+    {
+      "id": "FND-001",
+      "rationale": "Missing AC evidence in the guarantee scope (REL-PROXY-001 AC-3). The requirement says the slot, reservation and backend socket are released 'at the first of' close() and the onAbort notification, and AC-3 needs a unit test showing that each ordering closes the backend socket. In ProxyExchangeTest.driveRelayedEnd (lines 238-284), CLOSE_AFTER_ABORT awaits backend.closedByProxy only after both abortListener.run() and relayed.close(). RelayedBodyStream.close() calls super.close(), which reaches Proxy.SocketBodyStream and closes the socket by itself, so the test cannot tell whether the abort release closed it. Execution confirms this: mutant M1b (the abort listener releases without closing the socket) passes all 417 existing proxy tests, and the review repro fails on it ('backend observed close within 3s after abort: false'). The production code is correct today, but there is a real call path: an adapter-reported disconnect or res.abort() while the relay copy is blocked on a quiet backend. On that path the abort listener is the only thing that closes the socket; DefaultResponse.abort leaves the input of a running copy open. Without this test a regression would keep backend connections open up to readTimeout after the slot was freed, so live connections could exceed maxConcurrent. The fix is test-only and stays inside the write set.",
+      "estimated_complexity": "low",
+      "is_behavioral": false,
+      "tags": ["test-gap", "mutation-survivor", "REL-PROXY-001", "AC-3"],
+      "fix_hypothesis": "In ProxyExchangeTest.driveRelayedEnd, case CLOSE_AFTER_ABORT: right after abortListener.run() and before relayed.close(), assert counter == 0, reservation.cancels == 1 and await(order + \": the abort notification alone closed the backend connection\", backend.closedByProxy). Then close relayed and keep the final assertions (still 0, still 1 cancel). Optionally add the repro as a test: a HEAD_THEN_HOLD backend, a real relay copy blocked on a quiet backend, and res.abort(null) or the captured listener alone, asserting the backend sees the close within a short bound and the counter is 0. Base it on .kiwi/analysis/kiwi-review-fix-loop-2026-11-18.naruserve.self-w16s10/repro/ReviewReproAbortClosesBackendTest.java and put it in ProxyExchangeTest or ProxyLifetimeSocketTest. Confirm the new assertion fails on mutant M1b (ProxyExchange.releaseKeepingSocket used by the listener) and passes on HEAD. Do not change production code."
+    }
+  ],
+  "declared_limit": [],
+  "kept_tiers": [
+    {
+      "id": "FND-001",
+      "tier": "block",
+      "family": "rel-proxy-001-abort-socket-close-evidence",
+      "introduced_by_round": null,
+      "family_action": null
+    }
+  ],
+  "discussion_needed": [],
+  "rejected": [
+    {
+      "id": "FND-002",
+      "rationale": "Reviewer drop upheld. Proxy.forward registers releaseOnAbort before res.relay, and the core runs a listener registered after an abort at once. Swapping the order therefore changes nothing anyone can observe, and no AC fixes the order. No execution evidence of a blocking condition.",
+      "rejection_category": "dropped_no_observable_effect"
+    },
+    {
+      "id": "FND-003",
+      "rationale": "Reviewer drop upheld. The only installed watchdog is ProxyExchange.NO_WATCHDOG, whose Reservation.cancel() is empty, so a throwing cancel() cannot happen on any real path in this wave. The real total-timeout scheduler is wave-18 (FR-PROXY-015/017), declared out of scope. That wave should guard cancel() or close outgoing.body in its own finally.",
+      "rejection_category": "dropped_out_of_scope_later_wave"
+    },
+    {
+      "id": "FND-004",
+      "rationale": "Reviewer drop upheld. Between a successful tryAcquire and forward's try, the only code is 'new ProxyExchange(limiter)' and the call itself. The slot could leak only on an Error such as OOM or StackOverflowError, and there is no realistic path or execution evidence for that.",
+      "rejection_category": "dropped_theoretical"
+    },
+    {
+      "id": "FND-005",
+      "rationale": "Reviewer drop upheld. When an abort lands between onAbort registration and res.relay, the exchange is still released exactly once, so REL-PROXY-001 holds. The IllegalStateException from relay on an aborted response is existing core behavior, and no AC says what error a client that has gone away should see. Nothing is lost.",
+      "rejection_category": "dropped_benign_race"
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-001",
+      "decision": "dismissed",
+      "reason": "This would restructure the established immutable Options pattern: 15 final fields, with hiddenResponseNames and fixedResponseHeaders computed in the constructor, and 14 withX copy methods. A mutable builder copy touches every option path in a 1100-line class. That is too much risk and churn for a review-fix round, and the change does not belong to this wave's requirements (FR-PROXY-010/019, REL-PROXY-001).",
+      "fix_guidance": ""
+    },
+    {
+      "id": "CC-002",
+      "decision": "accepted",
+      "reason": "Valid least-astonishment issue that is local to Proxy.java. The option methods silently reset a watchdog set by withWatchdog, so p.withWatchdog(w).retries(0) drops w. Carrying the watchdog through matches how the limiter is already shared, and no public signature changes. The production watchdog is always NO_WATCHDOG, so runtime behavior stays the same.",
+      "fix_guidance": "In Proxy.java, change every option method's 'new Proxy(target, options.withX(...))' (lines ~115-239) to 'new Proxy(target, options.withX(...), watchdog)'. Keep Proxy.to using NO_WATCHDOG, either through the 2-arg constructor or by passing ProxyExchange.NO_WATCHDOG explicitly and removing the 2-arg constructor if it becomes unused. Update the withWatchdog javadoc: drop 'so a test calls this last' and say derived proxies keep the watchdog. Leave public signatures and tests as they are, apart from any test comment that relies on call-last."
+    },
+    {
+      "id": "CC-003",
+      "decision": "accepted",
+      "reason": "Valid: forward mixes the connect/write phase, response-head mapping and relay lifetime. A private method extraction inside Proxy.java is low risk and does not touch the public API. Splitting the file is not part of this.",
+      "fix_guidance": "Extract the response-header phase of Proxy.forward into one private method in Proxy.java, for example 'private void copyResponseHead(Request req, Response res, ResponseHead head)': res.status(head.status), ResponseHeaderCopier.copy, the LocationRewriter.apply under options.rewriteLocation, and the fixedResponseHeaders loop. Keep the statement order exactly as it is (copy, then Location rewrite, then .responseHeader values; FR-PROXY-012) and keep the existing comments and @req tags. Leave the relay and exchange lifetime code (RelayedBodyStream, releaseOnAbort, res.relay, relayed flag, finally) in forward. Do not split Proxy.java into new files."
+    },
+    {
+      "id": "CC-004",
+      "decision": "dismissed",
+      "reason": "Not a real duplication. RELEASED is a deliberate identity sentinel and its javadoc already says so ('Stands in for the reservation once release took it, so a later watch cancels at once'). Keeping it distinct from NO_RESERVATION makes the release state clear, and merging them would only hide that.",
+      "fix_guidance": ""
+    },
+    {
+      "id": "CC-005",
+      "decision": "dismissed",
+      "reason": "Consolidating the four raw-socket backends would need a shared fixture. RawBackend is already its own file, test/java/.../RawBackend.java, which is outside the lane write set, and a new shared helper file would also be outside it. The backends also differ on purpose in their modes (HEAD_THEN_HOLD, DRIP/RST, held accept and so on). Large test churn would carry regression risk with no benefit to the requirements.",
+      "fix_guidance": ""
+    }
+  ]
+}

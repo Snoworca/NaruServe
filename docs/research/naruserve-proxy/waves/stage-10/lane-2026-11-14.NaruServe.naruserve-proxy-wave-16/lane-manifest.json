@@ -1,0 +1,133 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-16",
+ "wave": "wave-16",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-16",
+ "base_sha": "1f4974b3bff16141ff9e535df475819316421cd8",
+ "head_sha": "9acf2114382fa93e9122f2d7a5f2673de3f4680b",
+ "commits": [
+  {
+   "sha": "e1fa9d5350603ed52010331bb01c7778a068aa99",
+   "subject": "test(proxy): pin the proxy check order and its plain HttpException answers",
+   "req": "FR-PROXY-010",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "63721a7055e20395010113262605403c488f3d30",
+   "subject": "test(proxy): pin the shared concurrency counter and its 503 refusal",
+   "req": "FR-PROXY-019",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "c3fc49f2845ed805059164b6c1524aa15f83a33d",
+   "subject": "feat(proxy): limit in-flight requests with a counter shared by derived proxies",
+   "req": "FR-PROXY-019",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "d6bb7a648b1af418acfca7c33ffd6a1a6b2b840f",
+   "subject": "test(proxy): pin the request lifetime of the slot, watchdog and backend socket",
+   "req": "REL-PROXY-001",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "cd8ea3d81f726ce47017fe061e545d80326681e7",
+   "subject": "feat(proxy): end each request once on relay close or abort and add a watchdog seam",
+   "req": "REL-PROXY-001",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "5bc6d7d06c4c1282db7262946fcb211f6e484149",
+   "subject": "test(proxy): wait for the backend to count proxy connections",
+   "req": "REL-PROXY-001",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "869dcd71748a99efea92291baba0aa0f25cf8d71",
+   "subject": "docs(proxy): state that the abort notification can release a relayed exchange first",
+   "req": "REL-PROXY-001",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "9acf2114382fa93e9122f2d7a5f2673de3f4680b",
+   "subject": "fix(proxy): prove the abort alone closes the backend socket and keep the watchdog seam",
+   "req": "REL-PROXY-001",
+   "kind": "review",
+   "missing_trailers": false
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "FR-PROXY-010",
+   "FR-PROXY-019",
+   "REL-PROXY-001"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-16/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-16-fr-proxy-010/lanes/w16s10l1/",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-16-fr-proxy-019/lanes/w16s10l1/",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-16-rel-proxy-001/lanes/w16s10l1/",
+  ".kiwi/analysis/kiwi-review-fix-loop-2026-11-18.naruserve.self-w16s10/report.md"
+ ],
+ "red_evidence": [
+  {
+   "req": "FR-PROXY-010",
+   "test": "ProxyCheckOrderTest",
+   "red_output": "No red at base: every AC already held. Each test was shown red under temporary reordering mutations (framing first -> AC-3/AC-4 501 instead of 400; non-null 405 message -> AC-7; upgrade after path check -> AC-1 400; bodyStream before framing -> AC-5 413/500). AC-6 was vacuously true until the FR-PROXY-019 slot existed; the clean-request-503 contrast added in 63721a7 was red before c3fc49f."
+  },
+  {
+   "req": "FR-PROXY-019",
+   "test": "ProxyConcurrencyTest",
+   "red_output": "At 63721a7 the tests did not compile (11 errors: concurrencyCounter()/ConcurrencyLimiter missing). With only the accessor lines removed, 5 of 17 failed: AC-1/2/3/8 'was not answered within 10s', and FR-PROXY-010 AC-6's clean contrast request expected 503. AC-4/5/6/7 'every request reaches the backend' passed before the change (no limit existed yet)."
+  },
+  {
+   "req": "REL-PROXY-001",
+   "test": "ProxyExchangeTest, ProxyLifetimeSocketTest",
+   "red_output": "At d6bb7a6 ProxyExchangeTest did not compile (9 errors: ProxyExchange.Watchdog/Reservation, Proxy.withWatchdog missing). With only the seam added, 3 of 8 still failed: all three AC-3 orders, 'the proxy registered an onAbort listener before res.relay'. AC-1/AC-2 socket tests and the AC-4/AC-5 counter checks held at base; their watchdog checks are new."
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "detail": "3 rounds, 7 findings: 1 immediate_fix (FND-001, AC-3 abort-alone socket close untested; fixed with tests, mutation-checked), 1 declared_limit (FND-101 test-helper thread scan isolation, no real call path), 5 rejected; residual 0; check_review_round CONTINUE, PASS, PASS; coverage anchors passed every round; clean-code 2 rounds: 4 fixed, 3 dismissed, 0 unresolved. Committed as 9acf211."
+ },
+ "intentionally_empty": [
+  {
+   "req": "FR-PROXY-010",
+   "detail": "All 7 acceptance criteria held at base 1f4974b (Proxy.handle already ran the D-050 order and threw plain HttpException 400/405/501 with a null message); test-only commit e1fa9d5, no implementation commit. Evidence: ProxyCheckOrderTest 9/9 green, each test red under a temporary reordering mutation."
+  }
+ ],
+ "design_refuted": [],
+ "srs_deltas": [],
+ "declared_limits": [
+  "The real total-timeout watchdog (JVM-wide lazy scheduler, D-066) and TOTAL_TIMEOUT belong to wave-18; only the package-private ProxyExchange.Watchdog/Reservation seam (no-op default) exists, reserved right after the slot and cancelled exactly once on release.",
+  "REL-PROXY-001 AC-2/AC-4: at this base a read timeout and a refused connect reach onError as HttpException(502), not ProxyException (READ_TIMEOUT/CONNECT_FAILED classification is wave-18); AC-2 tests accept either form, AC-4's ProxyException path uses a failed TLS handshake.",
+  "Core DefaultResponse.runTransfer calls ex.finish() before closing the relayed stream, so the slot outlives the last client byte briefly; fixing needs NaruServe-api (outside the write set). Tests poll the counter to 0.",
+  "TinyHttpd does not report an idle client disconnect while the relay is blocked reading a quiet backend; the slot is then held until the read timeout. Proxy documentation (wave-21) should state it.",
+  "FND-101 (record): ProxyExchangeTest.awaitBlockedRelayCopy scans every JVM thread for a blocked relay copy; it could fail falsely only if another test leaves a relay blocked (none does)."
+ ],
+ "out_of_lease_paths": [],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "check_test_sufficiency (workspaceRoot = worktree) for FR-PROXY-010, FR-PROXY-019, REL-PROXY-001: 22/22 ACs cited (7/9/6) in ProxyCheckOrderTest, ProxyConcurrencyTest, ProxyExchangeTest, ProxyLifetimeSocketTest; no fill tests needed."
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4511,
+  "failures": 0,
+  "exit_code": 0,
+  "detail": "integration-head baseline 4476/0; +35 new tests (9+13+10+3); the pinned 3829 baseline tests all pass."
+ },
+ "bootstrap": "not-applicable",
+ "execution_notes": "The Agent tool in this session only spawned asynchronous subagents (no foreground option took effect). The worker never ended its turn while waiting: it waited for each kiwi-coder run and the review-loop runner in the foreground by polling their transcripts' modification time and final status marker in under-180 s Bash calls. kiwi-pm's procedure was followed directly for FR-PROXY-019 and REL-PROXY-001 using the skill text loaded for FR-PROXY-010 (same args, separate session dirs). The coder subagents for FR-PROXY-019 and REL-PROXY-001 made their own test-then-implementation commits under the same trailers. Their long builds were moved to the background by the harness and were awaited the same way. All SRS mutations went only to the deferred queue (39 lines)."
+}

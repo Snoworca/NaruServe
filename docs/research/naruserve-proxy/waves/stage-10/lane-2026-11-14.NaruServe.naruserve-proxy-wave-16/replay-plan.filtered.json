@@ -1,0 +1,474 @@
+{
+ "ok": true,
+ "violations": [],
+ "calls": [
+  {
+   "tool": "update_status",
+   "args": {
+    "id": "FR-PROXY-010",
+    "status": "in_progress"
+   },
+   "argsHash": "67b115450af1c140cc30a21e0450f77f8dd2e82b",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:118",
+    "covers": "AC-1",
+    "notes": "FR-PROXY-010 AC-1 fr_PROXY_010_AC1_anUpgradeToAnEmptySegmentPathGoesToNextBeforeThePathCheck PASS (full build 4485 tests 0 failures)"
+   },
+   "argsHash": "c83835530db6ab98db68eb86fa1fb8852dcb0c10",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:138",
+    "covers": "AC-2",
+    "notes": "FR-PROXY-010 AC-2 fr_PROXY_010_AC2_traceToADotDotPathIs405BeforeThePathCheck PASS (full build 4485 tests 0 failures)"
+   },
+   "argsHash": "c1094c806b65525e4a397156e2890063f8ab1713",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:157",
+    "covers": "AC-3",
+    "notes": "FR-PROXY-010 AC-3 fr_PROXY_010_AC3_anEncodedDotDotPathWithAnUnsupportedCodingIs400BeforeTheFramingCheck PASS (full build 4485 tests 0 failures)"
+   },
+   "argsHash": "481488d89cbd7b79499eaaabc286c214fd4abd82",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:178",
+    "covers": "AC-4",
+    "notes": "FR-PROXY-010 AC-4 fr_PROXY_010_AC4_aNulHeaderValueWithAnUnsupportedCodingIs400BeforeTheFramingCheck PASS (full build 4485 tests 0 failures)"
+   },
+   "argsHash": "cf5d0f8542b7db82d7664835d024e7a07f2f6c65",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:199",
+    "covers": "AC-5",
+    "notes": "FR-PROXY-010 AC-5 fr_PROXY_010_AC5_conflictingLengthsOverTheBodyLimitAre400BeforeBodyStream PASS (full build 4485 tests 0 failures)"
+   },
+   "argsHash": "f3f6cf2fe88809ce4421c12e404eefb04ffe0bf5",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:216",
+    "covers": "AC-5",
+    "notes": "FR-PROXY-010 AC-5 fr_PROXY_010_AC5_anUnsupportedCodingOnABodyAlreadyReadIs501BeforeBodyStream PASS (full build 4485 tests 0 failures)"
+   },
+   "argsHash": "38a0a46b22f838a53e1a6b7d34f430090edca5c8",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:238",
+    "covers": "AC-6",
+    "notes": "FR-PROXY-010 AC-6 fr_PROXY_010_AC6_bodyStreamAnswersComeBeforeTheConcurrencySlot PASS (full build 4485 tests 0 failures); forward guard - concurrency slot lands with FR-PROXY-019"
+   },
+   "argsHash": "0e7bc4f07a7141b580ab3d23d08dd5a6f42e8b41",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:317",
+    "covers": "AC-7",
+    "notes": "FR-PROXY-010 AC-7 fr_PROXY_010_AC7_ownAnswersReachOnErrorAsPlainHttpExceptionsWithANullMessage PASS (full build 4485 tests 0 failures)"
+   },
+   "argsHash": "36c8bf863a57a61e6d859ac34029bc1345a34db8",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java:359",
+    "covers": "AC-7",
+    "notes": "FR-PROXY-010 AC-7 fr_PROXY_010_AC7_withoutOnErrorTheDefaultResponseCarriesTheReasonPhrase PASS (full build 4485 tests 0 failures)"
+   },
+   "argsHash": "2e92a7e804f0bbf9a08a44c4865e658ccbb522a9",
+   "action": "apply"
+  },
+  {
+   "tool": "update_status",
+   "args": {
+    "id": "FR-PROXY-010",
+    "status": "implemented"
+   },
+   "argsHash": "bf3ce9725bba9f8b7319555354caca0b024e8cdc",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-019",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java:173",
+    "covers": "AC-1",
+    "notes": "FR-PROXY-019 AC-1 fr_PROXY_019_AC1_theThirdOfThreeDelayedRequestsIsRefusedAtOnce PASS (full build 4498 tests 0 failures)"
+   },
+   "argsHash": "953775435cef0b14342bcb9dbfe37763b6e7b16d",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-019",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java:195",
+    "covers": "AC-2",
+    "notes": "FR-PROXY-019 AC-2 fr_PROXY_019_AC2_slotsAreHeldUntilTheRelayedBodiesEnd PASS (full build 4498 tests 0 failures)"
+   },
+   "argsHash": "60207009ea20bf941d663c0c9326e01cb580e585",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-019",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java:243",
+    "covers": "AC-3",
+    "notes": "FR-PROXY-019 AC-3 fr_PROXY_019_AC3_aDerivedProxySharesTheCounter PASS (full build 4498 tests 0 failures)"
+   },
+   "argsHash": "61db1a9ed4260e4ca65e8d2bc9a48a22a63208e7",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-019",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java:266",
+    "covers": "AC-4",
+    "notes": "FR-PROXY-019 AC-4 fr_PROXY_019_AC4_separatelyCreatedProxiesDoNotShareACounter PASS (full build 4498 tests 0 failures)"
+   },
+   "argsHash": "e79f5c8b1599f8a5b7199903b5b414422d9986c3",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-019",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java:292",
+    "covers": "AC-5",
+    "notes": "FR-PROXY-019 AC-5 fr_PROXY_019_AC5_maxConcurrentOnADerivedProxyCreatesANewCounter PASS (full build 4498 tests 0 failures)"
+   },
+   "argsHash": "36e39630a8746cb2c5ae4043f61263557ed96ec4",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-019",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java:309",
+    "covers": "AC-6",
+    "notes": "FR-PROXY-019 AC-6 fr_PROXY_019_AC6_anUnlimitedMountDoesNotCountAgainstALimitedOne PASS (full build 4498 tests 0 failures)"
+   },
+   "argsHash": "878066de7408ab497ad92b88d962d522be5fdd98",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-019",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java:332",
+    "covers": "AC-7",
+    "notes": "FR-PROXY-019 AC-7 fr_PROXY_019_AC7_theDefaultHasNoLimit PASS (full build 4498 tests 0 failures)"
+   },
+   "argsHash": "507e69c01c9f773536e9cc242be07bab47cb979a",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-019",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java:354",
+    "covers": "AC-8",
+    "notes": "FR-PROXY-019 AC-8 fr_PROXY_019_AC8_theCounterIsSharedAcrossApps PASS (full build 4498 tests 0 failures)"
+   },
+   "argsHash": "627288b846a1b8f80ed3c5e56211f2b68ec2fb63",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-019",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java:377",
+    "covers": "AC-9",
+    "notes": "FR-PROXY-019 AC-9 fr_PROXY_019_AC9_aFailedConnectReturnsTheSlot PASS (full build 4498 tests 0 failures)"
+   },
+   "argsHash": "e2fdfb32309f23347c72756a403d9a300335b9ac",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-019",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java:395",
+    "covers": "AC-9",
+    "notes": "FR-PROXY-019 AC-9 fr_PROXY_019_AC9_anUnreadableResponseReturnsTheSlot PASS (full build 4498 tests 0 failures)"
+   },
+   "argsHash": "e09748fc597c0ff881b90864435c3d46149858c6",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-019",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java:414",
+    "covers": "AC-9",
+    "notes": "FR-PROXY-019 AC-9 fr_PROXY_019_AC9_aRefusedRelayReturnsTheSlotOnce PASS (full build 4498 tests 0 failures)"
+   },
+   "argsHash": "9a5b87b52614aaa88d5f20d526dd20a775379455",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-019",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java:471",
+    "covers": "AC-9",
+    "notes": "FR-PROXY-019 AC-9 fr_PROXY_019_AC9_derivedProxiesShareTheCounterInstance PASS (full build 4498 tests 0 failures)"
+   },
+   "argsHash": "05ce98943d43665195eb8644be7a2a9e4de00d20",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "FR-PROXY-019",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java:488",
+    "covers": "AC-9",
+    "notes": "FR-PROXY-019 AC-9 fr_PROXY_019_AC9_theSlotIsTakenAndReturnedWithoutALock PASS (full build 4498 tests 0 failures)"
+   },
+   "argsHash": "d2f79160d7bdce45e8db2626e3c184dcf07a2ea0",
+   "action": "apply"
+  },
+  {
+   "tool": "update_status",
+   "args": {
+    "id": "FR-PROXY-019",
+    "status": "implemented"
+   },
+   "argsHash": "ae628cf74d92c9d0a46a2e79823eba1360fd2495",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "REL-PROXY-001",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyLifetimeSocketTest.java:67",
+    "covers": "AC-1",
+    "notes": "REL-PROXY-001 AC-1 rel_PROXY_001_AC1_aClientDisconnectDuringTheRelayClosesTheBackendAndReturnsTheSlot PASS (full build 4508 tests 0 failures)"
+   },
+   "argsHash": "7cbbde11a3667208c427e90f514c2c8a699c4160",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "REL-PROXY-001",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyLifetimeSocketTest.java:111",
+    "covers": "AC-2",
+    "notes": "REL-PROXY-001 AC-2 rel_PROXY_001_AC2_failedRequestsNeverLeakASlot PASS (full build 4508 tests 0 failures)"
+   },
+   "argsHash": "57c69d20895615bcef0dd62f1941c1504702f582",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "REL-PROXY-001",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java:218",
+    "covers": "AC-3",
+    "notes": "REL-PROXY-001 AC-3 rel_PROXY_001_AC3_closingTheRelayedStreamTwiceEndsTheExchangeOnce PASS (full build 4508 tests 0 failures)"
+   },
+   "argsHash": "04619c792a8c5368f47a52950e365ff98153d21a",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "REL-PROXY-001",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java:225",
+    "covers": "AC-3",
+    "notes": "REL-PROXY-001 AC-3 rel_PROXY_001_AC3_closeAfterTheAbortNotificationEndsTheExchangeOnce PASS (full build 4508 tests 0 failures)"
+   },
+   "argsHash": "de1d4a4ad6f51437900d941497fd5ca35cdd1763",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "REL-PROXY-001",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java:232",
+    "covers": "AC-3",
+    "notes": "REL-PROXY-001 AC-3 rel_PROXY_001_AC3_theAbortNotificationAfterCloseEndsTheExchangeOnce PASS (full build 4508 tests 0 failures)"
+   },
+   "argsHash": "c9b8fc4c28b84c3764c82225d2b141aa72b47c96",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "REL-PROXY-001",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java:292",
+    "covers": "AC-4",
+    "notes": "REL-PROXY-001 AC-4 rel_PROXY_001_AC4_aProxyExceptionReachesOnErrorAfterTheRelease PASS (full build 4508 tests 0 failures)"
+   },
+   "argsHash": "db4560b9c3e9aa9c6b17f2f9f28550eefa00f128",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "REL-PROXY-001",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java:309",
+    "covers": "AC-4",
+    "notes": "REL-PROXY-001 AC-4 rel_PROXY_001_AC4_a413WhileForwardingReachesOnErrorAfterTheRelease PASS (full build 4508 tests 0 failures)"
+   },
+   "argsHash": "9451fe050ca08878a4d32a2691543513e881dd8a",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "REL-PROXY-001",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java:355",
+    "covers": "AC-5",
+    "notes": "REL-PROXY-001 AC-5 rel_PROXY_001_AC5_refusalsBeforeTheSlotTakeNeitherTheSlotNorTheWatchdog PASS (full build 4508 tests 0 failures)"
+   },
+   "argsHash": "1a70d2e9e66a4615d4b021df914eddf3b5c759fa",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "REL-PROXY-001",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java:403",
+    "covers": "AC-6",
+    "notes": "REL-PROXY-001 AC-6 rel_PROXY_001_AC6_theBackendExchangeRunsOnTheHandleThreadUntilTheRelay PASS (full build 4508 tests 0 failures)"
+   },
+   "argsHash": "94419f103130d1a3c22bdd4fa4a33072bc8e756d",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "REL-PROXY-001",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java:453",
+    "covers": "AC-6",
+    "notes": "REL-PROXY-001 AC-6 rel_PROXY_001_AC6_anExceptionLeavesHandleOnItsThreadWithoutARelay PASS (full build 4508 tests 0 failures)"
+   },
+   "argsHash": "d3cd7309419394520a092021b92e13d3a964f8fe",
+   "action": "apply"
+  },
+  {
+   "tool": "update_status",
+   "args": {
+    "id": "REL-PROXY-001",
+    "status": "implemented"
+   },
+   "argsHash": "c321dec54aa6efd18bdede070eb09552d7eb7a62",
+   "action": "apply"
+  }
+ ],
+ "indexAfter": {
+  "update_status": [
+   "67b115450af1c140cc30a21e0450f77f8dd2e82b",
+   "ae628cf74d92c9d0a46a2e79823eba1360fd2495",
+   "bf3ce9725bba9f8b7319555354caca0b024e8cdc",
+   "c321dec54aa6efd18bdede070eb09552d7eb7a62"
+  ],
+  "add_verification_evidence": [
+   "04619c792a8c5368f47a52950e365ff98153d21a",
+   "05ce98943d43665195eb8644be7a2a9e4de00d20",
+   "0e7bc4f07a7141b580ab3d23d08dd5a6f42e8b41",
+   "1a70d2e9e66a4615d4b021df914eddf3b5c759fa",
+   "2e92a7e804f0bbf9a08a44c4865e658ccbb522a9",
+   "36c8bf863a57a61e6d859ac34029bc1345a34db8",
+   "36e39630a8746cb2c5ae4043f61263557ed96ec4",
+   "38a0a46b22f838a53e1a6b7d34f430090edca5c8",
+   "481488d89cbd7b79499eaaabc286c214fd4abd82",
+   "507e69c01c9f773536e9cc242be07bab47cb979a",
+   "57c69d20895615bcef0dd62f1941c1504702f582",
+   "60207009ea20bf941d663c0c9326e01cb580e585",
+   "61db1a9ed4260e4ca65e8d2bc9a48a22a63208e7",
+   "627288b846a1b8f80ed3c5e56211f2b68ec2fb63",
+   "7cbbde11a3667208c427e90f514c2c8a699c4160",
+   "878066de7408ab497ad92b88d962d522be5fdd98",
+   "94419f103130d1a3c22bdd4fa4a33072bc8e756d",
+   "9451fe050ca08878a4d32a2691543513e881dd8a",
+   "953775435cef0b14342bcb9dbfe37763b6e7b16d",
+   "9a5b87b52614aaa88d5f20d526dd20a775379455",
+   "c1094c806b65525e4a397156e2890063f8ab1713",
+   "c83835530db6ab98db68eb86fa1fb8852dcb0c10",
+   "c9b8fc4c28b84c3764c82225d2b141aa72b47c96",
+   "cf5d0f8542b7db82d7664835d024e7a07f2f6c65",
+   "d2f79160d7bdce45e8db2626e3c184dcf07a2ea0",
+   "d3cd7309419394520a092021b92e13d3a964f8fe",
+   "db4560b9c3e9aa9c6b17f2f9f28550eefa00f128",
+   "de1d4a4ad6f51437900d941497fd5ca35cdd1763",
+   "e09748fc597c0ff881b90864435c3d46149858c6",
+   "e2fdfb32309f23347c72756a403d9a300335b9ac",
+   "e79f5c8b1599f8a5b7199903b5b414422d9986c3",
+   "f3f6cf2fe88809ce4421c12e404eefb04ffe0bf5"
+  ],
+  "add_completed_work": [
+   "6789dc7609d1ef79720c2fe68c8ae17f662d6748",
+   "6f047b2a910b6932beb85c6f701cfbfda5ed0d78",
+   "cc8c893e21d02bb3f2b3f198309c50131aa42e5d"
+  ]
+ },
+ "inputRefusals": []
+}

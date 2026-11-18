@@ -1,0 +1,27 @@
+{
+  "iter": 1,
+  "fixes": [
+    {
+      "finding_id": "FND-001",
+      "files_changed": [
+        {
+          "path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+          "line_range": "212; 273-281; 294-378",
+          "loc_changed": 94
+        }
+      ],
+      "rationale_strip": "",
+      "rationale_full": "Test-only fix for REL-PROXY-001 AC-3. (1) Unit level: driveRelayedEnd now asserts, in the CLOSE_AFTER_ABORT ordering right after abortListener.run() and BEFORE relayed.close(), that the counter is 0, the watchdog reservation was cancelled once and the backend observed its connection closed (assertAbortAloneEndedTheExchange). A new EndOrder ABORT_ALONE and test rel_PROXY_001_AC3_theAbortNotificationAloneEndsTheExchange runs only the abort notification (no close at all) and checks the same, plus the existing post-conditions. Because the relayed stream is never closed before these assertions, a closed backend socket can only come from the proxy's own release. (2) Real path: rel_PROXY_001_AC3_anAbortDuringABlockedRelayCopyClosesTheBackend mounts the proxy (.maxConcurrent(1), recording watchdog) on the in-memory adapter against HoldingBackend HEAD_THEN_HOLD (Content-Length 10, 2 body bytes, then silence), waits by stack inspection until a thread is in DefaultResponse.runTransfer inside a socket read (the copy is running, so core abort leaves the input open), then calls res.abort(null) and asserts counter 0 and one reservation cancel immediately, and that the backend observes the close within 3 s. No fixed sleeps are used as correctness proof; waits are latches and bounded polls. Adapted from the reviewer repro ReviewReproAbortClosesBackendTest. Production code unchanged.",
+      "red_signature": "Mutant M1b (ProxyExchange.releaseKeepingSocket(){socket=null;release();} used by Proxy.releaseOnAbort listener instead of release()): ProxyExchangeTest 10 tests, 3 failed - rel_PROXY_001_AC3_closeAfterTheAbortNotificationEndsTheExchangeOnce (AssertionError 'CLOSE_AFTER_ABORT: the abort notification alone closed the backend connection', ProxyExchangeTest.java:183 await), rel_PROXY_001_AC3_theAbortNotificationAloneEndsTheExchange (AssertionError 'ABORT_ALONE: the abort notification alone closed the backend connection', :183), rel_PROXY_001_AC3_anAbortDuringABlockedRelayCopyClosesTheBackend (AssertionError 'the backend observed its connection closed within 3 s of res.abort', :344). BUILD FAILED. Mutant reverted; git diff on src/main empty.",
+      "green_on_head": true,
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    }
+  ],
+  "module_check": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:check",
+    "tests": 419,
+    "failures": 0,
+    "exit_code": 0
+  }
+}

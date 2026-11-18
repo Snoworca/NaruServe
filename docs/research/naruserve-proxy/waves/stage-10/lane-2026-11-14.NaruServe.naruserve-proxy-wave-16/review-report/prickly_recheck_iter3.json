@@ -1,0 +1,89 @@
+{
+  "resolved_findings": [],
+  "findings": [
+    {
+      "id": "FND-201",
+      "axis": "clean_code",
+      "verdict": "drop",
+      "evidence": {
+        "command": "",
+        "output": "",
+        "intent_output": ""
+      },
+      "drop_reason": "comment-only: after the CC-003 extraction the inline comment repeats the FR-PROXY-012 order the new javadoc already states; no behavior impact",
+      "title": "applyResponseHeaders inline comment repeats its javadoc",
+      "location": {
+        "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "line_range": "520-534"
+      },
+      "description": "The javadoc of applyResponseHeaders states copy -> Location rewrite -> .responseHeader (FR-PROXY-012), and the moved inline comment at the rewrite says the same thing again.",
+      "suggested_fix": "Optionally drop the inline FR-PROXY-012 comment inside applyResponseHeaders.",
+      "is_behavioral": false,
+      "tags": [
+        "comment"
+      ],
+      "related_ac": [
+        "FR-PROXY-012"
+      ],
+      "real_call_path": "Proxy.forward -> applyResponseHeaders"
+    }
+  ],
+  "clean_code": [],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+      "hunks_total": 21,
+      "anchors": [
+        "withConnectTimeoutNanos",
+        "withWriteTimeoutNanos",
+        "withReadTimeoutNanos",
+        "withTotalTimeoutNanos",
+        "withRetries",
+        "withRetryDelayNanos",
+        "withRetryUnsafeMethods",
+        "withStripPrefix",
+        "withPreserveHost",
+        "withBodyLimit",
+        "withMaxConcurrent",
+        "        return derived(options.withRequestHeaderRules(appended(options.requestHeaderRules, name, value)));",
+        "        return derived(options.withRequestHeaderRules(appended(options.requestHeaderRules, name, null)));",
+        "        return derived(options.withResponseHeaderRules(appended(options.responseHeaderRules, name, value)));",
+        "        return derived(options.withResponseHeaderRules(appended(options.responseHeaderRules, name, null)));",
+        "withRewriteLocation",
+        "withSslSocketFactory",
+        "    private Proxy derived(Options next) {",
+        "     * so a test calls this last.",
+        "            applyResponseHeaders(req, res, head);",
+        "    private void applyResponseHeaders(Request req, Response res, ResponseHead head) {"
+      ],
+      "findings": [
+        "FND-201"
+      ]
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+      "hunks_total": 3,
+      "anchors": [
+        "    /** The four ways the relayed stream's close and the abort notification may end the exchange. */",
+        "        assertEquals(\"counter after the client gave up\", 0, p.concurrencyCounter().get());",
+        "rel_PROXY_001_aWatchdogSurvivesLaterOptionMethods"
+      ],
+      "findings": []
+    }
+  ],
+  "summary": {
+    "round": 3,
+    "reviewer": "prickly",
+    "kept": 0,
+    "residual": 0,
+    "dropped": 1,
+    "clean_code": 0,
+    "behavior_preserved": "CC-003: forward still does res.status(head.status) before applyResponseHeaders, whose body is the old block moved verbatim (copy -> rewriteLocation -> fixedResponseHeaders). It is still inside the same try, before RelayedBodyStream/releaseOnAbort/res.relay, so a throw still hits finally with relayed=false and exchange.release() runs once (REL-PROXY-001). No checked exception was added.",
+    "option_methods": "All 17 option methods return derived(...); the only remaining new Proxy(...) calls are the 2-arg ctor, to(), derived and withWatchdog. withWatchdog keeps options, so the counter stays shared (FR-PROXY-019 AC-3). maxConcurrent goes through options.withMaxConcurrent, which still builds a new counter (AC-5/AC-9). Only the watchdog field is carried forward.",
+    "public_api": "No public signature change: derived and applyResponseHeaders are private and withWatchdog is package-private. Java 8 syntax only.",
+    "new_test": "Meaningful: mutating derived to pass ProxyExchange.NO_WATCHDOG fails only rel_PROXY_001_aWatchdogSurvivesLaterOptionMethods (AssertionError at ProxyExchangeTest.java:499, reservation count). Output: repro/mutation_iter3_derived_drops_watchdog.output.txt",
+    "regression": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test -> 420 tests, 0 failures, 0 errors",
+    "working_tree": "restored; a temp-index write-tree equals 8429dc6225618358216abbadfeb47235f75e4986",
+    "mutation_command": "cd <worktree> && sed -i '' 's/return new Proxy(target, next, watchdog);/return new Proxy(target, next, ProxyExchange.NO_WATCHDOG);/' Proxy.java && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ProxyExchangeTest'; then restore from repro/Proxy.java.iter3.saved"
+  }
+}

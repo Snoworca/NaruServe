@@ -1,0 +1,147 @@
+{
+  "run_id": "2026-11-18.naruserve.self-w16s10",
+  "skill": "kiwi-review-fix-loop",
+  "schema_version": "1.0.0",
+  "started_at": "2026-11-18T00:00:00Z",
+  "mode": "self",
+  "mode_flags": [
+    "--no-pipeline-emit",
+    "--keep-clean-code",
+    "--loops 20",
+    "--req-filter FR-PROXY-010,FR-PROXY-019,REL-PROXY-001",
+    "--regression-baseline"
+  ],
+  "phase": "8",
+  "finding_queue": [
+    {
+      "id": "FND-001",
+      "tier": "block",
+      "status": "resolved",
+      "resolved_in_round": 2
+    }
+  ],
+  "fix_iter": 1,
+  "recheck_iter": 1,
+  "clean_code_round": 2,
+  "clean_code_dismissed": [
+    {
+      "id": "CC-001",
+      "principle": "duplication (15-arg Options constructor repeated in 14 copy methods)",
+      "location": "Proxy.java Options copy methods",
+      "reason": "restructuring the immutable Options type is too risky for a review-fix round"
+    },
+    {
+      "id": "CC-004",
+      "principle": "duplicate empty classes NO_RESERVATION/RELEASED",
+      "location": "ProxyExchange.java",
+      "reason": "RELEASED is an intentional distinct sentinel, documented in a comment"
+    },
+    {
+      "id": "CC-005",
+      "principle": "duplication of hand-rolled test backends",
+      "location": "Proxy*Test.java",
+      "reason": "consolidation needs a shared file outside the lane write set"
+    }
+  ],
+  "clean_code_skip": false,
+  "guarantee_scope": "Acceptance criteria of FR-PROXY-010 (AC-1..AC-7), FR-PROXY-019 (AC-1..AC-9), REL-PROXY-001 (AC-1..AC-6) as implemented in NaruServe-proxy (ConcurrencyLimiter, Proxy, ProxyExchange, RelayedBodyStream) over 1f4974b..HEAD. Out of scope (later waves): backend response parsing/obs-text SEC-PROXY-004 (w17), FR-PROXY-014/016 (w17), FR-PROXY-015/017 incl. real total-timeout watchdog scheduler and READ_TIMEOUT/CONNECT_FAILED/TOTAL_TIMEOUT classification and retries (w18), X-Forwarded-* and FR-PROXY-005 (w19), FR-PROXY-018/020 (w20), documentation (w21). Known limits: core DefaultResponse.runTransfer calls ex.finish() before closing the relayed stream (needs NaruServe-api); TinyHttpd does not report idle client disconnect while relay blocks reading backend.",
+  "declared_limits": [
+    {
+      "id": "FND-101",
+      "reason": "Test-isolation defect in the new test helper awaitBlockedRelayCopy (scans all JVM threads for DefaultResponse.runTransfer blocked in socket read). It can fail falsely only if another test in the same JVM leaves a relay copy blocked; the current suite does not (419/0). No real call path, production code unaffected, no false pass vs mutant M1b.",
+      "evidence": ".kiwi/analysis/kiwi-review-fix-loop-2026-11-18.naruserve.self-w16s10/repro/ReviewReproStrayRelayThreadTest.output.txt: with a stray blocked relay, 5/10 runs on correct code fail 'watchdog reservations expected:<1> but was:<0>'; mutant M1b 10/10 fail."
+    }
+  ],
+  "limits": {
+    "round_cap": 20,
+    "token_budget": null
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "tree_sha": "7c581ab0de66e8bb61c481c04703345ac1d902f4",
+      "scope": "full",
+      "scope_widen_reason": null,
+      "files": [
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ConcurrencyLimiter.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyLifetimeSocketTest.java"
+      ],
+      "tokens_used": 233942,
+      "residual_count": 0,
+      "coverage_passed": true,
+      "findings": [
+        {
+          "id": "FND-001",
+          "tier": "block",
+          "family": "abort-listener-socket-close-test-gap",
+          "introduced_by_round": null
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "tree_sha": "81151742db32a60b0c3590510e56c0c4fadb3412",
+      "scope": "since-prev",
+      "scope_widen_reason": null,
+      "files": [
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java"
+      ],
+      "tokens_used": 179419,
+      "residual_count": 0,
+      "coverage_passed": true,
+      "findings": [
+        {
+          "id": "FND-101",
+          "tier": "record",
+          "family": "rel-proxy-001-abort-test-isolation-global-thread-scan",
+          "introduced_by_round": 1
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "tree_sha": "8429dc6225618358216abbadfeb47235f75e4986",
+      "scope": "since-prev",
+      "scope_widen_reason": null,
+      "files": [
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java"
+      ],
+      "tokens_used": 77585,
+      "residual_count": 0,
+      "coverage_passed": true,
+      "findings": []
+    }
+  ],
+  "regression_baseline": {
+    "source": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+    "total_tests": 3829,
+    "failing_tests": [],
+    "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4",
+    "command": "./gradlew -PtinyHttpdFromMaven=true build"
+  },
+  "regression_pass": true,
+  "pr_responded": false,
+  "failed": false,
+  "clean_code_result": {
+    "rounds": 2,
+    "fixed": [
+      "CC-002",
+      "CC-003",
+      "CC-101",
+      "CC-102"
+    ],
+    "dismissed": [
+      "CC-001",
+      "CC-004",
+      "CC-005"
+    ],
+    "unresolved": []
+  }
+}

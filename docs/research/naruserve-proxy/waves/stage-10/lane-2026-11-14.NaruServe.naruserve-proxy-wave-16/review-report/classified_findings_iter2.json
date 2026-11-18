@@ -1,0 +1,36 @@
+{
+  "immediate_fix": [],
+  "declared_limit": [
+    {
+      "id": "FND-101",
+      "rationale": "Reviewer verdict keep, tier record (the rule: proven by a failing test, but no real call path and no block condition, so declared_limit). The failure is proven: the temporary ReviewReproStrayRelayThreadTest left one stray relay copy blocked in DefaultResponse.runTransfer, and then the new test rel_PROXY_001_AC3_anAbortDuringABlockedRelayCopyClosesTheBackend failed on correct code in 5 of 10 runs. The cause is that awaitBlockedRelayCopy (ProxyExchangeTest.java:355-377) scans Thread.getAllStackTraces() and accepts any JVM thread that is in runTransfer and a socket read. None of the block conditions holds. The defect is in a test helper, not in production code, so no REL-PROXY-001 AC is violated, and src/main has no diff. No real call path triggers it: the current :NaruServe-proxy:test suite leaves no stray relay copy (419 tests, 0 failures, 0 errors; ProxyExchangeTest 10/10 in 5 reruns). There is no data loss, no secret exposure and no auth bypass. No value is silently lost and no ordinary correct input is rejected. The test's value as evidence holds: no false pass was seen against mutant M1b (10/10 fail), so the round-1 kill of FND-001 stands. The finding was introduced by the round-1 fix, which added this test and helper. The fix is cheap and test-only, so the next fixer may take it as an optional hardening if it touches this test anyway.",
+      "evidence": "repro/ReviewReproStrayRelayThreadTest.java + .output.txt: on the HEAD tree with a stray blocked relay copy, 5/10 pass and 5/10 fail with 'watchdog reservations expected:<1> but was:<0>'; the helper returned in about 120 us while counter=0, reservations=0 and backendConnections=0. With mutant M1b, 10/10 fail, so there is no false pass. Current suite: :NaruServe-proxy:test --rerun gives 419/0/0.",
+      "limit_reason": "Latent test-isolation defect. awaitBlockedRelayCopy matches a relay copy anywhere in the JVM, not only this test's relay, so the test can fail falsely only when another test in the same JVM leaves a relay copy blocked on a backend read. No test in the current suite does this. Suggested hardening: before the stack scan, first wait for resRef != null and watchdog.reservationCount() == 1, or record the handler thread or the adapter's copy thread and match only that thread."
+    }
+  ],
+  "kept_tiers": [
+    {
+      "id": "FND-101",
+      "tier": "record",
+      "family": "rel-proxy-001-abort-test-isolation-global-thread-scan",
+      "introduced_by_round": 1,
+      "family_action": null
+    }
+  ],
+  "discussion_needed": [],
+  "rejected": [],
+  "clean_code": [
+    {
+      "id": "CC-101",
+      "decision": "accepted",
+      "reason": "This stale comment was introduced by the round-1 fix. The javadoc of EndOrder (ProxyExchangeTest.java:210) says 'The three orders', but the enum now has four constants, and ABORT_ALONE is not an order between a close and an abort. The fix is a one-line comment change with no behavior risk.",
+      "fix_guidance": "In ProxyExchangeTest.java:210, reword the EndOrder javadoc so it covers all four constants. For example: '/** The ways the relayed stream's close and the abort notification may reach the exchange: three orders of both, and the abort notification alone. */'. Change only the comment, not the enum."
+    },
+    {
+      "id": "CC-102",
+      "decision": "accepted",
+      "reason": "This assertion message claims more than the test proves, and it was introduced by the round-1 fix. f.cancel(true) only cancels the client-side future. It waits neither for the core copy thread to end nor for RelayedBodyStream.close(), so 'after the copy ended' is not established at lines 347-348. The assertions themselves are still valid checks: counter 0 and cancels 1 after the abort.",
+      "fix_guidance": "In ProxyExchangeTest.java:347-348, prefer rewording the messages to what is proved, for example 'counter after the client gave up' and 'reservation cancels after the client gave up', or 'still ... after f.cancel'. Do not add another JVM-wide Thread.getAllStackTraces() wait for the copy to end, because it would bring back the FND-101 isolation problem. If a real 'copy ended' check is wanted, wait on a signal tied to this exchange, and keep the bound at WAIT_SECONDS. Do not weaken or remove the assertions."
+    }
+  ]
+}

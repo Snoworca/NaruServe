@@ -1,0 +1,23 @@
+{
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-16": {
+  "head": "9acf2114382fa93e9122f2d7a5f2673de3f4680b",
+  "commits": 8,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "detail": "3 rounds, 7 findings: 1 immediate_fix (FND-001, AC-3 abort-alone socket close untested; fixed with tests, mutation-checked), 1 declared_limit (FND-101 test-helper thread scan isolation, no real call path), 5 rejected; residual 0; check_review_round CONTINUE, PASS, PASS; coverage anchors passed every round; clean-code 2 rounds: 4 fixed, 3 dismissed, 0 unresolved. Committed as 9acf211."
+  },
+  "landed": [
+   "FR-PROXY-010",
+   "FR-PROXY-019",
+   "REL-PROXY-001"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [],
+  "outside_reason": "",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build (4511 tests, 0 failures)",
+  "verdict": "pass"
+ }
+}

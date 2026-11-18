@@ -1,0 +1,228 @@
+package com.snoworca.naruserve.proxy;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import com.snoworca.naruserve.Response;
+import com.snoworca.naruserve.RestApp;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.testing.TestApp;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import org.junit.After;
+import org.junit.Test;
+
+/**
+ * TEMPORARY review repro for FND-101 (deleted after the run): leaves a stray relay copy blocked in
+ * DefaultResponse.runTransfer on a backend socket read, then runs the scenario of
+ * ProxyExchangeTest#rel_PROXY_001_AC3_anAbortDuringABlockedRelayCopyClosesTheBackend verbatim, calling the real
+ * private helper ProxyExchangeTest.awaitBlockedRelayCopy by reflection.
+ */
+public class ReviewReproStrayRelayThreadTest {
+
+    private final List<Closeable> closeables = new ArrayList<>();
+    private final List<RestApp> started = new ArrayList<>();
+
+    @After
+    public void tearDown() throws IOException {
+        for (RestApp a : started) {
+            a.shutdown(2, TimeUnit.SECONDS);
+        }
+        for (Closeable c : closeables) {
+            c.close();
+        }
+    }
+
+    private static void awaitBlockedRelayCopy() throws Throwable {
+        Method m = ProxyExchangeTest.class.getDeclaredMethod("awaitBlockedRelayCopy");
+        m.setAccessible(true);
+        try {
+            m.invoke(null);
+        } catch (InvocationTargetException e) {
+            throw e.getCause();
+        }
+    }
+
+    private InMemoryHttpAdapter start(java.util.function.Consumer<RestApp> mount) {
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        TestApp t = TestApp.create(adapter);
+        mount.accept(t.app());
+        t.start();
+        started.add(t.app());
+        return adapter;
+    }
+
+    @Test(timeout = 60000)
+    public void strayRelayCopyThenTheSameScenario() throws Throwable {
+        // 1. a stray relay copy of another app, blocked reading a quiet backend
+        HoldBackend strayBackend = new HoldBackend();
+        closeables.add(strayBackend);
+        Proxy stray = Proxy.to(strayBackend.url());
+        InMemoryHttpAdapter strayAdapter = start(app -> app.use("/stray", stray));
+        Future<ClientResponse> strayF = strayAdapter.submit(ClientRequest.of("GET", "/stray/x"));
+        awaitBlockedRelayCopy();
+        long t0 = System.nanoTime();
+        awaitBlockedRelayCopy();
+        System.out.println("REPRO: helper returned again with only the stray copy present after "
+                + TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - t0) + " us");
+
+        // 2. the scenario of rel_PROXY_001_AC3_anAbortDuringABlockedRelayCopyClosesTheBackend, verbatim
+        HoldBackend backend = new HoldBackend();
+        closeables.add(backend);
+        Recording watchdog = new Recording();
+        Proxy p = Proxy.to(backend.url()).maxConcurrent(1).withWatchdog(watchdog);
+        AtomicReference<Response> resRef = new AtomicReference<>();
+        InMemoryHttpAdapter adapter = start(app -> app.use("/api", (req, res, next) -> {
+            resRef.set(res);
+            p.handle(req, res, next);
+        }));
+
+        Future<ClientResponse> f = adapter.submit(ClientRequest.of("GET", "/api/x"));
+
+        awaitBlockedRelayCopy();
+        System.out.println("REPRO: at the helper's return: counter=" + p.concurrencyCounter().get()
+                + " reservations=" + watchdog.reservations.size() + " resRef=" + (resRef.get() != null)
+                + " backendConnections=" + backend.connections.get());
+        assertEquals("the relay holds its slot", 1, p.concurrencyCounter().get());
+        assertEquals("watchdog reservations", 1, watchdog.reservations.size());
+        Rec reservation = watchdog.reservations.get(0);
+        assertEquals("the relay keeps its reservation", 0, reservation.cancels.get());
+        assertFalse("the backend connection is still open", backend.closedByProxy.await(100, TimeUnit.MILLISECONDS));
+        Response res = resRef.get();
+        assertNotNull("the request reached the proxy", res);
+
+        res.abort(null);
+
+        assertEquals("counter right after res.abort", 0, p.concurrencyCounter().get());
+        assertEquals("reservation cancels right after res.abort", 1, reservation.cancels.get());
+        assertTrue("the backend observed its connection closed within 3 s of res.abort",
+                backend.closedByProxy.await(3, TimeUnit.SECONDS));
+        f.cancel(true);
+        strayF.cancel(true);
+        assertEquals("counter after the copy ended", 0, p.concurrencyCounter().get());
+        assertEquals("reservation cancels after the copy ended", 1, reservation.cancels.get());
+    }
+
+    private static final class Recording implements ProxyExchange.Watchdog {
+        final List<Rec> reservations = Collections.synchronizedList(new ArrayList<Rec>());
+
+        @Override
+        public ProxyExchange.Reservation reserve(ProxyExchange exchange, long totalTimeoutNanos) {
+            Rec r = new Rec();
+            reservations.add(r);
+            return r;
+        }
+    }
+
+    private static final class Rec implements ProxyExchange.Reservation {
+        final AtomicInteger cancels = new AtomicInteger();
+
+        @Override
+        public void cancel() {
+            cancels.incrementAndGet();
+        }
+    }
+
+    /** HEAD_THEN_HOLD of ProxyExchangeTest.HoldingBackend, copied. */
+    private static final class HoldBackend implements Closeable {
+        private final ServerSocket server;
+        private final List<Socket> sockets = Collections.synchronizedList(new ArrayList<Socket>());
+        final AtomicInteger connections = new AtomicInteger();
+        final CountDownLatch closedByProxy = new CountDownLatch(1);
+
+        HoldBackend() throws IOException {
+            server = new ServerSocket();
+            server.bind(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 0), 50);
+            Thread acceptor = new Thread(this::acceptLoop, "repro-backend-" + server.getLocalPort());
+            acceptor.setDaemon(true);
+            acceptor.start();
+        }
+
+        String url() {
+            return "http://127.0.0.1:" + server.getLocalPort();
+        }
+
+        private void acceptLoop() {
+            while (!server.isClosed()) {
+                Socket s;
+                try {
+                    s = server.accept();
+                } catch (IOException e) {
+                    return;
+                }
+                connections.incrementAndGet();
+                sockets.add(s);
+                Thread t = new Thread(() -> serve(s), "repro-backend-conn");
+                t.setDaemon(true);
+                t.start();
+            }
+        }
+
+        private void serve(Socket s) {
+            try {
+                s.setSoTimeout(30_000);
+                InputStream in = s.getInputStream();
+                OutputStream out = s.getOutputStream();
+                int state = 0;
+                while (state < 4) {
+                    int b = in.read();
+                    if (b < 0) {
+                        throw new IOException("eof");
+                    }
+                    state = (b == '\r' && (state == 0 || state == 2)) || (b == '\n' && (state == 1 || state == 3))
+                            ? state + 1 : 0;
+                }
+                out.write("HTTP/1.1 200 X\r\nContent-Length: 10\r\n\r\nab".getBytes(StandardCharsets.ISO_8859_1));
+                out.flush();
+                byte[] buf = new byte[8192];
+                try {
+                    while (in.read(buf) >= 0) {
+                        // discard
+                    }
+                } catch (IOException e) {
+                    // a reset is a close as well
+                }
+                closedByProxy.countDown();
+            } catch (IOException e) {
+                // over
+            } finally {
+                try {
+                    s.close();
+                } catch (IOException ignored) {
+                    // closed
+                }
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            server.close();
+            synchronized (sockets) {
+                for (Socket s : sockets) {
+                    s.close();
+                }
+            }
+        }
+    }
+}

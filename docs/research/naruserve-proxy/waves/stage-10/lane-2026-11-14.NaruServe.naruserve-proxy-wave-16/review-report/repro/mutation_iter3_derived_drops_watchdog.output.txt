@@ -1,0 +1,46 @@
+> Task :NaruServe-api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-api:compileKotlin NO-SOURCE
+> Task :NaruServe-api:compileJava UP-TO-DATE
+> Task :NaruServe-proxy:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-proxy:compileKotlin NO-SOURCE
+> Task :NaruServe-proxy:compileJava UP-TO-DATE
+> Task :NaruServe-proxy:processResources NO-SOURCE
+> Task :NaruServe-proxy:classes UP-TO-DATE
+> Task :NaruServe-proxy:jar UP-TO-DATE
+> Task :NaruServe-api:processResources UP-TO-DATE
+> Task :NaruServe-api:classes UP-TO-DATE
+> Task :NaruServe-api:jar UP-TO-DATE
+> Task :NaruServe-api:compileTestFixturesKotlin NO-SOURCE
+> Task :NaruServe-api:compileTestFixturesJava UP-TO-DATE
+> Task :NaruServe-api:processTestFixturesResources NO-SOURCE
+> Task :NaruServe-api:testFixturesClasses UP-TO-DATE
+> Task :NaruServe-api:testFixturesJar UP-TO-DATE
+> Task :NaruServe-tinyhttpd:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-tinyhttpd:compileKotlin NO-SOURCE
+> Task :NaruServe-tinyhttpd:compileJava UP-TO-DATE
+> Task :NaruServe-proxy:compileTestKotlin UP-TO-DATE
+> Task :NaruServe-proxy:compileTestJava UP-TO-DATE
+> Task :NaruServe-proxy:processTestResources NO-SOURCE
+> Task :NaruServe-proxy:testClasses UP-TO-DATE
+> Task :NaruServe-tinyhttpd:processResources NO-SOURCE
+> Task :NaruServe-tinyhttpd:classes UP-TO-DATE
+> Task :NaruServe-tinyhttpd:jar UP-TO-DATE
+
+> Task :NaruServe-proxy:test FAILED
+
+ProxyExchangeTest > rel_PROXY_001_aWatchdogSurvivesLaterOptionMethods FAILED
+    java.lang.AssertionError at ProxyExchangeTest.java:499
+
+11 tests completed, 1 failed
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':NaruServe-proxy:test'.
+> There were failing tests. See the report at: file:///Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-16/NaruServe-proxy/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights.
+
+BUILD FAILED in 1s
+12 actionable tasks: 1 executed, 11 up-to-date

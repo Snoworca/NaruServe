@@ -1,0 +1,44 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-16-fr-proxy-019",
+ "base_sha": "e1fa9d5350603ed52010331bb01c7778a068aa99",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-019"
+ ],
+ "req_filter": [
+  "FR-PROXY-019"
+ ],
+ "write_set": [],
+ "started_at": "2026-11-18T07:23:12Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "changed": true,
+  "commit_sha": "c3fc49f",
+  "commits": [
+   {
+    "req_id": "FR-PROXY-019",
+    "test_sha": "63721a7",
+    "implementation_sha": "c3fc49f"
+   }
+  ],
+  "questions": [],
+  "result_summary": "4498 tests 0 failures; red: compile + 5 failing"
+ },
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-18T07:23:12Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-PROXY-019": "evolving"
+  },
+  "status_snapshot": {
+   "FR-PROXY-019": "planned"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-16-fr-proxy-019/lanes/w16s10l1/reports/pm-final.md"
+}

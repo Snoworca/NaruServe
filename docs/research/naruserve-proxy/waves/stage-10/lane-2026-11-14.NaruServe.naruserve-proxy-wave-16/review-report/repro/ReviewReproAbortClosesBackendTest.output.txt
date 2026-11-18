@@ -1,0 +1,24 @@
+FND-001 repro: ReviewReproAbortClosesBackendTest (copied here; temporary test file deleted from the source tree)
+
+1) Unmutated HEAD:
+$ ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*ReviewReproAbortClosesBackendTest' -i
+    REPRO backend observed close within 3s after abort: true
+BUILD SUCCESSFUL
+
+2) Mutant M1b (abort listener returns the slot and cancels the reservation but does not close the backend socket):
+   ProxyExchange: + void releaseKeepingSocket() { socket = null; release(); }
+   Proxy.releaseOnAbort listener: - exchange.release();  + exchange.releaseKeepingSocket();
+$ ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test        (whole proxy suite incl. the repro)
+ReviewReproAbortClosesBackendTest > abortAloneClosesTheBackendWhileTheCopyWaitsOnAQuietBackend FAILED
+418 tests completed, 1 failed
+   -> all 417 existing proxy tests (ProxyExchangeTest, ProxyLifetimeSocketTest, ProxyConcurrencyTest, ProxyCheckOrderTest, ...) PASS on the mutant.
+$ ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*ReviewReproAbortClosesBackendTest' -i
+    REPRO backend observed close within 3s after abort: false
+    java.lang.AssertionError: the abort notification alone closed the backend connection
+BUILD FAILED
+
+Why it matters: DefaultResponse.abort does not close the input while a copy runs ("a running copy keeps the input and
+closes it itself once its read returns"), so when the client goes away while the relay copy is blocked reading a quiet
+backend, only the proxy's onAbort listener can close the backend socket. On the mutant the copy thread and backend
+connection stay blocked up to readTimeout (60 s default) while the slot is already reported free, so the effective
+backend connection count exceeds maxConcurrent.

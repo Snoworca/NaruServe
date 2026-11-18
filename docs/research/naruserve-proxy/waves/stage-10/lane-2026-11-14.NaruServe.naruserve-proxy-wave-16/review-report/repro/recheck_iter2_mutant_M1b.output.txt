@@ -1,0 +1,12 @@
+Mutant M1b (recheck iter2, prickly reviewer): ProxyExchange.releaseKeepingSocket(){socket=null;release();} called from the Proxy.releaseOnAbort listener instead of release() (patch: recheck_iter2_mutant_M1b.patch).
+Command: ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ProxyExchangeTest'
+ProxyExchangeTest > rel_PROXY_001_AC3_closeAfterTheAbortNotificationEndsTheExchangeOnce FAILED
+    java.lang.AssertionError at ProxyExchangeTest.java:183
+ProxyExchangeTest > rel_PROXY_001_AC3_theAbortNotificationAloneEndsTheExchange FAILED
+    java.lang.AssertionError at ProxyExchangeTest.java:183
+ProxyExchangeTest > rel_PROXY_001_AC3_anAbortDuringABlockedRelayCopyClosesTheBackend FAILED
+    java.lang.AssertionError at ProxyExchangeTest.java:344
+10 tests completed, 3 failed
+BUILD FAILED in 28s
+Restored: git checkout -- Proxy.java ProxyExchange.java (src/main diff empty afterwards).
+HEAD tree: ProxyExchangeTest 5x --rerun all exit 0 (10/10 each); full :NaruServe-proxy:test --rerun 419 tests, 0 failures, 0 errors.

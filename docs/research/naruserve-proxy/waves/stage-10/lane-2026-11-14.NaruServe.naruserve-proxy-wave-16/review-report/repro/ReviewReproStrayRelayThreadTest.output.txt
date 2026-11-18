@@ -1,0 +1,78 @@
+== HEAD tree (correct code), 10 runs: 5 pass, 5 false failures
+run1     REPRO: helper returned again with only the stray copy present after 228 us
+run1     REPRO: at the helper's return: counter=0 reservations=0 resRef=false backendConnections=0
+run1     java.lang.AssertionError: watchdog reservations expected:<1> but was:<0>
+run1 BUILD FAILED in 4s
+run2     REPRO: helper returned again with only the stray copy present after 243 us
+run2     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run2     java.lang.AssertionError: watchdog reservations expected:<1> but was:<0>
+run2 BUILD FAILED in 5s
+run3     REPRO: helper returned again with only the stray copy present after 128 us
+run3     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run3     java.lang.AssertionError: watchdog reservations expected:<1> but was:<0>
+run3 BUILD FAILED in 4s
+run4     REPRO: helper returned again with only the stray copy present after 110 us
+run4     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run4     java.lang.AssertionError: watchdog reservations expected:<1> but was:<0>
+run4 BUILD FAILED in 4s
+run5     REPRO: helper returned again with only the stray copy present after 96 us
+run5     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run5 BUILD SUCCESSFUL in 2s
+run6     REPRO: helper returned again with only the stray copy present after 121 us
+run6     REPRO: at the helper's return: counter=1 reservations=0 resRef=true backendConnections=0
+run6 BUILD SUCCESSFUL in 2s
+run7     REPRO: helper returned again with only the stray copy present after 103 us
+run7     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run7 BUILD SUCCESSFUL in 2s
+run8     REPRO: helper returned again with only the stray copy present after 106 us
+run8     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run8 BUILD SUCCESSFUL in 2s
+run9     REPRO: helper returned again with only the stray copy present after 111 us
+run9     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run9     java.lang.AssertionError: watchdog reservations expected:<1> but was:<0>
+run9 BUILD FAILED in 4s
+run10     REPRO: helper returned again with only the stray copy present after 126 us
+run10     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run10 BUILD SUCCESSFUL in 2s
+
+== mutant M1b, 10 runs: 0 pass (no false pass), 10 fail
+run1     REPRO: helper returned again with only the stray copy present after 92 us
+run1     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run1     java.lang.AssertionError: the backend observed its connection closed within 3 s of res.abort
+run1 BUILD FAILED in 10s
+run2     REPRO: helper returned again with only the stray copy present after 115 us
+run2     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run2     java.lang.AssertionError: watchdog reservations expected:<1> but was:<0>
+run2 BUILD FAILED in 7s
+run3     REPRO: helper returned again with only the stray copy present after 131 us
+run3     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run3     java.lang.AssertionError: watchdog reservations expected:<1> but was:<0>
+run3 BUILD FAILED in 7s
+run4     REPRO: helper returned again with only the stray copy present after 238 us
+run4     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run4     java.lang.AssertionError: the backend observed its connection closed within 3 s of res.abort
+run4 BUILD FAILED in 10s
+run5     REPRO: helper returned again with only the stray copy present after 108 us
+run5     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run5     java.lang.AssertionError: watchdog reservations expected:<1> but was:<0>
+run5 BUILD FAILED in 7s
+run6     REPRO: helper returned again with only the stray copy present after 107 us
+run6     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run6     java.lang.AssertionError: watchdog reservations expected:<1> but was:<0>
+run6 BUILD FAILED in 7s
+run7     REPRO: helper returned again with only the stray copy present after 101 us
+run7     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run7     java.lang.AssertionError: the backend observed its connection closed within 3 s of res.abort
+run7 BUILD FAILED in 10s
+run8     REPRO: helper returned again with only the stray copy present after 124 us
+run8     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run8     java.lang.AssertionError: watchdog reservations expected:<1> but was:<0>
+run8 BUILD FAILED in 7s
+run9     REPRO: helper returned again with only the stray copy present after 136 us
+run9     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run9     java.lang.AssertionError: the backend observed its connection closed within 3 s of res.abort
+run9 BUILD FAILED in 10s
+run10     REPRO: helper returned again with only the stray copy present after 223 us
+run10     REPRO: at the helper's return: counter=0 reservations=0 resRef=true backendConnections=0
+run10     java.lang.AssertionError: the backend observed its connection closed within 3 s of res.abort
+run10 BUILD FAILED in 10s

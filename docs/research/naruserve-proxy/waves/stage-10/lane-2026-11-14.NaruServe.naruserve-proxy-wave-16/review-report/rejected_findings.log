@@ -1,0 +1,5 @@
+FND-002 dropped: no test pins onAbort listener registration before res.relay; the order makes no observable difference (the core runs a listener registered after an abort at once).
+FND-003 dropped: Reservation.cancel() throwing would mask the original exception; unreachable while only the no-op watchdog exists (real watchdog is wave-18).
+FND-004 dropped: slot leak between tryAcquire and forward's try only on an Error such as OutOfMemoryError; theoretical.
+FND-005 dropped: abort between listener registration and res.relay makes res.relay throw IllegalStateException; resources are still released exactly once; pre-existing core behavior.
+FND-201 dropped: inline comment repeats the FR-PROXY-012 order already stated in the javadoc (comment-only).

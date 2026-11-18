@@ -1,0 +1,101 @@
+package com.snoworca.naruserve.proxy;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import com.snoworca.naruserve.Response;
+import com.snoworca.naruserve.RestApp;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
+import com.snoworca.naruserve.testing.TestApp;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import org.junit.Test;
+
+/**
+ * Review repro (P6): the onAbort notification ALONE must close the backend socket while the relay copy is blocked
+ * reading a quiet backend (REL-PROXY-001: "at first of relayed stream close() and res.onAbort notification ... close
+ * backend socket"). The core's abort does not close the input while a copy runs, so only the proxy's abort listener
+ * can unblock it. Passes on the current code; fails on the mutant whose abort listener returns the slot without
+ * closing the socket, which every existing proxy test lets through.
+ */
+public class ReviewReproAbortClosesBackendTest {
+
+    @Test(timeout = 60000)
+    public void abortAloneClosesTheBackendWhileTheCopyWaitsOnAQuietBackend() throws Exception {
+        final CountDownLatch headSent = new CountDownLatch(1);
+        final CountDownLatch closedByProxy = new CountDownLatch(1);
+        final ServerSocket server = new ServerSocket();
+        server.bind(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 0), 50);
+        Thread backend = new Thread(() -> {
+            try (Socket s = server.accept()) {
+                s.setSoTimeout(30_000);
+                InputStream in = s.getInputStream();
+                OutputStream out = s.getOutputStream();
+                int state = 0;
+                while (state < 4) { // read the request head up to CRLFCRLF
+                    int b = in.read();
+                    if (b < 0) {
+                        return;
+                    }
+                    state = (b == '\r' && (state == 0 || state == 2)) || (b == '\n' && (state == 1 || state == 3))
+                            ? state + 1 : 0;
+                }
+                out.write("HTTP/1.1 200 OK\r\nContent-Length: 100000\r\n\r\nab".getBytes(StandardCharsets.ISO_8859_1));
+                out.flush();
+                headSent.countDown();
+                try {
+                    while (in.read() >= 0) {
+                        // the proxy sends nothing more
+                    }
+                } catch (IOException e) {
+                    // reset or timeout
+                }
+                closedByProxy.countDown();
+            } catch (IOException ignored) {
+                // test ends
+            }
+        }, "repro-backend");
+        backend.setDaemon(true);
+        backend.start();
+
+        Proxy p = Proxy.to("http://127.0.0.1:" + server.getLocalPort()).maxConcurrent(1);
+        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+        TestApp t = TestApp.create(adapter);
+        RestApp app = t.app();
+        final AtomicReference<Response> resRef = new AtomicReference<>();
+        app.use("/api", (req, res, next) -> {
+            resRef.set(res);
+            p.handle(req, res, next);
+        });
+        t.start();
+        try {
+            adapter.submit(ClientRequest.of("GET", "/api/x"));
+            assertTrue("backend sent the head", headSent.await(10, TimeUnit.SECONDS));
+            Thread.sleep(500); // the copy is now blocked in a read of the quiet backend
+            assertEquals("the relay holds its slot", 1, p.concurrencyCounter().get());
+            Response res = resRef.get();
+            assertNotNull(res);
+
+            res.abort(null); // the abort notification, with no close of the relayed stream yet
+
+            assertEquals("slot returned by the abort notification", 0, p.concurrencyCounter().get());
+            boolean closed = closedByProxy.await(3, TimeUnit.SECONDS);
+            System.out.println("REPRO backend observed close within 3s after abort: " + closed);
+            assertTrue("the abort notification alone closed the backend connection", closed);
+        } finally {
+            app.shutdown(2, TimeUnit.SECONDS);
+            server.close();
+        }
+    }
+}

@@ -1,0 +1,92 @@
+{
+  "resolved_findings": [
+    "FND-001"
+  ],
+  "unresolved_findings": [],
+  "resolution_evidence": {
+    "FND-001": {
+      "command": "apply mutant M1b (repro/recheck_iter2_mutant_M1b.patch: abort listener calls ProxyExchange.releaseKeepingSocket(){socket=null;release();}) then ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ProxyExchangeTest'; restore with git checkout -- Proxy.java ProxyExchange.java",
+      "output": "10 tests completed, 3 failed: closeAfterTheAbortNotificationEndsTheExchangeOnce (AssertionError ProxyExchangeTest.java:183), theAbortNotificationAloneEndsTheExchange (:183), anAbortDuringABlockedRelayCopyClosesTheBackend (:344). BUILD FAILED. On the restored tree: ProxyExchangeTest 5 consecutive --rerun runs exit 0 (10/10, AC3 tests 0.21-0.29 s each); full :NaruServe-proxy:test --rerun 419 tests, 0 failures, 0 errors.",
+      "intent_output": "The mutant from FND-001 (slot returned and reservation cancelled by the abort listener, backend socket left open) is now killed by three tests, two of which assert the backend close before any close() of the relayed stream. No assertion was removed (the only removed line is the EndOrder enum line, re-added with ABORT_ALONE). Waits are latches and bounded polls (WAIT_SECONDS=10, 3 s close window, 60 s JUnit timeout); on success the proxy closes the backend socket so the copy thread exits, and tearDown shuts the app and closes the backend, so no thread or socket outlives the test. Citation: the ABORT_ALONE and CLOSE_AFTER_ABORT assertions fit REL-PROXY-001 AC-3 (unit test driving the relayed stream and onAbort); the res.abort integration test goes beyond AC-3's 'unit test' wording (its 3 s window is test-chosen and its subject is closer to AC-1) but supports AC-3's 'close the backend socket' clause."
+    }
+  },
+  "findings": [
+    {
+      "id": "FND-101",
+      "axis": "test-robustness",
+      "verdict": "keep",
+      "evidence": {
+        "command": "Temporary NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ReviewReproStrayRelayThreadTest.java (archived in repro/, deleted from src): a stray in-memory app with Proxy.to(quiet HEAD_THEN_HOLD backend) leaves one relay copy blocked in DefaultResponse.runTransfer on a socket read; then the scenario of rel_PROXY_001_AC3_anAbortDuringABlockedRelayCopyClosesTheBackend runs verbatim, calling the real private ProxyExchangeTest.awaitBlockedRelayCopy by reflection. Run 10x: ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ReviewReproStrayRelayThreadTest' --rerun -i, on the HEAD tree and with mutant M1b applied.",
+        "output": "Helper returns in ~120 us with only the stray copy present. At its return in the scenario: counter=0 reservations=0 backendConnections=0. HEAD tree (correct production code): 5/10 pass, 5/10 fail with 'AssertionError: watchdog reservations expected:<1> but was:<0>' (watchdog.only() equivalent). Mutant M1b: 10/10 fail (5x 'watchdog reservations expected:<1> but was:<0>', 5x 'the backend observed its connection closed within 3 s of res.abort'), so no false pass.",
+        "intent_output": "Proven false failure: with any other relay copy blocked in the same test JVM, the helper returns before this test's copy starts and the test fails on correct code about half the time. No false pass was observed against M1b, so the mutant kill of FND-001 stands. In the current module suite no stray copy exists (419/0/0), so this is a latent isolation defect, not a present red."
+      },
+      "drop_reason": "",
+      "title": "awaitBlockedRelayCopy matches any JVM thread in DefaultResponse.runTransfer + socket read, not this test's relay",
+      "location": {
+        "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+        "line_range": "355-377"
+      },
+      "description": "The stack scan accepts the first thread anywhere in the shared module test JVM (no forkEvery on :NaruServe-proxy:test) whose stack has DefaultResponse.runTransfer and a *Socket*read* frame. With another relay copy blocked in the JVM it returns in ~120 us, before this test's request reached the proxy, and the next assertions fail on correct code (proven 5/10). It does not produce a false pass against M1b (0/10). Latent today: the current suite leaves no stray copy.",
+      "suggested_fix": "Narrow the match to this request, e.g. record the handler thread in the middleware and wait for that thread (or the copy thread started for this adapter) to be in runTransfer, or wait first for resRef != null and watchdog.reservationCount()==1 before the stack scan.",
+      "is_behavioral": false,
+      "tags": [
+        "flakiness",
+        "test-isolation",
+        "false-failure"
+      ],
+      "related_ac": [
+        "REL-PROXY-001 AC-3"
+      ],
+      "real_call_path": "ProxyExchangeTest.rel_PROXY_001_AC3_anAbortDuringABlockedRelayCopyClosesTheBackend -> awaitBlockedRelayCopy -> Thread.getAllStackTraces()"
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-101",
+      "principle": "Comments must stay true (stale comment)",
+      "location": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java:210 (EndOrder javadoc)",
+      "description": "The javadoc still says 'The three orders in which the relayed stream's close and the abort notification may reach the exchange' while the enum now has four constants, ABORT_ALONE being an abort with no close at all."
+    },
+    {
+      "id": "CC-102",
+      "principle": "Assertion messages state only what is proved",
+      "location": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java:347-348",
+      "description": "'counter after the copy ended' and 'reservation cancels after the copy ended' run right after f.cancel(true), which cancels the client future and does not wait for the copy thread's end or for RelayedBodyStream.close(). The assertions do not prove that the later close() after the copy failed leaves the counter at 0 and cancels at 1. Either wait for the copy to end (e.g. poll until no runTransfer thread is left) or reword the messages."
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+      "hunks_total": 4,
+      "anchors": [
+        "        CLOSE_TWICE, CLOSE_AFTER_ABORT, ABORT_AFTER_CLOSE, ABORT_ALONE",
+        "                // REL-PROXY-001 AC-3: the abort notification, before any close() of the relayed stream, has already",
+        "            case ABORT_ALONE:",
+        "    public void rel_PROXY_001_AC3_anAbortDuringABlockedRelayCopyClosesTheBackend() throws Exception {"
+      ],
+      "findings": [
+        "FND-101"
+      ]
+    }
+  ],
+  "summary": {
+    "round": 2,
+    "previous_findings_resolved": 1,
+    "previous_findings_unresolved": 0,
+    "new_findings_keep": 1,
+    "new_findings_residual": 0,
+    "new_findings_drop": 0,
+    "clean_code_items": 2,
+    "blocking_kept_findings": 0,
+    "mutant_killed": true,
+    "tests_head": "ProxyExchangeTest 10/10 x5; :NaruServe-proxy:test 419/0/0",
+    "working_tree_restored": "only ProxyExchangeTest.java modified vs HEAD (equals tree 81151742), src/main diff empty, untracked .kiwi/",
+    "repro_files": [
+      ".kiwi/analysis/kiwi-review-fix-loop-2026-11-18.naruserve.self-w16s10/repro/recheck_iter2_mutant_M1b.patch",
+      ".kiwi/analysis/kiwi-review-fix-loop-2026-11-18.naruserve.self-w16s10/repro/recheck_iter2_mutant_M1b.output.txt",
+      ".kiwi/analysis/kiwi-review-fix-loop-2026-11-18.naruserve.self-w16s10/repro/ReviewReproStrayRelayThreadTest.java",
+      ".kiwi/analysis/kiwi-review-fix-loop-2026-11-18.naruserve.self-w16s10/repro/ReviewReproStrayRelayThreadTest.output.txt"
+    ],
+    "fnd_101_note": "keep with execution proof (false failure 5/10 under an injected stray relay copy); no false pass vs M1b; latent in the current suite"
+  }
+}

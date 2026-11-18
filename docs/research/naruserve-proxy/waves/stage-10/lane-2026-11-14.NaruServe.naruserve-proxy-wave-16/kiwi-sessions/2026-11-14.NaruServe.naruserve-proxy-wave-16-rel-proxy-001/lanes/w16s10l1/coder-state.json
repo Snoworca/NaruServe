@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-16-rel-proxy-001",
+  "sds_path": null,
+  "target": "0.12.0",
+  "req_ids": [
+    "REL-PROXY-001"
+  ],
+  "spawn_context": "pm-child",
+  "mode": "normal",
+  "flags": [
+    "--loops 20",
+    "--defer-srs-mutation"
+  ],
+  "phase": "done",
+  "red_evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:compileTestJava",
+    "exit_code": 1,
+    "captured_failure": "ProxyExchangeTest.java: 9 errors, cannot find symbol ProxyExchange.Watchdog / ProxyExchange.Reservation / Proxy.withWatchdog; staged run with the seam only: 3 of 8 failed, AC-3 x3 'the proxy registered an onAbort listener before res.relay'",
+    "timestamp": "2026-11-18T07:48:00Z"
+  },
+  "red_evidence_meta": {
+    "already_holding_at_base": [
+      "REL-PROXY-001 AC-1",
+      "REL-PROXY-001 AC-2"
+    ]
+  },
+  "green_evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true build",
+    "exit_code": 0,
+    "timestamp": "2026-11-18T08:04:00Z"
+  },
+  "regression_summary": {
+    "scope": "full",
+    "passed": 4508,
+    "failed": 0,
+    "baseline_tests": 4498,
+    "regressed_files": []
+  },
+  "next_resume_hint": null,
+  "failed": false,
+  "loop_counters": {
+    "phase1": {
+      "kept": 0,
+      "dropped": 0,
+      "rounds": 1
+    },
+    "phase2": {
+      "kept": 2,
+      "dropped": 9,
+      "rounds": 1
+    }
+  },
+  "commits": [
+    "d6bb7a6",
+    "cd8ea3d",
+    "5bc6d7d",
+    "869dcd7"
+  ],
+  "deferred_mutations": 12
+}

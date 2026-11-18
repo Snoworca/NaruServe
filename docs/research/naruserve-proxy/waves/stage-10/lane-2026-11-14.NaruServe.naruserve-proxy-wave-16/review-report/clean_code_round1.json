@@ -1,0 +1,41 @@
+{
+  "round": 1,
+  "fixed": [
+    {
+      "id": "CC-002",
+      "files": [
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java"
+      ],
+      "summary": "Every option method now returns through a private derived(Options) helper that builds new Proxy(target, next, watchdog), so a watchdog installed with withWatchdog is carried forward; the Options constructor is untouched and withWatchdog's javadoc no longer says to call it last. New test rel_PROXY_001_aWatchdogSurvivesLaterOptionMethods (withWatchdog then retries(0).maxConcurrent(1).totalTimeout(7s)) failed before the fix and passes after: one reservation on the installed watchdog for 7 s."
+    },
+    {
+      "id": "CC-003",
+      "files": [
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java"
+      ],
+      "summary": "Extracted the response-header block of forward into private applyResponseHeaders(req, res, head), keeping the order copy -> Location rewrite -> .responseHeader values (FR-PROXY-012); res.status still runs first in forward. No behavior change."
+    },
+    {
+      "id": "CC-101",
+      "files": [
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java"
+      ],
+      "summary": "EndOrder javadoc reworded from 'The three orders' to 'The four ways the relayed stream's close and the abort notification may end the exchange.' Comment only."
+    },
+    {
+      "id": "CC-102",
+      "files": [
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java"
+      ],
+      "summary": "Assertion messages 'counter/reservation cancels after the copy ended' reworded to '... after the client gave up'. Assertion logic unchanged, no new wait added."
+    }
+  ],
+  "unresolved": [],
+  "module_check": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:check",
+    "tests": 420,
+    "failures": 0,
+    "exit_code": 0
+  }
+}

@@ -1,0 +1,324 @@
+{
+  "findings": [
+    {
+      "id": "FND-001",
+      "axis": "P6",
+      "verdict": "keep",
+      "evidence": {
+        "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test (with mutant M1b: the onAbort listener returns the slot and cancels the reservation but does not close the backend socket) and --tests '*ReviewReproAbortClosesBackendTest' -i",
+        "output": "Mutant: 418 tests completed, 1 failed -- only ReviewReproAbortClosesBackendTest fails; all 417 existing proxy tests pass. Repro on mutant: 'REPRO backend observed close within 3s after abort: false' / AssertionError: the abort notification alone closed the backend connection. Repro on HEAD: 'REPRO backend observed close within 3s after abort: true', BUILD SUCCESSFUL.",
+        "intent_output": "REL-PROXY-001: once handed to res.relay, the first of relayed-stream close() and the res.onAbort notification must close the backend socket. Core DefaultResponse.abort does not close the input while a copy runs, so the abort listener is the only thing that unblocks a relay copy waiting on a quiet backend; the suite does not pin that the abort notification ALONE closes the socket. Repro source and full output: .kiwi/analysis/kiwi-review-fix-loop-2026-11-18.naruserve.self-w16s10/repro/ReviewReproAbortClosesBackendTest.java, .kiwi/analysis/kiwi-review-fix-loop-2026-11-18.naruserve.self-w16s10/repro/ReviewReproAbortClosesBackendTest.output.txt"
+      },
+      "drop_reason": "",
+      "title": "No test proves the res.onAbort notification alone closes the backend socket while the relay copy is blocked",
+      "location": {
+        "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+        "line_range": "236-284"
+      },
+      "description": "driveRelayedEnd(CLOSE_AFTER_ABORT) only checks the socket after both abortListener.run() and relayed.close(); RelayedBodyStream.close() -> SocketBodyStream.close() closes the socket by itself, so the abort listener's socket close is never observed. ProxyLifetimeSocketTest AC-1 uses a DRIP backend with an RST client, so the relay's next write fails and the core's transfer closes the input itself. A regression where ProxyExchange.release (or the abort listener) stops closing the socket leaves the transfer thread and the backend connection blocked up to readTimeout (60 s) after the slot was already returned, so real backend connections exceed maxConcurrent, and every existing test still passes.",
+      "suggested_fix": "Add a test (in ProxyExchangeTest or similar): relay from a backend that sends a head and a few bytes and then goes quiet, call res.abort(null) (or the captured abort listener) without closing the relayed stream, and assert the backend observes its connection closed within a short bound and the counter is 0. Also, in driveRelayedEnd CLOSE_AFTER_ABORT, assert backend.closedByProxy right after abortListener.run() and before relayed.close().",
+      "is_behavioral": false,
+      "tags": [
+        "test-gap",
+        "mutation-survivor",
+        "REL-PROXY-001"
+      ],
+      "related_ac": "REL-PROXY-001 AC-3",
+      "real_call_path": "TinyHttpd/any adapter reports a client disconnect (DefaultResponse.abortByExchange) or app code calls res.abort() while DefaultResponse.runTransfer is blocked in RelayedBodyStream.read on a backend that sends nothing -> abort listener -> ProxyExchange.release -> socket close is the only unblocker."
+    },
+    {
+      "id": "FND-002",
+      "axis": "P6",
+      "verdict": "drop",
+      "evidence": {
+        "command": "static analysis of Proxy.forward / DefaultResponse.onAbort",
+        "output": "DefaultResponse.onAbort runs a listener registered after the abort at once on the calling thread",
+        "intent_output": "n/a"
+      },
+      "drop_reason": "Swapping releaseOnAbort after res.relay is not pinned by any test, but with the core contract (a listener registered after the abort runs at once) it produces no observable difference; it is an implementation-note ordering, not a behavior defect.",
+      "title": "Order 'onAbort registered before res.relay' is not pinned by a test",
+      "location": {
+        "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "line_range": "506-510"
+      },
+      "description": "The capturing Response in ProxyExchangeTest records onAbort and relay but not their order.",
+      "suggested_fix": "Optional: record call order in the capturing Response.",
+      "is_behavioral": false,
+      "tags": [
+        "test-gap"
+      ],
+      "related_ac": "REL-PROXY-001 AC-3",
+      "real_call_path": "none"
+    },
+    {
+      "id": "FND-003",
+      "axis": "P2",
+      "verdict": "drop",
+      "evidence": {
+        "command": "static analysis of ProxyExchange.release / Proxy.forward finally",
+        "output": "production watchdog is ProxyExchange.NO_WATCHDOG whose Reservation.cancel() is empty",
+        "intent_output": "n/a"
+      },
+      "drop_reason": "Unreachable in this wave: only the no-op NO_WATCHDOG is installed; the real total-timeout scheduler is wave-18 (FR-PROXY-015/017). Recorded for that wave.",
+      "title": "A throwing Reservation.cancel() would replace the in-flight exception and skip closeQuietly(outgoing.body)",
+      "location": {
+        "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "line_range": "515-522"
+      },
+      "description": "forward's finally calls exchange.release() before closeQuietly(outgoing.body); a RuntimeException from cancel() still closes the socket and returns the slot (nested finally) but propagates out of the finally, masking the original 413/502/ProxyException and leaving the client body stream unclosed.",
+      "suggested_fix": "When the wave-18 watchdog lands, guard cancel() (catch RuntimeException) or close outgoing.body in its own finally.",
+      "is_behavioral": true,
+      "tags": [
+        "future-wave",
+        "exception-masking"
+      ],
+      "related_ac": "REL-PROXY-001 AC-4",
+      "real_call_path": "none"
+    },
+    {
+      "id": "FND-004",
+      "axis": "P2",
+      "verdict": "drop",
+      "evidence": {
+        "command": "static analysis of Proxy.handle/takeSlot",
+        "output": "forward(req, res, outgoing, takeSlot(outgoing)); the only statement between a successful tryAcquire and forward's try is 'new ProxyExchange(limiter)'",
+        "intent_output": "n/a"
+      },
+      "drop_reason": "Only an Error (OOM / StackOverflowError) during 'new ProxyExchange' or the forward invocation could leak the slot; no realistic path, and the JVM is unhealthy at that point.",
+      "title": "Theoretical slot leak between tryAcquire and forward's try",
+      "location": {
+        "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "line_range": "436-438, 549-556"
+      },
+      "description": "Slot taken in takeSlot before the try/finally of forward.",
+      "suggested_fix": "Optional: take the slot inside forward's try.",
+      "is_behavioral": true,
+      "tags": [
+        "theoretical"
+      ],
+      "related_ac": "REL-PROXY-001 AC-5",
+      "real_call_path": "none"
+    },
+    {
+      "id": "FND-005",
+      "axis": "P1",
+      "verdict": "drop",
+      "evidence": {
+        "command": "static analysis of DefaultResponse.startBody/abort vs Proxy.forward",
+        "output": "An abort that lands between releaseOnAbort and res.relay releases the exchange at once; res.relay on an ABORTED response closes the relayed stream (release no-op) and throws IllegalStateException(notNew) out of handle",
+        "intent_output": "n/a"
+      },
+      "drop_reason": "Slot, reservation and socket are still released exactly once (REL-PROXY-001 holds); an exception from relay on an already aborted response is pre-existing core behavior and no AC specifies the error kind for a gone client.",
+      "title": "Abort between onAbort registration and res.relay surfaces IllegalStateException to the error flow",
+      "location": {
+        "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "line_range": "506-511"
+      },
+      "description": "Narrow race; resources are released correctly.",
+      "suggested_fix": "none required",
+      "is_behavioral": true,
+      "tags": [
+        "race",
+        "benign"
+      ],
+      "related_ac": null,
+      "real_call_path": "client disconnect reported by the adapter between the two calls"
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-001",
+      "principle": "DRY / long parameter list",
+      "location": {
+        "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "line_range": "790-944"
+      },
+      "description": "Options has a 15-argument constructor and 14 withX copy methods that each repeat the whole argument list; replacing maxConcurrent with limiter had to touch every one (17 of the 37 hunks). A mutable builder copy (copy(); field = v; return) would localize such changes."
+    },
+    {
+      "id": "CC-002",
+      "principle": "Surprising test seam / least astonishment",
+      "location": {
+        "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "line_range": "88-96, 274-282"
+      },
+      "description": "withWatchdog is a test seam in the production class, and every option method silently resets the watchdog to NO_WATCHDOG through the 2-arg constructor, so p.withWatchdog(w).retries(0) drops w. The javadoc says to call it last, but the option methods could carry the watchdog through like the limiter."
+    },
+    {
+      "id": "CC-003",
+      "principle": "Function size / mixed responsibility",
+      "location": {
+        "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "line_range": "464-522"
+      },
+      "description": "forward handles the watchdog, connect, request write, response-head read, header copy, Location rewrite, relay lifetime and error mapping in one ~60-line method, and Proxy.java is over 1100 lines; the response-header phase could move to its own method."
+    },
+    {
+      "id": "CC-004",
+      "principle": "Duplication",
+      "location": {
+        "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+        "line_range": "35-55"
+      },
+      "description": "NO_RESERVATION and RELEASED are two identical empty Reservation anonymous classes; RELEASED exists only as an identity sentinel, which a comment-free reader can mistake for duplication."
+    },
+    {
+      "id": "CC-005",
+      "principle": "Test fixture duplication",
+      "location": {
+        "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+        "line_range": "536-724"
+      },
+      "description": "HoldingBackend (ProxyExchangeTest), HeldBackend (ProxyConcurrencyTest), LifetimeBackend (ProxyLifetimeSocketTest) and RawBackend (ProxyCheckOrderTest) are four raw-ServerSocket backends with overlapping accept loops, head readers and close detection; awaitCounterZero/awaitConnections polling helpers are also repeated."
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ConcurrencyLimiter.java",
+      "hunks_total": 1,
+      "anchors": [
+        "* The in-flight request counter of one {@code .maxConcurrent(n)} call, shared by reference by every {@link Proxy}"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+      "hunks_total": 37,
+      "anchors": [
+        "import java.util.concurrent.atomic.AtomicInteger;",
+        "/** The total-timeout watchdog every forwarded request reserves; not an option, so describe() leaves it out. */",
+        "private Proxy(TargetUrl target, Options options, ProxyExchange.Watchdog watchdog) {",
+        "this.watchdog = watchdog;",
+        "* the reservations and their cancels (REL-PROXY-001). The option methods return proxies with the default watchdog,",
+        "/** The in-flight counter shared with the proxies derived from this one, or null when there is no limit. */",
+        "+ \" preserveHost=\" + o.preserveHost + \" bodyLimit=\" + o.bodyLimit + \" maxConcurrent=\" + o.maxConcurrent",
+        "// @req FR-PROXY-019",
+        "// The slot comes after every check and req.bodyStream (FR-PROXY-010) and before the backend connect.",
+        "private void forward(Request req, Response res, Outgoing outgoing, ProxyExchange exchange) {",
+        "// The watchdog starts right after the slot, the last step before the backend connect (D-050), and the",
+        "Socket socket = BackendClient.open(target, connectTimeoutMillis(), options.totalTimeoutNanos,",
+        "exchange.attach(socket);",
+        "// (FR-PROXY-019, REL-PROXY-001). The listener comes first, since one registered after an abort runs at once.",
+        "// A request that ends before res.relay took the body releases here, before its exception leaves.",
+        "* the relay waits on a quiet backend frees the slot and the connection at once. A response without abort listeners",
+        "private static void closeQuietly(Socket socket) {",
+        "/** The counter of {@code .maxConcurrent}, shared by reference with every derived proxy; null for no limit. */",
+        "boolean preserveHost, long bodyLimit, @Nullable ConcurrencyLimiter limiter,",
+        "this.maxConcurrent = maxConcurrent;",
+        "NO_CONCURRENCY_LIMIT, Collections.emptyList(), Collections.emptyList(), true, null);",
+        "retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, maxConcurrent, requestHeaderRules,",
+        "retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, limiter, requestHeaderRules,",
+        "retryUnsafeMethods",
+        "requestHeaderRules",
+        "retryDelayNanos, retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, maxConcurrent,",
+        "maxConcurrent",
+        "retryDelayNanos, v, stripPrefix, preserveHost, bodyLimit, maxConcurrent, requestHeaderRules,",
+        "retryDelayNanos, retryUnsafeMethods, v, preserveHost, bodyLimit, maxConcurrent, requestHeaderRules,",
+        "retryDelayNanos, retryUnsafeMethods, stripPrefix, v, bodyLimit, maxConcurrent, requestHeaderRules,",
+        "retryDelayNanos, retryUnsafeMethods, stripPrefix, preserveHost, v, maxConcurrent,",
+        "/** A copy with a new counter of limit {@code v}: every other option method copies the counter reference. */",
+        "retryDelayNanos, retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, v, requestHeaderRules,",
+        "retryDelayNanos, retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, maxConcurrent, v,",
+        "retryDelayNanos, retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, limiter,",
+        "retryDelayNanos",
+        "preserveHost"
+      ],
+      "findings": [
+        "FND-002",
+        "FND-003",
+        "FND-004",
+        "FND-005"
+      ]
+    },
+    {
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+      "hunks_total": 1,
+      "anchors": [
+        "* open. {@link #release} gives all of them back exactly once, whichever end of the request calls it first: the close"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+      "hunks_total": 1,
+      "anchors": [
+        "* The backend response body as handed to {@code res.relay}: closing it closes the backend body and then releases the"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "* {@code req.bodyStream(limit)}, concurrency slot; and the proxy's own 400, 405 and 501 reach the error flow as a plain"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "* proxy later derived from it, a request that finds the counter at its limit gets 503 {@code CONCURRENCY_LIMIT} at once"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "* The lifetime of one proxied request (REL-PROXY-001) over the in-memory adapter: the relayed stream's {@code close()}"
+      ],
+      "findings": [
+        "FND-001"
+      ]
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyLifetimeSocketTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "* The end of a proxied request seen from the sockets (REL-PROXY-001): a client that disconnects while a response body"
+      ],
+      "findings": []
+    }
+  ],
+  "summary": {
+    "round": 1,
+    "reviewer": "prickly",
+    "range": "1f4974b3bff16141ff9e535df475819316421cd8..HEAD",
+    "counts": {
+      "keep": 1,
+      "residual": 0,
+      "drop": 4
+    },
+    "blocking_keep": 1,
+    "clean_code": 5,
+    "tests_run": "ProxyCheckOrderTest 9, ProxyConcurrencyTest 13, ProxyExchangeTest 8, ProxyLifetimeSocketTest 2: all pass on HEAD; full NaruServe-proxy suite 417 tests pass",
+    "mutations": [
+      {
+        "id": "M1",
+        "change": "ProxyExchange.release never closes the socket",
+        "result": "killed (6 failures in ProxyBodyLimitTest/ProxyRequestBodyTest)"
+      },
+      {
+        "id": "M1b",
+        "change": "abort listener releases without closing the socket",
+        "result": "SURVIVED all 417 existing tests; killed only by the review repro (FND-001)"
+      }
+    ],
+    "verified_ok": [
+      "CAS slot take without lock; release exactly once via AtomicBoolean",
+      "slot/watchdog after every check and bodyStream; 503 path closes body, no reservation",
+      "non-relayed paths release in finally before the exception leaves (AC-4)",
+      "attach/release and watch/release volatile handshakes are race-free",
+      "public API unchanged; no internal/spi refs; Java 8 constructs only; BackendClient/TlsConnector (SEC-PROXY-005) untouched",
+      "own 400/405/501 are plain HttpException with null message"
+    ],
+    "out_of_scope": [
+      "Core DefaultResponse.runTransfer calls ex.finish() before closing the relayed stream (known; tests poll awaitCounterZero)",
+      "TinyHttpd does not report an idle client disconnect while the relay waits on the backend (known)",
+      "Real total-timeout watchdog, READ_TIMEOUT/CONNECT_FAILED/TOTAL_TIMEOUT kinds and retries (wave-18)",
+      "Backend response parsing / obs-text (SEC-PROXY-004, wave-17)"
+    ],
+    "working_tree_clean": true
+  }
+}

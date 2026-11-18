@@ -1,0 +1,44 @@
+[
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-18",
+   "summary": "[req] FR-PROXY-010 - proxy check order and plain HttpException answers; base Proxy.handle order already held, tests added in ProxyCheckOrderTest. green=PASS (9/9). AC: FR-PROXY-010 AC-1..7 PASS (AC-6 forward guard until FR-PROXY-019)",
+   "requirementIds": [
+    "FR-PROXY-010"
+   ],
+   "target": "0.12.0",
+   "scope": "PROXY"
+  },
+  "argsHash": "cc8c893e21d02bb3f2b3f198309c50131aa42e5d",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-18",
+   "summary": "[req] FR-PROXY-019 - proxy concurrency limit: maxConcurrent installs a ConcurrencyLimiter shared by derived proxies; slot taken by CAS after checks and bodyStream; 503 CONCURRENCY_LIMIT without backend connection; ProxyExchange releases slot and socket once, RelayedBodyStream close after relay. files: ConcurrencyLimiter.java, ProxyExchange.java, RelayedBodyStream.java, Proxy.java, ProxyConcurrencyTest.java, ProxyCheckOrderTest.java. green=PASS (13/13 + 9/9). AC: FR-PROXY-019 AC-1..9 PASS",
+   "requirementIds": [
+    "FR-PROXY-019"
+   ],
+   "target": "0.12.0",
+   "scope": "PROXY"
+  },
+  "argsHash": "6f047b2a910b6932beb85c6f701cfbfda5ed0d78",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-18",
+   "summary": "[req] REL-PROXY-001 - proxy request lifetime: res.onAbort listener registered before res.relay so the first of the relayed close and the abort notification ends the exchange; package-private total-timeout watchdog seam reserved after the slot and cancelled once by ProxyExchange.release (no-op default until the scheduler lands). files: Proxy.java, ProxyExchange.java, RelayedBodyStream.java, ProxyExchangeTest.java, ProxyLifetimeSocketTest.java. green=PASS (10/10). AC: REL-PROXY-001 AC-1..6 PASS (AC-1 AC-2 already held at base)",
+   "requirementIds": [
+    "REL-PROXY-001"
+   ],
+   "target": "0.12.0",
+   "scope": "PROXY"
+  },
+  "argsHash": "6789dc7609d1ef79720c2fe68c8ae17f662d6748",
+  "action": "apply"
+ }
+]
