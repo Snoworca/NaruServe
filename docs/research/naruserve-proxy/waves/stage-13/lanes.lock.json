@@ -1,0 +1,69 @@
+{
+  "lane_cap": 4,
+  "depends": {
+    "2026-11-14.NaruServe.naruserve-proxy-wave-19": [],
+    "2026-11-14.NaruServe.naruserve-proxy-wave-20": []
+  },
+  "declaration": "docs/research/naruserve-proxy/waves/waves.json",
+  "declaration_digests": {
+    "2026-11-14.NaruServe.naruserve-proxy-wave-19": "5c7b2c8fef82932e81ad221b040eb7da5b11e50fe58c1253cecd298f9341b084",
+    "2026-11-14.NaruServe.naruserve-proxy-wave-20": "9aa75b5b6e2c254ae8e43ced74fe920e4d7493fea7498931ea6e6857b4dfa65c"
+  },
+  "sds_digests": {},
+  "lane_count": 2,
+  "stage_count": 2,
+  "lanes": [
+    {
+      "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-19",
+      "stage": 1,
+      "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-19",
+      "sds": null,
+      "writeSet": [
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Watchdog.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyFixedRequestHeadersTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyForwardedHeadersTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/WatchdogTest.java"
+      ]
+    },
+    {
+      "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-20",
+      "stage": 2,
+      "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-20",
+      "sds": null,
+      "writeSet": [
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RetryPolicy.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBackendConnectionTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRetryTest.java"
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "index": 1,
+      "laneIds": [
+        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-19"
+      ]
+    },
+    {
+      "index": 2,
+      "laneIds": [
+        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-20"
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "a": "2026-11-14.NaruServe.naruserve-proxy-wave-19",
+      "b": "2026-11-14.NaruServe.naruserve-proxy-wave-20",
+      "reason": "write-set-overlap",
+      "paths": [
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java"
+      ]
+    }
+  ]
+}
