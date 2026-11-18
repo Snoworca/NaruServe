@@ -15,6 +15,7 @@ Request corresponds to Express's req. Use methods such as `req.param("id")` rath
 | `isSecure()` | boolean | req.secure | Whether transport uses TLS |
 | `socketAddress()` | String | `req.socket.remoteAddress` | The real connection peer; independent of proxy settings |
 | `requestId()` | String | none (Express has no built-in request id) | This request's id; the same value as the error body and the access log |
+| `isFromTrustedProxy()` | boolean | `app.get('trust proxy fn')(req.socket.remoteAddress, 0)` | `true` when the app's proxy trust setting trusts the direct peer; see [Requests from a trusted proxy](#requests-from-a-trusted-proxy) |
 
 By default, proxy headers are ignored. With app.trustProxy(true), remoteAddress uses the first X-Forwarded-For header's leftmost trimmed entry; isSecure uses the first X-Forwarded-Proto entry, with https meaning true. Missing/blank entries retain transport values. Values are not validated; enable this only behind a proxy that overwrites these headers. Forwarded is never read. This corresponds to Express's trust proxy setting. See [server options](app.md#server-options).
 
@@ -35,8 +36,10 @@ Hop mode `app.trustProxyHops(1)` (Express `app.set('trust proxy', 1)`) trusts th
 | `queries(name)` | List<String> | Empty list | Query array |
 | `header(name)` | String | null | req.get(name) |
 | `headers(name)` | List<String> | Empty list | — |
+| `headerNames()` | Set<String> | Empty set | `Object.keys(req.headers)` |
+| `rawHeaders()` | List<Map.Entry<String, String>> | Empty list | `req.rawHeaders` |
 
-Participating path captures are decoded exactly once; the pathname remains raw. Query values use their query decoder; headers are not URL-decoded. query/header return the first repeated value, queries/headers return every value as an unmodifiable list. Header names are case-insensitive. Use queryInt/paramInt or validate before converting a number.
+Participating path captures are decoded exactly once; the pathname remains raw. Query values use their query decoder; headers are not URL-decoded. query/header return the first repeated value, queries/headers return every value as an unmodifiable list. Header names are case-insensitive. Use queryInt/paramInt or validate before converting a number. To walk every header, use `headerNames()` and `rawHeaders()` (see [Header enumeration](#header-enumeration)).
 
 ```java
 // GET /users/42/posts?page=2&tag=a&tag=b
@@ -67,6 +70,8 @@ An uncaught NumberFormatException from Integer.parseInt becomes 500. Treat inval
 Empty strings, decimal fractions and surrounding whitespace are not missing numbers and produce errors. Negative integers are valid; enforce business ranges yourself. An undeclared path parameter remains a programming error. For an optional missing capture, use paramOrNull before choosing a default; paramInt does not supply one. Required-string helpers return the original value after checking it.
 
 ## Body
+
+To read the body as the bytes received, use the [raw body stream](#raw-body-stream).
 
 ### JSON
 
@@ -298,3 +303,181 @@ app.get("/whoami") { req, res ->
     res.send("$peer $client $id")
 }
 ```
+
+## Raw body stream
+
+`req.bodyStream()` and `req.bodyStream(maxBytes)` return an `InputStream` that reads the request body as received. They correspond to reading Express `req` as a stream (`req.on('data', ...)`, `req.pipe(...)`), and `bodyStream(maxBytes)`, which sets the limit per route, corresponds to `express.raw({ limit })`. Use them when the body must stay untouched, as for a webhook signature check or a file relay.
+
+| Method | Returns | Express | Limit |
+|---|---|---|---|
+| `bodyStream()` | `InputStream` | the `req` stream | `app.rawBodyLimit(bytes)` (default 1 MiB) |
+| `bodyStream(maxBytes)` | `InputStream` | `express.raw({ limit })` | `maxBytes`, for this call only |
+
+- **As received**: the stream removes only the chunked transfer coding and keeps `Content-Encoding` (for example gzip). Spaces and line breaks of JSON, binary bytes and urlencoded bodies stay unchanged.
+- **Without a body**: you get an empty, non-null stream; its first `read()` returns `-1`.
+- **Limits**: the limit of `bodyStream()` is `app.rawBodyLimit(bytes)` (see [Raw body limit](app.md#raw-body-limit)), and `bodyStream(maxBytes)` uses `maxBytes` for that call only. `maxBytes` takes `1..1073741824`; a value outside throws `IllegalArgumentException`. For a body over the limit see [Raw body over the limit](#raw-body-over-the-limit).
+- **One read**: the body is read once. Once `bodyStream` returned a stream, even with no byte read, `body(...)`, `form(...)` and `parts()` throw `BodyAlreadyConsumedException`. In the other direction, a `bodyStream` call after `body(...)` read the body throws `BodyAlreadyConsumedException`. On a request whose `Content-Type` is JSON, `form(...)` and `parts()` do not read the body, so a later `bodyStream()` returns the whole body.
+- **Repeated calls**: while nothing of the stream was consumed, a repeated call with the same limit returns the same stream object, and another limit throws `IllegalStateException`. `bodyStream()` counts as `bodyStream(maxBytes)` with the app's `rawBodyLimit`. After a `read` that returned at least one byte, a `skip` that advanced or a `close`, a further call throws `BodyAlreadyConsumedException` whatever the limit. `available()` does not count as consumption.
+- **Cleanup**: when a handler neither reads the stream to its end nor closes it, the framework closes it in the request cleanup after the response ends. You may close it yourself with try-with-resources (`use` in Kotlin).
+
+```java
+app.post("/webhook", (req, res) -> {
+    ByteArrayOutputStream raw = new ByteArrayOutputStream();
+    try (InputStream in = req.bodyStream()) {                        // the app's rawBodyLimit
+        byte[] buf = new byte[8192];
+        for (int n = in.read(buf); n != -1; n = in.read(buf)) {
+            raw.write(buf, 0, n);
+        }
+    }
+    res.send("received " + raw.size() + " bytes");
+});
+
+app.put("/backup", (req, res) -> {
+    long size = 0;
+    try (InputStream in = req.bodyStream(64L * 1024 * 1024)) {       // 64 MiB for this call only
+        byte[] buf = new byte[8192];
+        for (int n = in.read(buf); n != -1; n = in.read(buf)) {
+            size += n;
+        }
+    }
+    res.send("stored " + size + " bytes");
+});
+```
+
+Kotlin:
+
+```kotlin
+app.post("/webhook") { req, res ->
+    val raw = req.bodyStream().use { it.readBytes() }
+    res.send("received ${raw.size} bytes")
+}
+
+app.put("/backup") { req, res ->
+    var size = 0L
+    req.bodyStream(64L * 1024 * 1024).use { input ->
+        val buf = ByteArray(8192)
+        var n = input.read(buf)
+        while (n != -1) {
+            size += n
+            n = input.read(buf)
+        }
+    }
+    res.send("stored $size bytes")
+}
+```
+
+## Raw body over the limit
+
+A body read through `bodyStream` that is over its limit arrives in two forms.
+
+| Case | Exception | Thrown by |
+|---|---|---|
+| the declared `Content-Length` exceeds the limit | `HttpException` with `status()` `413` | the `bodyStream` call itself, before any byte is read |
+| a body without a declared length (chunked) passes the limit | `BodyTooLargeException` (an `IOException` subclass; `limit()` is the limit it passed) | the stream: the bytes up to the limit are read as usual, and the `read` that would return a byte beyond the limit throws |
+
+So an `onError` handler that wants to recognise an over-limit body must check both forms. Note that an unwrapped `BodyTooLargeException` that leaves the handler becomes a `413` response (the standard error body, code `PAYLOAD_TOO_LARGE`), and `onError` receives that exception object itself. One wrapped in another exception (for example `new RuntimeException(e)`) is handled as an ordinary exception and answered `500` (or with its own status when the wrapper is an `HttpException`). When `onError` does not answer, the error moves on to the next error layer ([app.onError](middleware.md#apponerror)).
+
+```java
+app.onError((error, req, res) -> {
+    boolean tooLarge = error instanceof BodyTooLargeException
+            || (error instanceof HttpException && ((HttpException) error).status() == 413);
+    if (tooLarge) {
+        res.status(413).send("body too large");
+    }
+});
+```
+
+Kotlin:
+
+```kotlin
+app.onError { error, req, res ->
+    val tooLarge = error is BodyTooLargeException ||
+        (error is HttpException && error.status() == 413)
+    if (tooLarge) {
+        res.status(413).send("body too large")
+    }
+}
+```
+
+## Header enumeration
+
+`req.headerNames()` is the counterpart of Express `Object.keys(req.headers)`, and `req.rawHeaders()` the counterpart of Express `req.rawHeaders`. Where Express `req.rawHeaders` is one array alternating names and values, `rawHeaders()` is a list of name-value pairs (`Map.Entry`).
+
+| Method | Returns | Content |
+|---|---|---|
+| `headerNames()` | `Set<String>` | lowercase names; names that differ only in case become one, in the order first seen |
+| `rawHeaders()` | `List<Map.Entry<String, String>>` | one name-value pair per header line; keeps case and duplicates (for the servlet adapter see below) |
+
+- Both results list names and pairs in the order the adapter reported. Names are lowercased character by character, independent of the locale.
+- Both results are unmodifiable: `add`, `remove`, `set` and `setValue` on an entry throw `UnsupportedOperationException`.
+- The values of each name equal `headers(name)`, so every value of a repeated header is kept.
+- The TinyHttpd adapter reports the lines in their order and case as received. The servlet adapter groups the values by name in the container's enumeration order, so lines of one name come out together even when they arrived apart, and each value carries the name spelling the container enumerated, so a line that sent the same name in another case loses its spelling.
+
+```java
+app.get("/headers", (req, res) -> {
+    Set<String> names = req.headerNames();                      // [x-a, x-b]
+    List<Map.Entry<String, String>> raw = req.rawHeaders();     // X-A=1, x-a=2, X-B=3
+    StringBuilder lines = new StringBuilder();
+    for (Map.Entry<String, String> h : raw) {
+        lines.append(h.getKey()).append(": ").append(h.getValue()).append('\n');
+    }
+    res.send(names + "\n" + lines);
+});
+```
+
+Kotlin:
+
+```kotlin
+app.get("/headers") { req, res ->
+    val names: Set<String> = req.headerNames()
+    val raw: List<Map.Entry<String, String>> = req.rawHeaders()
+    val lines = raw.joinToString("") { "${it.key}: ${it.value}\n" }
+    res.send("$names\n$lines")
+}
+```
+
+## Requests from a trusted proxy
+
+`req.isFromTrustedProxy()` tells whether the app's proxy trust setting trusts the direct peer (`req.socketAddress()`); when it is `true`, `remoteAddress()` and `isSecure()` follow the forwarding headers. It is the counterpart of Express `app.get('trust proxy fn')(req.socket.remoteAddress, 0)`, and Kotlin reads it as the property `req.isFromTrustedProxy`. Use it to decide whether to pass on `X-Forwarded-*` headers that a peer sent. The settings are in [proxy trust](app.md#proxy-trust).
+
+| App setting | `isFromTrustedProxy()` |
+|---|---|
+| no trust setting | `false` |
+| `trustProxyHops(0)` | `false` |
+| empty `trustProxyCidrs()` | `false` |
+| `trustProxyHops(n)`, n ≥ 1 | `true` |
+| legacy `trustProxy(true)` | `true` |
+| `trustProxyCidrs(...)` | `true` only when the direct peer (`socketAddress()`) lies inside a listed CIDR |
+
+Under `trustProxyCidrs(...)`, a direct peer whose address does not parse as an IPv4 or IPv6 address gives `false`. The answer is the same decision that makes `remoteAddress()` follow the forwarding headers.
+
+```java
+app.trustProxyHops(1);
+app.get("/via", (req, res) -> {
+    if (req.isFromTrustedProxy()) {
+        res.send("forwarded for " + req.remoteAddress() + " by " + req.socketAddress());
+    } else {
+        res.send("direct from " + req.socketAddress());
+    }
+});
+```
+
+Kotlin:
+
+```kotlin
+app.trustProxyHops(1)
+app.get("/via") { req, res ->
+    if (req.isFromTrustedProxy) {
+        res.send("forwarded for ${req.remoteAddress()} by ${req.socketAddress()}")
+    } else {
+        res.send("direct from ${req.socketAddress()}")
+    }
+}
+```
+
+## 0.12.0 compatibility notes
+
+0.12.0 makes two behaviour changes around `BodyTooLargeException`.
+
+- In the error flow, an unwrapped `BodyTooLargeException` now gives `413` where 0.11.0 gave `500`. A wrapped one is still handled as an ordinary exception, as in 0.11.0.
+- `BodyTooLargeException` moved from `com.snoworca.naruserve.internal` to `com.snoworca.naruserve`. Code that imported the internal class must change its import to `import com.snoworca.naruserve.BodyTooLargeException;`.

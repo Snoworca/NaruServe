@@ -17,6 +17,7 @@
 | `isSecure()` | `boolean` | `req.secure` | TLS 연결이면 `true` |
 | `socketAddress()` | `String` | `req.socket.remoteAddress` | 실제 연결 상대 주소. 프록시 설정과 무관 |
 | `requestId()` | `String` | 없음(Express에는 기본 요청 ID가 없습니다) | 이 요청의 ID. 오류 본문·접근 로그와 같은 값 |
+| `isFromTrustedProxy()` | `boolean` | `app.get('trust proxy fn')(req.socket.remoteAddress, 0)` | 앱의 프록시 신뢰 설정이 직접 연결한 상대를 믿으면 `true`. [프록시에서 온 요청](#프록시에서-온-요청) |
 
 `remoteAddress()`와 `isSecure()`는 기본으로 `X-Forwarded-For` 같은 프록시 헤더를 보지 않습니다. 리버스 프록시 뒤에서 `app.trustProxy(true)`를 켜면 첫 `X-Forwarded-For` 헤더의 맨 왼쪽 값과 첫 `X-Forwarded-Proto` 값(`https`이면 `true`)을 씁니다. Express의 `app.set('trust proxy', true)`에 해당하며, 값은 검증하지 않으므로 그 헤더를 덮어쓰는 프록시 뒤에서만 켜세요. `Forwarded` 헤더는 읽지 않습니다. [서버 설정](app.md#서버-설정)
 
@@ -37,10 +38,13 @@
 | `queries(name)` | `List<String>` | 빈 리스트 | `req.query.name` (배열) |
 | `header(name)` | `String` | `null` | `req.get(name)` |
 | `headers(name)` | `List<String>` | 빈 리스트 | — |
+| `headerNames()` | `Set<String>` | 빈 집합 | `Object.keys(req.headers)` |
+| `rawHeaders()` | `List<Map.Entry<String, String>>` | 빈 리스트 | `req.rawHeaders` |
 
 - 참여한 경로 캡처는 정확히 한 번 디코딩하지만 pathname 자체는 raw입니다. 쿼리는 별도 쿼리 디코더로 읽고 헤더 값은 URL 디코딩하지 않습니다. 숫자는 아래의 `queryInt`·`paramInt` 등으로 읽거나 직접 검증해 변환합니다.
 - 같은 이름이 여러 번 오면 `query`/`header`는 첫 번째 값을, `queries`/`headers`는 모든 값을 돌려줍니다.
 - 헤더 이름은 대소문자를 구분하지 않습니다.
+- 모든 헤더를 훑어보려면 `headerNames()`와 `rawHeaders()`를 쓰세요. [헤더 목록](#헤더-목록)
 
 ```java
 // GET /users/42/posts?page=2&tag=a&tag=b
@@ -71,6 +75,8 @@ app.get("/users/:id/posts", (req, res) -> {
 숫자 기본값은 누락된 값에만 적용합니다. 빈 문자열, 소수, 공백이 붙은 숫자는 오류입니다. 음수는 유효한 정수이며, 양수만 허용하는 등 업무상 범위는 앱에서 검사합니다. 선언하지 않은 경로 변수 이름은 프로그래밍 오류입니다. 빠질 수 있는 선택 캡처는 paramOrNull로 확인하고 기본값을 고르세요. paramInt가 기본값을 제공하지는 않습니다. 필수 문자열은 검사 후 원래 값을 그대로 반환합니다.
 
 ## 본문
+
+본문을 받은 그대로의 바이트로 읽으려면 [원시 본문 스트림](#원시-본문-스트림)을 쓰세요.
 
 ### JSON
 
@@ -316,3 +322,181 @@ app.get("/whoami") { req, res ->
     res.send("$peer $client $id")
 }
 ```
+
+## 원시 본문 스트림
+
+`req.bodyStream()`과 `req.bodyStream(maxBytes)`는 요청 본문을 받은 그대로 읽는 `InputStream`을 돌려줍니다. Express에서 `req`를 스트림으로 읽던 것(`req.on('data', ...)`, `req.pipe(...)`)에 해당하고, 라우트마다 한도를 정하는 `bodyStream(maxBytes)`는 `express.raw({ limit })`에 해당합니다. Webhook 서명 검사나 파일 전달처럼 본문을 가공하지 않고 써야 할 때 씁니다.
+
+| 메서드 | 반환 | Express | 한도 |
+|---|---|---|---|
+| `bodyStream()` | `InputStream` | `req` 스트림 | `app.rawBodyLimit(bytes)`(기본 1 MiB) |
+| `bodyStream(maxBytes)` | `InputStream` | `express.raw({ limit })` | 이 호출에만 쓰는 `maxBytes` |
+
+- **받은 그대로**: chunked 전송 코딩만 벗기고 `Content-Encoding`(예: gzip)은 풀지 않습니다. JSON의 공백과 줄바꿈, 바이너리 바이트, urlencoded 본문도 바꾸지 않습니다.
+- **본문이 없을 때**: `null`이 아닌 빈 스트림을 돌려줍니다. 첫 `read()`가 `-1`입니다.
+- **한도**: `bodyStream()`의 한도는 `app.rawBodyLimit(bytes)`이고([원시 본문 한도](app.md#원시-본문-한도)), `bodyStream(maxBytes)`는 그 호출에만 `maxBytes`를 한도로 씁니다. `maxBytes`의 범위는 `1..1073741824`이고 밖이면 `IllegalArgumentException`입니다. 한도를 넘었을 때는 [한도를 넘은 원시 본문](#한도를-넘은-원시-본문)을 보세요.
+- **한 번 읽기**: 본문은 한 번만 읽습니다. `bodyStream`이 스트림을 돌려준 뒤에는 한 바이트도 읽지 않았어도 `body(...)`, `form(...)`, `parts()`가 `BodyAlreadyConsumedException`을 던집니다. 반대로 `body(...)`가 본문을 읽은 뒤에 부른 `bodyStream`도 `BodyAlreadyConsumedException`입니다. `Content-Type`이 JSON인 요청에서 `form(...)`과 `parts()`는 본문을 읽지 않으므로 그 뒤의 `bodyStream()`은 본문 전체를 돌려줍니다.
+- **다시 부를 때**: 스트림에서 아무것도 소비하지 않았으면 같은 한도로 다시 부르면 같은 스트림 객체를 돌려주고, 다른 한도로 부르면 `IllegalStateException`입니다. `bodyStream()`은 앱의 `rawBodyLimit`을 넘긴 `bodyStream(maxBytes)`와 같은 한도로 봅니다. 한 바이트 이상을 돌려준 `read`, 앞으로 나아간 `skip`, `close` 가운데 하나라도 있었으면 그 뒤의 호출은 한도와 상관없이 `BodyAlreadyConsumedException`입니다. `available()`은 소비로 세지 않습니다.
+- **정리**: 핸들러가 끝까지 읽지 않았거나 닫지 않은 스트림은 응답이 끝난 뒤 요청 정리에서 프레임워크가 닫습니다. `try`-with-resources(Kotlin은 `use`)로 직접 닫아도 됩니다.
+
+```java
+app.post("/webhook", (req, res) -> {
+    ByteArrayOutputStream raw = new ByteArrayOutputStream();
+    try (InputStream in = req.bodyStream()) {                        // 앱의 rawBodyLimit
+        byte[] buf = new byte[8192];
+        for (int n = in.read(buf); n != -1; n = in.read(buf)) {
+            raw.write(buf, 0, n);
+        }
+    }
+    res.send("received " + raw.size() + " bytes");
+});
+
+app.put("/backup", (req, res) -> {
+    long size = 0;
+    try (InputStream in = req.bodyStream(64L * 1024 * 1024)) {       // 이 호출에만 64 MiB
+        byte[] buf = new byte[8192];
+        for (int n = in.read(buf); n != -1; n = in.read(buf)) {
+            size += n;
+        }
+    }
+    res.send("stored " + size + " bytes");
+});
+```
+
+Kotlin:
+
+```kotlin
+app.post("/webhook") { req, res ->
+    val raw = req.bodyStream().use { it.readBytes() }
+    res.send("received ${raw.size} bytes")
+}
+
+app.put("/backup") { req, res ->
+    var size = 0L
+    req.bodyStream(64L * 1024 * 1024).use { input ->
+        val buf = ByteArray(8192)
+        var n = input.read(buf)
+        while (n != -1) {
+            size += n
+            n = input.read(buf)
+        }
+    }
+    res.send("stored $size bytes")
+}
+```
+
+## 한도를 넘은 원시 본문
+
+`bodyStream`으로 읽는 본문이 한도를 넘으면 예외가 두 가지 모양으로 옵니다.
+
+| 상황 | 예외 | 던지는 곳 |
+|---|---|---|
+| 선언한 `Content-Length`가 한도보다 큼 | `status()`가 `413`인 `HttpException` | `bodyStream` 호출 자체. 본문을 한 바이트도 읽기 전에 던집니다 |
+| 길이를 선언하지 않은 본문(chunked)이 한도를 넘음 | `BodyTooLargeException`(`IOException`의 하위 클래스, `limit()`은 넘은 한도) | 스트림. 한도까지의 바이트는 그대로 읽히고, 한도를 넘는 바이트를 읽으려는 `read`가 던집니다 |
+
+`onError`에서 본문 한도 초과를 알아보려면 두 모양을 모두 확인하세요. 감싸지 않은 채 핸들러 밖으로 나간 `BodyTooLargeException`은 `413` 응답(표준 오류 본문, 코드 `PAYLOAD_TOO_LARGE`)이 되고, `onError`는 그 예외 객체를 그대로 받습니다. 다른 예외로 감싼 것(예: `new RuntimeException(e)`)은 일반 예외로 처리되어 `500`이 됩니다(감싼 예외가 `HttpException`이면 그 예외의 상태입니다). `onError`가 응답하지 않으면 오류는 다음 오류 처리로 넘어갑니다([app.onError](middleware.md#apponerror)).
+
+```java
+app.onError((error, req, res) -> {
+    boolean tooLarge = error instanceof BodyTooLargeException
+            || (error instanceof HttpException && ((HttpException) error).status() == 413);
+    if (tooLarge) {
+        res.status(413).send("body too large");
+    }
+});
+```
+
+Kotlin:
+
+```kotlin
+app.onError { error, req, res ->
+    val tooLarge = error is BodyTooLargeException ||
+        (error is HttpException && error.status() == 413)
+    if (tooLarge) {
+        res.status(413).send("body too large")
+    }
+}
+```
+
+## 헤더 목록
+
+`req.headerNames()`는 Express `Object.keys(req.headers)`에 해당하고, `req.rawHeaders()`는 Express `req.rawHeaders`에 해당합니다. Express의 `req.rawHeaders`는 이름과 값이 번갈아 오는 배열이지만 `rawHeaders()`는 이름·값 쌍(`Map.Entry`)의 목록입니다.
+
+| 메서드 | 반환 | 내용 |
+|---|---|---|
+| `headerNames()` | `Set<String>` | 소문자로 바꾼 이름. 대소문자만 다른 이름은 하나로 모으고, 처음 온 순서를 따릅니다 |
+| `rawHeaders()` | `List<Map.Entry<String, String>>` | 헤더 줄마다 이름·값 쌍 하나. 대소문자와 중복을 그대로 둡니다(서블릿 어댑터는 아래 참고) |
+
+- 두 결과 모두 어댑터가 알려 준 순서를 따릅니다. 이름은 로캘과 상관없이 글자마다 소문자로 바꿉니다.
+- 두 결과 모두 수정할 수 없습니다. `add`, `remove`, `set`, 원소의 `setValue`는 `UnsupportedOperationException`을 던집니다.
+- 이름마다의 값은 `headers(name)`과 같습니다. 반복된 헤더의 값도 모두 남습니다.
+- TinyHttpd 어댑터는 받은 줄의 순서와 대소문자를 그대로 알립니다. 서블릿 어댑터에서는 컨테이너가 헤더 이름을 열거하는 순서대로 이름마다 값을 묶어 알리므로, 같은 이름의 줄이 떨어져 와도 붙어서 나옵니다. 이때 값마다 컨테이너가 열거한 이름 표기를 쓰므로, 같은 이름을 다른 대소문자로 보낸 줄의 표기는 남지 않습니다.
+
+```java
+app.get("/headers", (req, res) -> {
+    Set<String> names = req.headerNames();                      // [x-a, x-b]
+    List<Map.Entry<String, String>> raw = req.rawHeaders();     // X-A=1, x-a=2, X-B=3
+    StringBuilder lines = new StringBuilder();
+    for (Map.Entry<String, String> h : raw) {
+        lines.append(h.getKey()).append(": ").append(h.getValue()).append('\n');
+    }
+    res.send(names + "\n" + lines);
+});
+```
+
+Kotlin:
+
+```kotlin
+app.get("/headers") { req, res ->
+    val names: Set<String> = req.headerNames()
+    val raw: List<Map.Entry<String, String>> = req.rawHeaders()
+    val lines = raw.joinToString("") { "${it.key}: ${it.value}\n" }
+    res.send("$names\n$lines")
+}
+```
+
+## 프록시에서 온 요청
+
+`req.isFromTrustedProxy()`는 앱의 프록시 신뢰 설정이 직접 연결한 상대(`req.socketAddress()`)를 믿는지 알려 줍니다. `true`이면 `remoteAddress()`와 `isSecure()`가 전달 헤더를 따릅니다. Express `app.get('trust proxy fn')(req.socket.remoteAddress, 0)`에 해당하고, Kotlin에서는 `req.isFromTrustedProxy` 속성으로 읽습니다. 신뢰하지 않는 상대가 보낸 `X-Forwarded-*` 헤더를 다음 서버로 넘길지 정할 때 씁니다. 설정은 [프록시 신뢰](app.md#프록시-신뢰)에 있습니다.
+
+| 앱 설정 | `isFromTrustedProxy()` |
+|---|---|
+| 신뢰 설정 없음 | `false` |
+| `trustProxyHops(0)` | `false` |
+| 빈 `trustProxyCidrs()` | `false` |
+| `trustProxyHops(n)`, n ≥ 1 | `true` |
+| 레거시 `trustProxy(true)` | `true` |
+| `trustProxyCidrs(...)` | 직접 연결한 상대(`socketAddress()`)가 목록의 CIDR 안일 때만 `true` |
+
+`trustProxyCidrs(...)`에서 직접 연결한 상대의 주소를 IPv4·IPv6 주소로 읽을 수 없으면 `false`입니다. `remoteAddress()`가 전달 헤더를 따를지 정할 때와 같은 판단을 씁니다.
+
+```java
+app.trustProxyHops(1);
+app.get("/via", (req, res) -> {
+    if (req.isFromTrustedProxy()) {
+        res.send("forwarded for " + req.remoteAddress() + " by " + req.socketAddress());
+    } else {
+        res.send("direct from " + req.socketAddress());
+    }
+});
+```
+
+Kotlin:
+
+```kotlin
+app.trustProxyHops(1)
+app.get("/via") { req, res ->
+    if (req.isFromTrustedProxy) {
+        res.send("forwarded for ${req.remoteAddress()} by ${req.socketAddress()}")
+    } else {
+        res.send("direct from ${req.socketAddress()}")
+    }
+}
+```
+
+## 0.12.0 호환성 메모
+
+0.12.0은 `BodyTooLargeException`에 관한 두 가지 동작을 바꿨습니다.
+
+- 오류 흐름에 도착한 감싸지 않은 `BodyTooLargeException`은 이제 `413`이 됩니다. 0.11.0에서는 `500`이었습니다. 감싼 예외는 0.11.0과 같이 일반 예외로 처리됩니다.
+- `BodyTooLargeException`이 `com.snoworca.naruserve.internal`에서 `com.snoworca.naruserve`로 옮겨졌습니다. 내부 클래스를 import하던 코드는 `import com.snoworca.naruserve.BodyTooLargeException;`으로 import를 바꿔야 합니다.
