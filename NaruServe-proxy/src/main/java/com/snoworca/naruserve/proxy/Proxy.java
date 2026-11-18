@@ -489,6 +489,8 @@ public final class Proxy implements Middleware {
             // A malformed head or framing is a ProxyException INVALID_RESPONSE, which passes the catch below. After a
             // failed write the response the backend may have left on the socket is read instead (FR-PROXY-015).
             ResponseParser.Head head = writeFailure == null ? ResponseParser.read(in) : earlyResponse(in, writeFailure);
+            // A deadline that fired while the head was read, after its last byte arrived, is still before the relay.
+            throwIfFired(exchange);
             ResponseParser.Framing framing = ResponseParser.framing(head, "HEAD".equals(req.methodToken()));
             // The adapter writes its own reason phrase for the status (D-059); the backend phrase is not kept.
             res.status(head.status);
@@ -501,6 +503,10 @@ public final class Proxy implements Middleware {
                     framing.bodyless ? -1 : framing.relayLength, req.application().logger(),
                     target.scheme + "://" + target.authority);
             releaseOnAbort(res, relayedBody, exchange);
+            // The last check before the hand-off: a deadline that fired while the status and headers were set is a 504
+            // through the error flow, which drops them (FR-PROXY-017). A deadline that fires after this check counts as
+            // after the hand-off: the relay meets the closed socket and takes the abort path of FR-PROXY-016.
+            throwIfFired(exchange);
             res.relay(relayedBody, framing.relayLength);
             relayed = true;
         } catch (IOException e) {
@@ -580,6 +586,18 @@ public final class Proxy implements Middleware {
                 ? ProxyException.Kind.READ_TIMEOUT : ProxyException.Kind.INVALID_RESPONSE);
         // settle never returns null for a non-null kind; the fallback keeps the type checker content.
         return new ProxyException(kind != null ? kind : ProxyException.Kind.INVALID_RESPONSE, e);
+    }
+
+    /**
+     * Throws a {@link ProxyException} of the kind of the deadline that fired, if one did, so a deadline reached before
+     * the response is handed to {@code res.relay} is a 504 of its kind through the error flow (FR-PROXY-017).
+     */
+    // @req FR-PROXY-017
+    private static void throwIfFired(ProxyExchange exchange) {
+        ProxyException.Kind fired = exchange.firedKind();
+        if (fired != null) {
+            throw new ProxyException(fired, null);
+        }
     }
 
     /**
