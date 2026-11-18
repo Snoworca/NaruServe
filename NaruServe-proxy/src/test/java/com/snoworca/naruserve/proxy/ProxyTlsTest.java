@@ -26,6 +26,8 @@ import java.net.Socket;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,11 +42,15 @@ import javax.net.ssl.SNIHostName;
 import javax.net.ssl.SNIMatcher;
 import javax.net.ssl.SNIServerName;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509ExtendedTrustManager;
+import javax.net.ssl.X509TrustManager;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -53,8 +59,9 @@ import org.junit.Test;
 /**
  * The https backends of the proxy (SEC-PROXY-005): a plain connect wrapped by
  * {@code createSocket(plain, host, port, true)}, SNI with the target host, certificate and host name verification
- * that stay on, the reflective endpoint identification with the {@code HostnameVerifier} fallback, the handshake under
- * the total-timeout watchdog, and every TLS failure as {@code CONNECT_FAILED}. A private CA and two server
+ * that stay on, the proxy's own certificate host name check after every handshake with the reflective endpoint
+ * identification as a second layer, the handshake under the total-timeout watchdog, and every TLS failure as
+ * {@code CONNECT_FAILED}. A private CA and two server
  * certificates are made with the JDK's {@code keytool} once per class: one for {@code localhost},
  * {@code backend.test} and {@code 127.0.0.1}, one for {@code other.example} only.
  */
@@ -110,7 +117,6 @@ public class ProxyTlsTest {
     public void tearDown() throws IOException {
         TlsConnector.endpointIdentification = true;
         TlsConnector.hostnameVerifier = null;
-        TlsConnector.verifyAfterIdentification = TlsConnector.androidRuntime(System.getProperty("java.vm.name"));
         BackendClient.resolver = BackendClient.SYSTEM_RESOLVER;
         if (started) {
             app.shutdown(2, TimeUnit.SECONDS);
@@ -373,12 +379,36 @@ public class ProxyTlsTest {
 
     // ---- AC-6 ----
 
-    // SEC-PROXY-005 AC-6: without an injected verifier the proxy holds HttpsURLConnection's default verifier
+    // SEC-PROXY-005 AC-6: without an injected verifier the proxy holds its built-in certificate host name matcher,
+    // never HttpsURLConnection's default verifier, which rejects every host on a JVM
     @Test
-    public void sec_PROXY_005_AC6_theHeldVerifierIsTheHttpsUrlConnectionDefault() {
-        assertSame(HttpsURLConnection.getDefaultHostnameVerifier(), TlsConnector.verifier());
+    public void sec_PROXY_005_AC6_theHeldVerifierIsTheBuiltInMatcher() {
+        HostnameVerifier held = TlsConnector.verifier();
+        assertEquals("CertificateHostnames", held.getClass().getSimpleName());
+        assertSame(TlsConnector.class.getPackage(), held.getClass().getPackage());
+        assertFalse(held == HttpsURLConnection.getDefaultHostnameVerifier());
         assertTrue("this JVM has SSLParameters.setEndpointIdentificationAlgorithm",
                 TlsConnector.endpointIdentificationAvailable());
+    }
+
+    // SEC-PROXY-005 AC-6: with the reflective path off and no injected verifier, the built-in matcher checks the
+    // host: the certificate for localhost reaches the backend, the certificate for other.example gives 502
+    // CONNECT_FAILED with no request bytes sent
+    @Test(timeout = 30000)
+    public void sec_PROXY_005_AC6_theBuiltInMatcherChecksTheHostWithTheReflectionOff() throws IOException {
+        TlsConnector.endpointIdentification = false;
+        TlsBackend good = tlsBackend(goodServer);
+        TlsBackend other = tlsBackend(otherHostServer);
+        app.use("/good", Proxy.to("https://localhost:" + good.port())
+                .sslSocketFactory(trustingClient.getSocketFactory()));
+        mount(Proxy.to("https://localhost:" + other.port()).sslSocketFactory(trustingClient.getSocketFactory()));
+
+        ClientResponse ok = adapter.send(ClientRequest.of("GET", "/good/x"));
+        assertEquals("status (errors: " + errors + ")", 200, ok.status());
+        assertEquals("ok", ok.text());
+
+        assertConnectFailed(get());
+        assertEquals("request bytes the backend read", 0, other.requestBytes());
     }
 
     // SEC-PROXY-005 AC-6: with the reflective path off, an injected verifier answering false is called once with the
@@ -411,44 +441,159 @@ public class ProxyTlsTest {
         assertTrue(backend.requestHead(), backend.requestHead().startsWith("GET /api/x HTTP/1.1\r\n"));
     }
 
-    // SEC-PROXY-005 AC-6: with the reflective path on and off Android (this JVM), the injected verifier is not
-    // consulted: the endpoint identification of the handshake checks the host
+    // ---- AC-9 ----
+
+    // SEC-PROXY-005 AC-9: with the reflective identification on and reading back (this JVM), the held verifier still
+    // runs after the handshake, once with the target host: the proxy's own check runs on every runtime
     @Test(timeout = 30000)
-    public void sec_PROXY_005_AC6_theVerifierIsTheFallbackOnly() throws IOException {
+    public void sec_PROXY_005_AC9_theHeldVerifierRunsAfterAnIdentifiedHandshake() throws IOException {
         TlsBackend backend = tlsBackend(goodServer);
-        RecordingVerifier verifier = new RecordingVerifier(false);
+        RecordingVerifier verifier = new RecordingVerifier(true);
         TlsConnector.hostnameVerifier = verifier;
         mount(Proxy.to("https://localhost:" + backend.port()).sslSocketFactory(trustingClient.getSocketFactory()));
 
         assertEquals(200, get().status());
-        assertEquals(Collections.<String>emptyList(), verifier.hosts());
+        assertEquals(Collections.singletonList("localhost"), verifier.hosts());
     }
 
-    // SEC-PROXY-005 AC-6: on Android the held verifier also runs after an identified handshake, because there the
-    // endpoint identification may not reach an app's plain X509TrustManager; on the JDK, whose default verifier
-    // rejects every host, only the identification checks the host
-    @Test
-    public void sec_PROXY_005_AC6_theVerifierAlsoRunsAfterIdentificationOnAndroidOnly() {
-        assertTrue(TlsConnector.androidRuntime("Dalvik"));
-        assertFalse(TlsConnector.androidRuntime("OpenJDK 64-Bit Server VM"));
-        assertFalse(TlsConnector.androidRuntime(null));
-        assertEquals(TlsConnector.androidRuntime(System.getProperty("java.vm.name")),
-                TlsConnector.verifyAfterIdentification);
-    }
-
-    // SEC-PROXY-005 AC-6: with the Android behaviour switched on, a rejecting verifier gives 502 CONNECT_FAILED after
-    // an identified handshake, called once with the target host, and no request bytes are sent
+    // SEC-PROXY-005 AC-9: a rejecting verifier after an identified handshake gives 502 CONNECT_FAILED, called once
+    // with the target host, and no request bytes are sent
     @Test(timeout = 30000)
-    public void sec_PROXY_005_AC6_aRejectingVerifierAfterIdentificationIsConnectFailed() throws IOException {
+    public void sec_PROXY_005_AC9_aRejectingVerifierAfterIdentificationIsConnectFailed() throws IOException {
         TlsBackend backend = tlsBackend(goodServer);
         RecordingVerifier verifier = new RecordingVerifier(false);
         TlsConnector.hostnameVerifier = verifier;
-        TlsConnector.verifyAfterIdentification = true;
         mount(Proxy.to("https://localhost:" + backend.port()).sslSocketFactory(trustingClient.getSocketFactory()));
 
         assertConnectFailed(get());
         assertEquals(Collections.singletonList("localhost"), verifier.hosts());
         assertEquals("request bytes the backend read", 0, backend.requestBytes());
+    }
+
+    // SEC-PROXY-005 AC-9 (loop P wave-14 r2 LP-1): a private-CA factory whose trust manager is an
+    // X509ExtendedTrustManager that checks only the chain: the JDK does not wrap it, so the endpoint identification
+    // reads back but checks nothing; the backend whose certificate names another host still gives 502
+    // CONNECT_FAILED with no request bytes sent
+    @Test(timeout = 30000)
+    public void sec_PROXY_005_AC9_hostNameCheckStaysOnWithAChainOnlyExtendedTrustManager() throws Exception {
+        TlsBackend backend = tlsBackend(otherHostServer);
+        mount(Proxy.to("https://localhost:" + backend.port()).sslSocketFactory(chainOnlyClient().getSocketFactory()));
+
+        ClientResponse r = get();
+
+        assertEquals("status (request bytes the backend read: " + backend.requestBytes() + ")", 502, r.status());
+        assertSame(ProxyException.Kind.CONNECT_FAILED, onlyProxyError().kind());
+        assertEquals("request bytes the backend read", 0, backend.requestBytes());
+    }
+
+    // SEC-PROXY-005 AC-9: the same chain-only trust manager still reaches a backend whose certificate names the
+    // target host
+    @Test(timeout = 30000)
+    public void sec_PROXY_005_AC9_aChainOnlyExtendedTrustManagerReachesTheGoodBackend() throws Exception {
+        TlsBackend backend = tlsBackend(goodServer);
+        mount(Proxy.to("https://localhost:" + backend.port()).sslSocketFactory(chainOnlyClient().getSocketFactory()));
+
+        assertEquals("status (errors: " + errors + ")", 200, get().status());
+    }
+
+    // SEC-PROXY-005 AC-9 (loop P wave-14 r2 LP-2): with a delegating private-CA factory, whose socket drops the
+    // endpoint identification, a backend whose certificate names the target host is reached
+    @Test(timeout = 30000)
+    public void sec_PROXY_005_AC9_aDelegatingPrivateCaFactoryReachesTheGoodBackend() throws IOException {
+        TlsBackend backend = tlsBackend(goodServer);
+        mount(Proxy.to("https://localhost:" + backend.port())
+                .sslSocketFactory(new DelegatingFactory(trustingClient.getSocketFactory(), false)));
+
+        ClientResponse r = get();
+
+        assertEquals("status (errors: " + errors + ")", 200, r.status());
+        assertEquals("ok", r.text());
+        assertTrue(errors.isEmpty());
+    }
+
+    // SEC-PROXY-005 AC-9 (loop P wave-14 r2 LP-3): a private-CA factory whose createSocket completes the handshake
+    // before returning, so the identification set afterwards checks nothing: the backend whose certificate names
+    // another host still gives 502 CONNECT_FAILED with no request bytes sent
+    @Test(timeout = 30000)
+    public void sec_PROXY_005_AC9_hostNameCheckStaysOnWithAnEagerHandshakeFactory() throws IOException {
+        TlsBackend backend = tlsBackend(otherHostServer);
+        mount(Proxy.to("https://localhost:" + backend.port())
+                .sslSocketFactory(new EagerHandshakeFactory(trustingClient.getSocketFactory())));
+
+        ClientResponse r = get();
+
+        assertEquals("status (request bytes the backend read: " + backend.requestBytes() + ")", 502, r.status());
+        assertSame(ProxyException.Kind.CONNECT_FAILED, onlyProxyError().kind());
+        assertEquals("request bytes the backend read", 0, backend.requestBytes());
+    }
+
+    // SEC-PROXY-005 AC-9 (loop P wave-14 r2 LP-4): a delegating SSLSocket that keeps the SSLParameters it was given,
+    // so the identification reads back "HTTPS", without applying it to the real socket: the backend whose
+    // certificate names another host still gives 502 CONNECT_FAILED with no request bytes sent
+    @Test(timeout = 30000)
+    public void sec_PROXY_005_AC9_hostNameCheckStaysOnWithAParameterCachingDelegate() throws IOException {
+        TlsBackend backend = tlsBackend(otherHostServer);
+        mount(Proxy.to("https://localhost:" + backend.port())
+                .sslSocketFactory(new DelegatingFactory(trustingClient.getSocketFactory(), true)));
+
+        ClientResponse r = get();
+
+        assertEquals("status (request bytes the backend read: " + backend.requestBytes() + ")", 502, r.status());
+        assertSame(ProxyException.Kind.CONNECT_FAILED, onlyProxyError().kind());
+        assertEquals("request bytes the backend read", 0, backend.requestBytes());
+    }
+
+    /**
+     * A context trusting the private CA through an {@link X509ExtendedTrustManager} that checks the chain with the
+     * PKIX manager's two-argument {@code checkServerTrusted} and never the endpoint.
+     */
+    private static SSLContext chainOnlyClient() throws Exception {
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(load("trust.p12"));
+        final X509TrustManager pkix = (X509TrustManager) tmf.getTrustManagers()[0];
+        X509ExtendedTrustManager chainOnly = new X509ExtendedTrustManager() {
+            @Override
+            public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket)
+                    throws CertificateException {
+                pkix.checkClientTrusted(chain, authType);
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket)
+                    throws CertificateException {
+                pkix.checkServerTrusted(chain, authType);
+            }
+
+            @Override
+            public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine)
+                    throws CertificateException {
+                pkix.checkClientTrusted(chain, authType);
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine)
+                    throws CertificateException {
+                pkix.checkServerTrusted(chain, authType);
+            }
+
+            @Override
+            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                pkix.checkClientTrusted(chain, authType);
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                pkix.checkServerTrusted(chain, authType);
+            }
+
+            @Override
+            public X509Certificate[] getAcceptedIssuers() {
+                return pkix.getAcceptedIssuers();
+            }
+        };
+        SSLContext c = SSLContext.getInstance("TLS");
+        c.init(null, new TrustManager[] {chainOnly}, null);
+        return c;
     }
 
     // ---- AC-7 ----
@@ -586,7 +731,7 @@ public class ProxyTlsTest {
     public void sec_PROXY_005_AC8_hostNameCheckStaysOnWithADelegatingSocket() throws IOException {
         TlsBackend backend = tlsBackend(otherHostServer);
         mount(Proxy.to("https://localhost:" + backend.port())
-                .sslSocketFactory(new DelegatingFactory(trustingClient.getSocketFactory())));
+                .sslSocketFactory(new DelegatingFactory(trustingClient.getSocketFactory(), false)));
 
         ClientResponse r = get();
 
@@ -828,18 +973,22 @@ public class ProxyTlsTest {
 
     /**
      * Wraps each layered socket of a real factory in a {@link DelegatingSocket}, which keeps {@link SSLSocket}'s
-     * base {@code getSSLParameters}/{@code setSSLParameters}.
+     * base {@code getSSLParameters}/{@code setSSLParameters}, or, with {@code cacheParameters}, in a
+     * {@link ParameterCachingSocket}.
      */
     private static final class DelegatingFactory extends SSLSocketFactory {
         private final SSLSocketFactory delegate;
+        private final boolean cacheParameters;
 
-        DelegatingFactory(SSLSocketFactory delegate) {
+        DelegatingFactory(SSLSocketFactory delegate, boolean cacheParameters) {
             this.delegate = delegate;
+            this.cacheParameters = cacheParameters;
         }
 
         @Override
         public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
-            return new DelegatingSocket((SSLSocket) delegate.createSocket(s, host, port, autoClose));
+            SSLSocket real = (SSLSocket) delegate.createSocket(s, host, port, autoClose);
+            return cacheParameters ? new ParameterCachingSocket(real) : new DelegatingSocket(real);
         }
 
         @Override
@@ -880,7 +1029,7 @@ public class ProxyTlsTest {
      * cipher suites, protocols and client-auth flags, so an endpoint identification algorithm set through them is
      * dropped silently.
      */
-    private static final class DelegatingSocket extends SSLSocket {
+    private static class DelegatingSocket extends SSLSocket {
         private final SSLSocket d;
 
         DelegatingSocket(SSLSocket d) {
@@ -1010,6 +1159,77 @@ public class ProxyTlsTest {
         @Override
         public boolean getEnableSessionCreation() {
             return d.getEnableSessionCreation();
+        }
+    }
+
+    /**
+     * A {@link DelegatingSocket} that keeps the {@link SSLParameters} it was given and answers them back, so an
+     * endpoint identification algorithm reads back while the base {@code setSSLParameters} applies only the cipher
+     * suites, protocols and client-auth flags to the real socket.
+     */
+    private static final class ParameterCachingSocket extends DelegatingSocket {
+        private SSLParameters kept;
+
+        ParameterCachingSocket(SSLSocket d) {
+            super(d);
+        }
+
+        @Override
+        public void setSSLParameters(SSLParameters params) {
+            super.setSSLParameters(params);
+            kept = params;
+        }
+
+        @Override
+        public SSLParameters getSSLParameters() {
+            return kept != null ? kept : super.getSSLParameters();
+        }
+    }
+
+    /** Returns the real factory's layered socket after completing its handshake inside {@code createSocket}. */
+    private static final class EagerHandshakeFactory extends SSLSocketFactory {
+        private final SSLSocketFactory delegate;
+
+        EagerHandshakeFactory(SSLSocketFactory delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
+            SSLSocket ssl = (SSLSocket) delegate.createSocket(s, host, port, autoClose);
+            ssl.startHandshake();
+            return ssl;
+        }
+
+        @Override
+        public Socket createSocket(String host, int port) throws IOException {
+            throw new IOException("not a layering createSocket");
+        }
+
+        @Override
+        public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
+            throw new IOException("not a layering createSocket");
+        }
+
+        @Override
+        public Socket createSocket(InetAddress host, int port) throws IOException {
+            throw new IOException("not a layering createSocket");
+        }
+
+        @Override
+        public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort)
+                throws IOException {
+            throw new IOException("not a layering createSocket");
+        }
+
+        @Override
+        public String[] getDefaultCipherSuites() {
+            return delegate.getDefaultCipherSuites();
+        }
+
+        @Override
+        public String[] getSupportedCipherSuites() {
+            return delegate.getSupportedCipherSuites();
         }
     }
 
