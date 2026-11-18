@@ -697,17 +697,9 @@ public final class Proxy implements Middleware {
     /** {@link #requestBodyLength(List, List)} of the request's Content-Length and Transfer-Encoding field lines. */
     // @req SEC-PROXY-003
     private static long requestBodyLength(Request req) {
-        List<String> contentLengths = new ArrayList<>();
-        List<String> transferEncodings = new ArrayList<>();
-        for (Map.Entry<String, String> h : req.rawHeaders()) {
-            String lower = h.getKey().toLowerCase(Locale.ROOT);
-            if (lower.equals("content-length")) {
-                contentLengths.add(h.getValue());
-            } else if (lower.equals("transfer-encoding")) {
-                transferEncodings.add(h.getValue());
-            }
-        }
-        return requestBodyLength(contentLengths, transferEncodings);
+        List<Map.Entry<String, String>> headers = req.rawHeaders();
+        return requestBodyLength(FramingLists.fieldValues(headers, FramingLists.CONTENT_LENGTH),
+                FramingLists.fieldValues(headers, FramingLists.TRANSFER_ENCODING));
     }
 
     /**

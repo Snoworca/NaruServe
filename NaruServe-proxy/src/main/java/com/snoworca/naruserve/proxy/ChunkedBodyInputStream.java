@@ -1,5 +1,6 @@
 package com.snoworca.naruserve.proxy;
 
+import com.snoworca.naruserve.common.HttpHeaderValues;
 import java.io.IOException;
 import java.io.InputStream;
 import org.jspecify.annotations.Nullable;
@@ -87,7 +88,7 @@ final class ChunkedBodyInputStream extends InputStream {
         }
         int left = MAX_TRAILER_BYTES;
         while (!lines.read(left).isEmpty()) {
-            left -= lines.consumed;
+            left -= lines.consumed();
             if (left < 0) {
                 throw new ResponseParser.Malformed("trailer section larger than " + MAX_TRAILER_BYTES + " bytes");
             }
@@ -102,11 +103,9 @@ final class ChunkedBodyInputStream extends InputStream {
      */
     // @req SEC-PROXY-004
     private static long chunkSize(String line) throws ResponseParser.Malformed {
-        for (int i = 0; i < line.length(); i++) {
-            char c = line.charAt(i);
-            if (c < 0x20 && c != '\t' || c == 0x7F) {
-                throw new ResponseParser.Malformed("control character in a chunk-size line");
-            }
+        // Every char is one byte (LineReader), so isFieldValue rejects exactly the controls other than HTAB.
+        if (!HttpHeaderValues.isFieldValue(line)) {
+            throw new ResponseParser.Malformed("control character in a chunk-size line");
         }
         int end = 0;
         long size = 0;

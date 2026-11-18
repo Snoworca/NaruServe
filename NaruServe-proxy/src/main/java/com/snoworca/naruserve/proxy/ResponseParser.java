@@ -8,7 +8,6 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -89,32 +88,23 @@ final class ResponseParser {
             LineReader lines = new LineReader(in);
             int remaining = MAX_HEAD_BYTES;
             while (true) {
-                String statusLine = lines.read(remaining);
+                StatusLine statusLine = statusLine(lines.read(remaining));
                 remaining = charge(remaining, lines);
-                int status = status(statusLine);
+                int status = statusLine.status;
                 if (status == 101) {
                     // The proxy relays no protocol switch: a WebSocket upgrade never reaches the backend
                     // (FR-PROXY-009).
                     throw new Malformed("101 Switching Protocols");
                 }
                 List<Map.Entry<String, String>> headers = new ArrayList<>();
-                List<String> contentLengths = new ArrayList<>();
-                List<String> transferEncodings = new ArrayList<>();
                 for (String line; !(line = lines.read(remaining)).isEmpty(); ) {
                     remaining = charge(remaining, lines);
-                    Map.Entry<String, String> header = headerLine(line);
-                    headers.add(header);
-                    String lower = header.getKey().toLowerCase(Locale.ROOT);
-                    if (lower.equals("content-length")) {
-                        contentLengths.add(header.getValue());
-                    } else if (lower.equals("transfer-encoding")) {
-                        transferEncodings.add(header.getValue());
-                    }
+                    headers.add(headerLine(line));
                 }
                 if (status >= 200) {
-                    // status() accepted HTTP/1.<digit>, so the minor version is the eighth char.
-                    return new Head(status, statusLine.charAt(7) == '0', headers, contentLengths,
-                            transferEncodings);
+                    return new Head(status, statusLine.http10, headers,
+                            FramingLists.fieldValues(headers, FramingLists.CONTENT_LENGTH),
+                            FramingLists.fieldValues(headers, FramingLists.TRANSFER_ENCODING));
                 }
             }
         } catch (SocketTimeoutException e) {
@@ -171,19 +161,30 @@ final class ResponseParser {
 
     /** {@code remaining} less the bytes of the line just read; a head past the bound is malformed. */
     private static int charge(int remaining, LineReader lines) throws Malformed {
-        int left = remaining - lines.consumed;
+        int left = remaining - lines.consumed();
         if (left < 0) {
             throw new Malformed("the status line and headers exceed " + MAX_HEAD_BYTES + " bytes");
         }
         return left;
     }
 
+    /** A parsed status line: its status code and whether its version is {@code HTTP/1.0}. */
+    private static final class StatusLine {
+        final int status;
+        final boolean http10;
+
+        StatusLine(int status, boolean http10) {
+            this.status = status;
+            this.http10 = http10;
+        }
+    }
+
     /**
-     * The status code of {@code line}: {@code HTTP/1.<digit>}, a space, exactly three digits within
+     * The status line {@code line}: {@code HTTP/1.<digit>}, a space, exactly three digits within
      * {@code 100..599}, and then nothing or a space and a reason phrase of HTAB, SP, VCHAR and obs-text.
      */
     // @req SEC-PROXY-004
-    private static int status(String line) throws Malformed {
+    private static StatusLine statusLine(String line) throws Malformed {
         if (line.length() < 12 || !line.startsWith("HTTP/1.") || !isDigit(line.charAt(7)) || line.charAt(8) != ' '
                 || !isDigit(line.charAt(9)) || !isDigit(line.charAt(10)) || !isDigit(line.charAt(11))
                 || (line.length() > 12 && line.charAt(12) != ' ')) {
@@ -193,13 +194,12 @@ final class ResponseParser {
         if (status < 100 || status > 599) {
             throw new Malformed("status outside 100..599");
         }
-        for (int i = 13; i < line.length(); i++) {
-            char c = line.charAt(i);
-            if (c < 0x20 && c != '\t' || c == 0x7F) {
-                throw new Malformed("control character in the reason phrase");
-            }
+        // Every char is one byte (LineReader), so isFieldValue rejects exactly the controls other than HTAB.
+        if (line.length() > 13 && !HttpHeaderValues.isFieldValue(line.substring(13))) {
+            throw new Malformed("control character in the reason phrase");
         }
-        return status;
+        // The minor version is the digit after "HTTP/1.", checked above.
+        return new StatusLine(status, line.charAt(7) == '0');
     }
 
     /**
@@ -237,7 +237,7 @@ final class ResponseParser {
         private final InputStream in;
         private final StringBuilder line = new StringBuilder();
         /** The bytes the last line read took, its terminator included. */
-        int consumed;
+        private int consumed;
 
         LineReader(InputStream in) {
             this.in = in;
@@ -268,6 +268,11 @@ final class ResponseParser {
             }
             consumed = end + terminator;
             return line.substring(0, end);
+        }
+
+        /** The bytes the last line read took, its terminator included. */
+        int consumed() {
+            return consumed;
         }
     }
 }
