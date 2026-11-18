@@ -67,6 +67,36 @@ Kotlin에서도 감싸는 함수나 확장 없이 Java 옵션 체인을 그대�
 
 Express에서 `app.use('/api', createProxyMiddleware(...))`로 붙이면 `req.url`에서 마운트 경로가 빠지므로(http-proxy-middleware 3.x) `stripPrefix(true)`가 그 동작에 가깝습니다. NaruServe의 기본값은 접두사를 남깁니다.
 
+### 요청마다 백엔드 고르기
+
+`Proxy`는 `Middleware`이므로 다른 미들웨어 안에서 `handle(req, res, next)`를 직접 불러도 됩니다. 고른 `Proxy`는 그 마운트에 직접 붙였을 때와 똑같이 요청을 넘깁니다. 아래 예제는 요청 헤더에 따라 두 백엔드 중 하나로 넘깁니다.
+
+```java
+import com.snoworca.naruserve.proxy.Proxy;
+
+String stableUrl = "http://127.0.0.1:8081";   // 기본 백엔드
+String canaryUrl = "http://127.0.0.1:8082";   // 시험 중인 백엔드
+Proxy stable = Proxy.to(stableUrl);
+Proxy canary = Proxy.to(canaryUrl);
+app.use("/api", (req, res, next) -> {
+    Proxy target = "1".equals(req.header("X-Canary")) ? canary : stable;   // 요청마다 백엔드를 고릅니다
+    target.handle(req, res, next);                                          // 고른 프록시가 요청을 넘깁니다
+});
+```
+
+Kotlin(`stableUrl`, `canaryUrl`은 백엔드 주소 문자열):
+
+```kotlin
+val stable = Proxy.to(stableUrl)
+val canary = Proxy.to(canaryUrl)
+app.use("/api") { req, res, next ->
+    val target = if (req.header("X-Canary") == "1") canary else stable
+    target.handle(req, res, next)
+}
+```
+
+Express 대응: `createProxyMiddleware({ target, router: (req) => url })`의 `router` 옵션, 또는 만든 미들웨어 함수를 직접 부르는 `proxy(req, res, next)`.
+
 ## 옵션
 
 옵션 메서드는 모두 새 `Proxy`를 돌려주고, 값은 메서드를 부를 때 검사합니다. 시간 옵션은 `(long, TimeUnit)`을 받고 `java.time.Duration`은 받지 않습니다(Android 5.0에는 `java.time`이 없습니다). 소켓에는 밀리초로 올림해서 적어도 1 ms, 많아야 `Integer.MAX_VALUE` ms로 넘기고, 전체 타임아웃은 나노초 정밀도(`Long.MAX_VALUE`에서 포화)로 잽니다.
@@ -138,6 +168,29 @@ app.use("/users", users)
 - 받은 헤더는 순서와 중복을 지켜 보내고 hop-by-hop 헤더, `Connection`에 이름이 오른 헤더, `Expect`는 빼며, 여러 `Cookie` 줄은 `; `로 이어 한 줄로 만듭니다. `Via`는 더하지 않습니다. 요청 줄과 헤더는 ISO-8859-1로 씁니다. 이름이 토큰이 아니거나 값에 쓸 수 없는 문자가 든 헤더, `Content-Length`와 `Transfer-Encoding`이 함께 있는 요청, 하나의 값으로 맞지 않는 `Content-Length` 목록, `chunked` 하나로 끝나지 않는 `Transfer-Encoding`은 `400`이고, `chunked` 앞에 다른 전송 코딩이 있으면 `501`입니다. 모두 백엔드에 연결하기 전에 답합니다.
 - 본문은 버퍼에 모으지 않고 흘려 보냅니다. `bodyLimit(n)`이 있으면 `req.bodyStream(n)`, 없으면 `req.bodyStream()`(앱의 `rawBodyLimit`)으로 읽으므로, 선언한 길이가 한도를 넘으면 백엔드에 연결하기 전에 `413`입니다. chunked 본문이 넘기는 도중에 한도를 넘으면 백엔드 연결을 닫고 `413`이며, `onError`가 받는 예외는 원인(`getCause()`)이 `BodyTooLargeException`인 `HttpException`입니다. 앞선 미들웨어가 본문을 이미 읽었으면 연결하지 않고 `500`입니다.
 
+큰 파일을 올리는 마운트:
+
+```java
+import com.snoworca.naruserve.proxy.Proxy;
+
+String url = "http://127.0.0.1:8081";
+app.use("/upload", Proxy.to(url)
+        .preserveHost(true)                        // 클라이언트가 보낸 Host를 그대로 보냅니다
+        .bodyLimit(100L * 1024 * 1024)             // 본문 한도 100 MiB(앱의 rawBodyLimit 대신)
+        .writeTimeout(2, TimeUnit.MINUTES));       // 백엔드 쓰기가 2분 넘게 막히면 WRITE_TIMEOUT
+```
+
+Kotlin:
+
+```kotlin
+app.use("/upload", Proxy.to(url)
+    .preserveHost(true)
+    .bodyLimit(100L * 1024 * 1024)
+    .writeTimeout(2, TimeUnit.MINUTES))
+```
+
+Express 대응: `preserveHost(true)`는 `changeOrigin: false`입니다. `bodyLimit`과 `writeTimeout`에 해당하는 옵션은 없습니다.
+
 ### X-Forwarded-* 헤더
 
 | 헤더 | 클라이언트가 보낸 값 | `.requestHeader(name, value)` |
@@ -189,6 +242,23 @@ Express 대응: `xfwd: true`.
 | 같은 마운트 | `http://other.example/x` | 그대로 |
 | 같은 마운트에 `rewriteLocation(false)` | `http://127.0.0.1:8081/api/orders/x` | 그대로 |
 
+다시 쓰기를 끄는 마운트:
+
+```java
+import com.snoworca.naruserve.proxy.Proxy;
+
+String url = "http://127.0.0.1:8081";
+app.use("/legacy", Proxy.to(url).rewriteLocation(false));   // 백엔드의 Location을 그대로 넘깁니다
+```
+
+Kotlin:
+
+```kotlin
+app.use("/legacy", Proxy.to(url).rewriteLocation(false))
+```
+
+Express 대응: `autoRewrite`, `hostRewrite`, `protocolRewrite`. http-proxy-middleware는 이 옵션을 켜야 `Location`을 다시 쓰지만, NaruServe는 기본으로 다시 쓰고 `rewriteLocation(false)`로 끕니다.
+
 ## 오류
 
 ### 응답을 보내기 전의 실패
@@ -210,7 +280,7 @@ Express 대응: `xfwd: true`.
 - 메시지(`getMessage()`)는 언제나 `null`입니다. 기본 오류 응답이 백엔드 주소를 내보내지 않게 하려는 것입니다. 실패의 원인은 `getCause()`에 있습니다(예: `java.net.ConnectException`, `java.net.UnknownHostException`).
 - `onError`가 없을 때의 기본 오류 페이지는 `ProxyException`의 원인을 클래스 이름으로만 보여 주므로 대상 호스트와 포트가 드러나지 않습니다. 원인은 `getCause()`에 그대로 남습니다.
 - 프록시가 스스로 답하는 `400`(잘못된 메서드·경로·헤더·프레이밍), `405`(`CONNECT`·`TRACE`), `501`(지원하지 않는 전송 코딩)은 `ProxyException`이 아닌 보통 `HttpException`이고 메시지는 `null`입니다. 한도를 넘은 본문의 `413`도 보통 `HttpException`입니다. 재시도 대기가 인터럽트된 `502`·`503`도 보통 `HttpException`입니다([재시도](#재시도)).
-- 공개 생성자 `new ProxyException(kind, cause)`가 있으므로 테스트에서 직접 만들어 `next.error(e)`로 `onError`를 시험할 수 있습니다.
+- 공개 생성자 `new ProxyException(kind, cause)`가 있으므로 테스트에서 직접 만들어 `next.error(e)`로 `onError`를 시험할 수 있습니다([테스트에서 프록시 실패 만들기](#테스트에서-프록시-실패-만들기)).
 
 Express 대응: `createProxyMiddleware({ on: { error: (err, req, res) => ... } })`의 `err.code`(`ECONNREFUSED` 등)를 `kind()`로 비교합니다.
 
@@ -255,6 +325,29 @@ app.onError { error, req, res ->
 ### 응답을 보내기 시작한 뒤의 실패
 
 프록시가 응답을 어댑터에 넘긴 뒤 본문을 넘기다가 실패하면(선언한 길이 전에 연결이 끊김, 잘못된 chunk, 본문 바이트 사이의 읽기 타임아웃, 전체 타임아웃) 상태 코드를 바꿀 수 없습니다. 프록시는 그 종류의 `ProxyException`을 앱 로거(`req.application().logger()`)에 한 번 기록하고, 프레임워크가 클라이언트 연결을 중단합니다. 클라이언트가 그때까지 상태 줄과 본문 일부를 받았는지는 어댑터가 얼마나 썼는지에 달려 있습니다. TinyHttpd 어댑터는 응답의 앞부분을 버퍼에 모아 두므로, 넘긴 양이 그 버퍼 안에 있을 때 실패하면(예: `Content-Length: 100`을 선언하고 10바이트를 보낸 뒤 연결을 닫은 백엔드) 클라이언트는 응답 없이 닫힌 연결을 받습니다. 그보다 많이 넘긴 뒤 실패하면(예: 더 긴 길이를 선언하고 64 KiB를 보낸 뒤 연결을 닫은 백엔드) 클라이언트는 상태 줄(`200`)과 중간에 끊긴 본문을 받습니다. 어느 쪽이든 클라이언트가 온전해 보이는 응답을 받는 일은 없습니다.
+
+## 테스트에서 프록시 실패 만들기
+
+공개 생성자 `new ProxyException(kind, cause)`로 백엔드 없이 프록시 실패를 만들 수 있습니다. 상태는 `kind`에서 정해지고(`CONNECT_FAILED`면 `502`), 메시지는 `null`이며, `cause`(`null`이어도 됩니다)는 `getCause()`가 돌려줍니다. 아래 예제는 테스트 앱에서 프록시 자리에 이 예외를 오류 흐름으로 넘기는 미들웨어를 붙여, [오류](#오류)의 `onError`가 백엔드 장애에 어떻게 답하는지 확인합니다.
+
+```java
+import com.snoworca.naruserve.proxy.ProxyException;
+import java.net.ConnectException;
+
+// 테스트 앱: 프록시 대신, 백엔드가 내려간 것처럼 실패를 오류 흐름으로 넘깁니다
+app.use("/api", (req, res, next) -> next.error(
+        new ProxyException(ProxyException.Kind.CONNECT_FAILED, new ConnectException("Connection refused"))));
+```
+
+Kotlin:
+
+```kotlin
+app.use("/api") { req, res, next ->
+    next.error(ProxyException(ProxyException.Kind.CONNECT_FAILED, java.net.ConnectException("Connection refused")))
+}
+```
+
+Express 대응: `next(Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' }))`처럼 `code`를 단 오류를 넘기는 것과 같습니다.
 
 ## 타임아웃
 
@@ -308,6 +401,29 @@ Express 대응: `proxyTimeout`은 `readTimeout`처럼 나가는 요청의 소켓
 
 **안전한 메서드는 HTTP 의미의 구분일 뿐입니다.** 부수 효과가 있는 `GET` 엔드포인트(예: `GET /api/payments/charge?id=1`)는 재시도로 두 번 실행될 수 있습니다. 그런 경로는 [기본 사용](#기본-사용)의 예제처럼 재시도를 끈 프록시를 따로 두고 일반 마운트보다 먼저 등록하세요.
 
+재시도 횟수와 대기 시간, 안전하지 않은 메서드의 재시도를 함께 정하는 마운트(이 백엔드의 `PUT`·`DELETE`는 두 번 실행돼도 결과가 같습니다):
+
+```java
+import com.snoworca.naruserve.proxy.Proxy;
+
+String url = "http://127.0.0.1:8081";
+app.use("/catalog", Proxy.to(url)
+        .retries(3)
+        .retryDelay(500, TimeUnit.MILLISECONDS)    // 재시도 전마다 0.5초 기다립니다
+        .retryUnsafeMethods(true));                // 본문 없는 PUT·DELETE도 502·503 뒤에 재시도합니다
+```
+
+Kotlin:
+
+```kotlin
+app.use("/catalog", Proxy.to(url)
+    .retries(3)
+    .retryDelay(500, TimeUnit.MILLISECONDS)
+    .retryUnsafeMethods(true))
+```
+
+`retryUnsafeMethods(true)`는 같은 요청이 두 번 실행돼도 되는(멱등인) 백엔드에만 켜세요.
+
 Express 대응: http-proxy-middleware에는 재시도 기능이 없습니다.
 
 ## 동시 요청 한도
@@ -348,8 +464,8 @@ Express 대응: 없습니다. `agent`의 `maxSockets`가 가장 가깝지만 넘
 - 프록시는 요청 스레드에서 동기로 돕니다. 프록시를 거치는 요청은 끝날 때까지 작업 스레드 하나를 잡고 있습니다.
 - 프록시가 백엔드를 기다리는 동안 클라이언트가 연결을 끊어도, 어댑터는 응답을 보내기 시작할 때에야 그것을 알 수 있습니다. 그래서 스레드는 백엔드가 답하거나 읽기 타임아웃이나 전체 타임아웃이 끝날 때까지 묶여 있습니다.
 - 응답 본문을 넘기는 도중에 백엔드가 말이 없어진 뒤 클라이언트가 연결을 끊어도 같습니다. TinyHttpd 어댑터는 클라이언트에 무언가를 써야 연결이 끊긴 것을 알 수 있으므로, 슬롯과 작업 스레드와 백엔드 소켓은 읽기 타임아웃이나 전체 타임아웃이 넘기기를 끝낼 때까지 잡혀 있습니다. 백엔드가 계속 보내는 동안 클라이언트가 끊으면 다음 쓰기에서 알아채고 곧바로 돌려줍니다.
-- 느린 백엔드는 작업 스레드 풀(`maxWorkers`, 기본 64)을 다 써서 프록시가 아닌 라우트까지 기다리게 만들 수 있습니다. 읽기 타임아웃을 길게 잡을수록 더 그렇습니다.
-- 기본으로는 `maxConcurrent` 한도가 없으므로, 프록시가 잡는 스레드 수를 묶는 것은 `maxWorkers`와 `totalTimeout`입니다. 느릴 수 있는 백엔드에는 `maxConcurrent`로 마운트마다 한도를 두세요.
+- 느린 백엔드는 어댑터의 요청 스레드를 다 써서 프록시가 아닌 라우트까지 기다리게 만들 수 있습니다. 읽기 타임아웃을 길게 잡을수록 더 그렇습니다. TinyHttpd 어댑터의 요청 스레드 풀은 `maxWorkers`(기본 64)만이 아니라 `maxWorkers + maxSseStreams`(기본 64 + 128 = 192)입니다. 열린 SSE 스트림이 없으면 일반 요청이 SSE 몫까지 쓰므로, `maxWorkers(2)`와 `maxSseStreams(3)`인 앱에서는 프록시 요청 다섯 개가 함께 백엔드를 기다릴 수 있습니다([기본값과 보안](defaults.md#시간연결-수-한도)).
+- 기본으로는 `maxConcurrent` 한도가 없으므로, 프록시가 잡는 스레드 수를 묶는 것은 어댑터의 요청 스레드 한도(TinyHttpd에서는 `maxWorkers + maxSseStreams`, 기본 192)와 `totalTimeout`입니다. 느릴 수 있는 백엔드에는 `maxConcurrent`로 마운트마다 한도를 두세요.
 
 ## 백엔드 연결
 

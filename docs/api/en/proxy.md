@@ -67,6 +67,36 @@ By default the original path with the mount prefix (`req.originalUrl()`) is appe
 
 In Express, mounting with `app.use('/api', createProxyMiddleware(...))` removes the mount path from `req.url` (http-proxy-middleware 3.x), so `stripPrefix(true)` is the closer behavior. NaruServe keeps the prefix by default.
 
+### Choosing the backend per request
+
+A `Proxy` is a `Middleware`, so another middleware may call its `handle(req, res, next)` directly. The chosen `Proxy` forwards the request exactly as it would when mounted on that path itself. The example below forwards to one of two backends depending on a request header.
+
+```java
+import com.snoworca.naruserve.proxy.Proxy;
+
+String stableUrl = "http://127.0.0.1:8081";   // the regular backend
+String canaryUrl = "http://127.0.0.1:8082";   // the backend under trial
+Proxy stable = Proxy.to(stableUrl);
+Proxy canary = Proxy.to(canaryUrl);
+app.use("/api", (req, res, next) -> {
+    Proxy target = "1".equals(req.header("X-Canary")) ? canary : stable;   // the backend is chosen per request
+    target.handle(req, res, next);                                          // the chosen proxy forwards the request
+});
+```
+
+Kotlin (`stableUrl` and `canaryUrl` are backend address strings):
+
+```kotlin
+val stable = Proxy.to(stableUrl)
+val canary = Proxy.to(canaryUrl)
+app.use("/api") { req, res, next ->
+    val target = if (req.header("X-Canary") == "1") canary else stable
+    target.handle(req, res, next)
+}
+```
+
+Express counterpart: the `router` option of `createProxyMiddleware({ target, router: (req) => url })`, or calling the created middleware function directly as `proxy(req, res, next)`.
+
 ## Options
 
 Every option method returns a new `Proxy`, and its value is checked when the method is called. Time options take `(long, TimeUnit)`, not `java.time.Duration` (Android 5.0 has no `java.time`). Sockets get them in milliseconds, rounded up to at least 1 ms and at most `Integer.MAX_VALUE` ms; the total timeout is measured with nanosecond precision (saturated at `Long.MAX_VALUE`).
@@ -138,6 +168,29 @@ app.use("/users", users)
 - Received headers are sent in order with duplicates, without the hop-by-hop headers, the headers named in `Connection` and `Expect`; several `Cookie` lines are joined with `; ` into one line. No `Via` is added. The request line and headers are written in ISO-8859-1. A header whose name is not a token or whose value holds a character a header cannot carry, a request with both `Content-Length` and `Transfer-Encoding`, a `Content-Length` list that is not one agreed value and a `Transfer-Encoding` that does not end in a single `chunked` get `400`, and another transfer coding before `chunked` gets `501`. All of them are answered before any backend connection.
 - The body is streamed, never buffered whole. It is read through `req.bodyStream(n)` with `bodyLimit(n)` and through `req.bodyStream()` (the app's `rawBodyLimit`) otherwise, so a declared length over the limit gets `413` before any backend connection. A chunked body that passes the limit while being forwarded closes the backend connection and gets `413`, and the exception `onError` receives is an `HttpException` whose cause (`getCause()`) is a `BodyTooLargeException`. A body an earlier middleware already read gets `500` without a backend connection.
 
+A mount for large uploads:
+
+```java
+import com.snoworca.naruserve.proxy.Proxy;
+
+String url = "http://127.0.0.1:8081";
+app.use("/upload", Proxy.to(url)
+        .preserveHost(true)                        // sends the client's Host unchanged
+        .bodyLimit(100L * 1024 * 1024)             // a 100 MiB body limit, instead of the app's rawBodyLimit
+        .writeTimeout(2, TimeUnit.MINUTES));       // WRITE_TIMEOUT when a backend write is stuck for over 2 minutes
+```
+
+Kotlin:
+
+```kotlin
+app.use("/upload", Proxy.to(url)
+    .preserveHost(true)
+    .bodyLimit(100L * 1024 * 1024)
+    .writeTimeout(2, TimeUnit.MINUTES))
+```
+
+Express counterpart: `preserveHost(true)` is `changeOrigin: false`. Nothing corresponds to `bodyLimit` or `writeTimeout`.
+
 ### X-Forwarded-* headers
 
 | Header | A value the client sent | `.requestHeader(name, value)` |
@@ -189,6 +242,23 @@ When a client would read the rewritten value as a network-path reference to anot
 | The same mount | `http://other.example/x` | Unchanged |
 | The same mount with `rewriteLocation(false)` | `http://127.0.0.1:8081/api/orders/x` | Unchanged |
 
+A mount with the rewrite turned off:
+
+```java
+import com.snoworca.naruserve.proxy.Proxy;
+
+String url = "http://127.0.0.1:8081";
+app.use("/legacy", Proxy.to(url).rewriteLocation(false));   // relays the backend's Location unchanged
+```
+
+Kotlin:
+
+```kotlin
+app.use("/legacy", Proxy.to(url).rewriteLocation(false))
+```
+
+Express counterpart: `autoRewrite`, `hostRewrite` and `protocolRewrite`. http-proxy-middleware rewrites `Location` only when these are turned on, while NaruServe rewrites by default and turns it off with `rewriteLocation(false)`.
+
 ## Errors
 
 ### Failures before the response
@@ -210,7 +280,7 @@ Backend-side failures reach the app's error flow (`onError`, `ErrorMiddleware`) 
 - The message (`getMessage()`) is always `null`, so the default error response never echoes the backend address. The underlying failure is in `getCause()` (for example `java.net.ConnectException` or `java.net.UnknownHostException`).
 - Without `onError`, the default error page shows the causes of a `ProxyException` by class name only, so the target host and port are not revealed. The cause stays whole in `getCause()`.
 - The proxy's own answers `400` (bad method, path, header or framing), `405` (`CONNECT`, `TRACE`) and `501` (unsupported transfer coding) are plain `HttpException`, not `ProxyException`, with a `null` message. The `413` of an over-limit body is a plain `HttpException` too. So is the `502` or `503` of an interrupted retry wait ([Retries](#retries)).
-- The public constructor `new ProxyException(kind, cause)` lets a test build one and throw it through `next.error(e)` to exercise `onError`.
+- The public constructor `new ProxyException(kind, cause)` lets a test build one and throw it through `next.error(e)` to exercise `onError` ([Simulating proxy failures in tests](#simulating-proxy-failures-in-tests)).
 
 Express counterpart: compare `kind()` the way you compare `err.code` (`ECONNREFUSED` and so on) in `createProxyMiddleware({ on: { error: (err, req, res) => ... } })`.
 
@@ -255,6 +325,29 @@ Check `ProxyException` before `HttpException`, because a `ProxyException` is an 
 ### Failures after the response started
 
 When relaying the body fails after the proxy handed the response to the adapter (the connection ending before the declared length, a malformed chunk, a read timeout between body bytes, the total timeout), the status can no longer change. The proxy logs a `ProxyException` of that kind once to the app logger (`req.application().logger()`), and the framework aborts the client connection. Whether the client has already received the status line and part of the body depends on how much the adapter has written. The TinyHttpd adapter buffers the beginning of the response, so when the failure comes while what was relayed still fits in that buffer (for example a backend that declares `Content-Length: 100`, sends 10 bytes and closes the connection), the client gets a closed connection with no response. When more was relayed before the failure (for example a backend that closes the connection after sending 64 KiB of a longer declared length), the client gets the status line (`200`) and a body cut short. Either way the client never gets a complete-looking response.
+
+## Simulating proxy failures in tests
+
+The public constructor `new ProxyException(kind, cause)` builds a proxy failure without a backend. The status follows `kind` (`502` for `CONNECT_FAILED`), the message is `null`, and `cause` (which may be `null`) is what `getCause()` returns. The example below mounts, in a test app, a middleware in the proxy's place that passes this exception to the error flow, to check how the `onError` of [Errors](#errors) answers a backend outage.
+
+```java
+import com.snoworca.naruserve.proxy.ProxyException;
+import java.net.ConnectException;
+
+// test app: instead of the proxy, pass a failure as if the backend were down to the error flow
+app.use("/api", (req, res, next) -> next.error(
+        new ProxyException(ProxyException.Kind.CONNECT_FAILED, new ConnectException("Connection refused"))));
+```
+
+Kotlin:
+
+```kotlin
+app.use("/api") { req, res, next ->
+    next.error(ProxyException(ProxyException.Kind.CONNECT_FAILED, java.net.ConnectException("Connection refused")))
+}
+```
+
+Express counterpart: passing an error with a `code`, as in `next(Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' }))`.
 
 ## Timeouts
 
@@ -308,6 +401,29 @@ Retries are off by default (`retries(0)`). With `retries(n)` a failed request is
 
 **Safe methods are an HTTP semantics distinction only.** A `GET` endpoint with side effects (for example `GET /api/payments/charge?id=1`) may run twice under retries. Give such a path its own proxy with retries off and mount it before the general mount, as the example in [Basic use](#basic-use) does.
 
+A mount that sets the retry count, the wait and retries of unsafe methods together (the `PUT` and `DELETE` of this backend give the same result when run twice):
+
+```java
+import com.snoworca.naruserve.proxy.Proxy;
+
+String url = "http://127.0.0.1:8081";
+app.use("/catalog", Proxy.to(url)
+        .retries(3)
+        .retryDelay(500, TimeUnit.MILLISECONDS)    // waits 0.5 seconds before each retry
+        .retryUnsafeMethods(true));                // also retries a bodiless PUT or DELETE after a 502 or 503
+```
+
+Kotlin:
+
+```kotlin
+app.use("/catalog", Proxy.to(url)
+    .retries(3)
+    .retryDelay(500, TimeUnit.MILLISECONDS)
+    .retryUnsafeMethods(true))
+```
+
+Turn `retryUnsafeMethods(true)` on only for a backend where running the same request twice is safe (idempotent).
+
 Express counterpart: http-proxy-middleware has no retries.
 
 ## Concurrency limit
@@ -348,8 +464,8 @@ Express counterpart: none. The `maxSockets` of an `agent` comes closest, but it 
 - The proxy runs synchronously on the request thread. A proxied request holds one worker thread until it ends.
 - When the client disconnects while the proxy waits for the backend, the adapter may notice only when the response starts. So the thread stays bound until the backend answers, the read timeout or the total timeout.
 - The same holds in the middle of the response body: when the backend goes silent and the client then disconnects, TinyHttpd cannot see the disconnect until something is written to the client, so the slot, the worker thread and the backend socket stay held until the read timeout or the total timeout ends the relay. A client that disconnects while the backend keeps sending is noticed at the next write and released at once.
-- Slow backends can use up the worker pool (`maxWorkers`, default 64) and make non-proxy routes wait, more so with a longer read timeout.
-- Since there is no `maxConcurrent` limit by default, `maxWorkers` and `totalTimeout` are what bound the threads a proxy holds. Give backends that may be slow a per-mount limit with `maxConcurrent`.
+- Slow backends can use up the adapter's request threads and make non-proxy routes wait, more so with a longer read timeout. On TinyHttpd the request-thread pool is not `maxWorkers` (default 64) alone but `maxWorkers + maxSseStreams` (64 + 128 = 192 by default). Ordinary requests also use the SSE share while no SSE stream is open, so an app with `maxWorkers(2)` and `maxSseStreams(3)` can have five proxied requests waiting on the backend at once ([Defaults and security](defaults.md#time-and-connection-limits)).
+- Since there is no `maxConcurrent` limit by default, the adapter's request-thread bound (on TinyHttpd `maxWorkers + maxSseStreams`, 192 by default) and `totalTimeout` are what bound the threads a proxy holds. Give backends that may be slow a per-mount limit with `maxConcurrent`.
 
 ## Backend connections
 
