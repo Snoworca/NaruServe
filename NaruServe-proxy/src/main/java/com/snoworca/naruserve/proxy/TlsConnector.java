@@ -24,7 +24,7 @@ import org.jspecify.annotations.Nullable;
  * set to the connect timeout and under the total-timeout watchdog; the certificate chain checked by the factory's
  * trust managers and the host name checked through {@code SSLParameters.setEndpointIdentificationAlgorithm("HTTPS")},
  * called by reflection where the method exists (Android API 24 and the JDK), and through the held
- * {@link HostnameVerifier} otherwise. Nothing turns either check off.
+ * {@link HostnameVerifier} otherwise and, on Android, also after it. Nothing turns either check off.
  */
 // @req SEC-PROXY-005
 final class TlsConnector {
@@ -50,6 +50,15 @@ final class TlsConnector {
      */
     static volatile @Nullable HostnameVerifier hostnameVerifier;
 
+    /**
+     * Whether the held {@link HostnameVerifier} also runs after a handshake the endpoint identification checked:
+     * {@code true} on Android, where the platform applies the identification only through its own trust managers and
+     * not to an app's plain {@code X509TrustManager} given through {@code .sslSocketFactory}; {@code false} on the JDK,
+     * which wraps such a trust manager with the check and whose default verifier rejects every host. Package-private
+     * so a test can switch the Android behaviour on.
+     */
+    static volatile boolean verifyAfterIdentification = androidRuntime(System.getProperty("java.vm.name"));
+
     private TlsConnector() {
     }
 
@@ -69,7 +78,7 @@ final class TlsConnector {
             SSLSocket ssl = (SSLSocket) f.createSocket(plain, host, port, true);
             boolean identified = endpointIdentification(ssl);
             ssl.startHandshake();
-            if (!identified && !verifier().verify(host, ssl.getSession())) {
+            if ((!identified || verifyAfterIdentification) && !verifier().verify(host, ssl.getSession())) {
                 throw new SSLPeerUnverifiedException("the backend certificate does not match the target host");
             }
             if (watchdog.disarm()) {
@@ -100,6 +109,11 @@ final class TlsConnector {
     static HostnameVerifier verifier() {
         HostnameVerifier v = hostnameVerifier;
         return v != null ? v : HttpsURLConnection.getDefaultHostnameVerifier();
+    }
+
+    /** Whether {@code vmName}, the {@code java.vm.name} system property, names the Android runtime. */
+    static boolean androidRuntime(@Nullable String vmName) {
+        return "Dalvik".equals(vmName);
     }
 
     /** Whether this runtime has {@code SSLParameters.setEndpointIdentificationAlgorithm}. */
