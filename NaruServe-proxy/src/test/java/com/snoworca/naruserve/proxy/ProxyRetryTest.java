@@ -12,11 +12,15 @@ import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
 import com.snoworca.naruserve.testing.RecordingLogger;
 import com.snoworca.naruserve.testing.StubJsonCodec;
+import com.snoworca.naruserve.tinyhttpd.TinyHttpdAdapter;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.NoRouteToHostException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -584,7 +588,89 @@ public class ProxyRetryTest {
         assertEquals(4, backend.requestCount());
     }
 
+    // ---- AC-12 ----
+    // The contrast cases (a bodyless GET and a GET with Content-Length: 0 arrive 3 times) are pinned by the AC-2
+    // tests fr_PROXY_018_AC2_aBodylessGetIsRetriedTwiceAndTheThird503IsRelayed and
+    // fr_PROXY_018_AC2_aGetWithContentLengthZeroIsRetried.
+
+    // FR-PROXY-018 AC-12: with .retries(2) and a backend that always answers 503, a GET sent with
+    // Transfer-Encoding: chunked and an empty body arrives exactly once and the client receives that 503, because a
+    // chunked body is never counted as zero bytes
+    @Test(timeout = 30000)
+    public void fr_PROXY_018_AC12_anEmptyChunkedGetIsNotRetriedOn503() throws Exception {
+        RawBackend backend = numbered(503);
+        String path = mount(Proxy.to(backend.url()).retries(2).retryDelay(20, TimeUnit.MILLISECONDS));
+        start();
+
+        ClientResponse r = send(ClientRequest.of("GET", path + "/x").header("Transfer-Encoding", "chunked")
+                .body(new byte[0]));
+
+        assertEquals(1, backend.requestCount());
+        assertEquals(503, r.status());
+        assertEquals("attempt-0", r.text());
+        assertEquals("0", r.header("X-Attempt"));
+        assertEquals("Transfer-Encoding: chunked", framingLine(backend.onlyRequest()));
+        assertEquals(0, backend.onlyRequest().body.length);
+        assertEquals("errors that reached onError: " + errors, 0, errors.size());
+    }
+
+    // FR-PROXY-018 AC-12: over a TinyHttpd socket, a GET whose client framing is Transfer-Encoding: chunked with only
+    // the last chunk 0\r\n\r\n arrives at an always-503 backend exactly once under .retries(2) and its 503 is relayed
+    @Test(timeout = 30000)
+    public void fr_PROXY_018_AC12_anEmptyChunkedGetOverASocketIsNotRetriedOn503() throws Exception {
+        RawBackend backend = numbered(503);
+        RestApp tiny = RestApp.builder().httpAdapter(new TinyHttpdAdapter()).jsonCodec(new StubJsonCodec())
+                .logger(new RecordingLogger()).build();
+        tiny.use("/api", Proxy.to(backend.url()).retries(2).retryDelay(20, TimeUnit.MILLISECONDS));
+        int port = tiny.listen(0).port();
+        String response;
+        try {
+            response = rawExchange(port, "GET /api/x HTTP/1.1\r\nHost: 127.0.0.1\r\nTransfer-Encoding: chunked\r\n"
+                    + "Connection: close\r\n\r\n0\r\n\r\n");
+        } finally {
+            tiny.shutdown(2, TimeUnit.SECONDS);
+        }
+
+        assertEquals(1, backend.requestCount());
+        assertTrue(response, response.startsWith("HTTP/1.1 503 "));
+        assertTrue(response, response.contains("\r\nX-Attempt: 0\r\n"));
+        assertTrue(response, response.endsWith("\r\n\r\nattempt-0"));
+        assertEquals("Transfer-Encoding: chunked", framingLine(backend.onlyRequest()));
+        assertEquals(0, backend.onlyRequest().body.length);
+    }
+
     // ---- helpers ----
+
+    /** The one Content-Length or Transfer-Encoding line of a request the backend received, or null when it had none. */
+    private static String framingLine(RawBackend.Received request) {
+        String found = null;
+        for (String line : request.headerLines()) {
+            String name = line.substring(0, Math.max(0, line.indexOf(':'))).trim();
+            if (name.equalsIgnoreCase("Content-Length") || name.equalsIgnoreCase("Transfer-Encoding")) {
+                assertEquals("one framing line: " + request.headerLines(), null, found);
+                found = line;
+            }
+        }
+        return found;
+    }
+
+    /** Writes {@code request} to the loopback {@code port} and returns everything sent back until close. */
+    private static String rawExchange(int port, String request) throws IOException {
+        try (Socket s = new Socket()) {
+            s.connect(new InetSocketAddress("127.0.0.1", port), 5000);
+            s.setSoTimeout((int) TimeUnit.SECONDS.toMillis(WAIT_SECONDS));
+            OutputStream out = s.getOutputStream();
+            out.write(request.getBytes(StandardCharsets.ISO_8859_1));
+            out.flush();
+            InputStream in = s.getInputStream();
+            ByteArrayOutputStream all = new ByteArrayOutputStream();
+            byte[] buffer = new byte[4096];
+            for (int n; (n = in.read(buffer)) >= 0; ) {
+                all.write(buffer, 0, n);
+            }
+            return new String(all.toByteArray(), StandardCharsets.ISO_8859_1);
+        }
+    }
 
     /**
      * Sends a bodyless GET through {@code Proxy.to(backend)} with {@code options} applied, to a backend that always
