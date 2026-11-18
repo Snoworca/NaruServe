@@ -551,15 +551,122 @@ class ProxyDocsKotlinTest {
         has("proxy.md", section(ko(), "## 스레드 모델"), "프록시를 거치는 요청은 끝날 때까지 작업 스레드 하나를 잡고 있습니다",
             "어댑터는 응답을 보내기 시작할 때에야 그것을 알 수 있습니다",
             "스레드는 백엔드가 답하거나 읽기 타임아웃이나 전체 타임아웃이 끝날 때까지 묶여 있습니다",
-            "작업 스레드 풀(`maxWorkers`, 기본 64)을 다 써서 프록시가 아닌 라우트까지 기다리게 만들 수 있습니다",
+            "느린 백엔드는 어댑터의 요청 스레드를 다 써서 프록시가 아닌 라우트까지 기다리게 만들 수 있습니다",
             "읽기 타임아웃을 길게 잡을수록 더 그렇습니다",
-            "기본으로는 `maxConcurrent` 한도가 없으므로, 프록시가 잡는 스레드 수를 묶는 것은 `maxWorkers`와 `totalTimeout`입니다")
+            "기본으로는 `maxConcurrent` 한도가 없으므로, 프록시가 잡는 스레드 수를 묶는 것은 어댑터의 요청 스레드 한도(TinyHttpd에서는 `maxWorkers + maxSseStreams`, 기본 192)와 `totalTimeout`입니다")
         has("en/proxy.md", section(en(), "## Thread model"), "A proxied request holds one worker thread until it ends",
             "the adapter may notice only when the response starts",
             "the thread stays bound until the backend answers, the read timeout or the total timeout",
-            "Slow backends can use up the worker pool (`maxWorkers`, default 64) and make non-proxy routes wait",
+            "Slow backends can use up the adapter's request threads and make non-proxy routes wait",
             "more so with a longer read timeout",
-            "Since there is no `maxConcurrent` limit by default, `maxWorkers` and `totalTimeout` are what bound the threads a proxy holds")
+            "Since there is no `maxConcurrent` limit by default, the adapter's request-thread bound (on TinyHttpd `maxWorkers + maxSseStreams`, 192 by default) and `totalTimeout` are what bound the threads a proxy holds")
+    }
+
+    // OPS-DX-010 AC-9 (loop P wave-21 r6 LP-1): over real TinyHttpd sockets with maxWorkers(2) and maxSseStreams(3), six
+    // clients send to a proxy whose backend reads each request head and never answers: five requests reach the backend
+    // at once and the sixth waits, so the request-thread pool that bounds a proxy is maxWorkers + maxSseStreams, not
+    // maxWorkers. Both thread model sections must state that bound (64 + 128 = 192 by default), link the pool rule in
+    // defaults.md and no longer name maxWorkers (default 64) as the pool or the bound.
+    @Test(timeout = 60000)
+    fun `OPS-DX-010 AC-9 over TinyHttpd maxWorkers plus maxSseStreams requests reach a holding backend and both pages state that bound`() {
+        val backend = ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))
+        val held = java.util.Collections.synchronizedList(ArrayList<Socket>())
+        val reached = AtomicInteger()
+        val closing = java.util.concurrent.atomic.AtomicBoolean()
+        val acceptor = Thread({
+            while (!backend.isClosed) {
+                try {
+                    val s = backend.accept()
+                    readHead(s.getInputStream())
+                    held.add(s)
+                    reached.incrementAndGet()
+                    if (closing.get()) s.close() // held without an answer until the test ends
+                } catch (e: java.io.IOException) {
+                    return@Thread
+                }
+            }
+        }, "docs-holding-backend")
+        acceptor.isDaemon = true
+        acceptor.start()
+        val app = RestApp.builder().httpAdapter(TinyHttpdAdapter()).jsonCodec(StubJsonCodec()).logger(RecordingLogger()).build()
+        val clients = ArrayList<Socket>()
+        try {
+            app.server { it.maxWorkers(2).maxSseStreams(3) }
+            app.use("/api", Proxy.to("http://127.0.0.1:${backend.localPort}").readTimeout(30, TimeUnit.SECONDS))
+            val port = app.listen(0).port()
+            for (i in 1..6) {
+                val c = Socket()
+                clients.add(c)
+                c.connect(InetSocketAddress("127.0.0.1", port), 5000)
+                c.getOutputStream().write("GET /api/x$i HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n".toByteArray(Charsets.ISO_8859_1))
+                c.getOutputStream().flush()
+            }
+            val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(15)
+            while (reached.get() < 5 && System.nanoTime() < deadline) {
+                Thread.sleep(50)
+            }
+            Thread.sleep(1000)
+            assertEquals("proxied requests held at the backend at once with maxWorkers(2), maxSseStreams(3)", 5, reached.get())
+        } finally {
+            closing.set(true)
+            synchronized(held) { for (s in held) s.close() }
+            for (c in clients) c.close()
+            app.shutdown(2, TimeUnit.SECONDS)
+            backend.close()
+        }
+
+        val k = section(ko(), "## 스레드 모델")
+        has("proxy.md thread model", k, "`maxWorkers + maxSseStreams`(기본 64 + 128 = 192)",
+            "`maxWorkers(2)`와 `maxSseStreams(3)`인 앱에서는 프록시 요청 다섯 개가 함께 백엔드를 기다릴 수 있습니다",
+            "(defaults.md#시간연결-수-한도)",
+            "어댑터의 요청 스레드 한도(TinyHttpd에서는 `maxWorkers + maxSseStreams`, 기본 192)와 `totalTimeout`입니다")
+        val e = section(en(), "## Thread model")
+        has("en/proxy.md thread model", e, "`maxWorkers + maxSseStreams` (64 + 128 = 192 by default)",
+            "an app with `maxWorkers(2)` and `maxSseStreams(3)` can have five proxied requests waiting on the backend at once",
+            "(defaults.md#time-and-connection-limits)",
+            "the adapter's request-thread bound (on TinyHttpd `maxWorkers + maxSseStreams`, 192 by default) and `totalTimeout` are what bound the threads a proxy holds")
+        for ((where, s, wrong) in listOf(Triple("proxy.md", k, "작업 스레드 풀(`maxWorkers`, 기본 64)"),
+                Triple("proxy.md", k, "묶는 것은 `maxWorkers`와 `totalTimeout`입니다"),
+                Triple("en/proxy.md", e, "worker pool (`maxWorkers`, default 64)"),
+                Triple("en/proxy.md", e, "`maxWorkers` and `totalTimeout` are what bound"))) {
+            assertFalse("$where still names maxWorkers alone as the pool or the bound: $wrong", s.contains(wrong))
+        }
+    }
+
+    // C-005 (loop P wave-21 r6 LP-2, LP-3): every public method and constructor that Proxy and ProxyException declare,
+    // enumerated by reflection, is called in a ```java block and in a ```kotlin block of both pages: `.name(` for a
+    // method, `new ProxyException(` in Java and `ProxyException(` without `new` in Kotlin for a constructor.
+    @Test
+    fun `C-005 every public method and constructor of Proxy and ProxyException appears in a Java and a Kotlin block of both pages`() {
+        val needles = ArrayList<Triple<String, Regex, Regex>>()
+        for (c in listOf(Proxy::class.java, ProxyException::class.java)) {
+            for (m in c.declaredMethods) {
+                if (!java.lang.reflect.Modifier.isPublic(m.modifiers) || m.isSynthetic || m.isBridge) continue
+                val call = Regex("\\." + Regex.escape(m.name) + "\\(")
+                needles.add(Triple("${c.simpleName}.${m.name}", call, call))
+            }
+            for (k in c.declaredConstructors) {
+                if (!java.lang.reflect.Modifier.isPublic(k.modifiers)) continue
+                needles.add(Triple("new ${c.simpleName}(${k.parameterTypes.joinToString(", ") { it.simpleName }})",
+                    Regex("\\bnew\\s+" + c.simpleName + "\\("), Regex("(?<![\\w.])(?<!new )" + c.simpleName + "\\(")))
+            }
+        }
+        val labels = needles.map { it.first }.toSet()
+        for (expected in listOf("Proxy.to", "Proxy.writeTimeout", "Proxy.retryDelay", "Proxy.retryUnsafeMethods",
+                "Proxy.preserveHost", "Proxy.bodyLimit", "Proxy.rewriteLocation", "Proxy.handle", "ProxyException.kind",
+                "new ProxyException(Kind, Throwable)")) {
+            assertTrue("reflection found $expected: $labels", expected in labels)
+        }
+        val missing = ArrayList<String>()
+        for ((where, doc) in listOf("proxy.md" to ko(), "en/proxy.md" to en())) {
+            val java = blocks(doc, "java").joinToString("\n")
+            val kotlin = blocks(doc, "kotlin").joinToString("\n")
+            for ((label, j, k) in needles) {
+                if (!j.containsMatchIn(java)) missing.add("$where java $label")
+                if (!k.containsMatchIn(kotlin)) missing.add("$where kotlin $label")
+            }
+        }
+        assertEquals("public Proxy and ProxyException members without a Java or Kotlin example", emptyList<String>(), missing)
     }
 
     @Test
@@ -630,7 +737,7 @@ class ProxyDocsKotlinTest {
         assertEquals(TimeUnit.SECONDS.toNanos(30), api.readTimeoutNanos())
     }
 
-    // docs-example: proxy.md#2
+    // docs-example: proxy.md#3
     @Test
     fun `OPS-DX-010 AC-2 the fixed header example strips the prefix and sets and removes the named headers`() {
         val backend = backend("HTTP/1.1 200 X\r\nServer: backend/1\r\nCache-Control: max-age=60\r\nContent-Length: 2\r\n\r\nok")
@@ -663,7 +770,7 @@ class ProxyDocsKotlinTest {
         }
     }
 
-    // docs-example: proxy.md#3
+    // docs-example: proxy.md#6
     @Test
     fun `OPS-DX-010 AC-3 the onError example answers JSON by kind and plain HttpException answers apart`() {
         val adapter = InMemoryHttpAdapter()
@@ -708,7 +815,7 @@ class ProxyDocsKotlinTest {
         }
     }
 
-    // docs-example: proxy.md#4
+    // docs-example: proxy.md#8
     @Test
     fun `OPS-DX-010 AC-7 the download example raises the total timeout and forwards`() {
         val backend = backend(RawBackend.response(200, "file"))
@@ -723,7 +830,7 @@ class ProxyDocsKotlinTest {
         assertEquals("GET /downloads/a.bin HTTP/1.1", backend.onlyRequest().requestLine())
     }
 
-    // docs-example: proxy.md#5
+    // docs-example: proxy.md#10
     @Test
     fun `OPS-DX-010 AC-10 the maxConcurrent example shares one counter between p and p retries(0) only`() {
         val backend = backend(RawBackend.response(200, "hit"))
@@ -744,7 +851,7 @@ class ProxyDocsKotlinTest {
         assertEquals(0, p.concurrencyCounter()!!.get())
     }
 
-    // docs-example: proxy.md#6
+    // docs-example: proxy.md#11
     @Test
     fun `OPS-DX-010 AC-2 the private CA example passes an SSLSocketFactory`() {
         val tls = SSLContext.getDefault()
@@ -1202,5 +1309,123 @@ class ProxyDocsKotlinTest {
         has("proxy.md basic use", k, "숫자 네 개를 점 세 개로 이은 IPv4 리터럴(`1.2.3.4`)")
         val e = section(en(), "## Basic use")
         has("en/proxy.md basic use", e, "a dotted-quad IPv4 literal (four numbers joined by three dots, `1.2.3.4`)")
+    }
+
+    // docs-example: proxy.md#2
+    @Test
+    fun `C-005 IR-PROXY-001 the per-request backend example calls handle on the Proxy it chose`() {
+        val stableBackend = backend(RawBackend.response(200, "stable"))
+        val canaryBackend = backend(RawBackend.response(200, "canary"))
+        val stableUrl = stableBackend.url()
+        val canaryUrl = canaryBackend.url()
+        val stable = Proxy.to(stableUrl)
+        val canary = Proxy.to(canaryUrl)
+        app.use("/api") { req, res, next ->
+            val target = if (req.header("X-Canary") == "1") canary else stable
+            target.handle(req, res, next)
+        }
+
+        assertEquals("stable", send("GET", "/api/orders").text())
+        assertEquals("canary", send("GET", "/api/orders", "X-Canary", "1").text())
+        assertEquals("GET /api/orders HTTP/1.1", stableBackend.onlyRequest().requestLine())
+        assertEquals("GET /api/orders HTTP/1.1", canaryBackend.onlyRequest().requestLine())
+    }
+
+    // docs-example: proxy.md#4
+    @Test
+    fun `C-005 OPS-DX-010 AC-2 the upload example keeps the client Host and forwards a body over the app's raw body limit`() {
+        val backend = backend(RawBackend.response(200, "stored"))
+        val url = backend.url()
+        val adapter = InMemoryHttpAdapter()
+        val app = RestApp.builder().httpAdapter(adapter).jsonCodec(StubJsonCodec()).logger(RecordingLogger()).build()
+        try {
+            app.use("/upload", Proxy.to(url)
+                .preserveHost(true)
+                .bodyLimit(100L * 1024 * 1024)
+                .writeTimeout(2, TimeUnit.MINUTES))
+            app.listen(0)
+
+            val body = ByteArray(2 * 1024 * 1024) { (it % 251).toByte() }
+            val r = adapter.send(ClientRequest.of("PUT", "/upload/a.bin").header("Host", "files.example")
+                .header("Content-Length", body.size.toString()).body(body))
+            assertEquals(200, r.status())
+            assertEquals("stored", r.text())
+            val received = backend.onlyRequest()
+            assertEquals("PUT /upload/a.bin HTTP/1.1", received.requestLine())
+            assertEquals("preserveHost(true) sends the client's Host", listOf("files.example"), received.headerValues("Host"))
+            assertTrue("the 2 MiB body passed the 1 MiB rawBodyLimit under bodyLimit", body.contentEquals(received.body))
+        } finally {
+            app.shutdown(2, TimeUnit.SECONDS)
+        }
+    }
+
+    // docs-example: proxy.md#5
+    @Test
+    fun `C-005 FR-PROXY-013 the rewriteLocation(false) example relays the backend Location unchanged`() {
+        var port = 0
+        val legacy = RawBackend.start { _, _, out ->
+            out.write("HTTP/1.1 302 X\r\nLocation: http://127.0.0.1:$port/legacy/new\r\nContent-Length: 0\r\n\r\n"
+                .toByteArray(Charsets.ISO_8859_1))
+        }
+        backends.add(legacy)
+        port = legacy.port()
+        val url = legacy.url()
+        app.use("/legacy", Proxy.to(url).rewriteLocation(false))
+        app.use("/rewritten", Proxy.to(url))
+
+        val kept = send("GET", "/legacy/old")
+        assertEquals(302, kept.status())
+        assertEquals("http://127.0.0.1:$port/legacy/new", kept.header("Location"))
+        assertEquals("the default rewrites the same Location", "/legacy/new", send("GET", "/rewritten/old").header("Location"))
+    }
+
+    // docs-example: proxy.md#7
+    @Test
+    fun `C-005 IR-PROXY-002 the test double example passes a ProxyException built with the public constructor to onError`() {
+        val adapter = InMemoryHttpAdapter()
+        val app = RestApp.builder().httpAdapter(adapter).jsonCodec(MapCodec()).logger(RecordingLogger()).build()
+        val seen = java.util.Collections.synchronizedList(ArrayList<Throwable>())
+        try {
+            app.use("/api") { req, res, next ->
+                next.error(ProxyException(ProxyException.Kind.CONNECT_FAILED, java.net.ConnectException("Connection refused")))
+            }
+            app.onError { error, req, res ->
+                seen.add(error)
+                res.status((error as HttpException).status()).json(mapOf("kind" to (error as ProxyException).kind().name))
+            }
+            app.listen(0)
+
+            val r = adapter.send(ClientRequest.of("GET", "/api/orders"))
+            assertEquals("the status follows the kind", 502, r.status())
+            assertEquals("{\"kind\":\"CONNECT_FAILED\"}", r.text())
+            val e = seen.single() as ProxyException
+            assertNull("the message is always null", e.message)
+            assertTrue("the cause stays in getCause(): ${e.cause}", e.cause is java.net.ConnectException)
+        } finally {
+            app.shutdown(2, TimeUnit.SECONDS)
+        }
+    }
+
+    // docs-example: proxy.md#9
+    @Test
+    fun `C-005 FR-PROXY-018 the retry example waits retryDelay and retries a bodiless DELETE after a 503`() {
+        val catalog = RawBackend.start { index, _, out ->
+            val raw = if (index == 0) RawBackend.response(503, "busy") else RawBackend.response(200, "deleted")
+            out.write(raw.toByteArray(Charsets.ISO_8859_1))
+        }
+        backends.add(catalog)
+        val url = catalog.url()
+        app.use("/catalog", Proxy.to(url)
+            .retries(3)
+            .retryDelay(500, TimeUnit.MILLISECONDS)
+            .retryUnsafeMethods(true))
+
+        val began = System.nanoTime()
+        val r = send("DELETE", "/catalog/items/7")
+        val tookMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - began)
+        assertEquals(200, r.status())
+        assertEquals("deleted", r.text())
+        assertEquals("one retry of the DELETE after the 503", 2, catalog.requestCount())
+        assertTrue("the retry waited retryDelay: $tookMillis ms", tookMillis >= 450)
     }
 }
