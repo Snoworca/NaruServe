@@ -1,0 +1,42 @@
+{
+  "kept": [],
+  "dropped": [
+    {
+      "axis": "security",
+      "note": "Hex/mixed BSD IPv4 forms such as http://0x7f.1:8081 or http://127.0.0.0x1 contain a letter, so isHostName (TargetUrl.java:136-150) takes them as names, while the all-digit guard refuses 127.1 and 4294967295. Whether InetSocketAddress then reaches 127.0.0.1 depends on the platform resolver: inet_aton reads it as 127.0.0.1, but recent JDK updates refuse ambiguous literals by default (jdk.net.allowAmbiguousIPAddressLiterals). I could not show a wrong outcome without a driver program, which the review rules forbid. The SRS/D-048 also leave the name grammar open, the URL comes from the developer and not from a client, and the Host header carries the string as written. Dropped as unproven."
+    },
+    {
+      "axis": "security",
+      "note": "Request-line and Host smuggling: the authority holds only [A-Za-z0-9._-] names, a port of digits, or an IPv6 literal that isIpv6 checks for hex digits, colons and a dotted tail; ']' must be followed by end or ':'+digits; '@', '%', '\\\\', space and controls are refused. The base path goes through PathChecker.isSafePath (no 0x00-0x20, 0x7F, non-ASCII, '#', bad '%', encoded unreserved, '/', '\\\\', NUL, or %25 double encoding), and '?' is refused for the whole URL. I found no string that injects CR/LF, a space or a second authority into the backend request line (Proxy.java:443) or Host (target.authority)."
+    },
+    {
+      "axis": "edge cases",
+      "note": "Hosts like '-', 'a..b' and '.h' and ports with leading zeros ('h:00080') are accepted. D-048 does not define the name grammar, and RFC 3986 allows port *DIGIT. An odd name only gives an unresolved connect (a backend failure), not a different host. How the Host header carries the authority belongs to FR-PROXY-004, out of scope. Dropped."
+    },
+    {
+      "axis": "edge cases",
+      "note": "http://[::] (unspecified address) is accepted. It is a valid RFC 4291 literal that the developer configures, and D-048 does not exclude it. Dropped."
+    },
+    {
+      "axis": "refactoring",
+      "note": "TargetUrl.hostLiteral and TargetUrl.isDefaultPort() have no caller in NaruServe-proxy/src (grep). They look prepared for FR-PROXY-004 (Host header), which is out of scope here, and they cause no wrong behavior. Dropped as style or forward-looking."
+    },
+    {
+      "axis": "comment truthfulness",
+      "note": "Proxy.to's public javadoc uses {@link TargetUrl}, a package-private class. Whether javadoc (withJavadocJar runs in build) warns or fails could not be checked with the one Gradle command allowed. The other comments match the code: the TargetUrl class/field/method docs, the parsePort sign claim, the isIpv4 'no leading zeros', the isIpv6 grammar, and PathChecker's mention of Proxy.to applying isSafePath. Dropped as unproven."
+    },
+    {
+      "axis": "tests S1",
+      "note": "AC-1..AC-6 each have dedicated tests: AC-1 has 5 tests covering every listed example; AC-2 has accepted forms via describe(), zone id, non-ASCII, ports 0/65536/abc, not-a-URL, plus an IPv6 connect test; AC-3 and AC-4 check the request line at a recording backend under /api/orders; AC-5 has all five SRS examples plus more; AC-6 expects NPE. Mutants I tried by hand (strip one trailing slash only, accept empty port, accept query or fragment, accept zone id, NPE→IAE, lastIndexOf port split) each fail at least one test."
+    },
+    {
+      "axis": "tests S2",
+      "note": "The IPv6 connect test is skipped through Assume when ::1 cannot be bound, so on such hosts the brackets-stripped connect is not exercised. This is acceptable, and no flakiness was found: ephemeral ports, closeables and apps are torn down in @After, and the acceptor thread is a daemon that stops when the socket closes. Gradle run: ProxyTargetUrlTest tests=24 failures=0 errors=0 skipped=0 (task UP-TO-DATE against the current sources)."
+    },
+    {
+      "axis": "concurrency / error handling",
+      "note": "TargetUrl is immutable, with final fields and no shared state. Every refusal throws IllegalArgumentException at Proxy.to, and null throws NullPointerException before any other check. Nothing found."
+    }
+  ],
+  "summary": "FR-PROXY-001 review, round 1: 0 kept findings. TargetUrl.parse follows the SRS: http/https in any case, a name, IPv4 dotted-quad or bracketed IPv6 host with no zone id, a port of 1..65535 in ASCII digits only, every trailing slash removed, the base path checked with PathChecker.isSafePath, IllegalArgumentException for a query, fragment, user info, another scheme or no host, and NullPointerException for null. This also matches D-048/D-072 and the hand-parsing Implementation Note. The Proxy public API is unchanged (to(String) has the same signature). No request-line or Host smuggling path was found. Tests cover AC-1..AC-6 with assertions that a wrong implementation fails; the Gradle run shows 24/24 passing, 0 skipped. Dropped as unproven or out of scope: hex IPv4 hosts (resolver-dependent), the dead members hostLiteral and isDefaultPort, and the javadoc link to a package-private class."
+}

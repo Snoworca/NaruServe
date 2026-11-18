@@ -1,0 +1,62 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-006",
+ "base_sha": "dba8b0c60c398c0b9ebfe0ae297af31333fa3049",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-006"
+ ],
+ "req_filter": [
+  "FR-PROXY-006"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestTargetTest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java"
+ ],
+ "started_at": "2026-11-17T18:51:37Z",
+ "last_updated_at": "2026-11-17T19:07:00Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-17T18:51:37Z",
+  "ended_at": "2026-11-17T19:07:00Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-006",
+  "result_summary": "FR-PROXY-006: Proxy.requestTarget forwards basePath + originalUrl() by default and basePath + url() under stripPrefix(true), computed in handle() right after the PathChecker check; a stripped remainder that is not '/' or a raw '/'-suffix of the checked originalUrl() path followed by the same raw query answers 400 before any connection (closes a CRLF injection via the decoded url() of WebSocket upgrades to app.ws routes). 21 focused tests green; full build 4360 tests 0 failures.",
+  "changed": true,
+  "commit_sha": "030ff09",
+  "commits": [
+   {
+    "req_id": "FR-PROXY-006",
+    "test_sha": "f1f7425",
+    "implementation_sha": "030ff09"
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-17T18:51:37Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-PROXY-006": "evolving"
+  },
+  "status_snapshot": {
+   "FR-PROXY-006": "planned"
+  }
+ },
+ "req_coverage": {
+  "FR-PROXY-006": {
+   "status_at_start": "planned",
+   "status_at_end": "planned",
+   "all_done": true
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-006/lanes/w13s8l1/reports/pm-20261117T190700Z.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": null
+}

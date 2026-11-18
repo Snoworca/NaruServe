@@ -1,0 +1,58 @@
+[
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-18",
+   "summary": "[req] SEC-PROXY-001 — proxy request-target and path checks (PathChecker) answer 400 before any backend connection on the raw originalUrl(). green=PASS (41/41 focused). files: PathChecker.java, Proxy.java, PathCheckerTest.java, ProxyPathChecksTest.java. AC: SEC-PROXY-001 AC-1..9 PASS (AC-8 servlet half not exercised in the proxy module). regression 4295 tests 0 failures",
+   "requirementIds": [
+    "SEC-PROXY-001"
+   ],
+   "target": "0.12.0",
+   "scope": "PROXY"
+  },
+  "argsHash": "7f0d729188776e2fb679d65b167fd9906c35217b",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-18",
+   "summary": "[req] FR-PROXY-001 — Proxy.to target URL grammar parsed by hand in TargetUrl (http/https origin, ASCII name or IPv4 or bracketed IPv6 host, port 1..65535, base path without trailing slashes checked by PathChecker). green=PASS (25/25 focused). files: TargetUrl.java, Proxy.java, ProxyTargetUrlTest.java. AC: FR-PROXY-001 AC-1..6 PASS. regression 4320 tests 0 failures",
+   "requirementIds": [
+    "FR-PROXY-001"
+   ],
+   "target": "0.12.0",
+   "scope": "PROXY"
+  },
+  "argsHash": "623ceca98142c295fcfd3c806f536068226cd6da",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-18",
+   "summary": "[req] FR-PROXY-004 — proxy Host handling: target Host with port only off the scheme default and IPv6 brackets, received Host as X-Forwarded-Host in the D-053 forwarding slot, preserveHost(true) keeps the received Host, no Host gives the target Host, several Host lines answer 400 before any backend connection. green=PASS (19/19 focused). files: TargetUrl.java, BackendRequest.java, Proxy.java, ProxyHostHeaderTest.java. AC: FR-PROXY-004 AC-1..5 PASS. regression 4339 tests 0 failures",
+   "requirementIds": [
+    "FR-PROXY-004"
+   ],
+   "target": "0.12.0",
+   "scope": "PROXY"
+  },
+  "argsHash": "823fe6e85855b9441610b8221ea1ad75d964b2b1",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-18",
+   "summary": "[req] FR-PROXY-006 — proxy forwarded target: base path followed by originalUrl() by default and by url() under stripPrefix(true); method token, path, query and body bytes unchanged; a stripped remainder that is not a raw suffix of the checked originalUrl() answers 400. green=PASS (21/21 focused). files: Proxy.java, ProxyRequestTargetTest.java. AC: FR-PROXY-006 AC-1..4 PASS. regression 4360 tests 0 failures",
+   "requirementIds": [
+    "FR-PROXY-006"
+   ],
+   "target": "0.12.0",
+   "scope": "PROXY"
+  },
+  "argsHash": "10d95d39b05ee79680d71a60cbfe18eb322f3e8a",
+  "action": "apply"
+ }
+]

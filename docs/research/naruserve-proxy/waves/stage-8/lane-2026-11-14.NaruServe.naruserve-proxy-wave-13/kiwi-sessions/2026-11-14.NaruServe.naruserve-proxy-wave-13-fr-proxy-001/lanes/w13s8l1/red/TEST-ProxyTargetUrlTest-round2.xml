@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" tests="25" skipped="0" failures="1" errors="0" timestamp="2026-11-17T18:35:36.742Z" hostname="Sungbeomui-Macmini.local" time="0.034">
+  <properties/>
+  <testcase name="fr_PROXY_001_AC2_acceptedFormsConstruct" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.005"/>
+  <testcase name="fr_PROXY_001_AC2_malformedIpv6IsRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC1_fragmentIsRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC1_userInformationIsRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC4_basePathEqualToTheMountIsPrefixed" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.018"/>
+  <testcase name="fr_PROXY_001_AC3_basePathWithTrailingSlashPrefixesWithoutDoubleSlash" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.001"/>
+  <testcase name="fr_PROXY_001_AC3_trailingSlashesAreRemovedFromTheConfiguredBasePath" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC3_rootBasePathForwardsThePathUnchanged" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.001"/>
+  <testcase name="fr_PROXY_001_AC1_otherSchemesAreRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC2_otherAcceptedHostsAndPortBounds" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC1_queryIsRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.001"/>
+  <testcase name="fr_PROXY_001_AC2_numericLastLabelIsRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.001">
+    <failure message="java.lang.AssertionError: Proxy.to accepted http://0x7f.1:8081 as target=http://0x7f.1:8081 connect=10000000000 write=60000000000 read=60000000000 total=300000000000 retries=0 retryDelay=200000000 retryUnsafeMethods=false stripPrefix=false preserveHost=false bodyLimit=-1 maxConcurrent=0 requestHeaders=[] responseHeaders=[] rewriteLocation=true sslSocketFactory=default" type="java.lang.AssertionError">java.lang.AssertionError: Proxy.to accepted http://0x7f.1:8081 as target=http://0x7f.1:8081 connect=10000000000 write=60000000000 read=60000000000 total=300000000000 retries=0 retryDelay=200000000 retryUnsafeMethods=false stripPrefix=false preserveHost=false bodyLimit=-1 maxConcurrent=0 requestHeaders=[] responseHeaders=[] rewriteLocation=true sslSocketFactory=default
+	at org.junit.Assert.fail(Assert.java:89)
+	at com.snoworca.naruserve.proxy.ProxyTargetUrlTest.assertRejected(ProxyTargetUrlTest.java:56)
+	at com.snoworca.naruserve.proxy.ProxyTargetUrlTest.fr_PROXY_001_AC2_numericLastLabelIsRejected(ProxyTargetUrlTest.java:177)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:27)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.runTestClass(JUnitTestClassExecutor.java:112)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.execute(JUnitTestClassExecutor.java:58)
+	at org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.execute(JUnitTestClassExecutor.java:40)
+	at org.gradle.api.internal.tasks.testing.junit.AbstractJUnitTestClassProcessor.processTestClass(AbstractJUnitTestClassProcessor.java:54)
+	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.processTestClass(SuiteTestClassProcessor.java:53)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:36)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:24)
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:92)
+	at jdk.proxy1/jdk.proxy1.$Proxy4.processTestClass(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$2.run(TestWorker.java:183)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:132)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+</failure>
+  </testcase>
+  <testcase name="fr_PROXY_001_AC2_ipv6LiteralConnectsWithoutBrackets" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.001"/>
+  <testcase name="fr_PROXY_001_AC1_missingHostIsRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC5_basePathsFailingThePathChecksAreRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC2_notAUrlIsRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC2_ipv6ZoneIdIsRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC2_nonAsciiHostIsRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.001"/>
+  <testcase name="fr_PROXY_001_AC2_hostWithOtherCharactersIsRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC5_basePathsPassingThePathChecksAreKept" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC6_nullUrlThrowsNullPointerException" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC3_basePathWithTrailingSlashesPrefixesWithoutDoubleSlash" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.003"/>
+  <testcase name="fr_PROXY_001_AC2_badPortIsRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC5_otherPathCheckFailuresAreRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.0"/>
+  <testcase name="fr_PROXY_001_AC2_malformedIpv4IsRejected" classname="com.snoworca.naruserve.proxy.ProxyTargetUrlTest" time="0.001"/>
+  <system-out><![CDATA[2026-11-18T03:35:36.765+0900 INFO GET /api/orders/x 200 7ms in=0 out=2 rid=ba7c88a1d735ea3c
+2026-11-18T03:35:36.767+0900 INFO GET /api/orders/x 200 0ms in=0 out=2 rid=0745d2cfe1dafe6f
+2026-11-18T03:35:36.768+0900 INFO GET /api/orders/x 200 0ms in=0 out=2 rid=80fa97dbdc0886a2
+2026-11-18T03:35:36.771+0900 INFO GET /api/orders/x 200 0ms in=0 out=2 rid=04b80ac794070e51
+2026-11-18T03:35:36.775+0900 INFO GET /api/orders/x 200 2ms in=0 out=2 rid=56d7e80627cfdbb3
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,56 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-001",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-001"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTargetUrlTest.java"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests com.snoworca.naruserve.proxy.ProxyTargetUrlTest",
+  "exit_code": 1,
+  "captured_failure": "24 tests completed, 12 failed: AC1 query/fragment/userinfo, AC2 zone id/non-ASCII/host chars/IPv4/IPv6/port/not-a-URL, AC5 base path checks (e.g. Proxy.to accepted http://h:8081/?a=1, http://user@h:8081, http://[fe80::1%25eth0]:8081, http://h:+80, http://h/a/../b)",
+  "timestamp": "2026-11-18T03:12:00Z"
+ },
+ "regression_baseline": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "note": "pinned by parent: 4295 tests, 0 failures at wave-13 HEAD 6af9853",
+  "head_sha": "6af9853297e2a42f960d17d969729e94ab7b2841"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests com.snoworca.naruserve.proxy.ProxyTargetUrlTest",
+  "exit_code": 0,
+  "timestamp": "2026-11-18T03:38:00Z"
+ },
+ "regression_summary": {
+  "scope": "full",
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "passed": 4320,
+  "failed": 0,
+  "regressed_files": []
+ },
+ "review_rounds": [
+  {
+   "round": 1,
+   "file": "review-round1.json",
+   "kept": 0,
+   "dropped": 9,
+   "followup": "dropped hex IPv4 note acted on: numeric last label rule + test (red then green); dead isDefaultPort removed; public javadoc no longer links package-private TargetUrl"
+  }
+ ]
+}

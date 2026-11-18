@@ -1,0 +1,30 @@
+{
+ "status": "TASK_DONE",
+ "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-004",
+ "summary": "FR-PROXY-004 implemented: TargetUrl.hostHeader (port only off the scheme default, IPv6 brackets), BackendRequest.receivedHost (400 on more than one Host line, checked after the header check and before framing per D-050) and forwardingHeaders (X-Forwarded-Host in the D-053 forwarding slot), Proxy.backendHost/prepare (preserveHost keeps the received Host; no Host gives the target Host). 19 new tests green, full regression 4339/0.",
+ "test_files": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyHostHeaderTest.java"
+ ],
+ "impl_files": [
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java"
+ ],
+ "red_evidence": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests ProxyHostHeaderTest -> 17 tests, 13 failed (e.g. AC2 expected:<h> but was:<h:80>; AC5 expected:<400> but was:<502>; AC1 X-Forwarded-Host expected:<[gw.example]> but was:<[]>); red XML at .kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-004/lanes/w13s8l1/red-ProxyHostHeaderTest.xml. Review-round seam tests (Proxy.backendHost) red as compile error 'cannot find symbol' before the seam was added.",
+ "green_evidence": "focused: ProxyHostHeaderTest 19 tests 0 failures 0 skipped (IPv6 test ran); NaruServe-proxy module 258/0; regression ./gradlew -PtinyHttpdFromMaven=true build BUILD SUCCESSFUL, 4339 tests 0 failures (baseline 4320 + 19)",
+ "already_green_acs": [
+  "FR-PROXY-004 AC-4 (target Host and no X-Forwarded-Host when no Host: the pre-existing code already wrote target.authority and no forwarding headers; tests passed in red run)",
+  "FR-PROXY-004 AC-5 over the TinyHttpd socket only (TinyHttpd itself refuses two Host lines with 400); the proxy's own check is tested through the in-memory adapter and was red"
+ ],
+ "declared_limits": [
+  "A client-sent X-Forwarded-Host (and Forwarded / X-Forwarded-For / -Proto) line is still forwarded as a client header, ahead of the proxy's own X-Forwarded-Host; dropping them belongs to SEC-PROXY-002 (wave-19). Not fixed here.",
+  "A single Host line with a comma-list or otherwise unusual value is forwarded as-is (only several Host lines answer 400, as the SRS states).",
+  "Test helpers ConnectionCounter/exchange/tinyHttpdProxy are duplicated again in ProxyHostHeaderTest (5th copy); extracting a shared test-support class needs edits outside this lane's write set.",
+  "D-051 null-message shape of the 400 is implemented (plain HttpException(400)) but not asserted beyond the status."
+ ],
+ "srs_deltas": [
+  "{\"req\": \"FR-PROXY-004\", \"kind\": \"ac-clarification\", \"ac\": \"AC-4\", \"proposal\": \"State that a Host line whose value is empty after OWS counts as no Host (target host as Host, no X-Forwarded-Host, with and without preserveHost).\", \"evidence\": \"BackendRequest.receivedHost returns null for an empty value; test fr_PROXY_004_AC4_anEmptyHostCountsAsNoHost. The SRS text only covers 'adapter reports no Host'; the reviewer flagged the interpretation as undocumented.\"}"
+ ],
+ "questions": [],
+ "error": null
+}

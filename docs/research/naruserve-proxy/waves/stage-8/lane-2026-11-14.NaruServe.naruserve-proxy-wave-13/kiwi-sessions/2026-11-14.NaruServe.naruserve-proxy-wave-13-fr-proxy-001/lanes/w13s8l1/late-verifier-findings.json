@@ -1,0 +1,42 @@
+{
+ "req": "FR-PROXY-001",
+ "source": "late TDD verifier (first verifier subagent, completed after the lane closed)",
+ "checked_at_head": "6e06870",
+ "status": "open - not applied by the lane (worktree has moved on; parent owns it)",
+ "kept": [
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTargetUrlTest.java",
+   "test": "fr_PROXY_001_AC2_malformedIpv6IsRejected",
+   "mutant": "TargetUrl.isIpv6 headGroups + tailGroups <= 7 -> <= 8 survives",
+   "add_rejected": "http://[1:2:3:4:5:6:7::8]"
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTargetUrlTest.java",
+   "test": "fr_PROXY_001_AC2_otherAcceptedHostsAndPortBounds",
+   "mutant": "<= 7 -> <= 6 survives (rejects a valid literal)",
+   "add_accepted": [
+    "http://[1:2:3:4:5:6::7]",
+    "http://[1::]"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTargetUrlTest.java",
+   "test": "fr_PROXY_001_AC2_malformedIpv4IsRejected / accepted forms",
+   "mutant": "TargetUrl.isOctet value <= 255 -> < 255 survives (rejects 10.0.0.255)",
+   "add_accepted": [
+    "http://255.255.255.255",
+    "http://10.0.0.255:8081"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTargetUrlTest.java",
+   "test": "fr_PROXY_001_AC2_malformedIpv6IsRejected",
+   "mutant": "countGroups(head, false) -> true survives (accepts an IPv4 tail before ::)",
+   "add_rejected": "http://[1.2.3.4::1]"
+  }
+ ],
+ "dropped_notes": [
+  "fr_PROXY_001_AC2_ipv6LiteralConnectsWithoutBrackets cannot tell bracket stripping apart: JDK 17 InetSocketAddress(\"[::1]\", port) also connects; the test name overclaims"
+ ],
+ "note": "Implementation behaves correctly for all four literals today; these are test-gap findings only (surviving mutants). Fix = add the listed literals to the cited tests; no production change needed."
+}

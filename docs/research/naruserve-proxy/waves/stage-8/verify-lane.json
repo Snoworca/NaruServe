@@ -1,0 +1,51 @@
+{
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-13": {
+  "head": "a0880bdfff1a6510001612d926e60c8584f2b30d",
+  "commits": 11,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "rounds": 2,
+   "fixed": [
+    "FND-002 degenerate Proxy.to host names (test 442e072, fix 6e06870)",
+    "late kiwi-coder verifier (FR-PROXY-001): 4 surviving TargetUrl mutants (IPv6 group limit x2, IPv4 octet bound, IPv4 tail before ::) plus bracket check killed by test-only commit a0880bd; production unchanged"
+   ],
+   "dropped": [
+    "FND-001 servlet AC-8 half: disproved by an uncommitted Jetty probe (originalUrl() path-only, %2e%2e -> 400, no connection to evil.example)",
+    "FND-003",
+    "FND-004",
+    "FND-005",
+    "FND-006",
+    "FND-101"
+   ],
+   "check_review_round": "PASS",
+   "clean_code": {
+    "fixed": [
+     "CC-002",
+     "CC-004"
+    ],
+    "dismissed": [
+     "CC-001",
+     "CC-003",
+     "CC-101",
+     "CC-102"
+    ],
+    "unresolved": []
+   },
+   "note": "classification by the lane lead; review artifacts under .kiwi/sessions/2026-11-18.naruserve.self-w13/ (docs/analysis is outside the write set)"
+  },
+  "landed": [
+   "SEC-PROXY-001",
+   "FR-PROXY-001",
+   "FR-PROXY-004",
+   "FR-PROXY-006"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [],
+  "outside_reason": "",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build (4367 tests, 0 failures)",
+  "verdict": "pass"
+ }
+}

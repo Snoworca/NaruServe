@@ -1,0 +1,114 @@
+{
+ "resolved_findings": [
+  "FND-002"
+ ],
+ "findings": [
+  {
+   "id": "FND-001",
+   "axis": "P2",
+   "verdict": "drop",
+   "drop_reason": "disproved by execution",
+   "evidence": {
+    "command": "cd <worktree> && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-servlet:test --tests '*ReviewProbe*' -i  (temporary ReviewProbeAbsoluteFormTest: real Jetty 9.4 ContainerRule + SharedApp.onJetty('/*'), raw socket request lines, app.use('/api/orders') middleware recording req.originalUrl() and applying a verbatim copy of proxy PathChecker.isSafeTarget -> 400; probe deleted afterwards)",
+    "output": "PROBE http://evil.example/api/orders/x -> 200 FORWARD originalUrl=/api/orders/x url=/x host=localhost\nPROBE http://h/api/orders/%2e%2e/x -> 400 PROXY400 originalUrl=/api/orders/%2e%2e/x\nPROBE HTTP://evil.example:9/api/orders/x?q=1 -> 200 FORWARD originalUrl=/api/orders/x?q=1 url=/x?q=1 host=localhost\nPROBE /api/orders/%2e%2e/x -> 400 PROXY400 originalUrl=/api/orders/%2e%2e/x\nPROBE http://evil.example/api/orders/%2E%2E/x -> 400 PROXY400 originalUrl=/api/orders/%2E%2E/x\nPROBE http://evil.example/api/orders/x/..%2f..%2fy -> 400 PROXY400 originalUrl=/api/orders/x/..%2f..%2fy\nBUILD SUCCESSFUL",
+    "intent_output": "SEC-PROXY-001 AC-8: absolute-form GET http://evil.example/api/orders/x is 400 or forwarded only to the configured target; GET http://h/api/orders/%2e%2e/x is 400. Observed: the servlet adapter's originalUrl() is the origin-form path (scheme and authority stripped by the container, %2e%2e kept raw), so the PathChecker check yields 400 for %2e%2e and the evil.example request reaches the proxy as /api/orders/x; the proxy connects only to TargetUrl.host/port and writes Host from target.hostHeader() (or, under preserveHost, the received Host header, which stays 'localhost' — the absolute-form authority never reaches req.header('Host'))."
+   },
+   "title": "Servlet adapter absolute-form request target vs proxy path check (SEC-PROXY-001 AC-8)",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "364-370"
+   },
+   "description": "Residual from round 1: whether on the servlet adapter an absolute-form target could bypass PathChecker or steer the proxy. Execution shows originalUrl() holds only the raw origin-form path (+query) on Jetty, so the AC-8 outcome holds.",
+   "suggested_fix": "None required. Optionally a servlet-side AC-8 test belongs to a lane that may add :NaruServe-proxy to NaruServe-servlet's test classpath.",
+   "is_behavioral": true,
+   "tags": [
+    "servlet",
+    "absolute-form",
+    "path-check"
+   ],
+   "req": "SEC-PROXY-001"
+  },
+  {
+   "id": "FND-101",
+   "axis": "P8",
+   "verdict": "drop",
+   "drop_reason": "traceability/documentation only; no behavioral defect proven",
+   "evidence": {
+    "command": "speckiwi show FR-PROXY-001; grep D-048 docs/research/naruserve-proxy/design/00.design.md",
+    "output": "AC-2 lists only http://h, HTTPS://h:8443, 127.0.0.1, [::1], zone id, non-ASCII host, bad ports; D-048 says 'a required ASCII host (name, IPv4 or bracketed IPv6 without zone id)'",
+    "intent_output": "label grammar (1..63, no edge '-', >=1 alnum, <=253, one root dot) recorded in SRS/design"
+   },
+   "title": "New DNS-label grammar is cited as 'FR-PROXY-001 AC-2' in tests but is not stated in AC-2 or D-048",
+   "location": {
+    "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTargetUrlTest.java",
+    "line_range": "184-208"
+   },
+   "description": "The narrowing of 'name' to DNS-style labels is a reasonable interpretation of D-048/FR-PROXY-001 but lives only in TargetUrl javadoc and test comments; the AC text does not carry it.",
+   "suggested_fix": "At promotion, append an AC (or a fills: note) to FR-PROXY-001 stating the label grammar via the SRS MCP tools.",
+   "is_behavioral": false,
+   "tags": [
+    "traceability"
+   ],
+   "req": "FR-PROXY-001"
+  }
+ ],
+ "clean_code": [
+  {
+   "id": "CC-101",
+   "principle": "No dead/redundant conditions (equivalent mutant)",
+   "location": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java:153",
+   "note": "`end == 0 ||` is redundant: with end==0 the first label is empty and isLabel(length<1) already returns false. Mutation M5 (remove it) survives ProxyTargetUrlTest. Similarly isNumber's `start >= end` guard (line 194) is now unreachable from isHostName since isLabel guarantees a non-empty last label (still reachable in principle only through future callers)."
+  },
+  {
+   "id": "CC-102",
+   "principle": "Readable javadoc formatting",
+   "location": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java:11-14",
+   "note": "Class javadoc reflow left a short line 'zone id. The base path loses every trailing' followed by a continuation line; reflow the paragraph."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+   "hunks_total": 9,
+   "anchors": [
+    " * a name of ASCII letters, digits, {@code -}, {@code .} and {@code _}; a dotted-quad IPv4 literal (a name whose last",
+    "    /** The authority as written in the URL (host literal and the port when one was written). */",
+    "        int port = portText == null ? (\"https\".equals(scheme) ? 443 : 80) : parsePort(portText);",
+    "        int defaultPort = \"https\".equals(scheme) ? 443 : 80;",
+    "     * A non-empty name of ASCII letters, digits, {@code -}, {@code .} and {@code _}. A name whose last label (one",
+    "        for (int i = 0; i < s.length(); i++) {",
+    "            if (!digit && !letter && c != '-' && c != '.' && c != '_') {",
+    "            alphanumeric |= digit || letter;",
+    "        int end = s.endsWith(\".\") ? s.length() - 1 : s.length();"
+   ],
+   "findings": [
+    "FND-002 resolved",
+    "CC-101",
+    "CC-102"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTargetUrlTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "    // FR-PROXY-001 AC-2: a name is dot-separated labels of 1..63 characters that do not start or end with '-' and"
+   ],
+   "findings": [
+    "FND-101"
+   ]
+  }
+ ],
+ "summary": {
+  "range": "53b1f84559c89d202151b383d166cb53d0652e4c..111183f4e4ed46e208f239e06d8bba305508ae56",
+  "fnd_002": "resolved: '.', '-', 'a..b', '_', '.h', 'h..', '..', '-.-', '__.example' all rejected (executed via ProxyTargetUrlTest and a deleted TargetUrl probe).",
+  "regressions": "none found. Accepted set is a strict subset of the previous one. Executed probe accepted localhost, h, H, my_service, _a, a_, a--b, 1a, api-1.example.com, xn--bcher-kva.example, 123.example.com, 127.0.0.1, [::1], https://[::1]:443, h.:8080 (Host 'h.:8080'), a 253-char name with a root dot; rejected 254-char name, 64-char label, a1-, xn--, example.123, 0x7f, 0x7f.1, a.0x1, 256.1.1.1, 1.2.3, 1.2.3.4.5, é.example, h%2e, a.-. 127.0.0.1. (root-dotted IPv4) is rejected, unchanged from before the range.",
+  "mutation": "9 hand mutants: 253->254, 63->64, drop leading-'-' check, drop trailing-'-' check, alnum->true, drop root-dot strip, drop numeric-last-label rule all KILLED by ProxyTargetUrlTest; defaultPort ->443 / ->80 KILLED by ProxyHostHeaderTest (full proxy suite); 'end == 0' removal SURVIVES (equivalent mutant, CC-101).",
+  "tests": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test -> BUILD SUCCESSFUL, 282 tests (incl. the temporary probe), 0 failures.",
+  "compat": "Java 8 / API 21: only String/char ops and boolean |=; no new API.",
+  "fnd_001": "drop — disproved by execution on the real Jetty servlet adapter (originalUrl() is origin-form; %2e%2e -> 400).",
+  "kept": 0,
+  "residual": 0,
+  "dropped": 2,
+  "worktree_clean": "git status --short shows only '?? .kiwi/'"
+ }
+}

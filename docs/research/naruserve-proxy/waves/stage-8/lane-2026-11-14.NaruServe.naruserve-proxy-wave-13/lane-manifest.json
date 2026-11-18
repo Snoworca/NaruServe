@@ -1,0 +1,209 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-13",
+ "wave": "wave-13",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-13",
+ "base_sha": "454955817122511f98992a626d47f2a5b4bd6c3e",
+ "head_sha": "a0880bdfff1a6510001612d926e60c8584f2b30d",
+ "commits": [
+  {
+   "sha": "9e4dcee30bb3f10da98a2204f510e63c3ebd01e6",
+   "subject": "test(proxy): cover raw path and request-target checks",
+   "req": "SEC-PROXY-001",
+   "kind": "test"
+  },
+  {
+   "sha": "6af9853297e2a42f960d17d969729e94ab7b2841",
+   "subject": "feat(proxy): reject dangerous raw paths before any backend connection",
+   "req": "SEC-PROXY-001",
+   "kind": "implementation"
+  },
+  {
+   "sha": "6814c376c283c63c41cacbbabed33539f7d43999",
+   "subject": "test(proxy): cover Proxy.to URL validation and base path",
+   "req": "FR-PROXY-001",
+   "kind": "test"
+  },
+  {
+   "sha": "63ce1a926968c5f4454f9712a372910cd98a100d",
+   "subject": "feat(proxy): validate the Proxy.to target URL by hand",
+   "req": "FR-PROXY-001",
+   "kind": "implementation"
+  },
+  {
+   "sha": "1a9ca7c5b8197b5e46be72b650fe69f5d2680363",
+   "subject": "test(proxy): cover Host replacement, preserveHost and X-Forwarded-Host",
+   "req": "FR-PROXY-004",
+   "kind": "test"
+  },
+  {
+   "sha": "dba8b0c60c398c0b9ebfe0ae297af31333fa3049",
+   "subject": "feat(proxy): send the target Host and the received Host as X-Forwarded-Host",
+   "req": "FR-PROXY-004",
+   "kind": "implementation"
+  },
+  {
+   "sha": "f1f7425e1ddf6b611b1a249e9daec16bbd643f9a",
+   "subject": "test(proxy): cover the forwarded request target and stripPrefix",
+   "req": "FR-PROXY-006",
+   "kind": "test"
+  },
+  {
+   "sha": "030ff0964668b6a8dc943abfe3c0a6b787d8c7f1",
+   "subject": "feat(proxy): forward base path plus url() under stripPrefix",
+   "req": "FR-PROXY-006",
+   "kind": "implementation"
+  },
+  {
+   "sha": "442e072babfafbde34a6b3bc906aa981a41474e8",
+   "subject": "test(proxy): reject degenerate host names in Proxy.to",
+   "req": "FR-PROXY-001",
+   "kind": "test"
+  },
+  {
+   "sha": "6e068703ffb3860e36aa1e52cb0a92dc29332fbd",
+   "subject": "fix(proxy): require DNS-style labels in the Proxy.to host name",
+   "req": "FR-PROXY-001",
+   "kind": "review"
+  },
+  {
+   "sha": "a0880bdfff1a6510001612d926e60c8584f2b30d",
+   "subject": "test(proxy): pin IPv6 and IPv4 literal bounds of Proxy.to",
+   "req": "FR-PROXY-001",
+   "kind": "test"
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "SEC-PROXY-001",
+   "FR-PROXY-001",
+   "FR-PROXY-004",
+   "FR-PROXY-006"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-13/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-13/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-001/lanes/w13s8l1/reports/pm-20261117T183815Z.md",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-13/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-004/lanes/w13s8l1/reports/pm-20261117T185137Z.md",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-13/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-006/lanes/w13s8l1/reports/pm-20261117T190700Z.md",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-13/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-13-sec-proxy-001/lanes/w13s8l1/reports/pm-20261117T181550Z.md",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-13/.kiwi/sessions/2026-11-18.naruserve.self-w13/analysis/report.md"
+ ],
+ "red_evidence": [
+  {
+   "req": "SEC-PROXY-001",
+   "test": "PathCheckerTest.java, ProxyPathChecksTest.java",
+   "red_output": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests PathCheckerTest --tests ProxyPathChecksTest against a PathChecker stub returning true and an unwired Proxy: 38 tests completed, 29 failed, e.g. 'status for /api/orders/../other/x expected:<400> but was:<502>', 'status for /api/orders/%252e%252e/other/x expected:<400> but was:<502>', 'expected:<400> but was:<200>' (AC-8 in-memory), TinyHttpd literal absolute-form traversal 'HTTP/1.1 502 Bad Gateway' instead of 400. The 3 tests added after review were mutation-checked: Proxy using req.url() fails sec_PROXY_001_AC9_theMatchedPrefix"
+  },
+  {
+   "req": "FR-PROXY-001",
+   "test": "ProxyTargetUrlTest.java",
+   "red_output": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests ...ProxyTargetUrlTest -> exit 1, 24 tests completed, 12 failed (AC1 query/fragment/userinfo; AC2 zone id, non-ASCII, host chars, IPv4, IPv6, port, not-a-URL; AC5 both). e.g. 'Proxy.to accepted http://h:8081/?a=1', 'accepted http://[fe80::1%25eth0]:8081', 'accepted http://h:+80', 'accepted http://h/a/../b'. Round 2 red: fr_PROXY_001_AC2_numericLastLabelIsRejected failed ('accepted http://0x7f.1:8081'). XML copies: .kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-001/lanes/w13s8l1/red/"
+  },
+  {
+   "req": "FR-PROXY-004",
+   "test": "ProxyHostHeaderTest.java",
+   "red_output": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests ProxyHostHeaderTest -> 17 tests, 13 failed (e.g. AC2 expected:<h> but was:<h:80>; AC5 expected:<400> but was:<502>; AC1 X-Forwarded-Host expected:<[gw.example]> but was:<[]>); red XML at .kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-004/lanes/w13s8l1/red-ProxyHostHeaderTest.xml. Review-round seam tests (Proxy.backendHost) red as compile error 'cannot find symbol' before the seam was added."
+  },
+  {
+   "req": "FR-PROXY-006",
+   "test": "ProxyRequestTargetTest.java",
+   "red_output": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests ProxyRequestTargetTest -> 20 tests, 10 failed (every stripPrefix case, e.g. expected:<GET /[]query HTTP/1.1> but was:<GET /[api/orders/]query HTTP/1.1>); after review round 1 the added raw-suffix test failed expected:<400> but was:<200>. XML: .kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-006/lanes/w13s8l1/red-ProxyRequestTargetTest.xml, .kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-006/lanes/w13s8l1/red2-raw-suffix-ProxyRequestTargetTest.xml"
+  },
+  {
+   "req": "FR-PROXY-001",
+   "test": "ProxyTargetUrlTest.fr_PROXY_001_AC2_degenerateHostNamesAreRejected (review fix)",
+   "red_output": "AssertionError: Proxy.to accepted http://. as target=http://. (27 tests, 1 failed) before 6e06870"
+  }
+ ],
+ "already_green_at_base": [
+  "SEC-PROXY-001 AC-8 TinyHttpd default-allowlist half (421 before middleware)",
+  "FR-PROXY-001 AC-3, AC-4, AC-6",
+  "FR-PROXY-004 AC-4; AC-5 over the TinyHttpd socket only (in-memory proxy check was red)",
+  "FR-PROXY-006 AC-1, AC-2 default part and accessor, AC-3 default part, AC-4 without stripPrefix (stripPrefix halves were red)"
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "rounds": 2,
+  "fixed": [
+   "FND-002 degenerate Proxy.to host names (test 442e072, fix 6e06870)",
+   "late kiwi-coder verifier (FR-PROXY-001): 4 surviving TargetUrl mutants (IPv6 group limit x2, IPv4 octet bound, IPv4 tail before ::) plus bracket check killed by test-only commit a0880bd; production unchanged"
+  ],
+  "dropped": [
+   "FND-001 servlet AC-8 half: disproved by an uncommitted Jetty probe (originalUrl() path-only, %2e%2e -> 400, no connection to evil.example)",
+   "FND-003",
+   "FND-004",
+   "FND-005",
+   "FND-006",
+   "FND-101"
+  ],
+  "check_review_round": "PASS",
+  "clean_code": {
+   "fixed": [
+    "CC-002",
+    "CC-004"
+   ],
+   "dismissed": [
+    "CC-001",
+    "CC-003",
+    "CC-101",
+    "CC-102"
+   ],
+   "unresolved": []
+  },
+  "note": "classification by the lane lead; review artifacts under .kiwi/sessions/2026-11-18.naruserve.self-w13/ (docs/analysis is outside the write set)"
+ },
+ "intentionally_empty": null,
+ "design_refuted": [],
+ "declared_limits": [
+  "SEC-PROXY-001 AC-8 servlet half has no committed test in NaruServe-proxy (no :NaruServe-servlet on its test classpath; build.gradle outside the lease); behaviour verified only by an uncommitted Jetty probe during review.",
+  "Client-sent X-Forwarded-Host/-For/-Proto and Forwarded are still forwarded as client headers ahead of the proxy's X-Forwarded-Host; dropping them is SEC-PROXY-002 (wave-19). With no Host, a client X-Forwarded-Host would reach the backend, conflicting with FR-PROXY-004 AC-4 until wave-19 lands.",
+  "D-050 earlier steps (WebSocket pass-through, method token 400, CONNECT/TRACE 405) are not implemented; the path check is currently first in Proxy.handle. Under stripPrefix(true) a WebSocket upgrade to an app.ws route is forwarded unstripped (plain path) or 400 (encoded); FR-PROXY-009 removes that path.",
+  "Test helpers (ConnectionCounter, exchange, tinyHttpdProxy) are copied across proxy test classes; a shared test-support class needs files outside this lease."
+ ],
+ "srs_deltas": [
+  {
+   "req": "SEC-PROXY-001",
+   "ac": "AC-8",
+   "proposal": "On TinyHttpd with default ServerOptions an absolute-form target naming a non-allowlisted host gets 421 (HostAllowlistFilter) before middleware; allow '400 or 421 or forwarded only to the configured target', or state the host is allowlisted.",
+   "evidence": "ProxyPathChecksTest.sec_PROXY_001_AC8_absoluteFormTargetsOverADefaultTinyHttpdSocket"
+  },
+  {
+   "req": "FR-PROXY-001",
+   "ac": "AC-2",
+   "proposal": "Record the host-name grammar settled in implementation: dot-separated labels of 1..63 ASCII letters/digits/'-'/'_', each with a letter or digit, no leading/trailing '-', at most 253 characters, one optional trailing root dot; names like '.', '-', 'a..b', '_' throw IllegalArgumentException.",
+   "evidence": "ProxyTargetUrlTest.fr_PROXY_001_AC2_degenerateHostNamesAreRejected / wellFormedHostNamesAreAccepted (review FND-002/FND-101)"
+  },
+  {
+   "req": "FR-PROXY-004",
+   "ac": "AC-4",
+   "proposal": "State that a Host line whose value is empty after OWS counts as no Host.",
+   "evidence": "ProxyHostHeaderTest.fr_PROXY_004_AC4_anEmptyHostCountsAsNoHost"
+  },
+  {
+   "req": "FR-PROXY-006",
+   "ac": "AC-2/AC-3",
+   "proposal": "State that under stripPrefix(true) a request to exactly the mount path forwards the base path + '/' + raw query (/api/orders?x=1 -> /base/?x=1), and that a stripped remainder that is not a raw suffix of the checked originalUrl() answers 400 before any backend connection.",
+   "evidence": "ProxyRequestTargetTest (mount-path and raw-suffix tests)"
+  }
+ ],
+ "out_of_lease_paths": [],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "speckiwi coverage --tests --ids SEC-PROXY-001,FR-PROXY-001,FR-PROXY-004,FR-PROXY-006: passed=true, 24/24 ACs cited (SEC 9, FR-001 6, FR-004 5, FR-006 4), expired citations 0"
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4367,
+  "failures": 0,
+  "exit_code": 0
+ },
+ "bootstrap": "not-applicable",
+ "process_notes": [
+  "Agent tool launched subagents asynchronously; the worker waited for each by polling a result file in short foreground calls, never ending its turn.",
+  "No commit lacks Orch trailers."
+ ]
+}

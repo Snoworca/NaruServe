@@ -1,0 +1,28 @@
+{
+ "status": "TASK_DONE",
+ "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-006",
+ "summary": "FR-PROXY-006: Proxy.requestTarget forwards basePath + originalUrl() by default and basePath + url() under stripPrefix(true), computed in handle() right after the PathChecker check; a stripped remainder that is not '/' or a raw '/'-suffix of the checked originalUrl() path followed by the same raw query answers 400 before any connection (closes a CRLF injection via the decoded url() of WebSocket upgrades to app.ws routes). 21 focused tests green; full build 4360 tests 0 failures.",
+ "test_files": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestTargetTest.java"
+ ],
+ "impl_files": [
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java"
+ ],
+ "red_evidence": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests ProxyRequestTargetTest -> 20 tests, 10 failed (every stripPrefix case, e.g. expected:<GET /[]query HTTP/1.1> but was:<GET /[api/orders/]query HTTP/1.1>); after review round 1 the added raw-suffix test failed expected:<400> but was:<200>. XML: .kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-006/lanes/w13s8l1/red-ProxyRequestTargetTest.xml, .kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-006/lanes/w13s8l1/red2-raw-suffix-ProxyRequestTargetTest.xml",
+ "green_evidence": "focused: ProxyRequestTargetTest 21/21 pass, NaruServe-proxy 279 tests 0 failures; regression ./gradlew -PtinyHttpdFromMaven=true build exit 0, 4360 tests 0 failures 0 errors (baseline 4339 + 21 new)",
+ "already_green_acs": [
+  "FR-PROXY-006 AC-1 (POST target, JSON body bytes, method token incl. mixed case, encoded path — default path already forwarded originalUrl())",
+  "FR-PROXY-006 AC-2 default part and the stripPrefix() accessor false on Proxy.to(url)",
+  "FR-PROXY-006 AC-3 default part (/base/api/orders/query?x=1)",
+  "FR-PROXY-006 AC-4 without stripPrefix"
+ ],
+ "declared_limits": [
+  "Under stripPrefix(true), a WebSocket upgrade to an app.ws route reaches the proxy without a mount view (Dispatcher.handleLegacy, url() = decoded full path, baseUrl ''): a plain path is still forwarded unstripped and an encoded path answers 400. The proxy cannot see its mount prefix there; FR-PROXY-009 AC-4/AC-5 (WebSocket upgrades pass to next() before any check, D-050) removes this path entirely and is out of this lane's scope.",
+  "Under stripPrefix(true), a request to exactly the mount path forwards basePath + '/' (+ query), e.g. /api/orders?x=1 -> /base/?x=1, because url() is '/' there (tested)."
+ ],
+ "srs_deltas": [
+  "FR-PROXY-006: consider stating that under stripPrefix(true) a request to exactly the mount path forwards the base path followed by '/' and the raw query (e.g. Proxy.to(\"http://h/base\").stripPrefix(true) forwards /api/orders?x=1 as /base/?x=1), and that a stripped remainder that is not a raw suffix of the checked originalUrl() answers 400 before any connection — both are implemented and tested but not in the AC text."
+ ],
+ "questions": [],
+ "error": null
+}

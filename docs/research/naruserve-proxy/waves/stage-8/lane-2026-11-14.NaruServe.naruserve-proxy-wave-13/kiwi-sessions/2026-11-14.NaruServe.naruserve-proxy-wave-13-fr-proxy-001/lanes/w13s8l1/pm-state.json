@@ -1,0 +1,63 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-001",
+ "base_sha": "6af9853297e2a42f960d17d969729e94ab7b2841",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-001"
+ ],
+ "req_filter": [
+  "FR-PROXY-001"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTargetUrlTest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java"
+ ],
+ "started_at": "2026-11-17T18:16:05Z",
+ "last_updated_at": "2026-11-17T18:38:15Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-17T18:16:05Z",
+  "ended_at": "2026-11-17T18:38:15Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-001",
+  "result_summary": "FR-PROXY-001: new package-private TargetUrl hand-parses the Proxy.to URL (http/https any case, ASCII name / dotted-quad IPv4 / bracketed IPv6 without zone id, port 1..65535 ASCII digits, no query/fragment/userinfo, base path with trailing slashes removed and checked by PathChecker.isSafePath); Proxy uses it in place of the nested Target. 25 tests cite AC-1..AC-6; focused 25/25 green, full build 4320 tests 0 failures.",
+  "changed": true,
+  "commit_sha": "63ce1a9",
+  "commits": [
+   {
+    "req_id": "FR-PROXY-001",
+    "test_sha": "6814c37",
+    "implementation_sha": "63ce1a9"
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-17T18:16:05Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-PROXY-001": "evolving"
+  },
+  "status_snapshot": {
+   "FR-PROXY-001": "planned"
+  }
+ },
+ "req_coverage": {
+  "FR-PROXY-001": {
+   "status_at_start": "planned",
+   "status_at_end": "planned",
+   "all_done": true
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-001/lanes/w13s8l1/reports/pm-20261117T183815Z.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": null
+}

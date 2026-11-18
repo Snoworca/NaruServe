@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-004",
+  "sds_path": null,
+  "target": "0.12.0",
+  "req_ids": ["FR-PROXY-004"],
+  "write_set": ["NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java", "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java", "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java", "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyHostHeaderTest.java"],
+  "mode": "normal",
+  "flags": ["--loops 20", "--defer-srs-mutation"],
+  "spawn_context": "pm-child",
+  "phase": "phase-2.f",
+  "next_resume_hint": "phase-2.f (prickly-review)",
+  "failed": false,
+  "red_evidence": {"command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests com.snoworca.naruserve.proxy.ProxyHostHeaderTest", "exit_code": 1, "captured_failure": "17 tests completed, 13 failed (AC-1/2/3/5 red; AC-4 x3 and AC-5 TinyHttpd socket probe already green). e.g. AC2_hostOfTheSrsExamples expected:<h[]> but was:<h[:80]>; AC5_twoHostLinesGet400WithoutConnecting expected:<400> but was:<502>", "timestamp": "2026-11-18"},
+  "green_evidence": {"command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests com.snoworca.naruserve.proxy.ProxyHostHeaderTest", "exit_code": 0, "timestamp": "2026-11-18"},
+  "regression_baseline": {"command": "./gradlew -PtinyHttpdFromMaven=true build", "source": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json + wave baseline 4320/0", "failed_test_ids": []},
+  "regression_summary": {"scope": "full", "passed": 4337, "failed": 0, "regressed_files": []},
+  "mcp_call_log": [],
+  "pending_mutations": []
+}

@@ -1,0 +1,216 @@
+{
+  "findings": [
+    {
+      "id": "FND-001",
+      "axis": "P5",
+      "verdict": "residual",
+      "evidence": {
+        "command": "cd <worktree> && grep -rln -i servlet NaruServe-proxy/src/test | wc -l; sed -n 323,329p build.gradle | grep -c NaruServe-servlet",
+        "output": "1 (only a comment in ProxyRequestBodyTest.java:347, no servlet-adapter test); 0 (the proxy test classpath has no :NaruServe-servlet)",
+        "intent_output": "SEC-PROXY-001 AC-8 names both the TinyHttpd adapter and the servlet adapter; a test should drive GET http://evil.example/api/orders/x and GET http://h/api/orders/%2e%2e/x through the servlet adapter"
+      },
+      "drop_reason": "",
+      "title": "SEC-PROXY-001 AC-8: the servlet adapter half has no test",
+      "location": {"file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyPathChecksTest.java", "line_range": "271-342"},
+      "description": "AC-8 is tested over the in-memory adapter and TinyHttpd sockets only. The servlet adapter's rawPath comes from HttpServletRequest.getRequestURI(), which by the Servlet spec carries no scheme or host, so the behaviour is probably right, but nothing runs it. The lane already declared this limit (pm report and deferred evidence notes: 'servlet adapter not covered in the proxy module'). Kept as residual because no execution shows a wrong servlet behaviour.",
+      "suggested_fix": "In a lane allowed to edit build.gradle, add testImplementation project(':NaruServe-servlet') (plus a servlet container fixture) to NaruServe-proxy and add the two AC-8 absolute-form requests over the servlet adapter; until then, do not record AC-8 as fully verified.",
+      "is_behavioral": false,
+      "tags": ["test-gap", "declared-limit", "servlet"],
+      "req": "SEC-PROXY-001 AC-8"
+    },
+    {
+      "id": "FND-002",
+      "axis": "P3",
+      "verdict": "residual",
+      "evidence": {
+        "command": "temporary NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ReviewProbeTinyTest.java#probeTargetUrlLeniency (copy kept in scratchpad/review-probes/), ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*ReviewProbeTinyTest' -i",
+        "output": "PROBE-URL http://. accepted -> target=http://. hostHeader=. | http://./x accepted | http://- accepted | http://-.- accepted | http://a..b accepted hostHeader=a..b | http://_ accepted",
+        "intent_output": "If 'a required ASCII host given as a name' means a DNS-style name (non-empty labels), Proxy.to should throw IllegalArgumentException for '.', '-', '-.-' and 'a..b'"
+      },
+      "drop_reason": "",
+      "title": "TargetUrl.isHostName accepts degenerate names: '.', '-', 'a..b'",
+      "location": {"file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java", "line_range": "142-154"},
+      "description": "isHostName checks only the character set plus the numeric-last-label rule, so empty labels, a lone dot, and labels that start or end with '-' pass. FR-PROXY-001 and D-048 require 'a required ASCII host given as a name' and reject 'every other URL', but they never define what a valid name is. RFC 3986 reg-name allows these strings. The proxy then fails late (DNS error, then 502) instead of throwing at Proxy.to. The intent is ambiguous, so the reviewer could not confirm a defect.",
+      "suggested_fix": "Decide the name grammar (for example, RFC 1123 labels: non-empty, at most 63 characters, no leading or trailing '-', with '_' allowed as a deliberate choice), reject empty labels apart from one trailing root dot, and add assertRejected cases to ProxyTargetUrlTest.",
+      "is_behavioral": true,
+      "tags": ["target-url", "validation", "ambiguous-spec"],
+      "req": "FR-PROXY-001 AC-2"
+    },
+    {
+      "id": "FND-003",
+      "axis": "P3",
+      "verdict": "drop",
+      "evidence": {
+        "command": "ReviewProbeTinyTest#probeTargetUrlLeniency",
+        "output": "PROBE-URL http://h:080 accepted -> target=http://h:080 hostHeader=h ; http://h:00080 accepted hostHeader=h",
+        "intent_output": "port value in 1..65535"
+      },
+      "drop_reason": "The value is 80, which is inside 1..65535. RFC 3986 port = *DIGIT allows leading zeros, and the Host header is normalised to the scheme default. The intent is not broken.",
+      "title": "A port with leading zeros is accepted",
+      "location": {"file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java", "line_range": "119-135"},
+      "description": "parsePort accepts '080' and '00080' as 80.",
+      "suggested_fix": "",
+      "is_behavioral": true,
+      "tags": ["target-url"],
+      "req": "FR-PROXY-001 AC-2"
+    },
+    {
+      "id": "FND-004",
+      "axis": "P2",
+      "verdict": "drop",
+      "evidence": {
+        "command": "ReviewProbeTinyTest#probeInMemoryMisc",
+        "output": "PROBE-MEM /api/orders/%25252e -> 200 GET /%25252e HTTP/1.1 ; /api/orders/a%3bb -> 200 GET /a%3bb HTTP/1.1 ; /api/orders/%25%32%65 -> 400",
+        "intent_output": "SEC-PROXY-001: reject the listed encodings directly or after one decode; a raw ';' only"
+      },
+      "drop_reason": "The requirement limits the double-encoding rule to a once-decoded path, and the ';' rule to a raw ';'. A triple encoding and %3B are outside the stated rules, so the intent is not broken.",
+      "title": "Triple encoding (%25252e) and an encoded semicolon (%3b) pass the path check",
+      "location": {"file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/PathChecker.java", "line_range": "78-108"},
+      "description": "Only one level of %25 nesting is inspected, and %3B is not in the rejected set.",
+      "suggested_fix": "",
+      "is_behavioral": true,
+      "tags": ["path-check", "spec-boundary"],
+      "req": "SEC-PROXY-001 AC-4"
+    },
+    {
+      "id": "FND-005",
+      "axis": "P1",
+      "verdict": "drop",
+      "evidence": {
+        "command": "ReviewProbeTinyTest#probeTiny: every AC-1..AC-7 rejected target as raw bytes over a real TinyHttpd socket, with and without stripPrefix, then one sentinel GET /api/orders/ok",
+        "output": "all 30 targets x 2 modes -> 'HTTP/1.1 400' with backendRequests=0; sentinel -> 'HTTP/1.1 200 OK' backendRequests=1",
+        "intent_output": "400 and no backend request for each rejected target, on a real adapter too"
+      },
+      "drop_reason": "Suspected hypothesis: the AC-1..AC-7 tests use only the in-memory adapter, so TinyHttpd might normalise raw targets before the proxy sees them. The probe disproved it.",
+      "title": "Hypothesis: TinyHttpd might normalise raw targets and bypass the AC-1..AC-7 checks",
+      "location": {"file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java", "line_range": "368-370"},
+      "description": "Checked and refuted by execution.",
+      "suggested_fix": "",
+      "is_behavioral": true,
+      "tags": ["refuted"],
+      "req": "SEC-PROXY-001 AC-1"
+    },
+    {
+      "id": "FND-006",
+      "axis": "P4",
+      "verdict": "drop",
+      "evidence": {"command": "", "output": "", "intent_output": ""},
+      "drop_reason": "Not proven. No test asserts the D-051 shape (null message) of the multiple-Host 400, but it is thrown with the same new HttpException(400) the path check uses, and that one is asserted (sec_PROXY_001_AC1_theRejectionIsAPlainHttpException400WithNoMessage). FR-PROXY-004 AC-5 requires only the status. No surviving mutation was demonstrated.",
+      "title": "The D-051 null-message shape of the multiple-Host 400 is not asserted",
+      "location": {"file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java", "line_range": "45-58"},
+      "description": "A test-strength observation only.",
+      "suggested_fix": "",
+      "is_behavioral": false,
+      "tags": ["test-strength"],
+      "req": "FR-PROXY-004 AC-5"
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-001",
+      "principle": "Dead code / YAGNI",
+      "location": {"file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java", "line_range": "487-494"},
+      "description": "In requestTarget, the guards !remainder.endsWith(query) and !remainderPath.startsWith(\"/\") cannot be reached on any current dispatch path. The common-HTTP view always carries the raw query suffix and a remainder that starts with '/', and the WebSocket view is the decoded full path plus the same raw query. No test reaches either branch, so removing them would not fail any test. Only the originalPath.endsWith(remainderPath) guard does work. The javadoc also suggests that this guard handles WebSocket requests under stripPrefix, but a plain WS path is forwarded unstripped (see out_of_scope_observations)."
+    },
+    {
+      "id": "CC-002",
+      "principle": "DRY",
+      "location": {"file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java", "line_range": "96, 114"},
+      "description": "The scheme-default-port rule \"https\".equals(scheme) ? 443 : 80 is written twice, once in parse and once in hostHeader. A private static defaultPort(scheme) would keep the two in step."
+    },
+    {
+      "id": "CC-003",
+      "principle": "Single responsibility / class size",
+      "location": {"file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java", "line_range": "1-1021"},
+      "description": "Proxy.java is now 1021 lines and mixes the public option API, the request pipeline (checks, request target, Host choice), the socket forwarder, response head parsing and nested stream classes. Moving Target into TargetUrl was a good extraction. requestTarget/backendHost could follow PathChecker into a small package-private 'BackendTarget' helper."
+    },
+    {
+      "id": "CC-004",
+      "principle": "Field kept for one consumer",
+      "location": {"file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java", "line_range": "21-22"},
+      "description": "authority is no longer used for the Host header (hostHeader() replaced it) and now serves only Proxy.describe(). That is fine, but its javadoc should say it exists only for describe(), so that it is not reused by mistake as a Host value (it keeps a written default port such as ':80')."
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+      "hunks_total": 2,
+      "anchors": ["import java.util.Collections;", "    static @Nullable String receivedHost(List<Map.Entry<String, String>> rawHeaders) {"],
+      "findings": ["FND-006"]
+    },
+    {
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/PathChecker.java",
+      "hunks_total": 1,
+      "anchors": ["    static boolean isSafeTarget(String rawTarget) {"],
+      "findings": ["FND-004"]
+    },
+    {
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+      "hunks_total": 14,
+      "anchors": [
+        "    private final TargetUrl target;",
+        "    private Proxy(TargetUrl target, Options options) {",
+        "     * throws {@code NullPointerException} and every other URL throws {@code IllegalArgumentException}: one with",
+        "    // @req FR-PROXY-001",
+        "        return new Proxy(TargetUrl.parse(url), Options.defaults());",
+        "    // @req SEC-PROXY-001",
+        "        if (!PathChecker.isSafeTarget(req.originalUrl())) {",
+        "        @Nullable String receivedHost = BackendRequest.receivedHost(req.rawHeaders());",
+        "            forward(req, res, prepare(req, requestTarget, declaredFraming, receivedHost));",
+        "     * as {@code X-Forwarded-Host}.",
+        "    private Outgoing prepare(Request req, String requestTarget, long declaredFraming, @Nullable String receivedHost) {",
+        "            String host = backendHost(receivedHost);",
+        "    String requestTarget(Request req) {",
+        "    private static final class Target {"
+      ],
+      "findings": ["FND-005"]
+    },
+    {
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+      "hunks_total": 1,
+      "anchors": ["    static TargetUrl parse(String url) {"],
+      "findings": ["FND-002", "FND-003"]
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/PathCheckerTest.java",
+      "hunks_total": 1,
+      "anchors": ["import static org.junit.Assert.assertFalse;"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyHostHeaderTest.java",
+      "hunks_total": 1,
+      "anchors": ["    public void fr_PROXY_004_AC5_twoHostLinesGet400WithoutConnecting() throws IOException {"],
+      "findings": ["FND-006"]
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyPathChecksTest.java",
+      "hunks_total": 1,
+      "anchors": ["    public void sec_PROXY_001_AC8_absoluteFormTargetsOverATinyHttpdSocket() throws IOException {"],
+      "findings": ["FND-001"]
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestTargetTest.java",
+      "hunks_total": 1,
+      "anchors": ["    public void fr_PROXY_006_AC2_aRemainderThatIsNotARawSuffixIsRefusedBeforeAnyConnection() throws IOException {"],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTargetUrlTest.java",
+      "hunks_total": 1,
+      "anchors": ["    public void fr_PROXY_001_AC2_numericLastLabelIsRejected() {"],
+      "findings": ["FND-002"]
+    }
+  ],
+  "out_of_scope_observations": [
+    "SEC-PROXY-002: a client-sent X-Forwarded-Host is forwarded next to the proxy's own one. Probe (in-memory, Host: gw.example + X-Forwarded-Host: evil.example) -> backend X-Forwarded-Host values [evil.example, gw.example]. With no Host, the client value alone would reach the backend, which conflicts with the literal FR-PROXY-004 AC-4 'no X-Forwarded-Host' once SEC-PROXY-002 lands. HeaderRules.REQUEST_NOT_FORWARDED does not list x-forwarded-host.",
+    "FR-PROXY-009: a WebSocket upgrade to an app.ws route that reaches a .stripPrefix(true) proxy with a plain path is forwarded unstripped as a plain GET. Probe: upgrade /api/orders/7 -> backend 'GET /api/orders/7 HTTP/1.1' (expected '/7', or hand-off to next()). The requestTarget guard covers only decoded != raw. The D-050 WebSocket hand-off is meant to remove this.",
+    "FR-PROXY-009 / D-050: the WebSocket, method-token and CONNECT/TRACE checks that D-050 puts before the request-target check are not implemented yet. req.methodToken() is concatenated into the backend request line unchecked by the proxy, which relies on the adapter's token validation for now.",
+    "SEC-PROXY-001 AC-8 servlet half needs a lane that may add a :NaruServe-servlet test dependency to NaruServe-proxy (see FND-001)."
+  ],
+  "summary": {
+    "total": 6,
+    "by_verdict": {"keep": 0, "drop": 4, "residual": 2},
+    "by_axis": {"P1": 1, "P2": 1, "P3": 2, "P4": 1, "P5": 1}
+  }
+}

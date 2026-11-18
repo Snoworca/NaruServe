@@ -1,0 +1,64 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-004",
+ "base_sha": "63ce1a926968c5f4454f9712a372910cd98a100d",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-004"
+ ],
+ "req_filter": [
+  "FR-PROXY-004"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyHostHeaderTest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java"
+ ],
+ "started_at": "2026-11-17T18:38:21Z",
+ "last_updated_at": "2026-11-17T18:51:37Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "started_at": "2026-11-17T18:38:21Z",
+  "ended_at": "2026-11-17T18:51:37Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-004",
+  "result_summary": "FR-PROXY-004 implemented: TargetUrl.hostHeader (port only off the scheme default, IPv6 brackets), BackendRequest.receivedHost (400 on more than one Host line, checked after the header check and before framing per D-050) and forwardingHeaders (X-Forwarded-Host in the D-053 forwarding slot), Proxy.backendHost/prepare (preserveHost keeps the received Host; no Host gives the target Host). 19 new tests green, full regression 4339/0.",
+  "changed": true,
+  "commit_sha": "dba8b0c",
+  "commits": [
+   {
+    "req_id": "FR-PROXY-004",
+    "test_sha": "1a9ca7c",
+    "implementation_sha": "dba8b0c"
+   }
+  ],
+  "questions": [],
+  "attempts": 1
+ },
+ "last_question": null,
+ "last_error": null,
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-17T18:38:21Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-PROXY-004": "evolving"
+  },
+  "status_snapshot": {
+   "FR-PROXY-004": "planned"
+  }
+ },
+ "req_coverage": {
+  "FR-PROXY-004": {
+   "status_at_start": "planned",
+   "status_at_end": "planned",
+   "all_done": true
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-13-fr-proxy-004/lanes/w13s8l1/reports/pm-20261117T185137Z.md",
+ "doculight_viewer_id": null,
+ "clean_code_skip": null
+}

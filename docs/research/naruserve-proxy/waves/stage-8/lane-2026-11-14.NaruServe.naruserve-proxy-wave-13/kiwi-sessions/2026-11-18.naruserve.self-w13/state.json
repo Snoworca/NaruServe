@@ -1,0 +1,93 @@
+{
+ "run_id": "2026-11-18.naruserve.self-w13",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "started_at": "2026-11-18T03:00:00Z",
+ "mode": "self",
+ "mode_flags": [
+  "--loops 20",
+  "--keep-clean-code",
+  "--no-pipeline-emit"
+ ],
+ "phase": "8",
+ "finding_queue": [],
+ "fix_iter": 1,
+ "recheck_iter": 1,
+ "clean_code_round": 2,
+ "clean_code_dismissed": [
+  {
+   "id": "CC-001",
+   "reason": "deliberate security guard"
+  },
+  {
+   "id": "CC-003",
+   "reason": "cross-wave refactor"
+  },
+  {
+   "id": "CC-101",
+   "reason": "explicit empty-name guard kept for readability; equivalent mutant"
+  },
+  {
+   "id": "CC-102",
+   "reason": "javadoc reflow cosmetics only"
+  }
+ ],
+ "clean_code_skip": false,
+ "guarantee_scope": "NaruServe-proxy request path: SEC-PROXY-001, FR-PROXY-001, FR-PROXY-004, FR-PROXY-006 behaviour of Proxy.to / Proxy.handle through any NaruServe adapter; out of scope: X-Forwarded-For/-Proto trust and client forwarding-header drop (SEC-PROXY-002), WebSocket pass-through and method/CONNECT/TRACE checks (FR-PROXY-009 etc.), https/TLS, timeouts, error mapping, backend response parsing, streaming, docs",
+ "declared_limits": [],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "53b1f84559c89d202151b383d166cb53d0652e4c",
+   "scope": "full",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/PathChecker.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/PathCheckerTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyHostHeaderTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyPathChecksTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestTargetTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTargetUrlTest.java"
+   ],
+   "tokens_used": 188340,
+   "residual_count": 2,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-002",
+     "tier": "block",
+     "family": "target-url-grammar",
+     "introduced_by_round": null
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "tree_sha": "111183f4e4ed46e208f239e06d8bba305508ae56",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTargetUrlTest.java"
+   ],
+   "tokens_used": 110671,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  }
+ ],
+ "regression_baseline": {
+  "source": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+  "failing_tests": []
+ },
+ "regression_pass": true,
+ "pr_responded": false,
+ "failed": false
+}
