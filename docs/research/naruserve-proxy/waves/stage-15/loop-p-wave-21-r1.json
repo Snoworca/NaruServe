@@ -1,0 +1,252 @@
+{
+  "wave": "wave-21",
+  "round": 1,
+  "verifier": "loop-p-wave-21-r1",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "OPS-DX-008 AC-2",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21RequestDocsFactsTest.java::ops_DX_008_AC2_unwrappedOverrunIs413WithStandardBodyAndOnErrorGetsTheSameObject",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: request.md: 413 response with the standard error body, code PAYLOAD_TOO_LARGE; got text/html; charset=utf-8: <!DOCTYPE html>...<pre>com.snoworca.naruserve.BodyTooLargeException: request body exceeds the limit of 10 bytes<br>\tat com.snoworca.naruserve.internal.LimitedInputStream.tooLarge(LimitedInputStream.java:132)...",
+      "note": "docs/api/request.md:397 and docs/api/en/request.md (Raw body over the limit) say an unwrapped BodyTooLargeException becomes a 413 with 'the standard error body, code PAYLOAD_TOO_LARGE'. On a default app (InMemory adapter, RestApp.builder) the 413 is the FinalHandler HTML page with the stack trace (FinalHandler.finish); no JSON body and no PAYLOAD_TOO_LARGE code. Status 413 and onError receiving the same object hold."
+    },
+    {
+      "id": "LP-2",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21ProxyDocsFactsTest.java::ops_DX_010_AC3_errorFlowLogsTheProxyExceptionWithItsCause",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: app logger errors: [] lines: [INFO GET /api/x 502 0ms in=0 out=12697 rid=45b9ca7a71edd0a8]",
+      "note": "docs/api/proxy.md:186/201 (and en mirror) say the proxy leaves logging to the error flow and that 'the app logger and getCause() keep the full cause'. The error flow logs only status-500 failures (DefaultRequest.logFailure, ErrorPath.handle: status == 500), so a 502 CONNECT_FAILED without onError leaves no logger entry: the doc promises a log the default flow never writes."
+    },
+    {
+      "id": "LP-3",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21RequestDocsFactsTest.java::ops_DX_008_AC1_bodyStreamEqualsBodyStreamOfRawBodyLimitAndAvailableIsNotConsumption",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-4",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21RequestDocsFactsTest.java::ops_DX_008_AC1_formAndPartsOnJsonLeaveTheWholeBodyForBodyStream",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-5",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21RequestDocsFactsTest.java::ops_DX_008_AC1_bodyStreamMaxBytesRange",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-6",
+      "cites": "OPS-DX-008 AC-2",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21RequestDocsFactsTest.java::ops_DX_008_AC2_twoOverLimitForms",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-7",
+      "cites": "OPS-DX-008 AC-2",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21RequestDocsFactsTest.java::ops_DX_008_AC2_wrappedOverrunIsOrdinary",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-8",
+      "cites": "OPS-DX-008 AC-3",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21RequestDocsFactsTest.java::ops_DX_008_AC3_headerNamesAndRawHeaders",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-9",
+      "cites": "OPS-DX-008 AC-4",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21RequestDocsFactsTest.java::ops_DX_008_AC4_isFromTrustedProxyTable",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-10",
+      "cites": "OPS-DX-008 AC-5",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21RequestDocsFactsTest.java::ops_DX_008_AC5_rawBodyLimitRangeDefaultAndAfterListen",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-11",
+      "cites": "OPS-DX-008 AC-6",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21RequestDocsFactsTest.java::ops_DX_008_AC6_bodyTooLargeExceptionMoved",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-12",
+      "cites": "C-005",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21RawApiDocsC005Test.java::c005_rawRequestMethodsAreDocumentedWithTheirApiReturnTypes",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "C-005 holds: request.md and en/request.md document bodyStream(), bodyStream(maxBytes), headerNames(), rawHeaders(), isFromTrustedProxy() with the API return types, Express counterparts and Java/Kotlin blocks; app.md/en document rawBodyLimit(long)"
+    },
+    {
+      "id": "LP-13",
+      "cites": "C-005",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21RawApiDocsC005Test.java::c005_rawRequestSectionsHaveExpressJavaAndKotlin",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "C-005 holds: request.md and en/request.md document bodyStream(), bodyStream(maxBytes), headerNames(), rawHeaders(), isFromTrustedProxy() with the API return types, Express counterparts and Java/Kotlin blocks; app.md/en document rawBodyLimit(long)"
+    },
+    {
+      "id": "LP-14",
+      "cites": "C-005",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21RawApiDocsC005Test.java::c005_rawBodyLimitSignature",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "C-005 holds: request.md and en/request.md document bodyStream(), bodyStream(maxBytes), headerNames(), rawHeaders(), isFromTrustedProxy() with the API return types, Express counterparts and Java/Kotlin blocks; app.md/en document rawBodyLimit(long)"
+    },
+    {
+      "id": "LP-15",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21ProxyDocsFactsTest.java::ops_DX_010_AC2_optionDefaults",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-16",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21ProxyDocsFactsTest.java::ops_DX_010_AC2_publicSurfaceIsTheOptionTable",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-17",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21ProxyDocsFactsTest.java::ops_DX_010_AC2_optionRangesAndExceptions",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-18",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21ProxyDocsFactsTest.java::ops_DX_010_AC2_managedHeaderNamesAreExactlyTheListedOnes",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-19",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21ProxyDocsFactsTest.java::ops_DX_010_AC3_proxyExceptionTable",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-20",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21ProxyDocsFactsTest.java::ops_DX_010_AC3_ownAnswersArePlainHttpExceptionsWithNullMessage",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-21",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21ProxyDocsFactsTest.java::ops_DX_010_AC3_defaultErrorPageNamesTheCauseByClassOnly",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-22",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21ProxyDocsFactsTest.java::ops_DX_010_AC2_requestHeaderLinesFollowXForwardedInLastCallOrder",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-23",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21ProxyDocsFactsTest.java::ops_DX_010_AC2_locationRewriteTableRows",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-24",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21ProxyDocsFactsTest.java::ops_DX_010_AC2_bodyLimitFailureShapes",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-25",
+      "cites": "OPS-DX-010 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21ProxyDocsFactsTest.java::ops_DX_010_AC10_counterSharing",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    },
+    {
+      "id": "LP-26",
+      "cites": "OPS-DX-010 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21ProxyDocsFactsTest.java::ops_DX_010_AC1_proxyToUrlRules",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "doc statement matches the code"
+    }
+  ],
+  "summary": {
+    "tests_written": 26,
+    "kept": 2
+  },
+  "context": {
+    "diff_window": "9150c04e83b004ad22e989d041a327fb2625dd3f..1177893",
+    "tested_at": "9a601d7",
+    "regression": "root docs tests (com.snoworca.naruserve.docs.*, 286) , KotlinDocsMarkersTest, RawRequestDocsKotlinTest, ProxyDocsKotlinTest all green with --rerun in Maven mode",
+    "also_checked_without_test": "relative links and anchors of proxy/request/app (ko/en), docs/api README (ko/en), README.md/README.ko.md resolve; ko/en proxy.md and the new request.md/app.md sections have identical inline-code sets per section",
+    "C-005": "holds"
+  }
+}
