@@ -1,0 +1,276 @@
+{
+  "wave": "wave-21",
+  "round": 5,
+  "verifier": "loop-p-wave-21-r5",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "OPS-DX-010 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_010_AC6_theClientSeesTheGatewayDateNotTheBackendDate",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "proxy.md: backend Date 2001 not seen; one gateway Date over TinyHttpd"
+    },
+    {
+      "id": "LP-2",
+      "cites": "FR-PROXY-011 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::fr_PROXY_011_AC4_noContentTypeIsAddedOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "proxy.md: no Content-Type added over TinyHttpd"
+    },
+    {
+      "id": "LP-3",
+      "cites": "FR-PROXY-015 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::fr_PROXY_015_AC4_theDefaultPageShowsTheCauseByClassNameOnly",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "proxy.md/defaults.md: default 502 page names java.net.ConnectException without its message"
+    },
+    {
+      "id": "LP-4",
+      "cites": "FR-PROXY-015 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::fr_PROXY_015_AC5_theDefaultErrorFlowDoesNotLogAProxyException",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "proxy.md: neither proxy nor default error flow logs the 502"
+    },
+    {
+      "id": "LP-5",
+      "cites": "FR-PROXY-005 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::fr_PROXY_005_AC1_aConnectionNamedHeaderSetByRequestHeaderGoesAsOneLine",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "proxy.md: a Connection-named header set by requestHeader goes as one line"
+    },
+    {
+      "id": "LP-6",
+      "cites": "FR-PROXY-003 AC-8",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::fr_PROXY_003_AC8_fixedHeadersFollowForwardingHeadersInLastCallOrder",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "proxy.md: fixed headers after X-Forwarded-Host in last-call order"
+    },
+    {
+      "id": "LP-7",
+      "cites": "FR-PROXY-012 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::fr_PROXY_012_AC1_removeKeepsTheAppValueAndResponseHeaderReplacesBoth",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "proxy.md: removeResponseHeader keeps app value, responseHeader replaces both"
+    },
+    {
+      "id": "LP-8",
+      "cites": "FR-PROXY-013 AC-11",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::fr_PROXY_013_AC11_backslashAndTabNetworkPathsGetTheGuard",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "proxy.md: /\\ and /<tab>/ rewritten values get the /. guard"
+    },
+    {
+      "id": "LP-9",
+      "cites": "FR-PROXY-013 AC-11",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::fr_PROXY_013_AC11_emptyPortUserInfoAndBadPort",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "proxy.md: user info dropped, port 99999 unchanged, query-only gives /?q=1, //host form rewritten"
+    },
+    {
+      "id": "LP-10",
+      "cites": "FR-PROXY-017 AC-12",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::fr_PROXY_017_AC12_aTricklingBodyEndsWithTotalTimeout",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "proxy.md: trickling body past totalTimeout(1s) gives 504 TOTAL_TIMEOUT"
+    },
+    {
+      "id": "LP-11",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_010_AC2_proxyHasNoPublicGetterAndIsNotInstallable",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "proxy.md: not Installable, no public getter, one public ProxyException constructor"
+    },
+    {
+      "id": "LP-12",
+      "cites": "FR-PROXY-001 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::fr_PROXY_001_AC1_proxyToRefusesWhatTheDocsList",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "proxy.md: Proxy.to refusals (zone id, port 0/65536, bad base path, scheme, userinfo, query, fragment, non-ASCII), trailing slashes removed, sslSocketFactory on http accepted"
+    },
+    {
+      "id": "LP-13",
+      "cites": "FR-PROXY-002 AC-8",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::fr_PROXY_002_AC8_socketMillisRoundUpAndClamp",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "proxy.md: ms round-up, 1 ms minimum, Integer.MAX_VALUE clamp, total saturates at Long.MAX_VALUE"
+    },
+    {
+      "id": "LP-14",
+      "cites": "FR-PROXY-018 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::fr_PROXY_018_AC10_aWaitPastTheDeadlineIsSkipped",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "proxy.md: retry wait past the deadline skipped, backend 502 relayed at once"
+    },
+    {
+      "id": "LP-15",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_008_AC1_formAndPartsOnAJsonRequestLeaveTheWholeBody",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "request.md: form/parts on a JSON request leave the whole body to bodyStream()"
+    },
+    {
+      "id": "LP-16",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_008_AC1_repeatedCallsReturnTheSameStream",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "request.md: -1 read and available() not consumption; bodyStream() == bodyStream(rawBodyLimit); other limit ISE"
+    },
+    {
+      "id": "LP-17",
+      "cites": "OPS-DX-008 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_008_AC2_bytesUpToTheLimitAreReadThenTheReadThrows",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "request.md: 10 bytes read under limit 10, then BodyTooLargeException limit()=10"
+    },
+    {
+      "id": "LP-18",
+      "cites": "OPS-DX-008 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_008_AC2_aDeclaredLengthOverTheLimitThrows413FromTheCall",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "request.md: declared length over the limit throws plain HttpException 413 from the call"
+    },
+    {
+      "id": "LP-19",
+      "cites": "OPS-DX-008 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_008_AC3_headerNamesIgnoreTheLocaleAndResultsAreUnmodifiable",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "request.md: headerNames lowercases X-TITLE under tr_TR; add/setValue throw UOE"
+    },
+    {
+      "id": "LP-20",
+      "cites": "OPS-DX-008 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_008_AC4_isFromTrustedProxyTable",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "request.md: isFromTrustedProxy table holds for a 127.0.0.1 client over TinyHttpd"
+    },
+    {
+      "id": "LP-21",
+      "cites": "OPS-DX-008 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_008_AC5_rawBodyLimitAfterListenThrowsAndChangesNothing",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "app.md: rawBodyLimit after listen throws ISE and the limit stays"
+    },
+    {
+      "id": "LP-22",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_008_AC1_gzipBodyIsNotDecoded",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "request.md: Content-Encoding gzip body returned as received"
+    },
+    {
+      "id": "LP-23",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_008_AC1_anUnclosedStreamIsClosedByTheFramework",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "request.md: unclosed stream closed by request cleanup"
+    },
+    {
+      "id": "LP-24",
+      "cites": "OPS-DX-008 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_008_AC2_wrappedOverrunsAreOrdinaryExceptions",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "request.md: RuntimeException wrap 500, HttpException wrap its status, bare 413 text/html and not logged"
+    },
+    {
+      "id": "LP-25",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_008_AC1_formAfterBodyStreamThrows",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "request.md: form/parts after bodyStream throw BodyAlreadyConsumedException"
+    },
+    {
+      "id": "LP-26",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_010_AC3_aLargeBodyCutAfterTheHeadReachesTheClientCutShort",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "with a 64 KiB partial body the client does see 200 and a cut body"
+    },
+    {
+      "id": "LP-27",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::ops_DX_010_AC3_aFailureAfterTheResponseStartedIsLoggedOnce",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: proxy.md says the client sees the response (status 200) cut short after the headers were sent, but over TinyHttpd a backend that declares Content-Length: 100 and closes after 10 bytes leaves the client with 0 bytes and no status line (access log: [ERROR proxy: the response body from http://127.0.0.1:63516 failed after the response started (INVALID_RESPONSE) null, INFO GET /api/x 200 aborted 0ms in=0 out=10 rid=e136866f4d0f7129])",
+      "note": "proxy.md and en/proxy.md 'Failures after the response started' say the headers were sent and the client sees a response cut short; for a body that fits the adapter buffer the client receives nothing at all (empty reply), reproduced 3 times; the logging part of the section passed first. A 64 KiB partial body (LP-27) does reach the client as 200 and a cut body."
+    },
+    {
+      "id": "LP-28",
+      "cites": "FR-PROXY-001 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::fr_PROXY_001_AC2_theKoreanPageDescribesTheIpv4FormTheCodeAccepts",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: docs/api/proxy.md says the accepted IPv4 literal has four dots (점 네 개), but Proxy.to accepts 1.2.3.4 (three dots) and refuses 1.2.3.4.5 (four dots): ...용자 정보가 있는 URL, 다른 스킴, ASCII 이름이나 점 네 개의 IPv4 리터럴이나...",
+      "note": "Korean 기본 사용 paragraph: '점 네 개의 IPv4 리터럴' (an IPv4 literal with four dots) is false; the en page says dotted-quad. Runtime part passed first."
+    },
+    {
+      "id": "LP-29",
+      "cites": "C-005",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R5DocsTest.java::c_005_bodyTooLargeExceptionHasItsExpressCounterpartAndConstructorInDocsApi",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: expected:<[]> but was:<[ko: no Express counterpart for BodyTooLargeException (raw-body's 413 error, type entity.too.large, err.limit), en: no Express counterpart for BodyTooLargeException, no docs/api page states the public constructor new BodyTooLargeException(long)]>",
+      "note": "BodyTooLargeException became public API in 0.12.0 (public class, public (long) constructor, limit()); request.md/en have Java and Kotlin onError examples but no Express counterpart, and no docs/api page mentions the public constructor (contrast ProxyException's documented constructor)."
+    }
+  ],
+  "summary": {
+    "tests_written": 29,
+    "kept": 3
+  },
+  "constraint_checks": {
+    "C-005": "does not fully hold: every proxy and request-A public method is documented with Express counterpart and Java/Kotlin examples, but the newly public BodyTooLargeException has no Express counterpart and its public constructor is undocumented (LP-29)"
+  },
+  "notes": "Integration head 888a144, scratch worktree detached; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R5DocsTest --rerun (29 tests, 3 failed). onError is positional: tests register it after the routes."
+}
