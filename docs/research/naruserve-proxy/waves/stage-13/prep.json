@@ -1,0 +1,24 @@
+{
+ "base": {
+  "wave-19": "f4ad767a323c1903c55cf55ee5ae5b22162e0a1d"
+ },
+ "lock_digest": "71d60e895c86d9072eabf9bfb17c166335a6a56f95b2893dd984f32b24609e9c",
+ "lock_commit": "2cc49cefa18bc80baa4648b63ec6a10a53c7b515",
+ "lanes": [
+  {
+   "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-19",
+   "stage": 1,
+   "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-19",
+   "sds": null,
+   "writeSet": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Watchdog.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyFixedRequestHeadersTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyForwardedHeadersTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/WatchdogTest.java"
+   ]
+  }
+ ]
+}

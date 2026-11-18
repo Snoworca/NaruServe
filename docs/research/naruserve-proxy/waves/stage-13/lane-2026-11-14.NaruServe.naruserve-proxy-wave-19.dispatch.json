@@ -1,0 +1,52 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy",
+ "wave": "wave-19",
+ "wave_number": 19,
+ "stage": 13,
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-19",
+ "lane_index": 1,
+ "worktree": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-19",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-19",
+ "base_sha": "f4ad767a323c1903c55cf55ee5ae5b22162e0a1d",
+ "lane_plan": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/stage-13/lanes.lock.json",
+ "write_set": [
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Watchdog.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyFixedRequestHeadersTest.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyForwardedHeadersTest.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/WatchdogTest.java"
+ ],
+ "requirements": [
+  "REL-PROXY-002",
+  "SEC-PROXY-002",
+  "FR-PROXY-005"
+ ],
+ "node_title": "Fixed request headers, watchdog, X-Forwarded rules",
+ "done_when": [
+  {
+   "id": "DW-1",
+   "text": "Every live acceptance criterion of REL-PROXY-002, SEC-PROXY-002, FR-PROXY-005 is cited by a test that was red before its implementation commit and is green now."
+  },
+  {
+   "id": "DW-2",
+   "text": "./gradlew -PtinyHttpdFromMaven=true build passes with no failing test beyond the P.4 baseline (none)."
+  }
+ ],
+ "verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build",
+ "regression_baseline": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+ "queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-19/.kiwi/deferred-srs-mutations.jsonl",
+ "manifest": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-19/.kiwi/lane-manifest.json",
+ "trailers": {
+  "Orch-Run": "2026-11-14.NaruServe.naruserve-proxy",
+  "Orch-Wave": "19",
+  "Orch-Stage": "13",
+  "Orch-Lane": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-19"
+ },
+ "kiwi_pm_args": "--req-filter {REQ} --run-id 2026-11-14.NaruServe.naruserve-proxy-wave-19-{req} --session-suffix w19s13l1 --no-final --no-pipeline-emit --commit-lane-work --defer-srs-mutation /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-19/.kiwi/deferred-srs-mutations.jsonl --regression-baseline /Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json --loops 20",
+ "review_args": "--base f4ad767a323c1903c55cf55ee5ae5b22162e0a1d --head HEAD --req-filter REL-PROXY-002,SEC-PROXY-002,FR-PROXY-005 --no-pipeline-emit --keep-clean-code --loops 20",
+ "prd": "/Users/beom/work/git/NaruServe/docs/prd/2026-11-14.naruserve-proxy.prd.md",
+ "design": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/design/00.design.md",
+ "brief": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/00.worker-brief.md"
+}
