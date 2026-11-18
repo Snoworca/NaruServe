@@ -1,0 +1,254 @@
+{
+  "wave": "wave-15",
+  "round": 1,
+  "verifier": "loop-p-wave-15-r1",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "FR-PROXY-013 AC-11",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15RewriterProbeTest.java::lp1_networkPathLookingResultsGetDotPrefix",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "tab, backslash, base-path, network-path, userinfo+empty-port and query variants all get /. (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-2",
+      "cites": "FR-PROXY-013 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15RewriterProbeTest.java::lp2_mixedCaseSchemesAndDefaultPorts",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "mixed-case scheme/host, explicit default ports, upper-case Proxy.to scheme, cross-scheme default port unchanged (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-3",
+      "cites": "FR-PROXY-013 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15RewriterProbeTest.java::lp3_ipv6Origins",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "IPv6 literals with ports, network path, hex case, userinfo and empty port (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-4",
+      "cites": "FR-PROXY-013 AC-11",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15RewriterProbeTest.java::lp4_userInformationDropped",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "userinfo up to the last @ dropped; foreign host after @ unchanged (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-5",
+      "cites": "FR-PROXY-013 AC-11",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15RewriterProbeTest.java::lp5_refusedHostOrPortUnchanged",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "port 65536, +80, percent-encoded host, backslash authority, IPv6 zone left unchanged (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-6",
+      "cites": "FR-PROXY-013 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15RewriterProbeTest.java::lp6_basePathRawComparison",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "case-sensitive raw base path, trailing-slash target, ?/# right after base, %2F not a boundary (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-7",
+      "cites": "FR-PROXY-013 AC-7",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15ProxyProbeTest.java::lp7_paramMountPrefixKeepsTheClientEncoding",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "param mount /t/:id with %3F: baseUrl is raw on the common HTTP path, prefix stays /t/a%3Fb (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-8",
+      "cites": "FR-PROXY-013 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15ProxyProbeTest.java::lp8_rootAndTrailingSlashMounts",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "mount '/api/orders/' and root mount under stripPrefix give /api/orders/x and /x (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-9",
+      "cites": "FR-PROXY-013 AC-11",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15ProxyProbeTest.java::lp9_doubleSlashThroughRootStripPrefix",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "root mount + stripPrefix: http://origin//evil.example/x -> /.//evil.example/x (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-10",
+      "cites": "FR-PROXY-012 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15ProxyProbeTest.java::lp10_fixedSetCookieReplacesBackendAndAppCookies",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "responseHeader(Set-Cookie) replaces backend cookies and an app res.cookie (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-11",
+      "cites": "FR-PROXY-012 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15ProxyProbeTest.java::lp11_removedSetCookieKeepsTheAppCookie",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "removeResponseHeader(set-cookie) keeps the app cookie only (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-12",
+      "cites": "FR-PROXY-012 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15ProxyProbeTest.java::lp12_removedLocationIsNotPutBackByTheRewrite",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "removed Location: app value /app stays, rewrite does not re-add (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-13",
+      "cites": "FR-PROXY-012 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15ProxyProbeTest.java::lp13_fixedValueOnHeadAnd304",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "fixed value applied on HEAD and 304 (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-14",
+      "cites": "FR-PROXY-012 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15ProxyProbeTest.java::lp14_laterOfThreeCallsWins",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "set/remove/set in mixed case gives exactly one X-A: 3 (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-15",
+      "cites": "FR-PROXY-012 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15ProxyProbeTest.java::lp15_fixedLocationWithoutRewrite",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "rewriteLocation(false) + responseHeader(Location) replaces two backend lines (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-16",
+      "cites": "FR-PROXY-009 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15ProxyProbeTest.java::lp16_lowerCaseConnectIs405",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "connect and Trace answered 405 with Allow, no backend request (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-17",
+      "cites": "FR-PROXY-009 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15ProxyProbeTest.java::lp17_upgradeWithoutConnectionIsForwardedWithoutUpgrade",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Upgrade without Connection: upgrade is dropped (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-18",
+      "cites": "FR-PROXY-009 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15ProxyProbeTest.java::lp18_mixedCaseUpgradeTokensGoToNext",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Connection: keep-alive, Upgrade + Upgrade: WebSocket goes to next() (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-19",
+      "cites": "FR-PROXY-009 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15TinyHttpdProbeTest.java::lp19_extensionMethodsOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "PATCH/PROPFIND/PURGE over a real TinyHttpd socket arrive unchanged (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-20",
+      "cites": "FR-PROXY-009 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15TinyHttpdProbeTest.java::lp20_traceAndConnectOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "TRACE, trace, origin-form CONNECT over TinyHttpd: 405 + Allow, no backend request (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-21",
+      "cites": "FR-PROXY-009 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15TinyHttpdProbeTest.java::lp21_webSocketUpgradeOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "WebSocket upgrade over TinyHttpd reaches app.ws (101), backend untouched (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-22",
+      "cites": "FR-PROXY-009 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15TinyHttpdProbeTest.java::lp22_h2cUpgradeOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "h2c upgrade over TinyHttpd forwarded as HTTP/1.1 without Upgrade/HTTP2-Settings (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-23",
+      "cites": "FR-PROXY-013 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15TinyHttpdProbeTest.java::lp23_locationRewriteOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "rewrite over TinyHttpd (sanity-checked by a deliberate wrong expectation going red) (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-24",
+      "cites": "FR-PROXY-012 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15TinyHttpdProbeTest.java::lp24_removedServerKeepsExactlyTheAppValueOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "TinyHttpd adds no own Server line: exactly one Server: gw (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-25",
+      "cites": "FR-PROXY-012 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15TinyHttpdProbeTest.java::lp25_fixedValueExactlyOnceOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "STS/Server/X-A fixed values exactly once over TinyHttpd (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-26",
+      "cites": "FR-PROXY-009 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15ProxyProbeTest.java::lp26_lowerCaseTokensArriveUnchanged",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "patch, purge, Propfind, M-SEARCH arrive with the same token (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    },
+    {
+      "id": "LP-27",
+      "cites": "FR-PROXY-013 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LpWave15ProxyProbeTest.java::lp27_stripPrefixKeepsQueryAndFragment",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "//origin?a=1#f under stripPrefix -> /api/orders?a=1#f (green at c88b3a8, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test)"
+    }
+  ],
+  "summary": {
+    "tests_written": 27,
+    "kept": 0
+  }
+}
