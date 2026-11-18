@@ -1,0 +1,7 @@
+{"schema_version":"1.0.0","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-18-fr-proxy-015","sds_path":null,"target":"0.12.0","req_ids":["FR-PROXY-015"],"mode":"normal","flags":["--loops 20","--defer-srs-mutation"],"spawn_context":"pm-child","phase":"done","next_resume_hint":null,"failed":false,
+"loop_counters":{"phase1":{"kept":0,"dropped":13,"rounds":1},"phase2":{"kept":0,"dropped":13,"rounds":1}},
+"red_evidence":{"command":"./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*ProxyErrorsTest*'","exit_code":1,"captured_failure":"11 tests completed, 7 failed: AC1/AC2/AC5/AC7/AC8x2 'a ProxyException: com.snoworca.naruserve.HttpException' or 502 instead of 401; AC3 expected:<502> but was:<500>","timestamp":"2026-11-18T11:30:00Z"},
+"green_evidence":{"command":"./gradlew -PtinyHttpdFromMaven=true build","exit_code":0,"timestamp":"2026-11-18T11:55:00Z"},
+"regression_baseline":{"command":"./gradlew -PtinyHttpdFromMaven=true build","exit_code":0,"passed":4611,"failed":0,"failed_test_ids":[],"head_sha":"d9f12c3","captured_at":"2026-11-18"},
+"regression_summary":{"scope":"full","passed":4622,"failed":0,"regressed_files":[]},
+"pending_mutations":[],"deferred_queue":".kiwi/deferred-srs-mutations.jsonl","deferred_appended":15}

@@ -1,0 +1,50 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-18-fr-proxy-017",
+ "base_sha": "9f6bc578c42fe6f6aebd2861983bcc47a7ccc6b9",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-017"
+ ],
+ "req_filter": [
+  "FR-PROXY-017"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTimeoutsTest.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java"
+ ],
+ "started_at": "2026-11-18T10:07:39Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "FR-PROXY-017",
+    "test_sha": "a14ebca",
+    "implementation_sha": "d9f12c3"
+   }
+  ],
+  "changed": true,
+  "commit_sha": "d9f12c3",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-18-fr-proxy-017",
+  "result_summary": "TASK_DONE; ProxyTimeoutsTest 13/0; full build 4611/0"
+ },
+ "lifecycle_gate_state": {
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-PROXY-017": "evolving"
+  },
+  "status_snapshot": {
+   "FR-PROXY-017": "planned"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-18-fr-proxy-017/lanes/w18s12l1/reports/pm-20261118T104637Z.md",
+ "clean_code_skip": false
+}

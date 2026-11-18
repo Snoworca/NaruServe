@@ -1,0 +1,132 @@
+{
+ "run_id": "2026-11-18.naruserve.self-w18",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "started_at": "2026-11-18T11:20:00Z",
+ "mode": "self",
+ "mode_flags": [
+  "--keep-clean-code",
+  "--loops 20",
+  "--no-pipeline-emit",
+  "--req-filter FR-PROXY-017,FR-PROXY-015"
+ ],
+ "phase": "8",
+ "self_scope": {
+  "source": "base-head",
+  "commit_range": "9f6bc578c42fe6f6aebd2861983bcc47a7ccc6b9..HEAD",
+  "excluded_prose": [],
+  "refused_artifacts": [],
+  "unclassified_files": []
+ },
+ "finding_queue": [],
+ "fix_iter": 1,
+ "recheck_iter": 1,
+ "clean_code_round": 0,
+ "clean_code_dismissed": [],
+ "clean_code_skip": false,
+ "guarantee_scope": "NaruServe-proxy behaviour of FR-PROXY-017 (timeouts, watchdog) and FR-PROXY-015 (pre-response errors, early response) over the public Proxy API and TinyHttpd/in-memory adapters, Java 8 / API 21; must not break SEC-PROXY-005, SEC-PROXY-004, REL-PROXY-001, FR-PROXY-016, FR-PROXY-019, FR-PROXY-010. REL-PROXY-002 scheduler details (single JVM thread, idle expiry, TLS watchdog unification) are wave-19 and outside scope.",
+ "declared_limits": [],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "f62d7b8ccca589883b9bc87b81dab61473054d54",
+   "scope": "full",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyErrorsTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTimeoutsTest.java"
+   ],
+   "tokens_used": 0,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-001",
+     "tier": "block",
+     "family": "pre-relay-deadline-window",
+     "introduced_by_round": null
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "tree_sha": "d192ead18b352b20d8961cc82f69f6f23671d8c0",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTimeoutsTest.java"
+   ],
+   "tokens_used": 0,
+   "residual_count": 1,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-101",
+     "tier": "block",
+     "family": "pre-relay-deadline-check",
+     "introduced_by_round": 1
+    },
+    {
+     "id": "FND-102",
+     "tier": "record",
+     "family": "pre-relay-deadline-check",
+     "introduced_by_round": 1
+    }
+   ]
+  }
+ ],
+ "regression_baseline": {
+  "source": "kiwi-coder full build at 9d10055 (same tree under review)",
+  "tests": 4622,
+  "failures": 0,
+  "failing_tests": []
+ },
+ "regression_pass": true,
+ "failed": false,
+ "outcome": {
+  "verdict": "NEEDS_USER",
+  "gate": "fix-induced-defects-majority",
+  "check_review_round": {
+   "round": 2,
+   "verdict": "NEEDS_USER",
+   "reasons": [
+    "earlier-fix-majority"
+   ]
+  },
+  "action": "halted the fix loop; reverted round-1 fix 5877b93 with 3605870 so the branch tree equals the reviewed tree f62d7b8 (removes FND-101 header leak)",
+  "open_block": [
+   "FND-001"
+  ],
+  "residual": [
+   "FND-103"
+  ],
+  "recommended_next": "apply the classifier fix hypothesis: one final throwIfFired before res.status with headers computed first, test pinning the check and the no-header-leak property; accept FND-103 as the documented hand-off boundary and clarify FR-PROXY-017"
+ },
+ "clean_code": {
+  "ran": false,
+  "reason": "the functional loop ended NEEDS_USER, so the clean-code rounds (which run after it) did not start; CC-001/002/004 marked fix, CC-003/005 dismissed (REL-PROXY-002 wave-19)"
+ },
+ "test_sufficiency": {
+  "verdict": "pass",
+  "ids": [
+   "FR-PROXY-017",
+   "FR-PROXY-015"
+  ],
+  "gaps": 0
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build --continue",
+  "tests": 4622,
+  "failures": 0,
+  "exit_code": 0
+ }
+}

@@ -1,0 +1,119 @@
+{
+ "resolved_findings": [
+  "FND-001"
+ ],
+ "findings": [
+  {
+   "id": "FND-101",
+   "axis": "correctness/security",
+   "verdict": "keep",
+   "evidence": {
+    "command": "cd /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-18 && (temporarily insert into ProxyTimeoutsTest, before '// ---- AC-9 ----', a probe test identical to fr_PROXY_017_AC7_AC8_aTotalTimeoutAfterTheHeadButBeforeTheRelayIsA504 except that the backend head is 'HTTP/1.1 200 OK\\r\\nContent-Length: 1000\\r\\nX-Backend: leak\\r\\nSet-Cookie: sid=backend\\r\\nCache-Control: public, max-age=600\\r\\n\\r\\n'; it asserts 504 and r.header(\"X-Backend\")==null and r.header(\"Set-Cookie\")==null) && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*ProxyTimeoutsTest.zzProbe*' -i; git checkout -- NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTimeoutsTest.java",
+    "output": "PROBE status=504 headers=[X-Backend=leak, Set-Cookie=sid=backend, Cache-Control=public, max-age=600, Content-Security-Policy=default-src 'none', X-Content-Type-Options=nosniff, Content-Type=text/html; charset=utf-8, Content-Length=2374] body=<!DOCTYPE html>...\nProxyTimeoutsTest > zzProbe_headersAfterLateDeadline FAILED\n    java.lang.AssertionError: X-Backend leaked into the 504: [...] expected:<null> but was:<leak>\nBUILD FAILED in 2s",
+    "intent_output": "The comment at Proxy.java:506-508 says a deadline that fires while the status and headers are set 'is a 504 through the error flow, which drops them'. The error flow does not drop them. The client gets a 504 error page carrying the backend's Set-Cookie and Cache-Control: public, max-age=600."
+   },
+   "drop_reason": null,
+   "title": "A late-check 504 carries the backend response headers (Set-Cookie, cacheable Cache-Control) into the error page",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "496-509"
+   },
+   "description": "The second throwIfFired runs after res.status(head.status) and applyResponseHeaders have copied the backend headers into res. Response has no API to remove headers, and the core error flow keeps headers that were already set. So the 504 that FND-001's fix now produces goes out with the backend's headers, among them Set-Cookie (a backend session cookie set on a gateway-timeout page) and Cache-Control: public, max-age=600 (a shared cache may store the 504 page for 10 minutes). Before this change the path never produced a 504. The leak is new, and it contradicts the change's own stated intent. The window is narrow in production (the header copy) but reachable, and it is the exact window the round's test targets.",
+   "suggested_fix": "Do not let a 504 go out after the backend headers were written into res. One option: move the last throwIfFired before res.status(head.status), after building the RelayedBodyStream and registering releaseOnAbort, so a deadline firing during the header copy counts as after the hand-off (FR-PROXY-016 abort). The other: collect the copied, rewritten and fixed headers into a list and apply them only after the final check. Add a test asserting the 504 has no backend headers.",
+   "is_behavioral": true,
+   "tags": [
+    "FR-PROXY-017",
+    "FR-PROXY-011",
+    "regression-of-fix",
+    "header-leak"
+   ]
+  },
+  {
+   "id": "FND-102",
+   "axis": "test-sufficiency",
+   "verdict": "keep",
+   "evidence": {
+    "command": "cd /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-18 && (delete the two lines '// A deadline that fired while the head was read...' + 'throwIfFired(exchange);' at Proxy.java:492-493) && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test; (sum the test-results xml); git checkout -- NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "output": "BUILD SUCCESSFUL in 47s\ntests 532 failures 0 errors 0",
+    "intent_output": "The first new check (after the head read) should be pinned by a test. Removing it leaves all 532 proxy tests green."
+   },
+   "drop_reason": null,
+   "title": "The post-head throwIfFired (hunk 1) is not exercised by any test",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "492-493"
+   },
+   "description": "The new test stalls inside res.status(), so only the second check catches the deadline. With the first check removed, a deadline that fires during the head read is still turned into a 504 by the second check, but only after the backend headers have been set (see FND-101). So the first check is the one that keeps that case from leaking headers, and no test guards it.",
+   "suggested_fix": "Add a test whose deadline fires after the last head byte is parsed and before res.status, for example a wrapper that stalls on the first header-producing call or a hook after ResponseParser.read, and assert a 504 with no backend headers. Or fold the two checks into one placed as FND-101 suggests.",
+   "is_behavioral": false,
+   "tags": [
+    "FR-PROXY-017",
+    "mutation-survivor"
+   ]
+  },
+  {
+   "id": "FND-103",
+   "axis": "correctness",
+   "verdict": "residual",
+   "evidence": {
+    "command": "static reading of Proxy.java:506-510 and ProxyExchange.fire/firedKind",
+    "output": "no deterministic reproduction: the window between the last throwIfFired and res.relay is a few instructions with no hookable call in between",
+    "intent_output": "FR-PROXY-017: a timeout before the hand-off to res.relay is a 504."
+   },
+   "drop_reason": null,
+   "title": "Remaining TOCTOU window between the last throwIfFired and res.relay still gives the abort path",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "509-510"
+   },
+   "description": "A total deadline that fires after the final check and before res.relay starts still produces the FR-PROXY-016 abort, not a 504. The comment documents this as a deliberate boundary. It could not be reproduced by execution, so it stays residual.",
+   "suggested_fix": "Accept and document it as the hand-off boundary (already commented), or have res.relay's first body read re-check firedKind before the response is committed.",
+   "is_behavioral": true,
+   "tags": [
+    "FR-PROXY-017",
+    "race"
+   ]
+  }
+ ],
+ "clean_code": [
+  "Proxy.java:506-508: the comment says the error flow 'drops' the status and headers. Execution shows it does not (FND-101). Fix the comment along with the code.",
+  "ProxyTimeoutsTest.mountWithSlowStatus stalls on any one-arg 'status' call. It is correct today because only Proxy calls the wrapper, but matching on method.getParameterTypes()[0]==int.class would state the intent exactly.",
+  "The new test can pass for another reason under heavy load: if the 1 s total deadline fires before the head arrives, it still sees 504 TOTAL_TIMEOUT without exercising the post-head path. Asserting that the backend wrote its head before the deadline (for example a latch in the script) would make it prove what its name claims."
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+   "hunks_total": 3,
+   "anchors": [
+    "            // A deadline that fired while the head was read, after its last byte arrived, is still before the relay.",
+    "            // The last check before the hand-off: a deadline that fired while the status and headers were set is a 504",
+    "    private static void throwIfFired(ProxyExchange exchange) {"
+   ],
+   "findings": [
+    "FND-101",
+    "FND-102",
+    "FND-103"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTimeoutsTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "import com.snoworca.naruserve.Response;",
+    "    public void fr_PROXY_017_AC7_AC8_aTotalTimeoutAfterTheHeadButBeforeTheRelayIsA504() throws Exception {",
+    "    private String mountWithSlowStatus(Proxy proxy, long millis) {"
+   ],
+   "findings": [
+    "FND-102"
+   ]
+  }
+ ],
+ "summary": {
+  "fnd_001": "Resolved. The new test fails on the pre-fix Proxy.java (git show 5877b93^:Proxy.java; AssertionError at ProxyTimeoutsTest.java:348, the 504 assertion) and passes on d192ead. ProxyTimeoutsTest is 14/14 green, and the new test passed 5 of 5 runs with --rerun.",
+  "checked_ok": "Release happens once (ProxyExchange.release uses compareAndSet, so an abort listener left registered after the throw is a no-op). No double release. The slot counter returns to zero (awaitCounterZero passes). The throwIfFired → firedKindOr path keeps the kind. The FR-PROXY-016 after-relay tests are still green. All 532 proxy tests are green on the current code.",
+  "kept": 2,
+  "residual": 1,
+  "blocking": "FND-101 (backend headers leak into the 504)",
+  "tree_state": "git status shows only the pre-existing untracked .kiwi/. Every throw-away probe and mutation was reverted, and nothing new is under NaruServe-proxy/src."
+ }
+}

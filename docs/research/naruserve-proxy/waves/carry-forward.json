@@ -86,7 +86,16 @@
       "carried_into": "wave-18",
       "owner_requirement": "FR-PROXY-015",
       "reason_class": "cross-wave-carry-forward",
-      "note": "REL-PROXY-001 AC-1 now bounds a silent-backend disconnect by the read timeout or the total timeout (TinyHttpd cannot see the disconnect without a write); the wave-18 worker and loop P must show that a silent backend with a disconnected client releases the slot and the backend socket by .readTimeout and by .totalTimeout on a .maxConcurrent(1) mount over real TinyHttpd sockets"
+      "note": "REL-PROXY-001 AC-1 now bounds a silent-backend disconnect by the read timeout or the total timeout (TinyHttpd cannot see the disconnect without a write); the wave-18 worker and loop P must show that a silent backend with a disconnected client releases the slot and the backend socket by .readTimeout and by .totalTimeout on a .maxConcurrent(1) mount over real TinyHttpd sockets",
+      "closed": "wave-18 (ProxyTimeoutsTest:418-445 read and total timeout release over TinyHttpd on maxConcurrent(1); REL-PROXY-001 VE-12)"
+    },
+    {
+      "from": "wave-18",
+      "finding": "srs-delta REL-PROXY-002",
+      "carried_into": "wave-19",
+      "owner_requirement": "REL-PROXY-002",
+      "reason_class": "later-wave-observation",
+      "note": "ProxyExchange.Scheduler is the default watchdog (lazy, one core daemon thread, null context class loader, removeOnCancel, 10 s keep-alive), but TlsConnector still runs its own naruserve-proxy-tls-watchdog executor whose thread never times out and keeps the creator's context class loader; this conflicts with REL-PROXY-002 AC-2..AC-4. The wave-19 worker should move it onto ProxyExchange.Scheduler.INSTANCE; wave-19 loop P re-checks it."
     }
   ]
 }

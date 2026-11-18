@@ -1,0 +1,30 @@
+[
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-18",
+   "summary": "[req] FR-PROXY-017 — proxy connect/write/read/total timeouts with a JVM-wide watchdog that records the fired kind and closes the plain socket; 504 before the relay and client abort after it. green=PASS (ProxyTimeoutsTest 13/13). files: Proxy.java, ProxyExchange.java, BackendClient.java, RelayedBodyStream.java, ProxyTimeoutsTest.java. AC: FR-PROXY-017 AC-1..10 PASS; full build 4611 tests 0 failures",
+   "requirementIds": [
+    "FR-PROXY-017"
+   ],
+   "target": "0.12.0",
+   "scope": "PROXY"
+  },
+  "argsHash": "01181bff8eaad0224882cb6ee4350f32516b7973",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-18",
+   "summary": "[req] FR-PROXY-015 - backend failures before the relay are ProxyException CONNECT_FAILED or INVALID_RESPONSE and an early backend response after a failed body write is relayed best effort. green=PASS (11/11 ProxyErrorsTest). files: NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java, NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java, NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyErrorsTest.java. AC: FR-PROXY-015 AC-1..9 PASS",
+   "requirementIds": [
+    "FR-PROXY-015"
+   ],
+   "target": "0.12.0",
+   "scope": "PROXY"
+  },
+  "argsHash": "0b0411ef39283fd4e62dfdae26587fd7927ba6b9",
+  "action": "apply"
+ }
+]

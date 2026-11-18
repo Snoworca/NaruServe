@@ -1,0 +1,339 @@
+{
+ "findings": [
+  {
+   "id": "FND-001",
+   "axis": "P2",
+   "verdict": "keep",
+   "evidence": {
+    "command": "cd /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-18 && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ZzReviewProbeTest.probe3*' -i   (throw-away test, now deleted. Setup: a ScriptedBackend sends 'HTTP/1.1 200 OK\\r\\nContent-Length: 1000\\r\\n\\r\\n' and then stays silent. The mount is Proxy.to(backend).totalTimeout(1, SECONDS), behind a middleware that wraps Response in a java.lang.reflect.Proxy and sleeps 1500 ms inside res.status(int). That sleep stands in for the request thread being descheduled after the head is parsed and before res.relay. The test asserts 504.)",
+    "output": "PROBE3 status=200 aborted=true errors=[] logged=[com.snoworca.naruserve.proxy.ProxyException]\nZzReviewProbeTest > probe3_deadlineFiredBeforeRelayIsStill504 FAILED\n    java.lang.AssertionError: a deadline that fired before res.relay is a 504 expected:<504> but was:<200>\nBUILD FAILED in 2s",
+    "intent_output": "FR-PROXY-017: a TOTAL_TIMEOUT reached before the response was handed to res.relay must be reported as 504 with kind TOTAL_TIMEOUT through onError. Actual: the client gets 200 followed by an aborted connection, and only the logger sees the failure."
+   },
+   "drop_reason": null,
+   "title": "A deadline that fires after the head is parsed but before res.relay is reported as an aborted 200, not a 504",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "491-505"
+   },
+   "description": "Between ResponseParser.read and res.relay, the forward path calls ResponseParser.framing, res.status, applyResponseHeaders, the RelayedBodyStream constructor and releaseOnAbort, and it never checks exchange.firedKind(). If the total deadline (or a write deadline that lost its disarm race) fires in that window, the watchdog has already recorded TOTAL_TIMEOUT and closed the plain socket. The proxy still hands the dead body to res.relay. The first read fails, RelayedBodyStream.fail settles TOTAL_TIMEOUT, logs it, and the framework aborts after committing the backend's status. So a timeout that was reached before the relay is reported with the after-relay contract (abort plus log) instead of 504 through the error flow. The window is small in production (it needs a scheduling stall or GC pause), so impact is low. The probe needed an injected delay to make it deterministic.",
+   "suggested_fix": "Just before res.relay(relayedBody, framing.relayLength), and also right after ResponseParser.read returns, check ProxyException.Kind k = exchange.firedKind(). If it is non-null, throw new ProxyException(k, null). The existing finally then releases the exchange. Add a test that uses a Response wrapper with a delay, as the probe did.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "race",
+    "low-severity"
+   ]
+  },
+  {
+   "id": "FND-002",
+   "axis": "P1",
+   "verdict": "drop",
+   "evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ZzReviewProbeTest' -i   (probe1: the backend sends 'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\n\\r\\n' with no length and trickles 1 byte every 500 ms. readTimeout is 1 s and totalTimeout is 2 s.)",
+    "output": "PROBE1 status=200 aborted=true bodyLen=4 millis=2165 logged=[ProxyException] lines=[ERROR proxy: the response body from http://127.0.0.1:58634 failed after the response started (TOTAL_TIMEOUT) null, ...]",
+    "intent_output": "aborted, with TOTAL_TIMEOUT logged once"
+   },
+   "drop_reason": "Not reproduced. A body that ends at connection close, cut by the watchdog's socket close, still throws, not EOF. The client is aborted and TOTAL_TIMEOUT is logged as required.",
+   "title": "A total timeout during a body that ends at connection close could look like a normal EOF and relay a truncated body silently",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+    "line_range": "70-90"
+   },
+   "description": "Hypothesis: a close by the watchdog returns -1 when remaining == -1, so the relay ends without an abort. Execution refuted it on the JDK socket implementation.",
+   "suggested_fix": null,
+   "is_behavioral": true,
+   "tags": [
+    "timeouts"
+   ]
+  },
+  {
+   "id": "FND-003",
+   "axis": "P1",
+   "verdict": "drop",
+   "evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ZzTlsProbeTest' -i   (throw-away TLS backend made with a keytool-generated private CA)",
+    "output": "PROBE-TLS1 status=200 aborted=true ... (TOTAL_TIMEOUT) logged once\nPROBE-TLS2 status=504 millis=2150 kind=TOTAL_TIMEOUT\nPROBE-TLS3 status=504 millis=1189 kind=WRITE_TIMEOUT\nBUILD SUCCESSFUL in 8s",
+    "intent_output": "same as above"
+   },
+   "drop_reason": "Not reproduced. Over https, closing only the plain socket (SEC-PROXY-005) correctly produces TOTAL_TIMEOUT in the head and in a close-delimited body, and WRITE_TIMEOUT for a 64 MiB body to a backend that never reads.",
+   "title": "Watchdog closing the plain socket under an SSLSocket might not map to TOTAL_TIMEOUT or WRITE_TIMEOUT over https",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "line_range": "128-136"
+   },
+   "description": "https variants of FR-PROXY-017 AC-5 and AC-7 and FR-PROXY-015 AC-9, which the module's tests cover only over plain http. All of them behaved correctly.",
+   "suggested_fix": null,
+   "is_behavioral": true,
+   "tags": [
+    "tls",
+    "timeouts"
+   ]
+  },
+  {
+   "id": "FND-004",
+   "axis": "P1",
+   "verdict": "drop",
+   "evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ZzReviewProbeTest.probe2*' -i   (the backend reads 1 KiB every 300 ms after the first 64 KiB. writeTimeout is 1 s. The body is 1 MiB.)",
+    "output": "PROBE2 status=504 kinds=WRITE_TIMEOUT sent=802816 backendRead=68608 maxGapBetweenBackendReadsMs=435",
+    "intent_output": "FR-PROXY-017: writeTimeout applies to a backend socket write that makes no progress"
+   },
+   "drop_reason": "The counter-example is confounded. The backend application read every 435 ms or less, but TCP silly-window avoidance only reopens the receive window after about an MSS (16 KiB on loopback) is freed. So the proxy's 8 KiB socket write really made no progress for more than 1 s. That does not prove the write deadline fires on a write that is progressing.",
+   "title": "A per-write deadline might fire on a write that is slowly making progress",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "line_range": "260-270"
+   },
+   "description": "The deadline covers the whole 8 KiB write call, not progress inside it. This is only observable when drain progress is below TCP window granularity, which counts as no progress at the sender.",
+   "suggested_fix": null,
+   "is_behavioral": true,
+   "tags": [
+    "timeouts"
+   ]
+  },
+  {
+   "id": "FND-005",
+   "axis": "P6",
+   "verdict": "drop",
+   "evidence": {
+    "command": "code reading: ProxyErrorsTest.fr_PROXY_015_AC6_anEarly401AfterAHalfCloseReachesTheClient (ProxyErrorsTest.java:214-235)",
+    "output": "The backend reads 64 KiB, sends 401, calls shutdownOutput and then drains the rest of the body. The proxy's write therefore never fails, and the test does not go through sendRequest's writeFailure or earlyResponse path. It would pass on the pre-diff code.",
+    "intent_output": "FR-PROXY-015 AC-6 describes exactly this half-close-and-drain scenario"
+   },
+   "drop_reason": "The test follows the AC text literally. The failed-write early-response path is covered by the two AC-8 tests with an injected write failure (failWritesAfter). This is test design, not a defect.",
+   "title": "The AC-6 early-401 test does not exercise the failed-write early-response path",
+   "location": {
+    "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyErrorsTest.java",
+    "line_range": "214-235"
+   },
+   "description": "See evidence.",
+   "suggested_fix": null,
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "FND-006",
+   "axis": "P8",
+   "verdict": "drop",
+   "evidence": {
+    "command": "code reading: ProxyExchange.WatchedOutputStream.write (ProxyExchange.java:262-270)",
+    "output": "Every socket write of up to 8 KiB allocates a WriteDeadline and runs a schedule and a cancel on one JVM-wide ScheduledThreadPoolExecutor queue. A 64 MiB body means about 8192 queue operations under the queue's single lock, shared by all concurrent proxied requests.",
+    "intent_output": "no measurable regression shown"
+   },
+   "drop_reason": "Not proven by measurement. No benchmark showed a throughput regression.",
+   "title": "Per-write schedule and cancel on a global queue",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "line_range": "262-270"
+   },
+   "description": "Possible contention point under high concurrency.",
+   "suggested_fix": null,
+   "is_behavioral": false,
+   "tags": [
+    "performance"
+   ]
+  },
+  {
+   "id": "FND-007",
+   "axis": "P3",
+   "verdict": "drop",
+   "evidence": {
+    "command": "code reading: ProxyExchange.Scheduler.executor (ProxyExchange.java:342-366)",
+    "output": "The watchdog thread is created lazily from a request thread, so it inherits that thread's ThreadGroup, inheritable thread-locals and access-control context. Only the context class loader is cleared.",
+    "intent_output": "'belongs to no app'"
+   },
+   "drop_reason": "Not proven. allowCoreThreadTimeOut with a 10 s keep-alive ends the thread once idle, so any retention is temporary. The scheduler-thread details belong to REL-PROXY-002 (wave-19), which is out of scope.",
+   "title": "The JVM-wide watchdog thread inherits context from the first request thread",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "line_range": "342-366"
+   },
+   "description": "Possible temporary class-loader retention in container redeploys.",
+   "suggested_fix": null,
+   "is_behavioral": false,
+   "tags": [
+    "leak"
+   ]
+  },
+  {
+   "id": "FND-008",
+   "axis": "P4",
+   "verdict": "drop",
+   "evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ProxyTimeoutsTest' --tests 'com.snoworca.naruserve.proxy.ProxyErrorsTest' --tests 'com.snoworca.naruserve.proxy.ProxyExchangeTest' --tests 'com.snoworca.naruserve.proxy.ProxyTlsTest' --tests 'com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest' -i",
+    "output": "BUILD SUCCESSFUL in 33s",
+    "intent_output": "The ProxyException message stays null, and the target appears only in the cause (UnknownHostException) and the logger record"
+   },
+   "drop_reason": "No leak. Every new ProxyException is built with new ProxyException(kind, cause), so the message is null. FiredGuard's IOException text names only the kind. FR-PROXY-015 AC-4 passes.",
+   "title": "The target address could leak to the client through the new error mapping",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "578-597"
+   },
+   "description": "Checked backendFailure, firedKindOr, earlyResponse and BackendClient.open.",
+   "suggested_fix": null,
+   "is_behavioral": true,
+   "tags": [
+    "security"
+   ]
+  }
+ ],
+ "clean_code": [
+  {
+   "id": "CC-001",
+   "principle": "DRY: the same 'settle own kind, then re-wrap with the fired kind' logic appears in three places",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "578-597 (also RelayedBodyStream.java:139-142)"
+   },
+   "description": "backendFailure, firedKindOr and RelayedBodyStream.fail each call exchange.settle(own) and build a new ProxyException when the settled kind differs. One ProxyExchange helper, for example ProxyException settled(ProxyException own, Throwable cause), would remove the repetition."
+  },
+  {
+   "id": "CC-002",
+   "principle": "Dead code",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "581-582"
+   },
+   "description": "The fallback 'kind != null ? kind : INVALID_RESPONSE' cannot be reached, and its comment says so. A non-null-returning settle overload would remove it."
+  },
+  {
+   "id": "CC-003",
+   "principle": "Single responsibility / class size",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "line_range": "208-367"
+   },
+   "description": "ProxyExchange now holds resource lifetime (slot, reservation, socket), deadline state, three output-stream decorators (FiredGuard, WatchedOutputStream, WriteDeadline) and the JVM-wide Scheduler executor. Scheduler and the write-deadline stream would fit better in their own types."
+  },
+  {
+   "id": "CC-004",
+   "principle": "Naming",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "line_range": "79, 142-144"
+   },
+   "description": "The field 'fired' and the method firedKind() also hold kinds the request thread settled itself (READ_TIMEOUT, INVALID_RESPONSE, CONNECT_FAILED). sendRequest's 'firedKind() != null' check depends on settle never running before it. A name such as 'settledKind' would make that invariant visible."
+  },
+  {
+   "id": "CC-005",
+   "principle": "Duplication: two watchdog executors",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TlsConnector.java",
+    "line_range": "45"
+   },
+   "description": "TlsConnector.WATCHDOG and ProxyExchange.Scheduler are separate scheduled executors that both close a plain socket on a deadline. The diff says so, and the move is deferred to wave-19 (REL-PROXY-002)."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+   "hunks_total": 8,
+   "anchors": [
+    "import java.net.SocketTimeoutException;",
+    "// @req FR-PROXY-017",
+    "    /** Creates the unconnected plain socket of a backend connection. */",
+    "     * total timeout counts from this call. A failure of the plain connect is the {@link IOException} itself; a TLS",
+    "    // @req SEC-PROXY-005",
+    "            @Nullable SSLSocketFactory sslSocketFactory, ProxyExchange exchange) throws IOException {",
+    "        Socket plain = plainSockets.create();",
+    "            exchange.plainSocket(plain);"
+   ],
+   "findings": [
+    "FND-008"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+   "hunks_total": 11,
+   "anchors": [
+    "import java.io.BufferedOutputStream;",
+    "import java.net.SocketTimeoutException;",
+    "    /** A proxy under the module's JVM-wide watchdog scheduler, which enforces the total timeout (FR-PROXY-017). */",
+    "        this(target, options, ProxyExchange.Scheduler.INSTANCE);",
+    "     * or answers with a response this proxy cannot read gives 502 through the error flow; a failure while reading",
+    "    // @req FR-PROXY-015",
+    "                    options.sslSocketFactory, exchange);",
+    "            OutputStream out = new BufferedOutputStream(socket.getOutputStream());",
+    "            ResponseParser.Head head = ResponseParser.read(in);",
+    "            throw new HttpException(502, null, e);",
+    "     * Writes the request head and the client body to the backend and flushes them. A write failure is returned, not"
+   ],
+   "findings": [
+    "FND-001",
+    "FND-008"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+   "hunks_total": 9,
+   "anchors": [
+    "import java.io.FilterOutputStream;",
+    "import java.io.OutputStream;",
+    "import java.util.concurrent.ScheduledThreadPoolExecutor;",
+    " * <p>The write timeout and the total timeout are enforced by closing the plain backend socket, never an",
+    "// @req FR-PROXY-017",
+    "    /** A watchdog that watches nothing: no total-timeout reservation fires on a proxy that uses it. */",
+    "    private volatile @Nullable Socket plain;",
+    "     * Records the plain backend socket, before its connect, so a firing deadline closes it; a socket recorded after a",
+    "    private static final class FiredGuard extends FilterOutputStream {"
+   ],
+   "findings": [
+    "FND-003",
+    "FND-004",
+    "FND-006",
+    "FND-007"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+   "hunks_total": 5,
+   "anchors": [
+    " * a failure on the backend socket closed by a firing deadline is the kind that deadline recorded (FR-PROXY-017, the",
+    "// @req FR-PROXY-017",
+    "    // @req FR-PROXY-017",
+    "        ProxyException own = cause instanceof ProxyException ? (ProxyException) cause",
+    "        ProxyException.Kind settled = exchange.settle(own.kind());"
+   ],
+   "findings": [
+    "FND-002"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyErrorsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class ProxyErrorsTest {"
+   ],
+   "findings": [
+    "FND-005"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTimeoutsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class ProxyTimeoutsTest {"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 8,
+  "by_verdict": {
+   "keep": 1,
+   "drop": 7,
+   "residual": 0
+  },
+  "by_axis": {
+   "P1": 3,
+   "P2": 1,
+   "P3": 1,
+   "P4": 1,
+   "P6": 1,
+   "P8": 1
+  }
+ }
+}

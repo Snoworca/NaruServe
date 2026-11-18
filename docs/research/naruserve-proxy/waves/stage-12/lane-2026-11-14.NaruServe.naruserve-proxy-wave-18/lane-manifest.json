@@ -1,0 +1,240 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-18",
+ "wave": "wave-18",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-18",
+ "base_sha": "9f6bc578c42fe6f6aebd2861983bcc47a7ccc6b9",
+ "head_sha": "b6f88f54b9a2dbf570130cfa1b6ac3b5df04bd1f",
+ "commits": [
+  {
+   "sha": "a14ebca1968e10a867b041667404856f8152ba96",
+   "subject": "test(proxy): cover the connect, write, read and total timeouts",
+   "req": "FR-PROXY-017",
+   "kind": "test"
+  },
+  {
+   "sha": "d9f12c36eb14865287d67e422b0f9bd7ade1b21d",
+   "subject": "feat(proxy): enforce the write and total timeouts with a watchdog",
+   "req": "FR-PROXY-017",
+   "kind": "implementation"
+  },
+  {
+   "sha": "587545f068681e9c5da61bd2f668b8a856655a97",
+   "subject": "test(proxy): cover backend failures before the response",
+   "req": "FR-PROXY-015",
+   "kind": "test"
+  },
+  {
+   "sha": "9d10055ea0be6f375ad81f3a9e41225838a6f720",
+   "subject": "feat(proxy): report failures before the response by kind",
+   "req": "FR-PROXY-015",
+   "kind": "implementation"
+  },
+  {
+   "sha": "5877b9318e0a1e8678a9c91a1a918618bc0777c2",
+   "subject": "fix(proxy): report a deadline that fires before the relay as a 504",
+   "req": "FR-PROXY-017",
+   "kind": "review"
+  },
+  {
+   "sha": "360587001aba5de3d12cac41231207fd94dff2d6",
+   "subject": "revert(proxy): drop the pre-relay deadline check pending a decision",
+   "req": "FR-PROXY-017",
+   "kind": "review"
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "FR-PROXY-017",
+   "FR-PROXY-015"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-18/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-18-fr-proxy-017/lanes/w18s12l1/reports/pm-20261118T104637Z.md",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-18-fr-proxy-015/lanes/w18s12l1/reports/",
+  ".kiwi/sessions/2026-11-18.naruserve.self-w18/analysis/report.md"
+ ],
+ "red_evidence": [
+  {
+   "req": "FR-PROXY-017",
+   "test": "fr_PROXY_017_AC2_theConnectTimeoutGoesToSocketConnectAndItsTimeoutIsConnectTimeout",
+   "red_output": "AssertionError: expected:<504> but was:<502>"
+  },
+  {
+   "req": "FR-PROXY-017",
+   "test": "fr_PROXY_017_AC4_aSilentBackendIsReadTimeoutAfterTheReadTimeout",
+   "red_output": "AssertionError: expected:<504> but was:<502>"
+  },
+  {
+   "req": "FR-PROXY-017",
+   "test": "fr_PROXY_017_AC5_aBackendThatNeverReadsTheBodyIsWriteTimeout",
+   "red_output": "TimeoutException (20.1 s, no write deadline)"
+  },
+  {
+   "req": "FR-PROXY-017",
+   "test": "fr_PROXY_017_AC7_aTrickledHeaderBlockIsTotalTimeout / aTrickledBodyAbortsTheClientAndLogsTotalTimeout",
+   "red_output": "TimeoutException (23.5 s / 22.3 s)"
+  },
+  {
+   "req": "FR-PROXY-017",
+   "test": "fr_PROXY_017_AC8_theFirstTimeoutReachedApplies / theTotalTimeoutEndsATrickledClientBody",
+   "red_output": "TimeoutException (23.4 s / 23.3 s)"
+  },
+  {
+   "req": "FR-PROXY-017",
+   "test": "fr_PROXY_017_AC9_timeoutsAreSetPerMount",
+   "red_output": "AssertionError: expected:<504> but was:<502>"
+  },
+  {
+   "req": "REL-PROXY-001",
+   "test": "ProxyTimeoutsTest.rel_PROXY_001_AC1_aResetDuringASilentBodyEndsByTheTotalTimeout (LP-1)",
+   "red_output": "AssertionError: the backend observed its connection closed (23.2 s)"
+  },
+  {
+   "req": "FR-PROXY-015",
+   "test": "fr_PROXY_015_AC1 / AC2 / AC5 / AC7 / AC8 (x2)",
+   "red_output": "AssertionError: a ProxyException: com.snoworca.naruserve.HttpException"
+  },
+  {
+   "req": "FR-PROXY-015",
+   "test": "fr_PROXY_015_AC3_onErrorAnswersByKindAndTheProxyWritesNoBodyOfItsOwn",
+   "red_output": "AssertionError: expected:<502> but was:<500>"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "detail": "host decision (recommended option): FND-001 fixed by an independent host-dispatched fixer in the lane, tests first (736691e test, b6f88f5 fix: headers computed into PendingResponseHeaders, one final throwIfFired before res.status; the 504 carries no backend headers). FND-103 accepted as the documented hand-off boundary. Lane full build 4624 tests, 0 failures. Original worker outcome was NEEDS_USER (earlier-fix-majority gate).",
+  "report": ".kiwi/sessions/2026-11-18.naruserve.self-w18/analysis/report.md"
+ },
+ "intentionally_empty": {
+  "note": "Some criteria already held at base or were satisfied by the earlier requirement in this wave. Their tests are regression guards with no red run of their own.",
+  "items": [
+   {
+    "req": "FR-PROXY-017",
+    "acs": [
+     "AC-1",
+     "AC-10"
+    ],
+    "evidence": "The accessors and defaults already existed. ProxyTimeoutsTest:81 and :83 are green."
+   },
+   {
+    "req": "FR-PROXY-017",
+    "acs": [
+     "AC-3"
+    ],
+    "evidence": "TlsConnector already mapped a handshake SO_TIMEOUT to CONNECT_TIMEOUT. ProxyTimeoutsTest:128 is green."
+   },
+   {
+    "req": "FR-PROXY-017",
+    "acs": [
+     "AC-6"
+    ],
+    "evidence": "With no watchdog at base there was no WRITE_TIMEOUT at all, so this is a guard test. ProxyTimeoutsTest:195 is green."
+   },
+   {
+    "req": "REL-PROXY-001",
+    "acs": [
+     "AC-1 LP-1 read-timeout variant"
+    ],
+    "evidence": "This already held through the FR-PROXY-016 READ_TIMEOUT path. ProxyTimeoutsTest:362 is green."
+   },
+   {
+    "req": "FR-PROXY-015",
+    "acs": [
+     "AC-4"
+    ],
+    "evidence": "The default 502 page already named neither the host nor the port. ProxyErrorsTest:143 is green."
+   },
+   {
+    "req": "FR-PROXY-015",
+    "acs": [
+     "AC-6"
+    ],
+    "evidence": "The backend drains the body, so no write fails and the normal path relays the 401. ProxyErrorsTest:211 is green."
+   },
+   {
+    "req": "FR-PROXY-015",
+    "acs": [
+     "AC-9"
+    ],
+    "evidence": "FR-PROXY-017's FiredGuard and settle already keep WRITE_TIMEOUT and TOTAL_TIMEOUT. ProxyErrorsTest:317 and :325 are green."
+   }
+  ]
+ },
+ "design_refuted": [],
+ "srs_deltas": [
+  {
+   "req": "FR-PROXY-017",
+   "kind": "clarification",
+   "text": "Define 'handed to res.relay' as the point after the proxy's final deadline check, which runs before the response status and headers are set. A deadline that fires after that point takes the FR-PROXY-016 abort-and-log path. This is FND-103, residual with a recommended answer."
+  },
+  {
+   "req": "FR-PROXY-017",
+   "kind": "open-defect",
+   "text": "FND-001 is still open. A deadline that fires between the head read and res.relay gives an aborted 200 instead of a 504. Evidence: the reviewer's probe, a Response wrapper that stalls 1500 ms in res.status with totalTimeout(1s), returned 200, aborted, errors=[]. Round-1 test fr_PROXY_017_AC7_AC8_aTotalTimeoutAfterTheHeadButBeforeTheRelayIsA504 was red at d9f12c3 and was reverted along with its fix."
+  },
+  {
+   "req": "FR-PROXY-017",
+   "kind": "clarification",
+   "text": "The total timeout also ends a request whose client body is still trickling in. It fails at the first client read after the deadline. Test: fr_PROXY_017_AC8_theTotalTimeoutEndsATrickledClientBody (ProxyTimeoutsTest:306)."
+  },
+  {
+   "req": "SEC-PROXY-004",
+   "kind": "update",
+   "text": "A read timeout while reading the response head is now 504 READ_TIMEOUT, not plain 502. A connect SocketTimeoutException is 504 CONNECT_TIMEOUT. This closes the limit wave-17 declared."
+  },
+  {
+   "req": "FR-PROXY-015",
+   "kind": "clarification",
+   "text": "A read timeout during the early-response read after a failed body write is reported as INVALID_RESPONSE, not READ_TIMEOUT, because no complete head arrived."
+  },
+  {
+   "req": "REL-PROXY-001",
+   "kind": "evidence",
+   "text": "LP-1 is closed. ProxyTimeoutsTest:362 (read timeout) and ProxyTimeoutsTest:370 (total timeout), over real TinyHttpd sockets on a .maxConcurrent(1) mount, show that the backend sees its connection closed and the next request reaches the backend. No evidence row for this was queued, because REL-PROXY-001 is outside this lane's requirement set."
+  },
+  {
+   "req": "REL-PROXY-002",
+   "kind": "note-for-wave-19",
+   "text": "ProxyExchange.Scheduler is the default watchdog: lazy, one core daemon thread, null context class loader, removeOnCancel, 10 s keep-alive. TlsConnector still runs its own naruserve-proxy-tls-watchdog executor, whose thread never times out and keeps the creator's context class loader. This conflicts with REL-PROXY-002 AC-2, AC-3 and AC-4. Move it onto ProxyExchange.Scheduler.INSTANCE."
+  },
+  {
+   "req": "FR-PROXY-017",
+   "kind": "queue-note",
+   "text": "The FR-PROXY-017 kiwi-coder queued update_status implemented in the deferred queue even though this run used --no-final. The host decides whether to apply it, given open finding FND-001."
+  }
+ ],
+ "out_of_lease_paths": [],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "check_test_sufficiency (workspaceRoot = this worktree) for FR-PROXY-017 AC-1..AC-10 and FR-PROXY-015 AC-1..AC-9: every AC is cited, passed=true, 0 gaps."
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4624,
+  "failures": 0,
+  "exit_code": 0
+ },
+ "bootstrap": "not-applicable",
+ "notes": [
+  "The Agent tool always started subagents in the background, and the harness moved foreground Bash commands longer than 180 s to the background. I waited for each one inline by polling, one at a time, without ending the turn: kiwi-coder ran twice, then reviewer, classifier, fixer, reviewer and classifier once each. The full build ran through nohup to a log file and was polled the same way.",
+  "The full build used --continue. The proxy module re-ran its tests (532). The other modules were UP-TO-DATE, and their stored results count toward the 4622 total, which is baseline 4598 plus 24 new tests.",
+  "Every commit carries REQ, Commit-Kind, Orch-Run, Orch-Wave, Orch-Stage and Orch-Lane, checked with git log --format='%(trailers)'."
+ ],
+ "host_fixes": [
+  {
+   "sha": "736691e",
+   "kind": "test",
+   "req": "FR-PROXY-017"
+  },
+  {
+   "sha": "b6f88f5",
+   "kind": "implementation",
+   "req": "FR-PROXY-017"
+  }
+ ]
+}

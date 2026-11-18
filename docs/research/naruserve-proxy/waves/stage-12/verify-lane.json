@@ -1,0 +1,27 @@
+{
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-18": {
+  "head": "b6f88f54b9a2dbf570130cfa1b6ac3b5df04bd1f",
+  "commits": 6,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "detail": "host decision (recommended option): FND-001 fixed by an independent host-dispatched fixer in the lane, tests first (736691e test, b6f88f5 fix: headers computed into PendingResponseHeaders, one final throwIfFired before res.status; the 504 carries no backend headers). FND-103 accepted as the documented hand-off boundary. Lane full build 4624 tests, 0 failures. Original worker outcome was NEEDS_USER (earlier-fix-majority gate).",
+   "report": ".kiwi/sessions/2026-11-18.naruserve.self-w18/analysis/report.md"
+  },
+  "landed": [
+   "FR-PROXY-017",
+   "FR-PROXY-015"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [
+   "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/LocationRewriter.java",
+   "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/PendingResponseHeaders.java",
+   "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java"
+  ],
+  "outside_reason": "FND-001 fix: response headers are computed into PendingResponseHeaders (new) by the copier and Location rewriter so the final deadline check runs before res.status and a 504 carries no backend header",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build (4624 tests, 0 failures)",
+  "verdict": "pass"
+ }
+}
