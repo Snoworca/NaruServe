@@ -1,0 +1,91 @@
+{
+  "wave": "wave-21",
+  "round": 3,
+  "verifier": "loop-p-wave-21-r3",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "FR-PROXY-013 AC-11",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R3Test.kt::FR-PROXY-013 AC-11 the Location sections state the leading slash-dot of a network-path-looking result",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: proxy.md Location section never states the /. guard: `rewriteLocation`(기본 `true`)이 켜져 있으면 ... 나머지 경로·쿼리·프래그먼트는 그대로 두고, 결과 경로가 비면 `/`입니다. ... (the running proxy, target http://127.0.0.1:<port> on app.use(\"/api\", ...), turns backend Location http://127.0.0.1:<port>//evil.example/x into /.//evil.example/x; the assertion on that value passed first)",
+      "note": "docs/api/proxy.md and docs/api/en/proxy.md 'Location 다시 쓰기 / Location rewrite' say the remainder of the path is kept unchanged, which predicts //evil.example/x (a network-path open redirect); the code adds the leading /. that FR-PROXY-013 AC-11 requires, and neither page states it (nor the dropped user information / empty port / refused host left unchanged of the same AC). Run with --rerun on integration head e285957."
+    },
+    {
+      "id": "LP-2",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R3Test.kt::OPS-DX-008 AC-1 the repeated-call rule of bodyStream holds as request md states",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "bodyStream() == bodyStream(1048576) same object, available() and a -1 read are no consumption, another limit gives IllegalStateException, after a read any limit gives BodyAlreadyConsumedException: matches request.md."
+    },
+    {
+      "id": "LP-3",
+      "cites": "OPS-DX-008 AC-5",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R3Test.kt::OPS-DX-008 AC-5 rawBodyLimit after listen throws and leaves the limit",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "rawBodyLimit after listen throws IllegalStateException and the 1 MiB default still applies: matches app.md."
+    },
+    {
+      "id": "LP-4",
+      "cites": "OPS-DX-008 AC-4",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R3Test.kt::OPS-DX-008 AC-4 isFromTrustedProxy follows the documented table",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "every row of the request.md table and the unreadable-peer sentence hold."
+    },
+    {
+      "id": "LP-5",
+      "cites": "OPS-DX-008 AC-3",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R3Test.kt::OPS-DX-008 AC-3 headerNames and rawHeaders behave as request md states",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "lowercase first-seen names, raw case and duplicates kept, add/setValue throw UnsupportedOperationException."
+    },
+    {
+      "id": "LP-6",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R3Test.kt::OPS-DX-010 AC-3 a body read before the proxy gives 500 without connecting",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "a form read before the proxy gives 500 (BodyAlreadyConsumedException) and no backend connection, as proxy.md says."
+    },
+    {
+      "id": "LP-7",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R3Test.kt::OPS-DX-010 AC-3 a chunked body over bodyLimit reaches onError as an HttpException 413 with the overrun as cause",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "onError receives a plain HttpException 413 whose cause is BodyTooLargeException, as proxy.md says."
+    },
+    {
+      "id": "LP-8",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R3Test.kt::OPS-DX-010 AC-2 fixed request header rules follow the fixed headers section",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "the later of requestHeader/removeRequestHeader wins and requestHeader lines follow X-Forwarded-*."
+    }
+  ],
+  "summary": {
+    "tests_written": 8,
+    "kept": 1
+  },
+  "constraints": {
+    "C-005": {
+      "holds": true,
+      "note": "The wave's public API (Request.bodyStream/headerNames/rawHeaders/isFromTrustedProxy, RestApp.rawBodyLimit, the public BodyTooLargeException, Proxy and its options, ProxyException) is documented in docs/api ko and en with Express counterparts and Java and Kotlin examples; no (미확정) marker remains in proxy.md, request.md or app.md; internal links and anchors of the wave pages resolve. Not checked: mkdocs build --strict (toolchain not installed locally)."
+    }
+  },
+  "head": "e285957",
+  "diff_window": "9150c04e83b004ad22e989d041a327fb2625dd3f..1177893 + 56ba544 11e9618 2077a82 2e6822d"
+}
