@@ -131,15 +131,87 @@ public final class ReadmeDocsTest {
         return out;
     }
 
-    /** The coordinates ({@code group:artifactId}) of the module table rows of {@code docs/api/README.md}. */
-    static Set<String> apiModuleTable(String path) throws IOException {
-        Set<String> table = new TreeSet<>();
-        Matcher row = Pattern.compile("(?m)^\\| `[\\w-]+` \\| `(com\\.snoworca\\.naruserve:[\\w-]+)` \\|")
-                .matcher(read(path));
-        while (row.find()) {
-            table.add(row.group(1));
+    /** The head line of the module table of {@code docs/api/README.md}. */
+    static final String API_MODULE_TABLE_HEAD = "| 모듈 | 좌표 | 내용 | Android |";
+
+    /**
+     * The cells of a Markdown table line: the leading and trailing {@code |} are removed and the rest is split at every
+     * {@code |} outside a backtick code span (a {@code \|} stays in its cell). A line that does not start and end with
+     * {@code |} fails.
+     */
+    static List<String> cells(String where, String line) {
+        assertTrue(where + ": a table line starts and ends with |: " + line,
+                line.length() >= 2 && line.startsWith("|") && line.endsWith("|"));
+        List<String> out = new ArrayList<>();
+        StringBuilder cell = new StringBuilder();
+        boolean code = false;
+        String inner = line.substring(1, line.length() - 1);
+        for (int i = 0; i < inner.length(); i++) {
+            char c = inner.charAt(i);
+            if (c == '\\' && i + 1 < inner.length() && inner.charAt(i + 1) == '|') {
+                cell.append("\\|");
+                i++;
+                continue;
+            }
+            if (c == '`') {
+                code = !code;
+            }
+            if (c == '|' && !code) {
+                out.add(cell.toString().trim());
+                cell.setLength(0);
+            } else {
+                cell.append(c);
+            }
         }
-        return table;
+        assertFalse(where + ": a code span is left open: " + line, code);
+        out.add(cell.toString().trim());
+        return out;
+    }
+
+    /**
+     * The rows of the one table of {@code text} whose head line is {@code head}, as cells: every line after the
+     * delimiter line ({@code |---}) up to the first line that does not start with {@code |} is a row, and each row has
+     * as many cells as the head.
+     */
+    static List<List<String>> tableRows(String where, String text, String head) {
+        String[] lines = text.split("\n", -1);
+        int at = -1;
+        for (int i = 0; i < lines.length; i++) {
+            if (lines[i].equals(head)) {
+                assertTrue(where + ": one table is headed " + head, at < 0);
+                at = i;
+            }
+        }
+        assertTrue(where + ": a table is headed " + head, at >= 0);
+        assertTrue(where + ": the line after " + head + " is the delimiter line",
+                at + 1 < lines.length && lines[at + 1].startsWith("|---"));
+        int width = cells(where, head).size();
+        List<List<String>> rows = new ArrayList<>();
+        for (int i = at + 2; i < lines.length && lines[i].startsWith("|"); i++) {
+            List<String> c = cells(where, lines[i]);
+            assertEquals(where + ": cells of the table row " + lines[i], width, c.size());
+            rows.add(c);
+        }
+        return rows;
+    }
+
+    /**
+     * Every row of the module table of {@code docs/api/README.md}, in order, as {@code {module name, group:artifactId}}.
+     * The module cell must be exactly one backticked module name and the coordinate cell exactly
+     * {@code `com.snoworca.naruserve:<module name in lower case>`}, so a row in any other form fails here.
+     */
+    static List<String[]> apiModuleRows(String path) throws IOException {
+        List<String[]> rows = new ArrayList<>();
+        for (List<String> row : tableRows(path, read(path), API_MODULE_TABLE_HEAD)) {
+            String cell = row.get(0);
+            assertTrue(path + ": the module cell is one backticked module name: " + row,
+                    cell.matches("`NaruServe(-[A-Za-z0-9]+)?`"));
+            String module = cell.substring(1, cell.length() - 1);
+            String coordinate = "com.snoworca.naruserve:" + module.toLowerCase(Locale.ROOT);
+            assertEquals(path + ": the coordinate cell of the module " + module, "`" + coordinate + "`", row.get(1));
+            rows.add(new String[] {module, coordinate});
+        }
+        return rows;
     }
 
     // SDS-AC-9; OPS-REL-001 AC-1; OPS-DX-011 AC-5: README.md lists the coordinates of the module table rows the published
@@ -148,17 +220,27 @@ public final class ReadmeDocsTest {
     public void ops_REL_001_AC1_readmeListsTheTenCoordinatesOfTheApiModuleTableAndTheInstallLines()
             throws IOException {
         Set<String> published = publishedArtifacts();
+        // OPS-DX-011 AC-5: every line of the table block is a row (a row in another form fails in apiModuleRows), so a
+        // row that invents a module name fails here: eleven rows, no coordinate twice, each artifactId its module name
+        List<String[]> rows = apiModuleRows("docs/api/README.md");
+        assertEquals("rows (not distinct coordinates) of the module table of docs/api/README.md", 11, rows.size());
+        Set<String> coordinates = new TreeSet<>();
         Set<String> table = new TreeSet<>();
         Set<String> unpublished = new TreeSet<>();
-        for (String c : apiModuleTable("docs/api/README.md")) {
-            if (published.contains(c.substring(c.indexOf(':') + 1))) {
-                table.add(c + ":" + PUBLISHED_VERSION);
+        for (String[] r : rows) {
+            assertTrue("module table coordinate " + r[1] + " appears once", coordinates.add(r[1]));
+            if (published.contains(r[1].substring(r[1].indexOf(':') + 1))) {
+                table.add(r[1] + ":" + PUBLISHED_VERSION);
             } else {
-                unpublished.add(c);
+                unpublished.add(r[1]);
             }
         }
         assertEquals("module table rows of docs/api/README.md that " + PUBLISHED_VERSION + " contains", 10, table.size());
         assertEquals("every module the release staged has a row: " + published, published.size(), table.size());
+        // OPS-DX-011 AC-5; OPS-REL-001 AC-1: the only row the published release lacks is NaruServe-proxy, so the table
+        // is exactly the ten published rows plus naruserve-proxy
+        assertEquals("module table rows of docs/api/README.md that " + PUBLISHED_VERSION + " does not contain",
+                new TreeSet<>(Arrays.asList("com.snoworca.naruserve:naruserve-proxy")), unpublished);
         assertTrue(table.toString(), table.contains("com.snoworca.naruserve:naruserve-android:0.11.0"));
         String readme = read("README.md");
         Set<String> listed = new TreeSet<>();
@@ -181,8 +263,12 @@ public final class ReadmeDocsTest {
     // README coordinates are the published rows only and neither README gives naruserve-proxy a version
     @Test
     public void OPS_DX_011_AC5_proxyRowIsInTheTableButNotAmongThePublishedCoordinates() throws IOException {
-        assertTrue("docs/api/README.md has the naruserve-proxy row",
-                apiModuleTable("docs/api/README.md").contains("com.snoworca.naruserve:naruserve-proxy"));
+        Set<String> coordinates = new TreeSet<>();
+        for (String[] r : apiModuleRows("docs/api/README.md")) {
+            coordinates.add(r[1]);
+        }
+        assertTrue("docs/api/README.md has the naruserve-proxy row: " + coordinates,
+                coordinates.contains("com.snoworca.naruserve:naruserve-proxy"));
         assertFalse(PUBLISHED_RECORD + " does not stage naruserve-proxy", publishedArtifacts().contains("naruserve-proxy"));
         for (String f : new String[] {"README.md", "README.ko.md"}) {
             // the READMEs install published artifacts only; any form of a naruserve-proxy dependency (colon

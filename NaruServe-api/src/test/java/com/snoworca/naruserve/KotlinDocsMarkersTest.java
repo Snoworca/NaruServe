@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -22,10 +23,9 @@ public final class KotlinDocsMarkersTest {
      * The Kotlin test source roots that may hold docs-example markers; a missing one holds none. The proxy root holds
      * the marked runs of the proxy.md Kotlin blocks (OPS-DX-010 AC-12).
      */
-    private static final String[] KOTLIN_ROOTS = {
+    static final List<String> KOTLIN_ROOTS = Collections.unmodifiableList(Arrays.asList(
         "NaruServe-api/src/test/kotlin", "NaruServe-kotlin/src/test/kotlin", "NaruServe-servlet/src/test/kotlin",
-        "NaruServe-proxy/src/test/kotlin",
-    };
+        "NaruServe-proxy/src/test/kotlin"));
 
     private static File root() {
         return new File(System.getProperty("user.dir")).getParentFile();

@@ -1039,7 +1039,9 @@ public final class DocsExamplesCompileTest {
     public void OPS_DX_008_AC7_rawRequestJavaBlocksOfTheFourPagesCompile() throws IOException {
         List<String> diagnostics = docsDiagnostics();
         Map<String, String[]> membersByPage = new TreeMap<>();
-        String[] requestMembers = {".bodyStream()", ".bodyStream(", "instanceof BodyTooLargeException", ".headerNames()",
+        // ".bodyStream(64L" is the per-call limit form (bodyStream(long)) of the request pages' Java blocks; a bare
+        // ".bodyStream(" would already match ".bodyStream()"
+        String[] requestMembers = {".bodyStream()", ".bodyStream(64L", "instanceof BodyTooLargeException", ".headerNames()",
             ".rawHeaders()", ".isFromTrustedProxy()"};
         String[] appMembers = {".rawBodyLimit(", ".bodyStream("};
         membersByPage.put("request.md", requestMembers);

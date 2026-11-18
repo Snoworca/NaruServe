@@ -151,37 +151,158 @@ class ProxyDocsKotlinTest {
             "Express (`http-proxy-middleware`)")
     }
 
-    /** One option row: its signature, default per language, the exceptions it names and its http-proxy-middleware cell. */
-    private class OptionRow(val sig: String, val koDefault: String, val enDefault: String, val exceptions: List<String>,
-        val counterpart: String)
+    /**
+     * The cells of a Markdown table line: the leading and trailing `|` are removed and the rest is split at every `|`
+     * outside a backtick code span (a `\|` stays in its cell). A line that does not start and end with `|` fails.
+     */
+    private fun cells(where: String, line: String): List<String> {
+        assertTrue("$where: a table line starts and ends with |: $line", line.length >= 2 && line.startsWith("|") && line.endsWith("|"))
+        val out = ArrayList<String>()
+        val cell = StringBuilder()
+        var code = false
+        val inner = line.substring(1, line.length - 1)
+        var i = 0
+        while (i < inner.length) {
+            val c = inner[i]
+            if (c == '\\' && i + 1 < inner.length && inner[i + 1] == '|') {
+                cell.append("\\|")
+                i += 2
+                continue
+            }
+            if (c == '`') code = !code
+            if (c == '|' && !code) {
+                out.add(cell.toString().trim())
+                cell.setLength(0)
+            } else {
+                cell.append(c)
+            }
+            i++
+        }
+        assertFalse("$where: a code span is left open: $line", code)
+        out.add(cell.toString().trim())
+        return out
+    }
 
-    private val iae = listOf("`IllegalArgumentException`")
-    private val iaeNpe = listOf("`IllegalArgumentException`", "`NullPointerException`")
+    /**
+     * The rows of the one table of [text] whose head line is [head], as cells: every line after the delimiter line
+     * (`|---`) up to the first line that does not start with `|` is a row, and each row has as many cells as the head.
+     */
+    private fun table(where: String, text: String, head: String): List<List<String>> {
+        val lines = text.split("\n")
+        val heads = lines.withIndex().filter { it.value == head }.map { it.index }
+        assertEquals("$where tables headed $head", 1, heads.size)
+        assertTrue("$where: the line after $head is the delimiter line", lines.getOrElse(heads[0] + 1) { "" }.startsWith("|---"))
+        val width = cells(where, head).size
+        val out = ArrayList<List<String>>()
+        for (line in lines.drop(heads[0] + 2)) {
+            if (!line.startsWith("|")) break
+            val c = cells(where, line)
+            assertEquals("$where cells of the table row $line", width, c.size)
+            out.add(c)
+        }
+        return out
+    }
+
+    /**
+     * One option row: its signature cell and, per language, the whole default, range and exceptions, and
+     * http-proxy-middleware cells as the page states them.
+     */
+    private class OptionRow(val sig: String, val ko: List<String>, val en: List<String>)
+
+    // OPS-DX-010 AC-2 accepted ranges, as Proxy (FR-PROXY-002) checks them: timeouts above 0, retries and retryDelay
+    // 0 or more, bodyLimit 1..MAX_BODY_LIMIT, maxConcurrent 1 or more, header names checked by HeaderRules; each range
+    // cell names the exceptions the option throws
+    private val positiveKo = "0보다 커야 합니다. 0 이하는 `IllegalArgumentException`, `unit`이 `null`이면 `NullPointerException`"
+    private val positiveEn = "Must be above 0. 0 or less throws `IllegalArgumentException`, a `null` `unit` throws `NullPointerException`"
+    private val anyKo = "모든 값을 받습니다"
+    private val anyEn = "Accepts every value"
 
     private val optionRows = listOf(
-        OptionRow("`connectTimeout(long, TimeUnit)`", "| 10초 |", "| 10 seconds |", iaeNpe, "No counterpart"),
-        OptionRow("`writeTimeout(long, TimeUnit)`", "| 60초 |", "| 60 seconds |", iaeNpe, "No counterpart"),
-        OptionRow("`readTimeout(long, TimeUnit)`", "| 60초 |", "| 60 seconds |", iaeNpe, "`proxyTimeout`"),
-        OptionRow("`totalTimeout(long, TimeUnit)`", "| 5분 |", "| 5 minutes |", iaeNpe, "`timeout`"),
-        OptionRow("`retries(int)`", "| 0(재시도 없음) |", "| 0 (no retries) |", iae, "No counterpart"),
-        OptionRow("`retryDelay(long, TimeUnit)`", "| 200밀리초 |", "| 200 milliseconds |", iaeNpe, "No counterpart"),
-        OptionRow("`retryUnsafeMethods(boolean)`", "| `false` |", "| `false` |", emptyList(), "No counterpart"),
-        OptionRow("`stripPrefix(boolean)`", "| `false`(접두사를 남깁니다) |", "| `false` (the prefix is kept) |", emptyList(),
-            "`pathRewrite`"),
-        OptionRow("`preserveHost(boolean)`", "| `false`(대상 호스트를 `Host`로 보냅니다) |",
-            "| `false` (the target host is sent as `Host`) |", emptyList(), "`changeOrigin: false`"),
-        OptionRow("`bodyLimit(long)`", "| 앱의 `rawBodyLimit`(기본 1 MiB) |", "| The app's `rawBodyLimit` (default 1 MiB) |",
-            iae + "`1..1073741824`", "No counterpart"),
-        OptionRow("`maxConcurrent(int)`", "| 한도 없음 |", "| No limit |", iae, "`maxSockets`"),
-        OptionRow("`requestHeader(String, String)`", "| 없음 |", "| None |", iaeNpe, "`headers: { name: value }`"),
-        OptionRow("`removeRequestHeader(String)`", "| 없음 |", "| None |", iaeNpe, "`proxyReq.removeHeader(name)`"),
-        OptionRow("`responseHeader(String, String)`", "| 없음 |", "| None |", iaeNpe + "`Content-Length`",
-            "`proxyRes.headers[name] = value`"),
-        OptionRow("`removeResponseHeader(String)`", "| 없음 |", "| None |", iaeNpe + "`Content-Length`",
-            "`delete proxyRes.headers[name]`"),
-        OptionRow("`rewriteLocation(boolean)`", "| `true` |", "| `true` |", emptyList(), "`autoRewrite`"),
-        OptionRow("`sslSocketFactory(SSLSocketFactory)`", "| JDK 기본 팩토리 |", "| The JDK default factory |",
-            listOf("`NullPointerException`"), "`secure: false`"),
+        OptionRow("`connectTimeout(long, TimeUnit)`",
+            ko = listOf("10초", positiveKo,
+                "대응 옵션 없음"),
+            en = listOf("10 seconds", positiveEn,
+                "No counterpart")),
+        OptionRow("`writeTimeout(long, TimeUnit)`",
+            ko = listOf("60초", positiveKo,
+                "대응 옵션 없음"),
+            en = listOf("60 seconds", positiveEn,
+                "No counterpart")),
+        OptionRow("`readTimeout(long, TimeUnit)`",
+            ko = listOf("60초", positiveKo,
+                "`proxyTimeout`"),
+            en = listOf("60 seconds", positiveEn,
+                "`proxyTimeout`")),
+        OptionRow("`totalTimeout(long, TimeUnit)`",
+            ko = listOf("5분", positiveKo,
+                "대응 옵션 없음(`timeout`은 들어오는 소켓의 유휴 제한입니다)"),
+            en = listOf("5 minutes", positiveEn,
+                "No counterpart (`timeout` is the idle limit of the incoming socket)")),
+        OptionRow("`retries(int)`",
+            ko = listOf("0(재시도 없음)", "0 이상. 음수는 `IllegalArgumentException`",
+                "대응 옵션 없음(재시도 기능이 없습니다)"),
+            en = listOf("0 (no retries)", "0 or more. A negative value throws `IllegalArgumentException`",
+                "No counterpart (it has no retries)")),
+        OptionRow("`retryDelay(long, TimeUnit)`",
+            ko = listOf("200밀리초", "0 이상. 음수는 `IllegalArgumentException`, `unit`이 `null`이면 `NullPointerException`",
+                "대응 옵션 없음"),
+            en = listOf("200 milliseconds", "0 or more. A negative value throws `IllegalArgumentException`, a `null` `unit` throws `NullPointerException`",
+                "No counterpart")),
+        OptionRow("`retryUnsafeMethods(boolean)`",
+            ko = listOf("`false`", anyKo,
+                "대응 옵션 없음"),
+            en = listOf("`false`", anyEn,
+                "No counterpart")),
+        OptionRow("`stripPrefix(boolean)`",
+            ko = listOf("`false`(접두사를 남깁니다)", anyKo,
+                "`pathRewrite`, 또는 3.x에서 마운트 경로를 빼는 `app.use(path, ...)`"),
+            en = listOf("`false` (the prefix is kept)", anyEn,
+                "`pathRewrite`, or the 3.x `app.use(path, ...)` that removes the mount path")),
+        OptionRow("`preserveHost(boolean)`",
+            ko = listOf("`false`(대상 호스트를 `Host`로 보냅니다)", anyKo,
+                "`changeOrigin: false`(http-proxy-middleware의 기본값). NaruServe의 기본값은 `changeOrigin: true`에 해당합니다"),
+            en = listOf("`false` (the target host is sent as `Host`)", anyEn,
+                "`changeOrigin: false` (the http-proxy-middleware default). The NaruServe default corresponds to `changeOrigin: true`")),
+        OptionRow("`bodyLimit(long)`",
+            ko = listOf("앱의 `rawBodyLimit`(기본 1 MiB)", "`1..1073741824`(1 GiB). 밖이면 `IllegalArgumentException`",
+                "대응 옵션 없음"),
+            en = listOf("The app's `rawBodyLimit` (default 1 MiB)", "`1..1073741824` (1 GiB). Outside it throws `IllegalArgumentException`",
+                "No counterpart")),
+        OptionRow("`maxConcurrent(int)`",
+            ko = listOf("한도 없음", "1 이상. 0 이하는 `IllegalArgumentException`",
+                "대응 옵션 없음(`agent`의 `maxSockets`는 넘친 요청을 기다리게 합니다)"),
+            en = listOf("No limit", "1 or more. 0 or less throws `IllegalArgumentException`",
+                "No counterpart (the `maxSockets` of an `agent` makes excess requests wait)")),
+        OptionRow("`requestHeader(String, String)`",
+            ko = listOf("없음", "이름은 HTTP 토큰이면서 프록시가 관리하는 이름이 아니어야 하고, 값은 헤더 값이어야 합니다. 어기면 `IllegalArgumentException`, `null`이면 `NullPointerException`",
+                "`headers: { name: value }`"),
+            en = listOf("None", "The name must be an HTTP token that the proxy does not manage, and the value a header value. Otherwise `IllegalArgumentException`; `null` throws `NullPointerException`",
+                "`headers: { name: value }`")),
+        OptionRow("`removeRequestHeader(String)`",
+            ko = listOf("없음", "이름은 HTTP 토큰이면서 프록시가 관리하는 이름이 아니어야 합니다. 어기면 `IllegalArgumentException`, `null`이면 `NullPointerException`",
+                "`on.proxyReq`에서 `proxyReq.removeHeader(name)`"),
+            en = listOf("None", "The name must be an HTTP token that the proxy does not manage. Otherwise `IllegalArgumentException`; `null` throws `NullPointerException`",
+                "`proxyReq.removeHeader(name)` in `on.proxyReq`")),
+        OptionRow("`responseHeader(String, String)`",
+            ko = listOf("없음", "이름은 HTTP 토큰이면서 hop-by-hop 헤더나 `Content-Length`가 아니어야 하고, 값은 헤더 값이어야 합니다. 어기면 `IllegalArgumentException`, `null`이면 `NullPointerException`",
+                "`on.proxyRes`에서 `proxyRes.headers[name] = value`"),
+            en = listOf("None", "The name must be an HTTP token that is neither a hop-by-hop header nor `Content-Length`, and the value a header value. Otherwise `IllegalArgumentException`; `null` throws `NullPointerException`",
+                "`proxyRes.headers[name] = value` in `on.proxyRes`")),
+        OptionRow("`removeResponseHeader(String)`",
+            ko = listOf("없음", "이름은 HTTP 토큰이면서 hop-by-hop 헤더나 `Content-Length`가 아니어야 합니다. 어기면 `IllegalArgumentException`, `null`이면 `NullPointerException`",
+                "`on.proxyRes`에서 `delete proxyRes.headers[name]`"),
+            en = listOf("None", "The name must be an HTTP token that is neither a hop-by-hop header nor `Content-Length`. Otherwise `IllegalArgumentException`; `null` throws `NullPointerException`",
+                "`delete proxyRes.headers[name]` in `on.proxyRes`")),
+        OptionRow("`rewriteLocation(boolean)`",
+            ko = listOf("`true`", anyKo,
+                "`autoRewrite`, `hostRewrite`, `protocolRewrite`"),
+            en = listOf("`true`", anyEn,
+                "`autoRewrite`, `hostRewrite`, `protocolRewrite`")),
+        OptionRow("`sslSocketFactory(SSLSocketFactory)`",
+            ko = listOf("JDK 기본 팩토리", "`null`이면 `NullPointerException`. `http` 대상도 받지만 쓰지 않습니다",
+                "`agent`(예: `new https.Agent({ ca })`). `secure: false`에 해당하는 옵션은 없습니다"),
+            en = listOf("The JDK default factory", "`null` throws `NullPointerException`. An `http` target accepts it and never uses it",
+                "`agent` (for example `new https.Agent({ ca })`). Nothing corresponds to `secure: false`")),
     )
 
     @Test
@@ -191,18 +312,19 @@ class ProxyDocsKotlinTest {
             .filter { java.lang.reflect.Modifier.isPublic(it.modifiers) && it.returnType == Proxy::class.java && it.name != "to" }
             .map { it.name }.toSet()
         assertEquals(publicOptions, optionRows.map { it.sig.substring(1, it.sig.indexOf('(')) }.toSet())
-        for ((where, doc, heading) in listOf(Triple("proxy.md", ko(), "## 옵션"), Triple("en/proxy.md", en(), "## Options"))) {
-            val s = section(doc, heading)
-            for (o in optionRows) {
-                val r = row(where, s, "| ${o.sig} |")
-                has("$where ${o.sig}", r, if (where == "proxy.md") o.koDefault else o.enDefault, *o.exceptions.toTypedArray())
-                val cells = r.split(" | ")
-                assertEquals("$where ${o.sig} cells", 4, cells.size)
-                assertTrue("$where ${o.sig} counterpart ${o.counterpart}: $r",
-                    cells[3].contains(o.counterpart) || (o.counterpart == "No counterpart" && cells[3].contains("대응 옵션 없음")))
-                if (o.exceptions.isEmpty()) {
-                    has("$where ${o.sig}", r, if (where == "proxy.md") "모든 값을 받습니다" else "Accepts every value")
-                }
+        for ((where, s, head) in listOf(
+                Triple("proxy.md", section(ko(), "## 옵션"), "| 옵션 | 기본값 | 허용 범위와 예외 | http-proxy-middleware |"),
+                Triple("en/proxy.md", section(en(), "## Options"),
+                    "| Option | Default | Accepted range and exceptions | http-proxy-middleware |"))) {
+            // OPS-DX-010 AC-2: the whole table block is one row per option, in order, and every cell is compared whole,
+            // so a range with a different bound or an added exception ("... except `true`") fails here
+            val rows = table(where, s, head)
+            assertEquals("$where option table rows", optionRows.map { it.sig }, rows.map { it[0] })
+            for ((o, r) in optionRows.zip(rows)) {
+                val expected = if (where == "proxy.md") o.ko else o.en
+                assertEquals("$where ${o.sig} default", expected[0], r[1])
+                assertEquals("$where ${o.sig} accepted range and exceptions", expected[1], r[2])
+                assertEquals("$where ${o.sig} http-proxy-middleware counterpart", expected[2], r[3])
             }
         }
         has("proxy.md", section(ko(), "## 기본 사용"), "`Proxy`는 `Middleware`를 구현하므로",
@@ -233,6 +355,13 @@ class ProxyDocsKotlinTest {
         assertEquals(Proxy.NO_CONCURRENCY_LIMIT, p.maxConcurrent())
         assertEquals(Proxy.NO_BODY_LIMIT, p.bodyLimit())
         assertEquals(1073741824L, Proxy.MAX_BODY_LIMIT)
+        // the lower and upper ends of each stated range are accepted
+        assertEquals(0, p.retries(0).retries())
+        assertEquals(0L, p.retryDelay(0, TimeUnit.MILLISECONDS).retryDelayNanos())
+        assertEquals(1, p.maxConcurrent(1).maxConcurrent())
+        assertEquals(1L, p.bodyLimit(1).bodyLimit())
+        assertEquals(Proxy.MAX_BODY_LIMIT, p.bodyLimit(1073741824).bodyLimit())
+        assertEquals(1L, p.connectTimeout(1, TimeUnit.NANOSECONDS).connectTimeoutNanos())
         for (bad in listOf<() -> Any>({ p.connectTimeout(0, TimeUnit.SECONDS) }, { p.retries(-1) },
                 { p.retryDelay(-1, TimeUnit.MILLISECONDS) }, { p.bodyLimit(0) }, { p.bodyLimit(1073741825) },
                 { p.maxConcurrent(0) }, { p.requestHeader("host", "h") }, { p.responseHeader("Content-Length", "1") })) {

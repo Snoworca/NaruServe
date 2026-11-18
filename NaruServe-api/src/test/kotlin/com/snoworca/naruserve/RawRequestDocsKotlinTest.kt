@@ -319,7 +319,8 @@ class RawRequestDocsKotlinTest {
     fun `OPS-DX-008 AC-7 the Kotlin blocks of request md and app md have one marker each in both languages`() {
         val docs = sortedMapOf("request.md" to ko(), "en/request.md" to en(), "app.md" to koApp(), "en/app.md" to enApp())
         val sources = sortedMapOf<String, String>()
-        for (r in listOf("NaruServe-api/src/test/kotlin", "NaruServe-kotlin/src/test/kotlin", "NaruServe-servlet/src/test/kotlin")) {
+        // the same Kotlin test roots KotlinDocsMarkersTest scans, so a marked run under any of them counts here too
+        for (r in KotlinDocsMarkersTest.KOTLIN_ROOTS) {
             File(root(), r).walkTopDown().filter { it.isFile && it.name.endsWith(".kt") }
                 .forEach { sources["$r/${it.relativeTo(File(root(), r)).invariantSeparatorsPath}"] = it.readText() }
         }
