@@ -967,19 +967,10 @@ public final class Proxy implements Middleware {
                     laterRuleOfEachName(requestHeaderRules);
             this.ruledRequestNames = Collections.unmodifiableSet(new HashSet<>(requestResolved.keySet()));
             this.fixedRequestHeaders = valueRules(requestResolved);
-            Map<String, Map.Entry<String, @Nullable String>> resolved = laterRuleOfEachName(responseHeaderRules);
-            Set<String> hidden = new HashSet<>();
-            List<Map.Entry<String, String>> fixed = new ArrayList<>();
-            for (Map.Entry<String, Map.Entry<String, @Nullable String>> e : resolved.entrySet()) {
-                String value = e.getValue().getValue();
-                if (value == null) {
-                    hidden.add(e.getKey());
-                } else {
-                    fixed.add(new SimpleImmutableEntry<>(e.getValue().getKey(), value));
-                }
-            }
-            this.hiddenResponseNames = Collections.unmodifiableSet(hidden);
-            this.fixedResponseHeaders = Collections.unmodifiableList(fixed);
+            Map<String, Map.Entry<String, @Nullable String>> responseResolved =
+                    laterRuleOfEachName(responseHeaderRules);
+            this.hiddenResponseNames = removalNames(responseResolved);
+            this.fixedResponseHeaders = valueRules(responseResolved);
             this.rewriteLocation = rewriteLocation;
             this.sslSocketFactory = sslSocketFactory;
         }
@@ -1004,6 +995,7 @@ public final class Proxy implements Middleware {
 
         /** The (name, value) of each resolved rule that sets a value, in map order; the removals are left out. */
         // @req FR-PROXY-005
+        // @req FR-PROXY-012
         private static List<Map.Entry<String, String>> valueRules(
                 Map<String, Map.Entry<String, @Nullable String>> resolved) {
             List<Map.Entry<String, String>> values = new ArrayList<>();
@@ -1014,6 +1006,18 @@ public final class Proxy implements Middleware {
                 }
             }
             return Collections.unmodifiableList(values);
+        }
+
+        /** The lower-case name of each resolved rule that is a removal; the value rules are left out. */
+        // @req FR-PROXY-012
+        private static Set<String> removalNames(Map<String, Map.Entry<String, @Nullable String>> resolved) {
+            Set<String> names = new HashSet<>();
+            for (Map.Entry<String, Map.Entry<String, @Nullable String>> e : resolved.entrySet()) {
+                if (e.getValue().getValue() == null) {
+                    names.add(e.getKey());
+                }
+            }
+            return Collections.unmodifiableSet(names);
         }
 
         /** Every option at its default. */
