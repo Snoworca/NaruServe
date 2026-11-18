@@ -101,7 +101,7 @@ public class ProxyRequestFramingTest {
 
     /**
      * Sends {@code request} to a proxy whose target is {@code https} on a listener that counts connections; asserts
-     * the status and that none opened. The framing answer comes before the https placeholder (502) of the proxy.
+     * the status and that none opened. The framing answer comes before any backend connection, https included.
      */
     private void assertHttpsAnswersWithoutConnection(int status, ClientRequest request) throws IOException {
         ConnectionCounter backend = counter();
@@ -235,7 +235,7 @@ public class ProxyRequestFramingTest {
                 post(HELLO, "Transfer-Encoding", "gzip", "Transfer-Encoding", "chunked"));
     }
 
-    // ---- https target: the framing answer comes before the https placeholder ----
+    // ---- https target: the framing answer comes before the backend connection ----
 
     // SEC-PROXY-003 AC-1: Content-Length with Transfer-Encoding is 400 for an https target too, without connecting
     @Test
@@ -256,11 +256,18 @@ public class ProxyRequestFramingTest {
         assertHttpsAnswersWithoutConnection(501, post(HELLO, "Transfer-Encoding", "gzip, chunked"));
     }
 
-    // SEC-PROXY-003 AC-2: a well-framed request (Content-Length: 5) to an https target still meets the https
-    // placeholder, 502, until the TLS requirement (SEC-PROXY-005) arrives
+    // SEC-PROXY-003 AC-2: a well-framed request (Content-Length: 5) to an https target passes the framing check and
+    // is forwarded: since the TLS requirement (SEC-PROXY-005) it opens exactly one connection, and the counting
+    // listener, which speaks no TLS, makes the handshake fail with 502
     @Test
     public void sec_PROXY_003_AC2_httpsTargetWellFramedRequestStillGives502() throws IOException {
-        assertHttpsAnswersWithoutConnection(502, post(HELLO, "Content-Length", "5"));
+        ConnectionCounter backend = counter();
+        mount(backend.httpsUrl());
+
+        ClientResponse r = adapter.send(post(HELLO, "Content-Length", "5"));
+
+        assertEquals("status", 502, r.status());
+        assertEquals("backend connections opened", 1, backend.connectionsBeforeSentinel());
     }
 
     // ---- AC-5 ----
