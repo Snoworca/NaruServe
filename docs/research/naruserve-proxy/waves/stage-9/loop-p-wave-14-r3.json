@@ -1,0 +1,138 @@
+{
+  "wave": "wave-14",
+  "round": 3,
+  "verifier": "loop-p-wave-14-r3",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "SEC-PROXY-005 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave14R3Test.java::cnOnlyCertificateRejectedWithIdentificationOn",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "CN=localhost leaf without SAN from the private CA, JDK identification on (which falls back to CN): 502 CONNECT_FAILED, 0 request bytes"
+    },
+    {
+      "id": "LP-2",
+      "cites": "SEC-PROXY-005 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave14R3Test.java::nonLeafSanIsNotUsedWithReflectionOff",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "intermediate CA with SAN dns:localhost signing a leaf for other.example only: 502 CONNECT_FAILED; only chain[0] is matched"
+    },
+    {
+      "id": "LP-3",
+      "cites": "SEC-PROXY-005 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave14R3Test.java::multipleSansMatchTheDnsEntryWithReflectionOff",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "leaf with dns:a.example, ip:10.0.0.1, dns:localhost reached via https://LocalHost (case-insensitive) with the built-in matcher alone"
+    },
+    {
+      "id": "LP-4",
+      "cites": "SEC-PROXY-005 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave14R3Test.java::wildcardReachesOneLabelWithReflectionOff",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "*.example.test reaches a.example.test (resolver seam to loopback)"
+    },
+    {
+      "id": "LP-5",
+      "cites": "SEC-PROXY-005 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave14R3Test.java::wildcardRejectsTwoLabelsWithReflectionOff",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "*.example.test does not reach a.b.example.test: 502 CONNECT_FAILED, no request bytes"
+    },
+    {
+      "id": "LP-6",
+      "cites": "SEC-PROXY-005 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave14R3Test.java::ipv6LiteralTargetReachesItsIpAddressEntry",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "https://[0:0:0:0:0:0:0:1] reaches a backend on ::1 with iPAddress ::1 (IPv6 loopback available, not skipped)"
+    },
+    {
+      "id": "LP-7",
+      "cites": "SEC-PROXY-005 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave14R3Test.java::ipv6LiteralTargetDoesNotMatchADnsName",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "https://[::1] against a dNSName-only localhost certificate: 502 CONNECT_FAILED"
+    },
+    {
+      "id": "LP-8",
+      "cites": "SEC-PROXY-005 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave14R3Test.java::ipv4MappedTargetIsNotTheIpv4Entry",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "https://[::ffff:127.0.0.1] against iPAddress 127.0.0.1: 502 CONNECT_FAILED (octet comparison; stricter than the JDK layer, fail-closed, contract silent)"
+    },
+    {
+      "id": "LP-9",
+      "cites": "SEC-PROXY-005 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave14R3Test.java::trailingDotTargetReachesWithIdentificationOn",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "https://localhost.:<port> reaches dNSName localhost with both layers on"
+    },
+    {
+      "id": "LP-10",
+      "cites": "SEC-PROXY-005 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave14R3Test.java::matcherFailsClosedOnOddSessionsAndLookAlikes",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "empty or null peer chain rejected; LOCALHOST accepted; non-ASCII look-alikes (long s, dotless i) rejected; leaf-first chain with a naming intermediate rejected"
+    },
+    {
+      "id": "LP-11",
+      "cites": "SEC-PROXY-005 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave14R3Test.java::hugeTotalTimeoutStillReachesTheBackend",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "totalTimeout(Long.MAX_VALUE, DAYS): deadline arithmetic wraps consistently, watchdog does not fire at once; request reached"
+    },
+    {
+      "id": "LP-12",
+      "cites": "CON-BUILD-020 AC-4",
+      "test": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java::lpW14R3_con_BUILD_020_AC4_arrayOnlyInternalReferenceFails",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "TestKit probe whose only internal reference is the array class constant [Lcom/snoworca/naruserve/internal/DefaultRequest; fails checkClassReferences naming the class and reference (descriptor regex catches it)"
+    },
+    {
+      "id": "LP-13",
+      "cites": "CON-BUILD-020 AC-2",
+      "test": ":NaruServe-proxy:check (animalsnifferMain, checkClassReferences, all proxy tests) and :NaruServe-proxy:dependencies runtimeClasspath",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "BUILD SUCCESSFUL; runtimeClasspath is project :NaruServe-api only; no existing test written, recorded as a check"
+    },
+    {
+      "id": "LP-14",
+      "cites": "OPS-BUILD-004 AC-1",
+      "test": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java::ops_BUILD_004_AC1_claudeMdModuleLineNamesTheProxy",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "existing test re-run at 4c0bfdf; the full Maven-mode build of AC-2 was not re-run here (brief limits runs to affected test tasks)"
+    }
+  ],
+  "summary": {
+    "tests_written": 12,
+    "kept": 0
+  },
+  "notes": "Integration head 4c0bfdf. CertificateHostnames reviewed for wildcard (whole leftmost label, one label), ASCII-only case folding, one trailing dot, IPv4/IPv6 parsing incl. IPv4 tail and zone ids, SAN-only (no CN), leaf-only, null/empty peer chains; TlsConnector runs the held verifier after every handshake before any request byte, with no public switch. No red test found. Wave-15/16/17 behaviour not probed."
+}
