@@ -257,6 +257,8 @@ public class BuildChecksTest {
 
     // SDS-AC-10; CON-BUILD-013 AC-1, CON-BUILD-013 AC-2, CON-BUILD-013 AC-3, CON-BUILD-007 AC-3, CON-BUILD-012 AC-1, OPS-BUILD-002 AC-3
     // CON-BUILD-019 AC-2: NaruServe-proxy joins the API 21 checks through naruModules
+    // CON-BUILD-020 AC-1, CON-BUILD-020 AC-3: build runs animal-sniffer and the class-reference check on the eight
+    // Android-targeted modules, NaruServe-proxy included
     @Test
     public void con_BUILD_013_buildRunsTheChecks() {
         String out = runner("-m", "build").build().getOutput();
@@ -557,6 +559,133 @@ public class BuildChecksTest {
         BuildResult sniffed = runner(":NaruServe-filelog:animalsnifferMain").buildAndFail();
         assertEquals(TaskOutcome.FAILED, sniffed.task(":NaruServe-filelog:animalsnifferMain").getOutcome());
         assertTrue(sniffed.getOutput(), sniffed.getOutput().contains("java.util.Optional"));
+    }
+
+    // CON-BUILD-020 AC-1, CON-BUILD-020 AC-2, CON-BUILD-020 AC-4 — :NaruServe-proxy passes animal-sniffer and the
+    // class-reference check on its own sources, and a main class there using an API absent from API 21 fails the check
+    @Test
+    public void con_BUILD_020_AC1_AC2_proxyPassesAndIsGuardedByTheApi21AnimalSniffer() throws IOException {
+        BuildResult clean = runner(":NaruServe-proxy:animalsnifferMain", ":NaruServe-proxy:checkClassReferences").build();
+        assertEquals(TaskOutcome.SUCCESS, clean.task(":NaruServe-proxy:animalsnifferMain").getOutcome());
+        assertEquals(TaskOutcome.SUCCESS, clean.task(":NaruServe-proxy:checkClassReferences").getOutcome());
+        addSource("NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/probe/UsesOptional.java",
+                "package com.snoworca.naruserve.proxy.probe;\n"
+                        + "public class UsesOptional { public Object none() { return java.util.Optional.empty(); } }\n");
+        BuildResult sniffed = runner(":NaruServe-proxy:animalsnifferMain").buildAndFail();
+        assertEquals(TaskOutcome.FAILED, sniffed.task(":NaruServe-proxy:animalsnifferMain").getOutcome());
+        assertTrue(sniffed.getOutput(), sniffed.getOutput().contains("java.util.Optional"));
+    }
+
+    // CON-BUILD-020 AC-2 — no main source of NaruServe-proxy carries an animal-sniffer suppression annotation, and the
+    // root build declares no animal-sniffer ignore entry
+    @Test
+    public void con_BUILD_020_AC2_proxyHasNoAnimalSnifferExemption() throws IOException {
+        List<File> sources = new ArrayList<>();
+        collectJava(new File(root, "NaruServe-proxy/src/main/java"), sources);
+        assertTrue(sources.toString(), sources.size() > 1);
+        for (File f : sources) {
+            String text = BuildLayoutTest.read(f);
+            assertFalse(f.getPath(), text.contains("IgnoreJRERequirement"));
+            assertFalse(f.getPath(), text.contains("animal_sniffer"));
+            assertFalse(f.getPath(), text.contains("animalsniffer"));
+        }
+        String build = BuildLayoutTest.read(new File(root, "build.gradle"));
+        java.util.regex.Matcher blocks = java.util.regex.Pattern.compile("animalsniffer \\{([^}]*)}").matcher(build);
+        int found = 0;
+        while (blocks.find()) {
+            found++;
+            assertFalse(blocks.group(1), blocks.group(1).contains("ignore"));
+            assertFalse(blocks.group(1), blocks.group(1).contains("annotation"));
+        }
+        assertEquals("animalsniffer blocks in build.gradle", 1, found);
+        assertFalse(build.contains("IgnoreJRERequirement"));
+    }
+
+    private static void collectJava(File dir, List<File> into) {
+        File[] children = dir.listFiles();
+        if (children != null) {
+            for (File c : children) {
+                if (c.isDirectory()) {
+                    collectJava(c, into);
+                } else if (c.getName().endsWith(".java")) {
+                    into.add(c);
+                }
+            }
+        }
+    }
+
+    // CON-BUILD-020 AC-3 — a NaruServe-proxy main class referencing javax.servlet fails the class-reference check,
+    // which names the class and the reference
+    @Test
+    public void con_BUILD_020_AC3_proxyMainReferencingServletFails() throws IOException {
+        addSource("NaruServe-proxy/src/main/java/javax/servlet/Servlet.java",
+                "package javax.servlet;\npublic interface Servlet { }\n");
+        addSource("NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/probe/UsesServlet.java",
+                "package com.snoworca.naruserve.proxy.probe;\n"
+                        + "public class UsesServlet { public javax.servlet.Servlet servlet; }\n");
+        String out = runner(":NaruServe-proxy:checkClassReferences").buildAndFail().getOutput();
+        assertTrue(out, out.contains("com/snoworca/naruserve/proxy/probe/UsesServlet -> javax/servlet/Servlet"));
+    }
+
+    // CON-BUILD-020 AC-4, CON-BUILD-020 AC-6 — a NaruServe-proxy main class referencing
+    // com.snoworca.naruserve.internal.DefaultRequest fails the class-reference check that build runs
+    @Test
+    public void con_BUILD_020_AC4_AC6_proxyMainReferencingTheInternalPackageFails() throws IOException {
+        addSource("NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/probe/UsesInternal.java",
+                "package com.snoworca.naruserve.proxy.probe;\n"
+                        + "public class UsesInternal { public com.snoworca.naruserve.internal.DefaultRequest request; }\n");
+        BuildResult failed = runner(":NaruServe-proxy:checkClassReferences").buildAndFail();
+        assertEquals(TaskOutcome.FAILED, failed.task(":NaruServe-proxy:checkClassReferences").getOutcome());
+        String out = failed.getOutput();
+        assertTrue(out, out.contains(
+                "com/snoworca/naruserve/proxy/probe/UsesInternal -> com/snoworca/naruserve/internal/DefaultRequest"));
+        // The proxy's own package is not the forbidden internal prefix: only the probe is named.
+        assertFalse(out, out.contains("com/snoworca/naruserve/proxy/Proxy ->"));
+    }
+
+    // CON-BUILD-020 AC-4, CON-BUILD-020 AC-6 — a NaruServe-proxy main class referencing
+    // com.snoworca.naruserve.spi.HttpExchange, in a method descriptor only, fails the class-reference check
+    @Test
+    public void con_BUILD_020_AC4_AC6_proxyMainReferencingTheSpiPackageFails() throws IOException {
+        addSource("NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/probe/UsesSpi.java",
+                "package com.snoworca.naruserve.proxy.probe;\n"
+                        + "public abstract class UsesSpi { public abstract void take(com.snoworca.naruserve.spi.HttpExchange e); }\n");
+        BuildResult failed = runner(":NaruServe-proxy:checkClassReferences").buildAndFail();
+        assertEquals(TaskOutcome.FAILED, failed.task(":NaruServe-proxy:checkClassReferences").getOutcome());
+        assertTrue(failed.getOutput(), failed.getOutput().contains(
+                "com/snoworca/naruserve/proxy/probe/UsesSpi -> com/snoworca/naruserve/spi/HttpExchange"));
+    }
+
+    // CON-BUILD-020 AC-5 — NaruServe-proxy main classes referencing android/, com/google/gson/,
+    // com/snoworca/tinyhttpd/ or kotlin/ fail the class-reference check, anchored at the start of the name so
+    // com/snoworca/naruserve/kotlin/ is not a hit (source stubs stand in for the platform and adapter types)
+    @Test
+    public void con_BUILD_020_AC5_proxyMainReferencingPlatformAndAdapterTypesFails() throws IOException {
+        addSource("NaruServe-proxy/src/main/java/android/util/Log.java",
+                "package android.util;\npublic final class Log { }\n");
+        addSource("NaruServe-proxy/src/main/java/com/google/gson/Gson.java",
+                "package com.google.gson;\npublic final class Gson { }\n");
+        addSource("NaruServe-proxy/src/main/java/com/snoworca/tinyhttpd/TinyHttpd.java",
+                "package com.snoworca.tinyhttpd;\npublic class TinyHttpd { }\n");
+        addSource("NaruServe-proxy/src/main/java/kotlin/Unit.java",
+                "package kotlin;\npublic final class Unit { }\n");
+        addSource("NaruServe-proxy/src/main/java/com/snoworca/naruserve/kotlin/Marker.java",
+                "package com.snoworca.naruserve.kotlin;\npublic class Marker { }\n");
+        addSource("NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/probe/UsesPlatform.java",
+                "package com.snoworca.naruserve.proxy.probe;\n"
+                        + "public class UsesPlatform {\n"
+                        + "  public android.util.Log log;\n"
+                        + "  public com.google.gson.Gson gson;\n"
+                        + "  public com.snoworca.tinyhttpd.TinyHttpd engine;\n"
+                        + "  public kotlin.Unit unit;\n"
+                        + "  public com.snoworca.naruserve.kotlin.Marker marker;\n"
+                        + "}\n");
+        String out = runner(":NaruServe-proxy:checkClassReferences").buildAndFail().getOutput();
+        for (String ref : Arrays.asList("android/util/Log", "com/google/gson/Gson", "com/snoworca/tinyhttpd/TinyHttpd",
+                "kotlin/Unit")) {
+            assertTrue(ref + "\n" + out, out.contains("com/snoworca/naruserve/proxy/probe/UsesPlatform -> " + ref));
+        }
+        assertFalse(out, out.contains("-> com/snoworca/naruserve/kotlin/Marker"));
     }
 
     // SDS-AC-9, SDS-AC-10, SDS-AC-11; CON-KT-001 AC-1, CON-KT-001 AC-2, CON-KT-001 AC-3

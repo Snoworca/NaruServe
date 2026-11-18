@@ -635,10 +635,7 @@ public class BuildLayoutTest {
         }
         assertNotNull("CLAUDE.md has a '- 모듈:' line", moduleLine);
         for (String module : MODULES) {
-            // OPS-BUILD-003 AC-3 expired for 0.12.0; OPS-BUILD-004 AC-1 adds NaruServe-proxy to the module line.
-            if (module.equals(PROXY_MODULE)) {
-                continue;
-            }
+            // OPS-BUILD-004 AC-1 adds NaruServe-proxy to the module line (OPS-BUILD-003 AC-3 expired for 0.12.0).
             assertTrue("module line names " + module, moduleLine.contains("`" + module + "`"));
         }
         // AC-3: the Android library module, built only when an Android SDK resolves (FR-BUILD-001).
@@ -648,6 +645,53 @@ public class BuildLayoutTest {
         assertTrue(moduleLine.contains("JVM 전용"));
         assertFalse(claude.contains("rest-kotlin"));
         assertFalse(read(new File(ROOT, "docs/api/kotlin.md")).contains("rest-kotlin"));
+    }
+
+    // OPS-BUILD-004 AC-1: the CLAUDE.md module line lists the eleven modules, marks the eight API 21 check targets,
+    // NaruServe-servlet JVM-only and NaruServe-android as the AAR built with an SDK, and describes NaruServe-proxy as
+    // the reverse proxy module on NaruServe-api only that no other module includes
+    @Test
+    public void ops_BUILD_004_AC1_claudeMdModuleLineNamesTheProxy() throws IOException {
+        String moduleLine = null;
+        for (String line : read(new File(ROOT, "CLAUDE.md")).split("\n")) {
+            if (line.startsWith("- 모듈:")) {
+                assertNull("one '- 모듈:' line", moduleLine);
+                moduleLine = line;
+            }
+        }
+        assertNotNull("CLAUDE.md has a '- 모듈:' line", moduleLine);
+        // The module part of the line ends where the root project (`NaruServe-build`) is named.
+        int root = moduleLine.indexOf("루트 프로젝트 이름");
+        assertTrue(moduleLine, root > 0);
+        Set<String> named = new TreeSet<>();
+        Matcher m = Pattern.compile("`(NaruServe(?:-[a-z0-9]+)?)`").matcher(moduleLine.substring(0, root));
+        while (m.find()) {
+            named.add(m.group(1));
+        }
+        Set<String> expected = new TreeSet<>(MODULES);
+        expected.add(ANDROID_MODULE);
+        assertEquals("the eleven modules", 11, expected.size());
+        assertEquals(moduleLine, expected, named);
+
+        int api21 = moduleLine.indexOf("이 여덟은 API 21 검사 대상");
+        assertTrue(moduleLine, api21 > 0);
+        String targets = moduleLine.substring(0, api21);
+        for (String module : Arrays.asList("NaruServe-api", "NaruServe", "NaruServe-tinyhttpd", "NaruServe-gson",
+                "NaruServe-kotlin", "NaruServe-logcat", "NaruServe-filelog", PROXY_MODULE)) {
+            assertTrue("API 21 target " + module, targets.contains("`" + module + "`"));
+        }
+        for (String module : Arrays.asList("NaruServe-servlet", "NaruServe-slf4j", ANDROID_MODULE)) {
+            assertFalse("not an API 21 target: " + module, targets.contains("`" + module + "`"));
+        }
+        assertTrue(moduleLine, moduleLine.contains("`NaruServe-servlet`(JVM 전용"));
+        assertTrue(moduleLine, moduleLine.contains("`" + ANDROID_MODULE + "`(")
+                && moduleLine.contains("Android 라이브러리 AAR") && moduleLine.contains("Android SDK가 있을 때만"));
+        int proxy = moduleLine.indexOf("`" + PROXY_MODULE + "`(");
+        assertTrue(moduleLine, proxy > 0);
+        String proxyNote = moduleLine.substring(proxy, moduleLine.indexOf(')', proxy) + 1);
+        assertTrue(proxyNote, proxyNote.contains("리버스 프록시"));
+        assertTrue(proxyNote, proxyNote.contains("`NaruServe-api`에만 의존"));
+        assertTrue(proxyNote, proxyNote.contains("다른 모듈은 이 모듈을 포함하지 않는다"));
     }
 
     // CON-HTTP-001 AC-2, CON-HTTP-001 AC-3

@@ -13,7 +13,6 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
@@ -372,10 +371,6 @@ public final class Proxy implements Middleware {
         BackendRequest.checkClientHeaders(req.rawHeaders());
         @Nullable String receivedHost = BackendRequest.receivedHost(req.rawHeaders());
         long declaredFraming = requestBodyLength(req);
-        if (!"http".equals(target.scheme)) {
-            // https backends arrive with the TLS requirement (SEC-PROXY-005); until then they are not reached.
-            throw new HttpException(502);
-        }
         try {
             forward(req, res, prepare(req, requestTarget, declaredFraming, receivedHost));
         } catch (RequestBodyCopier.ClientBodyFailure f) {
@@ -386,11 +381,14 @@ public final class Proxy implements Middleware {
     // @req IR-PROXY-001
     // @req FR-PROXY-011
     // @req FR-PROXY-007
+    // @req SEC-PROXY-005
     private void forward(Request req, Response res, Outgoing outgoing) {
-        Socket socket = new Socket();
+        @Nullable Socket socket = null;
         boolean relayed = false;
         try {
-            socket.connect(new InetSocketAddress(target.host, target.port), connectTimeoutMillis());
+            // Plain for http; TLS-layered and verified for https, whose failures are ProxyExceptions (SEC-PROXY-005).
+            socket = BackendClient.open(target, connectTimeoutMillis(), options.totalTimeoutNanos,
+                    options.sslSocketFactory);
             socket.setSoTimeout(readTimeoutMillis());
             OutputStream out = new BufferedOutputStream(socket.getOutputStream());
             out.write(outgoing.head);
@@ -420,7 +418,7 @@ public final class Proxy implements Middleware {
             // A null message: the default error handler echoes non-500 messages, which would name the backend.
             throw new HttpException(502, null, e);
         } finally {
-            if (!relayed) {
+            if (!relayed && socket != null) {
                 closeQuietly(socket);
             }
             closeQuietly(outgoing.body);
