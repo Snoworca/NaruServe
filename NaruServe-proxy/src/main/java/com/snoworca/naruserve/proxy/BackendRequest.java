@@ -222,13 +222,17 @@ final class BackendRequest {
     /**
      * The client header lines to forward, in received order with duplicates and the reported name letters: without
      * the names in {@link HeaderRules#REQUEST_NOT_FORWARDED}, the forwarding names of
-     * {@link #CLIENT_FORWARDING_NAMES} and those listed in a {@code Connection} line, and with
-     * every {@code Cookie} line joined by {@code "; "} into one line at the position (and with the name letters) of
-     * the first. The lines must have passed {@link #checkClientHeaders}.
+     * {@link #CLIENT_FORWARDING_NAMES}, those listed in a {@code Connection} line and the lower-case
+     * {@code ruledNames} of the {@code .requestHeader} and {@code .removeRequestHeader} rules (FR-PROXY-005), and with
+     * every remaining {@code Cookie} line joined by {@code "; "} into one line at the position (and with the name
+     * letters) of the first; a ruled {@code Cookie} leaves no client {@code Cookie} line to merge. The lines must have
+     * passed {@link #checkClientHeaders}.
      */
     // @req FR-PROXY-003
     // @req SEC-PROXY-002
-    static List<Map.Entry<String, String>> forwardedClientHeaders(List<Map.Entry<String, String>> rawHeaders) {
+    // @req FR-PROXY-005
+    static List<Map.Entry<String, String>> forwardedClientHeaders(List<Map.Entry<String, String>> rawHeaders,
+            Set<String> ruledNames) {
         Set<String> connectionNames = HeaderRules.connectionNames(rawHeaders);
         List<Map.Entry<String, String>> out = new ArrayList<>(rawHeaders.size());
         int cookieAt = -1;
@@ -237,7 +241,7 @@ final class BackendRequest {
         for (Map.Entry<String, String> h : rawHeaders) {
             String lower = h.getKey().toLowerCase(Locale.ROOT);
             if (HeaderRules.REQUEST_NOT_FORWARDED.contains(lower) || CLIENT_FORWARDING_NAMES.contains(lower)
-                    || connectionNames.contains(lower)) {
+                    || connectionNames.contains(lower) || ruledNames.contains(lower)) {
                 continue;
             }
             if (!lower.equals("cookie")) {
