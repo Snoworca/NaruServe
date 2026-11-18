@@ -105,9 +105,11 @@ def configureDependencies = { Project p ->
 
 // @req CON-BUILD-008
 // @req CON-BUILD-013
-// Constant-pool scan: CONSTANT_Class names and `L<name>;` descriptors whose internal name starts with a prefix.
-def scanClassRefs = { FileCollection classesDirs, List<String> prefixes ->
-    def forbidden = { String name -> prefixes.any { name.startsWith(it) } }
+// @req CON-BUILD-020
+// Constant-pool scan: CONSTANT_Class names and `L<name>;` descriptors whose internal name starts with a prefix, or,
+// for a Closure entry of `prefixes`, for which that predicate on the internal name answers true.
+def scanClassRefs = { FileCollection classesDirs, List prefixes ->
+    def forbidden = { String name -> prefixes.any { it instanceof Closure ? it(name) : name.startsWith((String) it) } }
     def hits = new TreeSet<String>()
     classesDirs.asFileTree.matching { include '**/*.class' }.files.each { File f ->
         new DataInputStream(new BufferedInputStream(new FileInputStream(f))).withCloseable { DataInputStream input ->
@@ -164,12 +166,19 @@ def classRefPrefixes = { String path ->
         prefixes += ['jakarta/servlet/']
     }
     // @req CON-BUILD-020
-    // The proxy uses only the public API of NaruServe-api: not its internal or SPI packages, and no platform,
-    // JSON, engine or Kotlin type. Prefixes match from the start of the name, so com/snoworca/naruserve/proxy/ is
-    // not com/snoworca/naruserve/internal/ and com/snoworca/naruserve/kotlin/ is not kotlin/.
+    // The proxy uses only the public API of NaruServe-api: no com/snoworca/naruserve/ package with an `internal` or
+    // `spi` segment at any depth (internal/, spi/ and any nested .../internal/ package), and no platform, JSON, engine or Kotlin
+    // type. Prefixes match from the start of the name, so com/snoworca/naruserve/kotlin/ is not kotlin/; the segment
+    // rule compares whole package segments, so com/snoworca/naruserve/proxy/ and a segment like `internals` pass.
     if (path == ':NaruServe-proxy') {
-        prefixes += ['com/snoworca/naruserve/internal/', 'com/snoworca/naruserve/spi/', 'android/',
-                     'com/google/gson/', 'com/snoworca/tinyhttpd/', 'kotlin/']
+        def internalOrSpiPackage = { String name ->
+            if (!name.startsWith('com/snoworca/naruserve/')) {
+                return false
+            }
+            def segments = name.split('/') as List<String>
+            segments.subList(0, segments.size() - 1).any { it == 'internal' || it == 'spi' }
+        }
+        prefixes += [internalOrSpiPackage, 'android/', 'com/google/gson/', 'com/snoworca/tinyhttpd/', 'kotlin/']
     }
     prefixes
 }
