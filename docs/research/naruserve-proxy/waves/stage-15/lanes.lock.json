@@ -1,0 +1,51 @@
+{
+  "lane_cap": 4,
+  "depends": {
+    "2026-11-14.NaruServe.naruserve-proxy-wave-21": []
+  },
+  "declaration": "docs/research/naruserve-proxy/waves/waves.json",
+  "declaration_digests": {
+    "2026-11-14.NaruServe.naruserve-proxy-wave-21": "8b5a8c52cdb3d7c71bef2f5ff13d2726ec96350afc5164d3364f65c43b698b88"
+  },
+  "sds_digests": {},
+  "lane_count": 1,
+  "stage_count": 1,
+  "lanes": [
+    {
+      "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-21",
+      "stage": 1,
+      "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-21",
+      "sds": null,
+      "writeSet": [
+        "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+        "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt",
+        "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+        "README.ko.md",
+        "README.md",
+        "build.gradle",
+        "docs/api/README.md",
+        "docs/api/app.md",
+        "docs/api/en/README.md",
+        "docs/api/en/app.md",
+        "docs/api/en/proxy.md",
+        "docs/api/en/request.md",
+        "docs/api/proxy.md",
+        "docs/api/request.md",
+        "mkdocs.en.yml",
+        "mkdocs.yml",
+        "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+        "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java",
+        "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java"
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "index": 1,
+      "laneIds": [
+        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-21"
+      ]
+    }
+  ],
+  "conflicts": []
+}
