@@ -42,6 +42,8 @@ final class ResponseParser {
     /** One final response head: its status, its header lines and its framing header values. */
     static final class Head {
         final int status;
+        /** Whether the status line is {@code HTTP/1.0}; such a response cannot carry Transfer-Encoding. */
+        final boolean http10;
         /** The header lines in received order, duplicates kept: the name as received, the value without OWS. */
         final List<Map.Entry<String, String>> headers;
         /** The values of every {@code Content-Length} line, in received order. */
@@ -49,9 +51,10 @@ final class ResponseParser {
         /** The values of every {@code Transfer-Encoding} line, in received order. */
         final List<String> transferEncodings;
 
-        Head(int status, List<Map.Entry<String, String>> headers, List<String> contentLengths,
+        Head(int status, boolean http10, List<Map.Entry<String, String>> headers, List<String> contentLengths,
                 List<String> transferEncodings) {
             this.status = status;
+            this.http10 = http10;
             this.headers = Collections.unmodifiableList(headers);
             this.contentLengths = Collections.unmodifiableList(contentLengths);
             this.transferEncodings = Collections.unmodifiableList(transferEncodings);
@@ -109,7 +112,9 @@ final class ResponseParser {
                     }
                 }
                 if (status >= 200) {
-                    return new Head(status, headers, contentLengths, transferEncodings);
+                    // status() accepted HTTP/1.<digit>, so the minor version is the eighth char.
+                    return new Head(status, statusLine.charAt(7) == '0', headers, contentLengths,
+                            transferEncodings);
                 }
             }
         } catch (SocketTimeoutException e) {
@@ -123,10 +128,10 @@ final class ResponseParser {
     /**
      * The framing of {@code head}'s body in the RFC 9112 §6.3 order: a response to a HEAD request, a 204 and a 304
      * are bodyless whatever their framing headers say, the length for {@code res.relay} being -1 for a 204 and the
-     * agreed Content-Length or -1 otherwise (FR-PROXY-014); then {@code Transfer-Encoding}, which must be a single
-     * {@code chunked} and must come without {@code Content-Length}; then {@code Content-Length}, which must be one
-     * agreed length; then a body read until the backend closes. The two lists are read as on the request side
-     * ({@link FramingLists}, SEC-PROXY-003).
+     * agreed Content-Length or -1 otherwise (FR-PROXY-014); then {@code Transfer-Encoding}, which an HTTP/1.0 response
+     * must not have at all (RFC 9112 §6.1) and which must otherwise be a single {@code chunked} without
+     * {@code Content-Length}; then {@code Content-Length}, which must be one agreed length; then a body read until
+     * the backend closes. The two lists are read as on the request side ({@link FramingLists}, SEC-PROXY-003).
      *
      * @throws ProxyException of kind {@code INVALID_RESPONSE} for framing headers a body-capable response cannot have
      */
@@ -137,6 +142,11 @@ final class ResponseParser {
             return new Framing(true, false, length);
         }
         if (!head.transferEncodings.isEmpty()) {
+            // RFC 9112 §6.1: an HTTP/1.0 message with Transfer-Encoding has faulty framing, Content-Length or not.
+            // @req SEC-PROXY-004
+            if (head.http10) {
+                throw invalid("Transfer-Encoding on an HTTP/1.0 response");
+            }
             if (!head.contentLengths.isEmpty()) {
                 throw invalid("Content-Length with Transfer-Encoding");
             }
