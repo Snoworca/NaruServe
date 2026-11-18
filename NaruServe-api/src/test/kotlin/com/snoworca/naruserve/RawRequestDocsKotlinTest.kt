@@ -168,8 +168,9 @@ class RawRequestDocsKotlinTest {
             "an `onError` handler that wants to recognise an over-limit body must check both forms",
             "an unwrapped `BodyTooLargeException` that leaves the handler becomes a `413` response",
             "wrapped in another exception", "handled as an ordinary exception and answered `500`")
+        // the onError example is the one before the section's ### `BodyTooLargeException` part, which has its own (C-005)
         for ((where, s) in listOf("request.md" to k, "en/request.md" to e)) {
-            oneJavaAndOneKotlin("$where over-limit", s,
+            oneJavaAndOneKotlin("$where over-limit", s.substringBefore("\n### "),
                 listOf("instanceof BodyTooLargeException", "instanceof HttpException", "status() == 413", "app.onError("),
                 listOf("is BodyTooLargeException", "is HttpException", "status() == 413", "app.onError {"))
         }
@@ -442,7 +443,7 @@ class RawRequestDocsKotlinTest {
             seen.last() is RuntimeException && seen.last().cause is BodyTooLargeException)
     }
 
-    // docs-example: request.md#6
+    // docs-example: request.md#7
     @Test
     fun `OPS-DX-008 AC-3 the header enumeration example lists lowercase names and the raw lines`() {
         app.get("/headers") { req, res ->
@@ -455,7 +456,7 @@ class RawRequestDocsKotlinTest {
         assertEquals("[x-a, x-b]\nX-A: 1\nx-a: 2\nX-B: 3\n", response.text())
     }
 
-    // docs-example: request.md#7
+    // docs-example: request.md#8
     @Test
     fun `OPS-DX-008 AC-4 the isFromTrustedProxy example tells a forwarded request from a direct one`() {
         app.trustProxyHops(1)
@@ -540,5 +541,40 @@ class RawRequestDocsKotlinTest {
         oneJavaAndOneKotlin("en/request.md BodyTooLargeException", ePart,
             listOf("throw new BodyTooLargeException(quota);", "((BodyTooLargeException) error).limit()"),
             listOf("throw BodyTooLargeException(quota)", "error.limit()"))
+    }
+
+    // docs-example: request.md#6
+    @Test
+    fun `C-005 OPS-DX-008 the BodyTooLargeException example throws the app's own limit unwrapped and reads limit in onError`() {
+        app.put("/avatar") { req, res ->
+            val quota = 256L * 1024                                          // 스트림 한도(1 MiB)보다 작은 앱의 한도
+            var size = 0L
+            req.bodyStream(1024L * 1024).use { input ->
+                val buf = ByteArray(8192)
+                var n = input.read(buf)
+                while (n != -1) {
+                    size += n
+                    if (size > quota) {
+                        throw BodyTooLargeException(quota)                   // 감싸지 않고 던지면 413
+                    }
+                    n = input.read(buf)
+                }
+            }
+            res.send("stored $size bytes")
+        }
+
+        app.onError { error, req, res ->
+            if (error is BodyTooLargeException) {
+                res.status(413).send("body over ${error.limit()} bytes")
+            }
+        }
+        assertEquals("stored 102400 bytes", send(ClientRequest.of("PUT", "/avatar").body(bytes(100 * 1024))).text())
+        val over = send(ClientRequest.of("PUT", "/avatar").body(bytes(300 * 1024)))
+        assertEquals(413, over.status())
+        assertEquals("body over 262144 bytes", over.text())
+        // a declared length over the 1 MiB stream limit is the framework's HttpException 413, which this onError leaves alone
+        val declared = send(ClientRequest.of("PUT", "/avatar").header("Content-Length", "2097152").body(bytes(2 * 1024 * 1024)))
+        assertEquals(413, declared.status())
+        assertFalse(declared.text().startsWith("body over"))
     }
 }

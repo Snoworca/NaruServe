@@ -399,6 +399,70 @@ app.onError { error, req, res ->
 }
 ```
 
+### `BodyTooLargeException`
+
+`com.snoworca.naruserve.BodyTooLargeException` is the public exception for a body over its byte limit (public since 0.12.0). Its Express counterpart is the error `raw-body` (used by `body-parser`, `express.raw` and `express.json`) raises for an over-limit body: the `http-errors` `PayloadTooLargeError`, with `err.status` `413`, `err.type` `'entity.too.large'` and the limit in `err.limit`. `limit()` is the counterpart of Express `err.limit`.
+
+| Constructor or method | Returns | Content |
+|---|---|---|
+| `new BodyTooLargeException(long limit)` | — | public constructor; `limit` is the byte limit the body passed, and the message (`getMessage()`) is `request body exceeds the limit of <limit> bytes` |
+| `limit()` | `long` | the byte limit given to the constructor |
+
+- It is a (`final`) `IOException` subclass and not an `HttpException`, so it has no `status()`. Unwrapped in the error flow, the framework answers it `413` (as described above).
+- The framework throws it from the stream `bodyStream()` or `bodyStream(maxBytes)` returned, on the `read` that would return a byte beyond the limit of a body without a declared length. When the declared `Content-Length` exceeds the limit, the `bodyStream` call throws an `HttpException` `413` instead, and `body(...)`, `form(...)` and `parts()` throw an `HttpException` `413` over their limits, not this exception.
+- Because the constructor is public, app code that counts its own limit while reading a stream can throw it to get the same `413`, and a test can create one to exercise `onError`.
+
+```java
+app.put("/avatar", (req, res) -> {
+    long quota = 256 * 1024;                                         // the app's own limit, under the stream limit (1 MiB)
+    long size = 0;
+    try (InputStream in = req.bodyStream(1024 * 1024)) {
+        byte[] buf = new byte[8192];
+        for (int n = in.read(buf); n != -1; n = in.read(buf)) {
+            size += n;
+            if (size > quota) {
+                throw new BodyTooLargeException(quota);              // thrown unwrapped: 413
+            }
+        }
+    }
+    res.send("stored " + size + " bytes");
+});
+
+app.onError((error, req, res) -> {
+    if (error instanceof BodyTooLargeException) {
+        long limit = ((BodyTooLargeException) error).limit();
+        res.status(413).send("body over " + limit + " bytes");
+    }
+});
+```
+
+Kotlin:
+
+```kotlin
+app.put("/avatar") { req, res ->
+    val quota = 256L * 1024                                          // the app's own limit, under the stream limit (1 MiB)
+    var size = 0L
+    req.bodyStream(1024L * 1024).use { input ->
+        val buf = ByteArray(8192)
+        var n = input.read(buf)
+        while (n != -1) {
+            size += n
+            if (size > quota) {
+                throw BodyTooLargeException(quota)                   // thrown unwrapped: 413
+            }
+            n = input.read(buf)
+        }
+    }
+    res.send("stored $size bytes")
+}
+
+app.onError { error, req, res ->
+    if (error is BodyTooLargeException) {
+        res.status(413).send("body over ${error.limit()} bytes")
+    }
+}
+```
+
 ## Header enumeration
 
 `req.headerNames()` is the counterpart of Express `Object.keys(req.headers)`, and `req.rawHeaders()` the counterpart of Express `req.rawHeaders`. Where Express `req.rawHeaders` is one array alternating names and values, `rawHeaders()` is a list of name-value pairs (`Map.Entry`).

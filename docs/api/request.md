@@ -418,6 +418,70 @@ app.onError { error, req, res ->
 }
 ```
 
+### `BodyTooLargeException`
+
+`com.snoworca.naruserve.BodyTooLargeException`은 본문이 바이트 한도를 넘었다는 공개 예외입니다(0.12.0부터 공개). Express에서 해당하는 것은 `raw-body`(`body-parser`와 `express.raw`·`express.json`이 씁니다)가 한도를 넘은 본문에 내는 오류, 곧 `http-errors`의 `PayloadTooLargeError`입니다. 그 오류는 `err.status`가 `413`, `err.type`이 `'entity.too.large'`이고 `err.limit`에 한도를 담습니다. `limit()`은 Express의 `err.limit`에 해당합니다.
+
+| 생성자·메서드 | 반환 | 내용 |
+|---|---|---|
+| `new BodyTooLargeException(long limit)` | — | 공개 생성자. `limit`은 본문이 넘은 바이트 한도이고, 메시지(`getMessage()`)는 `request body exceeds the limit of <limit> bytes`입니다 |
+| `limit()` | `long` | 생성자에 넘긴 바이트 한도 |
+
+- `IOException`의 하위 클래스(`final`)이고 `HttpException`이 아니므로 `status()`가 없습니다. 감싸지 않은 채 오류 흐름에 오면 프레임워크가 `413`으로 답합니다(위 설명과 같습니다).
+- 프레임워크는 `bodyStream()`·`bodyStream(maxBytes)`가 돌려준 스트림에서, 길이를 선언하지 않은 본문의 한도를 넘는 바이트를 읽으려는 `read`에서 던집니다. 선언한 `Content-Length`가 한도를 넘으면 이 예외가 아니라 `bodyStream` 호출이 `413` `HttpException`을 던지고, `body(...)`, `form(...)`, `parts()`는 한도를 넘으면 이 예외가 아니라 `413` `HttpException`을 던집니다.
+- 생성자가 공개이므로 앱이 스트림을 읽으며 직접 센 한도를 넘었을 때 던져 같은 `413`을 받을 수 있고, 테스트에서 직접 만들어 `onError`를 시험할 수도 있습니다.
+
+```java
+app.put("/avatar", (req, res) -> {
+    long quota = 256 * 1024;                                         // 스트림 한도(1 MiB)보다 작은 앱의 한도
+    long size = 0;
+    try (InputStream in = req.bodyStream(1024 * 1024)) {
+        byte[] buf = new byte[8192];
+        for (int n = in.read(buf); n != -1; n = in.read(buf)) {
+            size += n;
+            if (size > quota) {
+                throw new BodyTooLargeException(quota);              // 감싸지 않고 던지면 413
+            }
+        }
+    }
+    res.send("stored " + size + " bytes");
+});
+
+app.onError((error, req, res) -> {
+    if (error instanceof BodyTooLargeException) {
+        long limit = ((BodyTooLargeException) error).limit();
+        res.status(413).send("body over " + limit + " bytes");
+    }
+});
+```
+
+Kotlin:
+
+```kotlin
+app.put("/avatar") { req, res ->
+    val quota = 256L * 1024                                          // 스트림 한도(1 MiB)보다 작은 앱의 한도
+    var size = 0L
+    req.bodyStream(1024L * 1024).use { input ->
+        val buf = ByteArray(8192)
+        var n = input.read(buf)
+        while (n != -1) {
+            size += n
+            if (size > quota) {
+                throw BodyTooLargeException(quota)                   // 감싸지 않고 던지면 413
+            }
+            n = input.read(buf)
+        }
+    }
+    res.send("stored $size bytes")
+}
+
+app.onError { error, req, res ->
+    if (error is BodyTooLargeException) {
+        res.status(413).send("body over ${error.limit()} bytes")
+    }
+}
+```
+
 ## 헤더 목록
 
 `req.headerNames()`는 Express `Object.keys(req.headers)`에 해당하고, `req.rawHeaders()`는 Express `req.rawHeaders`에 해당합니다. Express의 `req.rawHeaders`는 이름과 값이 번갈아 오는 배열이지만 `rawHeaders()`는 이름·값 쌍(`Map.Entry`)의 목록입니다.
