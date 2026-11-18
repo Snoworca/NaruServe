@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
@@ -24,7 +25,9 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.After;
 import org.junit.Test;
 
@@ -253,18 +256,32 @@ public class ProxyRequestTargetTest {
 
     // FR-PROXY-006 AC-2: a WebSocket upgrade to an app.ws route runs the prefix middleware with a request whose url()
     // is the percent-decoded full path, not a remainder of the checked originalUrl(); under .stripPrefix(true) the
-    // proxy answers 400 before any backend connection instead of writing the decoded CR LF into the request line
-    @Test
-    public void fr_PROXY_006_AC2_aRemainderThatIsNotARawSuffixIsRefusedBeforeAnyConnection() throws IOException {
+    // request target of that request is refused with 400 instead of carrying the decoded CR LF into the request line,
+    // and the proxy itself hands the upgrade to next() (FR-PROXY-009 AC-4, AC-5), so no backend connection is opened
+    @Test(timeout = 20000)
+    public void fr_PROXY_006_AC2_aRemainderThatIsNotARawSuffixIsRefusedBeforeAnyConnection() throws Exception {
         RawBackend backend = okBackend();
+        Proxy proxy = Proxy.to(backend.url()).stripPrefix(true);
+        AtomicInteger refusal = new AtomicInteger(-1);
         app.ws("/api/orders/:id", (req, ws) -> { });
-        app.use("/api/orders", Proxy.to(backend.url()).stripPrefix(true));
+        app.use("/api/orders", (req, res, next) -> {
+            try {
+                proxy.requestTarget(req);
+            } catch (HttpException e) {
+                refusal.set(e.status());
+            }
+            next.run();
+        });
+        app.use("/api/orders", proxy);
         t.start();
         started.add(app);
 
-        ClientResponse r = adapter.send(ClientRequest.upgrade("/api/orders/x%0D%0AX-Injected:%20a"));
+        Future<ClientResponse> f = adapter.submit(ClientRequest.upgrade("/api/orders/x%0D%0AX-Injected:%20a"));
+        adapter.nextChannel(5, TimeUnit.SECONDS).clientClose(1000, "");
+        ClientResponse r = f.get(10, TimeUnit.SECONDS);
 
-        assertEquals(400, r.status());
+        assertEquals("request target refusal", 400, refusal.get());
+        assertEquals("the upgrade reaches the app.ws route", 101, r.status());
         assertEquals("backend requests", 0, backend.requestCount());
     }
 
