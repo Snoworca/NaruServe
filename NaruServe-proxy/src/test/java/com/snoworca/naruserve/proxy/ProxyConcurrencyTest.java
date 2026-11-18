@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.HttpException;
+import com.snoworca.naruserve.Response;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.InetAddress;
@@ -182,6 +184,7 @@ public class ProxyConcurrencyTest {
         assertRefused("the third request", third);
         assertEquals("backend connections", 2, backend.connections());
         releaseAndAssertOk(backend, pending);
+        assertEquals("backend connections once every request ended", 2, backend.connections());
     }
 
     // ---- AC-2 ----
@@ -205,6 +208,7 @@ public class ProxyConcurrencyTest {
         assertEquals("backend connections during the relays", 2, backend.connections());
 
         releaseAndAssertOk(backend, pending);
+        assertEquals("backend connections once the relays ended", 2, backend.connections());
         awaitCounterZero(proxy);
         errors.clear();
         Future<ClientResponse> next = m.submit("/api/4");
@@ -251,6 +255,7 @@ public class ProxyConcurrencyTest {
         assertRefused("the third request", third);
         assertEquals("backend connections", 2, backend.connections());
         releaseAndAssertOk(backend, pending);
+        assertEquals("backend connections once every request ended", 2, backend.connections());
     }
 
     // ---- AC-4 ----
@@ -361,6 +366,101 @@ public class ProxyConcurrencyTest {
         assertRefused("the request through the second app", other);
         assertEquals("backend connections", 1, backend.connections());
         releaseAndAssertOk(backend, pending);
+        assertEquals("backend connections once every request ended", 1, backend.connections());
+    }
+
+    // ---- slot return on the paths that end before the relay ----
+
+    // FR-PROXY-019 AC-9: a request whose backend connect fails returns its slot before its 502 leaves, so on a
+    // .maxConcurrent(1) mount the next request is 502 again, not 503, and the counter is back at zero each time
+    @Test(timeout = 30000)
+    public void fr_PROXY_019_AC9_aFailedConnectReturnsTheSlot() throws Exception {
+        int closedPort;
+        try (ServerSocket probe = new ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"))) {
+            closedPort = probe.getLocalPort();
+        }
+        Proxy p = Proxy.to("http://127.0.0.1:" + closedPort).maxConcurrent(1);
+        Mounted m = app().use("/api", p).start();
+
+        for (int i = 0; i < 3; i++) {
+            ClientResponse r = answered("request " + i, m.submit("/api/" + i));
+            assertEquals("request " + i + " status", 502, r.status());
+            assertEquals("counter after request " + i, 0, p.concurrencyCounter().get());
+        }
+    }
+
+    // FR-PROXY-019 AC-9: a backend answer the proxy cannot read is 502 and returns the slot, so the next request on the
+    // .maxConcurrent(1) mount reaches the backend again
+    @Test(timeout = 30000)
+    public void fr_PROXY_019_AC9_anUnreadableResponseReturnsTheSlot() throws Exception {
+        RawBackend backend = RawBackend.answering("NOT HTTP\r\n\r\n");
+        closeables.add(backend);
+        Proxy p = Proxy.to(backend.url()).maxConcurrent(1);
+        Mounted m = app().use("/api", p).start();
+
+        ClientResponse first = answered("the first request", m.submit("/api/1"));
+        ClientResponse second = answered("the second request", m.submit("/api/2"));
+
+        assertEquals("the first request", 502, first.status());
+        assertEquals("the second request", 502, second.status());
+        assertEquals("backend requests", 2, backend.requestCount());
+        assertEquals("counter", 0, p.concurrencyCounter().get());
+    }
+
+    // FR-PROXY-019 AC-9: when res.relay refuses the body, closing it as a response does when it refuses a stream, the
+    // slot is returned exactly once: the refused stream's close and the forward path both end the exchange, and the
+    // counter is 0, not -1, so a .maxConcurrent(1) mount still admits one request at a time afterwards
+    @Test(timeout = 30000)
+    public void fr_PROXY_019_AC9_aRefusedRelayReturnsTheSlotOnce() throws Exception {
+        RawBackend backend = RawBackend.answering(RawBackend.response(200, "ok"));
+        closeables.add(backend);
+        Proxy p = Proxy.to(backend.url()).maxConcurrent(1);
+        List<Throwable> proxyFailures = Collections.synchronizedList(new ArrayList<Throwable>());
+        Mounted m = app();
+        m.app.use("/refuse", (req, res, next) -> {
+            try {
+                p.handle(req, refusingRelay(res), next);
+            } catch (Exception | Error e) {
+                proxyFailures.add(e);
+            }
+            res.status(200).send("after " + p.concurrencyCounter().get());
+        });
+        m.use("/api", p).start();
+
+        ClientResponse refused = answered("the request whose relay is refused", m.submit("/refuse/x"));
+
+        assertEquals("backend requests", 1, backend.requestCount());
+        assertEquals("the refused relay failed the proxy call: " + proxyFailures, 1, proxyFailures.size());
+        assertEquals("counter seen right after the refused relay", "after 0", refused.text());
+        assertEquals("counter after the refused relay", 0, p.concurrencyCounter().get());
+        ClientResponse next = answered("the next request", m.submit("/api/y"));
+        assertEquals("the next request", 200, next.status());
+        assertEquals("counter after the next request", 0, waitForZero(p.concurrencyCounter()));
+    }
+
+    /** {@code res} with a {@code relay} that closes the stream and throws, as a response refusing the body does. */
+    private static Response refusingRelay(Response res) {
+        return (Response) java.lang.reflect.Proxy.newProxyInstance(Response.class.getClassLoader(),
+                new Class<?>[] {Response.class}, (self, method, args) -> {
+                    if (method.getName().equals("relay")) {
+                        ((InputStream) args[0]).close();
+                        throw new IllegalStateException("relay refused");
+                    }
+                    try {
+                        return method.invoke(res, args);
+                    } catch (InvocationTargetException e) {
+                        throw e.getCause();
+                    }
+                });
+    }
+
+    /** The value of {@code counter} once it is 0, or its value after {@link #WAIT_SECONDS}. */
+    private static int waitForZero(AtomicInteger counter) throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(WAIT_SECONDS);
+        while (counter.get() != 0 && System.nanoTime() < deadline) {
+            Thread.sleep(5);
+        }
+        return counter.get();
     }
 
     // ---- AC-9 ----
