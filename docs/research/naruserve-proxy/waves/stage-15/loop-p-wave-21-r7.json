@@ -1,0 +1,258 @@
+{
+  "wave": "wave-21",
+  "round": 7,
+  "verifier": "loop-p-wave-21-r7",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-010 AC-2 extreme time options saturate and still forward",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-2",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-010 AC-2 an sslSocketFactory on an http target is accepted and never used",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-3",
+      "cites": "OPS-DX-010 AC-1",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-010 AC-1 a trailing slash of the target is removed before the path is joined",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-4",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-010 AC-2 fixed request headers follow the forwarding headers in the order of each name's last call",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-5",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-010 AC-2 every managed name is refused by the header options",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-6",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-010 AC-3 a chunked body over bodyLimit gives onError a plain 413 HttpException caused by BodyTooLargeException",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-7",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-010 AC-3 a body read by an earlier middleware gives 500 without a backend connection",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-8",
+      "cites": "OPS-DX-010 AC-6",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-010 AC-6 a backend header byte 0xE9 reaches the client as 0xC3 0xA9 over TinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-9",
+      "cites": "OPS-DX-010 AC-6",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-010 AC-6 the app's Set-Cookie and Vary stay next to the backend's and other app values are replaced",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-10",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-010 AC-2 cookie lines are joined into one and Expect is dropped over TinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-11",
+      "cites": "OPS-DX-010 AC-9",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-010 AC-9 a client that leaves while the backend keeps sending frees the slot at once",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-12",
+      "cites": "OPS-DX-010 AC-7",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-010 AC-7 a body arriving after the total deadline ends with TOTAL_TIMEOUT",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-13",
+      "cites": "C-005",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::C-005 relay without an app Content-Type sends no Content-Type over TinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-14",
+      "cites": "C-005",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::C-005 relay sends neither body nor Content-Length on 204 and keeps Content-Length on HEAD over TinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-15",
+      "cites": "C-005",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::C-005 relay cuts a longer stream at the length and aborts on a shorter one over TinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-16",
+      "cites": "C-005",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::C-005 relay below -1 throws IllegalArgumentException and closes the input",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-17",
+      "cites": "C-005",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::C-005 append after the response was sent throws IllegalStateException",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-18",
+      "cites": "C-005",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::C-005 onAbort runs late listeners at once, logs a failing one and never runs after a normal end",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-19",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-008 AC-1 form and parts on a JSON request leave the whole body to bodyStream",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-20",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-008 AC-1 the repeated-call rule of bodyStream holds as stated",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-21",
+      "cites": "OPS-DX-008 AC-2",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-008 AC-2 body and form over their limit with a chunked body throw a 413 HttpException",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-22",
+      "cites": "OPS-DX-008 AC-5",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-008 AC-5 rawBodyLimit after listen throws IllegalStateException and changes nothing",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-23",
+      "cites": "OPS-DX-008 AC-4",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-008 AC-4 isFromTrustedProxy is false for an unreadable peer under trustProxyCidrs and for the false rows",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-24",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-010 AC-2 Proxy is a Middleware, not Installable, and has no public getter",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-25",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::OPS-DX-010 AC-3 ProxyException has a null message with a cause for every kind",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-26",
+      "cites": "C-005",
+      "test": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/LoopPWave21R7Test.kt::C-005 the onAbort example cancels the job when the client leaves over TinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "green over the running app (TinyHttpd raw sockets or in-memory adapter) at 2eedd4a; ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests LoopPWave21R7Test --rerun: 26 tests 0 failures"
+    },
+    {
+      "id": "LP-27",
+      "cites": "OPS-DX-011 AC-1",
+      "test": "manual: build/docs-venv (tools/docs-site/requirements.txt) mkdocs build --strict (mkdocs.yml, mkdocs.en.yml) + tools/docs-site/check_site.py",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "both strict builds exit 0; check_site.py: 'docs site check passed: 40 guide pages'; build/docs-site/proxy and build/docs-site/en/proxy built"
+    }
+  ],
+  "c005": {
+    "holds": true,
+    "note": "Every public member added in 0.12.0 (Request.bodyStream()/bodyStream(long)/headerNames/rawHeaders/isFromTrustedProxy, RestApp.rawBodyLimit, BodyTooLargeException(long)/limit(), Response.append/onAbort/relay, HttpHeaderValues.isFieldValue, Proxy and ProxyException members) appears with an Express counterpart and in a java and a kotlin block of both the Korean page and its English mirror; HttpHeaderValues.isToken and commaSeparated were already public in v0.11.0 and are outside the 0.12.0 set. C-005 Proxy/ProxyException reflection coverage exists in ProxyDocsKotlinTest; the raw API examples run green here."
+  },
+  "summary": {
+    "tests_written": 26,
+    "kept": 0
+  }
+}
