@@ -494,7 +494,7 @@ public final class Proxy implements Middleware {
             // exchange's release cancels it. It runs through every attempt and every wait between them (FR-PROXY-018).
             long startNanos = System.nanoTime();
             exchange.watch(watchdog, options.totalTimeoutNanos);
-            Attempt attempt = attempt(req, outgoing, exchange, startNanos);
+            Attempt attempt = lastAttempt(req, outgoing, exchange, startNanos);
             Socket socket = attempt.socket;
             InputStream in = attempt.in;
             ResponseParser.Head head = attempt.head;
@@ -540,27 +540,29 @@ public final class Proxy implements Middleware {
      * after a backend 502 or 503, only when {@link RetryPolicy#retriesStatus} allows it, the retried response's header
      * block having been read and its connection closed. Each retry waits {@code .retryDelay} first; when that wait would
      * end past the total deadline, or no retry is left, the last failure is thrown, or the last 502 or 503 returned
-     * for relaying unchanged. A deadline that already fired is never retried. Every connection belongs to
-     * {@code exchange}, which closes the current one on release, and to its one slot (FR-PROXY-019).
+     * for relaying unchanged. A deadline that already fired is never retried, and neither is anything on an
+     * interrupted thread: an interrupted wait after a connect failure throws that failure, and one after a closed
+     * 502 or 503 leaves the attempt it was waiting for as the last. Every connection belongs to {@code exchange},
+     * which closes the current one on release, and to its one slot (FR-PROXY-019).
      */
     // @req FR-PROXY-018
     // @req FR-PROXY-020
     // @req FR-PROXY-017
     // @req FR-PROXY-015
     // @req SEC-PROXY-005
-    private Attempt attempt(Request req, Outgoing outgoing, ProxyExchange exchange, long startNanos)
+    private Attempt lastAttempt(Request req, Outgoing outgoing, ProxyExchange exchange, long startNanos)
             throws IOException {
         long deadlineNanos = startNanos + options.totalTimeoutNanos;
         for (int retry = 0; ; retry++) {
-            boolean retryLeft = retry < options.retries;
+            // The interrupt status is kept by an interrupted wait, so it also ends the retries after that wait.
+            boolean retryLeft = retry < options.retries && !Thread.currentThread().isInterrupted();
             Socket plain;
             try {
                 plain = BackendClient.connect(target, connectTimeoutMillis(), exchange);
             } catch (ProxyException e) {
                 // A connect ended by a fired deadline fails as a closed socket: that is the deadline's, never retried.
                 if (retryLeft && exchange.firedKind() == null && RetryPolicy.retriesConnectFailure(e)
-                        && retryWaitFits(startNanos)) {
-                    waitRetryDelay();
+                        && retryWaitFits(startNanos) && waitRetryDelay()) {
                     continue;
                 }
                 throw e;
@@ -581,7 +583,8 @@ public final class Proxy implements Middleware {
                     && RetryPolicy.retriesStatus(head.status, req.methodToken(), outgoing.framing.bodyless(),
                             options.retryUnsafeMethods)
                     && retryWaitFits(startNanos)) {
-                // The header block was read; the rest of the response is dropped with its connection.
+                // The header block was read; the rest of the response is dropped with its connection. The response is
+                // gone, so even an interrupted wait goes on to the attempt it was for, which is then the last.
                 closeQuietly(socket);
                 waitRetryDelay();
                 continue;
@@ -601,16 +604,18 @@ public final class Proxy implements Middleware {
     }
 
     /**
-     * Waits {@code .retryDelay} before a retry (FR-PROXY-018). An interrupted wait ends early with the thread's interrupt
-     * status kept; the retry still counts against the retry count and the total deadline. A deadline that fires during
-     * the wait closes the next attempt's socket at once, which keeps that deadline's kind.
+     * Waits {@code .retryDelay} before a retry and returns true (FR-PROXY-018), or returns false when the wait was
+     * interrupted, with the thread's interrupt status kept so no later retry starts. A deadline that fires during the
+     * wait closes the next attempt's socket at once, which keeps that deadline's kind.
      */
     // @req FR-PROXY-018
-    private void waitRetryDelay() {
+    private boolean waitRetryDelay() {
         try {
             TimeUnit.NANOSECONDS.sleep(options.retryDelayNanos);
+            return true;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            return false;
         }
     }
 

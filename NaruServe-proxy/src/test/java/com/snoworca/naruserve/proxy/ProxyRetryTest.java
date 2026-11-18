@@ -80,17 +80,17 @@ public class ProxyRetryTest {
     // once, and through Proxy.to(url).retries(2).retries(0) also exactly once
     @Test(timeout = 30000)
     public void fr_PROXY_018_AC1_withoutRetriesA503RequestArrivesOnce() throws Exception {
-        RawBackend plain = always(503);
-        RawBackend reset = always(503);
-        String a = mount(Proxy.to(plain.url()));
-        String b = mount(Proxy.to(reset.url()).retries(2).retries(0));
+        RawBackend byDefault = always(503);
+        RawBackend setBackToZero = always(503);
+        String a = mount(Proxy.to(byDefault.url()));
+        String b = mount(Proxy.to(setBackToZero.url()).retries(2).retries(0));
         start();
 
         assertEquals(503, send(ClientRequest.of("GET", a + "/x")).status());
         assertEquals(503, send(ClientRequest.of("GET", b + "/x")).status());
 
-        assertEquals(1, plain.requestCount());
-        assertEquals(1, reset.requestCount());
+        assertEquals(1, byDefault.requestCount());
+        assertEquals(1, setBackToZero.requestCount());
     }
 
     // ---- AC-2 ----
@@ -374,6 +374,64 @@ public class ProxyRetryTest {
     @Test(timeout = 30000)
     public void fr_PROXY_018_AC9_aConfiguredDelayIsObserved() throws Exception {
         assertRetryGapAtLeast(p -> p.retries(1).retryDelay(300, TimeUnit.MILLISECONDS), 300);
+    }
+
+    // FR-PROXY-018 AC-9 (REL-PROXY-001): a request whose worker thread is interrupted during the wait before a retry
+    // makes no further attempt, so its retries never reach the backend back to back without the delay; the client
+    // receives the last failure
+    @Test(timeout = 30000)
+    public void fr_PROXY_018_AC9_anInterruptedWaitEndsTheRetries() throws Exception {
+        final AtomicInteger attempts = new AtomicInteger();
+        final List<Thread> workers = Collections.synchronizedList(new ArrayList<Thread>());
+        BackendClient.plainSockets = () -> new Socket() {
+            @Override
+            public void connect(SocketAddress endpoint, int timeout) throws IOException {
+                if (attempts.getAndIncrement() == 0) {
+                    final Thread worker = Thread.currentThread();
+                    workers.add(worker);
+                    Thread interrupter = new Thread(() -> {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            return;
+                        }
+                        worker.interrupt();
+                    });
+                    interrupter.setDaemon(true);
+                    interrupter.start();
+                }
+                throw new ConnectException("Connection refused (simulated)");
+            }
+        };
+        String path = mount(Proxy.to("http://127.0.0.1:" + closedPort()).retries(3)
+                .retryDelay(400, TimeUnit.MILLISECONDS));
+        start();
+
+        ClientResponse r = send(ClientRequest.of("GET", path + "/x"));
+
+        assertEquals(502, r.status());
+        assertSame(ProxyException.Kind.CONNECT_FAILED, onlyProxyError().kind());
+        assertEquals("connection attempts", 1, attempts.get());
+    }
+
+    // FR-PROXY-018 AC-2 (REL-PROXY-001, FR-PROXY-019): the connection of a retried 503 is closed by the proxy before
+    // the retry, even when the backend answered with Connection: keep-alive and keeps it open
+    @Test(timeout = 30000)
+    public void fr_PROXY_018_AC2_theConnectionOfARetried503IsClosedByTheProxy() throws Exception {
+        ProxyBackendConnectionTest.ConnectionBackend backend = track(new ProxyBackendConnectionTest.ConnectionBackend(
+                "HTTP/1.1 503 X\r\nConnection: keep-alive\r\nContent-Length: 4\r\n\r\nbusy", true));
+        String path = mount(Proxy.to(backend.url()).retries(2).retryDelay(20, TimeUnit.MILLISECONDS));
+        start();
+
+        ClientResponse r = send(ClientRequest.of("GET", path + "/x"));
+
+        assertEquals(503, r.status());
+        assertEquals("busy", r.text());
+        for (int i = 0; i < 3; i++) {
+            assertTrue("connection " + i + " closed by the proxy",
+                    backend.connection(i).closedByProxy.await(3, TimeUnit.SECONDS));
+        }
+        assertEquals(3, backend.connectionsSnapshot().size());
     }
 
     // ---- AC-10 ----
