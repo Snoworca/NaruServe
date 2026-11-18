@@ -656,6 +656,31 @@ public class BuildChecksTest {
                 "com/snoworca/naruserve/proxy/probe/UsesSpi -> com/snoworca/naruserve/spi/HttpExchange"));
     }
 
+    // CON-BUILD-020 AC-4 (loop P wave-14 r2 LP-5) — a NaruServe-proxy main class referencing
+    // com.snoworca.naruserve.utils.auth.internal.Base64Url, an internal package below the top level, fails the
+    // class-reference check naming the class and the reference; a package segment that only starts with internal or
+    // spi is not a hit
+    @Test
+    public void con_BUILD_020_AC4_proxyMainReferencingANestedInternalPackageFails() throws IOException {
+        addSource("NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/probe/UsesAuthInternal.java",
+                "package com.snoworca.naruserve.proxy.probe;\n"
+                        + "public class UsesAuthInternal { public com.snoworca.naruserve.utils.auth.internal.Base64Url b; }\n");
+        addSource("NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/internals/Marker.java",
+                "package com.snoworca.naruserve.proxy.internals;\npublic class Marker { }\n");
+        addSource("NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/spider/Spi.java",
+                "package com.snoworca.naruserve.proxy.spider;\npublic class Spi { }\n");
+        addSource("NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/probe/UsesLookalikes.java",
+                "package com.snoworca.naruserve.proxy.probe;\n"
+                        + "public class UsesLookalikes { public com.snoworca.naruserve.proxy.internals.Marker m;"
+                        + " public com.snoworca.naruserve.proxy.spider.Spi s; }\n");
+        BuildResult failed = runner(":NaruServe-proxy:checkClassReferences").buildAndFail();
+        assertEquals(TaskOutcome.FAILED, failed.task(":NaruServe-proxy:checkClassReferences").getOutcome());
+        String out = failed.getOutput();
+        assertTrue(out, out.contains("com/snoworca/naruserve/proxy/probe/UsesAuthInternal -> "
+                + "com/snoworca/naruserve/utils/auth/internal/Base64Url"));
+        assertFalse(out, out.contains("UsesLookalikes ->"));
+    }
+
     // CON-BUILD-020 AC-5 — NaruServe-proxy main classes referencing android/, com/google/gson/,
     // com/snoworca/tinyhttpd/ or kotlin/ fail the class-reference check, anchored at the start of the name so
     // com/snoworca/naruserve/kotlin/ is not a hit (source stubs stand in for the platform and adapter types)
