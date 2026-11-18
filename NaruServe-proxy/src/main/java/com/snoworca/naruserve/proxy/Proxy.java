@@ -282,6 +282,12 @@ public final class Proxy implements Middleware {
         return new Proxy(target, options, watchdog);
     }
 
+    /** Package-private test accessor: the watchdog this proxy's requests reserve (REL-PROXY-002 AC-2). */
+    // @req REL-PROXY-002
+    ProxyExchange.Watchdog watchdog() {
+        return watchdog;
+    }
+
     // Package-private accessors: the configured values, read by unit tests only (D-046).
 
     long connectTimeoutNanos() {

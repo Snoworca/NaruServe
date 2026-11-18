@@ -299,13 +299,15 @@ final class ProxyExchange {
     }
 
     /**
-     * The JVM-wide scheduler of the write and total deadlines, the default {@link Watchdog} of {@code Proxy.to}: its
-     * executor is created by the first deadline a proxied request arms, belongs to no app, and runs at most one daemon
-     * thread without context class loader that ends once idle; cancelled deadlines leave its queue at once. A deadline
-     * only records its kind and closes a plain socket, so it never blocks the thread. The TLS handshake's own deadline
-     * still runs on {@link TlsConnector}'s executor.
+     * The JVM-wide scheduler of the write, total and TLS handshake deadlines, the default {@link Watchdog} of
+     * {@code Proxy.to}: its executor is created by the first deadline a proxied request arms, belongs to no app and is
+     * never shut down, and runs at most one daemon thread without context class loader that ends once idle;
+     * cancelled deadlines leave its queue at once. A deadline only records its kind and closes a plain socket, so it
+     * never blocks the thread. {@link TlsConnector} arms the handshake's total deadline here too, so the proxy module
+     * has this one watchdog thread and no other.
      */
     // @req FR-PROXY-017
+    // @req REL-PROXY-002
     static final class Scheduler implements Watchdog {
         static final Scheduler INSTANCE = new Scheduler();
         /** How long the idle watchdog thread waits for a new deadline before it ends. */
@@ -336,6 +338,25 @@ final class ProxyExchange {
 
         ScheduledFuture<?> schedule(Runnable task, long delayNanos) {
             return executor().schedule(task, delayNanos, TimeUnit.NANOSECONDS);
+        }
+
+        /**
+         * Package-private test accessor: the executor, or null while no proxied request has armed a deadline yet, read
+         * without creating it (REL-PROXY-002 AC-1).
+         */
+        // @req REL-PROXY-002
+        @Nullable ScheduledThreadPoolExecutor executorIfCreated() {
+            return executor;
+        }
+
+        /**
+         * Package-private test accessor: how many deadlines wait in the executor's queue, 0 before it exists; a
+         * cancelled deadline leaves the queue at once (REL-PROXY-002 AC-6).
+         */
+        // @req REL-PROXY-002
+        int queuedReservations() {
+            ScheduledThreadPoolExecutor e = executor;
+            return e == null ? 0 : e.getQueue().size();
         }
 
         // @req FR-PROXY-017
