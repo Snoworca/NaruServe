@@ -24,7 +24,7 @@
 
 ## Basic use
 
-`Proxy.to(url)` is the only way to create a proxy. `url` is an `http` or `https` origin, optionally followed by a base path (`http://127.0.0.1:8081`, `https://backend.example/v1`). Trailing `/` characters are removed. `null` throws `NullPointerException`; a URL with a query, a fragment or user information, another scheme, a host that is not an ASCII name, a dotted-quad IPv4 literal or a bracketed IPv6 literal without a zone id, a port outside `1..65535`, or a base path that fails the request path checks throws `IllegalArgumentException`. Everything is checked when `Proxy.to` is called, so a wrong configuration shows at startup rather than on the first request.
+`Proxy.to(url)` is the only way to create a proxy. `url` is an `http` or `https` origin, optionally followed by a base path (`http://127.0.0.1:8081`, `https://backend.example/v1`). Trailing `/` characters are removed. `null` throws `NullPointerException`; a URL with a query, a fragment or user information, another scheme, a host that is not an ASCII name, a dotted-quad IPv4 literal (four numbers joined by three dots, `1.2.3.4`) or a bracketed IPv6 literal without a zone id, a port outside `1..65535`, or a base path that fails the request path checks throws `IllegalArgumentException`. Everything is checked when `Proxy.to` is called, so a wrong configuration shows at startup rather than on the first request.
 
 `Proxy` implements `Middleware` (not `Installable`), so it is mounted with `app.use(path, proxy)` or a router's `use`. A `Proxy` is immutable. Every option method returns a new `Proxy` and leaves its receiver unchanged, so one configured value can be shared by several mounts.
 
@@ -254,7 +254,7 @@ Check `ProxyException` before `HttpException`, because a `ProxyException` is an 
 
 ### Failures after the response started
 
-When relaying the body fails after the response headers were sent (the connection ending before the declared length, a malformed chunk, a read timeout between body bytes, the total timeout), the status can no longer change. The proxy logs a `ProxyException` of that kind once to the app logger (`req.application().logger()`), and the framework aborts the client connection. The client sees a response cut short.
+When relaying the body fails after the proxy handed the response to the adapter (the connection ending before the declared length, a malformed chunk, a read timeout between body bytes, the total timeout), the status can no longer change. The proxy logs a `ProxyException` of that kind once to the app logger (`req.application().logger()`), and the framework aborts the client connection. Whether the client has already received the status line and part of the body depends on how much the adapter has written. The TinyHttpd adapter buffers the beginning of the response, so when the failure comes while what was relayed still fits in that buffer (for example a backend that declares `Content-Length: 100`, sends 10 bytes and closes the connection), the client gets a closed connection with no response. When more was relayed before the failure (for example a backend that closes the connection after sending 64 KiB of a longer declared length), the client gets the status line (`200`) and a body cut short. Either way the client never gets a complete-looking response.
 
 ## Timeouts
 
