@@ -2,6 +2,7 @@ package com.snoworca.naruserve.proxy;
 
 import com.snoworca.naruserve.Response;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -29,13 +30,25 @@ final class ResponseHeaderCopier {
     // @req FR-PROXY-011
     // @req FR-PROXY-013
     static List<Map.Entry<String, String>> copy(List<Map.Entry<String, String>> lines, Response res) {
+        return copy(lines, Collections.<String>emptySet(), res);
+    }
+
+    /**
+     * As {@link #copy(List, Response)}, and also skips every line whose lower-case name is in {@code hiddenNames}
+     * (the {@code .removeResponseHeader} names, FR-PROXY-012): such a line is neither written nor returned, so an
+     * app value of the name stays and the {@code Location} rewrite does not put it back.
+     */
+    // @req FR-PROXY-012
+    static List<Map.Entry<String, String>> copy(List<Map.Entry<String, String>> lines, Set<String> hiddenNames,
+            Response res) {
         Set<String> connectionNames = connectionNames(lines);
         Set<String> seen = new HashSet<>();
         List<Map.Entry<String, String>> copied = new ArrayList<>();
         for (Map.Entry<String, String> line : lines) {
             String name = line.getKey();
             String lower = name.toLowerCase(Locale.ROOT);
-            if (HeaderRules.RESPONSE_MANAGED.contains(lower) || connectionNames.contains(lower)) {
+            if (HeaderRules.RESPONSE_MANAGED.contains(lower) || connectionNames.contains(lower)
+                    || hiddenNames.contains(lower)) {
                 continue;
             }
             copied.add(line);

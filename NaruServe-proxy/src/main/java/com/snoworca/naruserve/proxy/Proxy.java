@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -190,14 +191,22 @@ public final class Proxy implements Middleware {
         return new Proxy(target, options.withRequestHeaderRules(appended(options.requestHeaderRules, name, null)));
     }
 
-    /** Sends {@code value} as response header {@code name} in place of the backend's lines of that name. */
+    /**
+     * Sends {@code value} as response header {@code name} in place of the backend's lines and the app's value of that
+     * name, set after the backend header copy and the {@code Location} rewrite. Names compare case-insensitively and
+     * the later {@code responseHeader} or {@code removeResponseHeader} call for a name wins.
+     */
     // @req IR-PROXY-001
     public Proxy responseHeader(String name, String value) {
         HeaderRules.checkResponseRule(name, value, "responseHeader");
         return new Proxy(target, options.withResponseHeaderRules(appended(options.responseHeaderRules, name, value)));
     }
 
-    /** Drops the backend's response header {@code name}. */
+    /**
+     * Drops the backend's response header lines of {@code name}; a value the app set before the proxy stays. Names
+     * compare case-insensitively and the later {@code responseHeader} or {@code removeResponseHeader} call for a name
+     * wins.
+     */
     // @req IR-PROXY-001
     public Proxy removeResponseHeader(String name) {
         HeaderRules.checkResponseRule(name, "removeResponseHeader");
@@ -425,6 +434,7 @@ public final class Proxy implements Middleware {
     // @req FR-PROXY-011
     // @req FR-PROXY-007
     // @req FR-PROXY-013
+    // @req FR-PROXY-012
     private void forward(Request req, Response res, Outgoing outgoing) {
         Socket socket = new Socket();
         boolean relayed = false;
@@ -450,10 +460,15 @@ public final class Proxy implements Middleware {
             }
             // The adapter writes its own reason phrase for the status (D-059); the backend phrase is not kept.
             res.status(head.status);
-            List<Map.Entry<String, String>> copied = ResponseHeaderCopier.copy(head.headers, res);
+            // A removed name's backend lines are skipped, so an app value of it stays and the rewrite never sees them.
+            List<Map.Entry<String, String>> copied =
+                    ResponseHeaderCopier.copy(head.headers, options.hiddenResponseNames, res);
             // The Location rewrite follows the copy and comes before the .responseHeader values (FR-PROXY-012).
             if (options.rewriteLocation) {
                 LocationRewriter.apply(copied, target, options.stripPrefix ? req.baseUrl() : "", res);
+            }
+            for (Map.Entry<String, String> fixed : options.fixedResponseHeaders) {
+                res.header(fixed.getKey(), fixed.getValue());
             }
             long length = head.status == 204 || head.transferEncoding != null ? -1 : head.contentLength;
             InputStream body = chunked ? new ChunkedBodyStream(in, socket) : new SocketBodyStream(in, socket);
@@ -702,6 +717,10 @@ public final class Proxy implements Middleware {
         final int maxConcurrent;
         final List<Map.Entry<String, @Nullable String>> requestHeaderRules;
         final List<Map.Entry<String, @Nullable String>> responseHeaderRules;
+        /** The lower-case names whose later response rule is a removal: their backend lines are not copied. */
+        final Set<String> hiddenResponseNames;
+        /** The later {@code .responseHeader} call of each name not removed afterwards, as (name, value) in call order. */
+        final List<Map.Entry<String, String>> fixedResponseHeaders;
         final boolean rewriteLocation;
         final @Nullable SSLSocketFactory sslSocketFactory;
 
@@ -725,8 +744,38 @@ public final class Proxy implements Middleware {
             this.maxConcurrent = maxConcurrent;
             this.requestHeaderRules = requestHeaderRules;
             this.responseHeaderRules = responseHeaderRules;
+            Map<String, Map.Entry<String, @Nullable String>> resolved = laterRuleOfEachName(responseHeaderRules);
+            Set<String> hidden = new HashSet<>();
+            List<Map.Entry<String, String>> fixed = new ArrayList<>();
+            for (Map.Entry<String, Map.Entry<String, @Nullable String>> e : resolved.entrySet()) {
+                String value = e.getValue().getValue();
+                if (value == null) {
+                    hidden.add(e.getKey());
+                } else {
+                    fixed.add(new SimpleImmutableEntry<>(e.getValue().getKey(), value));
+                }
+            }
+            this.hiddenResponseNames = Collections.unmodifiableSet(hidden);
+            this.fixedResponseHeaders = Collections.unmodifiableList(fixed);
             this.rewriteLocation = rewriteLocation;
             this.sslSocketFactory = sslSocketFactory;
+        }
+
+        /**
+         * One ordered map from lower-case name to the later rule of that name (FR-PROXY-012): a later call for a name
+         * replaces the earlier entry whatever its kind, names compare case-insensitively (RFC 9110 §5.1), and an
+         * entry keeps the name as the later call wrote it with its value, null for a removal.
+         */
+        // @req FR-PROXY-012
+        private static Map<String, Map.Entry<String, @Nullable String>> laterRuleOfEachName(
+                List<Map.Entry<String, @Nullable String>> rules) {
+            Map<String, Map.Entry<String, @Nullable String>> resolved = new LinkedHashMap<>();
+            for (Map.Entry<String, @Nullable String> rule : rules) {
+                String lower = rule.getKey().toLowerCase(Locale.ROOT);
+                resolved.remove(lower);
+                resolved.put(lower, rule);
+            }
+            return resolved;
         }
 
         /** Every option at its default. */
