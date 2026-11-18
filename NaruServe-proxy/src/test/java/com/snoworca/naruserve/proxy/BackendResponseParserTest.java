@@ -228,6 +228,41 @@ public class BackendResponseParserTest {
         assertNoError();
     }
 
+    /** The cause message of a head past the 64 KiB bound. */
+    private static final String HEAD_BOUND_CAUSE = "the status line and headers exceed 65536 bytes";
+
+    /** A GET to a backend answering {@code rawResponse} is 502 INVALID_RESPONSE whose cause is the head bound. */
+    private void assertGetFailsOnTheHeadBound(String rawResponse) throws IOException {
+        assertGetIsInvalidResponse(rawResponse);
+        Throwable cause = onlyProxyError().getCause();
+        assertNotNull("the INVALID_RESPONSE cause", cause);
+        assertEquals(HEAD_BOUND_CAUSE, cause.getMessage());
+    }
+
+    /**
+     * SEC-PROXY-004 AC-2: a first line of 65536 bytes plus CRLF that is also not a status line passes the 64 KiB bound
+     * before it is parsed, so the 502 INVALID_RESPONSE cause is the head bound, not the malformed status line.
+     */
+    @Test(timeout = 30000)
+    public void sec_PROXY_004_AC2_oversizedMalformedStatusLineFailsOnTheHeadBound() throws IOException {
+        assertGetFailsOnTheHeadBound(repeat('X', ResponseParser.MAX_HEAD_BYTES) + "\r\n");
+    }
+
+    /**
+     * SEC-PROXY-004 AC-2: after a 100 head, a malformed second status line one byte past the bound the 100 head left is
+     * charged before it is parsed, so the 502 INVALID_RESPONSE cause is the head bound, not the malformed status line.
+     */
+    @Test(timeout = 30000)
+    public void sec_PROXY_004_AC2_oversizedMalformedStatusLineAfterInterimHeadFailsOnTheHeadBound()
+            throws IOException {
+        String interimStatusLine = "HTTP/1.1 100 Continue\r\n";
+        // The interim status line is charged; the blank line ending the interim head is not.
+        int left = ResponseParser.MAX_HEAD_BYTES - interimStatusLine.length();
+        String oneBytePast = repeat('Y', left - "\r\n".length() + 1) + "\r\n";
+        assertEquals(left + 1, oneBytePast.length());
+        assertGetFailsOnTheHeadBound(interimStatusLine + "\r\n" + oneBytePast);
+    }
+
     // ---------------------------------------------------------------------------------------------------------------
     // AC-3: obs-fold, value bytes and the header name token
 
