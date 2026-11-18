@@ -1085,4 +1085,122 @@ class ProxyDocsKotlinTest {
             "TinyHttpd cannot see the disconnect until something is written to the client",
             "the slot, the worker thread and the backend socket stay held until the read timeout or the total timeout ends the relay")
     }
+
+    /**
+     * Over real TinyHttpd sockets: a backend that answers `200` with `Content-Length: [declared]`, sends [sent] body
+     * bytes and closes; returns everything the client received until the connection ended, and the app logger.
+     */
+    private fun cutOffOverTinyHttpd(declared: Long, sent: Int): Pair<ByteArray, RecordingLogger> {
+        val backend = ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))
+        val acceptor = Thread({
+            while (!backend.isClosed) {
+                try {
+                    backend.accept().use { s ->
+                        readHead(s.getInputStream())
+                        s.getOutputStream().write("HTTP/1.1 200 OK\r\nContent-Length: $declared\r\n\r\n".toByteArray(Charsets.ISO_8859_1))
+                        s.getOutputStream().write(ByteArray(sent) { 'x'.code.toByte() })
+                        s.getOutputStream().flush()
+                    }
+                } catch (e: java.io.IOException) {
+                    return@Thread
+                }
+            }
+        }, "docs-cut-off-backend")
+        acceptor.isDaemon = true
+        acceptor.start()
+        val logger = RecordingLogger()
+        val app = RestApp.builder().httpAdapter(TinyHttpdAdapter()).jsonCodec(StubJsonCodec()).logger(logger).build()
+        try {
+            app.use("/api", Proxy.to("http://127.0.0.1:${backend.localPort}").readTimeout(10, TimeUnit.SECONDS))
+            val port = app.listen(0).port()
+            val got = java.io.ByteArrayOutputStream()
+            Socket().use { client ->
+                client.connect(InetSocketAddress("127.0.0.1", port), 5000)
+                client.soTimeout = 15000
+                client.getOutputStream().write("GET /api/x HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n".toByteArray(Charsets.ISO_8859_1))
+                client.getOutputStream().flush()
+                val buf = ByteArray(8192)
+                try {
+                    while (true) {
+                        val n = client.getInputStream().read(buf)
+                        if (n < 0) break
+                        got.write(buf, 0, n)
+                    }
+                } catch (reset: java.net.SocketException) {
+                    // an aborted connection may end in a reset; what arrived before it is kept
+                }
+            }
+            return Pair(got.toByteArray(), logger)
+        } finally {
+            app.shutdown(2, TimeUnit.SECONDS)
+            backend.close()
+        }
+    }
+
+    // OPS-DX-010 AC-3 (FR-PROXY-016, FR-PROXY-014; loop P wave-21 r5 LP-26/LP-27): over TinyHttpd, a failure after the
+    // proxy handed the response to the adapter aborts the client connection, and what the client already has depends
+    // on how much the adapter wrote: a backend declaring Content-Length: 100 that closes after 10 bytes leaves the
+    // client 0 bytes (no status line), one that closes after 64 KiB of a larger declared length leaves it the 200 and
+    // a cut body. Both pages must say exactly that, and neither may promise a response cut short in every case.
+    @Test(timeout = 90000)
+    fun `OPS-DX-010 AC-3 the pages state that a failure after the hand-off leaves either no response or a status line with a cut body`() {
+        val (small, smallLog) = cutOffOverTinyHttpd(100, 10)
+        assertEquals("bytes the client received: ${String(small, Charsets.ISO_8859_1)}", 0, small.size)
+        val (large, largeLog) = cutOffOverTinyHttpd(1048576, 65536)
+        val text = String(large, Charsets.ISO_8859_1)
+        assertTrue(text.substring(0, minOf(40, text.length)), text.startsWith("HTTP/1.1 200 "))
+        val bodyStart = text.indexOf("\r\n\r\n") + 4
+        assertTrue("a cut body: ${large.size - bodyStart} bytes", large.size - bodyStart in 1 until 1048576)
+        for (log in listOf(smallLog, largeLog)) {
+            val errors = synchronized(log.errors) { log.errors.filter { it is ProxyException } }
+            assertEquals("${log.lines}", 1, errors.size)
+            assertEquals(ProxyException.Kind.INVALID_RESPONSE, (errors[0] as ProxyException).kind())
+        }
+
+        val k = section(ko(), "### 응답을 보내기 시작한 뒤의 실패")
+        has("proxy.md after the response started", k,
+            "프록시가 응답을 어댑터에 넘긴 뒤 본문을 넘기다가 실패하면",
+            "앱 로거(`req.application().logger()`)에 한 번 기록하고, 프레임워크가 클라이언트 연결을 중단합니다",
+            "클라이언트가 그때까지 상태 줄과 본문 일부를 받았는지는 어댑터가 얼마나 썼는지에 달려 있습니다",
+            "TinyHttpd 어댑터는 응답의 앞부분을 버퍼에 모아 두므로",
+            "`Content-Length: 100`을 선언하고 10바이트를 보낸 뒤 연결을 닫은 백엔드",
+            "클라이언트는 응답 없이 닫힌 연결을 받습니다",
+            "64 KiB를 보낸 뒤 연결을 닫은 백엔드",
+            "상태 줄(`200`)과 중간에 끊긴 본문을 받습니다",
+            "어느 쪽이든 클라이언트가 온전해 보이는 응답을 받는 일은 없습니다")
+        assertFalse("proxy.md still says the headers were sent", k.contains("응답 헤더를 보낸 뒤"))
+        assertFalse("proxy.md still promises a cut response", k.contains("클라이언트는 응답이 중간에 끊긴 것을 봅니다"))
+        val e = section(en(), "### Failures after the response started")
+        has("en/proxy.md after the response started", e,
+            "When relaying the body fails after the proxy handed the response to the adapter",
+            "logs a `ProxyException` of that kind once to the app logger (`req.application().logger()`), and the framework aborts the client connection",
+            "Whether the client has already received the status line and part of the body depends on how much the adapter has written",
+            "The TinyHttpd adapter buffers the beginning of the response",
+            "a backend that declares `Content-Length: 100`, sends 10 bytes and closes the connection",
+            "the client gets a closed connection with no response",
+            "a backend that closes the connection after sending 64 KiB",
+            "the client gets the status line (`200`) and a body cut short",
+            "Either way the client never gets a complete-looking response")
+        assertFalse("en/proxy.md still says the headers were sent", e.contains("after the response headers were sent"))
+        assertFalse("en/proxy.md still promises a cut response", e.contains("The client sees a response cut short."))
+    }
+
+    // FR-PROXY-001 AC-2 (loop P wave-21 r5 LP-28): an IPv4 literal host is four numbers joined by three dots, which
+    // Proxy.to accepts (1.2.3.4) while five numbers (1.2.3.4.5, four dots) are refused; the Korean page must not
+    // describe the accepted form as having four dots, and both pages state the same form
+    @Test
+    fun `FR-PROXY-001 AC-2 both pages describe the accepted IPv4 literal as four numbers joined by three dots`() {
+        assertNotNull(Proxy.to("http://1.2.3.4"))
+        assertNotNull(Proxy.to("http://1.2.3.4:8080"))
+        try {
+            Proxy.to("http://1.2.3.4.5")
+            org.junit.Assert.fail("1.2.3.4.5 was accepted")
+        } catch (expected: IllegalArgumentException) {
+        }
+        val k = section(ko(), "## 기본 사용")
+        assertFalse("proxy.md still says four dots", k.contains("점 네 개"))
+        has("proxy.md basic use", k, "숫자 네 개를 점 세 개로 이은 IPv4 리터럴(`1.2.3.4`)")
+        val e = section(en(), "## Basic use")
+        has("en/proxy.md basic use", e, "a dotted-quad IPv4 literal (four numbers joined by three dots, `1.2.3.4`)")
+    }
 }

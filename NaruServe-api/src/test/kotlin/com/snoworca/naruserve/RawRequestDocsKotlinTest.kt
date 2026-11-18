@@ -489,4 +489,56 @@ class RawRequestDocsKotlinTest {
         assertEquals(413, send(ClientRequest.of("POST", "/small").body(body)).status())
         assertEquals("small 1024", send(ClientRequest.of("POST", "/small").body(bytes(1024))).text())
     }
+
+    // C-005 (loop P wave-21 r5 LP-29): BodyTooLargeException is public API since 0.12.0, so both request pages give it
+    // its own part of the over-limit section with the Express counterpart (raw-body's 413 `entity.too.large`
+    // error), the public constructor and accessor read here by reflection, when the framework throws it, and one
+    // Java and one Kotlin example that use the constructor and limit().
+    @Test
+    fun `C-005 OPS-DX-008 both request pages document BodyTooLargeException with its Express counterpart, constructor and accessor`() {
+        val type = BodyTooLargeException::class.java
+        assertTrue(java.lang.reflect.Modifier.isPublic(type.modifiers))
+        assertTrue(java.lang.reflect.Modifier.isFinal(type.modifiers))
+        assertEquals(java.io.IOException::class.java, type.superclass)
+        val ctor = type.getConstructor(java.lang.Long.TYPE)
+        assertEquals(1, type.constructors.size)
+        val made = ctor.newInstance(10L)
+        assertEquals(10L, made.limit())
+        assertEquals("request body exceeds the limit of 10 bytes", made.message)
+        assertEquals(java.lang.Long.TYPE, type.getMethod("limit").returnType)
+        // thrown unwrapped by app code, the framework answers it 413 like its own overrun
+        app.get("/thrown") { _, _ -> throw BodyTooLargeException(10) }
+        assertEquals(413, send(ClientRequest.of("GET", "/thrown")).status())
+
+        val k = section(ko(), "## 한도를 넘은 원시 본문")
+        val kPart = k.substring(k.indexOf("\n### `BodyTooLargeException`\n").also {
+            assertTrue("request.md has no ### `BodyTooLargeException` part in the over-limit section", it >= 0)
+        })
+        has("request.md BodyTooLargeException", kPart,
+            "`com.snoworca.naruserve.BodyTooLargeException`", "`raw-body`", "`body-parser`", "`express.raw`",
+            "`http-errors`의 `PayloadTooLargeError`", "`err.status`가 `413`", "`err.type`이 `'entity.too.large'`",
+            "`limit()`은 Express의 `err.limit`에 해당합니다",
+            "| `new BodyTooLargeException(long limit)` |", "| `limit()` | `long` |",
+            "`request body exceeds the limit of <limit> bytes`", "`HttpException`이 아니므로 `status()`가 없습니다",
+            "`bodyStream()`·`bodyStream(maxBytes)`가 돌려준 스트림",
+            "`body(...)`, `form(...)`, `parts()`는 한도를 넘으면 이 예외가 아니라 `413` `HttpException`을 던집니다")
+        val e = section(en(), "## Raw body over the limit")
+        val ePart = e.substring(e.indexOf("\n### `BodyTooLargeException`\n").also {
+            assertTrue("en/request.md has no ### `BodyTooLargeException` part in the over-limit section", it >= 0)
+        })
+        has("en/request.md BodyTooLargeException", ePart,
+            "`com.snoworca.naruserve.BodyTooLargeException`", "`raw-body`", "`body-parser`", "`express.raw`",
+            "the `http-errors` `PayloadTooLargeError`", "`err.status` `413`", "`err.type` `'entity.too.large'`",
+            "`limit()` is the counterpart of Express `err.limit`",
+            "| `new BodyTooLargeException(long limit)` |", "| `limit()` | `long` |",
+            "`request body exceeds the limit of <limit> bytes`", "not an `HttpException`, so it has no `status()`",
+            "the stream `bodyStream()` or `bodyStream(maxBytes)` returned",
+            "`body(...)`, `form(...)` and `parts()` throw an `HttpException` `413` over their limits, not this exception")
+        oneJavaAndOneKotlin("request.md BodyTooLargeException", kPart,
+            listOf("throw new BodyTooLargeException(quota);", "((BodyTooLargeException) error).limit()"),
+            listOf("throw BodyTooLargeException(quota)", "error.limit()"))
+        oneJavaAndOneKotlin("en/request.md BodyTooLargeException", ePart,
+            listOf("throw new BodyTooLargeException(quota);", "((BodyTooLargeException) error).limit()"),
+            listOf("throw BodyTooLargeException(quota)", "error.limit()"))
+    }
 }
