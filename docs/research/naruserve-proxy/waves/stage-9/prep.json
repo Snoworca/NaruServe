@@ -1,0 +1,43 @@
+{
+ "base": {
+  "wave-14": "0537d7596f83b27e4c75e95df67d6463c4d30026",
+  "wave-15": "2f57538a4c592734d15306f009b5667595a31a45"
+ },
+ "lock_digest": "931ff44f6068c0138b08d35fb8805cc9e3c334168a3eb92e5d6c4492d4ef81ae",
+ "lock_commit": "01e5287d017583b529158b0a01fe63a7588d888f",
+ "lanes": [
+  {
+   "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-14",
+   "stage": 1,
+   "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-14",
+   "sds": null,
+   "writeSet": [
+    "CLAUDE.md",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyException.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TlsConnector.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExceptionTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsTest.java",
+    "build.gradle",
+    "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+    "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java"
+   ]
+  },
+  {
+   "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-15",
+   "stage": 1,
+   "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-15",
+   "sds": null,
+   "writeSet": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/LocationRewriter.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LocationRewriterTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyFixedResponseHeadersTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyLocationRewriteTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyMethodTest.java"
+   ]
+  }
+ ]
+}

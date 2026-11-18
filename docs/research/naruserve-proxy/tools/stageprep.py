@@ -15,7 +15,7 @@ base={}
 for i,w in enumerate(waves):
   n=int(w.split('-')[1])
   app({"event":"intent","verb":"commit-wave-inputs","wave":w,"inputs_digest":"sha256:"+gd})
-  c=commit(f"chore(orchestrator): wave {n} inputs for stage {s}",[("Orch-Run",R),("Orch-Verb","commit-wave-inputs"),("Orch-Wave",n),("Orch-Stage",s)],[snap] if i==0 else [],allow_empty=i>0)
+  c=commit(f"chore(orchestrator): wave {n} inputs for stage {s}",[("Orch-Run",R),("Orch-Verb","commit-wave-inputs"),("Orch-Wave",n),("Orch-Stage",s)],[snap] if i==0 else [],allow_empty=True)
   base[w]=c
   app({"event":"result","verb":"commit-wave-inputs","wave":w,"proof":{"kind":"git-trailer","ref":f"{c} Orch-Run={R} Orch-Verb=commit-wave-inputs Orch-Wave={n}"},"isolation":{"base_sha":c}})
 lock=f"{SD}/lanes.lock.json"
