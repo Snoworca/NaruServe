@@ -1,0 +1,47 @@
+{
+  "round": 5,
+  "tree_sha": "22b12543d71e8c6e3dad2e722e8d42f618ab8cd1",
+  "resolved_findings": [
+    {
+      "id": "FND-201",
+      "status": "resolved",
+      "req": "SEC-PROXY-004",
+      "evidence": {
+        "order_check": "ResponseParser.read at 3dc09b9 (lines 91-94): lines.read(remaining) -> charge(remaining, lines) -> parseStatusLine(rawStatusLine). 344d39e: lines.read -> charge -> status(statusLine). 2917400 (the regression): statusLine(lines.read(remaining)) then charge. The restored order matches 344d39e exactly; the header loop (read -> charge -> headerLine) is unchanged; the http10 flag (charAt(7)=='0') and the reason-phrase check (isFieldValue with c<0x20 except HTAB, 0x7F, c>0xFF, the last unreachable for ISO-8859-1 chars) match the pre-2917400 loop. No input reaches a different outcome than at 344d39e.",
+        "arithmetic_check": "LineReader.read(maxContent) accepts up to maxContent content bytes; consumed = content + terminator. Test 1: 65536 X + CRLF passes LineReader (end == 65536, not > 65536), consumed 65538, charge 65536-65538 = -2 -> head-bound message; 65537 X would instead fail in LineReader with 'line longer than 65536 bytes', so 65536 is the right size to reach charge. Test 2: interim line 23 bytes charged (left = 65513), the blank interim terminator is not charged (the header loop exits before charge on the empty line); second line = 65512 Y + CRLF = 65514 = left + 1 -> charge -1 -> head bound. At exactly left (65513) charge returns 0 and the parse would report 'malformed status line', so the fixer's +1 is required and correct.",
+        "red_against_regression": "At 2917400, parseStatusLine runs before charge, so both inputs throw 'malformed status line' and assertEquals(HEAD_BOUND_CAUSE, cause.getMessage()) fails; both tests therefore discriminate the order (deduced from 2917400 source lines 90-93; product code not modified to re-run).",
+        "probe_command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*ReviewProbe5Test' --tests '*BackendResponseParserTest'",
+        "probe_output": "BUILD SUCCESSFUL; ReviewProbe5Test tests=9 failures=0 errors=0; BackendResponseParserTest tests=62 failures=0 errors=0 (both new head-bound tests pass)",
+        "probe_cases_green": "first line 65534+CRLF -> 'malformed status line' (exactly at bound passes the bound); 65535+CRLF -> bound; 65536+CRLF -> bound; 65535+LF -> 'malformed status line'; 65536+LF -> bound; 65537+CRLF -> 'line longer than 65536 bytes'; interim + exactly-left -> 'malformed status line'; interim + left+1 -> bound; valid 200 + header one byte past -> bound. Probe file deleted."
+      }
+    }
+  ],
+  "findings": [],
+  "clean_code": [],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+      "hunks_total": 3,
+      "anchors": [
+        "String rawStatusLine = lines.read(remaining);",
+        "StatusLine statusLine = parseStatusLine(rawStatusLine);",
+        "private static StatusLine parseStatusLine(String line) throws Malformed {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/BackendResponseParserTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "private static final String HEAD_BOUND_CAUSE = \"the status line and headers exceed 65536 bytes\";"
+      ],
+      "findings": []
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "by_verdict": {"keep": 0, "drop": 0, "residual": 0},
+    "resolved": ["FND-201"],
+    "note": "FND-201 resolved; restored read -> charge -> parse equals 344d39e for every input; new tests' sizes verified at both sides of the bound by an executed probe (deleted)."
+  }
+}

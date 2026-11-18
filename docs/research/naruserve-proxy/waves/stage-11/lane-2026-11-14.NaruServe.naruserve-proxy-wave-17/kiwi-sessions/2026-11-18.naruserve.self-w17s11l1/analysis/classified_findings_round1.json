@@ -1,0 +1,5 @@
+{"immediate_fix":[{"id":"FND-001","rationale":"kept with red probe; security/framing (smuggling) finding on SEC-PROXY-004 statement (RFC 9112 6.3 order, stricter than RFC) -> block","estimated_complexity":"small","is_behavioral":true,"tags":["bug","security"]}],
+ "declared_limit":[],
+ "kept_tiers":[{"id":"FND-001","tier":"block","family":"response-framing","introduced_by_round":null,"family_action":null}],
+ "discussion_needed":[],
+ "rejected":[{"id":"FND-002","rationale":"reviewer drop: comment wording only","rejection_category":"dropped"},{"id":"FND-003","rationale":"reviewer drop: intended, documented shared head budget","rejection_category":"dropped"},{"id":"FND-004","rationale":"reviewer drop: micro-optimisation, no proven defect","rejection_category":"dropped"}]}

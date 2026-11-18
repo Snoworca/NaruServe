@@ -1,0 +1,26 @@
+{
+ "id": "FND-001",
+ "axis": "P2",
+ "verdict": "keep",
+ "evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*ReviewProbe1Test'",
+  "output": "ReviewProbe1Test > sec_PROXY_004_transferEncodingOnHttp10ResponseIsInvalidResponse FAILED\n    java.lang.AssertionError: status (body: hello) expected:<502> but was:<200>\n1 test completed, 1 failed",
+  "intent_output": "502 with onError receiving exactly one ProxyException of kind INVALID_RESPONSE; the chunked body is never decoded or relayed",
+  "test_source": "package com.snoworca.naruserve.proxy;\n\nimport static org.junit.Assert.assertEquals;\nimport static org.junit.Assert.assertSame;\nimport static org.junit.Assert.assertTrue;\n\nimport com.snoworca.naruserve.RestApp;\nimport com.snoworca.naruserve.testing.InMemoryHttpAdapter;\nimport com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;\nimport com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;\nimport com.snoworca.naruserve.testing.TestApp;\nimport java.io.IOException;\nimport java.util.ArrayList;\nimport java.util.Collections;\nimport java.util.List;\nimport java.util.concurrent.TimeUnit;\nimport org.junit.After;\nimport org.junit.Test;\n\n/**\n * RFC 9112 \u00a76.1: a client that receives an HTTP/1.0 message containing Transfer-Encoding MUST treat the framing as\n * faulty; \u00a76.3 then requires a proxy to answer a response with faulty framing with 502. SEC-PROXY-004 is \"stricter\n * than the RFC\", so an HTTP/1.0 response with Transfer-Encoding: chunked must be 502 INVALID_RESPONSE, not decoded.\n */\npublic class ReviewProbe1Test {\n\n    private final InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();\n    private final TestApp t = TestApp.create(adapter);\n    private final RestApp app = t.app();\n    private final List<Throwable> errors = Collections.synchronizedList(new ArrayList<Throwable>());\n    private RawBackend backend;\n\n    @After\n    public void tearDown() throws IOException {\n        app.shutdown(2, TimeUnit.SECONDS);\n        if (backend != null) {\n            backend.close();\n        }\n    }\n\n    // SEC-PROXY-004 (RFC 9112 \u00a76.1): Transfer-Encoding on an HTTP/1.0 response is faulty framing -> 502\n    @Test(timeout = 30000)\n    public void sec_PROXY_004_transferEncodingOnHttp10ResponseIsInvalidResponse() throws IOException {\n        backend = RawBackend.answering(\n                \"HTTP/1.0 200 OK\\r\\nTransfer-Encoding: chunked\\r\\n\\r\\n5\\r\\nhello\\r\\n0\\r\\n\\r\\n\");\n        app.use(\"/api\", Proxy.to(backend.url()));\n        app.onError((error, req, res) -> errors.add(error));\n        t.start();\n\n        ClientResponse r = adapter.send(ClientRequest.of(\"GET\", \"/api/x\"));\n\n        assertEquals(\"status (body: \" + r.text() + \")\", 502, r.status());\n        synchronized (errors) {\n            assertEquals(\"errors: \" + errors, 1, errors.size());\n            assertTrue(errors.get(0) instanceof ProxyException);\n            assertSame(ProxyException.Kind.INVALID_RESPONSE, ((ProxyException) errors.get(0)).kind());\n        }\n    }\n}\n"
+ },
+ "drop_reason": null,
+ "title": "HTTP/1.0 backend response with Transfer-Encoding: chunked is decoded as chunked instead of rejected as faulty framing",
+ "location": {
+  "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+  "line_range": "134-147 (framing), 176-193 (status: minor version discarded)"
+ },
+ "description": "RFC 9112 \u00a76.1: 'A server or client that receives an HTTP/1.0 message containing a Transfer-Encoding header field MUST treat the message as if the framing is faulty, even if a Content-Length is present'; \u00a76.3 then requires a proxy receiving a response with faulty framing to close the server connection, discard the response and send 502. SEC-PROXY-004 is explicitly 'stricter than the RFC' and lists smuggling as its threat, yet ResponseParser.status() throws away the HTTP minor version and framing() decodes 'HTTP/1.0 200 OK / Transfer-Encoding: chunked' as chunked and relays 200 'hello'. A backend (or anything between proxy and backend) that frames differently from the HTTP/1.0 semantics is accepted here, which is the exact desync class the requirement exists to close; this is the only place the parser is laxer than the RFC.",
+ "suggested_fix": "Keep the minor version digit in ResponseParser.Head (e.g. boolean http10 from line.charAt(7)=='0'); in framing(), after the bodyless check, throw invalid(\"Transfer-Encoding on an HTTP/1.0 response\") when head is HTTP/1.0 and transferEncodings is non-empty. HEAD/204/304 stay bodyless first (FR-PROXY-014 AC-6 unaffected). Reuse the probe above as the regression test in BackendResponseParserTest.",
+ "is_behavioral": true,
+ "tags": [
+  "bug",
+  "security",
+  "smuggling"
+ ],
+ "req": "SEC-PROXY-004 (requirement statement: RFC 9112 \u00a76.3 framing, stricter than the RFC; RFC 9112 \u00a76.1)"
+}

@@ -1,0 +1,24 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-17-fr-proxy-016",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-016"
+ ],
+ "spawn_context": "pm-child",
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests ProxyMidResponseFailureTest",
+  "exit_code": 1,
+  "captured_failure": "11 tests completed, 9 failed",
+  "timestamp": "2026-11-18T09:12:00Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:check",
+  "exit_code": 0,
+  "timestamp": "2026-11-18T09:20:00Z"
+ }
+}

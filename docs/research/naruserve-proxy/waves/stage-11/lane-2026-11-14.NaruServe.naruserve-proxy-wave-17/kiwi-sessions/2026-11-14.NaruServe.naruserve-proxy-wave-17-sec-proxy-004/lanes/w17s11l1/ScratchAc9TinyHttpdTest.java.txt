@@ -1,0 +1,55 @@
+package com.snoworca.naruserve.proxy;
+
+import static org.junit.Assert.assertEquals;
+
+import com.snoworca.naruserve.RestApp;
+import com.snoworca.naruserve.testing.RecordingLogger;
+import com.snoworca.naruserve.testing.StubJsonCodec;
+import com.snoworca.naruserve.tinyhttpd.TinyHttpdAdapter;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
+import org.junit.Test;
+
+public class ScratchAc9TinyHttpdTest {
+    // SEC-PROXY-004 AC-9 over a real TinyHttpd 3.1.1 socket (scratch, not committed)
+    @Test(timeout = 30000)
+    public void sec_PROXY_004_AC9_overATinyHttpdSocketTheHeaderByteIsOneE9() throws Exception {
+        RawBackend backend = RawBackend.answering("HTTP/1.1 200 OK\r\nX-Name: café\r\nContent-Length: 2\r\n\r\nok");
+        RestApp g = RestApp.builder().httpAdapter(new TinyHttpdAdapter()).jsonCodec(new StubJsonCodec())
+                .logger(new RecordingLogger()).build();
+        try {
+            g.use("/p", Proxy.to(backend.url()));
+            int port = g.listen(0).port();
+            byte[] raw;
+            try (Socket s = new Socket()) {
+                s.connect(new InetSocketAddress("127.0.0.1", port), 5000);
+                s.setSoTimeout(10000);
+                s.getOutputStream().write("GET /p/x HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n"
+                        .getBytes(StandardCharsets.ISO_8859_1));
+                ByteArrayOutputStream buf = new ByteArrayOutputStream();
+                InputStream in = s.getInputStream();
+                byte[] b = new byte[8192];
+                try {
+                    for (int n; (n = in.read(b)) >= 0; ) buf.write(b, 0, n);
+                } catch (SocketException reset) { }
+                raw = buf.toByteArray();
+            }
+            String text = new String(raw, StandardCharsets.ISO_8859_1);
+            int i = text.toLowerCase().indexOf("x-name:");
+            int end = text.indexOf("\r\n", i);
+            byte[] line = text.substring(i, end).getBytes(StandardCharsets.ISO_8859_1);
+            StringBuilder hex = new StringBuilder();
+            for (byte x : line) hex.append(String.format("%02X ", x & 0xff));
+            System.out.println("AC9 line bytes: " + hex);
+            assertEquals("X-Name line bytes " + hex, "X-Name: café", text.substring(i, end));
+        } finally {
+            g.shutdown(2, TimeUnit.SECONDS);
+            backend.close();
+        }
+    }
+}

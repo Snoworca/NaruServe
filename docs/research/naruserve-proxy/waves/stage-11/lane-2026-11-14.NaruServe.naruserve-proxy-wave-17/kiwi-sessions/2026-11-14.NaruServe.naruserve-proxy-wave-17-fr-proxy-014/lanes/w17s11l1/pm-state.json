@@ -1,0 +1,36 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-17-fr-proxy-014",
+ "base_sha": "baf3320",
+ "sds_path": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-014"
+ ],
+ "req_filter": [
+  "FR-PROXY-014"
+ ],
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "FR-PROXY-014",
+    "test_sha": "b3ad0ed",
+    "implementation_sha": "ddca9e1"
+   }
+  ],
+  "changed": true,
+  "commit_sha": "ddca9e1"
+ },
+ "lifecycle_gate_state": {
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-PROXY-014": "evolving"
+  },
+  "status_snapshot": {
+   "FR-PROXY-014": "planned"
+  }
+ },
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-17-fr-proxy-014/lanes/w17s11l1/reports/pm-20261118.md"
+}

@@ -1,0 +1,133 @@
+{
+ "run_id": "2026-11-18.naruserve.self-w17s11l1",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "started_at": "2026-11-18T00:00:00Z",
+ "mode": "self",
+ "mode_flags": [
+  "--loops 20",
+  "--keep-clean-code",
+  "--no-pipeline-emit",
+  "--req-filter SEC-PROXY-004,FR-PROXY-014,FR-PROXY-016"
+ ],
+ "phase": "8",
+ "finding_queue": [],
+ "fix_iter": 3,
+ "recheck_iter": 4,
+ "clean_code_round": 2,
+ "clean_code_dismissed": [
+  {
+   "id": "CC-002",
+   "principle": "DRY",
+   "location": "ChunkedBodyInputStream.java 41-46 / RelayedBodyStream.java 59-64",
+   "reason": "standard 3-line read() idiom; no shared home without new files"
+  }
+ ],
+ "clean_code_skip": false,
+ "guarantee_scope": "NaruServe-proxy response parser, response body relay and mid-response failure handling changed in 7b20950..HEAD for SEC-PROXY-004, FR-PROXY-014, FR-PROXY-016; timeouts/retries (FR-PROXY-015/017), X-Forwarded (FR-PROXY-005), FR-PROXY-018/020 are later waves",
+ "declared_limits": [],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "f8df8e00b86350fe267503776f377ff39cc336f2",
+   "scope": "full",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ChunkedBodyInputStream.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/FramingLists.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/BackendResponseParserTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyMidResponseFailureTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyResponseBodyTest.java"
+   ],
+   "tokens_used": 270731,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-001",
+     "tier": "block",
+     "family": "response-framing",
+     "introduced_by_round": null
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "tree_sha": "628f3b5a59527e4b128ed61daf64fb37f3f61da1",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/BackendResponseParserTest.java"
+   ],
+   "tokens_used": 102772,
+   "residual_count": 0,
+   "coverage_passed": false,
+   "invalid_reason": "anchor not a whole added line: 'must not have at all (RFC 9112 \u00a76.1) and which must otherwise be a single {@code chunked} without'",
+   "findings": []
+  },
+  {
+   "round": 3,
+   "tree_sha": "628f3b5a59527e4b128ed61daf64fb37f3f61da1",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/BackendResponseParserTest.java"
+   ],
+   "tokens_used": 3557,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  },
+  {
+   "round": 4,
+   "tree_sha": "54f2c2895bfe3584e6197a8060c3c854d97a177f",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ChunkedBodyInputStream.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/FramingLists.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java"
+   ],
+   "tokens_used": 102802,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [],
+   "clean_code_regression": [
+    {
+     "id": "FND-201",
+     "handled_as": "behaviour change of clean-code fix CC-005 (parse before head-size charge); restored pre-refactor order per clean-code rule instead of a block finding",
+     "evidence": "ReviewProbe1Test 2/2 red: expected <the status line and headers exceed 65536 bytes> but was <malformed status line>"
+    }
+   ]
+  },
+  {
+   "round": 5,
+   "tree_sha": "22b12543d71e8c6e3dad2e722e8d42f618ab8cd1",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/BackendResponseParserTest.java"
+   ],
+   "tokens_used": 90000,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": []
+  }
+ ],
+ "regression_baseline": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json (failing_tests [])",
+ "regression_pass": true,
+ "pr_responded": false,
+ "failed": false
+}

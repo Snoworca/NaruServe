@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest" tests="11" skipped="0" failures="9" errors="0" timestamp="2026-11-18T09:15:05.778Z" hostname="Sungbeomui-Macmini.local" time="25.173">
+  <properties/>
+  <testcase name="fr_PROXY_016_AC2_chunkSizeLineOver4KiBAbortsTheClientAndLogsInvalidResponse" classname="com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest" time="5.042">
+    <failure message="java.lang.AssertionError: ProxyExceptions logged: [INFO GET /m0/x 200 aborted 9ms in=0 out=5 rid=b1cc6b10e979b90e] expected:&lt;1&gt; but was:&lt;0&gt;" type="java.lang.AssertionError">java.lang.AssertionError: ProxyExceptions logged: [INFO GET /m0/x 200 aborted 9ms in=0 out=5 rid=b1cc6b10e979b90e] expected:&lt;1&gt; but was:&lt;0&gt;
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.assertLoggedOnce(ProxyMidResponseFailureTest.java:155)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.fr_PROXY_016_AC2_chunkSizeLineOver4KiBAbortsTheClientAndLogsInvalidResponse(ProxyMidResponseFailureTest.java:219)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+</failure>
+  </testcase>
+  <testcase name="fr_PROXY_016_AC3_stalledBodyAbortsTheClientAfterTheReadTimeoutAndLogsReadTimeout" classname="com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest" time="6.038">
+    <failure message="java.lang.AssertionError: ProxyExceptions logged: [INFO GET /m0/x 200 aborted 1005ms in=0 out=10 rid=fa952104cb00faa2] expected:&lt;1&gt; but was:&lt;0&gt;" type="java.lang.AssertionError">java.lang.AssertionError: ProxyExceptions logged: [INFO GET /m0/x 200 aborted 1005ms in=0 out=10 rid=fa952104cb00faa2] expected:&lt;1&gt; but was:&lt;0&gt;
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.assertLoggedOnce(ProxyMidResponseFailureTest.java:155)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.fr_PROXY_016_AC3_stalledBodyAbortsTheClientAfterTheReadTimeoutAndLogsReadTimeout(ProxyMidResponseFailureTest.java:254)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+</failure>
+  </testcase>
+  <testcase name="fr_PROXY_016_AC1_backendClosingBeforeItsLengthAbortsTheClientAndLogsInvalidResponse" classname="com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest" time="5.015">
+    <failure message="java.lang.AssertionError: ProxyExceptions logged: [INFO GET /m0/x 200 aborted 1ms in=0 out=50 rid=e7710034cfd5a4cd] expected:&lt;1&gt; but was:&lt;0&gt;" type="java.lang.AssertionError">java.lang.AssertionError: ProxyExceptions logged: [INFO GET /m0/x 200 aborted 1ms in=0 out=50 rid=e7710034cfd5a4cd] expected:&lt;1&gt; but was:&lt;0&gt;
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.assertLoggedOnce(ProxyMidResponseFailureTest.java:155)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.fr_PROXY_016_AC1_backendClosingBeforeItsLengthAbortsTheClientAndLogsInvalidResponse(ProxyMidResponseFailureTest.java:203)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+</failure>
+  </testcase>
+  <testcase name="fr_PROXY_016_AC5_clientAbortIsNotLoggedAsABackendFailure" classname="com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest" time="0.01"/>
+  <testcase name="fr_PROXY_016_AC2_trailerOver64KiBAbortsTheClientAndLogsInvalidResponse" classname="com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest" time="5.034">
+    <failure message="java.lang.AssertionError: ProxyExceptions logged: [INFO GET /m0/x 200 aborted 5ms in=0 out=5 rid=57166fac69ab84e8] expected:&lt;1&gt; but was:&lt;0&gt;" type="java.lang.AssertionError">java.lang.AssertionError: ProxyExceptions logged: [INFO GET /m0/x 200 aborted 5ms in=0 out=5 rid=57166fac69ab84e8] expected:&lt;1&gt; but was:&lt;0&gt;
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.assertLoggedOnce(ProxyMidResponseFailureTest.java:155)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.fr_PROXY_016_AC2_trailerOver64KiBAbortsTheClientAndLogsInvalidResponse(ProxyMidResponseFailureTest.java:234)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+</failure>
+  </testcase>
+  <testcase name="fr_PROXY_016_AC5_readTimeoutIsLoggedOnceBeforeTheIoExceptionLeaves" classname="com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest" time="2.01">
+    <failure message="java.lang.AssertionError: cause of java.net.SocketTimeoutException: Read timed out: null" type="java.lang.AssertionError">java.lang.AssertionError: cause of java.net.SocketTimeoutException: Read timed out: null
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.causeOf(ProxyMidResponseFailureTest.java:335)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.fr_PROXY_016_AC5_readTimeoutIsLoggedOnceBeforeTheIoExceptionLeaves(ProxyMidResponseFailureTest.java:423)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+</failure>
+  </testcase>
+  <testcase name="fr_PROXY_016_AC5_shortBodyIsLoggedOnceBeforeTheIoExceptionLeaves" classname="com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest" time="0.005">
+    <failure message="java.lang.AssertionError: a read of the relayed stream threw" type="java.lang.AssertionError">java.lang.AssertionError: a read of the relayed stream threw
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertNotNull(Assert.java:713)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.causeOf(ProxyMidResponseFailureTest.java:334)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.fr_PROXY_016_AC5_shortBodyIsLoggedOnceBeforeTheIoExceptionLeaves(ProxyMidResponseFailureTest.java:400)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+</failure>
+  </testcase>
+  <testcase name="fr_PROXY_016_AC4_malformedChunkThrowsIoExceptionCausedByInvalidResponseWithoutAbort" classname="com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest" time="0.003"/>
+  <testcase name="fr_PROXY_016_AC4_shortBodyThrowsIoExceptionCausedByInvalidResponseWithoutAbort" classname="com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest" time="0.002">
+    <failure message="java.lang.AssertionError: a read of the relayed stream threw" type="java.lang.AssertionError">java.lang.AssertionError: a read of the relayed stream threw
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertNotNull(Assert.java:713)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.causeOf(ProxyMidResponseFailureTest.java:334)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.fr_PROXY_016_AC4_shortBodyThrowsIoExceptionCausedByInvalidResponseWithoutAbort(ProxyMidResponseFailureTest.java:350)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+</failure>
+  </testcase>
+  <testcase name="fr_PROXY_016_AC5_malformedChunkIsLoggedOnceWithItsKind" classname="com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest" time="0.006">
+    <failure message="java.lang.AssertionError: log and throw order expected:&lt;2&gt; but was:&lt;1&gt;" type="java.lang.AssertionError">java.lang.AssertionError: log and throw order expected:&lt;2&gt; but was:&lt;1&gt;
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.fr_PROXY_016_AC5_malformedChunkIsLoggedOnceWithItsKind(ProxyMidResponseFailureTest.java:448)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+</failure>
+  </testcase>
+  <testcase name="fr_PROXY_016_AC4_readTimeoutThrowsIoExceptionCausedByReadTimeoutWithoutAbort" classname="com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest" time="2.008">
+    <failure message="java.lang.AssertionError: cause of java.net.SocketTimeoutException: Read timed out: null" type="java.lang.AssertionError">java.lang.AssertionError: cause of java.net.SocketTimeoutException: Read timed out: null
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.causeOf(ProxyMidResponseFailureTest.java:335)
+	at com.snoworca.naruserve.proxy.ProxyMidResponseFailureTest.fr_PROXY_016_AC4_readTimeoutThrowsIoExceptionCausedByReadTimeoutWithoutAbort(ProxyMidResponseFailureTest.java:367)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:299)
+	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:293)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+</failure>
+  </testcase>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

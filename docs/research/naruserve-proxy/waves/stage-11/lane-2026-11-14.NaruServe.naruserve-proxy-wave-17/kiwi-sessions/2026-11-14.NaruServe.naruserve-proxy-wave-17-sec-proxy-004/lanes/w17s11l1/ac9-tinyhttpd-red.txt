@@ -1,0 +1,1 @@
+AC9 TinyHttpd 3.1.1 socket: X-Name line bytes 58 2D 4E 61 6D 65 3A 20 63 61 66 C3 A9 ; expected:<X-Name: caf[é]> but was:<X-Name: caf[Ã©]>

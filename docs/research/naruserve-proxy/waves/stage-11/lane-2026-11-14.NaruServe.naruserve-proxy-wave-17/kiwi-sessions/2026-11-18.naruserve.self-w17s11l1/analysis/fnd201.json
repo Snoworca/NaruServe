@@ -1,0 +1,26 @@
+{
+ "id": "FND-201",
+ "axis": "P2",
+ "verdict": "keep",
+ "evidence": {
+  "command": "cd /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-17 && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*ReviewProbe1Test'   (reference: --tests '*ReviewProbe3Test' against the 344d39e parser copied into test scope as ReviewProbeOldParser)",
+  "output": "ReviewProbe1Test > oversizedMalformedStatusLineKeepsTheBoundCause FAILED: org.junit.ComparisonFailure: expected:<[the status line and headers exceed 65536 bytes]> but was:<[malformed status line]>\nReviewProbe1Test > oversizedMalformedSecondStatusLineKeepsTheBoundCause FAILED: org.junit.ComparisonFailure: expected:<[the status line and headers exceed 65536 bytes]> but was:<[malformed status line]>\n4 tests completed, 2 failed (ReviewProbe2Test equivalence cases green)\nReviewProbe3Test (pre-refactor parser, same bytes): BUILD SUCCESSFUL",
+  "intent_output": "Both ReviewProbe1Test cases pass: the ProxyException (kind INVALID_RESPONSE) carries the pre-refactor cause 'the status line and headers exceed 65536 bytes', as the 344d39e parser does for the same bytes.",
+  "test_source": "package com.snoworca.naruserve.proxy;\n\nimport static org.junit.Assert.assertEquals;\nimport static org.junit.Assert.fail;\n\nimport java.io.ByteArrayInputStream;\nimport java.nio.charset.StandardCharsets;\nimport java.util.Arrays;\nimport org.junit.Test;\n\npublic class ReviewProbe1Test {\n    // A first status line of exactly MAX_HEAD_BYTES bytes plus CRLF that is also not a status line.\n    // Pre-refactor (344d39e): read -> charge -> status(): cause \"the status line and headers exceed 65536 bytes\".\n    @Test\n    public void oversizedMalformedStatusLineKeepsTheBoundCause() throws Exception {\n        byte[] line = new byte[ResponseParser.MAX_HEAD_BYTES + 2];\n        Arrays.fill(line, (byte) 'X');\n        line[line.length - 2] = '\\r';\n        line[line.length - 1] = '\\n';\n        try {\n            ResponseParser.read(new ByteArrayInputStream(line));\n            fail(\"expected INVALID_RESPONSE\");\n        } catch (ProxyException e) {\n            assertEquals(ProxyException.Kind.INVALID_RESPONSE, e.kind());\n            assertEquals(\"the status line and headers exceed 65536 bytes\", e.getCause().getMessage());\n        }\n    }\n\n    // Second status line after a 1xx head, malformed and over the remaining bound.\n    @Test\n    public void oversizedMalformedSecondStatusLineKeepsTheBoundCause() throws Exception {\n        String interim = \"HTTP/1.1 100 Continue\\r\\n\\r\\n\";\n        int remaining = ResponseParser.MAX_HEAD_BYTES - (interim.length());\n        StringBuilder sb = new StringBuilder(interim);\n        for (int i = 0; i < remaining; i++) sb.append('Y');\n        sb.append(\"\\r\\n\");\n        try {\n            ResponseParser.read(new ByteArrayInputStream(sb.toString().getBytes(StandardCharsets.ISO_8859_1)));\n            fail(\"expected INVALID_RESPONSE\");\n        } catch (ProxyException e) {\n            assertEquals(ProxyException.Kind.INVALID_RESPONSE, e.kind());\n            assertEquals(\"the status line and headers exceed 65536 bytes\", e.getCause().getMessage());\n        }\n    }\n}\n\n// Reference (ReviewProbe3Test + ReviewProbeOldParser.java = `git show 344d39e:NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java | perl -pe 's/\\bResponseParser\\b/ReviewProbeOldParser/g'`):\n// the same 65536 'X' + CRLF bytes through ReviewProbeOldParser.read assert cause message\n// \"the status line and headers exceed 65536 bytes\" -> PASSES (BUILD SUCCESSFUL).\n"
+ },
+ "drop_reason": null,
+ "title": "Status-line parse now runs before the head-size charge, changing the INVALID_RESPONSE cause for an over-bound malformed status line",
+ "location": {
+  "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+  "line_range": "91-93"
+ },
+ "description": "Pre-refactor order was `String statusLine = lines.read(remaining); remaining = charge(remaining, lines); int status = status(statusLine);`. The refactor inlines the parse into `StatusLine statusLine = statusLine(lines.read(remaining));` and charges afterwards, so parse and bound check swap. When a status line is both malformed and pushes the head past MAX_HEAD_BYTES (e.g. 65536 non-HTTP bytes + CRLF as the first line, or an over-bound malformed status line after a 1xx head), the ProxyException cause (visible to onError/error handlers via getCause()) changes from 'the status line and headers exceed 65536 bytes' to 'malformed status line'. Kind (INVALID_RESPONSE) and the 502 are unchanged, so SEC-PROXY-004 AC-1/AC-2 still hold; impact is diagnostic-only, but it contradicts the commit's behaviour-identical claim.",
+ "suggested_fix": "Restore the original order: `String line = lines.read(remaining); remaining = charge(remaining, lines); StatusLine statusLine = statusLine(line);` (add a regression test pinning the bound cause for an over-bound malformed status line).",
+ "is_behavioral": true,
+ "tags": [
+  "refactor-regression",
+  "diagnostic-only",
+  "low-severity"
+ ],
+ "req": "SEC-PROXY-004"
+}

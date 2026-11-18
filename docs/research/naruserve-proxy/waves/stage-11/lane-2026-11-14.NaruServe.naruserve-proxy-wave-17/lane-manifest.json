@@ -1,0 +1,231 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-17",
+ "wave": "wave-17",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-17",
+ "base_sha": "7b209508704dd5d9ce5f169e81fc780f28792863",
+ "head_sha": "3dc09b935c29cde7e03155c67aed6e4afab56970",
+ "commits": [
+  {
+   "sha": "4150957d4b677076f638df2389c7c23b69e11aa8",
+   "subject": "test(proxy): backend response parser malformed-input tests",
+   "req": "SEC-PROXY-004",
+   "kind": "test",
+   "missing_trailers": true
+  },
+  {
+   "sha": "baf332003f8ff28e2e9aa29096a2f3851dbb156b",
+   "subject": "feat(proxy): strict backend response parser sharing FramingLists",
+   "req": "SEC-PROXY-004",
+   "kind": "implementation",
+   "missing_trailers": true
+  },
+  {
+   "sha": "b3ad0edeab3c061f12638872b709de952a1ad1e5",
+   "subject": "test(proxy): response body relay length and bodyless responses",
+   "req": "FR-PROXY-014",
+   "kind": "test",
+   "missing_trailers": true
+  },
+  {
+   "sha": "ddca9e1dfa1fb3d12088d9738f9d298e03a007d9",
+   "subject": "feat(proxy): relay no backend bytes for HEAD, 204 and 304 responses",
+   "req": "FR-PROXY-014",
+   "kind": "implementation",
+   "missing_trailers": true
+  },
+  {
+   "sha": "7355187ae0929078ae574da7050416a897699f9e",
+   "subject": "test(proxy): mid-response backend failures abort the client",
+   "req": "FR-PROXY-016",
+   "kind": "test",
+   "missing_trailers": true
+  },
+  {
+   "sha": "527685bb7d09aaaa04e304ebbd99672530f5216c",
+   "subject": "feat(proxy): log and rethrow backend failures after the response started",
+   "req": "FR-PROXY-016",
+   "kind": "implementation",
+   "missing_trailers": true
+  },
+  {
+   "sha": "78136e293d1768b763f2b7ab76330c787719f53a",
+   "subject": "test(proxy): HTTP/1.0 response with Transfer-Encoding is invalid",
+   "req": "SEC-PROXY-004",
+   "kind": "test",
+   "missing_trailers": true
+  },
+  {
+   "sha": "344d39e87fa94dd03e55c0f659f613ee90d5a353",
+   "subject": "fix(proxy): reject Transfer-Encoding on HTTP/1.0 backend responses",
+   "req": "SEC-PROXY-004",
+   "kind": "review",
+   "missing_trailers": true
+  },
+  {
+   "sha": "2917400cdb863e6c669837f34d7f09c1d03e373d",
+   "subject": "refactor(proxy): share framing field collection and line reading helpers",
+   "req": "SEC-PROXY-004",
+   "kind": "review",
+   "missing_trailers": true
+  },
+  {
+   "sha": "7bcaf3f166c3240774f5fe4f12006c2bbd2f1302",
+   "subject": "test(proxy): head bound wins over a malformed oversized status line",
+   "req": "SEC-PROXY-004",
+   "kind": "test",
+   "missing_trailers": true
+  },
+  {
+   "sha": "3dc09b935c29cde7e03155c67aed6e4afab56970",
+   "subject": "refactor(proxy): charge the head bound before parsing the status line",
+   "req": "SEC-PROXY-004",
+   "kind": "review",
+   "missing_trailers": true
+  }
+ ],
+ "commits_trailer_note": "Every commit message carries REQ, Commit-Kind, Orch-Run, Orch-Wave 17, Orch-Stage 11 and Orch-Lane lines, but a blank line separates them from the final Co-Authored-By line, so git parses only Co-Authored-By as the trailer block (`git log --format=%(trailers:key=Orch-Wave)` is empty). History was not rewritten, per the brief. The lines are recoverable with `git log --format=%B | grep -E '^(REQ|Commit-Kind|Orch-[A-Za-z]+):'`.",
+ "requirements": {
+  "landed": [
+   "SEC-PROXY-004",
+   "FR-PROXY-014",
+   "FR-PROXY-016"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-17/.kiwi/deferred-srs-mutations.jsonl",
+ "deferred_queue_lines": 36,
+ "reports": [
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-17-sec-proxy-004/lanes/w17s11l1/coder-result.json",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-17-fr-proxy-014/lanes/w17s11l1/coder-result.json",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-17-fr-proxy-016/lanes/w17s11l1/coder-result.json",
+  ".kiwi/sessions/2026-11-18.naruserve.self-w17s11l1/analysis/report.md"
+ ],
+ "red_evidence": [
+  {
+   "req": "SEC-PROXY-004",
+   "test": "BackendResponseParserTest (54 tests)",
+   "red_output": "54 tests completed, 40 failed - e.g. AC1_fourDigitStatus: 'a ProxyException: com.snoworca.naruserve.HttpException'; AC2_headOneBytePast64KiB expected:<502> but was:<200>; AC4_contentLengthWithTransferEncoding expected:<502> but was:<200>; AC7_repeatedContentLengthList expected:<200> but was:<502>; AC10 trailerPast64KiBAbortsTheClient"
+  },
+  {
+   "req": "FR-PROXY-014",
+   "test": "ProxyResponseBodyTest AC4/AC5 stream-bytes tests (red at HEAD and 7b20950); AC6 x5 (red at 7b20950, green via baf3320)",
+   "red_output": "bytes read from the relayed stream expected:<[]> but was:<[body]>; AC6: expected:<10> but was:<-1> / expected:<200> but was:<502>"
+  },
+  {
+   "req": "FR-PROXY-016",
+   "test": "ProxyMidResponseFailureTest (9 red)",
+   "red_output": "ProxyExceptions logged ... expected:<1> but was:<0>; cause of java.net.SocketTimeoutException: Read timed out: null"
+  },
+  {
+   "req": "SEC-PROXY-004",
+   "test": "BackendResponseParserTest#sec_PROXY_004_transferEncodingOnHttp10ResponseIsInvalidResponse (review FND-001)",
+   "red_output": "status (body: hello) expected:<502> but was:<200>"
+  },
+  {
+   "req": "SEC-PROXY-004",
+   "test": "BackendResponseParserTest#sec_PROXY_004_AC2_oversizedMalformedStatusLine* (review FND-201)",
+   "red_output": "expected:<[the status line and headers exceed 65536 bytes]> but was:<[malformed status line]>"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "rounds": 5,
+  "invalid_rounds": [
+   2
+  ],
+  "check_review_round": "PASS",
+  "fixed_findings": [
+   "FND-001 (HTTP/1.0 + Transfer-Encoding now INVALID_RESPONSE, RFC 9112 6.1)",
+   "FND-201 (clean-code refactor reordered parse/charge; restored)"
+  ],
+  "clean_code": {
+   "rounds": 2,
+   "fixed": [
+    "CC-001",
+    "CC-003",
+    "CC-004",
+    "CC-005",
+    "CC-101"
+   ],
+   "dismissed": [
+    "CC-002"
+   ],
+   "unresolved": []
+  },
+  "notes": "The Agent tool started every subagent asynchronously in this environment (run_in_background was never set); the worker waited for each one in the same turn by polling a result file in short foreground commands. The first kiwi-coder (SEC-PROXY-004) got the result-file instruction by SendMessage. Classification used the fixed keep/drop mapping applied by the lead. FND-201 (a behaviour change introduced by the clean-code fix) was handled under the clean-code rule and not counted as a block finding, so fix-induced-defects-majority did not fire; the host may reclassify it."
+ },
+ "intentionally_empty": [
+  {
+   "req": "FR-PROXY-014",
+   "acs": [
+    "AC-1",
+    "AC-2",
+    "AC-3",
+    "AC-4 (length/timing part)",
+    "AC-5 (status/length/timing part)"
+   ],
+   "evidence": "ProxyResponseBodyTest fr_PROXY_014_AC1/AC2/AC3 and the kept-open AC4/AC5 tests were green at wave base 7b20950 (earlier wave relay code); the no-body-bytes parts of AC-4/AC-5 were red and fixed by ddca9e1; AC-6 was red at 7b20950 and made green by baf3320"
+  }
+ ],
+ "design_refuted": [],
+ "srs_deltas": [
+  {
+   "req": "SEC-PROXY-004",
+   "ac": "AC-9",
+   "kind": "adapter-dependent-limit",
+   "detail": "The proxy keeps byte 0xE9 as U+00E9 and the committed in-memory adapter test (BackendResponseParserTest#sec_PROXY_004_AC9_latin1HeaderBytesReachTheClientAsTheSameSingleBytes) is green. Over a real TinyHttpd 3.1.1 socket the client gets 0xC3 0xA9 because TinyHttpd writes header chars as UTF-8. ../TinyHttpd and NaruServe-tinyhttpd were not changed and no workaround was added; please amend AC-9 to name the adapters it holds for (or wait for a TinyHttpd fix). The red socket test was not committed.",
+   "evidence": "X-Name line bytes 58 2D 4E 61 6D 65 3A 20 63 61 66 C3 A9; org.junit.ComparisonFailure: expected:<X-Name: caf[é]> but was:<X-Name: caf[Ã©]>"
+  },
+  {
+   "req": "SEC-PROXY-004",
+   "ac": "AC-2",
+   "kind": "interpretation",
+   "detail": "The 64 KiB bound counts the status line and header lines with their line terminators but not the blank line ending the head; interim 1xx heads share the same bound with the final head. The bound is charged before the status line is parsed, so an over-bound malformed status line fails on the bound.",
+   "evidence": "BackendResponseParserTest#sec_PROXY_004_AC2_headOfExactly64KiBIsRelayed / headOneBytePast64KiBIsInvalidResponse / oversizedMalformedStatusLine*"
+  },
+  {
+   "req": "SEC-PROXY-004",
+   "ac": "new",
+   "kind": "ac-gap",
+   "detail": "Review FND-001: a body-capable HTTP/1.0 backend response carrying Transfer-Encoding is now INVALID_RESPONSE (RFC 9112 6.1 faulty framing, 6.3 -> 502); HEAD/204/304 stay bodyless first. Suggest an AC so the rule is traced.",
+   "evidence": "before 344d39e: status (body: hello) expected:<502> but was:<200>; tests BackendResponseParserTest#sec_PROXY_004_transferEncodingOnHttp10* (6 tests citing SEC-PROXY-004)"
+  },
+  {
+   "req": "FR-PROXY-016",
+   "ac": "Requirement (total timeout)",
+   "kind": "declared-limit",
+   "detail": "The total-timeout watchdog is not installed yet (ProxyExchange.NO_WATCHDOG), so mapping a watchdog close during the body to TOTAL_TIMEOUT is left to wave 18 (FR-PROXY-015/017). Short body, malformed chunk and read timeout are mapped, logged once and rethrown.",
+   "evidence": "coder report FR-PROXY-016"
+  },
+  {
+   "req": "SEC-PROXY-004",
+   "ac": "-",
+   "kind": "declared-limit",
+   "detail": "Wave 18: a read timeout while reading the response head still surfaces as the existing HttpException 502 (not READ_TIMEOUT), and other socket errors during the head read map to INVALID_RESPONSE.",
+   "evidence": "coder report SEC-PROXY-004"
+  }
+ ],
+ "out_of_lease_paths": [
+  {
+   "path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+   "reason": "REL-PROXY-001 AC-6 test waits for the stack frame Proxy$ResponseHead.read; the head parser moved to ResponseParser.read (SEC-PROXY-004 de-duplication), so one line now names the new frame. Same assertion, not weakened.",
+   "commit": "baf3320"
+  }
+ ],
+ "duplication_removed": "Proxy.ResponseHead's own Content-Length/Transfer-Encoding parsing replaced by FramingLists.contentLength/transferEncoding; field collection shared via FramingLists.fieldValues (request and response side).",
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "MCP check_test_sufficiency ids=[SEC-PROXY-004,FR-PROXY-014,FR-PROXY-016] workspaceRoot=worktree: all 22 ACs cited, passed=true, no fill needed"
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4598,
+  "failures": 0,
+  "exit_code": 0,
+  "note": "4511 at integration head + 87 new; build ran detached and was polled in the foreground because commands over ~170 s are moved to the background by the harness"
+ },
+ "bootstrap": "not-applicable"
+}

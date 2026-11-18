@@ -1,0 +1,45 @@
+{
+ "iter": 1,
+ "fixes": [
+  {
+   "finding_id": "FND-001",
+   "files_changed": [
+    {
+     "path": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+     "line_range": "45-57,115-117,131-134,145-149",
+     "loc_changed": 22
+    },
+    {
+     "path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/BackendResponseParserTest.java",
+     "line_range": "377-437",
+     "loc_changed": 61
+    }
+   ],
+   "rationale_full": "RFC 9112 §6.1 says an HTTP/1.0 message carrying Transfer-Encoding has faulty framing even if Content-Length is present, and §6.3 then requires a proxy to discard the response with a 502. ResponseParser.status() already accepts only HTTP/1.<digit>, but the parser threw away the minor version. ResponseParser.Head (package-private, not public API) now records http10 = statusLine.charAt(7)=='0', taken when the final head is built. framing() keeps the RFC 9112 §6.3 order: HEAD, 204 and 304 are still bodyless first, so they never become INVALID_RESPONSE because of framing headers (FR-PROXY-014 AC-6). Next, a non-empty Transfer-Encoding list on an HTTP/1.0 head throws invalid(\"Transfer-Encoding on an HTTP/1.0 response\"), which is ProxyException INVALID_RESPONSE and a 502, before the CL+TE check and the chunked check run. HTTP/1.0 responses without Transfer-Encoding are unchanged: Content-Length works (the existing AC-1 test with HTTP/1.0 599) and read-until-close works (new guard test). Annotated // @req SEC-PROXY-004.",
+   "mock_scan_passed": true,
+   "external_module_touch": false
+  }
+ ],
+ "red_evidence": {
+  "test": "BackendResponseParserTest.sec_PROXY_004_transferEncodingOnHttp10ResponseIsInvalidResponse",
+  "red_output": "BackendResponseParserTest > sec_PROXY_004_transferEncodingOnHttp10ResponseIsInvalidResponse FAILED\n    java.lang.AssertionError: status (body: hello) expected:<502> but was:<200>\n60 tests completed, 1 failed\nBUILD FAILED"
+ },
+ "green": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*BackendResponseParserTest' --tests '*ProxyResponseBodyTest' --tests '*ProxyMidResponseFailureTest' && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:check",
+  "result": "targeted: BUILD SUCCESSFUL (BackendResponseParserTest 60/0 failures, ProxyResponseBodyTest 14/0, ProxyMidResponseFailureTest 11/0); check: BUILD SUCCESSFUL in 21s, 505 tests 0 skipped 0 failures 0 errors, animalsnifferMain + checkClassReferences passed"
+ },
+ "commits": [
+  {
+   "sha": "78136e2",
+   "subject": "test(proxy): HTTP/1.0 response with Transfer-Encoding is invalid",
+   "kind": "test"
+  },
+  {
+   "sha": "344d39e87fa94dd03e55c0f659f613ee90d5a353",
+   "subject": "fix(proxy): reject Transfer-Encoding on HTTP/1.0 backend responses",
+   "kind": "review"
+  }
+ ],
+ "tree_sha_after": "628f3b5a59527e4b128ed61daf64fb37f3f61da1",
+ "notes": "The test commit adds 6 tests, all citing SEC-PROXY-004 and 'RFC 9112 §6.1 (review FND-001)'. They are: HTTP/1.0 chunked -> 502 INVALID_RESPONSE (red before the fix); HTTP/1.0 TE+CL -> 502 (already green before the fix because CL+TE is rejected anyway, now also caught by the new HTTP/1.0 rule); HTTP/1.0 HEAD, 204 and 304 with TE stay bodyless with no error (FR-PROXY-014 AC-6 guards); HTTP/1.0 without framing headers is read until close. No public symbol changed: Head and its constructor are package-private, and the constructor is called only in ResponseParser.read. No existing test was changed or deleted. Nothing outside the two allowed files. The pre-commit hook in the main repo is not executable and was ignored by git (warning only). .kiwi/ was not staged."
+}

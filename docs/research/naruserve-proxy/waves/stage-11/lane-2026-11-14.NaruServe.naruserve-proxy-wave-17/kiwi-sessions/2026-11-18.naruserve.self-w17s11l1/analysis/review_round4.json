@@ -1,0 +1,160 @@
+{
+ "round": 4,
+ "tree_sha": "54f2c2895bfe3584e6197a8060c3c854d97a177f",
+ "findings": [
+  {
+   "id": "FND-201",
+   "axis": "P2",
+   "verdict": "keep",
+   "evidence": {
+    "command": "cd /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-17 && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*ReviewProbe1Test'   (reference: --tests '*ReviewProbe3Test' against the 344d39e parser copied into test scope as ReviewProbeOldParser)",
+    "output": "ReviewProbe1Test > oversizedMalformedStatusLineKeepsTheBoundCause FAILED: org.junit.ComparisonFailure: expected:<[the status line and headers exceed 65536 bytes]> but was:<[malformed status line]>\nReviewProbe1Test > oversizedMalformedSecondStatusLineKeepsTheBoundCause FAILED: org.junit.ComparisonFailure: expected:<[the status line and headers exceed 65536 bytes]> but was:<[malformed status line]>\n4 tests completed, 2 failed (ReviewProbe2Test equivalence cases green)\nReviewProbe3Test (pre-refactor parser, same bytes): BUILD SUCCESSFUL",
+    "intent_output": "Both ReviewProbe1Test cases pass: the ProxyException (kind INVALID_RESPONSE) carries the pre-refactor cause 'the status line and headers exceed 65536 bytes', as the 344d39e parser does for the same bytes.",
+    "test_source": "package com.snoworca.naruserve.proxy;\n\nimport static org.junit.Assert.assertEquals;\nimport static org.junit.Assert.fail;\n\nimport java.io.ByteArrayInputStream;\nimport java.nio.charset.StandardCharsets;\nimport java.util.Arrays;\nimport org.junit.Test;\n\npublic class ReviewProbe1Test {\n    // A first status line of exactly MAX_HEAD_BYTES bytes plus CRLF that is also not a status line.\n    // Pre-refactor (344d39e): read -> charge -> status(): cause \"the status line and headers exceed 65536 bytes\".\n    @Test\n    public void oversizedMalformedStatusLineKeepsTheBoundCause() throws Exception {\n        byte[] line = new byte[ResponseParser.MAX_HEAD_BYTES + 2];\n        Arrays.fill(line, (byte) 'X');\n        line[line.length - 2] = '\\r';\n        line[line.length - 1] = '\\n';\n        try {\n            ResponseParser.read(new ByteArrayInputStream(line));\n            fail(\"expected INVALID_RESPONSE\");\n        } catch (ProxyException e) {\n            assertEquals(ProxyException.Kind.INVALID_RESPONSE, e.kind());\n            assertEquals(\"the status line and headers exceed 65536 bytes\", e.getCause().getMessage());\n        }\n    }\n\n    // Second status line after a 1xx head, malformed and over the remaining bound.\n    @Test\n    public void oversizedMalformedSecondStatusLineKeepsTheBoundCause() throws Exception {\n        String interim = \"HTTP/1.1 100 Continue\\r\\n\\r\\n\";\n        int remaining = ResponseParser.MAX_HEAD_BYTES - (interim.length());\n        StringBuilder sb = new StringBuilder(interim);\n        for (int i = 0; i < remaining; i++) sb.append('Y');\n        sb.append(\"\\r\\n\");\n        try {\n            ResponseParser.read(new ByteArrayInputStream(sb.toString().getBytes(StandardCharsets.ISO_8859_1)));\n            fail(\"expected INVALID_RESPONSE\");\n        } catch (ProxyException e) {\n            assertEquals(ProxyException.Kind.INVALID_RESPONSE, e.kind());\n            assertEquals(\"the status line and headers exceed 65536 bytes\", e.getCause().getMessage());\n        }\n    }\n}\n\n// Reference (ReviewProbe3Test + ReviewProbeOldParser.java = `git show 344d39e:NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java | perl -pe 's/\\bResponseParser\\b/ReviewProbeOldParser/g'`):\n// the same 65536 'X' + CRLF bytes through ReviewProbeOldParser.read assert cause message\n// \"the status line and headers exceed 65536 bytes\" -> PASSES (BUILD SUCCESSFUL).\n"
+   },
+   "drop_reason": null,
+   "title": "Status-line parse now runs before the head-size charge, changing the INVALID_RESPONSE cause for an over-bound malformed status line",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+    "line_range": "91-93"
+   },
+   "description": "Pre-refactor order was `String statusLine = lines.read(remaining); remaining = charge(remaining, lines); int status = status(statusLine);`. The refactor inlines the parse into `StatusLine statusLine = statusLine(lines.read(remaining));` and charges afterwards, so parse and bound check swap. When a status line is both malformed and pushes the head past MAX_HEAD_BYTES (e.g. 65536 non-HTTP bytes + CRLF as the first line, or an over-bound malformed status line after a 1xx head), the ProxyException cause (visible to onError/error handlers via getCause()) changes from 'the status line and headers exceed 65536 bytes' to 'malformed status line'. Kind (INVALID_RESPONSE) and the 502 are unchanged, so SEC-PROXY-004 AC-1/AC-2 still hold; impact is diagnostic-only, but it contradicts the commit's behaviour-identical claim.",
+   "suggested_fix": "Restore the original order: `String line = lines.read(remaining); remaining = charge(remaining, lines); StatusLine statusLine = statusLine(line);` (add a regression test pinning the bound cause for an over-bound malformed status line).",
+   "is_behavioral": true,
+   "tags": [
+    "refactor-regression",
+    "diagnostic-only",
+    "low-severity"
+   ],
+   "req": "SEC-PROXY-004"
+  },
+  {
+   "id": "FND-202",
+   "axis": "P1",
+   "verdict": "drop",
+   "evidence": {
+    "command": "cd /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-17 && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*ReviewProbe2Test'",
+    "output": "ReviewProbe2Test: 2 tests, 0 failures (reasonPhraseEquivalence, chunkSizeLineEquivalence)",
+    "intent_output": "green (equivalence confirmed)",
+    "test_source": "package com.snoworca.naruserve.proxy;\n// Equivalence probe (expected GREEN, was GREEN): reason phrase with obs-text 0x80/0xFF/0xE9 and HTAB accepted;\n// \"HTTP/1.1 200 \" (empty reason) and \"HTTP/1.1 200\" accepted; http10 true only for HTTP/1.0; DEL/NUL/CR in reason\n// -> \"control character in the reason phrase\"; 101 -> \"101 Switching Protocols\"; 103 then 200 with\n// Content-Length x2 (mixed case), Transfer-Encoding, \"transfer-encodingx\" -> contentLengths [1,1],\n// transferEncodings [chunked], 4 headers; chunk-size line \"3\\t;ext=éÿ\" decodes \"abc\" with trailer;\n// 0x01 / 0x7F in chunk extension -> \"control character in a chunk-size line\".\n"
+   },
+   "drop_reason": "Verified identical: LineReader appends (char) b for b in 0..255, so isFieldValue's extra `c > 0xFF` branch is unreachable; obs-text 0x80-0xFF and HTAB are accepted in reason phrase and chunk extensions as before; `line.length() > 13` guard reproduces the old empty loop for length 12/13 (empty reason after SP still accepted); http10 derived from charAt(7) as before.",
+   "title": "isFieldValue substitution for reason-phrase and chunk-size-line control checks",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+    "line_range": "197-202"
+   },
+   "description": "Checked whether CC-001 changes acceptance of obs-text, HTAB, empty reason phrase or HTTP/1.0 detection; it does not.",
+   "suggested_fix": "none",
+   "is_behavioral": false,
+   "tags": [
+    "equivalence-checked"
+   ],
+   "req": "SEC-PROXY-004"
+  },
+  {
+   "id": "FND-203",
+   "axis": "P1",
+   "verdict": "drop",
+   "evidence": {
+    "command": "cd /Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-17 && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test :NaruServe-proxy:animalsnifferMain",
+    "output": "BUILD SUCCESSFUL; 29 result files, 505 tests, 0 failures, 0 errors (incl. ProxyCheckOrderTest, ProxyRequestFramingTest, BackendResponseParserTest); animalsnifferMain OK",
+    "intent_output": "green",
+    "test_source": ""
+   },
+   "drop_reason": "Verified identical: req.rawHeaders() still called exactly once; FramingLists.fieldValues uses the same Locale.ROOT lower-case equality and preserves received order; the two names are disjoint so two passes equal the old if/else-if; requestBodyLength(List, List) and its check order (both -> TE -> CL, FR-PROXY-010/SEC-PROXY-003) untouched; response-side lists built from the same SimpleImmutableEntry list after headerLine validation (an invalid header still throws before Head construction). Java 8/API 21 clean, no internal/spi import (common.HttpHeaderValues is public API), @req SEC-PROXY-003/004 kept and added on fieldValues.",
+   "title": "Request/response framing-list collection via FramingLists.fieldValues",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "698-703"
+   },
+   "description": "Checked CC-004 for changes in request-side collection over req.rawHeaders(), ordering, case handling and FR-PROXY-010 check order; none found.",
+   "suggested_fix": "none",
+   "is_behavioral": false,
+   "tags": [
+    "equivalence-checked"
+   ],
+   "req": "SEC-PROXY-003"
+  }
+ ],
+ "clean_code": [
+  {
+   "id": "CC-101",
+   "principle": "Meaningful, distinct names (avoid one identifier for type, method and variable)",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+    "line_range": "91, 172, 187"
+   },
+   "description": "`StatusLine statusLine = statusLine(lines.read(remaining));` uses the same name for the nested type, the parsing method and the local; the old code had `status(String)`. A verb name such as `parseStatusLine` would read unambiguously and would also make the parse-before-charge reordering (FND-201) easier to spot."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ChunkedBodyInputStream.java",
+   "hunks_total": 3,
+   "anchors": [
+    "import com.snoworca.naruserve.common.HttpHeaderValues;",
+    "left -= lines.consumed();",
+    "if (!HttpHeaderValues.isFieldValue(line)) {"
+   ],
+   "findings": [
+    "FND-202"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/FramingLists.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import java.util.ArrayList;",
+    "import java.util.Locale;",
+    "static final String CONTENT_LENGTH = \"content-length\";",
+    "static List<String> fieldValues(List<Map.Entry<String, String>> headers, String lowerName) {"
+   ],
+   "findings": [
+    "FND-203"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+   "hunks_total": 1,
+   "anchors": [
+    "List<Map.Entry<String, String>> headers = req.rawHeaders();"
+   ],
+   "findings": [
+    "FND-203"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+   "hunks_total": 14,
+   "anchors": [
+    "import java.util.Locale;",
+    "StatusLine statusLine = statusLine(lines.read(remaining));",
+    "int status = statusLine.status;",
+    "List<String> contentLengths = new ArrayList<>();",
+    "headers.add(headerLine(line));",
+    "return new Head(status, statusLine.http10, headers,",
+    "int left = remaining - lines.consumed();",
+    "private static final class StatusLine {",
+    "* The status line {@code line}: {@code HTTP/1.<digit>}, a space, exactly three digits within",
+    "private static StatusLine statusLine(String line) throws Malformed {",
+    "if (line.length() > 13 && !HttpHeaderValues.isFieldValue(line.substring(13))) {",
+    "return new StatusLine(status, line.charAt(7) == '0');",
+    "private int consumed;",
+    "int consumed() {"
+   ],
+   "findings": [
+    "FND-201",
+    "FND-202"
+   ]
+  }
+ ],
+ "summary": {
+  "total": 3,
+  "by_verdict": {
+   "keep": 1,
+   "drop": 2,
+   "residual": 0
+  }
+ }
+}

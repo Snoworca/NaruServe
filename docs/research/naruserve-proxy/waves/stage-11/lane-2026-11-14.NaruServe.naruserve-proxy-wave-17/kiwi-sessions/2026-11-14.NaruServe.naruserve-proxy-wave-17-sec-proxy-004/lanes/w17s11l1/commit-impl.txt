@@ -1,0 +1,22 @@
+feat(proxy): strict backend response parser sharing FramingLists
+
+Move the backend response head parser into ResponseParser and the
+chunked decoder into ChunkedBodyInputStream. The head is read as
+ISO-8859-1 within a 64 KiB bound, the status line must be HTTP/1.<d>
+with three digits in 100..599, obs-fold lines and bad names or values
+are refused, interim 1xx heads other than 101 are skipped, and the body
+framing reuses FramingLists with HEAD, 204 and 304 bodyless first. Every
+malformed head is a ProxyException INVALID_RESPONSE; a malformed chunked
+body fails the relayed stream with an IOException caused by one.
+
+The handle-thread frame check of ProxyExchangeTest follows the head
+parser to its new class.
+
+REQ: SEC-PROXY-004
+Commit-Kind: implementation
+Orch-Run: 2026-11-14.NaruServe.naruserve-proxy
+Orch-Wave: 17
+Orch-Stage: 11
+Orch-Lane: lane-2026-11-14.NaruServe.naruserve-proxy-wave-17
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

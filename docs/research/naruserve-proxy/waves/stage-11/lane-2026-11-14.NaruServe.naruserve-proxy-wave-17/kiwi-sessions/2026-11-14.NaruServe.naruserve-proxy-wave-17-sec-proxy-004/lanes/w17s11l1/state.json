@@ -1,0 +1,30 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-17-sec-proxy-004",
+ "sds_path": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "SEC-PROXY-004"
+ ],
+ "spawn_context": "pm-child",
+ "phase": "done",
+ "failed": false,
+ "next_resume_hint": null,
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests com.snoworca.naruserve.proxy.BackendResponseParserTest",
+  "exit_code": 1,
+  "captured_failure": "54 tests completed, 40 failed",
+  "timestamp": "2026-11-18T08:50:00Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "exit_code": 0,
+  "timestamp": "2026-11-18T09:05:00Z"
+ },
+ "regression_summary": {
+  "scope": "full",
+  "passed": 4565,
+  "failed": 0,
+  "regressed_files": []
+ }
+}

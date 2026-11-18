@@ -1,0 +1,260 @@
+{
+ "round": 1,
+ "tree_sha": "f8df8e00b86350fe267503776f377ff39cc336f2",
+ "findings": [
+  {
+   "id": "FND-001",
+   "axis": "P2",
+   "verdict": "keep",
+   "evidence": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*ReviewProbe1Test'",
+    "output": "ReviewProbe1Test > sec_PROXY_004_transferEncodingOnHttp10ResponseIsInvalidResponse FAILED\n    java.lang.AssertionError: status (body: hello) expected:<502> but was:<200>\n1 test completed, 1 failed",
+    "intent_output": "502 with onError receiving exactly one ProxyException of kind INVALID_RESPONSE; the chunked body is never decoded or relayed",
+    "test_source": "package com.snoworca.naruserve.proxy;\n\nimport static org.junit.Assert.assertEquals;\nimport static org.junit.Assert.assertSame;\nimport static org.junit.Assert.assertTrue;\n\nimport com.snoworca.naruserve.RestApp;\nimport com.snoworca.naruserve.testing.InMemoryHttpAdapter;\nimport com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;\nimport com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;\nimport com.snoworca.naruserve.testing.TestApp;\nimport java.io.IOException;\nimport java.util.ArrayList;\nimport java.util.Collections;\nimport java.util.List;\nimport java.util.concurrent.TimeUnit;\nimport org.junit.After;\nimport org.junit.Test;\n\n/**\n * RFC 9112 §6.1: a client that receives an HTTP/1.0 message containing Transfer-Encoding MUST treat the framing as\n * faulty; §6.3 then requires a proxy to answer a response with faulty framing with 502. SEC-PROXY-004 is \"stricter\n * than the RFC\", so an HTTP/1.0 response with Transfer-Encoding: chunked must be 502 INVALID_RESPONSE, not decoded.\n */\npublic class ReviewProbe1Test {\n\n    private final InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();\n    private final TestApp t = TestApp.create(adapter);\n    private final RestApp app = t.app();\n    private final List<Throwable> errors = Collections.synchronizedList(new ArrayList<Throwable>());\n    private RawBackend backend;\n\n    @After\n    public void tearDown() throws IOException {\n        app.shutdown(2, TimeUnit.SECONDS);\n        if (backend != null) {\n            backend.close();\n        }\n    }\n\n    // SEC-PROXY-004 (RFC 9112 §6.1): Transfer-Encoding on an HTTP/1.0 response is faulty framing -> 502\n    @Test(timeout = 30000)\n    public void sec_PROXY_004_transferEncodingOnHttp10ResponseIsInvalidResponse() throws IOException {\n        backend = RawBackend.answering(\n                \"HTTP/1.0 200 OK\\r\\nTransfer-Encoding: chunked\\r\\n\\r\\n5\\r\\nhello\\r\\n0\\r\\n\\r\\n\");\n        app.use(\"/api\", Proxy.to(backend.url()));\n        app.onError((error, req, res) -> errors.add(error));\n        t.start();\n\n        ClientResponse r = adapter.send(ClientRequest.of(\"GET\", \"/api/x\"));\n\n        assertEquals(\"status (body: \" + r.text() + \")\", 502, r.status());\n        synchronized (errors) {\n            assertEquals(\"errors: \" + errors, 1, errors.size());\n            assertTrue(errors.get(0) instanceof ProxyException);\n            assertSame(ProxyException.Kind.INVALID_RESPONSE, ((ProxyException) errors.get(0)).kind());\n        }\n    }\n}\n"
+   },
+   "drop_reason": null,
+   "title": "HTTP/1.0 backend response with Transfer-Encoding: chunked is decoded as chunked instead of rejected as faulty framing",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+    "line_range": "134-147 (framing), 176-193 (status: minor version discarded)"
+   },
+   "description": "RFC 9112 §6.1: 'A server or client that receives an HTTP/1.0 message containing a Transfer-Encoding header field MUST treat the message as if the framing is faulty, even if a Content-Length is present'; §6.3 then requires a proxy receiving a response with faulty framing to close the server connection, discard the response and send 502. SEC-PROXY-004 is explicitly 'stricter than the RFC' and lists smuggling as its threat, yet ResponseParser.status() throws away the HTTP minor version and framing() decodes 'HTTP/1.0 200 OK / Transfer-Encoding: chunked' as chunked and relays 200 'hello'. A backend (or anything between proxy and backend) that frames differently from the HTTP/1.0 semantics is accepted here, which is the exact desync class the requirement exists to close; this is the only place the parser is laxer than the RFC.",
+   "suggested_fix": "Keep the minor version digit in ResponseParser.Head (e.g. boolean http10 from line.charAt(7)=='0'); in framing(), after the bodyless check, throw invalid(\"Transfer-Encoding on an HTTP/1.0 response\") when head is HTTP/1.0 and transferEncodings is non-empty. HEAD/204/304 stay bodyless first (FR-PROXY-014 AC-6 unaffected). Reuse the probe above as the regression test in BackendResponseParserTest.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "security",
+    "smuggling"
+   ],
+   "req": "SEC-PROXY-004 (requirement statement: RFC 9112 §6.3 framing, stricter than the RFC; RFC 9112 §6.1)"
+  },
+  {
+   "id": "FND-002",
+   "axis": "P8",
+   "verdict": "drop",
+   "evidence": {
+    "command": "",
+    "output": "",
+    "intent_output": "",
+    "test_source": ""
+   },
+   "drop_reason": "Comment wording only: LineReader accepts a bare LF as line terminator everywhere (RFC 9112 §2.2 permits it, no AC requires CRLF) and the proxy re-frames the body for the client, so no desync; the Javadoc 'chunk data not followed by CRLF' slightly overstates the check.",
+   "title": "ChunkedBodyInputStream Javadoc says chunk data must be followed by CRLF but a bare LF is accepted",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ChunkedBodyInputStream.java",
+    "line_range": "7-15, 79-81"
+   },
+   "description": "'5\\r\\nhello\\n0\\r\\n\\r\\n' decodes without failure because lines.read(0) treats a lone LF as the terminator.",
+   "suggested_fix": "Say 'CRLF or LF' in the class comment, or reject bare LF if the team wants the stricter reading.",
+   "is_behavioral": false,
+   "tags": [
+    "doc"
+   ],
+   "req": "SEC-PROXY-004 AC-10"
+  },
+  {
+   "id": "FND-003",
+   "axis": "P1",
+   "verdict": "drop",
+   "evidence": {
+    "command": "",
+    "output": "",
+    "intent_output": "",
+    "test_source": ""
+   },
+   "drop_reason": "Intended and documented (ResponseParser.MAX_HEAD_BYTES Javadoc): interim heads share the 64 KiB budget so a backend cannot stream 1xx heads forever; AC-2 does not say the budget is per head, and the old MAX_HEADER_LINES cap is subsumed by the byte bound.",
+   "title": "Interim 1xx heads count toward the same 64 KiB bound as the final head",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+    "line_range": "24-29, 87-114"
+   },
+   "description": "A 103 with a 40 KiB Link header followed by a 30 KiB final head is rejected although each head alone is within 64 KiB.",
+   "suggested_fix": "None required.",
+   "is_behavioral": false,
+   "tags": [
+    "design-choice"
+   ],
+   "req": "SEC-PROXY-004 AC-2"
+  },
+  {
+   "id": "FND-004",
+   "axis": "P7",
+   "verdict": "drop",
+   "evidence": {
+    "command": "",
+    "output": "",
+    "intent_output": "",
+    "test_source": ""
+   },
+   "drop_reason": "Micro-optimisation: the single-byte read() bridges allocate a byte[1] per call, but DefaultResponse copies with bulk 8192-byte reads, and LineReader's per-byte reads go through a BufferedInputStream bounded at 64 KiB per head.",
+   "title": "Per-call byte[1] allocation in read() of RelayedBodyStream and ChunkedBodyInputStream",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+    "line_range": "59-64"
+   },
+   "description": "read() allocates a new one-byte array per call.",
+   "suggested_fix": "Optional: keep a reusable one-byte buffer field.",
+   "is_behavioral": false,
+   "tags": [
+    "performance"
+   ],
+   "req": "invariant"
+  }
+ ],
+ "clean_code": [
+  {
+   "id": "CC-001",
+   "principle": "DRY",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+    "line_range": "186-191"
+   },
+   "description": "The control-character test 'c < 0x20 && c != \\'\\t\\' || c == 0x7F' is written out in ResponseParser.status (188) and ChunkedBodyInputStream.chunkSize (105-110) and duplicates HttpHeaderValues.isFieldValue; both loops can be '!HttpHeaderValues.isFieldValue(...)' on the substring."
+  },
+  {
+   "id": "CC-002",
+   "principle": "DRY",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ChunkedBodyInputStream.java",
+    "line_range": "41-46"
+   },
+   "description": "The single-byte read() bridge is copied verbatim in ChunkedBodyInputStream (41-46) and RelayedBodyStream (59-64)."
+  },
+  {
+   "id": "CC-003",
+   "principle": "Encapsulation / cohesion",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+    "line_range": "221-262"
+   },
+   "description": "ResponseParser.LineReader exposes a mutable package-visible field 'consumed' that callers in two classes (ResponseParser.charge, ChunkedBodyInputStream.nextChunk 90) read after each call; LineReader and Malformed are shared line-level infrastructure nested inside the head parser, coupling ChunkedBodyInputStream to ResponseParser. A small package-private LineReader class with a consumed() accessor (or a read that charges a budget itself) would remove both."
+  },
+  {
+   "id": "CC-004",
+   "principle": "DRY",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "700-710"
+   },
+   "description": "Collecting Content-Length and Transfer-Encoding field values by lower-cased name is written twice: the request side in Proxy (704-707) and the response side in ResponseParser.read (104-109). The parsing of the lists now goes through FramingLists as the wave-11 audit asked, but the collection step could also live there (e.g. FramingLists.collect(name, value, cl, te))."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ChunkedBodyInputStream.java",
+   "hunks_total": 1,
+   "anchors": [
+    "MAX_CHUNK_SIZE_LINE"
+   ],
+   "findings": [
+    "FND-002"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/FramingLists.java",
+   "hunks_total": 2,
+   "anchors": [
+    " * use it now; the backend response parser is to adopt the same reading with the response framing requirement",
+    "// @req SEC-PROXY-004"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+   "hunks_total": 15,
+   "anchors": [
+    "import java.io.EOFException;",
+    "    /** The longest status or header line the backend may send. */",
+    "    // @req SEC-PROXY-004",
+    "            BodyFraming framing = outgoing.framing;",
+    "                RequestBodyCopier.copyLength(outgoing.body, out, framing.contentLength);",
+    "            ResponseHead head = ResponseHead.read(in);",
+    "            applyResponseHeaders(req, res, head);",
+    "            RelayedBodyStream relayedBody = new RelayedBodyStream(body, exchange);",
+    "     * Sets the response headers of {@code res} from the backend {@code head} in this order: the backend header copy,",
+    "    private void applyResponseHeaders(Request req, Response res, ResponseHead head) {",
+    "                ResponseHeaderCopier.copy(head.headers, options.hiddenResponseNames, res);",
+    "     * the relay waits on a quiet backend frees the slot and the connection at once. A response without abort listeners",
+    "    private static void releaseOnAbort(Response res, final ProxyExchange exchange) {",
+    "                    // Before the release closes the backend connection, so the read it fails is not logged.",
+    "lastCodingIsChunked"
+   ],
+   "findings": [
+    "FND-001"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+   "hunks_total": 8,
+   "anchors": [
+    "import com.snoworca.naruserve.Logger;",
+    "import java.net.SocketTimeoutException;",
+    " * read throws the same exception without logging again. A read failing after {@link #abandon} (the client went away",
+    "// @req FR-PROXY-016",
+    "    private volatile boolean abandoned;",
+    "     * backend's close ends the body; failures are logged to {@code logger} naming {@code backend}.",
+    "    RelayedBodyStream(InputStream body, ProxyExchange exchange, long length, Logger logger, String backend) {",
+    "        this.remaining = length;"
+   ],
+   "findings": [
+    "FND-004"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+   "hunks_total": 1,
+   "anchors": [
+    "MAX_HEAD_BYTES"
+   ],
+   "findings": [
+    "FND-001",
+    "FND-003"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/BackendResponseParserTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "sec_PROXY_004_AC10_trailerPast64KiBIsAnInvalidResponseFailure"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "        awaitFrame(\"the response head read\", t, Proxy.class.getName() + \"$ResponseHead\", \"read\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyMidResponseFailureTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "fr_PROXY_016_AC5_clientAbortIsNotLoggedAsABackendFailure"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyResponseBodyTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "fr_PROXY_014_AC4_headResponseKeptOpenArrivesWithItsLengthAndNoBody"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 4,
+  "by_verdict": {
+   "keep": 1,
+   "drop": 3
+  },
+  "by_axis": {
+   "P2": 1,
+   "P8": 1,
+   "P1": 1,
+   "P7": 1
+  }
+ }
+}

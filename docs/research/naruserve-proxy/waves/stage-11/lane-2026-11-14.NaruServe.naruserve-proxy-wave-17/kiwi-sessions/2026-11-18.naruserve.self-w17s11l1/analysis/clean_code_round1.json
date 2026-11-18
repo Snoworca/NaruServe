@@ -1,0 +1,19 @@
+{"clean_code_round":1,
+ "classified":[
+  {"id":"CC-001","decision":"fix","reason":"isFieldValue rejects c<0x20 except HTAB, 0x7F and c>0xFF; both call sites receive lines from LineReader, which appends one ISO-8859-1 char per byte (always <=0xFF), so the extra c>0xFF clause never fires and isFieldValue does no trimming: identical behaviour for every reachable input. The reason-phrase call is guarded by length>13 (the old loop ran from index 13)."},
+  {"id":"CC-002","decision":"dismissed","reason":"A 3-line standard InputStream.read() idiom in two unrelated stream classes (InputStream vs FilterInputStream subclasses). No new files are allowed, so the only shared home would be one of these classes or an unrelated write-set class, which adds cross-class coupling that costs more than the duplication removes."},
+  {"id":"CC-003","decision":"fix","reason":"Narrow fix inside the write set: LineReader.consumed is now private behind a consumed() accessor. Moving LineReader/Malformed to their own file is out of scope (no new files)."},
+  {"id":"CC-004","decision":"fix","reason":"Valid DRY. FramingLists is the shared SEC-PROXY-003/004 home. The helper keeps the exact toLowerCase(Locale.ROOT).equals comparison."},
+  {"id":"CC-005","decision":"fix","reason":"Valid. Status line parsing now returns the HTTP/1.0 flag next to the status code, so read() no longer indexes charAt(7)."}
+ ],
+ "fixed":[
+  {"id":"CC-001","files":["NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java","NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ChunkedBodyInputStream.java"],"summary":"The reason-phrase and chunk-size-line control checks call HttpHeaderValues.isFieldValue instead of hand-written loops."},
+  {"id":"CC-003","files":["NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java","NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ChunkedBodyInputStream.java"],"summary":"LineReader.consumed is now private and read through a package-private consumed() accessor by ResponseParser.charge and ChunkedBodyInputStream.nextChunk."},
+  {"id":"CC-004","files":["NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/FramingLists.java","NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java","NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java"],"summary":"Added FramingLists.fieldValues(headers, lowerName) plus CONTENT_LENGTH/TRANSFER_ENCODING constants (@req SEC-PROXY-003/004). Proxy.requestBodyLength(Request) and ResponseParser.read now use it; the response side collects from the final head's header list."},
+  {"id":"CC-005","files":["NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java"],"summary":"The private status(String) became statusLine(String), which returns a private nested StatusLine(status, http10). The minor-version knowledge sits next to the layout validation (@req SEC-PROXY-004 kept)."}
+ ],
+ "unresolved":[],
+ "check":{"command":"./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:check","tests":505,"failures":0,"exit_code":0},
+ "commit":{"sha":"2917400cdb863e6c669837f34d7f09c1d03e373d","subject":"refactor(proxy): share framing field collection and line reading helpers"},
+ "tree_sha_after":"54f2c2895bfe3584e6197a8060c3c854d97a177f",
+ "preservation":"no public symbol changed, no test changed/weakened, no file deleted/moved, only write-set paths"}

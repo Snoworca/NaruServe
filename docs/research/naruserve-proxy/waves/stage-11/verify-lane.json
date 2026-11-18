@@ -1,0 +1,48 @@
+{
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-17": {
+  "head": "3dc09b935c29cde7e03155c67aed6e4afab56970",
+  "commits": 11,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "rounds": 5,
+   "invalid_rounds": [
+    2
+   ],
+   "check_review_round": "PASS",
+   "fixed_findings": [
+    "FND-001 (HTTP/1.0 + Transfer-Encoding now INVALID_RESPONSE, RFC 9112 6.1)",
+    "FND-201 (clean-code refactor reordered parse/charge; restored)"
+   ],
+   "clean_code": {
+    "rounds": 2,
+    "fixed": [
+     "CC-001",
+     "CC-003",
+     "CC-004",
+     "CC-005",
+     "CC-101"
+    ],
+    "dismissed": [
+     "CC-002"
+    ],
+    "unresolved": []
+   },
+   "notes": "The Agent tool started every subagent asynchronously in this environment (run_in_background was never set); the worker waited for each one in the same turn by polling a result file in short foreground commands. The first kiwi-coder (SEC-PROXY-004) got the result-file instruction by SendMessage. Classification used the fixed keep/drop mapping applied by the lead. FND-201 (a behaviour change introduced by the clean-code fix) was handled under the clean-code rule and not counted as a block finding, so fix-induced-defects-majority did not fire; the host may reclassify it."
+  },
+  "landed": [
+   "SEC-PROXY-004",
+   "FR-PROXY-014",
+   "FR-PROXY-016"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [
+   "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java"
+  ],
+  "outside_reason": "one line: a frame name changed after the response parser class moved",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build (4598 tests, 0 failures)",
+  "verdict": "pass"
+ }
+}

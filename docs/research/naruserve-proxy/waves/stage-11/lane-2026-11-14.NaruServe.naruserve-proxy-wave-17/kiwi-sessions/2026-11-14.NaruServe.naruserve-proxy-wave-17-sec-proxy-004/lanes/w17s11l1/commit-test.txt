@@ -1,0 +1,15 @@
+test(proxy): backend response parser malformed-input tests
+
+Raw-socket backend tests for the strict response parser: malformed
+status lines, the 64 KiB head bound, obs-fold and header byte checks,
+response framing lists, interim 1xx and 101, close and reset before the
+head is complete, ISO-8859-1 header bytes and malformed chunked bodies.
+
+REQ: SEC-PROXY-004
+Commit-Kind: test
+Orch-Run: 2026-11-14.NaruServe.naruserve-proxy
+Orch-Wave: 17
+Orch-Stage: 11
+Orch-Lane: lane-2026-11-14.NaruServe.naruserve-proxy-wave-17
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

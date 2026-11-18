@@ -1,0 +1,44 @@
+[
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-18",
+   "summary": "[req] SEC-PROXY-004 - strict backend response parser: ResponseParser reads the head as ISO-8859-1 within 64 KiB with strict status line and header checks, skips 1xx but 101, frames HEAD 204 304 bodyless first and reuses FramingLists for Content-Length and Transfer-Encoding; ChunkedBodyInputStream bounds chunk-size lines to 4 KiB and trailers to 64 KiB. files: ResponseParser.java, ChunkedBodyInputStream.java, Proxy.java, FramingLists.java, BackendResponseParserTest.java, ProxyExchangeTest.java. green=PASS (54/54). AC: SEC-PROXY-004 AC-1..11 PASS (AC-9 proven on the in-memory adapter; TinyHttpd socket writes 0xE9 as UTF-8)",
+   "requirementIds": [
+    "SEC-PROXY-004"
+   ],
+   "target": "0.12.0",
+   "scope": "PROXY"
+  },
+  "argsHash": "d01b595c7f1d9d72000d73bb678b96184c0563e5",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-18",
+   "summary": "[req] FR-PROXY-014 - proxy response body relay: res.relay gets the agreed Content-Length or -1 for chunked and read-until-close bodies; HEAD 204 and 304 are bodyless before the framing checks and the stream handed to res.relay for them is empty whatever the backend wrote. files: Proxy.java, ProxyResponseBodyTest.java. green=PASS (14/14). AC: FR-PROXY-014 AC-1..6 PASS (AC-1..5 kept-open and length cases already held at the wave base; AC-6 made green by SEC-PROXY-004 baf3320; empty bodyless stream by this run)",
+   "requirementIds": [
+    "FR-PROXY-014"
+   ],
+   "target": "0.12.0",
+   "scope": "PROXY"
+  },
+  "argsHash": "0d589ad0f3974c0c79603635bf81e1c9f1318bff",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-18",
+   "summary": "[req] FR-PROXY-016 - proxy failures after the response started: RelayedBodyStream maps a short Content-Length body, a malformed chunk and a read timeout to a ProxyException of the kind, logs it once to the app logger and throws IOException(cause) so the framework aborts the client; the proxy never calls res.abort; a client abort is not logged. files: RelayedBodyStream.java, Proxy.java, ProxyMidResponseFailureTest.java. green=PASS (11/11). AC: FR-PROXY-016 AC-1..5 PASS; total-timeout watchdog mapping is a wave-18 declared limit (no watchdog installed yet)",
+   "requirementIds": [
+    "FR-PROXY-016"
+   ],
+   "target": "0.12.0",
+   "scope": "PROXY"
+  },
+  "argsHash": "79d1537e1379cadb227d04cf80fac8b63577f2a4",
+  "action": "apply"
+ }
+]

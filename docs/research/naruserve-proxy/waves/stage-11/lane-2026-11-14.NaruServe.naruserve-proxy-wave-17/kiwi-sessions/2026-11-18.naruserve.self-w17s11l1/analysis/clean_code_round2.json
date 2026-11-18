@@ -1,0 +1,39 @@
+{
+ "clean_code_round": 2,
+ "items": [
+  {
+   "id": "FND-201",
+   "status": "fixed",
+   "summary": "ResponseParser.read again reads the status line, charges it against MAX_HEAD_BYTES, then parses it (pre-2917400 order), keeping the StatusLine value and its http10 flag. An over-bound malformed status line now fails with cause 'the status line and headers exceed 65536 bytes' again. Pinned by two new raw-socket tests in BackendResponseParserTest (SEC-PROXY-004 AC-2). Note: the probe's second case (65511 'Y' after the 100 head) is exactly at the bound, not past it (the interim status line is 23 charged bytes; the blank line is not charged), so it gives 'malformed status line' under either order; the regression test uses one byte more (65512 'Y' + CRLF = 65514 > 65513 left) so it is truly over the bound."
+  },
+  {
+   "id": "CC-101",
+   "status": "fixed",
+   "summary": "Private method statusLine(String) renamed to parseStatusLine(String); the raw line local is rawStatusLine and the parsed value stays statusLine of type StatusLine, so the method no longer shares the name. Behaviour-preserving; no public symbol changed."
+  }
+ ],
+ "red_evidence": {
+  "test": "BackendResponseParserTest.sec_PROXY_004_AC2_oversizedMalformedStatusLineFailsOnTheHeadBound, BackendResponseParserTest.sec_PROXY_004_AC2_oversizedMalformedStatusLineAfterInterimHeadFailsOnTheHeadBound",
+  "red_output": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*BackendResponseParserTest' (against 2917400 code)\nBackendResponseParserTest > sec_PROXY_004_AC2_oversizedMalformedStatusLineAfterInterimHeadFailsOnTheHeadBound FAILED\n    org.junit.ComparisonFailure at BackendResponseParserTest.java:239\nBackendResponseParserTest > sec_PROXY_004_AC2_oversizedMalformedStatusLineFailsOnTheHeadBound FAILED\n    org.junit.ComparisonFailure at BackendResponseParserTest.java:239\n(both) org.junit.ComparisonFailure: expected:<[the status line and headers exceed 65536 bytes]> but was:<[malformed status line]>\n62 tests completed, 2 failed\nBUILD FAILED"
+ },
+ "check": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:check",
+  "tests": 507,
+  "failures": 0,
+  "exit_code": 0
+ },
+ "commits": [
+  {
+   "sha": "7bcaf3f",
+   "subject": "test(proxy): head bound wins over a malformed oversized status line",
+   "kind": "test"
+  },
+  {
+   "sha": "3dc09b9",
+   "subject": "refactor(proxy): charge the head bound before parsing the status line",
+   "kind": "review"
+  }
+ ],
+ "tree_sha_after": "22b12543d71e8c6e3dad2e722e8d42f618ab8cd1",
+ "preservation": "Only ResponseParser.java (+4/-2: order restored, private method renamed, one comment) and BackendResponseParserTest.java (+35: one constant, one helper, two tests) changed since 2917400. No public symbol changed, no test deleted or weakened, no mocks, @req SEC-PROXY-004 annotations kept, Java 8 syntax only. :NaruServe-proxy:check green with 507 tests (505 + 2 new), 0 failures, 0 errors."
+}
