@@ -393,6 +393,8 @@ project(':NaruServe-servlet') {
         servletTestDependencies.each { testImplementation it }
         testImplementation project(':NaruServe-gson')
         testImplementation testFixtures(project(':NaruServe-api'))
+        // @req SEC-PROXY-001 — AC-8 drives the proxy over the servlet adapter (ServletProxyAbsoluteFormTest).
+        testImplementation project(':NaruServe-proxy')
     }
     def servletJar = tasks.named('jar').flatMap { it.archiveFile }
     tasks.named('test') {
