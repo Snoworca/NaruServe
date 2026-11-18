@@ -33,7 +33,15 @@ final class TlsConnector {
      * {@code SSLParameters.setEndpointIdentificationAlgorithm}, looked up by reflection: it is absent before Android
      * API 24, and a direct reference fails the API 21 signature check (design D-067). {@code null} where it is absent.
      */
-    private static final @Nullable Method SET_ENDPOINT_IDENTIFICATION = endpointIdentificationMethod();
+    private static final @Nullable Method SET_ENDPOINT_IDENTIFICATION = endpointIdentificationMethod(
+            "setEndpointIdentificationAlgorithm", String.class);
+
+    /**
+     * {@code SSLParameters.getEndpointIdentificationAlgorithm}, looked up by reflection for the same reason, to read
+     * back what the socket kept; {@code null} where it is absent.
+     */
+    private static final @Nullable Method GET_ENDPOINT_IDENTIFICATION = endpointIdentificationMethod(
+            "getEndpointIdentificationAlgorithm");
 
     /** The watchdog thread that closes the plain socket of a handshake past the total-timeout deadline. */
     private static final ScheduledThreadPoolExecutor WATCHDOG = watchdog();
@@ -116,34 +124,37 @@ final class TlsConnector {
         return "Dalvik".equals(vmName);
     }
 
-    /** Whether this runtime has {@code SSLParameters.setEndpointIdentificationAlgorithm}. */
+    /** Whether this runtime has {@code SSLParameters.set/getEndpointIdentificationAlgorithm}. */
     static boolean endpointIdentificationAvailable() {
-        return SET_ENDPOINT_IDENTIFICATION != null;
+        return SET_ENDPOINT_IDENTIFICATION != null && GET_ENDPOINT_IDENTIFICATION != null;
     }
 
     /**
      * Turns on the "HTTPS" endpoint identification of {@code ssl}, so its handshake checks the certificate against
-     * the host given to {@code createSocket}; {@code false} when the method is absent, switched off, or not
-     * applicable, so the caller verifies the host itself.
+     * the host given to {@code createSocket}; {@code true} only when the socket's parameters read back "HTTPS"
+     * afterwards. {@code false} when the methods are absent, switched off, or not applicable, or when the socket
+     * dropped the algorithm (a delegating {@code SSLSocket} that keeps the base {@code setSSLParameters}), so the
+     * caller verifies the host itself.
      */
     private static boolean endpointIdentification(SSLSocket ssl) {
-        Method m = SET_ENDPOINT_IDENTIFICATION;
-        if (!endpointIdentification || m == null) {
+        Method set = SET_ENDPOINT_IDENTIFICATION;
+        Method get = GET_ENDPOINT_IDENTIFICATION;
+        if (!endpointIdentification || set == null || get == null) {
             return false;
         }
         try {
             SSLParameters params = ssl.getSSLParameters();
-            m.invoke(params, "HTTPS");
+            set.invoke(params, "HTTPS");
             ssl.setSSLParameters(params);
-            return true;
+            return "HTTPS".equals(get.invoke(ssl.getSSLParameters()));
         } catch (IllegalAccessException | InvocationTargetException | RuntimeException e) {
             return false;
         }
     }
 
-    private static @Nullable Method endpointIdentificationMethod() {
+    private static @Nullable Method endpointIdentificationMethod(String name, Class<?>... parameterTypes) {
         try {
-            return SSLParameters.class.getMethod("setEndpointIdentificationAlgorithm", String.class);
+            return SSLParameters.class.getMethod(name, parameterTypes);
         } catch (NoSuchMethodException | RuntimeException e) {
             return null;
         }
