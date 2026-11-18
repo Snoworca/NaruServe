@@ -1,0 +1,121 @@
+{
+  "wave": "wave-19",
+  "round": 1,
+  "verifier": "loop-p-wave-19-r1",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "FR-PROXY-003 AC-8",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave19Test.java::lp1_fr_PROXY_003_AC8_wholeBlockOverTinyHttpdTrustedPeer",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Real TinyHttpd socket, trustProxy(true): block is Host, client lines (forwarding names dropped in all cases, Cookie merged), X-Forwarded-For 1.2.3.4, 5.6.7.8, 127.0.0.1 / Proto https / Host gw.example, then .requestHeader values in call order, Connection: close. AC-8 holds."
+    },
+    {
+      "id": "LP-2",
+      "cites": "SEC-PROXY-002 AC-7",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave19Test.java::lp2_sec_PROXY_002_AC7_untrustedTinyHttpdCaseVariantsAndDuplicatesDropped",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Untrusted TinyHttpd peer: duplicated and case-variant X-Forwarded-Host, Forwarded, X-Forwarded-For, X-Real-IP, X-Forwarded-Port, X-Forwarded-Prefix, X-Forwarded-Proto all dropped; only the proxy's three lines arrive."
+    },
+    {
+      "id": "LP-3",
+      "cites": "SEC-PROXY-002 AC-7",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave19Test.java::lp3_sec_PROXY_002_AC7_preserveHostAndTrustedPeer",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "preserveHost(true) with a trusted CIDR peer and removeRequestHeader(X-Real-IP): Host and X-Forwarded-Host both the received Host, client forwarding variants dropped."
+    },
+    {
+      "id": "LP-4",
+      "cites": "FR-PROXY-005 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave19Test.java::lp4_fr_PROXY_005_AC4_laterCallWinsAcrossCaseAndKinds",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Later call wins across letter case and set/remove kinds; surviving values follow the forwarding lines in the order of their later call."
+    },
+    {
+      "id": "LP-5",
+      "cites": "FR-PROXY-002 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave19Test.java::lp5_fr_PROXY_005_AC1_managedNamesRefusedInMixedCase",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "All 16 managed names refused in mixed case by requestHeader and removeRequestHeader; X-Real-IP, X-Forwarded-Port, X-Forwarded-Prefix stay configurable."
+    },
+    {
+      "id": "LP-6",
+      "cites": "REL-PROXY-002 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave19Test.java::lp6_rel_PROXY_002_AC6_everyResponseShapeOverTinyHttpdCancelsItsReservations",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "90 TinyHttpd requests (HEAD, 204, 304, read-to-close, chunked, 404, refused backend 502, POST) leave 0 queued reservations."
+    },
+    {
+      "id": "LP-7",
+      "cites": "REL-PROXY-002 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave19Test.java::lp7_rel_PROXY_002_AC6_failedHandshakesLeaveNoReservation",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "50 https requests whose TLS handshake fails at once: the handshake deadline on the shared scheduler and the total reservation are both cancelled (queue 0)."
+    },
+    {
+      "id": "LP-8",
+      "cites": "REL-PROXY-002 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave19Test.java::lp8_rel_PROXY_002_AC3_threadPropertiesFromAThreadWithAClassLoader",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Watchdog thread created from a request thread holding a custom context class loader: single thread, name naruserve-proxy-watchdog, daemon, null context class loader."
+    },
+    {
+      "id": "LP-9",
+      "cites": "SEC-PROXY-002 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave19Test.java::lp9_sec_PROXY_002_AC2_ipv6LoopbackOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Inconclusive: skipped by assumption, TinyHttpd listen(0) refuses connections on ::1 (IPv4-only bind). Not a defect; AC-2 is covered by the in-memory adapter tests."
+    },
+    {
+      "id": "LP-10",
+      "cites": "SEC-PROXY-002 AC-7",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave19Test.java::lp10_sec_PROXY_002_AC7_noHostOverTinyHttpdSendsNoForwardedHost",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "HTTP/1.0 without Host over TinyHttpd, trusted peer, two client X-Forwarded-Host lines: no client value reaches the backend."
+    },
+    {
+      "id": "LP-11",
+      "cites": "FR-PROXY-003 AC-8",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave19Test.java::lp11_fr_PROXY_003_AC8_chunkedPostBlockOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Chunked POST over TinyHttpd, trusted CIDR peer: Host, client lines, X-Forwarded-For 1.2.3.4, 127.0.0.1 / Proto / Host, Via and X-Z requestHeader values, framing header, Connection: close; body relayed."
+    },
+    {
+      "id": "LP-12",
+      "cites": "REL-PROXY-002 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave19Test.java::lp12_rel_PROXY_002_AC6_clientGoneMidBodyLeavesNoReservation",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Client that resets mid-way through a 12.8 MB streamed body over TinyHttpd: no reservation remains in the queue."
+    }
+  ],
+  "summary": {
+    "tests_written": 12,
+    "kept": 0
+  },
+  "integration": "Full :NaruServe-proxy:test in Maven mode at 04ee886 plus these tests: 599 tests, 0 failures, 1 skipped (LP-9).",
+  "fr_proxy_003_ac8": "holds: LP-1 and LP-11 (real TinyHttpd sockets) show Host, client lines, real X-Forwarded-For/Proto/Host, .requestHeader values, framing, Connection: close in that order."
+}
