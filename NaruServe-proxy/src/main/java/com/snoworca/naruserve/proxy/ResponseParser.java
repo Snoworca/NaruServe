@@ -88,8 +88,10 @@ final class ResponseParser {
             LineReader lines = new LineReader(in);
             int remaining = MAX_HEAD_BYTES;
             while (true) {
-                StatusLine statusLine = statusLine(lines.read(remaining));
+                String rawStatusLine = lines.read(remaining);
+                // The head bound is charged before the line is parsed, so an over-bound line fails on the bound.
                 remaining = charge(remaining, lines);
+                StatusLine statusLine = parseStatusLine(rawStatusLine);
                 int status = statusLine.status;
                 if (status == 101) {
                     // The proxy relays no protocol switch: a WebSocket upgrade never reaches the backend
@@ -184,7 +186,7 @@ final class ResponseParser {
      * {@code 100..599}, and then nothing or a space and a reason phrase of HTAB, SP, VCHAR and obs-text.
      */
     // @req SEC-PROXY-004
-    private static StatusLine statusLine(String line) throws Malformed {
+    private static StatusLine parseStatusLine(String line) throws Malformed {
         if (line.length() < 12 || !line.startsWith("HTTP/1.") || !isDigit(line.charAt(7)) || line.charAt(8) != ' '
                 || !isDigit(line.charAt(9)) || !isDigit(line.charAt(10)) || !isDigit(line.charAt(11))
                 || (line.length() > 12 && line.charAt(12) != ' ')) {
