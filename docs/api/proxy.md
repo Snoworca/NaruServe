@@ -99,6 +99,7 @@ Express에서 `app.use('/api', createProxyMiddleware(...))`로 붙이면 `req.ur
 
 - `requestHeader(name, value)`는 그 이름의 헤더를 정확히 한 줄 보냅니다. 클라이언트가 보낸 같은 이름의 줄은 대소문자와 상관없이 모두 대신합니다. 이 줄은 전달용 헤더(`X-Forwarded-*`) 뒤에, 이름마다 남는 마지막 호출의 순서로 붙습니다.
 - `removeRequestHeader(name)`은 클라이언트가 보낸 그 이름의 줄을 모두 버립니다.
+- 두 옵션은 hop-by-hop 헤더 제거, `Host` 처리, 전달용 헤더 다음에 적용됩니다. 그래서 클라이언트가 `Connection`에 이름을 올린 헤더도, 프록시가 버리는 `X-Real-IP`, `X-Forwarded-Port`, `X-Forwarded-Prefix`도 `requestHeader`로 정하면 그 값이 한 줄 갑니다. 프록시가 더하지 않는 `Via`도 `requestHeader("Via", "1.1 gw")`로 정하면 그대로 보냅니다.
 - `responseHeader(name, value)`는 백엔드 헤더를 복사하고 `Location`을 다시 쓴 뒤에 `res.header`로 값을 정하므로, 백엔드 값과 앱이 프록시 앞에서 정한 값을 모두 대신합니다.
 - `removeResponseHeader(name)`은 백엔드가 보낸 그 이름의 줄만 버립니다. 앱이 프록시 앞에서 정한 값은 남습니다.
 - 이름은 대소문자를 가리지 않고, 같은 이름에 여러 번 부르면(`requestHeader`와 `removeRequestHeader`를 섞어도) 마지막 호출만 남습니다. 응답 쪽도 같습니다.
@@ -139,12 +140,15 @@ app.use("/users", users)
 
 ### X-Forwarded-* 헤더
 
-| 헤더 | 백엔드가 받는 값 |
-|---|---|
-| `X-Forwarded-For` | 클라이언트 연결이 [신뢰한 프록시](app.md#프록시-신뢰)에서 왔으면 받은 값들 뒤에 소켓 주소를 붙이고, 아니면 소켓 주소 하나만 보냅니다. 소켓 주소가 IP 리터럴이 아니면 보내지 않습니다 |
-| `X-Forwarded-Proto` | `req.isSecure()`에 따라 `https` 또는 `http`로 언제나 바꿉니다 |
-| `X-Forwarded-Host` | 받은 `Host`로 언제나 바꿉니다(`Host`가 없으면 보내지 않습니다) |
-| `Forwarded`, `X-Real-IP`, `X-Forwarded-Port`, `X-Forwarded-Prefix` | 신뢰 설정과 상관없이 언제나 뺍니다 |
+| 헤더 | 클라이언트가 보낸 값 | `.requestHeader(name, value)` |
+|---|---|---|
+| `X-Forwarded-For` | 클라이언트 연결이 [신뢰한 프록시](app.md#프록시-신뢰)에서 왔으면 받은 줄들의 값을 받은 순서대로 `, `로 이어 한 줄로 만들고 뒤에 소켓 주소를 붙입니다. 아니면 클라이언트 값을 버리고 소켓 주소 하나만 보냅니다. 소켓 주소는 대괄호와 `%zone` 없이 씁니다. 대괄호와 `%zone`을 뺀 소켓 주소가 IPv4·IPv6 리터럴이 아니면(빈 값, `unknown`, 호스트 이름) 신뢰 설정이나 클라이언트 값과 상관없이 이 줄을 보내지 않습니다 | 관리하는 이름이라 호출할 때 `IllegalArgumentException` |
+| `X-Forwarded-Proto` | 언제나 버리고 `req.isSecure()`에 따라 `https` 또는 `http`를 보냅니다. 신뢰한 프록시가 보낸 값은 `req.isSecure()`를 거쳐서만 반영됩니다 | 관리하는 이름이라 호출할 때 `IllegalArgumentException` |
+| `X-Forwarded-Host` | 신뢰 설정과 상관없이 버리고 어댑터가 알려 준 `Host` 헤더 값을 보냅니다(`Host`가 없으면 보내지 않습니다). 요청 대상의 authority에서 가져오지 않습니다 | 관리하는 이름이라 호출할 때 `IllegalArgumentException` |
+| `Forwarded` | 신뢰 설정과 상관없이 버리고, 프록시가 따로 만들지도 않습니다 | 관리하는 이름이라 호출할 때 `IllegalArgumentException` |
+| `X-Real-IP`, `X-Forwarded-Port`, `X-Forwarded-Prefix` | 신뢰 설정과 상관없이 버립니다 | 받습니다. 정한 값이 정확히 한 줄 백엔드에 갑니다 |
+
+관리하는 이름은 `removeRequestHeader`에서도 `IllegalArgumentException`입니다. 백엔드가 마운트 경로를 알아야 하면 `.requestHeader("X-Forwarded-Prefix", "/api")`처럼 직접 정하세요. 고정 헤더는 전달용 헤더 다음에 적용되므로 클라이언트가 보낸 `X-Forwarded-Prefix`는 버려지고 정한 값만 갑니다.
 
 Express 대응: `xfwd: true`.
 

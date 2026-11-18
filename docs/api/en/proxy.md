@@ -99,6 +99,7 @@ The request headers the proxy manages are `Connection`, `Keep-Alive`, `Proxy-Con
 
 - `requestHeader(name, value)` sends exactly one line of that name. It replaces every line of that name the client sent, in any letter case. The line follows the forwarding headers (`X-Forwarded-*`), in the order of the last call for each name.
 - `removeRequestHeader(name)` drops every line of that name the client sent.
+- Both apply after hop-by-hop removal, `Host` handling and the forwarding headers. So a header the client named in `Connection`, and the `X-Real-IP`, `X-Forwarded-Port` and `X-Forwarded-Prefix` the proxy drops, reach the backend as one line with the value `requestHeader` sets. A `Via`, which the proxy never adds, is sent as set with `requestHeader("Via", "1.1 gw")`.
 - `responseHeader(name, value)` sets the value with `res.header` after the backend header copy and the `Location` rewrite, so it replaces both the backend's value and a value the app set before the proxy.
 - `removeResponseHeader(name)` drops only the backend's lines of that name. A value the app set before the proxy stays.
 - Names compare case-insensitively, and when one name is given several times (`requestHeader` and `removeRequestHeader` mixed included) only the last call counts. The response side works the same way.
@@ -139,12 +140,15 @@ app.use("/users", users)
 
 ### X-Forwarded-* headers
 
-| Header | What the backend receives |
-|---|---|
-| `X-Forwarded-For` | When the client connection comes from a [trusted proxy](app.md#proxy-trust), the received values followed by the socket address; otherwise the socket address alone. Not sent when the socket address is not an IP literal |
-| `X-Forwarded-Proto` | Always replaced by `https` or `http` from `req.isSecure()` |
-| `X-Forwarded-Host` | Always replaced by the received `Host` (none when there is no `Host`) |
-| `Forwarded`, `X-Real-IP`, `X-Forwarded-Port`, `X-Forwarded-Prefix` | Always removed, whatever the trust setting |
+| Header | A value the client sent | `.requestHeader(name, value)` |
+|---|---|---|
+| `X-Forwarded-For` | When the client connection comes from a [trusted proxy](app.md#proxy-trust), the values of the received lines are joined with `, ` in received order into one line, followed by the socket address; otherwise the client value is dropped and the socket address alone is sent. The socket address is written without brackets or `%zone`. When the socket address, brackets and `%zone` removed, is not an IPv4 or IPv6 literal (empty, `unknown`, a host name), no line is sent, whatever the trust setting or the client value | A managed name: `IllegalArgumentException` at the call |
+| `X-Forwarded-Proto` | Always dropped; `https` or `http` from `req.isSecure()` is sent. A trusted proxy's value counts only through `req.isSecure()` | A managed name: `IllegalArgumentException` at the call |
+| `X-Forwarded-Host` | Dropped whatever the trust setting; the `Host` header value the adapter reported is sent (none when there is no `Host`). It never comes from the request target's authority | A managed name: `IllegalArgumentException` at the call |
+| `Forwarded` | Dropped whatever the trust setting, and the proxy writes none of its own | A managed name: `IllegalArgumentException` at the call |
+| `X-Real-IP`, `X-Forwarded-Port`, `X-Forwarded-Prefix` | Dropped whatever the trust setting | Accepted: exactly one line with the configured value reaches the backend |
+
+The managed names also throw `IllegalArgumentException` from `removeRequestHeader`. When the backend needs the mount path, set it yourself, for example `.requestHeader("X-Forwarded-Prefix", "/api")`. Fixed headers apply after the forwarding headers, so a client's `X-Forwarded-Prefix` is dropped and only the configured value arrives.
 
 Express counterpart: `xfwd: true`.
 
