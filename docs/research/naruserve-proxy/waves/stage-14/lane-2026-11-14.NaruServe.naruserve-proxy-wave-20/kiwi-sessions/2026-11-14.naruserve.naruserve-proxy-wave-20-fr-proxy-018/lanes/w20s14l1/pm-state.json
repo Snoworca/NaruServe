@@ -1,0 +1,51 @@
+{
+ "run_id": "2026-11-14.naruserve.naruserve-proxy-wave-20-fr-proxy-018",
+ "run_id_requested": "2026-11-14.NaruServe.naruserve-proxy-wave-20-fr-proxy-018",
+ "base_sha": "c900c9dd276513e149c74883beaf93881bd8fe67",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-018"
+ ],
+ "req_filter": [
+  "FR-PROXY-018"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RetryPolicy.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRetryTest.java"
+ ],
+ "started_at": "2026-11-18T13:50:18Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "FR-PROXY-018",
+    "test_sha": "a74b9a4",
+    "implementation_sha": "40e91ea"
+   }
+  ],
+  "changed": true,
+  "commit_sha": "40e91ea",
+  "ended_at": "2026-11-18T13:59:15Z",
+  "coder_run_id": "2026-11-14.naruserve.naruserve-proxy-wave-20-fr-proxy-018",
+  "result_summary": "ProxyRetryTest 20 tests (12 red before impl, AC-1/4/7 negative cases held at base); proxy module 607 tests green; kiwi-coder work ran inline in the worker foreground (Agent tool launched async and was stopped before any edit)"
+ },
+ "lifecycle_gate_state": {
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-PROXY-018": "evolving"
+  },
+  "status_snapshot": {
+   "FR-PROXY-018": "planned"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.naruserve.naruserve-proxy-wave-20-fr-proxy-018/lanes/w20s14l1/reports/pm-2026-11-18T135915Z.md",
+ "last_updated_at": "2026-11-18T13:59:15Z"
+}

@@ -1,0 +1,685 @@
+{
+ "chunk": "T2",
+ "round": 2,
+ "findings": [
+  {
+   "id": "T2-F01",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "RolePolicyTest still asserts the message of the exception the test itself created (T3-F09 not resolved)",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/rbac/RolePolicyTest.java",
+    "line_range": "129-146"
+   },
+   "description": "throwingRoleStorePropagates now stores the caught exception in 'propagated' after assertEquals(down, e). Throwable does not override equals, so that assertion already proves propagated == down, the IllegalStateException(\"db down\") the test built. The two new checks, assertFalse(propagated.getMessage().isEmpty()) and assertEquals(\"db down\", propagated.getMessage()), read the test's own literal and cannot fail. If EffectiveGrants wrapped or replaced the store error, assertEquals(down, e) would already fail first, so the comment 'keeps the store's message (not wrapped or replaced)' adds nothing.",
+   "suggested_fix": "Use assertSame(down, e) as the only proof and delete the two message assertions and the 'propagated' variable.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F02",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Duplicate transient-hash docs tests remain (T4-F10 only partially resolved)",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/AuthDocsTest.java",
+    "line_range": "41-43,81-83"
+   },
+   "description": "The fix replaced the CON_AUTH_005_AC2 negative control with a real check: unnamedTypes runs on a synthetic 'NoSuchAuthType' entry and must report it in ko and en. That half is resolved. The other half of T4-F10 is still present: transientHashLimitIsDocumented (41-43) and DR_IAM_001_AC7_transientHashLimitInJavadocAndDocs (81-83) both assert contains(KO_HASH) and contains(EN_HASH) on the same pages. A wording change still has to be made in two tests.",
+   "suggested_fix": "Delete transientHashLimitIsDocumented, or merge its assertions into DR_IAM_001_AC7, which also covers the Javadoc.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "style"
+   ]
+  },
+  {
+   "id": "T2-F03",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "AC-5 check compares a loaded-server latency with one idle-server probe (T4-F03 partially resolved)",
+   "location": {
+    "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AuthFailureFloorSocketTest.java",
+    "line_range": "262-287"
+   },
+   "description": "The fixed sleep is gone. The test now waits until two logins reach the user-key throttle check before the hash, which sound reasoning ties to the worker count. The deciding assertion is still health.millis < floorMillis (286-287). floorMillis is one probe on an idle server. health.millis is measured while up to 50 logins compete for the hash slots and the CPU, each running a 200,000-iteration PBKDF2. A false failure is possible: on a 2-vCPU or Android-speed CI the hash threads saturate the CPU, and /health can run past an idle floor. A false pass is also possible: under the blocking-floor regression the failures run slower under load, so the margin by which /health beats an idle floor depends on scheduling, not on the property tested.",
+   "suggested_fix": "Decide by state instead of a latency comparison: assert that /health returned while at least slots+1 failures are still pending (already counted in 'pending'), and that the 2 TinyHttpd workers are not parked (for example a worker-thread state or count seam). Alternatively take the floor from the configured HashCost or FailureFloor value rather than from an idle probe.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F04",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Kotlin tests reworked for T4-F05/T4-F06 now start apps and auth instances and never shut them down",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave6KotlinTest.kt",
+    "line_range": "33-81"
+   },
+   "description": "To make the tests check behaviour, AuthWave6KotlinTest 'token service, lockout and websocket wrapper' now calls t.start() (line 56) and opens a WebSocket session. AuthWave7KotlinTest 'docs auth csrf guarded route' (108-131) and 'docs auth cors before install' (149-165) call t.send(...), and TestApp.send runs listen(0) on first use. None of the three ever calls app().shutdown(...). Each one therefore leaves a started RestApp, its in-memory adapter pool and the started Auth's cleanup scheduler running for the rest of the test JVM. This is the T1-F02 leak pattern that the same fix round removed from WebSocketWrapperTest and ServletProxyTrustTest. Before this round these Kotlin tests never started anything, so the leak is new. AuthFileKeyKotlinTest in the same round does it right: it shuts down in finally.",
+   "suggested_fix": "Wrap each started TestApp in try/finally { t.app().shutdown(5, TimeUnit.SECONDS) } (or an @After that stops a list of started apps).",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "regression"
+   ]
+  },
+  {
+   "id": "T2-F05",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "MiniJsonTest: the new AC-3 test was inserted under the AC-4 test's comment, so both requirement labels are wrong",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/MiniJsonTest.java",
+    "line_range": "127-143"
+   },
+   "description": "The new SEC_TOKEN_002_AC3_unicodeEscapeTakesAsciiHexOnly test, with its two-line comment, was placed between the existing '// SEC-TOKEN-002 AC-4: a 100-level array ...' comment (127) and the AC-4 test it described. The AC-3 test now sits under an AC-4 comment, and SEC_TOKEN_002_AC4_deepArrayStopsAtTheLimitWithoutParsingFurther (143) has no requirement comment. Requirement traceability greps that use the comment lines (the project's '// <REQ> AC-n:' convention) now map the deep-array check to the wrong test.",
+   "suggested_fix": "Move the '// SEC-TOKEN-002 AC-4: ...' line down to directly above SEC_TOKEN_002_AC4_deepArrayStopsAtTheLimitWithoutParsingFurther.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F06",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "hugeFileFailsBeforeItIsRead needs 3 GB of free disk wherever the file system does not support sparse files",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java",
+    "line_range": "211-225"
+   },
+   "description": "The test runs RandomAccessFile.setLength(3 GB) on the TemporaryFolder file. This is cheap on APFS, ext4 and tmpfs only because those create a sparse file. On NTFS (no sparse flag is set), on some overlay or quota CI file systems, or on FAT, the 3 GB is allocated for real. setLength then throws ENOSPC as a test error on a small runner, or it holds 3 GB of disk until the rule deletes the folder. The property under test, that the size check runs before the read, does not need 3 GB. Any file just over the limit whose read would be detectable would do. The other AC-6 test already proves the size limit itself.",
+   "suggested_fix": "Use a file a little above a lowered limit, for example new FileUserStore(f, 1024, logger) with a sparse 64 MB file. Or assume the free space first (Assume.assumeTrue(tmp.getRoot().getUsableSpace() > 4L<<30)).",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F07",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "FR-APIKEY-002 AC-5: the old assertion that cannot fail is kept under a new comment that claims it checks something",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java",
+    "line_range": "900-909"
+   },
+   "description": "The fix adds a real check: a 20 ms ticking scheduler is seen calling deleteExpired and then makes no call in the 500 ms after onStop. That resolves T3-F06. The earlier assertEquals(calls, keys.expiredCalls.get()) is still there, now under the comment 'the stopped node made no call while the other one started and ran its cleanup'. 'none' holds no reference to 'keys', and f's stopped scheduler has a 10-minute default interval, so the count cannot change in that window. The comment presents a check that cannot fail as evidence.",
+   "suggested_fix": "Delete the 'none' block (start, cleanupRun and the assertEquals) or reword the comment as a no-key-store smoke check. The ticking block is the AC-5 proof.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "style"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7LoginTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// MULTI_INSTANCE: Wave7MultiInstanceTest FR_AUTH_003_AC3_multiInstanceNeedsSharedStores; the Kotlin implementation:"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7MultiInstanceTest.java",
+   "hunks_total": 19,
+   "anchors": [
+    "import static org.junit.Assert.assertNull;",
+    "import com.snoworca.naruserve.utils.auth.jdbc.JdbcRefreshTokenStore;",
+    "import java.sql.Connection;",
+    "import org.sqlite.SQLiteDataSource;",
+    "* MULTI_INSTANCE with shared JDBC stores (FR-AUTH-003 AC-3, REL-IAM-003 AC-1 and AC-2) and the single restart-logout",
+    "ds.setUrl(\"jdbc:sqlite:\" + new File(tmp.newFolder(), \"auth.db\").getAbsolutePath());",
+    "private Auth.Builder multi(UserStore users, SQLiteDataSource ds) {",
+    ".loginThrottle(JdbcLoginThrottle.builder(ds).dialect(AuthDialect.SQLITE).build())",
+    "// store shared (app-provided test implementations, none a built-in in-memory or file store) -> build() passes and",
+    "Auth auth = multi(new PlainStore(), new AppStores()).build();",
+    "assertTrue(String.valueOf(m), m == null || !m.contains(\"atomic field writes\"));",
+    "// and the implicit in-memory defaults a custom UserStore would get; with app-provided stores implementing the SPIs",
+    "SQLiteDataSource ds = sqlite();",
+    "b.refreshTokens(new JdbcRefreshTokenStore(ds, AuthDialect.SQLITE));",
+    "b.loginThrottle(JdbcLoginThrottle.builder(ds).dialect(AuthDialect.SQLITE).build());",
+    "b.deviceTrust(JdbcDeviceTrust.builder(ds).dialect(AuthDialect.SQLITE).build());",
+    "assertTrue(JdbcUserStore.builder(sqlite()).dialect(AuthDialect.SQLITE).build().supportsAtomicFieldWrites());",
+    "LoginThrottle th = JdbcLoginThrottle.builder(ds).dialect(AuthDialect.SQLITE).build();",
+    "assertEquals(0, restartWarns(single(new FileUserStore(new File(tmp.newFolder(), \"u.json\"), AuthTestSupport.FILE_KEY))));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7ReviewFixesTest.java",
+   "hunks_total": 8,
+   "anchors": [
+    "import com.snoworca.naruserve.utils.auth.jdbc.JdbcLoginThrottle;",
+    "import java.sql.Connection;",
+    "import org.sqlite.SQLiteDataSource;",
+    "// review M3: the 10-minute cleanup also purges the device-trust state and the default throttle's old keys",
+    "JdbcLoginThrottle throttle = JdbcLoginThrottle.builder(ds).dialect(AuthDialect.SQLITE).timeSource(clock::get)",
+    "InMemoryLoginThrottle throttle = (InMemoryLoginThrottle) auth.loginThrottle();",
+    "assertEquals(Collections.singletonList(\"login:ip:new\"), new ArrayList<>(throttle.snapshot().keySet()));",
+    "// FR-IAM-013 AC-4: a device token invalidated on node A (5 failures within 15 minutes) is rejected on node B on the"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7TokenTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "/** Runs once just before the next save, standing in for a concurrent request between markUsed and save. */",
+    "Runnable r = beforeSave;",
+    "// A concurrent reuse of the same refresh token that lands between the winner's markUsed and its save revokes the"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8AccountTest.java",
+   "hunks_total": 7,
+   "anchors": [
+    "import com.snoworca.naruserve.HttpException;",
+    "private List<String> refusals(String pw, String rootToken, String targetId, String targetToken)",
+    "ClientResponse change = f.post(\"/auth/password\", \"{\\\"currentPassword\\\":\\\"\" + W8.PW + \"\\\",\\\"newPassword\\\":\\\"\"",
+    "String targetToken = (String) f.loginBody(\"target\", W8.PW).get(\"accessToken\");",
+    "List<String> r = refusals(pw, rootToken, target, targetToken);",
+    "assertTrue(\"the hash qualifies for a rehash\", counting.needsRehash(before));",
+    "// the rehash decision is made inside checkPassword: no entry was offered, so none can still be running"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8ApiKeysTest.java",
+   "hunks_total": 9,
+   "anchors": [
+    "import com.snoworca.naruserve.utils.auth.jdbc.JdbcApiKeyStore;",
+    "import java.sql.Connection;",
+    "// FR-APIKEY-010 AC-4: apiKeyFor works with an app-provided ApiKeyStore implementation that is not",
+    "assertFalse(((Object) keys) instanceof com.snoworca.naruserve.utils.auth.apikey.InMemoryApiKeyStore);",
+    "f.start(b -> b.apiKeys(jdbc));",
+    "assertEquals(1, jdbc.listByOwner(id).size());",
+    "// the stale key is still the owner's one listed key: the held deletion has not removed it",
+    "for (com.snoworca.naruserve.utils.auth.apikey.ApiKey listed : f.auth.apiKeys().list(owner)) {",
+    "assertTrue(seen + \" holds the prefix of \" + k, seen.contains(k.substring(3, 11)));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8RevocationTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "f.auth.passwordChanges().selfService(b, v, W8.PW.toCharArray(), \"a-new-password-1\".toCharArray());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java",
+   "hunks_total": 4,
+   "anchors": [
+    "long requested = f.auth.hashSlots().requested();",
+    "assertEquals(\"no hash slot was asked for\", requested, f.auth.hashSlots().requested());",
+    "// the stopped node made no call while the other one started and ran its cleanup",
+    "// after onStop no further call, against a scheduler seen ticking: a 20 ms cleanup calls deleteExpired on its"
+   ],
+   "findings": [
+    "T2-F07"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java",
+   "hunks_total": 23,
+   "anchors": [
+    "import com.snoworca.naruserve.utils.auth.jdbc.JdbcRefreshTokenStore;",
+    "import java.sql.Connection;",
+    "import org.sqlite.SQLiteDataSource;",
+    "ds.setUrl(\"jdbc:sqlite:\" + new File(tmp.newFolder(), \"auth.db\").getAbsolutePath());",
+    "private Auth.Builder multi(SQLiteDataSource ds, com.snoworca.naruserve.utils.auth.apikey.ApiKeyStore keyStore) {",
+    ".deviceTrust(JdbcDeviceTrust.builder(ds).dialect(AuthDialect.SQLITE).build()).apiKeys(keyStore);",
+    "// OPS-APIKEY-001 AC-7: the MULTI_INSTANCE key fixture (shared app-provided stores, atomic field writes and atomic",
+    "JdbcApiKeyStore jdbc = JdbcApiKeyStore.builder(ds).dialect(AuthDialect.SQLITE).build();",
+    "ok.start(b -> multi(ds, jdbc));",
+    "/** A JDBC user store whose reads come from a replica that can lag one ver behind. */",
+    "SQLiteDataSource ds = sqlite();",
+    "replica[0] = new Replica(JdbcUserStore.builder(ds).dialect(AuthDialect.SQLITE).build());",
+    "JdbcUserStore primary = JdbcUserStore.builder(ds).dialect(AuthDialect.SQLITE).build();",
+    "// isServiceAccount() true through InMemoryUserStore and FileUserStore, and through an app-provided UserStore that",
+    "stores.add(new FileUserStore(new File(tmp.newFolder(), \"users.json\"), AuthTestSupport.FILE_KEY));",
+    "AppStores ds = new AppStores();",
+    "AppStores.Users primary = ds.users();",
+    "SQLiteDataSource",
+    "replica[0] = new Replica(ds.users());",
+    "JdbcUserStore",
+    "AppStores",
+    "AuthDialect",
+    "primary"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9RefreshTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// FR-FLOW-001 (the earliest step decides; body format 415 before CSRF/Origin 403): secure COOKIE, a valid naru_at"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/WebSocketWrapperTest.java",
+   "hunks_total": 15,
+   "anchors": [
+    "import java.util.concurrent.CopyOnWriteArrayList;",
+    "import org.junit.After;",
+    "/** The fixtures this test made; each is stopped after the test (its app, auth scheduler and pools). */",
+    "AdminFixture f = fixture();",
+    "AdminFixture f = new AdminFixture().start(b -> b, x -> x.app.ws(\"/ws\", x.auth.webSocket(signal())));",
+    "AdminFixture f = fixture().start(b -> b, x -> x.app.ws(\"/ws\", x.auth.webSocket(signal())));",
+    "AdminFixture f = new AdminFixture().start(b -> b,",
+    "AdminFixture f = new AdminFixture().start(b -> b.transport(TokenTransport.COOKIE),",
+    "AdminFixture",
+    "AdminFixture g = new AdminFixture().start(b -> b, x -> {",
+    "AdminFixture f = fixture().start(b -> b.transport(TokenTransport.COOKIE),",
+    "AdminFixture f = new AdminFixture().start(b -> b.statelessAccess(stateless),",
+    "final List<Integer> closes = new CopyOnWriteArrayList<>();",
+    "// the recheck closes on the ticking thread, so isOpen() above is the proof; a regression closing",
+    "assertEquals(\"stateless=\" + stateless + \": the one close is the client's, no access revocation\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/group/GroupAdminStoreTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// the race forced: x has passed the check for a -> b and waits before its insert; y's b -> a must wait for the"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// REL-IAM-004: a store file (password hashes, token versions) is readable and writable by its owner only, like the"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/HashSlotsTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "// the refusal is answered inside submit(): no wait for a slot, whatever the clock says",
+    "assertTrue(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - before) < 10_000);",
+    "@Test(timeout = 10000)",
+    "// the synchronous caller is queued (it asked for a slot) and parked on its answer before the shutdown",
+    "slots.shutdown(); // idempotent: frees the hash and timer threads when an assertion above failed"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/MiniJsonTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "eightKb.append(eightKb.length() == 1 ? \"\" : \",\").append('\"').append(repeat('x', 1000)).append('\"');",
+    "// SEC-TOKEN-002 AC-3: a \\\\u escape takes ASCII hex digits only (RFC 8259 HEXDIG): fullwidth or other Unicode"
+   ],
+   "findings": [
+    "T2-F05"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/RehashQueueTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// offer() returned while the worker is still parked in the hasher and nothing was written: it did not wait"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/SecretBoxTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// SEC-IAM-008 AC-2: the same value sealed twice gives two different enc(...) strings, and 1,000 seals of one value"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/ThrottleKeysTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// SEC-FLOW-011: an IPv4-mapped IPv6 address counts as its IPv4 address in every spelling (dotted, hex, expanded),"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/password/BcryptPasswordHasherTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "@Test(timeout = 120_000)",
+    "// warm-up: class loading and S-box init happen before the timing",
+    "// a sanity bound only (the key-schedule count above is the proof): a cost-15 schedule takes over a second",
+    "long before = Blowfish.keySchedules();",
+    "assertTrue(\"a raised maximum runs the schedule\", Blowfish.keySchedules() > before);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/password/PasswordHashersTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "UnsupportedOperationException refused = null;",
+    "fail(h + \" made a hash: \" + made);",
+    "// made is non-null exactly when hash() returned, so both checks can fail"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/rbac/RolePolicyTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "Exception propagated = null;",
+    "propagated = e;",
+    "// the propagated exception keeps the store's message (not wrapped or replaced)"
+   ],
+   "findings": [
+    "T2-F01"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/testing/VerifyApiKeyStoreTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// FR-APIKEY-009 AC-6: verifyApiKeyStore(a, b) with a and b two instances of an app-provided test ApiKeyStore over"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/testing/VerifyUserStoreTest.java",
+   "hunks_total": 11,
+   "anchors": [
+    "import com.snoworca.naruserve.utils.auth.jdbc.JdbcUserStore;",
+    "import java.sql.Connection;",
+    "import org.sqlite.SQLiteDataSource;",
+    "* The \"disk\" this store writes through to (a Gson file rewrite): the in-memory rows keep the hash, the disk",
+    "/** A fresh instance over the same disk, as a restart would open it. */",
+    "disk.put(stored.getId(), diskDropsHash ? stored.toBuilder().passwordHash(null).build() : stored);",
+    "return persist(user.toBuilder().id(\"t\" + (max + 1)).build());",
+    "disk.remove(id);",
+    "// FR-IAM-004 AC-1: verifyUserStore passes for InMemoryUserStore, FileUserStore and an app-provided test UserStore",
+    "// null-hash changePassword and ver-mismatch checks (both are clauses of the contract: the broken stores below show",
+    "// FR-IAM-004 AC-1 (the CRUD clause, UserStore's \"a deleted id is never reused\"): a MAX(id)+1 store, which hands the"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "// stops with the FAIL of REL-IAM-004 naming the limit, the constructor that raises it and the advice to move to an",
+    "\"app-provided UserStore implementation backed by the application's database\"));",
+    "// SEC-TOKEN-002 AC-6: the size limit is applied before the file is read, so a huge (here sparse, 3 GB) users file"
+   ],
+   "findings": [
+    "T2-F06"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/ForwardingUserStoreTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "for (String field : Arrays.asList(\"updatePasswordHash\", \"changePassword\", \"setEnabled\", \"bumpTokenVersion\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/UserStoreContractTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// IR-IAM-001 component (listing): InMemoryUserStore pages its users (the File and JDBC stores and admin A1 come later)"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthDocsExamplesKotlinTest.kt",
+   "hunks_total": 4,
+   "anchors": [
+    "import com.snoworca.naruserve.utils.auth.jdbc.JdbcUserStore",
+    "fun `docs auth own database`() {",
+    "// adapted: AppStores (test implementations of the SPIs over one shared backing store, no JDBC driver) stand in for the app's SQL stores, and a fixed test secret for JWT_SECRET",
+    "// docs-example: auth.md#41"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFacadeKotlinTest.kt",
+   "hunks_total": 2,
+   "anchors": [
+    "t.app().get(\"/x\", auth.check { p, req -> p.hasScope(\"posts:read\") && req.path() == \"/x\" }) { _, res ->",
+    "assertEquals(\"allowed\", t.send(\"GET\", \"/x\", AuthTestSupport.HEADER, \"${alice.id}:0:k1:posts:read\").text())"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFileKeyKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "// FR-IAM-015 AC-9: val key: AuthFileKey? = AuthFileKey.fromEnv() compiles with no platform type; a FileUserStore"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthTestingReopenKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "/** Kotlin compile-and-run check of AuthTesting.verifyUserStore(store, reopen) (CLAUDE.md T11, FR-IAM-004). */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave10KotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "// docs-example: auth.md#48"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave5KotlinTest.kt",
+   "hunks_total": 4,
+   "anchors": [
+    "import com.snoworca.naruserve.utils.auth.jdbc.JdbcRefreshTokenStore",
+    "// FR-TOKEN-002 from Kotlin: a refresh store in memory, on file and over JDBC share one SPI",
+    "val auth = Auth.builder(\"k9Qv2Lm7Xr4Tz8Wb1Nc6Ys3Hd5Gf0Ja-Pq\").users(FileUserStore(java.io.File(tmp.root, \"u.json\"), AuthTestSupport.FILE_KEY))",
+    "assertEquals(\"JdbcRefreshTokenStore\", JdbcRefreshTokenStore::class.java.simpleName)"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave6KotlinTest.kt",
+   "hunks_total": 7,
+   "anchors": [
+    "import com.snoworca.naruserve.testing.InMemoryHttpAdapter",
+    "import com.snoworca.naruserve.utils.auth.password.Pbkdf2PasswordHasher",
+    "import java.util.concurrent.atomic.AtomicReference",
+    "import org.junit.Assert.assertFalse",
+    "val auth = Auth.builder(secret).hashIterations(1000).users(store).lockout(Lockout.after(3).forMinutes(1))",
+    "repeat(3) { assertEquals(PasswordLogin.Kind.INVALID_CREDENTIALS, attempt(auth, \"lo\", \"wrong\").kind) }",
+    "auth.passwordLogin().attempt(name, pw.toCharArray(), \"10.0.0.1\", null) { out.set(it); done.countDown() }"
+   ],
+   "findings": [
+    "T2-F04"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave7KotlinTest.kt",
+   "hunks_total": 10,
+   "anchors": [
+    "import org.junit.Assert.fail",
+    "fail(\"a reused refresh token was accepted\")",
+    "com.snoworca.naruserve.utils.auth.jdbc.AuthSchema.apiKeyStatements(com.snoworca.naruserve.utils.auth.jdbc.AuthDialect.SQLITE).forEach { st.execute(it) }",
+    "// adapted: a TestApp over a TLS in-memory adapter, COOKIE transport as the Java example, a policy declaring",
+    "com.snoworca.naruserve.testing.InMemoryHttpAdapter(\"127.0.0.1\", true))",
+    "val refused = t.send(\"POST\", \"/api/posts\", \"Host\", \"app.test\", \"Origin\", \"https://app.test\",",
+    "// docs-example: auth.md#38",
+    "// adapted: a TestApp instead of RestApp.create(), a fixed test secret, and a preflight checking that the CORS",
+    "\"Access-Control-Request-Method\", \"POST\", \"Access-Control-Request-Headers\", \"X-CSRF-Token\")",
+    "// docs-example: auth.md#40"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave8KotlinTest.kt",
+   "hunks_total": 6,
+   "anchors": [
+    "// docs-example: auth.md#41",
+    "// docs-example: auth.md#43",
+    "// docs-example: auth.md#44",
+    "// docs-example: auth.md#45",
+    "// docs-example: auth.md#46",
+    "// docs-example: auth.md#47"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAuthFailureFloorTest.java",
+   "hunks_total": 10,
+   "anchors": [
+    "import java.util.concurrent.CountDownLatch;",
+    "import java.util.concurrent.atomic.AtomicLong;",
+    "static final class NoLimit implements LoginThrottle {",
+    "* A {@link NoLimit} that counts the logins reaching the last limit check before the hash (the user-only key, one",
+    "ReachedLimit limit = new ReachedLimit();",
+    "Auth auth = Auth.builder(SECRET).users(users).hashCost(HashCost.fixed(200_000)).loginThrottle(new NoLimit())",
+    "assertTrue(\"the failing login reached the server\", reached.await(20, TimeUnit.SECONDS));",
+    "long healthAt = System.nanoTime() - healthStart;",
+    "assertTrue(\"the failing login was still waiting when /health was answered\", stillWaiting);",
+    "long failedAt = System.nanoTime() - start;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletProxyTrustTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "t.app().shutdown(5, java.util.concurrent.TimeUnit.SECONDS); // its adapter pool ends with it",
+    "return out;",
+    "// is still the captured getRemoteAddr, and every value equals the in-memory adapter's over the same"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AuthFailureFloorSocketTest.java",
+   "hunks_total": 11,
+   "anchors": [
+    "import java.util.concurrent.CountDownLatch;",
+    "static final class NoLimit implements LoginThrottle {",
+    "* A {@link NoLimit} that counts the logins reaching the last limit check before the hash (the user-only key, one",
+    "private final ReachedLimit limit = new ReachedLimit();",
+    "Auth auth = Auth.builder(SECRET).users(users).hashCost(COST).loginThrottle(new NoLimit()).permit(\"/health\")",
+    "CountDownLatch reached = limit.expect(1);",
+    "assertTrue(\"the failing login reached the server\", reached.await(20, TimeUnit.SECONDS));",
+    "boolean stillWaiting = !failing.isDone();",
+    "assertTrue(\"the failing login was still waiting when /health was answered (\" + health.millis + \" ms)\",",
+    "// as many failures as there are workers reached the hash step: a floor that held its worker would now",
+    "assertTrue(\"the failures reached the server\", reached.await(20, TimeUnit.SECONDS));"
+   ],
+   "findings": [
+    "T2-F03"
+   ]
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java",
+   "hunks_total": 10,
+   "anchors": [
+    "/** Where the auth module lives and what it may depend on (CON-AUTH-001, CON-IAM-002 AC-1, CON-AUTH-002 AC-3). */",
+    "\"jwt\", \"password\", \"user\", \"group\", \"rbac\", \"audit\", \"apikey\", \"spi\", \"jdbc\", \"internal\", \"testing\"));",
+    "// CON-AUTH-001 AC-3: the auth packages are in the NaruServe-api main jar and in no other jar, and no utils/auth/jdbc",
+    "for (String v2 : new String[] {\"oidc\", \"mfa\", \"tenant\", \"scim\", \"jdbc\"}) {",
+    "private static final Pattern JDBC_DRIVER = Pattern.compile(\"org\\\\.xerial:sqlite-jdbc|com\\\\.h2database:|org\\\\.hsqldb:\"",
+    "public void CON_IAM_003_AC2_noJdbcDriverInAnyApiConfiguration() throws IOException {",
+    "for (String file : new String[] {\"build.gradle\", \"gradle/release.gradle\", \"settings.gradle\"}) {",
+    "Matcher declared = Pattern.compile(\"(\\\\w+)\\\\s*\\\\(?\\\\s*['\\\"]([^'\\\"]+:[^'\\\"]+)['\\\"]\").matcher(build);",
+    "onApiMain |= row[1].equals(\"runtimeClasspath\") || row[1].equals(\"compileClasspath\");",
+    "assertTrue(apiConfigurations.toString(), apiConfigurations.containsAll(Arrays.asList(\"compileClasspath\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/AuthDocsTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "import static org.junit.Assert.assertEquals;",
+    "assertEquals(java.util.Arrays.asList(\"ko NoSuchAuthType\", \"en NoSuchAuthType\"), unnamedTypes(control, ko, en));",
+    "for (String type : publicUtilsTypes()) {",
+    "// the negative control: a type absent from the pages is reported",
+    "// DR-IAM-003 AC-5 (docs half) and CON-IAM-002 AC-4: the docs record that MySQL and PostgreSQL were not run live"
+   ],
+   "findings": [
+    "T2-F02"
+   ]
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "+ \"import com.snoworca.naruserve.utils.auth.jdbc.*;\\n\""
+   ],
+   "findings": []
+  }
+ ],
+ "resolved_findings": [
+  "M2-F03",
+  "M3-F01",
+  "M3-F04",
+  "M3-F08",
+  "M3-F09",
+  "M4-F06",
+  "M4-F12",
+  "M5-F01",
+  "M5-F02",
+  "M5-F03",
+  "M5-F11",
+  "T1-F02",
+  "T2-F08",
+  "T2-F09",
+  "T3-F01",
+  "T3-F02",
+  "T3-F04",
+  "T3-F05",
+  "T3-F06",
+  "T3-F07",
+  "T3-F08",
+  "T3-F10",
+  "T3-F11",
+  "T3-F16",
+  "T4-F01",
+  "T4-F02",
+  "T4-F04",
+  "T4-F05",
+  "T4-F06",
+  "T4-F07",
+  "T4-F14"
+ ],
+ "not_resolved": [
+  {
+   "id": "T3-F09",
+   "why": "The new message assertions still read the test's own exception (identity already proven by assertEquals(down, e)); see T2-F01."
+  },
+  {
+   "id": "T4-F10",
+   "why": "Partially: the negative control now exercises unnamedTypes, but the duplicate transient-hash tests remain; see T2-F02."
+  },
+  {
+   "id": "T4-F03",
+   "why": "Partially: the fixed sleep is replaced by a reach latch, but health.millis < floorMillis (loaded vs idle probe) still decides; see T2-F03."
+  }
+ ],
+ "summary": {
+  "total": 7,
+  "by_severity": {
+   "LOW": 7
+  }
+ }
+}

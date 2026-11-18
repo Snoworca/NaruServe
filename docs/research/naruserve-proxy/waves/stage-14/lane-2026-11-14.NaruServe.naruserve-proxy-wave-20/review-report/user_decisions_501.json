@@ -1,0 +1,1 @@
+{"date":"2026-11-03","decisions":[{"id":"R2-M1-F06","verdict":"residual","user_decision":"fix","note":"Windows key-file .bak delete failure; fix with WARN + continue, simulated POSIX test"},{"id":"R2-T2-F03","verdict":"residual","user_decision":"keep as is","note":"SEC-TOKEN-009 AC-5 latency margin ~70x on saturated 10-core Mac; revisit if a slow CI fails"}]}

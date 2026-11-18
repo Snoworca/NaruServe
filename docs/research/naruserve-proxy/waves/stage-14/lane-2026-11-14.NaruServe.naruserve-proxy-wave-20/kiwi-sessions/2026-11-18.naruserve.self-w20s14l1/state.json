@@ -1,0 +1,156 @@
+{
+ "run_id": "2026-11-18.naruserve.self-w20s14l1",
+ "skill": "kiwi-review-fix-loop",
+ "mode": "self",
+ "mode_flags": [
+  "--keep-clean-code",
+  "--loops 20",
+  "--no-pipeline-emit"
+ ],
+ "self_scope": {
+  "source": "base-head",
+  "commit_range": "c900c9dd276513e149c74883beaf93881bd8fe67..HEAD",
+  "excluded_prose": [],
+  "refused_artifacts": [],
+  "unclassified_files": []
+ },
+ "guarantee_scope": "NaruServe-proxy retry loop and backend connection per attempt (FR-PROXY-018, FR-PROXY-020) plus the invariants FR-PROXY-015/017/019, REL-PROXY-001, SEC-PROXY-005",
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "scope": "full",
+   "base": "c900c9d",
+   "head": "cc66dd4",
+   "findings": [
+    {
+     "id": "FND-001",
+     "tier": "block",
+     "family": "interrupt-handling",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-002",
+     "tier": "block",
+     "family": "retry-socket-close-test",
+     "introduced_by_round": null
+    }
+   ],
+   "dropped": [
+    "FND-003",
+    "FND-004"
+   ],
+   "residual_count": 0,
+   "coverage_passed": true
+  },
+  {
+   "round": 2,
+   "scope": "since-prev",
+   "base": "cc66dd4",
+   "head": "64cba5c",
+   "resolved": [
+    "FND-001",
+    "FND-002"
+   ],
+   "findings": [
+    {
+     "id": "FND-101",
+     "tier": "block",
+     "family": "interrupt-handling",
+     "introduced_by_round": 1
+    }
+   ],
+   "residual": [
+    "FND-102 (resolved round 3: documented and tested declared behaviour)"
+   ],
+   "coverage_passed": true
+  },
+  {
+   "round": 3,
+   "scope": "since-prev",
+   "base": "64cba5c",
+   "head": "54e6f0c",
+   "resolved": [
+    "FND-101",
+    "FND-102"
+   ],
+   "findings": [
+    {
+     "id": "FND-201",
+     "tier": "block",
+     "family": "retry-socket-close",
+     "introduced_by_round": 2
+    }
+   ],
+   "coverage_passed": true
+  },
+  {
+   "round": 4,
+   "scope": "since-prev",
+   "base": "54e6f0c",
+   "head": "2891b43",
+   "resolved": [
+    "FND-201"
+   ],
+   "findings": [
+    {
+     "id": "FND-301",
+     "tier": "block",
+     "family": "interrupt-handling",
+     "introduced_by_round": 3
+    }
+   ],
+   "residual": [
+    "FND-302 (fixed by code in round 4, judged resolved round 5)"
+   ],
+   "family_action": {
+    "interrupt-handling": "single-rule (retryAllowed)"
+   },
+   "coverage_passed": true
+  },
+  {
+   "round": 5,
+   "scope": "since-prev",
+   "base": "2891b43",
+   "head": "3b7065b",
+   "resolved": [
+    "FND-301",
+    "FND-302"
+   ],
+   "findings": [],
+   "dropped": [
+    "FND-401"
+   ],
+   "coverage_passed": true,
+   "verdict": "PASS"
+  }
+ ],
+ "clean_code_round": 1,
+ "clean_code_dismissed": [
+  {
+   "id": "CC-001",
+   "reason": "per-class private closeQuietly is the module's existing convention (ProxyExchange is outside the lane write set)"
+  },
+  {
+   "id": "CC-003",
+   "reason": "each proxy test class owns its fixtures by existing convention"
+  }
+ ],
+ "clean_code_fixed": [
+  "CC-002 rename attempt->lastAttempt",
+  "CC-004 test backend names",
+  "round-3/4/5 comment and label fixes"
+ ],
+ "declared_limits": [
+  {
+   "id": "interrupt-declared",
+   "reason": "an interrupted thread makes no retry; an interrupted wait after a closed 502/503 answers HttpException(status) instead of relaying it",
+   "evidence": "ProxyRetryTest fr_PROXY_018_AC9_* interrupt tests"
+  }
+ ],
+ "regression_pass": true,
+ "blocking_kept": 0
+}

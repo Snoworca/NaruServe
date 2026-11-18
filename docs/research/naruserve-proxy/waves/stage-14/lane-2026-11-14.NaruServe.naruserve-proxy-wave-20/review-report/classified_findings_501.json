@@ -1,0 +1,480 @@
+{
+ "rule": "speckiwi 5.0.1 fixed mapping: keep->immediate_fix, residual->discussion_needed, drop->rejected",
+ "immediate_fix": [
+  {
+   "id": "F7-N01",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "regression-risk"
+   ]
+  },
+  {
+   "id": "M1-F04",
+   "is_behavioral": true,
+   "tags": [
+    "performance",
+    "resource-growth"
+   ]
+  },
+  {
+   "id": "M2-F09",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "security"
+   ]
+  },
+  {
+   "id": "M2-F12",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "doctor"
+   ]
+  },
+  {
+   "id": "M2-F19",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "R2-M1-F02",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "regression"
+   ]
+  },
+  {
+   "id": "R2-M1-F08",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "R2-M1-F09",
+   "is_behavioral": true,
+   "tags": [
+    "security"
+   ]
+  },
+  {
+   "id": "R2-M1-F03",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "R2-M1-F04",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "R2-M1-F05",
+   "is_behavioral": true,
+   "tags": [
+    "security"
+   ]
+  },
+  {
+   "id": "M4-F09",
+   "is_behavioral": true,
+   "tags": [
+    "deferred",
+    "security"
+   ]
+  },
+  {
+   "id": "R2-T1-F03",
+   "is_behavioral": true,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F07",
+   "is_behavioral": true,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "R2-T2-F06",
+   "is_behavioral": true,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "R2-T2-F04",
+   "is_behavioral": true,
+   "tags": [
+    "test",
+    "regression"
+   ]
+  }
+ ],
+ "discussion_needed": [
+  {
+   "id": "R2-M1-F06",
+   "tried": "Read KeySources.replaceWith/createOnce (current lines 244-353). The failing branch (old.delete() false after file->.bak and tmp->file renames) is reached only when tmp.renameTo(file) does not replace an existing target, which never happens on macOS/POSIX (rename replaces atomically), so the path cannot be driven here without contriving a directory as the key file. The second half (createOnce restoring a leftover .<name>.bak when the key file is missing) is visible in the code at lines 254-259, but the precondition needs a Windows file system; not provable or disprovable on this machine.",
+   "user_decision": "fix",
+   "resolution": "fixed in fix_iter3_G2 and verified resolved in round 3"
+  },
+  {
+   "id": "R2-T2-F03",
+   "tried": "Ran SEC_TOKEN_009_AC5_waitingFailuresHoldNoWorker 3 times (./gradlew :NaruServe-tinyhttpd:test --offline --rerun --tests '*AuthFailureFloorSocketTest.SEC_TOKEN_009_AC5*') while 30 busy 'yes > /dev/null' processes saturated the 10-core machine: all passed with 'floor 1140/1141/1187 ms, non-auth 16/11/15 ms, 50 of 50 failures pending' (~70x margin). A 2-vCPU or Android-speed runner cannot be emulated here (no CPU affinity on macOS), so the false-failure on such a runner and the scheduling-dependent false-pass were neither proven nor disproven.",
+   "user_decision": "keep as is",
+   "resolution": "closed by user decision (keep as is)"
+  }
+ ],
+ "rejected": [
+  {
+   "id": "R2-M1-F01",
+   "rejection_category": "dropped",
+   "drop_reason": "already resolved: save() now rebuilds the map without revoked records and without records expired at the new record's createdAt (lines 187-198), so login/logout churn and abandoned sessions no longer accumulate; executed: RefreshTokenStoreTest (12 tests, 0 failures) including fileStoreStaysBoundedUnderLoginLogoutChurn (5000 sign-in/sign-out cycles leave records=1, file < 1 KB) and fileStorePurgesExpiredRecordsOnSave (5000 logins, 1 s ttl -> records=10). The remaining capacity problem of the new admission reserve is filed separately as F7-N01."
+  },
+  {
+   "id": "R2-T1-F01",
+   "rejection_category": "dropped",
+   "drop_reason": "already resolved: the test now calls scheduleStale(u1, 5) after the ver-6 observation and asserts pendingStale==6 and one queued deletion. Mutation run in a scratch copy of the repo with ApiKeyOwners.java:366 changed from 'pending >= ver || staleVers.replace(..)' to 'staleVers.replace(..)': the new test fails with 'the largest observed ver wins expected:<6> but was:<5>', while the base (e12e74a) version of Wave10PatTest passes against the same mutant (BUILD SUCCESSFUL), so the guard is now covered."
+  },
+  {
+   "id": "M1-F05",
+   "rejection_category": "dropped",
+   "drop_reason": "style/maintainability only (two sources of truth, a hypothetical future construction site); no wrong behaviour is claimed or reproducible today \u2014 ProxyTrustAcceptanceTest covers the current construction sites."
+  },
+  {
+   "id": "M1-F06",
+   "rejection_category": "dropped",
+   "drop_reason": "API-surface/style only: the internal package is not a documented public API (same accepted pattern as AsyncMiddleware); no behaviour is wrong."
+  },
+  {
+   "id": "M1-F08",
+   "rejection_category": "dropped",
+   "drop_reason": "duplication/maintainability only; no current behavioural divergence is claimed or shown."
+  },
+  {
+   "id": "M1-F07",
+   "rejection_category": "dropped",
+   "drop_reason": "size/structure only (maintainability), not a defect."
+  },
+  {
+   "id": "M1-F09",
+   "rejection_category": "dropped",
+   "drop_reason": "intended: docs/api/auth.md:1194 says 'when key authentication succeeds auth calls ApiKeyStore.updateLastUsed ... for every request authenticated by a key'. A 403 api_key_not_allowed on /auth/me/apikeys etc. is an authorization refusal after the key authenticated (Wave10AccountTest SEC-APIKEY-008 AC-2 shows the key is valid), so recording the use matches the contract."
+  },
+  {
+   "id": "M1-F10",
+   "rejection_category": "dropped",
+   "drop_reason": "performance (an extra read on a rare admin/logout-all path) plus housekeeping: on RejectedExecutionException the pending entry is removed with a WARN (line 385-387), which docs/api/auth.md describes for background work ('WARN only, request unaffected'); stale keys are still refused at use (ownerVer < ver -> 401, SEC-APIKEY-006) and the next use reschedules the deletion, so no wrong answer results."
+  },
+  {
+   "id": "M2-F05",
+   "rejection_category": "dropped",
+   "drop_reason": "intended by IR-FLOW-003: AC-6 requires the Javadoc to state that 'an implementation not overriding the limit-argument methods applies its own limits', and AC-4 fixes the doctor WARN only for API keys enabled; the behaviour described is the specified one."
+  },
+  {
+   "id": "M2-F08",
+   "rejection_category": "dropped",
+   "drop_reason": "performance only (allocations per request); no functional defect and no measured budget breach."
+  },
+  {
+   "id": "M2-F10",
+   "rejection_category": "dropped",
+   "drop_reason": "intended: OPS-AUTH-001 AC-6 (docs/spec/17.auth.srs.md:1817) requires 'exactly one WARN stating that a restart logs every user out, however many of the three fall back'; wording is mandated by the AC."
+  },
+  {
+   "id": "M2-F11",
+   "rejection_category": "dropped",
+   "drop_reason": "not a defect against any contract: executed reuse of one Auth in a second app after the first stopped (W8 start/stop, then auth.install(app2); app2.listen(0)) -> listen throws 'AuthUnavailableException: the password hash slots are shut down; retry later' (fail closed at start, not silent 503s). RestApp is single-use (TERMINATED is final) and no SRS/docs/api text promises that a stopped Auth can be re-installed; the idle ticker is a performance remark."
+  },
+  {
+   "id": "M2-F13",
+   "rejection_category": "dropped",
+   "drop_reason": "not a defect against the contract: docs/api/auth.md:1123 fixes only 'each TTL >= 1 s' and no SRS AC requires accessTtl <= refreshTtl; an app may choose a long access token deliberately."
+  },
+  {
+   "id": "M2-F14",
+   "rejection_category": "dropped",
+   "drop_reason": "already resolved: there are no built-in JDBC default stores any more (CON-IAM-003, FR-TOKEN-002 Research 2026-11-03 'There is no built-in database refresh store'); `grep -n Jdbc Auth.java` finds nothing and utils/auth/jdbc no longer exists; an app-provided UserStore falls back to in-memory with the OPS-AUTH-001 WARN."
+  },
+  {
+   "id": "M2-F15",
+   "rejection_category": "dropped",
+   "drop_reason": "performance only (a one-time calibration latency on the first failed login while holding the monitor); no wrong result, deadlock or lost close is claimed."
+  },
+  {
+   "id": "M2-F17",
+   "rejection_category": "dropped",
+   "drop_reason": "performance only (slow store delays the 1 s tick); no AC sets a close-latency bound that is shown to be broken."
+  },
+  {
+   "id": "M2-F20",
+   "rejection_category": "dropped",
+   "drop_reason": "out of contract: FileUserStore's Javadoc (user/FileUserStore.java:35) states 'one file has one writer', so two FileUserStore objects over the same users.json are already an unsupported configuration; the side stores inherit that rule."
+  },
+  {
+   "id": "M2-F21",
+   "rejection_category": "dropped",
+   "drop_reason": "report noise/style only; each FAIL names a real file that cannot be written."
+  },
+  {
+   "id": "M2-F18",
+   "rejection_category": "dropped",
+   "drop_reason": "intended/perf: the hash-slot requirement (docs/spec/18.auth-tokens.srs.md:919) specifies '503 and Retry-After, or AuthUnavailableException for synchronous app calls' \u2014 AuthUsers.checkPassword is the synchronous app call, so AuthUnavailableException without a Retry-After is the specified outcome; the wait length is a latency remark."
+  },
+  {
+   "id": "M2-F22",
+   "rejection_category": "dropped",
+   "drop_reason": "behaviour matches the contract on a failed write: executed with an unwritable directory -> recordFailure throws FileNotFoundException (auth maps it to 503 and the error layer logs AuthUnavailableException, OPS errors AC-3), memory keeps the token invalidated so it is still refused, and the next snapshot persists it (restart after snapshot: invalidated=true). Only a disk failure followed by a crash within the 60 s snapshot window loses it; REL-FLOW-001 AC-4 ('on disk before the next snapshot tick') is about a working disk, and no AC requires an immediate retry."
+  },
+  {
+   "id": "M2-F23",
+   "rejection_category": "dropped",
+   "drop_reason": "duplication/maintainability only."
+  },
+  {
+   "id": "M2-F01",
+   "rejection_category": "dropped",
+   "drop_reason": "already resolved for the reported scenarios: pruneUsed keeps at most 32 used predecessors per family and save() drops revoked/expired records. Executed: one family rotated 2000 times -> records=33, file 4544 bytes (the 'client looping POST /auth/refresh ~35k times' and '450-1,300 records per active user' cases no longer grow); churn tests in RefreshTokenStoreTest pass. The separate admission-reserve capacity gap is F7-N01."
+  },
+  {
+   "id": "M3-F06",
+   "rejection_category": "dropped",
+   "drop_reason": "not a defect: issuance requires the account password verified against the re-read (current) hash, and the password alone already regains full access after a ver++ \u2014 executed: logout?all=true 204, then a fresh login with only the password 200. A password change also changes the hash, so the old session cannot pass the confirmation. The cross-node staleness is the documented principal-cache window (REL-APIKEY-001: ver++ takes effect within 5 s on other nodes)."
+  },
+  {
+   "id": "M3-F05",
+   "rejection_category": "dropped",
+   "drop_reason": "Not a defect against intent: SEC-FLOW-012 (docs/spec/19 L1381-1394) keys the IP, (user,IP) and user-only limits on the typed login name before findByUsername, and IR-TOKEN-001 leaves what a custom Authenticator answers to the app (app-defined identifier mapping). The resolved user's own Lockout is still consulted (PasswordLogin.finish: lock.isLocked(id) on the found user's id, lines ~320). No AC requires the pre-hash limits to be re-keyed on the authenticator's answer."
+  },
+  {
+   "id": "M3-F07",
+   "rejection_category": "dropped",
+   "drop_reason": "Style/dead-code only: the 4-argument TokenPair constructor has no caller (only TokenService.java:124 uses the 6-argument form); no reachable behaviour."
+  },
+  {
+   "id": "M3-F12",
+   "rejection_category": "dropped",
+   "drop_reason": "Format/style only: no AC of FR-AUTH-009 (docs/spec/17 L1999-2012) or docs/api/auth.md L1022 ('\uc774\ubca4\ud2b8\ub9c8\ub2e4 INFO \ud55c \uc904') requires a machine-parseable key=value line; C0/DEL are escaped so no forged log line through the Logger. U+2028/U+0085 handling is a viewer concern."
+  },
+  {
+   "id": "M3-F11",
+   "rejection_category": "dropped",
+   "drop_reason": "Intended by IR-TOKEN-002 AC-2 (docs/spec/18 L1285) and docs/api/auth.md L1248: a protected request is authenticated from the claims the configured codec's decode returns, and the codec owns validation (the default HS256 codec checks exp). 0.11.0 ships no other codec; a custom codec that skips expiry is an app codec bug, not a framework defect."
+  },
+  {
+   "id": "M3-F10",
+   "rejection_category": "dropped",
+   "drop_reason": "No intent contradicted: PERF-APIKEY-001 (docs/spec/21 L2103-2114) only fixes once-per-minute, off-path, best-effort updates. The map holds one Long per key id ever used in the process (bounded by distinct keys), an accepted memory/maintainability trade-off with no AC requiring eviction on every delete path."
+  },
+  {
+   "id": "M3-F08",
+   "rejection_category": "dropped",
+   "drop_reason": "already resolved: AtomicFiles.load(File,long,TooLarge,...) now compares the file length with the store limit before reading (AtomicFiles.java:164-207, buffer sized from length), and the user, refresh, throttle and device-trust stores use it (executed: a 900 MB users.json -> IOException 'FAIL: ... above the limit of 8388608 bytes'). The remaining FileGroupStore case is the same defect, kept separately as R2-M1-F04."
+  },
+  {
+   "id": "R2-M1-F07",
+   "rejection_category": "dropped",
+   "drop_reason": "Style/maintainability only: GrantRule.scopesOf(String) has no main-code caller (AdminEndpoints:593 calls EffectiveGrants.scopesOf(AuthUser)); every actor check goes through actorScopes(), so no reachable bypass today."
+  },
+  {
+   "id": "M4-F14",
+   "rejection_category": "dropped",
+   "drop_reason": "Performance only, no intent contradicted: SEC-AUTH-007 ACs (docs/spec/17 L1744-1749) fix TTL semantics, not a cache cap or sweep cost; the map is bounded by users active within one TTL (default 5 s) and sweep removes expired entries. No functional defect claimed."
+  },
+  {
+   "id": "M4-F07",
+   "rejection_category": "dropped",
+   "drop_reason": "Behaviour confirmed (the refresh path logs no cause) but it contradicts no stated intent: the logging rule of IR-TOKEN-002 AC-2 / docs/api/auth.md L1248 is stated for the access-token invalid_token path, which does log the cause. Diagnostic improvement only."
+  },
+  {
+   "id": "M4-F08",
+   "rejection_category": "dropped",
+   "drop_reason": "Duplication/maintainability only: RefreshTokens.TYPE and TokenCodec.REFRESH are both \"rt+jwt\" today; no behaviour differs."
+  },
+  {
+   "id": "M4-F13",
+   "rejection_category": "dropped",
+   "drop_reason": "Comment only: stale Javadoc in TokenVerifier.java:3-7; no behaviour."
+  },
+  {
+   "id": "M4-F05",
+   "rejection_category": "dropped",
+   "drop_reason": "already resolved: the utils.auth.jdbc package (AuthSchema, JdbcDeviceTrust) no longer exists in NaruServe-api/src/main/java; docs/api/auth.md L533 states auth ships no built-in database stores."
+  },
+  {
+   "id": "M4-F04",
+   "rejection_category": "dropped",
+   "drop_reason": "already resolved: utils/auth/jdbc/Connections.java was removed with the whole jdbc package; docs/api/auth.md L533: persistence is SPI-only, no built-in JDBC store."
+  },
+  {
+   "id": "M4-F15",
+   "rejection_category": "dropped",
+   "drop_reason": "already resolved: utils/auth/jdbc/JdbcGroupStore.java no longer exists (jdbc package removed; docs/api/auth.md L533)."
+  },
+  {
+   "id": "M4-F10",
+   "rejection_category": "dropped",
+   "drop_reason": "already resolved: JdbcRefreshTokenStore and JdbcGroupStore were removed with the jdbc package; there is no default JDBC refresh store in Auth any more (docs/api/auth.md L533, L1044-1046)."
+  },
+  {
+   "id": "M5-F06",
+   "rejection_category": "dropped",
+   "drop_reason": "Intended by FR-TOKEN-003 AC-2 (docs/spec/18 L854): one ERROR per unknown prefix showing at most the first 4 characters; the code logs <= 4 (min(4, len-1))."
+  },
+  {
+   "id": "M5-F05",
+   "rejection_category": "dropped",
+   "drop_reason": "Intended by docs/api/auth.md L754: a stored count above 2,000,000 (MAX_STORED_ITERATIONS) is refused without hashing and verify returns false; no AC asks for an ERROR log on that path."
+  },
+  {
+   "id": "M5-F09",
+   "rejection_category": "dropped",
+   "drop_reason": "Annotation/style only: Java equals overrides map to Kotlin Any.equals(Any?) regardless of the parameter annotation, and Pbkdf2PasswordHasher.parse is private; no observable behaviour or compile failure."
+  },
+  {
+   "id": "M5-F10",
+   "rejection_category": "dropped",
+   "drop_reason": "No intent contradicted: the class Javadoc (ApiKeyStoreContract.java:23-27) promises only that a run reads and deletes rows it created (fresh random 'contract-*' owners per run), not cleanup after a failed rule; FR-APIKEY-009 ACs and docs/api/auth.md L1378 define the checks and the AssertionError, not failure-path cleanup. Test-kit hygiene only."
+  },
+  {
+   "id": "M5-F07",
+   "rejection_category": "dropped",
+   "drop_reason": "Performance only: commit() holds the instance monitor during AtomicFiles.write; correctness is unaffected and no AC sets a latency bound for concurrent reads during a write."
+  },
+  {
+   "id": "T1-F08",
+   "rejection_category": "dropped",
+   "drop_reason": "Test-coverage/maintainability only (hand-maintained package lists in tests); no product behaviour is shown to contradict intent."
+  },
+  {
+   "id": "T1-F05",
+   "rejection_category": "dropped",
+   "drop_reason": "Test-strength only (assertion style in AdminEndpointsTest); no product behaviour is shown to contradict SEC-IAM-007."
+  },
+  {
+   "id": "T1-F09",
+   "rejection_category": "dropped",
+   "drop_reason": "Stale test Javadoc and test-coverage gap only; no execution shows a real-verifier regression on SEC-FLOW-004 AC-1/6/8/9."
+  },
+  {
+   "id": "T1-F06",
+   "rejection_category": "dropped",
+   "drop_reason": "Not a defect: executed a temp test (Tmp501DescribeTest) that started a PROD Auth with the DescribeTest marker secret and searched describe(), toString() and every startup log line for the base64, base64url, hex and upper-hex forms of the secret bytes: output 'TMP501 encodedHits=0 chars=1125' (the only 32+ char run was the one-time setup token, allowed in one line by OPS-AUTH-002 AC-2). The product prints no encoded key; the finding is a test-strength suggestion about a hypothetical regression."
+  },
+  {
+   "id": "R2-T1-F02",
+   "rejection_category": "dropped",
+   "drop_reason": "Style/doc only: an orphaned Javadoc line (now line 1214 above assertAll401's Javadoc at 1215, assertReleased at 1272 without one). No behaviour."
+  },
+  {
+   "id": "T2-F13",
+   "rejection_category": "dropped",
+   "drop_reason": "Comment/coverage-placement only: the snapshot-buffered stores' flush on stop is covered by Wave12ThrottleTest REL_FLOW_001_AC4 (as the finding itself states) and Auth.onStop runs the final snapshot; no wrong behaviour is claimed or shown."
+  },
+  {
+   "id": "T2-F15",
+   "rejection_category": "dropped",
+   "drop_reason": "Intended by design: the test comment (Wave12AuthTest 142-144) states the AC-3 evidence is the two recorded build runs including the real Java 8 run under -I gradle/java8-tests.gradle, and this test is the per-run anchor. Test-strength note, no defect."
+  },
+  {
+   "id": "T2-F17",
+   "rejection_category": "dropped",
+   "drop_reason": "Not a defect: executed Tmp501TypTest decoding an access token as REFRESH and a refresh token as ACCESS with the default Hs256TokenCodec: both threw 'com.snoworca.naruserve.utils.auth.jwt.JwtException: the signature does not match' (purpose-key separation), not an NPE or parser bug. The broad catch is a test-strength remark only."
+  },
+  {
+   "id": "T2-F16",
+   "rejection_category": "dropped",
+   "drop_reason": "Style only: the try/catch with an inverted message (Wave8LogoutTest 601-605) still fails the test when the token is not usable; the assertion outcome is correct, only the failure text is misleading."
+  },
+  {
+   "id": "R2-T2-F07",
+   "rejection_category": "dropped",
+   "drop_reason": "Comment/redundant assertion only: the real post-onStop check (the 20 ms ticking scheduler) follows at 910+ and resolves the behaviour; a leftover assertion that cannot fail plus its comment is not a defect."
+  },
+  {
+   "id": "T3-F13",
+   "rejection_category": "dropped",
+   "drop_reason": "Duplication/maintainability only; both copies pass and assert the same lock order. No behaviour defect."
+  },
+  {
+   "id": "R2-T2-F05",
+   "rejection_category": "dropped",
+   "drop_reason": "Comment placement/traceability only: the '// SEC-TOKEN-002 AC-4' line (MiniJsonTest 127) now sits above the AC-3 comment and test; test method names still carry the correct AC ids and both tests run. No behaviour defect."
+  },
+  {
+   "id": "T3-F12",
+   "rejection_category": "dropped",
+   "drop_reason": "Dead code only (unused 'big' map, JwtTest 284/294); no behaviour."
+  },
+  {
+   "id": "T3-F09",
+   "rejection_category": "dropped",
+   "drop_reason": "Redundant assertion only; assertEquals(down, e) already proves propagation of the store's exception (FR-IAM-006 component). Superseded by R2-T2-F01, same verdict."
+  },
+  {
+   "id": "R2-T2-F01",
+   "rejection_category": "dropped",
+   "drop_reason": "Redundant assertions that cannot fail; assertEquals(down, e) (line 140) carries the real check. Test-strength/style only, no product behaviour wrong."
+  },
+  {
+   "id": "T3-F14",
+   "rejection_category": "dropped",
+   "drop_reason": "already resolved: the jdbc test package (JdbcThrottleTest, FakeJdbc, RecordingJdbc, SqliteFixture) no longer exists; only one classFiles(...) copy remains (VerifyUserStoreTest.java:443) and no DataSource plumbing (getLogWriter) is left in NaruServe-api/src/test. Duplication was maintainability-only anyway."
+  },
+  {
+   "id": "T3-F15",
+   "rejection_category": "dropped",
+   "drop_reason": "already resolved: AuthDocsExamplesKotlinTest no longer has a 'docs auth schema' SQLite test or any File.createTempFile/deleteOnExit (grep finds none in NaruServe-api/src/test/kotlin); the docs example now uses AppStores with no JDBC driver."
+  },
+  {
+   "id": "T4-F08",
+   "rejection_category": "dropped",
+   "drop_reason": "already resolved: AuthWave7KotlinTest no longer creates a SQLite database with File.createTempFile/deleteOnExit (no createTempFile anywhere in NaruServe-api/src/test/kotlin)."
+  },
+  {
+   "id": "T4-F03",
+   "rejection_category": "dropped",
+   "drop_reason": "already resolved (the fixed-sleep half): the max(20, floor/4) sleep was replaced by limit.expect(2) latch (AuthFailureFloorSocketTest 270-276); the remaining idle-floor margin concern is carried by R2-T2-F03 (residual)."
+  },
+  {
+   "id": "T4-F09",
+   "rejection_category": "dropped",
+   "drop_reason": "Not a current defect: build.gradle line 25 still has version = '0.10.0', so jar() resolves the built jars and the tests pass; breakage on a future version bump and whitespace-exact matching are maintainability concerns, not shown wrong behaviour."
+  },
+  {
+   "id": "T4-F11",
+   "rejection_category": "dropped",
+   "drop_reason": "Hypothetical gate weakness: the scenario (an owner test deleted while an assertion string with the AC token sits within four lines above another @Test) does not exist in the tree; no AC is reported cited without an owner test. Test-heuristic strength only."
+  },
+  {
+   "id": "T4-F10",
+   "rejection_category": "dropped",
+   "drop_reason": "Partly already resolved: the CON_AUTH_005_AC2 negative control now runs unnamedTypes on a synthetic NoSuchAuthType entry (AuthDocsTest 188-191). The remaining duplicate KO_HASH/EN_HASH assertions are maintainability only."
+  },
+  {
+   "id": "R2-T2-F02",
+   "rejection_category": "dropped",
+   "drop_reason": "Duplication/maintainability only (two tests assert the same docs text); both pass and check correct content."
+  },
+  {
+   "id": "T4-F12",
+   "rejection_category": "dropped",
+   "drop_reason": "No current page hits the edge cases (stated by the finding itself); a heuristic-edge note with no counter-example in the tree, not a defect."
+  }
+ ],
+ "totals": {
+  "immediate_fix": 16,
+  "discussion_needed": 2,
+  "rejected": 67
+ }
+}

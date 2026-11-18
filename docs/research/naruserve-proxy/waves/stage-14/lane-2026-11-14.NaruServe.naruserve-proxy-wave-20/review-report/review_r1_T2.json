@@ -1,0 +1,521 @@
+{
+ "chunk": "T2",
+ "round": 1,
+ "findings": [
+  {
+   "id": "T2-F01",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "IR-FLOW-002 AC-5 / FR-APIKEY-004 AC-9 / REL-TOKEN-001 AC-5 'worker is free' assertion cannot fail",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+    "line_range": "1098-1146"
+   },
+   "description": "The test claims the async registration means 'a request waiting for a hash slot holds no worker thread' and that 'a non-auth route still answers without waiting'. Its only proof besides the instanceof AsyncRouteHandler check is f.get(\"/api/x\") returning 200 after Thread.sleep(200). InMemoryHttpAdapter.send runs the exchange on the caller thread and submit() uses Executors.newCachedThreadPool (unbounded), so there is no worker pool to exhaust: a synchronous handler that blocked an adapter thread in HashSlots would pass exactly the same way. The isDone()==false checks after the fixed 200 ms sleep also hold if the requests have not even reached the slot yet. Scenario: someone re-registers /auth/me/apikeys with method() but keeps an AsyncRouteHandler wrapper that blocks inside, or the adapter's dispatch blocks; the behavioural half still passes.",
+   "suggested_fix": "Run the probe over an adapter with a bounded worker pool (e.g. 3 workers for 3 pending requests) so the 4th request can only be served if the pending ones released their workers; replace Thread.sleep(200) with a wait on f.auth.hashSlots().requested() reaching base+3 (as Wave12TokenTest.awaitRequested does).",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F02",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "REL-APIKEY-002 AC-1: half of the '100 concurrent requests' bypass the request path",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+    "line_range": "758-796"
+   },
+   "description": "The AC asks for 100 concurrent requests with stale keys of one owner observed at vers 5 and 6. The odd-numbered tasks call f.auth.apiKeyOwners().scheduleStale(u1, 5) directly and return a hard-coded 401, so the ver-5 path never goes through key authentication (cached principal -> stale check -> schedule). The test therefore does not check that a real request holding a cached ver-5 principal schedules (or coalesces into) the one pending deletion; a regression in the request path's ver-5 branch (e.g. scheduling with the cached ver, or not scheduling at all) is invisible because the internal call stands in for it.",
+   "suggested_fix": "Drive the ver-5 half through real requests: warm the principal cache at ver 5 on a second node (as nodeB() does in AC-3) or keep userCacheTtl long and bump the store behind the cache, then send 50 key requests per ver; assert the single pending entry and ver 6.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F03",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "Fixed sleep makes the A4 re-check test pass without exercising the re-check",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave6ReviewFixesTest.java",
+    "line_range": "128-152"
+   },
+   "description": "a4RechecksTheGrantRuleAfterTheHashWait sleeps 200 ms and assumes 'the first grant check has passed; the A4 waits for the slot'. On a slow CI or Android-speed JVM the PATCH may not have reached the first grant check within 200 ms; then setRoles(bob, admin) happens first, the first check already refuses with 403 and the test passes even if the re-check under the user lock were removed. The test can only fail (catch the regression) when scheduling happens to be fast.",
+   "suggested_fix": "Wait for the A4 to be parked on the slot (poll f.auth.hashSlots().requested() for base+1, or a waiter count) before changing the roles, instead of Thread.sleep(200).",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F04",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "IR-APIKEY-004 AC-6: the lastUsedAt and off-request failure cases never prove the failure happened",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ApiKeyTest.java",
+    "line_range": "300-319"
+   },
+   "description": "failing(\"updateLastUsed\", ...) removes the failure flag in its finally block as soon as the response returns, but the lastUsedAt update runs on the background executor (DR_APIKEY_001_AC5 in the same file has to keep it failing and poll for the WARN for exactly this reason). So the store failure is usually never injected and assertEquals(200) cannot fail. Likewise the stale/invariant/deleteExpired failures are injected after the 401 responses s and v were already captured, and nothing asserts that deleteStaleByOwner/deleteById/deleteExpired were actually reached or logged, so the 'leave the response unchanged' half of the AC is vacuous.",
+   "suggested_fix": "Keep updateLastUsed failing until its WARN appears (reuse the DR_APIKEY_001_AC5 wait) and assert the WARN; inject the deletion failures before the requests and assert a call count or ERROR line per failing method.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F05",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "Wall-clock bound on the 429 latency will flake on slow CI",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ThrottleTest.java",
+    "line_range": "168-189"
+   },
+   "description": "SEC_FLOW_011_AC5 asserts the throttled login answers in < 400 ms measured by System.nanoTime over a full in-memory HTTP exchange (MiniJson parse, throttle lookups, response write). A GC pause or an Android-speed / heavily loaded CI JVM can exceed 400 ms and fail the test although no floor was applied. The structural check (no Thread.sleep in the source files) is also weak: it misses TimeUnit.sleep, LockSupport.parkNanos or a scheduled delay through FailureFloor.",
+   "suggested_fix": "Assert the floor bypass deterministically: inject a recording FailureFloor/scheduler (as Wave7LoginTest.SEC_TOKEN_009_AC3 does) and assert no scheduled delay for the 429; keep at most a very generous wall-clock sanity bound.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F06",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "REL-FLOW-001 AC-3 scheduler test relies on fixed sleeps around a 50 ms tick",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ThrottleTest.java",
+    "line_range": "329-348"
+   },
+   "description": "The test sleeps 200 ms to show 'nothing changed, nothing written' (passes vacuously if the scheduler has not ticked yet), then after the first write sleeps 150 ms 'because a tick may fall between the keys of one failed login', samples the count, sleeps 300 ms and asserts no further write. If the scheduler thread is starved for more than 150 ms after a tick that landed between the throttle keys of the failed login, the catch-up write lands inside the 300 ms window and the test fails although behaviour is correct.",
+   "suggested_fix": "Drive the snapshot via an injected/observable scheduler or call snapshotRun() deterministically; if the real scheduler must be shown, wait until two consecutive ticks have run (expose a tick counter) instead of fixed sleeps.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F07",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "Forged-signature token is identical to the original about 1 run in 1024",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7TokenTest.java",
+    "line_range": "340-350"
+   },
+   "description": "customCodecIssuesAndAuthenticates builds forged = token without its last 2 chars + \"AA\" unconditionally. The access token's jti is random, so its HS256 signature is random; when the base64url signature already ends in \"AA\" (last char has 16 possible values, second-last 64 => ~1/1024) forged equals the valid token, sig answers 200 and assertEquals(sig.status(), bad.status()) fails. Wave7TokenTest line 138 and Wave8EndpointClassesTest guard this case with endsWith(...) ? \"BB\" : \"AA\"; this site does not.",
+   "suggested_fix": "Use the same guard: (token.endsWith(\"AA\") ? \"BB\" : \"AA\"), or flip one bit of the decoded signature and re-encode.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F08",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "SEC-IAM-003 AC-3 (API key row) ends with an assertion on a value the test itself set",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8ApiKeysTest.java",
+    "line_range": "898-916"
+   },
+   "description": "The last three lines build a HashSet, add k, and assertEquals(1, seen.size()). This can never fail and checks nothing about the AC; it reads as if it verified uniqueness of something.",
+   "suggested_fix": "Delete the dead assertion (or replace it with a real check, e.g. that list(owner) holds exactly one key).",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F09",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Fixed 50 ms sleep before asserting 'no rehash' after checkPassword",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8AccountTest.java",
+    "line_range": "649-666"
+   },
+   "description": "SEC_IAM_002_AC1 asserts that a true checkPassword does not rehash by sleeping 50 ms and then checking the stored hash and rehashQueue().size() == 0. If a rehash were wrongly enqueued and the worker had dequeued it but not finished hashing/writing at the 50 ms mark, both checks pass. The negative is only probabilistic.",
+   "suggested_fix": "Assert on a deterministic signal: the counting hasher's hash() count stays unchanged and RehashQueue has a submitted/accepted counter of 0, or pass a recording rehash queue.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F10",
+   "axis": "P3",
+   "severity": "LOW",
+   "title": "Test pins the static confirmation stripe: a different user on the same stripe gets 503",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8AccountTest.java",
+    "line_range": "738-771"
+   },
+   "description": "SEC_IAM_002_AC3_sharedStripeWaitIsBounded duplicates DefaultAuthUsers' private stripe function ((hashCode & 0x7fffffff) % 64) and asserts that user b, unrelated to a, waits up to 5 s and then gets AuthUnavailableException because a's confirmation holds the shared CONFIRM_LOCKS stripe (DefaultAuthUsers.java:380). This enshrines cross-user interference as expected behaviour (any user holding a slow confirmation can 503 the ~1/64 of users on its stripe) and was the reason the w10 fix 'take the per-user hold before the stripe' was reverted. It is still present.",
+   "suggested_fix": "Decide the intended behaviour: per-user hold first (or per-id lock map), then change the test to assert only that the wait is bounded and that a different user is NOT blocked; stop re-implementing the private stripe hash in the test.",
+   "is_behavioral": true,
+   "tags": [
+    "test",
+    "deferred"
+   ]
+  },
+  {
+   "id": "T2-F11",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Started TestApps are never shut down (deferred from w05)",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave5ComponentsTest.java",
+    "line_range": "149-236"
+   },
+   "description": "authCookiesCarryTheirAttributes starts one TestApp and SEC_FLOW_009_AC6_refreshCookieIsNoCredential starts two (one per transport, Auth installed, so each app also starts the naru-auth-cleanup scheduler) and none is shut down. The daemon cleanup threads and adapter worker pools leak into the rest of the test JVM; Wave11ClosureTest.FR_AUTH_005_AC6 counts naru-auth-cleanup- threads (before/after diff), so leaked threads raise the noise floor of such checks. Deferred in .kiwi/sessions/0.11.0-w05 'Started TestApps are not shut down' and still present. Same pattern: Wave11ClosureTest.SEC_AUTH_002_AC3 (TestApp t started at line 911, never stopped) and Wave7MultiInstanceTest.startFailure when start throws.",
+   "suggested_fix": "Track started apps in a field list and shut them down in an @After (as Wave11DoctorTest does).",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "deferred"
+   ]
+  },
+  {
+   "id": "T2-F12",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "AdminFixture apps are never stopped (deferred from w06)",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave6ComponentsTest.java",
+    "line_range": "163-366"
+   },
+   "description": "Every test in Wave6ComponentsTest (10 fixtures) and Wave6ReviewFixesTest (8 fixtures, lines 131-288) calls new AdminFixture().start(...) which listens and starts the auth cleanup scheduler; AdminFixture has no stop() and the classes have no @After, so each fixture's app, adapter pool and cleanup thread leak for the rest of the fork. Deferred in .kiwi/sessions/0.11.0-w06 'Test fixtures are not stopped'; still present. lastUsedOffTheCallerThread also leaks the Auth's background executor.",
+   "suggested_fix": "Add AdminFixture.stop() (app.shutdown) and an @After that stops every fixture a test created.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "deferred"
+   ]
+  },
+  {
+   "id": "T2-F13",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Comment claims no file store buffers state, but the throttle snapshot does",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave11ClosureTest.java",
+    "line_range": "370-381"
+   },
+   "description": "FR_AUTH_005_AC6's file-store half says 'the shipped file stores write through ... so there is no buffered state for onStop to flush' and only checks FileUserStore. FileLoginThrottle/FileDeviceTrust are snapshot-buffered (60 s tick) and Auth.onStop runs a final snapshotRun (Auth.java:677). The AC clause 'every file-store write is on disk when stop returns' is therefore only exercised for the write-through store here; the buffered one is only covered indirectly by Wave12ThrottleTest.REL_FLOW_001_AC4.",
+   "suggested_fix": "Fix the comment and add a throttle failure before files.stop(), then assert users-login-throttle.json holds the key after stop.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "doc"
+   ]
+  },
+  {
+   "id": "T2-F14",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Logged-error assertion compares ERROR baseline with ERROR+WARN total",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave11ClosureTest.java",
+    "line_range": "514-530"
+   },
+   "description": "errors = f.logger.count(\"ERROR\") is taken before the failing routes, but the check is count(\"ERROR\") + count(\"WARN\") >= errors + 4; every WARN logged at start (doctor findings etc.) counts toward the 4, so this line can pass with nothing new logged. The later per-route countMatching checks carry the real weight.",
+   "suggested_fix": "Use the same metric on both sides (baseline = ERROR+WARN) or drop the line.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F15",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "CON-AUTH-007 AC-3 anchor accepts Java 17 and so cannot show the Java 8 run",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12AuthTest.java",
+    "line_range": "143-155"
+   },
+   "description": "The test passes on 1.8 or >= 17 and reads gradle/java8-tests.gradle text; under the default Java 17 build it proves nothing about running on Java 8. The comment says the evidence is the recorded runs, so the AC citation here is a marker, not a check.",
+   "suggested_fix": "Either mark it as non-evidence (drop the AC citation) or assert java.specification.version == 1.8 when the java8 init script property is set.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T2-F16",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Inverted failure message",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8LogoutTest.java",
+    "line_range": "591-605"
+   },
+   "description": "SEC_FLOW_008_AC4 wraps assertTrue(usable(s[1])) in catch (AssertionError) { fail(\"the cookie token stayed usable\") } - the message fires when the token did NOT stay usable, and the try/catch adds nothing.",
+   "suggested_fix": "Replace with assertTrue(\"the cookie token stays usable\", usable(s[1])).",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "style"
+   ]
+  },
+  {
+   "id": "T2-F17",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "typ-separation helper accepts any Exception as a refusal",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7TokenTest.java",
+    "line_range": "306-313"
+   },
+   "description": "refused() treats every Exception from decode as the expected typ refusal, so an NPE or a MiniJson bug while decoding a cross-typ token would count as 'typ separation'.",
+   "suggested_fix": "Catch the codec's documented rejection type (JwtException / the auth rejection) and fail on others.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave10PatTest {"
+   ],
+   "findings": [
+    "T2-F01",
+    "T2-F02"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave11ClosureTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave11ClosureTest {"
+   ],
+   "findings": [
+    "T2-F13",
+    "T2-F14"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave11DoctorTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave11DoctorTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave11HygieneTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave11HygieneTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ApiKeyTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave12ApiKeyTest {"
+   ],
+   "findings": [
+    "T2-F04"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12AuthTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave12AuthTest {"
+   ],
+   "findings": [
+    "T2-F15"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ThrottleTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave12ThrottleTest {"
+   ],
+   "findings": [
+    "T2-F05",
+    "T2-F06"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12TokenTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave12TokenTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12TransportTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave12TransportTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave5ComponentsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave5ComponentsTest {"
+   ],
+   "findings": [
+    "T2-F11"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave6ComponentsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave6ComponentsTest {"
+   ],
+   "findings": [
+    "T2-F12"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave6ReviewFixesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave6ReviewFixesTest {"
+   ],
+   "findings": [
+    "T2-F03"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7CsrfTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave7CsrfTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7DeliveryTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave7DeliveryTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7DocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave7DocsTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7LoginTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave7LoginTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7MultiInstanceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave7MultiInstanceTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7ReviewFixesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave7ReviewFixesTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7TokenTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave7TokenTest {"
+   ],
+   "findings": [
+    "T2-F07",
+    "T2-F17"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8AccountTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave8AccountTest {"
+   ],
+   "findings": [
+    "T2-F09",
+    "T2-F10"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8ApiKeysTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave8ApiKeysTest {"
+   ],
+   "findings": [
+    "T2-F08"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8EndpointClassesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave8EndpointClassesTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8LoginTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave8LoginTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8LogoutTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave8LogoutTest {"
+   ],
+   "findings": [
+    "T2-F16"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8RevocationTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave8RevocationTest {"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 17,
+  "by_severity": {
+   "MEDIUM": 7,
+   "LOW": 10
+  }
+ }
+}

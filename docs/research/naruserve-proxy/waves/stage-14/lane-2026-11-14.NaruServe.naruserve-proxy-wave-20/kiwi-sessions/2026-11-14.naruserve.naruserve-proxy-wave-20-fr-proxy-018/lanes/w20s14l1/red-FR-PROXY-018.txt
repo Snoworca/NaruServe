@@ -1,0 +1,20 @@
+fr_PROXY_018_AC8_withoutTheSwitchABodylessDeleteIsNotRetried pass
+fr_PROXY_018_AC2_retriesKeepTheOneSlotAndCloseEveryRetriedConnection FAIL: org.junit.ComparisonFailure: expected:<attempt-[2]> but was:<attempt-[0]>
+fr_PROXY_018_AC3_bodylessHeadAndOptionsAreRetriedOn502 FAIL: java.lang.AssertionError: expected:<3> but was:<1>
+fr_PROXY_018_AC1_withoutRetriesA503RequestArrivesOnce pass
+fr_PROXY_018_AC4_aReadTimeoutIsNotRetried pass
+fr_PROXY_018_AC6_theRetryDecisionClassifiesConnectFailuresByCause FAIL: java.lang.AssertionError
+fr_PROXY_018_AC9_aConfiguredDelayIsObserved FAIL: java.lang.AssertionError: expected:<2> but was:<1>
+fr_PROXY_018_AC5_theBodyOfARetriedPostArrivesWhole FAIL: java.lang.AssertionError: expected:<200> but was:<502>
+fr_PROXY_018_AC8_unsafeMethodsAreRetriedOnlyWhenBodyless FAIL: java.lang.AssertionError: expected:<2> but was:<1>
+fr_PROXY_018_AC1_theDefaultsAreNoRetryA200MillisecondDelayAndSafeMethodsOnly pass
+fr_PROXY_018_AC4_a504IsNotRetried pass
+fr_PROXY_018_AC2_aGetWithContentLengthZeroIsRetried FAIL: java.lang.AssertionError: expected:<3> but was:<1>
+fr_PROXY_018_AC4_anInvalidResponseIsNotRetried pass
+fr_PROXY_018_AC9_theDefaultDelayIsAtLeast200Milliseconds FAIL: java.lang.AssertionError: expected:<2> but was:<1>
+fr_PROXY_018_AC10_aWaitThatWouldPassTheTotalDeadlineIsSkipped FAIL: java.lang.AssertionError: expected:<3> but was:<1>
+fr_PROXY_018_AC5_aRefusedConnectionIsRetriedForAPostWithABody FAIL: java.lang.AssertionError: expected:<3> but was:<1>
+fr_PROXY_018_AC7_aTlsHandshakeTimeoutIsNotRetried pass
+fr_PROXY_018_AC11_aDerivedProxyKeepsItsOwnRetryCount FAIL: java.lang.AssertionError: expected:<3> but was:<1>
+fr_PROXY_018_AC2_aBodylessPostAndAGetWithABodyAreNotRetried pass
+fr_PROXY_018_AC2_aBodylessGetIsRetriedTwiceAndTheThird503IsRelayed FAIL: java.lang.AssertionError: expected:<3> but was:<1>

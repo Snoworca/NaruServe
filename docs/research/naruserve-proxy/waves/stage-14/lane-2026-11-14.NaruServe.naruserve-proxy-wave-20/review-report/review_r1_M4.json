@@ -1,0 +1,642 @@
+{
+ "chunk": "M4",
+ "round": 1,
+ "findings": [
+  {
+   "id": "M4-F01",
+   "axis": "P4",
+   "severity": "MEDIUM",
+   "title": "SQLite issuance can return a pooled connection with an open BEGIN IMMEDIATE transaction",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcApiKeyStore.java",
+    "line_range": "593-626"
+   },
+   "description": "sqliteTransaction sets open=false before exec(\"COMMIT\") (605-606) and before exec(\"ROLLBACK\") (600-601), and the catch handles SQLException only. In rollback-journal mode (the SQLite default), COMMIT needs an EXCLUSIVE lock and returns SQLITE_BUSY when another connection or process keeps a SHARED read lock longer than busy_timeout. SQLite then keeps the transaction active ('the COMMIT can be retried'), but no ROLLBACK runs because open is already false. restoreSqlite runs and the connection goes back to the pool. JDBC still reports autocommit=true, so HikariCP does not roll it back on return. The pooled connection keeps its RESERVED/PENDING lock, so every later writer on another connection (login throttle upserts, refresh-token saves, the next issuance) gets SQLITE_BUSY until that physical connection is reused. A reused connection then fails BEGIN IMMEDIATE with 'cannot start a transaction within a transaction'. A RuntimeException thrown inside the transaction (for example a MiniJson JsonFormatException from scopes(k) in insertRow) also skips the ROLLBACK, because only SQLException is caught.",
+   "suggested_fix": "Clear open only after COMMIT/ROLLBACK succeed. Catch Throwable (or use finally) so the transaction is rolled back whenever it is still open, and rethrow the original exception with the rollback failure added as suppressed.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "M4-F02",
+   "axis": "P3",
+   "severity": "MEDIUM",
+   "title": "addMember/addParent check-then-insert races deleteGroup and leaves orphan memberships that still grant the group",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcGroupStore.java",
+    "line_range": "145-185"
+   },
+   "description": "addMember runs requireGroup (a SELECT in its own autocommit connection), then a separate INSERT. No transaction or lock spans the two, and the tables have no foreign keys. Scenario: admin A calls DELETE group 'ops' while admin B calls addMember('ops', X), on the same node or on two MULTI_INSTANCE nodes. B's requireGroup sees the group; A's deleteGroup transaction deletes the members, edges and group row and commits; then B's INSERT IGNORE / ON CONFLICT DO NOTHING adds ('ops', X). The row survives with no group. GroupExpander (internal/GroupExpander.java:24) copies store.groupsOfUser(userId) into the principal's groups without checking that the group exists. X now carries group 'ops' in every request, so app guards on that group name pass for a deleted group. If 'ops' is created again later, X is a member without anyone adding them. addParent has the same window and leaves an orphan edge.",
+   "suggested_fix": "Run the existence check and the insert in one statement or transaction, for example INSERT ... SELECT ? , ? FROM naru_groups WHERE group_id = ? (plus the dialect's ignore clause), and decide by the update count. Alternatively, have groupsOfUser/parentsOf join naru_groups so orphan rows are never returned.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "security"
+   ]
+  },
+  {
+   "id": "M4-F03",
+   "axis": "P1",
+   "severity": "LOW",
+   "title": "MySQL throttle_key uses the accent- and case-insensitive default collation, so distinct login names share a counter",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/AuthSchema.java",
+    "line_range": "98-102"
+   },
+   "description": "The id and username columns get COLLATE utf8mb4_bin on MySQL; the class Javadoc says this keeps 'josé' and 'jose' apart. throttle_key VARCHAR(255) has no collation, so MySQL 8 uses utf8mb4_0900_ai_ci. Users 'josé' and 'jose' are two rows in naru_users, but ThrottleKeys.loginUser gives 'login:u:josé' and 'login:u:jose', which compare equal as primary keys. The ON DUPLICATE KEY upsert counts failures for both names in one row, and AdminEndpoints' reset(loginUser(jose)) also clears josé's row. Ten failures against 'jose' lock 'josé' out of user-only logins, and unlocking one account unlocks the other.",
+   "suggested_fix": "Add the bin collation to throttle_key on MySQL (\"VARCHAR(255)\" + bin), like the id and name columns.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "M4-F04",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Connections.autocommit switches autocommit on and never restores it",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/Connections.java",
+    "line_range": "21-32"
+   },
+   "description": "Every single-statement JDBC store method calls setAutoCommit(true) on a borrowed connection and closes it without restoring the previous value. The design relies on the pool resetting autocommit on return. HikariCP, DBCP2 and c3p0 do that. A plain DataSource (DriverManagerDataSource, or a minimal pool without reset) keeps autocommit on for the next borrower, so app code that expects the pool's autoCommit=false default silently commits each statement. Deferred from w07 ('Autocommit is not restored after a write'); still present.",
+   "suggested_fix": "Remember the previous autocommit value and restore it in a wrapper's close(), as JdbcApiKeyStore.insertLocked already does. Or document the pool requirement in the JdbcUserStore/JdbcLoginThrottle Javadoc.",
+   "is_behavioral": true,
+   "tags": [
+    "deferred"
+   ]
+  },
+  {
+   "id": "M4-F05",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "naru_device_trust.name_hash column is never read or written",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/AuthSchema.java",
+    "line_range": "103-112"
+   },
+   "description": "The reference DDL creates name_hash VARCHAR(64) NULL. JdbcDeviceTrust's COLUMNS (device_id, user_id, failures, window_start, invalidated, created_at, expires_at) never use it, and no other store does. Operators migrate a dead column, and readers assume the device-name fingerprint is stored. Deferred from w07; still present.",
+   "suggested_fix": "Remove the column from the reference DDL, or wire the fingerprint into JdbcDeviceTrust if it is meant to be stored.",
+   "is_behavioral": false,
+   "tags": [
+    "deferred",
+    "style"
+   ]
+  },
+  {
+   "id": "M4-F06",
+   "axis": "P1",
+   "severity": "LOW",
+   "title": "Hex-form IPv4-mapped IPv6 addresses all collapse into the /64 bucket 0:0:0:0::/64",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/ThrottleKeys.java",
+    "line_range": "54-78"
+   },
+   "description": "ipKey maps '::ffff:1.2.3.4' to '1.2.3.4' only when the text contains a dot. The hex form of the same address, '::ffff:c000:201', goes through expand() to [0,0,0,0,0,ffff,c000,201], and its first four groups give '0:0:0:0::/64'. Every IPv4 client whose address arrives in hex-mapped form (for example from an X-Forwarded-For written by a dual-stack proxy) then shares one IP counter, so 20 failures from one of them make every such client get 429 on login (IP key) and on API-key auth (apikey:ip). '0:0:0:0:0:ffff:1.2.3.4' is also not normalized. Deferred from w05 ('ThrottleKeys does not normalize hex IPv4-mapped IPv6'); still present.",
+   "suggested_fix": "After expand(), when groups 0-4 are 0 and group 5 is ffff, return the IPv4 dotted form built from groups 6-7, and handle the expanded dotted form as well.",
+   "is_behavioral": true,
+   "tags": [
+    "deferred",
+    "bug"
+   ]
+  },
+  {
+   "id": "M4-F07",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "RefreshTokens.verify swallows the codec failure without logging the cause",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/RefreshTokens.java",
+    "line_range": "57-65"
+   },
+   "description": "A non-JwtException from a custom TokenCodec.decode (a bug, or an outage of a KMS-backed codec) becomes JwtException MALFORMED with a fixed message, and the cause is neither attached nor logged. Operators then see only 401 invalid_refresh_token for every refresh during a codec outage, with nothing to diagnose it. Deferred from w07 (L1); still present.",
+   "suggested_fix": "Log the cause class and message once per interval (never the token), or keep the cause reachable through a constructor that takes one.",
+   "is_behavioral": false,
+   "tags": [
+    "deferred"
+   ]
+  },
+  {
+   "id": "M4-F08",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "RefreshTokens.TYPE duplicates TokenCodec.REFRESH",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/RefreshTokens.java",
+    "line_range": "17-18"
+   },
+   "description": "RefreshTokens.TYPE = \"rt+jwt\" repeats TokenCodec.REFRESH (spi/TokenCodec.java:24). Hs256TokenCodec routes on TokenCodec.REFRESH, while RefreshTokens issues and checks TYPE. If one constant changes without the other, every refresh token fails with IllegalArgumentException/MALFORMED. Deferred from w07 ('Duplicate type constants'); still present.",
+   "suggested_fix": "Define TYPE as TokenCodec.REFRESH, or drop TYPE and use the SPI constant.",
+   "is_behavioral": false,
+   "tags": [
+    "deferred",
+    "style"
+   ]
+  },
+  {
+   "id": "M4-F09",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "An accepted but malformed stored hash is refused with no derivation, unlike the documented constant work",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Passwords.java",
+    "line_range": "120-179"
+   },
+   "description": "verify() and verifyForLogin() treat any string the hasher accepts (a prefix match) as real and call h.verify(password, stored). Pbkdf2PasswordHasher.verify returns false at once when parse() fails (Pbkdf2PasswordHasher.java:79-81), so a row holding 'pbkdf2-sha256$x$y$z' costs no PBKDF2. The class Javadoc and the verifyForLogin Javadoc say every attempt does exactly one target-cost computation. The login floor (1.25T) hides this on POST /auth/login, but Passwords.verify callers without a floor answer measurably faster for such accounts. Deferred from w04 (P-16); still present.",
+   "suggested_fix": "When h.verify returns false and the stored string does not parse (or always on a mismatch outside the padded path), run one dummy verify, so the work does not depend on the row.",
+   "is_behavioral": true,
+   "tags": [
+    "deferred",
+    "security"
+   ]
+  },
+  {
+   "id": "M4-F10",
+   "axis": "P5",
+   "severity": "LOW",
+   "title": "JdbcRefreshTokenStore and JdbcGroupStore hard-code unqualified table names",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcRefreshTokenStore.java",
+    "line_range": "25-37"
+   },
+   "description": "JdbcUserStore, JdbcApiKeyStore, JdbcLoginThrottle and JdbcDeviceTrust accept table(\"schema.name\"). JdbcRefreshTokenStore (T = naru_refresh_tokens) and JdbcGroupStore (AuthSchema.GROUPS/GROUP_MEMBERS/GROUP_PARENTS) do not. An app that puts the auth tables in schema 'auth' and builds JdbcUserStore.table(\"auth.naru_users\") gets a default refresh store from Auth (Auth.java:3716) that queries the unqualified naru_refresh_tokens. With no such table on the search_path, every login fails with an SQLException. Deferred from w07 ('The schema prefix is ignored by the default JDBC throttle and device trust'); the throttle and device trust now have table(), but these two stores still cannot be pointed at a schema.",
+   "suggested_fix": "Give both stores a builder with table names (or a schema prefix), and have Auth's defaults reuse the JdbcUserStore's schema.",
+   "is_behavioral": true,
+   "tags": [
+    "deferred"
+   ]
+  },
+  {
+   "id": "M4-F11",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "HashSlots.shutdown is permanent, so an Auth reused after app stop answers 503 for every hash",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/HashSlots.java",
+    "line_range": "231-241"
+   },
+   "description": "shutdown() sets closed=true and calls shutdownNow on both executors, and nothing reopens them. Auth calls it in onStop (Auth.java:600) and keeps the same final hashSlots field. An app that stops and starts again with the same Auth (tests, Android service restart) answers every login, password change and PAT issuance with 503 'the password hash slots are shut down'. Deferred from w04 (#5) and w06 ('Executors are not recreated after onStop'); still present.",
+   "suggested_fix": "Make HashSlots restartable (create the executors lazily under a lock on the first submit after shutdown), or have Auth refuse a second install with a clear message.",
+   "is_behavioral": true,
+   "tags": [
+    "deferred"
+   ]
+  },
+  {
+   "id": "M4-F12",
+   "axis": "P1",
+   "severity": "LOW",
+   "title": "MiniJson accepts non-ASCII hex digits in \\u escapes",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/MiniJson.java",
+    "line_range": "315-329"
+   },
+   "description": "The escape loop uses Character.digit(c, 16), which also accepts fullwidth and other Unicode digits and the fullwidth letters A-F. A \\u escape whose four digits are the fullwidth characters U+FF10 U+FF10 U+FF14 U+FF11 parses as 'A'. The class claims strict JSON (invalid escapes refused), and RFC 8259 allows only ASCII HEXDIG. The FILE profile therefore accepts auth files that other strict parsers refuse, and two spellings decode to the same string.",
+   "suggested_fix": "Accept only '0'-'9', 'a'-'f' and 'A'-'F' (an explicit range check) in the \\u loop.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "M4-F13",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "TokenVerifier Javadoc still says no JWT verifier exists",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/TokenVerifier.java",
+    "line_range": "3-7"
+   },
+   "description": "The comment says 'The JWT verifier plugs in here; until it exists every token is refused.' Hs256TokenCodec and the bearer path now verify real JWTs through this seam, so the comment describes an earlier wave and misleads readers about current behaviour.",
+   "suggested_fix": "Describe the current implementation (the bearer verifier over TokenCodec) and drop the 'until it exists' sentence.",
+   "is_behavioral": false,
+   "tags": [
+    "doc",
+    "style"
+   ]
+  },
+  {
+   "id": "M4-F14",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "PrincipalCache walks every entry on each miss once 10,000 live entries exist",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/PrincipalCache.java",
+    "line_range": "127-131"
+   },
+   "description": "When entries.size() >= SWEEP_ABOVE, every cache miss calls sweep(now), which iterates the whole map. With more than 10,000 distinct users active inside one TTL (5 s), nothing expires, so the size stays above the threshold and every miss (each new user or expired entry) costs a 10k+ entry scan on the request thread. The map also has no hard cap.",
+   "suggested_fix": "Sweep at most once per TTL (keep a lastSweep timestamp), or bound the map and evict the oldest entry instead of scanning.",
+   "is_behavioral": true,
+   "tags": [
+    "performance"
+   ]
+  },
+  {
+   "id": "M4-F15",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "JdbcGroupStore.deleteGroup loses the original exception when rollback fails",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcGroupStore.java",
+    "line_range": "116-134"
+   },
+   "description": "In the catch block, c.rollback() runs before throw e. If the rollback throws (connection broken, the usual cause of the first failure), its SQLException propagates and the real cause is lost. The finally setAutoCommit(auto) can replace it the same way. JdbcApiKeyStore attaches rollback failures as suppressed; this store does not.",
+   "suggested_fix": "Wrap the rollback (and the autocommit restore) in try/catch and add their failures to e as suppressed before rethrowing e.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/HashSlots.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class HashSlots {"
+   ],
+   "findings": [
+    "M4-F11"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/HashTiming.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class HashTiming {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/HmacSigner.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class HmacSigner {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Hs256TokenCodec.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class Hs256TokenCodec implements TokenCodec {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Lockouts.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class Lockouts {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/LoginLimits.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class LoginLimits {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/MiniJson.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class MiniJson {"
+   ],
+   "findings": [
+    "M4-F12"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Origins.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class Origins {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Passwords.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class Passwords {"
+   ],
+   "findings": [
+    "M4-F09"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Pbkdf2.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class Pbkdf2 {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/PrincipalCache.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class PrincipalCache {"
+   ],
+   "findings": [
+    "M4-F14"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/RefreshTokens.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class RefreshTokens {"
+   ],
+   "findings": [
+    "M4-F07",
+    "M4-F08"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/RehashQueue.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class RehashQueue {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/ScopeMatcher.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class ScopeMatcher {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/SecretRules.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class SecretRules {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/TestingBridge.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class TestingBridge {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/ThrottleKeys.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class ThrottleKeys {"
+   ],
+   "findings": [
+    "M4-F06"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/TokenKeys.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class TokenKeys {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/TokenVerifier.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface TokenVerifier {"
+   ],
+   "findings": [
+    "M4-F13"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/TransportCredentials.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class TransportCredentials implements CredentialResolver {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/UserFieldWrites.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class UserFieldWrites {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/UserLocks.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class UserLocks {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Usernames.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class Usernames {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/AuthDialect.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public enum AuthDialect {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/AuthSchema.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class AuthSchema {"
+   ],
+   "findings": [
+    "M4-F03",
+    "M4-F05"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/Connections.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth.jdbc;"
+   ],
+   "findings": [
+    "M4-F04"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcApiKeyStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class JdbcApiKeyStore implements ApiKeyStore {"
+   ],
+   "findings": [
+    "M4-F01"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcDeviceTrust.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class JdbcDeviceTrust implements DeviceTrust {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcGroupStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class JdbcGroupStore implements GroupAdminStore {"
+   ],
+   "findings": [
+    "M4-F02",
+    "M4-F15"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcLoginThrottle.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class JdbcLoginThrottle implements LoginThrottle {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcRefreshTokenStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class JdbcRefreshTokenStore implements RefreshTokenStore {"
+   ],
+   "findings": [
+    "M4-F10"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcUserStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class JdbcUserStore implements UserStore {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth.jdbc;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jwt/Jwt.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class Jwt {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jwt/JwtClaims.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class JwtClaims {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jwt/JwtException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class JwtException extends Exception {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jwt/JwtKeys.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class JwtKeys {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jwt/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth.jwt;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/BcryptPasswordHasher.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class BcryptPasswordHasher implements PasswordHasher {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/DigestEncoding.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public enum DigestEncoding {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/HashCost.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class HashCost {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/PasswordHasher.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public interface PasswordHasher {"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 15,
+  "by_severity": {
+   "CRITICAL": 0,
+   "HIGH": 0,
+   "MEDIUM": 2,
+   "LOW": 13
+  }
+ }
+}

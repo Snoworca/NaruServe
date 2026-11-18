@@ -1,0 +1,54 @@
+{
+  "run": "F7",
+  "fixes": [
+    {
+      "finding_id": "M1-F01",
+      "status": "fixed",
+      "files_changed": [
+        {
+          "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java",
+          "line_range": "21-37, 147-211"
+        },
+        {
+          "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+          "line_range": "437-512"
+        },
+        {
+          "path": "docs/api/auth.md",
+          "line_range": "1045"
+        },
+        {
+          "path": "docs/api/en/auth.md",
+          "line_range": "1045"
+        }
+      ],
+      "red_test": "RefreshTokenStoreTest.fileStoreStaysBoundedUnderLoginLogoutChurn, fileStorePurgesExpiredRecordsOnSave, fullFileStoreRefusesOnlyNewSignIns: all three failed before the fix with MiniJson$JsonFormatException 'the written document is larger than 65536/32768 bytes (the FILE limit)'; green after.",
+      "why_no_red": null,
+      "rationale_full": "Most conservative option that keeps every existing AC and test: FileRefreshTokenStore.save now (1) drops every revoked record (logged-out or reuse-revoked families) and every record whose expiresAt <= the saved record's createdAt, since TokenService answers both exactly like a missing record (401 invalid_refresh_token; unknownFamily WARN is in-memory-only; markUsed returns false for revoked and missing alike; the refresh race check treats after==null like after.isRevoked()); (2) keeps the existing 32-used-per-family prune; (3) refuses with a clear IOException (mapped to 503 by TokenService) only a new sign-in, i.e. a record of a family the file does not hold (counted before filtering, so a racing save into a just-revoked family is not misclassified), when the encoded document would exceed limit - limit/8; rotations of existing families may still use the reserved last eighth up to the hard limit. revokeFamily and purgeExpired are unchanged, so revoked records stay findable as revoked until the next save (RefreshTokenStoreTest AC-7 assertion find(t1).isRevoked() kept), and AC-4 write points are unchanged (save already wrote). No live session is evicted (no per-user family cap, which would change behaviour). Login/logout churn now keeps O(1) records; drop-without-logout churn is bounded by refreshTtl and the admission reserve. Not a guarantee for unlimited young families rotating in the reserve, but steady-state rotation (family at 33 records) is size-neutral. Docs (ko/en auth.md FileRefreshTokenStore row) record the dropped revoked/expired records and the 503 for new sign-ins near the limit. Commit code split into encode()+commit(next, bytes) (private only)."
+    },
+    {
+      "finding_id": "T1-F01",
+      "status": "fixed",
+      "files_changed": [
+        {
+          "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+          "line_range": "789-796"
+        }
+      ],
+      "red_test": "Wave10PatTest.REL_APIKEY_002_AC1_oneDeletionPerOwnerWithTheLargestVer: with the guard temporarily mutated to last-writer-wins (ApiKeyOwners.scheduleStale 'pending >= ver ||' removed) the test failed: 'the largest observed ver wins expected:<6> but was:<5>'; ApiKeyOwners.java restored from backup (guard line 366 verified), test green.",
+      "why_no_red": "Test-only finding: the production guard is correct, so the restored case passes on the real code; the red evidence is the mutation run above.",
+      "rationale_full": "After the ver-6 batch (pending 6, one queued deletion) the test now calls f.auth.apiKeyOwners().scheduleStale(u1, 5) once as a deterministic out-of-order ver-5 observation and asserts pendingStale(u1) stays 6 and held.queued.size() stays 1, before held.runAll() asserts 'deleteStaleByOwner u1 6'. No existing assertion removed or weakened; REL-APIKEY-002 AC-1 citation kept."
+    }
+  ],
+  "public_api_changes": [],
+  "docs_changed": [
+    "docs/api/auth.md",
+    "docs/api/en/auth.md"
+  ],
+  "build": {
+    "tests": 3001,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

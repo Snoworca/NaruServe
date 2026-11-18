@@ -1,0 +1,40 @@
+{
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-20": {
+  "head": "25454cc11e8ac5ce7327a9af72f20459c892499a",
+  "commits": 8,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "rounds": 5,
+   "resolved": [
+    "FND-001",
+    "FND-002",
+    "FND-101",
+    "FND-102",
+    "FND-201",
+    "FND-301",
+    "FND-302"
+   ],
+   "dropped": [
+    "FND-003",
+    "FND-004",
+    "FND-401"
+   ],
+   "declared_limits": [
+    "interrupt behaviour (see srs_deltas)"
+   ],
+   "clean_code": "1 round applied; CC-001, CC-003 dismissed as project convention"
+  },
+  "landed": [
+   "FR-PROXY-018",
+   "FR-PROXY-020"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [],
+  "outside_reason": "",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build (4710 tests, 0 failures)",
+  "verdict": "pass"
+ }
+}

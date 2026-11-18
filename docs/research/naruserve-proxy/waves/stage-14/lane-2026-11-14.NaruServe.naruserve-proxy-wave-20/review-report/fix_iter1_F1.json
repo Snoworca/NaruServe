@@ -1,0 +1,168 @@
+{
+ "run": "F1",
+ "fixes": [
+  {
+   "finding_id": "M1-F01",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "line_range": "693-697, 797-800"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+     "line_range": "301-321"
+    }
+   ],
+   "red_test": "AppLifecycleGuardTest.SEC_APP_002_AC5_watcherCannotShutDownTheAppMidRegistration: java.lang.AssertionError: expected:<[refused]> but was:<[shut down]>",
+   "why_no_red": null,
+   "rationale_full": "RestApp.shutdown(long, TimeUnit) now calls RegistrationLog.requireNotWatching() first, so app.shutdown and ServerHandle.shutdown (which delegates) are both refused inside a watcher; the duplicate, mis-indented guard in the anonymous ServerHandle was removed. The test registers a watcher that calls app.shutdown(0, SECONDS): it is now refused, the app stays NEW and the registration is recorded."
+  },
+  {
+   "finding_id": "M1-F02",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "line_range": "every former synchronized entry point (39 methods, e.g. 197-203 jsonCodec ... 1300-1330 freeze/registries) + 520-530 refuseForeignWatcher + builderHook ~1201 + DefaultRouteBuilder.add/use ~1385-1405"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationLog.java",
+     "line_range": "80-91"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/RegistrationListener.java",
+     "line_range": "12-19"
+    },
+    {
+     "path": "docs/api/app.md",
+     "line_range": "355"
+    },
+    {
+     "path": "docs/api/en/app.md",
+     "line_range": "340"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+     "line_range": "323-365"
+    }
+   ],
+   "red_test": "AppLifecycleGuardTest.SEC_APP_002_watcherCallingAnotherAppFailsFastInsteadOfDeadlocking: real Java-level deadlock (jstack: watcher-thread BLOCKED in DefaultRestApp.trustProxyHops waiting for app B's monitor held by b-registrar, which is BLOCKED in RegistrationLog.admit waiting for RegistrationLog.LOCK held by watcher-thread); the test JVM hung and had to be killed",
+   "why_no_red": null,
+   "rationale_full": "Conservative fix per the hypothesis, keeping SEC-APP-002 order and the static LOCK. Every synchronized method of DefaultRestApp (configuration, registration, getters such as staticMounts, freeze) and the synchronized(this) blocks of the route-builder hook and DefaultRouteBuilder.add/use became non-synchronized wrappers that first call refuseForeignWatcher() and then take the monitor in a synchronized(this) block. refuseForeignWatcher() calls the new RegistrationLog.requireNotWatchingElsewhere() (ISE 'a registration watcher must not call into another app') only when the thread does not already hold this app's monitor, so a watcher calling its own app (which it already holds, on both the app path and the Router path) behaves as before, while a watcher calling another app fails fast before it can block on that app's monitor. Registrations from a watcher are still refused by the existing requireNotWatching(). RegistrationListener Javadoc and docs/api app.md (ko+en) now say the watcher runs under a registration lock shared by every app, must not wait for other threads, and that calling another app throws ISE. The optional 'watchers outside LOCK' change was not done: releasing LOCK between watch and apply lets another app mount the Router in between, so its records would miss the entry (needs a redesign). Red test: watcher of A, once a second thread registering on B is BLOCKED (polled with a 10 s deadline) holding B's monitor and waiting for LOCK, calls b.trustProxyHops(1); now ISE, both threads finish."
+  },
+  {
+   "finding_id": "M1-F03",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationLog.java",
+     "line_range": "34-35, 46-47, 199-226"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+     "line_range": "367-384"
+    }
+   ],
+   "red_test": "AppLifecycleGuardTest.SEC_APP_002_routerOwnersAreLockedInCreationOrder: java.lang.AssertionError: expected:<[DefaultRestApp@3bf9ce3e, DefaultRestApp@156b88f5, ...]> but was:<[... identity-hash order ...]>",
+   "why_no_red": null,
+   "rationale_full": "Each RegistrationLog gets a unique, increasing seq from a static AtomicLong; owners() now collects the distinct live logs, sorts them by seq (a total order, no ties) and maps them to their owner apps, so two Routers mounted in the same apps in opposite orders always lock them in one order. owners() became package-private (still only called under LOCK) for the test, which mounts one Router into 24 apps in reverse creation order and asserts owners() is creation order (identity-hash order made it fail)."
+  },
+  {
+   "finding_id": "M2-F02",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "1506-1513 (csrfPasses), 1622-1633 (attachOptional)"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7CsrfTest.java",
+     "line_range": "101-112, 478-509"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "1185"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "1185"
+    }
+   ],
+   "red_test": "Wave7CsrfTest.SEC_FLOW_006_guardedCookieWriteOnAPublicPathNeedsTheCsrfToken: java.lang.AssertionError: closed expected:<401> but was:<200>",
+   "why_no_red": null,
+   "rationale_full": "New private csrfPasses(req, c) = !csrfRequired(req,c) || (csrfTokens.passes(..) && Origins.passes(..)), used by the protected path and now by attachOptional: on a public path a cookie-authenticated POST/PUT/PATCH/DELETE without the session's CSRF token or with a foreign Origin attaches no principal, so a guard there answers 401 unauthenticated and an unguarded handler sees userOrNull == null; with a valid token the principal is attached as before. Safe methods, Bearer and API-key requests are unchanged. docs/api auth.md CSRF section (ko+en) documents the public-path rule."
+  },
+  {
+   "finding_id": "M2-F03",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "1490-1504"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9RefreshTest.java",
+     "line_range": "561-577"
+    }
+   ],
+   "red_test": "Wave9RefreshTest.FR_FLOW_001_bodyFormatBeforeCsrfOnPrincipalEndpoints: java.lang.AssertionError: /auth/password {\"error\":{\"code\":\"csrf_failed\",...}} expected:<415> but was:<403>",
+   "why_no_red": null,
+   "rationale_full": "In Auth.handle the keyOnAdmin computation and jsonBodyOk(req, credentialEndpoint || isAdminPath(req), res) now run before the CSRF/Origin check (after the api_key_not_allowed step), matching FR-FLOW-001 and the documented decision order (415 before 403). The keyOnAdmin exception is kept; key requests never need CSRF so their order is unchanged. Principal attachment still happens after CSRF. Test: COOKIE, valid naru_at, no X-CSRF-Token, text/plain body to POST /auth/password and /auth/admin/users -> 415 UNSUPPORTED_MEDIA_TYPE."
+  },
+  {
+   "finding_id": "M2-F04",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "224-225, 309-310, 346-348, 556-562, 1366-1414 (ComponentLogger), Builder.build ~3706"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthInstallTest.java",
+     "line_range": "197-229"
+    }
+   ],
+   "red_test": "AuthInstallTest.withoutBuilderLoggerEveryComponentLogsToTheAppLoggerAfterInstall: java.lang.AssertionError: [] expected:<1> but was:<0>",
+   "why_no_red": null,
+   "rationale_full": "New package-private Auth.ComponentLogger (a Logger that forwards to a volatile target). build() creates one per Auth (target = .logger(..) or a ConsoleLogger) and hands it to everything built with it: key set, refresh/file throttle/device-trust stores, AuditTrail, AccessTokens, EffectiveGrants, TokenService, ApiKeyUsage, RehashQueue, DefaultAuthUsers and the default throttle/device trust. install() without .logger(..) now also re-targets it to app.logger(), so every component logs to the app's logger from install on, as Builder.logger Javadoc and docs/api auth.md already promise (no doc change needed; the reviewer's 'line 594' was RolePolicy.Builder.logger). Auth.logger/log() keep the real logger. Test: Auth without .logger(), app.logger(RecordingLogger), a throwing audit sink and a user store whose findById throws -> both ERRORs land in the app logger."
+  },
+  {
+   "finding_id": "M2-F07",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "593-610 (onStop)"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/HashSlots.java",
+     "line_range": "242-250"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthInstallTest.java",
+     "line_range": "231-266"
+    }
+   ],
+   "red_test": "AuthInstallTest.REL_FLOW_001_failureRecordedDuringStopIsInTheFinalSnapshot: java.lang.AssertionError: no snapshot was written at stop",
+   "why_no_red": null,
+   "rationale_full": "onStop now stops the socket ticker and rehash queue, shuts down the failure floor, shutdownNow()s the background pool (abandoning queued tasks as before), shuts down the hash slots, then awaits the hash slots and the background pool (5 s each, WARN if exceeded) and only then calls stopCleanup(), which writes the final throttle/device-trust snapshot. A hash or login completion still running at stop (its callback runs inline on the hash thread once the background pool rejects it) therefore records its failure before the snapshot. HashSlots got an additive awaitTermination(long, TimeUnit). Test (real path, FileUserStore + default FileLoginThrottle): a custom Authenticator that runs in the hash slot until stop interrupts it; a login is in flight, app.shutdown(0, SECONDS); afterwards users-login-throttle.json exists and holds hashed('login:u:alice'). Happy path waits only for idle pools (no fixed sleeps)."
+  }
+ ],
+ "public_api_changes": [
+  "none to the published API surface; additive only: HashSlots.awaitTermination(long, TimeUnit) (public method on a class in the internal package utils.auth.internal), package-private Auth.ComponentLogger, package-private RegistrationLog.requireNotWatchingElsewhere()/owners(); behavioural: a RegistrationListener that calls another app now gets IllegalStateException, RestApp.shutdown from a watcher now throws IllegalStateException, unsafe cookie writes on public auth paths without CSRF/Origin are anonymous"
+ ],
+ "docs_changed": [
+  "docs/api/app.md",
+  "docs/api/en/app.md",
+  "docs/api/auth.md",
+  "docs/api/en/auth.md",
+  "NaruServe-api/src/main/java/com/snoworca/naruserve/RegistrationListener.java (Javadoc)"
+ ],
+ "build": {
+  "tests": 3381,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+ }
+}

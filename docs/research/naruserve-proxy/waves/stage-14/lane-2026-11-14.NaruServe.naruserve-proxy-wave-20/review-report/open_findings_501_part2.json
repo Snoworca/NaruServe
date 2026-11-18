@@ -1,0 +1,406 @@
+[
+ {
+  "id": "R2-M1-F06",
+  "round": 2,
+  "source": "round2-new",
+  "title": "Key-file migration on Windows: a failed delete of the raw .bak fails the build after a successful migration and leaves the raw key, which createOnce later restores",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeySources.java",
+   "line_range": "254-263, 334-353"
+  },
+  "description": "replaceWith() moves the raw key to .<name>.bak, renames the enc(...) file in, then throws IOException if old.delete() fails. The migration succeeded, but signingKey() fails, so build() reports a key-source failure; the raw signing key stays on disk next to its encrypted form (defeating SEC-IAM-008 for that file). Later, if the operator deletes the key file to make a new key (read() itself advises 'delete it to make a new key'), createOnce() sees the stale .bak and restores the old raw key instead of generating one. POSIX rename replaces in one step, so this is Windows (or any FS where rename does not replace) only.",
+  "tags": [
+   "bug",
+   "security"
+  ]
+ },
+ {
+  "id": "M3-F05",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Custom-authenticator login for another user skips that user's pre-hash IP/user-only waits",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/PasswordLogin.java",
+   "line_range": "308-320"
+  },
+  "description": "Steps 1-3 check the IP, (user,IP) and user-only keys for key(name). When a custom Authenticator answers with a different user (finish() replaces user with users.findById(found)), that user's own user-only and lockout-independent waits are never consulted, and the failure counting/success path is keyed by the typed name. A user B that is currently throttled can still be logged in by name A if the authenticator maps A to B. Carried from the 0.11.0-w08 review (prickly r4).",
+  "tags": [
+   "security",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M3-F07",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Unused 4-argument TokenPair constructor yields empty userId/familyId",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenPair.java",
+   "line_range": "22-24"
+  },
+  "description": "TokenPair(String,long,String,long) is unused (only the 6-argument form is called, TokenService.pair line 124). If it is ever used, TokenDelivery.deliver would call csrf.issue(\"\", \"\") and bind the CSRF token to an empty user and family. Carried from the 0.11.0-w07 review (L9).",
+  "tags": [
+   "style",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M3-F12",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Audit log line is not unambiguously parseable",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/audit/AuditSinks.java",
+   "line_range": "58-93"
+  },
+  "description": "line() writes key=value pairs separated by spaces without quoting; action values already contain spaces (\"POST /auth/me/apikeys\") and a value containing ' actor=x' would read as a second field. clean() escapes C0 controls but not U+0085/U+2028/U+2029, which some log viewers treat as line breaks.",
+  "tags": [
+   "style"
+  ]
+ },
+ {
+  "id": "M3-F11",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "AccessTokens trusts the codec for expiry although it re-checks the type",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AccessTokens.java",
+   "line_range": "87-105"
+  },
+  "description": "claims() defends against a codec that ignores the expected type but not one that ignores exp: a custom TokenCodec wrapping a library without expiry validation would make access tokens never expire, while the time field is already available here and unused for verification.",
+  "tags": [
+   "security"
+  ]
+ },
+ {
+  "id": "M3-F10",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "ApiKeyUsage.lastWrite is only cleared by auth.apiKeys().revoke",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/ApiKeyUsage.java",
+   "line_range": "26,71-74"
+  },
+  "description": "forget() is called only from DefaultAuthApiKeys.revoke; keys deleted through DELETE /auth/me/apikeys/:id, DELETE /auth/admin/apikeys/:id, user deletion (deleteAllByOwner), stale cleanup and the expiry purge keep their entry forever. Growth is bounded by keys ever used in the process, but on a long-running server with short-lived keys it never shrinks.",
+  "tags": [
+   "performance"
+  ]
+ },
+ {
+  "id": "M3-F08",
+  "round": 1,
+  "source": "round1-not_resolved_in_round2",
+  "title": "AtomicFiles.load reads a whole store file into memory with no size bound",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "line_range": "125-151"
+  },
+  "description": "read() copies the file into a growing ByteArrayOutputStream before the parser sees it, with no limit (toByteArray doubles the peak). A corrupt or attacker-grown file (e.g. a huge naru-groups file) makes start-up OOM instead of failing with the FAIL message; on Android the heap is small. Carried from the 0.11.0-w05 review.",
+  "tags": [
+   "deferred",
+   "performance"
+  ]
+ },
+ {
+  "id": "R2-M1-F03",
+  "round": 2,
+  "source": "round2-new",
+  "title": "AtomicFiles.lockFor keys on the absolute, not canonical, path: two FileUserStores over one file spelled differently bypass the per-path lock",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "line_range": "72-83"
+  },
+  "description": "The M5-F01 fix relies on synchronized(AtomicFiles.lockFor(file)) around refuseForeignChange()+write. lockFor uses file.getAbsoluteFile().getPath(), so new File(\"data/users.json\") and new File(new File(\"./data\"), \"users.json\") (or a symlinked data dir) get two different monitors. Two such instances writing at the same time both pass the CRC check before either renames, both open and truncate the one shared <name>.tmp sibling, and the renamed file can interleave both contents (next start FAIL) or the later write silently rolls back the other instance's ver bump / password hash, which is exactly the M5-F01 failure.",
+  "tags": [
+   "bug"
+  ]
+ },
+ {
+  "id": "R2-M1-F04",
+  "round": 2,
+  "source": "round2-new",
+  "title": "M3-F08 partially resolved: FileGroupStore still loads its file through the unbounded overload",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "line_range": "153-155"
+  },
+  "description": "load(File, Parser, Logger) still passes Long.MAX_VALUE, and FileGroupStore (group/FileGroupStore.java:39) uses it, so the 'huge naru-groups file' case named in the round-1 finding still reads the whole file into a ByteArrayOutputStream (initial buffer up to 64 MB, toByteArray doubling the peak) and the String copy in parse; on Android a corrupt or grown groups file is an OOM at start instead of the FAIL message. The user, refresh, throttle and device-trust stores were moved to the bounded overload.",
+  "tags": [
+   "bug"
+  ]
+ },
+ {
+  "id": "R2-M1-F05",
+  "round": 2,
+  "source": "round2-new",
+  "title": "AtomicFiles restricts the temp file only after FileOutputStream created it with umask permissions",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "line_range": "102-113, 140-146"
+  },
+  "description": "writeLocked() creates <name>.tmp with new FileOutputStream (umask, typically 0644) and only then calls ownerOnly(tmp). A local user watching the data directory (inotify IN_CREATE) can open the temp file in that window and keep the descriptor; the content written next (users file with plain password hashes in DEV/without a key, throttle and refresh snapshots) is then readable through it, and the later chmod does not revoke an open descriptor. KeySources.publish avoids exactly this with an owner-only staging directory, so the two file paths of auth differ in protection.",
+  "tags": [
+   "security"
+  ]
+ },
+ {
+  "id": "R2-M1-F07",
+  "round": 2,
+  "source": "round2-new",
+  "title": "GrantRule.scopesOf(String) is now dead in main code and still answers 'empty' for a missing or disabled actor",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/GrantRule.java",
+   "line_range": "67-75"
+  },
+  "description": "Every actor read moved to actorScopes(), which refuses a missing or disabled actor (the M3-F02 fix). The public scopesOf(String) stays, unused by main code, with the exact semantics that caused M3-F02 (empty set for a disabled actor, so writes on scope-less targets pass coverage). The next caller that picks it for an actor check reintroduces the bypass silently.",
+  "tags": [
+   "style"
+  ]
+ },
+ {
+  "id": "M4-F09",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "An accepted but malformed stored hash is refused with no derivation, unlike the documented constant work",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Passwords.java",
+   "line_range": "120-179"
+  },
+  "description": "verify() and verifyForLogin() treat any string the hasher accepts (a prefix match) as real and call h.verify(password, stored). Pbkdf2PasswordHasher.verify returns false at once when parse() fails (Pbkdf2PasswordHasher.java:79-81), so a row holding 'pbkdf2-sha256$x$y$z' costs no PBKDF2. The class Javadoc and the verifyForLogin Javadoc say every attempt does exactly one target-cost computation. The login floor (1.25T) hides this on POST /auth/login, but Passwords.verify callers without a floor answer measurably faster for such accounts. Deferred from w04 (P-16); still present.",
+  "tags": [
+   "deferred",
+   "security"
+  ]
+ },
+ {
+  "id": "M4-F14",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "PrincipalCache walks every entry on each miss once 10,000 live entries exist",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/PrincipalCache.java",
+   "line_range": "127-131"
+  },
+  "description": "When entries.size() >= SWEEP_ABOVE, every cache miss calls sweep(now), which iterates the whole map. With more than 10,000 distinct users active inside one TTL (5 s), nothing expires, so the size stays above the threshold and every miss (each new user or expired entry) costs a 10k+ entry scan on the request thread. The map also has no hard cap.",
+  "tags": [
+   "performance"
+  ]
+ },
+ {
+  "id": "M4-F07",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "RefreshTokens.verify swallows the codec failure without logging the cause",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/RefreshTokens.java",
+   "line_range": "57-65"
+  },
+  "description": "A non-JwtException from a custom TokenCodec.decode (a bug, or an outage of a KMS-backed codec) becomes JwtException MALFORMED with a fixed message, and the cause is neither attached nor logged. Operators then see only 401 invalid_refresh_token for every refresh during a codec outage, with nothing to diagnose it. Deferred from w07 (L1); still present.",
+  "tags": [
+   "deferred"
+  ]
+ },
+ {
+  "id": "M4-F08",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "RefreshTokens.TYPE duplicates TokenCodec.REFRESH",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/RefreshTokens.java",
+   "line_range": "17-18"
+  },
+  "description": "RefreshTokens.TYPE = \"rt+jwt\" repeats TokenCodec.REFRESH (spi/TokenCodec.java:24). Hs256TokenCodec routes on TokenCodec.REFRESH, while RefreshTokens issues and checks TYPE. If one constant changes without the other, every refresh token fails with IllegalArgumentException/MALFORMED. Deferred from w07 ('Duplicate type constants'); still present.",
+  "tags": [
+   "deferred",
+   "style"
+  ]
+ },
+ {
+  "id": "M4-F13",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "TokenVerifier Javadoc still says no JWT verifier exists",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/TokenVerifier.java",
+   "line_range": "3-7"
+  },
+  "description": "The comment says 'The JWT verifier plugs in here; until it exists every token is refused.' Hs256TokenCodec and the bearer path now verify real JWTs through this seam, so the comment describes an earlier wave and misleads readers about current behaviour.",
+  "tags": [
+   "doc",
+   "style"
+  ]
+ },
+ {
+  "id": "M4-F05",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "naru_device_trust.name_hash column is never read or written",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/AuthSchema.java",
+   "line_range": "103-112"
+  },
+  "description": "The reference DDL creates name_hash VARCHAR(64) NULL. JdbcDeviceTrust's COLUMNS (device_id, user_id, failures, window_start, invalidated, created_at, expires_at) never use it, and no other store does. Operators migrate a dead column, and readers assume the device-name fingerprint is stored. Deferred from w07; still present.",
+  "tags": [
+   "deferred",
+   "style"
+  ]
+ },
+ {
+  "id": "M4-F04",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Connections.autocommit switches autocommit on and never restores it",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/Connections.java",
+   "line_range": "21-32"
+  },
+  "description": "Every single-statement JDBC store method calls setAutoCommit(true) on a borrowed connection and closes it without restoring the previous value. The design relies on the pool resetting autocommit on return. HikariCP, DBCP2 and c3p0 do that. A plain DataSource (DriverManagerDataSource, or a minimal pool without reset) keeps autocommit on for the next borrower, so app code that expects the pool's autoCommit=false default silently commits each statement. Deferred from w07 ('Autocommit is not restored after a write'); still present.",
+  "tags": [
+   "deferred"
+  ]
+ },
+ {
+  "id": "M4-F15",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "JdbcGroupStore.deleteGroup loses the original exception when rollback fails",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcGroupStore.java",
+   "line_range": "116-134"
+  },
+  "description": "In the catch block, c.rollback() runs before throw e. If the rollback throws (connection broken, the usual cause of the first failure), its SQLException propagates and the real cause is lost. The finally setAutoCommit(auto) can replace it the same way. JdbcApiKeyStore attaches rollback failures as suppressed; this store does not.",
+  "tags": [
+   "style"
+  ]
+ },
+ {
+  "id": "M4-F10",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "JdbcRefreshTokenStore and JdbcGroupStore hard-code unqualified table names",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcRefreshTokenStore.java",
+   "line_range": "25-37"
+  },
+  "description": "JdbcUserStore, JdbcApiKeyStore, JdbcLoginThrottle and JdbcDeviceTrust accept table(\"schema.name\"). JdbcRefreshTokenStore (T = naru_refresh_tokens) and JdbcGroupStore (AuthSchema.GROUPS/GROUP_MEMBERS/GROUP_PARENTS) do not. An app that puts the auth tables in schema 'auth' and builds JdbcUserStore.table(\"auth.naru_users\") gets a default refresh store from Auth (Auth.java:3716) that queries the unqualified naru_refresh_tokens. With no such table on the search_path, every login fails with an SQLException. Deferred from w07 ('The schema prefix is ignored by the default JDBC throttle and device trust'); the throttle and device trust now have table(), but these two stores still cannot be pointed at a schema.",
+  "tags": [
+   "deferred"
+  ]
+ },
+ {
+  "id": "M5-F06",
+  "round": 1,
+  "source": "round1-rejected:already_intended",
+  "title": "The chain's unknown-format log prints up to 4 characters of the stored value, which leaks password characters when a legacy column holds plaintext",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/PasswordHashers.java",
+   "line_range": "152-161"
+  },
+  "description": "unknown() logs stored.substring(0, min(4, len-1)) once per distinct prefix, for up to 64 prefixes. That is harmless for hashes. Failure scenario: an app migrates a legacy table that kept plaintext passwords, or a mix of plaintext and hashes, and no member accepts those rows. The first 4 characters of up to 64 users' passwords go to the console or Logcat at ERROR level, keyed to separate log lines. FR-TOKEN-003 AC-2 allows 'at most 4' characters; 0 to 2 characters, or only the characters up to the first '$', would still identify a hash format.",
+  "tags": [
+   "security"
+  ]
+ },
+ {
+  "id": "M5-F05",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "A stored PBKDF2 hash above MAX_STORED_ITERATIONS is refused silently, with no ERROR like bcrypt's",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/Pbkdf2PasswordHasher.java",
+   "line_range": "103-129"
+  },
+  "description": "parse() returns null for rounds > 2,000,000 (and for a malformed string), and verify() then returns false with no log. BcryptPasswordHasher logs an ERROR for a stored cost above its cap (line 110). Failure scenario: an account imported from a system that used 3,000,000 rounds can never log in, and operators see only failed logins. A planted hash is also refused without a trace. w04 P-15 asked for both the cap and the ERROR; only the cap was done. Deferred.",
+  "tags": [
+   "security",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M5-F09",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "@NullMarked packages contain a nullable equals parameter and a null-returning private method without @Nullable",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/spi/DeviceToken.java",
+   "line_range": "47-50"
+  },
+  "description": "DeviceToken.equals(Object o) has no @Nullable, while AuthUser.equals and RefreshRecord.equals use '@Nullable Object o'. Under @NullMarked, jspecify tooling and the Kotlin JSpecify mode read the parameter as non-null, which contradicts the Object.equals contract (equals(null) is legal and returns false here). The same applies to Pbkdf2PasswordHasher.parse (Pbkdf2PasswordHasher.java:104), which returns null on several paths without @Nullable. A nullness checker flags both, and the CLAUDE.md rule asks for annotations on public API parameters.",
+  "tags": [
+   "style"
+  ]
+ },
+ {
+  "id": "M5-F10",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "verifyApiKeyStore leaves its rows in the store when a rule fails, although its javadoc says it deletes what it created",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/ApiKeyStoreContract.java",
+   "line_range": "173-190,193-248"
+  },
+  "description": "UserStoreContract cleans up in a finally block, but ApiKeyStoreContract calls cleanup() only at the end of each successful phase. Failure scenario: the contract runs against the app's real JDBC test database, for example to verify a custom store. A failing check such as the case-sensitivity or limit rule throws before cleanup, leaving 'contract-*' keys, with 64-hex secret hashes, owner ids and scopes, in a database that other tests read. listByOwner and count-based assertions in the app's own tests can then see foreign rows. verifyConcurrent behaves the same way when the win count is wrong.",
+  "tags": [
+   "test"
+  ]
+ },
+ {
+  "id": "M5-F07",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "FileUserStore reads wait on the same monitor during a full-file rewrite and fsync, though the maps are already replaced copy-on-write",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+   "line_range": "196-216"
+  },
+  "description": "commit() runs AtomicFiles.write (a write of up to 8 MB, fsync, two renames) while holding the instance monitor. findById and findByUsername are synchronized on that monitor and run on every login and on each request's user reload when the principal cache misses. Failure scenario: on Android flash an fsync can take 50-300 ms, so every rehash, logout-all or admin edit stalls all concurrent authenticated requests for that time. commit() already builds new maps and swaps them in (byId = rows), so reads do not need the lock.",
+  "tags": [
+   "performance"
+  ]
+ },
+ {
+  "id": "T1-F08",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Public package lists are hand-maintained; a new public utils package silently escapes every API surface check",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java",
+   "line_range": "30-43, 96-110"
+  },
+  "description": "publicTypes() skips every jar package not in PUBLIC_PACKAGES, and AuthKotlinContractTest.AUTH_PACKAGES is a second copy of that list. Nothing compares the packages actually in the jar against the list. Failure scenario: adding com.snoworca.naruserve.utils.auth.oauth with public types and no @NullMarked package-info, or with java.time in its signatures, passes CON_AUTH_004_AC1, the FR-KT nullability and keyword checks and TimeSourceTest.IR_AUTH_001_AC3.",
+  "tags": [
+   "test"
+  ]
+ },
+ {
+  "id": "T1-F05",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "SEC-IAM-007 AC-1 'the handler does not run' is inferred from the response text",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminEndpointsTest.java",
+   "line_range": "242-250"
+  },
+  "description": "The test proves the handler did not run with assertFalse(r.text().contains(\"items\")) on the 401 response. A handler that ran (and read the store or wrote audit) before the 401 was sent would still pass. The SEC-IAM-007 AC-4 loop (288-302) likewise accepts any status other than 401 or 403, including 404 or 500 from a wrongly substituted path. Deferred from 0.11.0-w06 (handler-run counters) and still present.",
+  "tags": [
+   "test",
+   "deferred"
+  ]
+ },
+ {
+  "id": "T1-F09",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Stale stand-in Javadoc; SEC-FLOW-004 AC-1/6/8/9 still run only against the fake TokenVerifier",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/CredentialTransportTest.java",
+   "line_range": "17-21"
+  },
+  "description": "CredentialTransportTest (17-21), AuthTestSupport (18-22) and TransportRuleTest (17-20) still say the JWT verifier or the account endpoints are 'not built yet', but both now exist (RealJwtPathTest, AccountEndpoints). The w04 deferred item 'SEC-AUTH-005, SEC-FLOW-004 and IR-AUTH-002 tests use a test TokenVerifier; re-run them with real JWTs' is only partly closed: RealJwtPathTest covers SEC-FLOW-004 AC-2 and AC-3 and SEC-AUTH-005 AC-3. SEC-FLOW-004 AC-1, AC-6, AC-8 and AC-9 (for example AC-9's 'Bearer forged' leading to invalid_token) are proven only with TestTokens, so a real-verifier regression on those paths, such as a forged JWT answered 400 instead of 401, is not caught.",
+  "tags": [
+   "test",
+   "doc",
+   "deferred"
+  ]
+ }
+]

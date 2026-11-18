@@ -1,0 +1,165 @@
+{
+ "run": "G1",
+ "fixes": [
+  {
+   "finding_id": "F7-N01",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java",
+     "line_range": "20-61, 159-327"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+     "line_range": "515-605"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "1045"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "1045"
+    }
+   ],
+   "red_test": "RefreshTokenStoreTest.everyAdmittedSessionKeepsRotatingAfterSignInsAreRefused -> AssertionError: rotation 1 of family 10 of 68 failed at 16280 bytes: MiniJson$JsonFormatException: the written document is larger than 16384 bytes (the FILE limit); RefreshTokenStoreTest.signedInSessionsKeepRefreshingThroughTokenServiceWhenTheFileIsFull -> AssertionError: refresh 1 of session 8 of 57 answered 503: MiniJson$JsonFormatException ...",
+   "why_no_red": null,
+   "rationale_full": "Read FR-TOKEN-002 (AC-1..8), SEC-TOKEN-006 (AC-1..6) and REL-TOKEN-001: no AC requires 32 used records per family; SEC-TOKEN-006 AC-1 needs only the immediate predecessor to be found used. The existing test fileStoreKeepsABoundedHistoryPerFamily pins the 32-deep history at normal load, so the 32 default is kept (no test weakened) and no AC conflict arises. save() now measures, while encoding record by record (inner class Measured), the bytes the file NEEDS for one more rotation of every live family: content + 15 bytes per unused record (usedAt null -> up to 19 digits) + one record (with its own usedAt growth) for every family that holds no used record yet. When need > limit the save switches to the compact form (compact(): every family keeps only its most recently used record), where a rotation adds one record and drops the older used one, so it needs no net bytes. A new sign-in is refused (IOException -> 503, message still says 'new sign-ins are refused' and names the app-provided RefreshTokenStore) when even the compact form would exceed the limit, or the content would enter the last eighth (old rule kept as margin). So the admission reserve is sized from the real per-rotation growth, and every admitted session keeps rotating forever; a rotation that would still not fit (only possible for a file loaded already over the bound) is an IOException instead of an unchecked JsonFormatException. Mutation check: disabling the compact switch (if (false && m.need > limit)) -> both new tests red ('refresh 2 of session 4 of 30 answered 503: IOException ... would grow to 16426 bytes'); restoring the old admission rule only -> both red ('rotation 1 of family 10 of 68 failed'); restored -> green. Javadoc of the class and USED_PER_FAMILY and docs/api auth.md (ko+en) FileRefreshTokenStore row updated."
+  },
+  {
+   "finding_id": "R2-M1-F03",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+     "line_range": "14-31, 76-96"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+     "line_range": "241-261"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java",
+     "line_range": "281-333"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "747"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "747"
+    }
+   ],
+   "red_test": "AtomicFilesTest.lockForKeysOnTheCanonicalPath -> AssertionError: expected same:<java.lang.Object@543295b0> was not:<java.lang.Object@54422e18>; FileUserStoreTest.twoSpellingsOfOneFileShareTheWriteLock -> AssertionError: trial 0: user0 was created but is not on disk [refused1, user0]",
+   "why_no_red": null,
+   "rationale_full": "AtomicFiles.lockFor now keys LOCKS on file.getCanonicalPath() (java.io, API 21 safe), falling back to the absolute path when canonicalization throws, so dir/users.json, dir/./users.json, dir/sub/../users.json and a path through a symlink share one monitor; FileUserStore's check-and-write is then serialized for every spelling. Regression tests: assertSame over the spellings (plus symlink when available) and a real two-FileUserStore race (150 trials, CyclicBarrier with a 10 s await, no fixed sleeps) asserting a create that returned is on disk and the file stays readable. Mutation check: key back to the absolute path -> both tests red; restored -> green."
+  },
+  {
+   "finding_id": "R2-M1-F04",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/FileGroupStore.java",
+     "line_range": "13-69, 136-152"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+     "line_range": "206-218"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/group/GroupAdminStoreTest.java",
+     "line_range": "344-399"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+     "line_range": "296-313"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "511"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "511"
+    }
+   ],
+   "red_test": "GroupAdminStoreTest.hugeGroupsFileFailsBeforeItIsRead (sparse 900 MB groups file) -> java.lang.OutOfMemoryError: Java heap space; AtomicFilesTest.loadWithoutALimitIsBoundedByTheDefault -> AssertionError: a file above 8 MB was read",
+   "why_no_red": null,
+   "rationale_full": "FileGroupStore gains public DEFAULT_MAX_FILE_BYTES (8 MB) and an additive constructor FileGroupStore(File, GroupLimits, long maxFileBytes, Logger); the existing constructors delegate with the default. The file is loaded through AtomicFiles.load(file, maxBytes, tooLarge, parser, logger) with a 'the groups file has N bytes, above the limit of M bytes; ...' reason, so a huge or corrupt file fails with FAIL before any byte is read; change() refuses a write that would grow the file above the limit (IOException, graph restored, disk unchanged), so the file can always be read back. The unbounded AtomicFiles.load(File, Parser, Logger) overload is kept (no signature change) but is now bounded by MiniJson.DEFAULT_FILE_BYTES, so no store can read an unbounded file through it. Added fileGroupStoreSizeLimitBoundsReadsAndWrites for the new overload. Mutation checks: FileGroupStore load with Long.MAX_VALUE -> OOM red; write check disabled -> 'a change above the limit was written' red; default overload back to Long.MAX_VALUE -> loadWithoutALimit red; restored -> green."
+  },
+  {
+   "finding_id": "R2-M1-F05",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+     "line_range": "46-69, 115-195"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+     "line_range": "263-294"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "747"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "747"
+    }
+   ],
+   "red_test": "AtomicFilesTest.tempFileIsOwnerOnlyBeforeItIsOpenedForWriting -> ComparisonFailure: users.json.tmp [OWNER_READ, OWNER_WRITE, GROUP_READ, OTHERS_READ] expected:<...ER_READ, OWNER_WRITE[]]> (the temp file had the umask 0644 when the write stream was opened)",
+   "why_no_red": null,
+   "rationale_full": "Before the write stream is opened, stageOwnerOnly creates a fresh directory .<name>.tmp.new-<hex> (SecureRandom), restricts it to the owner, creates the empty temp file inside, restricts it to owner read/write, and renames it to <name>.tmp (deleting a leftover first where rename does not replace); the staging directory is removed. So the temp file is never visible under its name with umask permissions and no other user can open a descriptor in that window (the KeySources.publish pattern). Best effort as before: where the staging step is not possible the old in-place create+restrict remains. The protocol events (sync, renames, delete) and the dir listing seen by REL-IAM-004 AC-1 are unchanged. A Steps.open(File) seam (package-private) lets the test observe the permissions at the moment the stream is opened, deterministically and over the real FileOutputStream. Mutation check: removing the stageOwnerOnly call -> red with GROUP_READ/OTHERS_READ; restored -> green. Side note about 12 'cannot rename users.json.tmp' failures under a concurrent stat watcher was not reproduced by the deterministic test and not chased further."
+  },
+  {
+   "finding_id": "M4-F09",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Passwords.java",
+     "line_range": "10-16, 120-133, 157-196"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Pbkdf2.java",
+     "line_range": "96-145"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/Pbkdf2PasswordHasher.java",
+     "line_range": "76-107"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7ReviewFixesTest.java",
+     "line_range": "115-204"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "754, 1298"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "754, 1298"
+    }
+   ],
+   "red_test": "Wave7ReviewFixesTest.malformedAcceptedHashCostsOneDummyDerivation -> AssertionError: pbkdf2-sha256$x$y$z is checked once, against the dummy expected:<[pbkdf2-sha256$1000$...]> but was:<[pbkdf2-sha256$x$y$z]>; Wave7ReviewFixesTest.malformedAcceptedHashTakesRealWorkOnTheDefaultHasher -> AssertionError: malformed 4 us vs real 69614 us",
+   "why_no_red": null,
+   "rationale_full": "The PBKDF2 stored-string parser moved from the private Pbkdf2PasswordHasher.parse into internal Pbkdf2.parseStored(stored, prefix, maxIterations) (+ Pbkdf2.Stored holder); Pbkdf2PasswordHasher delegates (behaviour unchanged). Passwords.verifyForLogin and Passwords.verify treat a string with the default 'pbkdf2-sha256$' prefix that does not parse (malformed, wrong key/salt length, or above MAX_STORED_ITERATIONS) like an unknown hash: verify against the target-cost dummy and return no match / no rehash, so every login attempt runs exactly one target-cost PBKDF2 (SEC-TOKEN-009). Tests: a recording wrapper over the real Pbkdf2PasswordHasher asserts the only verify target is the dummy for five malformed forms (verifyForLogin and verify) and that a well-formed hash is still verified against itself; a real-path check on the default hasher (100k iterations) compares thread CPU time (independent of machine load): malformed >= 1/4 of a real verify. Mutation check: malformed() -> false makes both red; restored -> green."
+  }
+ ],
+ "public_api_changes": [
+  "FileGroupStore.DEFAULT_MAX_FILE_BYTES (new public constant, 8 MB)",
+  "FileGroupStore(File, GroupLimits, long maxFileBytes, Logger) (new constructor overload; existing constructors unchanged and now bounded at 8 MB)",
+  "internal (not public API): Pbkdf2.parseStored + Pbkdf2.Stored; AtomicFiles.Steps.open seam (package-private); AtomicFiles.load(File, Parser, Logger) now bounded by 8 MB"
+ ],
+ "docs_changed": [
+  "docs/api/auth.md (FileGroupStore size limit L511, AtomicFiles staging dir and canonical-path lock L747, Pbkdf2 malformed hash dummy L754, login constant work L1298, FileRefreshTokenStore compact form/admission L1045)",
+  "docs/api/en/auth.md (same five places)"
+ ],
+ "build": {
+  "tests": 3360,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+ }
+}

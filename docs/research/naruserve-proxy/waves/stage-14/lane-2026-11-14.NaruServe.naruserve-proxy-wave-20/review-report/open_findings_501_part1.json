@@ -1,0 +1,417 @@
+[
+ {
+  "id": "M1-F05",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Dispatcher/DefaultRequest still carry the legacy trustProxy boolean that is immediately overwritten by proxyTrust(..)",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "line_range": "59-61, 161-164, 209-214, 224-225, 275-278"
+  },
+  "description": "Dispatcher keeps `private final boolean trustProxy` and passes it into every DefaultRequest constructor, then calls req.proxyTrust(proxyTrust) right after. DefaultRestApp.freeze (lines 1186-1190) passes proxyTrust.legacyFlag() to the constructor and then calls dispatcher.proxyTrust(proxyTrust) on a field that was just constructed. That makes two sources of truth, plus a volatile post-construction setter on a hot per-request object. A future construction site that forgets proxyTrust(..) silently falls back to legacy/none and drops hop/CIDR mode. Carried open item from w01 prickly review.",
+  "tags": [
+   "style",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M1-F04",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "A shared Router keeps strong references to every app it was ever mounted in",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationLog.java",
+   "line_range": "110-122, 184-192"
+  },
+  "description": "record() adds a Mount(log, record) to router.mounts for each ROUTER_MOUNT. A Mount pins the app's RegistrationLog, its owner (the DefaultRestApp) and all its records. Mounts are pruned only lazily in owners(), which runs only when a later registration is made through that Router, and only for TERMINATED apps. A static or shared Router mounted into many short-lived apps (per-test apps, hot-reload or per-tenant app factories, apps that fail before listen and are never shut down, which stay NEW forever) therefore retains every such app indefinitely once the Router stops receiving registrations.",
+  "tags": [
+   "performance"
+  ]
+ },
+ {
+  "id": "M1-F06",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "HttpRoutes.terminal now instantiates a public class from the internal package",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/TerminalMiddleware.java",
+   "line_range": "15-25"
+  },
+  "description": "The public default method HttpRoutes.terminal (HttpRoutes.java:51) returns `new com.snoworca.naruserve.internal.TerminalMiddleware(callback)`, so TerminalMiddleware and its public constructor become part of the published NaruServe-api jar surface that user code can reference. Its package-private `handler` field is read by RegistrationLog.routeTarget for record targets. Carried open item from the w01 prickly review (same pattern as AsyncMiddleware).",
+  "tags": [
+   "style",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M1-F08",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Duplicated helpers between AccountEndpoints and AdminEndpoints",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AccountEndpoints.java",
+   "line_range": "122-208"
+  },
+  "description": "Deferred (w08): continueLater (AccountEndpoints 175-182 vs AdminEndpoints 327-334), checkNewPassword vs newPassword (161-173 vs 1164-1176), body(req) (122-128 vs 1230-1240, the Admin one also honours BODY_ERROR), string(..) helpers and the hash-slot submit + wipe + continueLater pattern (hashThen vs the inline blocks in createUser/patchUser) are copied. A fix to one copy, for example wiping or the BODY_ERROR replay, does not reach the other.",
+  "tags": [
+   "style",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M1-F07",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "AdminEndpoints is ~1,300 lines with one class handling users, groups, keys, guards and JSON",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AdminEndpoints.java",
+   "line_range": "1-1303"
+  },
+  "description": "Deferred L16 (w06): the class has grown to 1,303 lines. It mixes the scope guards, A1-A6 users with the multi-step A4 PATCH state machine, G1-G8 groups with the R31 enumeration, key endpoints and the JSON/body helpers. That makes the security-relevant paths (keyBodyFirst, checkPatch recheck, protectAffected) hard to review in isolation.",
+  "tags": [
+   "style",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M1-F09",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "API key lastUsedAt is recorded at verification, before the endpoint/middleware may refuse the key",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/ApiKeyCredentials.java",
+   "line_range": "171-174"
+  },
+  "description": "Deferred (w08): verify() calls auth.apiKeyUsage().used(k.getId()) as soon as the key verifies. The middleware then refuses key credentials on some paths, for example 403 api_key_not_allowed on /auth/me/apikeys, /auth/password or an anonymous-entry endpoint. Such a refused request still bumps the key's lastUsedAt, so the admin key list reports the key as used even though no request with it succeeded. That misleads stale-key cleanup decisions.",
+  "tags": [
+   "bug",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M1-F10",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Two user-store reads per ver++ and a stale-deletion entry dropped on executor rejection",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/ApiKeyOwners.java",
+   "line_range": "165-186, 207-222, 384-388"
+  },
+  "description": "Deferred (w10): bump() reads the owner in bumpInLock (findById at 210, or 199 on the busy path) and again in afterBump (171), plus keys.listByOwner. That makes two user-store reads for every logout?all, password change, disable or recovery. On RejectedExecutionException, scheduleStale removes staleVers[ownerId] and only WARNs. The stale keys then stay until a request presents one of them, and afterBump's 'next request schedules it again' covers only keys that are used.",
+  "tags": [
+   "performance",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M2-F05",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": ".loginFailureLimits and the password-confirmation limit are silently ignored by a custom throttle without usesLimitArguments()",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "883-899"
+  },
+  "description": "LoginLimits and DefaultAuthUsers.checkPassword pass their limits only through the limit-argument methods. A custom LoginThrottle that does not declare usesLimitArguments() applies its own limits, and the doctor reports that only when API keys are on (line 893). Scenario: .loginThrottle(customRedisThrottle).loginFailureLimits(3, 10, 5, 600_000) without .apiKeys: the configured login limits and the SEC-FLOW-015 5-per-15-min confirmation limit are not applied, with no WARN.",
+  "tags": [
+   "doc"
+  ]
+ },
+ {
+  "id": "M2-F08",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Per-request recomputation of the protected range and canonical paths",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "1084-1093, 1661-1673"
+  },
+  "description": "With .protectOnly, every public-candidate request calls protectedPrefixes() (allocates a new list) and widePath(prefix) for each prefix (ByteArrayOutputStream plus a new CharsetDecoder per prefix), and handle() computes canonical(req.path()) up to four times (isCredentialEndpoint, isAnonymousEntry, isPublic, isAdminPath twice). The prefixes are fixed after build.",
+  "tags": [
+   "performance"
+  ]
+ },
+ {
+  "id": "M2-F09",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Registration racing onStart can escape the protectOnly FAIL",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "583-590, 629-645"
+  },
+  "description": "watchRange() adds an unjudgeable registration to the list while started is false; the doctor reads that list at the start of onStart, but started.set(true) happens only after seed()/startCleanup(). A Pattern/array route registered from another thread in that window is neither failed nor refused, and is served under protectOnly (deferred from W5).",
+  "tags": [
+   "bug",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M2-F10",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Restart-logout WARN says every user is logged out even when only the throttle or device trust falls back to memory",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "819-824"
+  },
+  "description": "The WARN fires when any of refresh/throttle/device trust is unset with a custom UserStore, but always says 'a restart logs every user out'. With .refreshTokens(jdbc) set and only .loginThrottle unset, nobody is logged out; only throttle counters are lost (deferred from W5).",
+  "tags": [
+   "style",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M2-F11",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Pools shut down in onStop are not recreated; the socket ticker runs while idle",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "591-601, 2492-2518"
+  },
+  "description": "onStop shuts down background (shutdownNow), hashSlots and the floor scheduler but onStart never recreates them, so an Auth whose app is stopped and started again answers 503 on every hash/login and the stale failureFloor field points at a terminated scheduler. The WebSocket ticker, once started, keeps ticking every second even when no socket is tracked (deferred from W4/W6).",
+  "tags": [
+   "bug",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M2-F12",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "webSocketWrappers counts webSocket() calls, not WEBSOCKET registrations",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "1001-1012, 2428-2431"
+  },
+  "description": "The doctor compares the number of WEBSOCKET registrations with the number of auth.webSocket(handler) calls; a wrapper created and not registered, or one wrapper reused for two routes, skews the WARN (deferred from W6).",
+  "tags": [
+   "style",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M2-F13",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "accessTtl longer than refreshTtl is accepted",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "423-429, 3368-3389"
+  },
+  "description": "build() validates each TTL >= 1 s but not accessTtl <= refreshTtl; .accessTtl(2 days) with STANDARD (1-day refresh) issues access tokens that outlive their refresh token (deferred from W6).",
+  "tags": [
+   "bug",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M2-F14",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Default JDBC throttle, device trust and refresh store ignore the JdbcUserStore schema/table prefix",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "441-463, 3713-3718"
+  },
+  "description": "defaultThrottle/defaultDeviceTrust/refreshStore build the JDBC stores with only DataSource and dialect, so with JdbcUserStore.table(\"app.naru_users\") they still use naru_login_throttle etc. in the default schema (deferred from W7).",
+  "tags": [
+   "bug",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M2-F15",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Failure floor is created lazily under the Auth monitor",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "2781-2800"
+  },
+  "description": "failureFloor() runs passwords.timing() (which may calibrate) inside synchronized(this), the same monitor as startSocketTicker/stopSocketTicker, so the first failed login can block WebSocket tracking and stop (deferred from W7).",
+  "tags": [
+   "performance",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M2-F17",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "WebSocket rechecks do store reads on the single ticker thread",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "2525-2586"
+  },
+  "description": "webSocketTick() runs principals.refresh() and keys.findById() for every due socket sequentially on one thread; with userCacheTtl(0) or many sockets a slow store delays expiry closes of all connections (deferred from W10).",
+  "tags": [
+   "performance",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M2-F19",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Per-FileUserStore file throttle/device trust keep the first builder's TimeSource and Logger",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "3740-3786"
+  },
+  "description": "FILE_THROTTLES/FILE_DEVICE_TRUSTS cache the store made by the first build() over a FileUserStore; a later Auth with another .timeSource(...) or .logger(...) silently uses the first one's clock and logger (deferred from W12 #1).",
+  "tags": [
+   "bug",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M2-F20",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Two FileUserStore instances over one file get two throttle/device/refresh writers",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "3688-3786"
+  },
+  "description": "The static caches are keyed by the FileUserStore instance, so two FileUserStore objects over the same users.json create two FileLoginThrottle/FileDeviceTrust/FileRefreshTokenStore writers over the same side files; the last snapshot wins and refresh records of one are overwritten by the other (deferred from W12 #2).",
+  "tags": [
+   "bug",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M2-F21",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Doctor file-state prints one FAIL per store file in the same unwritable directory",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "907-936"
+  },
+  "description": "users.json, the refresh, throttle and device-trust files share one directory, so an unwritable directory yields up to four identical FAILs (deferred from W12 #3).",
+  "tags": [
+   "style",
+   "deferred"
+  ]
+ },
+ {
+  "id": "R2-M1-F02",
+  "round": 2,
+  "source": "round2-new",
+  "title": "onStop: an interrupt during the new awaits skips stopCleanup, so the final throttle/device snapshot is lost and the cleanup executor is never shut down",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "588-603"
+  },
+  "description": "The M2-F07 fix moved stopCleanup() after hashSlots.awaitTermination(5 s) and background.awaitTermination(5 s). Both throw InterruptedException; the lambda propagates it, runShutdownSequence logs 'onStop callback failed' and moves on, so stopCleanup() never runs: the cleanup ScheduledThreadPoolExecutor keeps its thread (daemon, but alive until JVM exit in a host that restarts apps, e.g. Android service restart) and the final snapshotRun() is skipped, so failures since the last 60 s tick are lost at restart, which is what the fix was meant to prevent. Before the fix stopCleanup ran first and only its own await could be interrupted.",
+  "tags": [
+   "bug",
+   "regression"
+  ]
+ },
+ {
+  "id": "R2-M1-F08",
+  "round": 2,
+  "source": "round2-new",
+  "title": "Shared file default stores keep the first Auth's ComponentLogger, so after that app stops they log to its closed logger",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "3770, 3927-3948"
+  },
+  "description": "FILE_THROTTLES / FILE_DEVICE_TRUSTS / FILE_REFRESH_STORES share one store per FileUserStore across every Auth built over it, and the store is built with the first build's ComponentLogger, which install() points at the first app's logger. A second Auth over the same FileUserStore (an app restarted in the same process, an Android service re-created with a singleton store) reuses the stores, so their WARNs (throttle and device-trust cap warnings, recovery warnings) still go to the first app's logger, which SafeLogger.flushAndClose closed at that app's shutdown, and are lost; the second app's logger never sees them. Before the M2-F04 fix they went to a ConsoleLogger.",
+  "tags": [
+   "bug"
+  ]
+ },
+ {
+  "id": "R2-M1-F09",
+  "round": 2,
+  "source": "round2-new",
+  "title": "PROD file-key policy and doctor count only see a bare FileUserStore; a decorated one writes plain hashes in PROD with no refusal and no WARN",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "3836-3850, 894-912"
+  },
+  "description": "unkeyedFileStores() and plainSecretItems() test users instanceof FileUserStore. An app that wraps the shipped store, e.g. .users(new CachingUserStore(new FileUserStore(file))) or a logging/metrics decorator, gets no PROD AuthConfigException, no DEV WARN and no doctor item, and the inner store writes every passwordHash plain (format version 1) in PROD, which FR-IAM-015 says PROD refuses. The file defaults (refresh/throttle/device trust) are skipped too, so the gap is silent.",
+  "tags": [
+   "security"
+  ]
+ },
+ {
+  "id": "M2-F18",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "checkPassword waits up to 10 s (static stripe then per-user hold) and answers 503 without Retry-After",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/DefaultAuthUsers.java",
+   "line_range": "376-401"
+  },
+  "description": "The JVM-wide 64-stripe lock is taken first (tryLock 5 s, unrelated users on the same stripe serialize behind a ~500 ms hash), then ConfirmationHolds.hold polls with Thread.sleep(5) for another 5 s; both timeouts throw AuthUnavailableException without a retry delay (deferred from W8/W10, W12 #7).",
+  "tags": [
+   "performance",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M2-F22",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "A failed immediate invalidation write answers 503 without a WARN and is retried only at the next snapshot",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileDeviceTrust.java",
+   "line_range": "67-78"
+  },
+  "description": "When write(true) fails, memory already holds the invalidation, recordFailure throws (the login answers 503) and the next failure sees before=true, so no immediate retry happens; until the 60 s snapshot succeeds a crash loses the invalidation and nothing says the invalidation is not on disk (deferred from W12 #4).",
+  "tags": [
+   "bug",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M2-F23",
+  "round": 1,
+  "source": "round1-rejected:auto_low_skip",
+  "title": "Versioned-JSON load/parse/write code is duplicated across the three file stores",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileLoginThrottle.java",
+   "line_range": "137-206"
+  },
+  "description": "FileLoginThrottle, FileDeviceTrust and FileRefreshTokenStore each repeat the size check, format/version check, list check, integer field reader and the AtomicFiles write with dirty-retry (deferred from W12 #5).",
+  "tags": [
+   "style",
+   "deferred"
+  ]
+ },
+ {
+  "id": "M2-F01",
+  "round": 1,
+  "source": "round1-not_resolved_in_round2",
+  "title": "Default file refresh store keeps every rotated record until its own expiry, so the 8 MB file fills and all logins/refreshes answer 503",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java",
+   "line_range": "113-145"
+  },
+  "description": "TokenService.pair() saves a new RefreshRecord (expiresAt = now + refreshTtl) on every login AND every refresh rotation; markUsed() only sets usedAt, and purgeExpired() removes a record only after its own expiresAt. So one active session keeps one record per refresh made within refreshTtl alive (BASELINE: 14 d refresh / 15 min access -> ~450-1,300 live records per active user). Every save()/markUsed() copies the whole map and rewrites the whole JSON file (commit, line 114-134), and MiniJson.write throws JsonFormatException once the document exceeds DEFAULT_FILE_BYTES (8 MB, ~35k records of ~225 B). Scenario: FileUserStore (the device-server/small-install default) under BASELINE with ~80 active users, or one authenticated client looping POST /auth/refresh (no throttle on successful refresh) ~35k times: the file hits 8 MB, commit() throws, TokenService.call maps it to AuthUnavailableException, and every login and refresh of every user answers 503 until records expire (up to 14 days). Before that, each refresh rewrites up to 8 MB with fsync on the request path (quadratic total I/O).",
+  "tags": [
+   "bug",
+   "performance"
+  ]
+ },
+ {
+  "id": "M3-F06",
+  "round": 1,
+  "source": "round1-skipped",
+  "title": "PAT issuance re-reads the caller in the slot but does not compare the request token's ver",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeyIssuance.java",
+   "line_range": "192-194,236-276"
+  },
+  "description": "confirmThenIssue receives only callerId; the slot re-reads the caller and checks only null/enabled. A session cut off by logout-all or a password change (ver raised) that is still admitted by another node's principal cache can, with the password, mint a personal API key bound to the new ver (owner = re-read caller), outliving the revocation. PasswordChanges/the password endpoint guard the same window with expectedVer. Carried from the 0.11.0-w10 review.",
+  "tags": [
+   "security",
+   "deferred"
+  ]
+ }
+]

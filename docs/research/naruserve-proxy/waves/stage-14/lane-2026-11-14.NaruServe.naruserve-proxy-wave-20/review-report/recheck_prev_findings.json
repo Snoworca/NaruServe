@@ -1,0 +1,1429 @@
+[
+ {
+  "id": "M1-F01",
+  "severity": "MEDIUM",
+  "title": "app.shutdown(...) is not refused inside a registration watcher (only ServerHandle.shutdown is)",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "line_range": "626-628, 729-735"
+  },
+  "description": "RegistrationListener's Javadoc says a watcher must not shut down the app (IllegalStateException), and the SEC-APP-002 trace note says requireNotWatching guards shutdown. In fact only the anonymous ServerHandle.shutdown (line 627, also mis-indented) calls RegistrationLog.requireNotWatching(); RestApp.shutdown(long, TimeUnit) at line 729 has no guard, and none of its other entry points do either. Scenario 1 (NEW): a watcher calls app.shutdown(0, SECONDS) while it decides on app.get(\"/w\", h). terminateIfNew moves the app to TERMINATED and closes the logger, the watcher returns normally, and the registration is then applied and recorded on a terminated app with no exception. Scenario 2 (RUNNING, registering thread is not a request thread): beginStop runs the stop sequence on this thread, which waits for in-flight requests while it holds the app monitor and the JVM-wide RegistrationLog.LOCK. Any in-flight request that registers (an app route, or a route on a Router mounted anywhere) blocks on LOCK, so the stop waits for the full timeout. The earlier w01 prickly HIGH (watcher could listen/freeze/shutdown) was fixed for only one of the two shutdown entry points.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "line_range": "693-697, 797-800"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+     "line_range": "301-321"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M1-F02",
+  "severity": "MEDIUM",
+  "title": "User watcher code runs under the JVM-global RegistrationLog.LOCK (and the app monitor), so registrations serialize across all apps and can deadlock",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationLog.java",
+   "line_range": "29-31, 129-138, 218-267"
+  },
+  "description": "LOCK is a static Object shared by every app and Router in the JVM. admit() and admitRouterLocked() call every RegistrationListener.onRegistration while holding it, and the app monitor too. A watcher is arbitrary user code (auth's protectOnly watcher, logging, I/O), and the lock serializes every registration of every app in the process behind it, including post-listen route/use/mount registrations. Concrete deadlock: thread T1 registers on app A, so its watcher runs holding A's monitor and LOCK. The watcher calls any synchronized config method of another app B, for example b.onRegistration(...), b.trustProxyHops(..) or b.ws(..), even one that would only throw ISE, and blocks taking B's monitor. Meanwhile T2 registers on a Router mounted in B: admitRouter takes B's monitor (holding()) and then waits for LOCK. Neither thread can continue, and there is no timeout. A watcher that waits for a Future doing a registration on another thread deadlocks the same way. The Javadoc forbids only registering from the watcher thread itself.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+     "line_range": "every former synchronized entry point (39 methods, e.g. 197-203 jsonCodec ... 1300-1330 freeze/registries) + 520-530 refuseForeignWatcher + builderHook ~1201 + DefaultRouteBuilder.add/use ~1385-1405"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationLog.java",
+     "line_range": "80-91"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/RegistrationListener.java",
+     "line_range": "12-19"
+    },
+    {
+     "path": "docs/api/app.md",
+     "line_range": "355"
+    },
+    {
+     "path": "docs/api/en/app.md",
+     "line_range": "340"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+     "line_range": "323-365"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M1-F03",
+  "severity": "LOW",
+  "title": "Monitor ordering by System.identityHashCode has no tie-break, so a hash collision gives a lock-order inversion",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationLog.java",
+   "line_range": "184-208, 218-238"
+  },
+  "description": "owners() sorts the mounting apps by identityHashCode only. Collections.sort is stable, so apps with equal hash codes keep the order of router.mounts. Router R1 mounted in A then B and Router R2 mounted in B then A, with identityHashCode(A)==identityHashCode(B) (rare but possible, since identity hashes are not unique), give T1 (R1 registration) locking A then B and T2 (R2 registration) locking B then A: a classic deadlock with no timeout.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationLog.java",
+     "line_range": "34-35, 46-47, 199-226"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+     "line_range": "367-384"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M2-F01",
+  "severity": "HIGH",
+  "title": "Default file refresh store keeps every rotated record until its own expiry, so the 8 MB file fills and all logins/refreshes answer 503",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java",
+   "line_range": "113-145"
+  },
+  "description": "TokenService.pair() saves a new RefreshRecord (expiresAt = now + refreshTtl) on every login AND every refresh rotation; markUsed() only sets usedAt, and purgeExpired() removes a record only after its own expiresAt. So one active session keeps one record per refresh made within refreshTtl alive (BASELINE: 14 d refresh / 15 min access -> ~450-1,300 live records per active user). Every save()/markUsed() copies the whole map and rewrites the whole JSON file (commit, line 114-134), and MiniJson.write throws JsonFormatException once the document exceeds DEFAULT_FILE_BYTES (8 MB, ~35k records of ~225 B). Scenario: FileUserStore (the device-server/small-install default) under BASELINE with ~80 active users, or one authenticated client looping POST /auth/refresh (no throttle on successful refresh) ~35k times: the file hits 8 MB, commit() throws, TokenService.call maps it to AuthUnavailableException, and every login and refresh of every user answers 503 until records expire (up to 14 days). Before that, each refresh rewrites up to 8 MB with fsync on the request path (quadratic total I/O).",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java",
+     "line_range": "21-32 (class Javadoc), 39 (USED_PER_FAMILY), 150-193 (save + pruneUsed + usedAt)"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+     "line_range": "380-428"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "923 (FileRefreshTokenStore row)"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "923 (FileRefreshTokenStore row)"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M2-F02",
+  "severity": "MEDIUM",
+  "title": "Guards on public paths accept a cookie session without the CSRF/Origin check",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "1374-1380, 1556-1567, 2106-2141"
+  },
+  "description": "For a public path (permitPrefix, or any path outside .protectOnly), handle() only calls attachOptional(), which resolves the naru_at cookie and attaches the principal without csrfRequired()/csrfTokens.passes()/Origins.passes(); guard() (require/requireRole/authenticated/check) then trusts that principal and never checks CSRF. Scenario: COOKIE transport, .protectOnly(\"/api\"), and an app route app.post(\"/account/close\", auth.authenticated(), ...) or app.delete(\"/teams/:id\", auth.require(\"teams:write\"), ...) outside the range (the doctor only WARNs that it is 'public with optional authentication'): a same-site attacker page (sibling subdomain, which SameSite=Strict does not stop) posts to it with the user's cookie and the guarded handler runs. The same holds for built-in DELETE /auth/me/apikeys/:id if the app permitPrefix-es its mount. docs/api/auth.md says cookie-authenticated writes need X-CSRF-Token; a guard is where users expect that protection.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "1506-1513 (csrfPasses), 1622-1633 (attachOptional)"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7CsrfTest.java",
+     "line_range": "101-112, 478-509"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "1185"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "1185"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M2-F03",
+  "severity": "MEDIUM",
+  "title": "Principal-required auth endpoints check CSRF before the 415 body-format step, against FR-FLOW-001's order",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "1429-1442"
+  },
+  "description": "FR-FLOW-001 fixes the order transport -> multiple credentials/key procedure -> body format (415) -> COOKIE body refreshToken (400) -> CSRF/Origin (403) and says the earliest step decides. In handle(), for POST /auth/password, POST /auth/me/apikeys and every POST under /auth/admin, the CSRF/Origin check (line 1429) runs before jsonBodyOk() (line 1440). Scenario: COOKIE mode, a valid naru_at, no X-CSRF-Token, POST /auth/password with Content-Type text/plain and a body -> 403 csrf_failed, while the spec order answers 415 UNSUPPORTED_MEDIA_TYPE (FR-FLOW-001 AC-1 states the same principle for login). No test covers the principal-required case (only refresh/login/admin-key variants exist).",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "1490-1504"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9RefreshTest.java",
+     "line_range": "561-577"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M2-F04",
+  "severity": "MEDIUM",
+  "title": "Builder default logger is not replaced by the app logger in most components, contrary to the documented default",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "332-403, 555-559"
+  },
+  "description": "Builder.logger() says 'the app's logger from install on when not called' (docs/api/auth.md line 91 says the same), but build() passes a new ConsoleLogger into AuditTrail (332), AccessTokens (350), EffectiveGrants (381), ApiKeyUsage (397), DefaultAuthUsers (403, final field), the default InMemoryLoginThrottle/InMemoryDeviceTrust (448/461) and the file throttle/device trust; install() only swaps Auth.logger, RehashQueue and TokenService. Scenario: an app with an SLF4J or Logcat logger and a failing audit sink or user store: 'auth: the user store failed in ... answering 503' (DefaultAuthUsers.call), audit sink failures, group-expansion warnings and the throttle/device-trust cap WARNs go to stdout instead of the app log, so operators miss them. docs/api/auth.md line 594 documents the opposite default (ConsoleLogger), so the two doc rows also disagree.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "224-225, 309-310, 346-348, 556-562, 1366-1414 (ComponentLogger), Builder.build ~3706"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthInstallTest.java",
+     "line_range": "197-229"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M2-F06",
+  "severity": "LOW",
+  "title": "InMemoryDeviceTrust can lose an invalidation when makeRoom evicts the entry another thread is counting",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/InMemoryDeviceTrust.java",
+   "line_range": "71-95, 148-185, 188-199"
+  },
+  "description": "recordFailure() reads Entry e from the map and later updates it under synchronized(e); makeRoom() (another thread at the cap) may pick that same not-invalidated entry as the victim and remove it in between. The first thread then sets invalidated=true on an orphaned Entry and returns true, but isInvalidated() later finds no entry and FileDeviceTrust's immediate write snapshots the map without it, so the token is trusted again. Only at the cap (10,000 tokens on Android). Also purge() drops expiresAt < now while purgeExpired() drops expiresAt <= now (inconsistent boundary).",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/InMemoryDeviceTrust.java",
+     "line_range": "23-36, 42-44, 76-118, 120-125, 176-232, 234-262"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/DeviceTrustEvictionRaceTest.java",
+     "line_range": "1-49 (new)"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M2-F07",
+  "severity": "LOW",
+  "title": "The final snapshot at stop runs before the background pool and failure floor stop",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "591-601, 669-679"
+  },
+  "description": "onStop calls stopCleanup() (which writes the last throttle/device-trust snapshot) before background.shutdownNow() and the floor scheduler shutdown. A login completion still running on the background pool after that snapshot records its failure in memory only, so it is lost at restart. Scenario: stop during a password-spraying burst; failures recorded in the last moments are not persisted, letting the attacker get a few more attempts per window after restart.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "593-610 (onStop)"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/HashSlots.java",
+     "line_range": "242-250"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthInstallTest.java",
+     "line_range": "231-266"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M3-F01",
+  "severity": "MEDIUM",
+  "title": "Concurrent refresh: reuse revocation can miss the winner's new refresh record (and logout can miss it too)",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenService.java",
+   "line_range": "113-125,180-192"
+  },
+  "description": "refresh() marks the presented record used (store.markUsed) and only then saves the new record in pair() -> store.save. With reuseGrace 0, a second concurrent presentation of the same token loses markUsed (or sees usedAt set) and calls reused() -> store.revokeFamily(fam). revokeFamily only flips the records that exist at that moment (InMemoryRefreshTokenStore.revokeFamily iterates existing entries; a SQL UPDATE behaves the same). Interleaving: A.markUsed=true; B.markUsed=false; B.revokeFamily(fam); A.pair() -> save(new record, revoked=false). Result: onRefreshTokenReused fired and the family is reported revoked, but A's freshly issued refresh token is unrevoked and keeps rotating. If A is the attacker who stole the token and raced the legitimate client, the attacker keeps a live session despite reuse detection (RFC 9700 4.14 intent). The same window lets a POST /auth/logout that revokes the family concurrently with a refresh leave the new token alive. Window = markUsed..save, i.e. JWT signing plus one store round trip (milliseconds with a JDBC store).",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenService.java",
+     "line_range": "140-148 (Javadoc), 186-203 (refresh tail)"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7TokenTest.java",
+     "line_range": "52-66 (CountingStore.beforeSave seam), 245-276 (two new tests)"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M3-F02",
+  "severity": "MEDIUM",
+  "title": "GrantRule treats a missing or disabled actor as 'no scopes' and still allows writes on scope-less targets",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/GrantRule.java",
+   "line_range": "66-74,101-122,130-141"
+  },
+  "description": "scopesOf(actorId) returns an empty set for a missing or disabled actor, and check() only tests coverage: for MODIFY, PASSWORD_RESET, DISABLE and DELETE with gained empty, a target whose effective scopes are empty passes every loop, so the write is allowed. The route guard that admitted the actor reads the principal cache, so an admin disabled (or deleted) directly in the store, or on another node within userCacheTtl, can still reset the password of or delete a user that holds no scopes (AdminEndpoints 374, 572-578 call check with an empty gained set). The class contract says the actor is re-read from the store precisely to close this cache window (SEC-IAM-004 AC-4), but a re-read that finds the actor gone or disabled does not refuse.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/GrantRule.java",
+     "line_range": "13-23 (class Javadoc), 76-93 (new actorScopes), 128, 151, 162-167"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AdminEndpoints.java",
+     "line_range": "929 (protectAffected)"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminEndpointsTest.java",
+     "line_range": "500-535"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M3-F03",
+  "severity": "MEDIUM",
+  "title": "KeySources.fromFile can overwrite a key file another process just created (rename replaces on POSIX)",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeySources.java",
+   "line_range": "117-163"
+  },
+  "description": "signingKey() checks file.exists() and create() later does 'if (!file.exists() && !tmp.renameTo(file) ...)'. On POSIX File.renameTo replaces an existing target, so two processes starting together on a fresh data dir (two instances on one host or a shared volume, or two Auth builds in one JVM) can both pass the exists check: A renames and reads key A, B renames over it and reads key B. A keeps signing with A while the file holds B; tokens issued by A fail on B and every A session dies at A's next restart. This contradicts the documented and SRS (SEC-TOKEN-004 AC-5) guarantee that an existing file is never overwritten.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeySources.java",
+     "line_range": "10-12, 62-75, 107-170"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/KeySourcesTest.java",
+     "line_range": "148-182"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "684"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "684"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M3-F04",
+  "severity": "MEDIUM",
+  "title": "PasswordChanges.selfService is a test-only second implementation of POST /auth/password without throttle, hold, slot or floor",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/PasswordChanges.java",
+   "line_range": "46-101"
+  },
+  "description": "selfService() is never called from main code (the endpoint AccountEndpoints.changePassword/changePasswordHeld has its own sequence and only reuses beforeUpdate/afterUpdate). Yet TokenServiceTest (370, 457, 491, 502), Wave8AccountTest 531 and Wave8RevocationTest 55 drive REL-IAM-002/FR-TOKEN-004 behaviour through it, so those tests verify a duplicate path rather than the production one: a regression in the endpoint's conflict/retry or revocation logic would not fail them. The duplicate is also weaker: a wrong current password answers 401 at once with no confirm throttle (CONFIRM_MAX), no per-user confirmation hold, no hash slot and no failure floor, so if anyone later wires it to a route it is an unthrottled password oracle for a stolen access token.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/PasswordChanges.java",
+     "line_range": "1-47 (selfService, call, locked, requireSession, conflict, the instance field and constructor removed; private constructor; Javadoc rewritten; beforeUpdate/afterUpdate kept unchanged)"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "296 (passwordChanges field removed), ~2939 (package-private passwordChanges() accessor removed)"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/TokenServiceTest.java",
+     "line_range": "11-46 (imports, class Javadoc), 84-124 (apps list, @After stopApps, serve(), changePassword(), accessToken()), 410-419 (FR_TOKEN_001_AC5), 495-509 (REL_IAM_002_AC3_AC5), 512-553 (REL_IAM_002_AC4_AC6)"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8AccountTest.java",
+     "line_range": "11 (unused HttpException import removed), 513-536 (refusals takes the target's token and posts POST /auth/password), 570-577"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8RevocationTest.java",
+     "line_range": "54-59"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M3-F06",
+  "severity": "LOW",
+  "title": "PAT issuance re-reads the caller in the slot but does not compare the request token's ver",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeyIssuance.java",
+   "line_range": "192-194,236-276"
+  },
+  "description": "confirmThenIssue receives only callerId; the slot re-reads the caller and checks only null/enabled. A session cut off by logout-all or a password change (ver raised) that is still admitted by another node's principal cache can, with the password, mint a personal API key bound to the new ver (owner = re-read caller), outliving the revocation. PasswordChanges/the password endpoint guard the same window with expectedVer. Carried from the 0.11.0-w10 review.",
+  "fix_meta": {
+   "status": "skipped",
+   "files_changed": []
+  }
+ },
+ {
+  "id": "M3-F08",
+  "severity": "LOW",
+  "title": "AtomicFiles.load reads a whole store file into memory with no size bound",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "line_range": "125-151"
+  },
+  "description": "read() copies the file into a growing ByteArrayOutputStream before the parser sees it, with no limit (toByteArray doubles the peak). A corrupt or attacker-grown file (e.g. a huge naru-groups file) makes start-up OOM instead of failing with the FAIL message; on Android the heap is small. Carried from the 0.11.0-w05 review.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+     "line_range": "13-28 (class Javadoc), 39-45 (TooLarge), 151-226 (load overload, size pre-check in parse, bounded sized read)"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+     "line_range": "65, 84-88, 97-100"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java",
+     "line_range": "56-57, 66-77"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileLoginThrottle.java",
+     "line_range": "59-60, 168-178"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileDeviceTrust.java",
+     "line_range": "46-47, 126-136"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java",
+     "line_range": "206-224"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+     "line_range": "430-445"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M3-F09",
+  "severity": "LOW",
+  "title": "Auth store files are written with the process umask, unlike the key file",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "line_range": "59-95"
+  },
+  "description": "write() creates <name>.tmp with default permissions (typically 0644 on a JVM host) and renames it over the store file, so a FileUserStore file (PBKDF2 hashes, token versions) and the throttle/refresh snapshots are readable by other local users; KeySources.fromFile restricts its file to the owner. Not an Android issue (app-private dir), but a shared Linux host leaks the hashes for offline cracking.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+     "line_range": "104-108 (ownerOnly call), 136-147 (ownerOnly)"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+     "line_range": "223-239"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M4-F01",
+  "severity": "MEDIUM",
+  "title": "SQLite issuance can return a pooled connection with an open BEGIN IMMEDIATE transaction",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcApiKeyStore.java",
+   "line_range": "593-626"
+  },
+  "description": "sqliteTransaction sets open=false before exec(\"COMMIT\") (605-606) and before exec(\"ROLLBACK\") (600-601), and the catch handles SQLException only. In rollback-journal mode (the SQLite default), COMMIT needs an EXCLUSIVE lock and returns SQLITE_BUSY when another connection or process keeps a SHARED read lock longer than busy_timeout. SQLite then keeps the transaction active ('the COMMIT can be retried'), but no ROLLBACK runs because open is already false. restoreSqlite runs and the connection goes back to the pool. JDBC still reports autocommit=true, so HikariCP does not roll it back on return. The pooled connection keeps its RESERVED/PENDING lock, so every later writer on another connection (login throttle upserts, refresh-token saves, the next issuance) gets SQLITE_BUSY until that physical connection is reused. A reused connection then fails BEGIN IMMEDIATE with 'cannot start a transaction within a transaction'. A RuntimeException thrown inside the transaction (for example a MiniJson JsonFormatException from scopes(k) in insertRow) also skips the ROLLBACK, because only SQLException is caught.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcApiKeyStore.java",
+     "line_range": "593-630"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcApiKeySqliteRollbackTest.java",
+     "line_range": "1-160 (new)"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M4-F02",
+  "severity": "MEDIUM",
+  "title": "addMember/addParent check-then-insert races deleteGroup and leaves orphan memberships that still grant the group",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcGroupStore.java",
+   "line_range": "145-185"
+  },
+  "description": "addMember runs requireGroup (a SELECT in its own autocommit connection), then a separate INSERT. No transaction or lock spans the two, and the tables have no foreign keys. Scenario: admin A calls DELETE group 'ops' while admin B calls addMember('ops', X), on the same node or on two MULTI_INSTANCE nodes. B's requireGroup sees the group; A's deleteGroup transaction deletes the members, edges and group row and commits; then B's INSERT IGNORE / ON CONFLICT DO NOTHING adds ('ops', X). The row survives with no group. GroupExpander (internal/GroupExpander.java:24) copies store.groupsOfUser(userId) into the principal's groups without checking that the group exists. X now carries group 'ops' in every request, so app guards on that group name pass for a deleted group. If 'ops' is created again later, X is a member without anyone adding them. addParent has the same window and leaves an orphan edge.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcGroupStore.java",
+     "line_range": "18-26, 88-114, 116-140, 180-186, 222-230"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcGroupStoreOrphanTest.java",
+     "line_range": "1-125 (new)"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "537"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "537"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M4-F03",
+  "severity": "LOW",
+  "title": "MySQL throttle_key uses the accent- and case-insensitive default collation, so distinct login names share a counter",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/AuthSchema.java",
+   "line_range": "98-102"
+  },
+  "description": "The id and username columns get COLLATE utf8mb4_bin on MySQL; the class Javadoc says this keeps 'jos\u00e9' and 'jose' apart. throttle_key VARCHAR(255) has no collation, so MySQL 8 uses utf8mb4_0900_ai_ci. Users 'jos\u00e9' and 'jose' are two rows in naru_users, but ThrottleKeys.loginUser gives 'login:u:jos\u00e9' and 'login:u:jose', which compare equal as primary keys. The ON DUPLICATE KEY upsert counts failures for both names in one row, and AdminEndpoints' reset(loginUser(jose)) also clears jos\u00e9's row. Ten failures against 'jose' lock 'jos\u00e9' out of user-only logins, and unlocking one account unlocks the other.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/AuthSchema.java",
+     "line_range": "20-21, 100"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/AuthSchemaTest.java",
+     "line_range": "111-121"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "536"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "536"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M4-F06",
+  "severity": "LOW",
+  "title": "Hex-form IPv4-mapped IPv6 addresses all collapse into the /64 bucket 0:0:0:0::/64",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/ThrottleKeys.java",
+   "line_range": "54-78"
+  },
+  "description": "ipKey maps '::ffff:1.2.3.4' to '1.2.3.4' only when the text contains a dot. The hex form of the same address, '::ffff:c000:201', goes through expand() to [0,0,0,0,0,ffff,c000,201], and its first four groups give '0:0:0:0::/64'. Every IPv4 client whose address arrives in hex-mapped form (for example from an X-Forwarded-For written by a dual-stack proxy) then shares one IP counter, so 20 failures from one of them make every such client get 429 on login (IP key) and on API-key auth (apikey:ip). '0:0:0:0:0:ffff:1.2.3.4' is also not normalized. Deferred from w05 ('ThrottleKeys does not normalize hex IPv4-mapped IPv6'); still present.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/ThrottleKeys.java",
+     "line_range": "9-11, 50-90, 92-135"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/ThrottleKeysTest.java",
+     "line_range": "1-37 (new)"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M4-F12",
+  "severity": "LOW",
+  "title": "MiniJson accepts non-ASCII hex digits in \\u escapes",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/MiniJson.java",
+   "line_range": "315-329"
+  },
+  "description": "The escape loop uses Character.digit(c, 16), which also accepts fullwidth and other Unicode digits and the fullwidth letters A-F. A \\u escape whose four digits are the fullwidth characters U+FF10 U+FF10 U+FF14 U+FF11 parses as 'A'. The class claims strict JSON (invalid escapes refused), and RFC 8259 allows only ASCII HEXDIG. The FILE profile therefore accepts auth files that other strict parsers refuse, and two spellings decode to the same string.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/MiniJson.java",
+     "line_range": "150-162, 335"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/MiniJsonTest.java",
+     "line_range": "114-126"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M5-F01",
+  "severity": "MEDIUM",
+  "title": "Nothing stops two FileUserStore instances, or two processes, from using one file; their writes overwrite each other and can roll back ver and password hashes",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+   "line_range": "17-61,196-205"
+  },
+  "description": "The class description says 'one file has one writer', but nothing enforces it. Each instance loads the file once into its own maps (lines 52-61). commit() then rewrites the whole file from that instance's in-memory copy (196-205), through the one shared '<name>.tmp' sibling. Failure scenario: an app builds two Auth instances, or a test and the app, each with new FileUserStore(new File(\"data/users.json\")). Instance A runs changePassword or bumpTokenVersion (ver 3 -> 4, new hash) and writes the file. Instance B still holds ver 3 and the old hash, and later writes any other change, such as a rehash, a role change or a new user. The file now holds ver 3 and the old password hash again. After a restart, the old password works and tokens revoked by the ver bump are valid again. If both instances write at once, both FileOutputStreams truncate and write the same .tmp, so the renamed file can be interleaved or corrupt and the next start FAILs. Deferred as w12 residual #2; still present.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+     "line_range": "19-30 (class Javadoc), 44-48 (fields), 90-94 (fingerprint), 101 (seen at load), 214-280 (commit under path lock, crcOf, refuseForeignChange)"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+     "line_range": "48-82 (LOCKS, lockFor), 94-100 (write holds the path lock)"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java",
+     "line_range": "226-260"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "437, 625"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "437, 625"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M5-F02",
+  "severity": "MEDIUM",
+  "title": "verifyUserStore's hash round-trip check misses a write-through-cached store whose disk format drops passwordHash, which is the Gson case it claims to catch",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/UserStoreContract.java",
+   "line_range": "132-149"
+  },
+  "description": "hashRoundTrip() reads the user back through the same store instance with findById/findByUsername right after create/update. A store that keeps rows in memory and persists them with Gson, the shape FileUserStore itself has, returns the cached AuthUser with its hash intact, so it passes. Its file has no hash (AuthUser.passwordHash is transient). Failure scenario: an app writes a GsonUserStore modeled on FileUserStore (a map plus a file rewrite), runs AuthTesting.verifyUserStore and gets PASS. In production every user loses their password at the first restart and nobody can log in. FR-IAM-004 states 'password-hash round trip after save and reload', and the failure message itself names the Gson/transient case, but the check reaches only stores that re-read their backing storage on every find.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/AuthTesting.java",
+     "line_range": "6-7, 66-92"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/UserStoreContract.java",
+     "line_range": "15-21, 36-70, 160-189"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/testing/VerifyUserStoreTest.java",
+     "line_range": "57-80, 92-95, 140-145, 268-330"
+    },
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthTestingReopenKotlinTest.kt",
+     "line_range": "1-26 (new)"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "1283-1284"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "1283-1284"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M5-F03",
+  "severity": "MEDIUM",
+  "title": "verifyUserStore never checks the security-critical 'a deleted id is never reused' clause of the UserStore contract",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/UserStoreContract.java",
+   "line_range": "64-98"
+  },
+  "description": "UserStore's first contract bullet (UserStore.java:13-14) says a deleted id is never reused, because an old group membership would grant its rights to the new user. The contract kit checks CRUD, duplicates, hashes, changePassword and field methods, but never creates a user after a delete and compares ids. Failure scenario: a custom SQLite store with 'id INTEGER PRIMARY KEY' and no AUTOINCREMENT, or a MAX(id)+1 store. Creating and then deleting the newest user frees its rowid, and the next create gets the same id and inherits its group memberships and per-id API keys. That store passes AuthTesting.verifyUserStore.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/UserStoreContract.java",
+     "line_range": "104-109"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/testing/VerifyUserStoreTest.java",
+     "line_range": "57-60, 117-124, 288-298"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "1283"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "1283"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M5-F11",
+  "severity": "LOW",
+  "title": "list(search) lower-cases only the search text, so 'ignoring case' fails for usernames stored with upper case",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+   "line_range": "268-285"
+  },
+  "description": "FileUserStore.list (275-279) and InMemoryUserStore.list (89-93) lower-case the needle but compare it with u.getUsername() as stored. Usernames written through auth are normalized, but UserStore.create is public and the stores accept any username. Failure scenario: a migration script calls store.create(AuthUser.builder().username(\"Alice\")...), and then A1 GET /auth/admin/users?search=ali (or search=Alice) does not list it, although the javadoc says the match ignores case.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+     "line_range": "346"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/InMemoryUserStore.java",
+     "line_range": "92"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java",
+     "line_range": "262-276"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T1-F01",
+  "severity": "MEDIUM",
+  "title": "FR-DX-012 AC-1 getenv scan weakened for Core classes (existing 0.10.0 test)",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StartApiTest.java",
+   "line_range": "147-229"
+  },
+  "description": "The 0.10.0 check flagged any Core class file whose bytes contained the string \"getenv\" (so a reflective System.class.getMethod(\"getenv\", ...) or a \"getenv\" string constant was caught). classify() now flags only an invokestatic (0xb8) of a java/lang/System.getenv Methodref, or a MethodHandle to it. That relaxation is needed to allow-list AuthMode#fromEnv, KeySources#fromEnv and Auth$Builder#recoveryFromEnv, but it is also applied to every Core class. Failure scenario: a Core class reading System.class.getMethod(\"getenv\", String.class).invoke(null, \"X\") used to fail FR_DX_012_AC1 and now passes. The test now asserts less for Core than in 0.10.0, which the review rules forbid.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/StartApiTest.java",
+     "line_range": "73-75 (comment), 81-96 (main scan calls scan()), 117-172 (new negative control FR_DX_012_AC1_reflectiveGetenvInCoreIsCaught, ReflectiveCoreEnvFixture, scan(), contains()), 196-201 and 239/283 (classify returns the class name)"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T1-F02",
+  "severity": "MEDIUM",
+  "title": "Started test apps and auth fixtures are never shut down; per-app daemon threads leak across the test JVM",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminEndpointsTest.java",
+   "line_range": "1-1084"
+  },
+  "description": "AdminEndpointsTest has about 40 starts through AdminFixture.start() (AdminFixture.java:294-363) and no shutdown. ProtectOnlyTest (12 starts), AuthErrorLayerTest (12), AuthHashSettingsTest (7), AuthDoctorTest, DescribeTest, RealJwtPathTest, CredentialTransportTest, TransportRuleTest, PreAuthOrderTest, PrincipalCacheTest, UserLifecycleTest, AuthBootstrapTest, AuthInstallTest, RequestIdAndSocketAddressTest, RefreshTokenStoreTest#FR_TOKEN_002_AC3 (line 106) and Wave10AccountTest (W8 has stop(), but this test has no @After) do the same. Each started Auth leaves a naru-auth-cleanup ScheduledThreadPoolExecutor thread (Auth.java:654), and may also leave the floor scheduler, HashSlots and background pools. Failure scenario: hundreds of idle daemon threads build up in the single Gradle test JVM. Tests that count or scan threads (RefreshTokenStoreTest.cleanupThreads/newCleanupThread) then depend on unrelated leftovers, and memory and thread limits grow on CI or Android-speed JVMs. Deferred from 0.11.0-w05 (MEDIUM) and w06 (LOW) and still present.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminFixture.java",
+     "line_range": "317-346 (stop(), static stopAll(List))"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminEndpointsTest.java",
+     "line_range": "17-29 (imports), 38-51 (fixtures list, fixture(), @After stopFixtures); 39 'new AdminFixture()' -> fixture()"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave6ComponentsTest.java",
+     "line_range": "imports, 36-49; 10 'new AdminFixture()' -> fixture()"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave6ReviewFixesTest.java",
+     "line_range": "25-28 (imports), 37-50; 8 'new AdminFixture()' -> fixture()"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/WebSocketWrapperTest.java",
+     "line_range": "8-18 (imports), 23-36; 9 'new AdminFixture()' -> fixture()"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave5ComponentsTest.java",
+     "line_range": "30-33 (imports), 40-57 (apps list, app(adapter), @After stopApps); 2 TestApp.create(adapter) -> app(adapter)"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave11ClosureTest.java",
+     "line_range": "896-909 (SEC_AUTH_002_AC3 TestApp in try/finally with shutdown)"
+    },
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletProxyTrustTest.java",
+     "line_range": "90-102 (inMemory() TestApp shut down in finally)"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T1-F03",
+  "severity": "LOW",
+  "title": "FR-TOKEN-002 AC-5 'default purgeExpired still runs' is checked only by thread liveness after a fixed 100 ms sleep",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+   "line_range": "289-303"
+  },
+  "description": "For a store that keeps the default purgeExpired, the test sleeps 100 ms and asserts thread2.isAlive(). A ScheduledThreadPoolExecutor keeps its worker alive even after a periodic task throws, because the throw only cancels later runs. So if the scheduler called the default method and it threw, or the task never ran, the assertion still passes. The 'runs' half of the AC is not observed. Deferred from 0.11.0-w05 and still present.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+     "line_range": "289-312"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T1-F04",
+  "severity": "LOW",
+  "title": "IR-IAM-005 AC-4 mount loop is vacuous; 'the app mounted nothing itself' is not asserted",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminEndpointsTest.java",
+   "line_range": "89-102"
+  },
+  "description": "The loop asserts assertNotNull(reg.getTarget()) only when it finds a ROUTER_MOUNT record at /auth/admin. If install stopped recording that mount, or mounted it under another path, the loop would run zero assertions and the test would still pass. Only the 200 on GET /auth/admin/users is effective. Deferred from 0.11.0-w06 and still present.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminEndpointsTest.java",
+     "line_range": "106-134"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T1-F07",
+  "severity": "LOW",
+  "title": "REL-IAM-001 AC-5 lock wait is shown by Thread.sleep(200) plus isAlive(), which passes when the thread simply has not run yet",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/UserLifecycleTest.java",
+   "line_range": "517-526"
+  },
+  "description": "After starting logoutAll, the test sleeps 200 ms and asserts logoutAll.isAlive(). On a slow or loaded JVM the thread may not have reached bumpTokenVersion within 200 ms, so the assertion passes even if bumpTokenVersion takes no lock at all. The test cannot fail in the direction that matters when the scheduler is slow. The end assertion (ver 8, team b) does not show ordering either, because a non-locked ver++ applied before the profile write would also end with ver 8 if the profile write re-reads.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/UserLifecycleTest.java",
+     "line_range": "517-540"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T2-F01",
+  "severity": "MEDIUM",
+  "title": "IR-FLOW-002 AC-5 / FR-APIKEY-004 AC-9 / REL-TOKEN-001 AC-5 'worker is free' assertion cannot fail",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+   "line_range": "1098-1146"
+  },
+  "description": "The test claims the async registration means 'a request waiting for a hash slot holds no worker thread' and that 'a non-auth route still answers without waiting'. Its only proof besides the instanceof AsyncRouteHandler check is f.get(\"/api/x\") returning 200 after Thread.sleep(200). InMemoryHttpAdapter.send runs the exchange on the caller thread and submit() uses Executors.newCachedThreadPool (unbounded), so there is no worker pool to exhaust: a synchronous handler that blocked an adapter thread in HashSlots would pass exactly the same way. The isDone()==false checks after the fixed 200 ms sleep also hold if the requests have not even reached the slot yet. Scenario: someone re-registers /auth/me/apikeys with method() but keeps an AsyncRouteHandler wrapper that blocks inside, or the adapter's dispatch blocks; the behavioural half still passes.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/W8.java",
+     "line_range": "50-72"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+     "line_range": "1098-1160"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+     "line_range": "1211-1265"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T2-F02",
+  "severity": "MEDIUM",
+  "title": "REL-APIKEY-002 AC-1: half of the '100 concurrent requests' bypass the request path",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+   "line_range": "758-796"
+  },
+  "description": "The AC asks for 100 concurrent requests with stale keys of one owner observed at vers 5 and 6. The odd-numbered tasks call f.auth.apiKeyOwners().scheduleStale(u1, 5) directly and return a hard-coded 401, so the ver-5 path never goes through key authentication (cached principal -> stale check -> schedule). The test therefore does not check that a real request holding a cached ver-5 principal schedules (or coalesces into) the one pending deletion; a regression in the request path's ver-5 branch (e.g. scheduling with the cached ver, or not scheduling at all) is invisible because the internal call stands in for it.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+     "line_range": "762-796"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+     "line_range": "1211-1222"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T2-F03",
+  "severity": "MEDIUM",
+  "title": "Fixed sleep makes the A4 re-check test pass without exercising the re-check",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave6ReviewFixesTest.java",
+   "line_range": "128-152"
+  },
+  "description": "a4RechecksTheGrantRuleAfterTheHashWait sleeps 200 ms and assumes 'the first grant check has passed; the A4 waits for the slot'. On a slow CI or Android-speed JVM the PATCH may not have reached the first grant check within 200 ms; then setRoles(bob, admin) happens first, the first check already refuses with 403 and the test passes even if the re-check under the user lock were removed. The test can only fail (catch the regression) when scheduling happens to be fast.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave6ReviewFixesTest.java",
+     "line_range": "155-170"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T2-F04",
+  "severity": "MEDIUM",
+  "title": "IR-APIKEY-004 AC-6: the lastUsedAt and off-request failure cases never prove the failure happened",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ApiKeyTest.java",
+   "line_range": "300-319"
+  },
+  "description": "failing(\"updateLastUsed\", ...) removes the failure flag in its finally block as soon as the response returns, but the lastUsedAt update runs on the background executor (DR_APIKEY_001_AC5 in the same file has to keep it failing and poll for the WARN for exactly this reason). So the store failure is usually never injected and assertEquals(200) cannot fail. Likewise the stale/invariant/deleteExpired failures are injected after the 401 responses s and v were already captured, and nothing asserts that deleteStaleByOwner/deleteById/deleteExpired were actually reached or logged, so the 'leave the response unchanged' half of the AC is vacuous.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ApiKeyTest.java",
+     "line_range": "104-114"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ApiKeyTest.java",
+     "line_range": "278-320"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T2-F05",
+  "severity": "LOW",
+  "title": "Wall-clock bound on the 429 latency will flake on slow CI",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ThrottleTest.java",
+   "line_range": "168-189"
+  },
+  "description": "SEC_FLOW_011_AC5 asserts the throttled login answers in < 400 ms measured by System.nanoTime over a full in-memory HTTP exchange (MiniJson parse, throttle lookups, response write). A GC pause or an Android-speed / heavily loaded CI JVM can exceed 400 ms and fail the test although no floor was applied. The structural check (no Thread.sleep in the source files) is also weak: it misses TimeUnit.sleep, LockSupport.parkNanos or a scheduled delay through FailureFloor.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ThrottleTest.java",
+     "line_range": "156-200"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T2-F06",
+  "severity": "MEDIUM",
+  "title": "REL-FLOW-001 AC-3 scheduler test relies on fixed sleeps around a 50 ms tick",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ThrottleTest.java",
+   "line_range": "329-348"
+  },
+  "description": "The test sleeps 200 ms to show 'nothing changed, nothing written' (passes vacuously if the scheduler has not ticked yet), then after the first write sleeps 150 ms 'because a tick may fall between the keys of one failed login', samples the count, sleeps 300 ms and asserts no further write. If the scheduler thread is starved for more than 150 ms after a tick that landed between the throttle keys of the failed login, the catch-up write lands inside the 300 ms window and the test fails although behaviour is correct.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "662-668"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "704-722"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ThrottleTest.java",
+     "line_range": "338-372"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T2-F08",
+  "severity": "LOW",
+  "title": "SEC-IAM-003 AC-3 (API key row) ends with an assertion on a value the test itself set",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8ApiKeysTest.java",
+   "line_range": "898-916"
+  },
+  "description": "The last three lines build a HashSet, add k, and assertEquals(1, seen.size()). This can never fail and checks nothing about the AC; it reads as if it verified uniqueness of something.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8ApiKeysTest.java",
+     "line_range": "898-907"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T2-F09",
+  "severity": "LOW",
+  "title": "Fixed 50 ms sleep before asserting 'no rehash' after checkPassword",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8AccountTest.java",
+   "line_range": "649-666"
+  },
+  "description": "SEC_IAM_002_AC1 asserts that a true checkPassword does not rehash by sleeping 50 ms and then checking the stored hash and rehashQueue().size() == 0. If a rehash were wrongly enqueued and the worker had dequeued it but not finished hashing/writing at the 50 ms mark, both checks pass. The negative is only probabilistic.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/RehashQueue.java",
+     "line_range": "42-100"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave8AccountTest.java",
+     "line_range": "656-668"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T2-F14",
+  "severity": "LOW",
+  "title": "Logged-error assertion compares ERROR baseline with ERROR+WARN total",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave11ClosureTest.java",
+   "line_range": "514-530"
+  },
+  "description": "errors = f.logger.count(\"ERROR\") is taken before the failing routes, but the check is count(\"ERROR\") + count(\"WARN\") >= errors + 4; every WARN logged at start (doctor findings etc.) counts toward the 4, so this line can pass with nothing new logged. The later per-route countMatching checks carry the real weight.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave11ClosureTest.java",
+     "line_range": "514-514"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T3-F01",
+  "severity": "MEDIUM",
+  "title": "IR-IAM-004 AC-6 'one lock' race test almost never runs into the race it is named for",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/group/GroupAdminStoreTest.java",
+   "line_range": "171-216"
+  },
+  "description": "IR_IAM_004_AC6_oneLockAndDurableFile starts two threads on a latch, and each one calls addParent(a,b) or addParent(b,a) once on a two-group graph. The check-then-insert takes microseconds, and thread wake-up jitter after go.countDown() is usually larger than that, so the two calls nearly always run one after the other. Then the second call sees the first edge and is refused as a cycle (refused.size()==1), whether or not InMemoryGroupStore holds one lock over the check and the insert. Example: remove the synchronization from InMemoryGroupStore.addParent (check under one lock, insert under another, or no lock) and all 20 rounds would still pass on almost every run. So the AC's concurrency guarantee has no real evidence.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/GroupGraph.java",
+     "line_range": "24-26"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/GroupGraph.java",
+     "line_range": "140-150"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/InMemoryGroupStore.java",
+     "line_range": "81-86"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/group/GroupAdminStoreTest.java",
+     "line_range": "171-235"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T3-F02",
+  "severity": "MEDIUM",
+  "title": "200 ms wall-clock upper bound in the bcrypt cost-cap test fails on slow CI",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/password/BcryptPasswordHasherTest.java",
+   "line_range": "73-89"
+  },
+  "description": "SEC_TOKEN_008_AC3 measures one verify() with System.nanoTime() and asserts millis < 200 to prove that the cost-15 key schedule was skipped. On a loaded CI agent or an Android-speed JVM, a GC pause or scheduler stall, or the first-call class loading and static S-box init of Blowfish/BcryptPasswordHasher (this is the first bcrypt call in the method), can push a cheap refused verify past 200 ms. The test then fails while the product is correct. The same method then runs a real cost-15 verify (raised.verify), which takes about 2-3 s on a desktop JVM and longer on CI, with no timeout. The skipped-work property is better proven structurally.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Blowfish.java",
+     "line_range": "19-30"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Blowfish.java",
+     "line_range": "96-100"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/password/BcryptPasswordHasherTest.java",
+     "line_range": "73-98"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T3-F04",
+  "severity": "LOW",
+  "title": "A fixed 50 ms sleep is the only guard against an asynchronous wrong close",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/WebSocketWrapperTest.java",
+   "line_range": "204-210"
+  },
+  "description": "FR_FLOW_008_AC8 asserts o.server.isOpen() after each tick, then sleeps 50 ms ('a wrong asynchronous close would have reached the channel by now') and asserts channel.isOpen(). If a regression closes the session asynchronously, for example on the ticker's executor, and that close arrives later than 50 ms on a slow CI JVM, the test passes. The negative check depends on timing and gets weaker exactly where it matters.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/WebSocketWrapperTest.java",
+     "line_range": "216-246"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T3-F05",
+  "severity": "LOW",
+  "title": "shutdown test may never put the synchronous caller in the queue before shutdown",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/HashSlotsTest.java",
+   "line_range": "186-224"
+  },
+  "description": "shutdownFailsWaitersAndRefusesLaterRequests starts the sync caller and sleeps 100 ms, assuming the caller is blocked in the queue by then. On a slow JVM the thread may reach slots.call() only after slots.shutdown(). Its AuthUnavailableException then comes from the 'refused after shutdown' path, so the test passes without proving that shutdown wakes and fails a queued synchronous waiter. Also, the finally block only counts hold down and never calls slots.shutdown(). If started.await or an earlier assertion fails, the 1-slot pool's hash and timer threads leak.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/HashSlotsTest.java",
+     "line_range": "191-240"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T3-F06",
+  "severity": "LOW",
+  "title": "FR-APIKEY-002 AC-5 tail assertion can never fail; 'after onStop no further call' is not checked by call count",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java",
+   "line_range": "895-905"
+  },
+  "description": "After f.stop() the test builds a fresh W8 'none' without .apiKeys(keys), calls none.auth.cleanupRun() and asserts keys.expiredCalls is unchanged. 'none' has no reference to the test's Keys instance, so the count cannot change and assertEquals(calls, keys.expiredCalls.get()) is always true. The 'after onStop no further call' half is covered only by the cleanupScheduled() flag. A regression where onStop clears the flag but a still-running scheduled task calls deleteExpired again would pass.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java",
+     "line_range": "905-933"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T3-F07",
+  "severity": "LOW",
+  "title": "CLAIMS 8 KB total is never accepted at its boundary; the 'eightKb' document is 16 bytes",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/MiniJsonTest.java",
+   "line_range": "57-87"
+  },
+  "description": "SEC_TOKEN_002_AC2 builds justFits (exactly 8192 bytes) but expects it to be refused for its 1 KB string. It then parses 'eightKb', which is {\"s\":\"\",\"t\":[1]} (repeat(' ',0) and repeat('1',1)), only 16 bytes. 'many' is over 8192. No CLAIMS document of exactly 8192 bytes is ever accepted, so an off-by-one that refuses total == 8192 passes this AC test. The variable name suggests the boundary was meant to be covered.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/MiniJsonTest.java",
+     "line_range": "57-80"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T3-F08",
+  "severity": "LOW",
+  "title": "assertEquals(null, made) in the catch block cannot fail",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/password/PasswordHashersTest.java",
+   "line_range": "177-185"
+  },
+  "description": "In FR_TOKEN_003_AC5 'made' is assigned only if hash() returns, and in that case fail() throws before the catch. Inside catch(UnsupportedOperationException), made is therefore always null, so the assertion checks a value the test itself set.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/password/PasswordHashersTest.java",
+     "line_range": "177-190"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T3-F09",
+  "severity": "LOW",
+  "title": "Assertion on the test's own exception message",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/rbac/RolePolicyTest.java",
+   "line_range": "139-141"
+  },
+  "description": "throwingRoleStorePropagates ends with assertFalse(down.getMessage().isEmpty()), where 'down' is the IllegalStateException(\"db down\") the test created. It checks no product behavior.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/rbac/RolePolicyTest.java",
+     "line_range": "133-146"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T3-F10",
+  "severity": "LOW",
+  "title": "IR-AUTH-004 AC-8 test ends with an assertion on a local null",
+  "location": {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFacadeKotlinTest.kt",
+   "line_range": "57-62"
+  },
+  "description": "val p: AuthPrincipal? = null; assertEquals(null, p?.apiKeyId) is always true. If the intent is a compile-time probe that AuthPrincipal.apiKeyId is a nullable property, the runtime assertion adds nothing and looks like a check.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFacadeKotlinTest.kt",
+     "line_range": "50-70"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T3-F11",
+  "severity": "LOW",
+  "title": "Dead set and tautological assertion in the Javadoc test",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/ForwardingUserStoreTest.java",
+   "line_range": "181-182"
+  },
+  "description": "IR_IAM_002_AC5 ends with Set<String> unused = Collections.emptySet(); assertTrue(unused.isEmpty()); \u2014 dead code with an assertion that cannot fail.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/ForwardingUserStoreTest.java",
+     "line_range": "180-195"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T3-F16",
+  "severity": "LOW",
+  "title": "Wall-clock upper bounds used as proof that a call does not block",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/RehashQueueTest.java",
+   "line_range": "168-171"
+  },
+  "description": "fullQueueDropsWithoutBlockingAndAcceptsLater asserts that the 101st offer returns within 1 s of System.nanoTime(). The same pattern is in Wave9KeyAuthTest.SEC_APIKEY_004_AC8 (two in-memory requests < 3 s, lines 381-384) and HashSlotsTest.fullQueueRefusesImmediatelyWithoutRunningTheWork (< 1000 ms at line 83, already implied by the await(1, SECONDS) on line 82). A stalled CI JVM can break these bounds while the code is correct. In the HashSlots case the bound is redundant. The non-blocking property is better shown structurally: offer() returned false while the worker is still parked in the hasher, and nothing waited on the queue.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/RehashQueueTest.java",
+     "line_range": "168-176"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java",
+     "line_range": "378-392"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/HashSlotsTest.java",
+     "line_range": "76-85"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T4-F01",
+  "severity": "MEDIUM",
+  "title": "SEC-TOKEN-009 AC-8 Servlet half: the \"answered while the failure waits\" assertion cannot fail",
+  "location": {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAuthFailureFloorTest.java",
+   "line_range": "124-133"
+  },
+  "description": "healthAt is taken right after the synchronous /health call returns, and failedAt is taken after failing.get(...), which is only called after /health has returned. System.nanoTime is monotonic, so failedAt >= healthAt on every run and `healthAt < failedAt` holds whatever the server does. Scenario: the floor is changed to sleep inside the request thread, or Jetty serves /health only after the delayed 401 is written; the test still passes. Nothing checks that the failing login was still pending when /health answered (Thread.sleep(10) does not even guarantee the login reached the server first). The SRS evidence for SEC-TOKEN-009 AC-8 (VE-2, Servlet half) therefore does not cover the concurrency clause of the AC.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletAuthFailureFloorTest.java",
+     "line_range": "66-180"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T4-F02",
+  "severity": "MEDIUM",
+  "title": "TinyHttpd AC-8 check compares durations from separate starts, so it does not show the two requests overlapped",
+  "location": {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AuthFailureFloorSocketTest.java",
+   "line_range": "210-219"
+  },
+  "description": "health.millis and failed.millis are each measured from that request's own start. If the pool thread opens its socket late (the 10 ms Thread.sleep is the only ordering) and /health is answered before the failing login arrives, the failure still takes T + 1.25T, so `health.millis + 10 < failed.millis` holds although the two requests never overlapped. The AC clause \"a concurrent non-auth request is answered while the failure waits\" is then not shown. With 4 workers a floor that blocks its worker would also pass, but that half is covered by the AC-5 test. Earlier waves deferred this as \"floor-test wall-clock margins\" (W10); it is still there.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AuthFailureFloorSocketTest.java",
+     "line_range": "73-250"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T4-F03",
+  "severity": "LOW",
+  "title": "AC-5 check compares a loaded-server latency with one idle-server probe",
+  "location": {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AuthFailureFloorSocketTest.java",
+   "line_range": "233-254"
+  },
+  "description": "floorMillis comes from a single probe on an idle server, and health.millis is measured while 50 logins each run a 200 000-iteration PBKDF2. On a slow 2-vCPU CI or an Android-speed JVM, CPU contention can push /health past one idle floor, and the test then fails for timing alone. The sleep max(20, floor/4) is also a fixed wall-clock wait. This is the deferred W10 \"floor-test wall-clock margins\" item; it is still present.",
+  "fix_meta": {
+   "status": "skipped",
+   "files_changed": [
+    {
+     "path": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/AuthFailureFloorSocketTest.java",
+     "line_range": "265-280"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T4-F04",
+  "severity": "LOW",
+  "title": "Expected AuthRejection on refresh-token reuse has no fail() when nothing is thrown",
+  "location": {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave7KotlinTest.kt",
+   "line_range": "97-102"
+  },
+  "description": "The second refresh(pair.refreshToken) is wrapped in try/catch(AuthRejection) with no fail() after the call. If reuse detection started returning a new pair and still fired onRefreshTokenReused, the test would pass, although the docs example (auth.md#35) says a reused token is rejected.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave7KotlinTest.kt",
+     "line_range": "97-104"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T4-F05",
+  "severity": "LOW",
+  "title": "Two docs-example tests run with no assertion",
+  "location": {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave7KotlinTest.kt",
+   "line_range": "133-170"
+  },
+  "description": "`docs auth csrf guarded route` (133-142) and `docs auth cors before install` (159-170) only build and install. They pass as long as nothing throws, so a guard that let a POST without a CSRF token through, or an install that dropped the CORS middleware, would not be noticed. As T11 compile checks they are acceptable, but their names suggest a behaviour check.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave7KotlinTest.kt",
+     "line_range": "106-165"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T4-F06",
+  "severity": "LOW",
+  "title": "The \"lockout and websocket wrapper\" test checks neither the lockout nor the wrapper",
+  "location": {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave6KotlinTest.kt",
+   "line_range": "26-42"
+  },
+  "description": "Lockout.after(3).forMinutes(1) is set but no failed login is ever attempted. The auth.webSocket { } wrapper is registered on an app that is never started or sent an upgrade, so its lambda never runs. `auth.describe().contains(\"auth\")` is close to always true. Only the token-service half is asserted.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave6KotlinTest.kt",
+     "line_range": "1-81"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T4-F07",
+  "severity": "LOW",
+  "title": "The JDBC half of \"refresh token stores from Kotlin\" is a tautology",
+  "location": {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave5KotlinTest.kt",
+   "line_range": "140-157"
+  },
+  "description": "The comment says the in-memory, file and JDBC stores share one SPI, but the JDBC store is checked only by `assertEquals(\"JdbcRefreshTokenStore\", JdbcRefreshTokenStore::class.java.simpleName)`, which compares a class with its own name and cannot fail. Nothing calls JdbcRefreshTokenStore from Kotlin.",
+  "fix_meta": {
+   "status": "not_reproduced",
+   "files_changed": []
+  }
+ },
+ {
+  "id": "T4-F10",
+  "severity": "LOW",
+  "title": "Duplicate transient-hash tests, and the AC-2 \"negative control\" does not test the checker",
+  "location": {
+   "file": "src/test/java/com/snoworca/naruserve/docs/AuthDocsTest.java",
+   "line_range": "38-191"
+  },
+  "description": "transientHashLimitIsDocumented (38-50) and DR_IAM_001_AC7_transientHashLimitInJavadocAndDocs (78-95) assert the same KO_HASH/EN_HASH and the same AuthUser Javadoc, so a change has to be made twice. In CON_AUTH_005_AC2 the \"negative control\" `assertFalse(ko.contains(\"`NoSuchAuthType`\"))` (190) only checks that the page lacks a made-up string. It never runs the missing-type logic on an absent type, so a broken check (for example publicUtilsTypes() returning the wrong names) would not be caught. Compare CON_AUTH_005_AC3, which feeds apiEntryGaps a synthetic page.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "src/test/java/com/snoworca/naruserve/docs/AuthDocsTest.java",
+     "line_range": "1-6, 175-206"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T4-F14",
+  "severity": "LOW",
+  "title": "The AC-5 test checks no response values under the hop setting",
+  "location": {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletProxyTrustTest.java",
+   "line_range": "131-140"
+  },
+  "description": "For \"hops=1\" the body check is skipped entirely, including socketAddress() (the first token), which must still equal the captured getRemoteAddr() 198.51.100.20 under every setting. SEC-SVL-001 AC-5 asks that the exchange values equal the captured values for every setting and header combination. Under hops the test verifies only the call recording.",
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletProxyTrustTest.java",
+     "line_range": "137-152"
+    }
+   ]
+  }
+ }
+]

@@ -1,0 +1,669 @@
+{
+ "chunk": "T1",
+ "round": 1,
+ "findings": [
+  {
+   "id": "T1-F01",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "FR-DX-012 AC-1 getenv scan weakened for Core classes (existing 0.10.0 test)",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StartApiTest.java",
+    "line_range": "147-229"
+   },
+   "description": "The 0.10.0 check flagged any Core class file whose bytes contained the string \"getenv\" (so a reflective System.class.getMethod(\"getenv\", ...) or a \"getenv\" string constant was caught). classify() now flags only an invokestatic (0xb8) of a java/lang/System.getenv Methodref, or a MethodHandle to it. That relaxation is needed to allow-list AuthMode#fromEnv, KeySources#fromEnv and Auth$Builder#recoveryFromEnv, but it is also applied to every Core class. Failure scenario: a Core class reading System.class.getMethod(\"getenv\", String.class).invoke(null, \"X\") used to fail FR_DX_012_AC1 and now passes. The test now asserts less for Core than in 0.10.0, which the review rules forbid.",
+   "suggested_fix": "Keep the old substring check for every class outside com/snoworca/naruserve/utils/auth/ (Core), and use the method-level classify() plus ENV_READERS only for utils/auth classes. Or add a constant-pool UTF-8 \"getenv\" check that fails for any non-allowed class that has no Methodref. Add a reflective-getenv fixture as a negative control.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "regression"
+   ]
+  },
+  {
+   "id": "T1-F02",
+   "axis": "P4",
+   "severity": "MEDIUM",
+   "title": "Started test apps and auth fixtures are never shut down; per-app daemon threads leak across the test JVM",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminEndpointsTest.java",
+    "line_range": "1-1084"
+   },
+   "description": "AdminEndpointsTest has about 40 starts through AdminFixture.start() (AdminFixture.java:294-363) and no shutdown. ProtectOnlyTest (12 starts), AuthErrorLayerTest (12), AuthHashSettingsTest (7), AuthDoctorTest, DescribeTest, RealJwtPathTest, CredentialTransportTest, TransportRuleTest, PreAuthOrderTest, PrincipalCacheTest, UserLifecycleTest, AuthBootstrapTest, AuthInstallTest, RequestIdAndSocketAddressTest, RefreshTokenStoreTest#FR_TOKEN_002_AC3 (line 106) and Wave10AccountTest (W8 has stop(), but this test has no @After) do the same. Each started Auth leaves a naru-auth-cleanup ScheduledThreadPoolExecutor thread (Auth.java:654), and may also leave the floor scheduler, HashSlots and background pools. Failure scenario: hundreds of idle daemon threads build up in the single Gradle test JVM. Tests that count or scan threads (RefreshTokenStoreTest.cleanupThreads/newCleanupThread) then depend on unrelated leftovers, and memory and thread limits grow on CI or Android-speed JVMs. Deferred from 0.11.0-w05 (MEDIUM) and w06 (LOW) and still present.",
+   "suggested_fix": "Give AdminFixture and the local TestApp helpers a stop() (app.shutdown(5, SECONDS)), call it from @After (as Wave10CarryTest and Wave10KeyWebSocketTest do for W8), and add @After to Wave10AccountTest. Or make TestApp.stop() public and register started apps in a JUnit rule.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "deferred"
+   ]
+  },
+  {
+   "id": "T1-F03",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "FR-TOKEN-002 AC-5 'default purgeExpired still runs' is checked only by thread liveness after a fixed 100 ms sleep",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+    "line_range": "289-303"
+   },
+   "description": "For a store that keeps the default purgeExpired, the test sleeps 100 ms and asserts thread2.isAlive(). A ScheduledThreadPoolExecutor keeps its worker alive even after a periodic task throws, because the throw only cancels later runs. So if the scheduler called the default method and it threw, or the task never ran, the assertion still passes. The 'runs' half of the AC is not observed. Deferred from 0.11.0-w05 and still present.",
+   "suggested_fix": "Observe a run: for example, count deleteExpired calls of an ExpiringKeys store set next to the NoPurgeStore, or use a RecordingLogger and assert that no cleanup ERROR was logged after at least two intervals (wait with await(), not a fixed sleep).",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "deferred"
+   ]
+  },
+  {
+   "id": "T1-F04",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "IR-IAM-005 AC-4 mount loop is vacuous; 'the app mounted nothing itself' is not asserted",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminEndpointsTest.java",
+    "line_range": "89-102"
+   },
+   "description": "The loop asserts assertNotNull(reg.getTarget()) only when it finds a ROUTER_MOUNT record at /auth/admin. If install stopped recording that mount, or mounted it under another path, the loop would run zero assertions and the test would still pass. Only the 200 on GET /auth/admin/users is effective. Deferred from 0.11.0-w06 and still present.",
+   "suggested_fix": "Count the matching ROUTER_MOUNT records and assert exactly one (or assert the expected admin ROUTE records), and assert that no registration has a target created by the test.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "deferred"
+   ]
+  },
+  {
+   "id": "T1-F05",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "SEC-IAM-007 AC-1 'the handler does not run' is inferred from the response text",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminEndpointsTest.java",
+    "line_range": "242-250"
+   },
+   "description": "The test proves the handler did not run with assertFalse(r.text().contains(\"items\")) on the 401 response. A handler that ran (and read the store or wrote audit) before the 401 was sent would still pass. The SEC-IAM-007 AC-4 loop (288-302) likewise accepts any status other than 401 or 403, including 404 or 500 from a wrongly substituted path. Deferred from 0.11.0-w06 (handler-run counters) and still present.",
+   "suggested_fix": "Wrap the user store in a counting ForwardingUserStore (as CredentialTransportTest does) and assert zero list/findById calls on the 401. In AC-4, assert that each status is in the route's expected success or validation set.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "deferred"
+   ]
+  },
+  {
+   "id": "T1-F06",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "OPS-AUTH-002 AC-2 checks only the raw secret string, not encoded key forms",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/DescribeTest.java",
+    "line_range": "57-71"
+   },
+   "description": "The test asserts that the startup log and describe() do not contain SECRET or the marker password, but it does not check the key bytes in base64, base64url or hex, which is how a key or HMAC material would typically be printed. Failure scenario: describe() printing the derived signing key in base64 passes this test. Deferred from 0.11.0-w05 and still present.",
+   "suggested_fix": "Also assert that the log lines and describe() contain none of Base64 (standard and URL, with and without padding) and hex encodings of SECRET.getBytes(UTF_8) and of a.keySet().getSigningKey().",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "deferred"
+   ]
+  },
+  {
+   "id": "T1-F07",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "REL-IAM-001 AC-5 lock wait is shown by Thread.sleep(200) plus isAlive(), which passes when the thread simply has not run yet",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/UserLifecycleTest.java",
+    "line_range": "517-526"
+   },
+   "description": "After starting logoutAll, the test sleeps 200 ms and asserts logoutAll.isAlive(). On a slow or loaded JVM the thread may not have reached bumpTokenVersion within 200 ms, so the assertion passes even if bumpTokenVersion takes no lock at all. The test cannot fail in the direction that matters when the scheduler is slow. The end assertion (ver 8, team b) does not show ordering either, because a non-locked ver++ applied before the profile write would also end with ver 8 if the profile write re-reads.",
+   "suggested_fix": "Wait until logoutAll.getState() is BLOCKED or WAITING (bounded poll), or put a hook in MinimalStore.bumpTokenVersion that records whether it entered while the mutator latch was still held, and assert that it did not.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T1-F08",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Public package lists are hand-maintained; a new public utils package silently escapes every API surface check",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java",
+    "line_range": "30-43, 96-110"
+   },
+   "description": "publicTypes() skips every jar package not in PUBLIC_PACKAGES, and AuthKotlinContractTest.AUTH_PACKAGES is a second copy of that list. Nothing compares the packages actually in the jar against the list. Failure scenario: adding com.snoworca.naruserve.utils.auth.oauth with public types and no @NullMarked package-info, or with java.time in its signatures, passes CON_AUTH_004_AC1, the FR-KT nullability and keyword checks and TimeSourceTest.IR_AUTH_001_AC3.",
+   "suggested_fix": "In AuthKotlinContractTest (or ApiJarClasses), enumerate every package under com/snoworca/naruserve/ in the jar and assert that each is in PUBLIC_PACKAGES or ends with '.internal'. Derive AUTH_PACKAGES from PUBLIC_PACKAGES by the utils prefix instead of copying it.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T1-F09",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Stale stand-in Javadoc; SEC-FLOW-004 AC-1/6/8/9 still run only against the fake TokenVerifier",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/CredentialTransportTest.java",
+    "line_range": "17-21"
+   },
+   "description": "CredentialTransportTest (17-21), AuthTestSupport (18-22) and TransportRuleTest (17-20) still say the JWT verifier or the account endpoints are 'not built yet', but both now exist (RealJwtPathTest, AccountEndpoints). The w04 deferred item 'SEC-AUTH-005, SEC-FLOW-004 and IR-AUTH-002 tests use a test TokenVerifier; re-run them with real JWTs' is only partly closed: RealJwtPathTest covers SEC-FLOW-004 AC-2 and AC-3 and SEC-AUTH-005 AC-3. SEC-FLOW-004 AC-1, AC-6, AC-8 and AC-9 (for example AC-9's 'Bearer forged' leading to invalid_token) are proven only with TestTokens, so a real-verifier regression on those paths, such as a forged JWT answered 400 instead of 401, is not caught.",
+   "suggested_fix": "Update the three Javadocs to say the stand-ins isolate the transport rule on purpose. Add real-JWT variants of SEC-FLOW-004 AC-1, AC-6, AC-8 and AC-9 to RealJwtPathTest, or parameterize CredentialTransportTest over TestTokens and the real verifier.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "doc",
+    "deferred"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java",
+   "hunks_total": 2,
+   "anchors": [
+    "/** The public API packages; {@code internal} is outside the method-level checks. */",
+    "\"com.snoworca.naruserve\", \"com.snoworca.naruserve.spi\", \"com.snoworca.naruserve.routing\"));"
+   ],
+   "findings": [
+    "T1-F08"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClassesAccess.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AuthKotlinContractTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/CrossModuleAuthCompatTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "hunks_total": 4,
+   "anchors": [
+    "// form, file, files and parts",
+    "\"form(String)->String\", \"file(String)->UploadFile\", \"files(String)->List\", \"parts()->List\"),",
+    "// IR-STATIC-002 AC-5: the wave 6 set",
+    "\"sse(Configurer)->RestApp\"), signatures(RestApp.class));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// CON-AUTH-005 AC-4: every Kotlin block of auth.md and en/auth.md has its compiled, run Kotlin test marker"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ProxyTrustAcceptanceTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "// FR-ENGINE-008 AC-1",
+    "// SDS-AC-8; FR-ENGINE-008 AC-2",
+    "// SDS-AC-9; FR-ENGINE-008 AC-3"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ProxyTrustModesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RegistrationListTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestIdAndSocketAddressTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StartApiTest.java",
+   "hunks_total": 10,
+   "anchors": [
+    "// FR-DX-012 AC-1: no environment variable is an input of the core",
+    "java.util.Set<String> readers = new java.util.TreeSet<>();",
+    "scanDir(location, location, hits);",
+    "hits.add(entry.getName());",
+    "assertEquals(\"the allowed readers are the only getenv callers\", ENV_READERS, readers);",
+    "private static void scanDir(File root, File dir, List<String> hits) throws IOException {",
+    "scanDir(root, f, hits);",
+    "hits.add(f.getPath());",
+    "String where = self + \"#\" + name;",
+    "private static boolean contains(byte[] bytes, String needle) {"
+   ],
+   "findings": [
+    "T1-F01"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import static org.junit.Assert.assertFalse;",
+    "// 0.11.0: IR-APP-008 AC-2 and IR-ENGINE-003 AC-1 put onRegistration, trustProxyHops and trustProxyCidrs",
+    "\"defaultCache\", \"ws\", \"webSocket\", \"sse\"));",
+    "// IR-APP-008 AC-2: the refused configuration calls (onRegistration among them) recorded nothing"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/DefaultRestAppTest.java",
+   "hunks_total": 11,
+   "anchors": [
+    "List<DefaultRestApp.Registration> regs = app.registrations();",
+    "List<DefaultRestApp.Registration> regs = app.routeRegistrations();",
+    "assertEquals(0, app.registrations().size());",
+    "assertEquals(2, app.registrations().size());",
+    "assertEquals(3, app.registrations().size());",
+    "assertEquals(1 + live.size(), app.registrations().size());",
+    "int before = app.registrations().size();",
+    "assertEquals(before, app.registrations().size());",
+    "assertRegistration(app.registrations().get(0), MethodSet.of(Method.GET), \"/ws\", h, RouteKind.WEBSOCKET);",
+    "assertEquals(2, app.routeRegistrations().size());",
+    "DefaultRestApp.Registration r = app.registrations().get(0);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/RegistrationOrderTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.internal;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/TimeSourceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminEndpointsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": [
+    "T1-F02",
+    "T1-F04",
+    "T1-F05"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminFixture.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AtomicFieldWritesDoctorTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthArchitectureTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthBootstrapTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthBuilderTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthConfigTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthDoctorTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthErrorLayerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthErrorsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthEventsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthGuardsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthHardeningTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthHashSettingsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthInstallTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthJdbcDefaultsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthJsonBodyTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthResponsesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthSpiSnapshotTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthTestAccess.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthTestSupport.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthUsersTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/CarriedAcceptanceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/CredentialTransportTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": [
+    "T1-F09"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/DescribeTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": [
+    "T1-F06"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/EnvFixture.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/InternalReferenceFixture.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/KeySourcesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/LoginThrottleTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/PasswordConfirmLimitTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/PreAuthOrderTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/PrincipalCacheTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/ProtectOnlyTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RealJwtPathTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": [
+    "T1-F03"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/TokenServiceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/TransportRuleTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/UserLifecycleTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": [
+    "T1-F07"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/W8.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10AccountTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10CarryTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10KeyWebSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 9,
+  "by_severity": {
+   "CRITICAL": 0,
+   "HIGH": 0,
+   "MEDIUM": 2,
+   "LOW": 7
+  }
+ }
+}

@@ -1,0 +1,60 @@
+[
+ {
+  "id": "N3-01",
+  "title": "ForwardingUserStore's constructor now calls this.hashCode() (UserStoreDelegates.record -> WeakHashMap.put) before the subclass is initialised: a value-equality decorator either cannot be constructed (NPE) or is recorded under a stale hash, so its FileUserStore is invisible and PROD builds without a key and writes plain hashes",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/UserStoreDelegates.java",
+   "line_range": "18-28 (and user/ForwardingUserStore.java 23-26)"
+  },
+  "evidence": {
+   "command": "temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Tmp501R3Test.java (deleted after the run); ./gradlew :NaruServe-api:test --offline --tests '*Tmp501R3Test*' -i | grep TMP501 (test n3_valueDecorator: Java TenantUsers extends ForwardingUserStore with equals/hashCode = Objects.hash(tenant), StrictTenantUsers with hashCode = tenant.hashCode()); plus temporary NaruServe-api/src/test/kotlin/.../Tmp501DataDecoratorKotlinTest.kt: data class Tmp501TenantStore(val tenant: String, val inner: UserStore) : ForwardingUserStore(inner); ./gradlew :NaruServe-api:test --offline --tests '*Tmp501*' -i | grep TMP501 (both files deleted afterwards)",
+   "output": "TMP501 N3 TenantUsers(FileUserStore) without key PROD: built\nTMP501 N3 users.json after create: {\"format\":\"naru-users\",\"version\":1,\"next ... passwordHash\":\"pbkdf2-sha256$1000$yO1LDo\nTMP501 N3 StrictTenantUsers constructor threw java.lang.NullPointerException: Cannot invoke \"String.hashCode()\" because \"this.tenant\" is null\nTMP501 KT data class decorator constructor threw java.lang.NullPointerException: Cannot invoke \"String.hashCode()\" because \"this.tenant\" is null at Tmp501TenantStore.hashCode < java.util.WeakHashMap.hash < WeakHashMap.put < Collections$SynchronizedMap.put < UserStoreDelegates.record(UserStoreDelegates.java:27)",
+   "intent_output": "docs/api/auth.md:1648 (added by this fix): a FileUserStore inside ForwardingUserStore decorators, any depth, is held to the same PROD rule as a bare one -> AuthConfigException; and constructing a ForwardingUserStore subclass (the documented decorator base, Kotlin data classes included, CLAUDE.md Kotlin compatibility) must not throw. Observed: PROD builds and writes version-1 plain hashes, and a Kotlin data class decorator cannot be constructed at all (it could before this change: the constructor only stored the delegate)."
+  },
+  "fix_meta": [
+   {
+    "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/UserStoreDelegates.java",
+    "line_range": "1-79"
+   },
+   {
+    "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/FileSecretsTest.java",
+    "line_range": "710-777"
+   },
+   {
+    "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFileKeyKotlinTest.kt",
+    "line_range": "9-23, 76-90"
+   }
+  ]
+ },
+ {
+  "id": "N3-02",
+  "title": "Canonical-path lock key is not stable for a store file that does not exist yet on a case-insensitive file system: dir/users.json and dir/USERS.json get different monitors but share one temp file, so racing first creates are lost and the file is left unreadable",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "line_range": "78-96 (lockFor), 111-120 (write)"
+  },
+  "evidence": {
+   "command": "temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Tmp501R3Test.java (deleted after the run); ./gradlew :NaruServe-api:test --offline --tests '*Tmp501R3Test*' -i | grep TMP501 (test r2m1f03, modes case/caseExisting: 400 fresh dirs, two FileUserStores over dir/users.json and dir/USERS.json on the default case-insensitive APFS volume, each create() at a CyclicBarrier, file reopened; caseExisting seeds the file before opening the stores)",
+   "output": "TMP501 R2M1F03 sameMonitor case (file exists)=true caseInsensitiveFs=true canon=.../d/users.json\nTMP501 R2M1F03 case oneSuccessButNotOnDisk=287 unreadable=103 zeroSuccess=0\nTMP501 R2M1F03 caseExisting oneSuccessButNotOnDisk=0 unreadable=0 zeroSuccess=0",
+   "intent_output": "AtomicFiles Javadoc ('writes to one path (by its canonical path) are serialized ... since two writers would share the temp file') and docs/api/auth.md:747 (a FileUserStore refuses a write another writer changed; the file stays readable): expected 0 lost creates and 0 unreadable files, as for the dot spelling. getCanonicalPath() folds case only once the file exists, so for a new file the two spellings lock separately while users.json.tmp and USERS.json.tmp are the same file."
+  },
+  "fix_meta": [
+   {
+    "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "11, 25, 79-116"
+   },
+   {
+    "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+    "line_range": "262-341"
+   },
+   {
+    "path": "docs/api/auth.md",
+    "line_range": "747"
+   },
+   {
+    "path": "docs/api/en/auth.md",
+    "line_range": "747"
+   }
+  ]
+ }
+]

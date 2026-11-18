@@ -1,0 +1,219 @@
+{
+ "run": "F3",
+ "fixes": [
+  {
+   "finding_id": "M3-F03",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeySources.java",
+     "line_range": "10-12, 62-75, 107-170"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/KeySourcesTest.java",
+     "line_range": "148-182"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "684"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "684"
+    }
+   ],
+   "red_test": "KeySourcesTest.SEC_TOKEN_004_AC5_concurrentCreatorsAgreeOnOneKey: 'trial 11: a creator kept a key the file no longer holds: arrays first differed at element [0]; expected:<-44> but was:<-78>'",
+   "why_no_red": null,
+   "rationale_full": "Creation of a missing key file is now serialized: FileKey.createOnce() takes a JVM-wide monitor plus an exclusive FileChannel lock (java.nio.channels, API 21) on the sibling '.<name>.lock' file, re-checks exists() inside the lock and only then writes the staged key and renames it, so File.renameTo (which replaces on POSIX) can no longer overwrite a file another creator published. The lock is released explicitly (no FileLock try-with-resources, for API 21). Every caller then reads the one file on disk. The fast path (file exists) takes no lock. The lock file stays in place, because deleting it would break mutual exclusion; this is written in the Javadoc and in docs/api (ko+en). The red test runs 150 trials of 8 threads racing on a fresh path and checks that every caller got the bytes on disk."
+  },
+  {
+   "finding_id": "M2-F06",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/InMemoryDeviceTrust.java",
+     "line_range": "23-36, 42-44, 76-118, 120-125, 176-232, 234-262"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/DeviceTrustEvictionRaceTest.java",
+     "line_range": "1-49 (new)"
+    }
+   ],
+   "red_test": "DeviceTrustEvictionRaceTest.SEC_FLOW_013_invalidationRacingACapEvictionIsKept: 'java.lang.AssertionError: the invalidation reported to the caller is kept'",
+   "why_no_red": null,
+   "rationale_full": "Entries leaving the map are now marked removed while their monitor is held, in cap eviction, purge() and purgeExpired(). recordFailure() retries on the entry the map holds now when its entry was removed between the lookup and the lock, so its answer always matches stored state. makeRoom() locks the chosen victim before dropping it. If a concurrent failure invalidated the victim after the scan, it keeps the victim and scans again, so it drops the next non-invalidated candidate. Removal uses entries.remove(key, entry). Both purges now drop expiresAt <= now through one dropExpired() helper (purge() used to use '<'). A package-private volatile test seam 'beforeDrop' (null in production) lets the test run the racing failure between choosing and dropping the victim, deterministically, at maxEntries=2."
+  },
+  {
+   "finding_id": "M4-F01",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcApiKeyStore.java",
+     "line_range": "593-630"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcApiKeySqliteRollbackTest.java",
+     "line_range": "1-160 (new)"
+    }
+   ],
+   "red_test": "JdbcApiKeySqliteRollbackTest.REL_APIKEY_007_busyCommitIsRolledBack and REL_APIKEY_007_runtimeFailureInsideTheTransactionIsRolledBack: 'org.sqlite.SQLiteException: [SQLITE_ERROR] SQL error or missing database (cannot start a transaction within a transaction)' on the next issuance over the same pooled physical connection",
+   "why_no_red": null,
+   "rationale_full": "sqliteTransaction now clears 'open' only after COMMIT/ROLLBACK succeed, and catches SQLException | RuntimeException | Error, so a COMMIT refused with SQLITE_BUSY, or a RuntimeException from insertRow, still runs ROLLBACK. A rollback failure is added as suppressed. SQLExceptions keep their old mapping (prefix collision, busy message), and other throwables are rethrown unchanged. The tests use the real sqlite-jdbc driver behind one physical connection reused as a pool would (close is a no-op). A statement wrapper injects the BUSY COMMIT or the RuntimeException once. The tests then check that the next issuance on the same connection works, that the failed row is absent, and that a writer on a second connection is not locked out."
+  },
+  {
+   "finding_id": "M4-F02",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcGroupStore.java",
+     "line_range": "18-26, 88-114, 116-140, 180-186, 222-230"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcGroupStoreOrphanTest.java",
+     "line_range": "1-125 (new)"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "537"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "537"
+    }
+   ],
+   "red_test": "JdbcGroupStoreOrphanTest.FR_IAM_011_orphanRowsFromTheDeleteRaceGrantNothing: 'java.lang.AssertionError: the deleted group is not granted expected:<[eng]> but was:<[eng, ops]>'",
+   "why_no_red": null,
+   "rationale_full": "Applied the classifier's approach. groupsOfUser and membersOf join naru_groups. parentsOf and childrenOf join naru_groups on both edge ends. So a membership or edge that a deleteGroup committing between addMember/addParent's requireGroup check and its INSERT leaves behind is never returned, and GroupExpander can no longer grant a deleted group. createGroup now runs in a transaction: when the group is really new, it deletes leftover membership and edge rows under that id before committing, so a re-created group starts empty. The requireGroup error on the normal path is unchanged. The test drives the real interleaving on SQLite by running deleteGroup on a second store right after the existence-check statement closes, for both addMember and addParent. It then checks the reads and a re-create."
+  },
+  {
+   "finding_id": "M4-F03",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/jdbc/AuthSchema.java",
+     "line_range": "20-21, 100"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/AuthSchemaTest.java",
+     "line_range": "111-121"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "536"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "536"
+    }
+   ],
+   "red_test": "AuthSchemaTest.DR_IAM_003_mysqlThrottleKeyIsBinaryCollated: 'expected:<VARCHAR(255) [COLLATE utf8mb4_bin ]NOT NULL PRIMARY KEY> but was:<VARCHAR(255) []NOT NULL PRIMARY KEY>'",
+   "why_no_red": null,
+   "rationale_full": "throttle_key now gets the same MySQL-only ' COLLATE utf8mb4_bin' as the id and name columns, so 'login:u:josé' and 'login:u:jose' are two rows. SQLite and PostgreSQL DDL text is unchanged. The other text key columns are hex hashes. The class Javadoc and docs/api (ko+en) now name the throttle key among the binary-collated columns."
+  },
+  {
+   "finding_id": "M4-F06",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/ThrottleKeys.java",
+     "line_range": "9-11, 50-90, 92-135"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/ThrottleKeysTest.java",
+     "line_range": "1-37 (new)"
+    }
+   ],
+   "red_test": "ThrottleKeysTest.SEC_FLOW_011_ipv4MappedAddressesCountAsIpv4InEverySpelling: 'expected:<[192.0.2.1]> but was:<[0:0:0:0::/64]>' for ipKey(\"::ffff:c000:201\")",
+   "why_no_red": null,
+   "rationale_full": "ipKey keeps its '::ffff:<dotted>' fast path. A trailing dotted IPv4 part in any other spelling is turned into two hex groups (ASCII digits, four octets <= 255, otherwise the address stays as written). After expand(), an address in ::ffff:0:0/96 (groups 0-4 zero, group 5 ffff) returns the dotted IPv4 built from groups 6-7. So hex-mapped, upper-case and fully expanded forms count as their IPv4 address, and different mapped clients get different counters. Unmapped addresses (::1, ::fffe:..., 2001:db8::ffff:...) still reduce to their /64."
+  },
+  {
+   "finding_id": "M4-F12",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/MiniJson.java",
+     "line_range": "150-162, 335"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/MiniJsonTest.java",
+     "line_range": "114-126"
+    }
+   ],
+   "red_test": "MiniJsonTest.SEC_TOKEN_002_AC3_unicodeEscapeTakesAsciiHexOnly: 'java.lang.AssertionError: accepted {\"a\":\"\\u００４１\"}'",
+   "why_no_red": null,
+   "rationale_full": "The \\u escape loop now uses a private hexDigit(char) that accepts only '0'-'9', 'a'-'f' and 'A'-'F' (RFC 8259 HEXDIG), in place of Character.digit(c, 16), which also takes fullwidth and other Unicode digits. Fullwidth digits and letters and Arabic-Indic digits are refused as 'invalid \\u escape' in both profiles. Mixed-case ASCII escapes still decode."
+  },
+  {
+   "finding_id": "M5-F02",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/AuthTesting.java",
+     "line_range": "6-7, 66-92"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/UserStoreContract.java",
+     "line_range": "15-21, 36-70, 160-189"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/testing/VerifyUserStoreTest.java",
+     "line_range": "57-80, 92-95, 140-145, 268-330"
+    },
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthTestingReopenKotlinTest.kt",
+     "line_range": "1-26 (new)"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "1283-1284"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "1283-1284"
+    }
+   ],
+   "red_test": "VerifyUserStoreTest.FR_IAM_004_AC2_reopenCatchesAHashLostOnDisk (against an overload stub that ignored reopen): 'message should name UserStore contract (password hash round trip): verifyUserStore(store, reopen) passed a store that loses every hash on restart'",
+   "why_no_red": null,
+   "rationale_full": "Additive overload AuthTesting.verifyUserStore(UserStore store, Callable<? extends UserStore> reopen); reopen must not be null (NullPointerException). It runs the same contract and, after the in-instance hash checks, opens a fresh instance through reopen and requires the hash written by create() and kept through update() to read back by id and by name. A reopen that throws or returns null fails the clause. A reopened instance other than store is closed when it is AutoCloseable. The existing one-argument overload is unchanged, and its Javadoc and docs/api (ko+en) now say its round trip is in-instance only and point to the reopen form. Test: a write-through cached TestStore whose 'disk' copy drops passwordHash passes the old overload and fails the new one naming the clause. The sound fake, FileUserStore with () -> new FileUserStore(file), and JdbcUserStore with () -> jdbc pass. A Kotlin test calls the overload with trailing lambdas (T11)."
+  },
+  {
+   "finding_id": "M5-F03",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/testing/UserStoreContract.java",
+     "line_range": "104-109"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/testing/VerifyUserStoreTest.java",
+     "line_range": "57-60, 117-124, 288-298"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "1283"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "1283"
+    }
+   ],
+   "red_test": "VerifyUserStoreTest.FR_IAM_004_AC1_reusedDeletedIdFails: 'verifyUserStore passed a broken store: com.snoworca.naruserve.utils.auth.testing.VerifyUserStoreTest$TestStore@52af26ee'",
+   "why_no_red": null,
+   "rationale_full": "crud() now creates another contract user after deleting the newest one and checks that its id differs from the deleted id. The failure message names 'a deleted id is never reused' and the inherited memberships and API keys. The new user is tracked and cleaned up like the others. Test: TestStore.reusesHighestId (MAX(id)+1) fails naming 'UserStore contract (CRUD)', and its rows are empty afterwards. The shipped stores still pass."
+  }
+ ],
+ "public_api_changes": [
+  "New overload com.snoworca.naruserve.utils.auth.testing.AuthTesting.verifyUserStore(UserStore store, java.util.concurrent.Callable<? extends UserStore> reopen) (additive; package @NullMarked, so both arguments are non-null)"
+ ],
+ "docs_changed": [
+  "docs/api/auth.md",
+  "docs/api/en/auth.md"
+ ],
+ "build": {
+  "tests": 3401,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+ }
+}

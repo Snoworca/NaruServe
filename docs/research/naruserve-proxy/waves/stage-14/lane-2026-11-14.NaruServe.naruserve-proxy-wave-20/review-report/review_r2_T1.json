@@ -1,0 +1,535 @@
+{
+ "chunk": "T1",
+ "round": 2,
+ "findings": [
+  {
+   "id": "T1-F01",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "REL-APIKEY-002 AC-1 rewrite no longer exercises the 'largest ver wins' guard (a lower ver arriving after a higher one)",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+    "line_range": "763-795"
+   },
+   "description": "The test was rewritten (T2-F02 fix) into two sequential batches: 50 requests whose cached principal holds ver 5, then userRevoked(u1) and 50 requests that read ver 6. ApiKeyOwners.scheduleStale (ApiKeyOwners.java 355-368) keeps the pending ver as the maximum (pending >= ver, else replace(pending, ver)); the only scenario that guard exists for is a ver-5 observation landing after a ver-6 one, and the new test produces observations in strictly increasing order only. The old version interleaved scheduleStale(u1, 5) calls with ver-6 requests concurrently, so a last-writer-wins implementation (staleVers.put(ownerId, ver)) was likely caught. Now such a regression passes every assertion (pending is 5 after batch 1, 6 after batch 2, the run deletes with 6), and no other test calls scheduleStale or pendingStale with a decreasing ver (grep over src/test). The AC's 'called with ver 6' when vers 5 and 6 are observed concurrently is therefore no longer verified for the out-of-order case.",
+   "suggested_fix": "After the ver-6 batch (pending is 6) send one more request (or several concurrently) that observes ver 5, e.g. by re-priming the principal cache with f.auth.accessToken(u1, 5, ...) on a fresh cache entry, or call f.auth.apiKeyOwners().scheduleStale(u1, 5) directly once as an explicit out-of-order step, and assert pendingStale(u1) stays 6 and held.queued.size() stays 1 before held.runAll().",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "regression"
+   ]
+  },
+  {
+   "id": "T1-F02",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "assertReleased's Javadoc was left above the new assertAll401 helper (two stacked Javadoc comments)",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+    "line_range": "1209-1211, 1267"
+   },
+   "description": "The new helpers were inserted between the Javadoc '/** The holds are released once the answer settled ... */' and its method assertReleased(). Line 1209 now holds that orphaned comment directly above '/** Sends n concurrent GET /api/x ... */' and assertAll401 (1211), while assertReleased at 1267 has no Javadoc. A reader (or javadoc tooling) attributes the wrong description; the first comment is dead text.",
+   "suggested_fix": "Move the 'The holds are released once the answer settled' Javadoc back directly above assertReleased() and keep only the assertAll401 Javadoc above assertAll401.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "doc"
+   ]
+  },
+  {
+   "id": "T1-F03",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "hugeRefreshFileFailsBeforeItIsRead depends on a 3 GB sparse file the test file system may not support",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+    "line_range": "437-454"
+   },
+   "description": "The M3-F08 regression test calls RandomAccessFile.setLength(3 GB) in the JUnit temp folder and relies on it being sparse. On a file system without sparse-on-extend semantics (NTFS without the sparse flag, FAT/exFAT, some container overlay or quota-limited CI volumes) the call reserves or allocates 3 GB, so on a runner with less free space it fails with IOException('not enough space') before the store is constructed, and on others it is slow and fills the disk temporarily. The behaviour under test (the size check runs before any read) does not need 3 GB: FileRefreshTokenStore has a public (File, long maxFileBytes, Logger) constructor.",
+   "suggested_fix": "Use new FileRefreshTokenStore(f, smallLimit, logger) with a file a little above that limit (or a few MB sparse file with a 1 KB limit) and keep the FAIL / 'above the limit' / app-provided-store message assertions; if the 'never read' property must be shown, wrap the file in a size that exceeds the heap only on platforms that report sparse support, or assert on a read counter seam.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ApiJarClasses.java",
+   "hunks_total": 1,
+   "anchors": [
+    "\"com.snoworca.naruserve.utils.auth.jdbc\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/AuthKotlinContractTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "\"com.snoworca.naruserve.utils.auth.jdbc\",",
+    "\"com.snoworca.naruserve.utils.auth.rbac\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ConsumerRulesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// SEC-IAM-008 AC-6 (Android): AuthFileKey installs its box access by class identity, and the consumer rules keep"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StartApiTest.java",
+   "hunks_total": 11,
+   "anchors": [
+    "* {@code NARU_AUTH_RECOVERY} switch {@code Auth.Builder.recoveryFromEnv()} included (SEC-AUTH-003).",
+    "\"com/snoworca/naruserve/utils/auth/Auth$Builder#recoveryFromEnv\")));",
+    "// FR-DX-012 AC-1: no Core class reads the environment; inside utils.auth only the allowed explicit calls do",
+    "scan(readAll(in), hits, readers);",
+    "// FR-DX-012 AC-1: negative control of the 0.10.0 Core check; a Core class that reads getenv reflectively has no",
+    "/** A Core-package class reading the environment through reflection, with no getenv Methodref. */",
+    "classify(readAll(in), hits, readers);",
+    "* {@link #ENV_READERS}, is a hit; allowed callers are collected in {@code readers}.",
+    "static void classify(byte[] bytes, List<String> hits, java.util.Set<String> readers) throws IOException {",
+    "return;",
+    "return self;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// SEC-APP-002 AC-5: a watcher cannot shut the app down under the registration it is deciding on (app.shutdown"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminEndpointsTest.java",
+   "hunks_total": 45,
+   "anchors": [
+    "import org.junit.After;",
+    "/** The fixtures this test made; each is stopped after the test (its app, auth scheduler and pools). */",
+    "f",
+    "AdminFixture f = new AdminFixture().start(b -> b.apiKeys(new AdminFixture.ListKeys()));",
+    "List<String> off = adminPairs(new AdminFixture().start());",
+    "new",
+    "start",
+    "int adminMounts = 0;",
+    "if (reg.getKind() == RegistrationKind.ROUTER_MOUNT) {",
+    "if (reg.getMount() == null) {",
+    "// install recorded exactly one app-level admin mount, and every mount of the app is one install made under",
+    "fixture",
+    "AdminFixture",
+    "AdminFixture f = new AdminFixture();",
+    "AdminFixture f = fixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start(b -> b.lockout(Lockout.after(2).forMinutes(15)));",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start(b -> b.apiKeys(keys));",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "// SEC-IAM-004 AC-4: an actor disabled (or deleted) directly in the store while the principal cache still admits it",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start();",
+    "AdminFixture f = new AdminFixture().start(b -> b.credentials(new AuthTestSupport.TestCredentials()));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminFixture.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/**"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AppStores.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthArchitectureTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "// CON-AUTH-003 AC-4: java.sql, javax.sql.DataSource, java.text.Normalizer and FileDescriptor.sync() are referenced",
+    "boolean sql = false;",
+    "violations(utilsClasses(), Collections.singletonList(\"javax/naming/\")));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthBuilderTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// refresh, throttle and device-trust defaults (building with JDBC stores waits for the JDBC token stores)"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthHardeningTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "import com.snoworca.naruserve.utils.auth.jdbc.AuthDialect;",
+    "// DR-IAM-003 component (MySQL collation): identity columns compare bytes, so josé and jose stay two names"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthInstallTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "// FR-AUTH-005 (Builder.logger default): without .logger(...), the components built with auth (audit trail, user"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthStoreDefaultsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthTestSupport.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** The file key of PROD tests over the shipped file stores, which PROD requires (FR-IAM-015 AC-3). */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/DeviceTrustEvictionRaceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/FileSecretsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/KeySourcesTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "Auth a = Auth.builder(KeySources.fromFile(f)).build();",
+    "assertTrue(Arrays.equals(mine, Auth.builder(KeySources.fromFile(existing)).build().keySet().getSigningKey()));",
+    "AuthConfigException e = refused(Auth.builder(KeySources.fromFile(missingDir)));",
+    "AuthConfigException emptyFile = refused(Auth.builder(KeySources.fromFile(empty)));",
+    "// SEC-TOKEN-004 AC-5: creators racing on one fresh path never overwrite each other's file: every caller gets the"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "Auth withDefault = Auth.builder(AuthTestSupport.SECRET).hashIterations(1000).logger(new RecordingLogger())",
+    "Thread.sleep(100);",
+    "// and the default purgeExpired those runs called did not fail",
+    "// A long-lived session on the file store does not grow the file: each rotation keeps the current record and only",
+    ".users(new FileUserStore(new File(dir, \"users.json\"))).build();"
+   ],
+   "findings": [
+    "T1-F03"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/SpiOnlyPersistenceTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/TokenServiceTest.java",
+   "hunks_total": 13,
+   "anchors": [
+    "import com.snoworca.naruserve.RestApp;",
+    "import java.util.ArrayList;",
+    "import java.util.List;",
+    "import java.util.concurrent.TimeUnit;",
+    "import org.junit.After;",
+    "* (FR-TOKEN-001), the self-service password change core (REL-IAM-002) and what one ver++ revokes (SEC-IAM-003), with",
+    "/** The apps {@link #serve} started, shut down after each test. */",
+    "TokenPair changed = auth.passwordChanges().selfService(alice.getId(), 0L, \"pw-alice\".toCharArray(),",
+    "TokenPair p = auth.passwordChanges().selfService(alice.getId(), 0L, \"cur-pw\".toCharArray(),",
+    "InMemoryHttpAdapter adapter = serve(auth);",
+    "auth.passwordChanges().selfService(alice.getId(), 0L, \"cur-pw\".toCharArray(), \"next-pw-1\".toCharArray());",
+    "// a disabled or bumped session is 401 before any write",
+    "try {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/UserLifecycleTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Thread.sleep(200);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/W8.java",
+   "hunks_total": 2,
+   "anchors": [
+    "/** Wraps the engine the app is built over (the in-memory adapter itself when not replaced). */",
+    "app = RestApp.builder().httpAdapter(adapter).jsonCodec(codec).logger(logger).build();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave10PatTest.java",
+   "hunks_total": 13,
+   "anchors": [
+    "import com.snoworca.naruserve.spi.ExchangeHandler;",
+    "import java.io.IOException;",
+    "import java.util.concurrent.atomic.AtomicBoolean;",
+    "import java.util.function.Consumer;",
+    "setVer(u1, 4);",
+    "String stale = f.auth.apiKeys().issue(u1, \"old\", null, \"posts:read\").getPlainKey();",
+    "setVer(u1, 6);",
+    "// the even requests read ver 6 from the store; the odd calls are the request path's own scheduling step",
+    "// every exchange of a hashing endpoint whose handle() returned while the slots were still held: the adapter",
+    "long base = slots.requested();",
+    "Thread.sleep(200);",
+    "slotsHeld.set(false);",
+    "/** Sends {@code n} concurrent {@code GET /api/x} with {@code authorization}; each must answer 401. */"
+   ],
+   "findings": [
+    "T1-F01",
+    "T1-F02"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave11ClosureTest.java",
+   "hunks_total": 6,
+   "anchors": [
+    "files.users = new FileUserStore(file);",
+    "FileUserStore reread = new FileUserStore(file);",
+    "int errors = f.logger.count(\"ERROR\");",
+    "// IR-IAM-001 AC-6: InMemoryUserStore, FileUserStore and JdbcUserStore override the listing method: with three users",
+    "File db = new File(tmp.newFolder(), \"auth.db\");",
+    "weak.install(t.app());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave11DoctorTest.java",
+   "hunks_total": 13,
+   "anchors": [
+    "import com.snoworca.naruserve.utils.auth.jdbc.AuthDialect;",
+    "import java.sql.Connection;",
+    "import org.sqlite.SQLiteConfig;",
+    "private SQLiteDataSource sqlite() throws Exception {",
+    ".refreshTokens(new JdbcRefreshTokenStore(ds, AuthDialect.SQLITE))",
+    "/** A JDBC user store behind a decorator that does not declare atomic field writes. */",
+    "FileUserStore fileStore = new FileUserStore(users);",
+    "FileUserStore homeless = new FileUserStore(new File(new File(tmp.getRoot(), \"missing-dir\"), \"users.json\"));",
+    "FileUserStore clean = new FileUserStore(new File(tmp.newFolder(), \"users.json\"));",
+    "JdbcUserStore jdbc = JdbcUserStore.builder(ds).dialect(AuthDialect.SQLITE).build();",
+    "SQLiteDataSource ds = sqlite();",
+    "Probe cidr = new Probe(b -> multi(b, ds, jdbc), a -> a.trustProxyCidrs(\"10.0.0.0/8\"), p -> { });",
+    "for (Probe hops : new Probe[] {new Probe(b -> multi(b, ds, jdbc), a -> a.trustProxyHops(1), p -> { }),"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ApiKeyTest.java",
+   "hunks_total": 16,
+   "anchors": [
+    "import com.snoworca.naruserve.utils.auth.jdbc.AuthDialect;",
+    "import java.sql.Statement;",
+    "import java.util.concurrent.TimeUnit;",
+    "import org.sqlite.SQLiteDataSource;",
+    "* The ApiKeyStore contract over the shipped stores (IR-APIKEY-004 AC-2, AC-5), the 503 wrapping of store failures on",
+    "private SQLiteDataSource sqlite() throws Exception {",
+    "return Arrays.<ApiKeyStore>asList(new InMemoryApiKeyStore(),",
+    "volatile @Nullable ApiKeyStore inserts;",
+    "failed.add(method);",
+    "ApiKeyStore other = inserts;",
+    "ClientResponse used = failing(\"updateLastUsed\", () -> f.get(\"/api/x\", \"Authorization\", \"ApiKey \" + plain));",
+    "assertTrue(\"the lastUsedAt update was reached and failed: \" + keys.failed,",
+    "keys.failed.clear();",
+    "assertTrue(\"nothing failed on the request path: \" + keys.failed, keys.failed.isEmpty());",
+    "assertTrue(\"every off-request deletion was reached and failed: \" + keys.failed,",
+    "// ---------------------------------------------------------------------------------------------- REL-APIKEY-005"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12ThrottleTest.java",
+   "hunks_total": 28,
+   "anchors": [
+    "import com.snoworca.naruserve.utils.auth.jdbc.AuthDialect;",
+    "import java.sql.Connection;",
+    "import org.sqlite.SQLiteConfig;",
+    "* store (REL-FLOW-001: the snapshot files beside a FileUserStore, shared JDBC counting), the built-in throttles'",
+    "assertFalse(name + \" sleeps\", text.contains(\"TimeUnit.\") && text.contains(\".sleep(\"));",
+    "f.user(\"bob\", W8.PW, \"reader\");",
+    "assertTrue(\"the 429 is not held to the floor: \" + took + \" ns\", took < 400_000_000L);",
+    "/** A FileUserStore deployment in a fresh directory. */",
+    "FileUserStore store = new FileUserStore(new File(dir, \"users.json\"));",
+    "again.users = new FileUserStore(new File(dir, \"users.json\"), AuthTestSupport.FILE_KEY);",
+    "Thread.sleep(200);",
+    "Thread.sleep(150); // a tick may fall between the keys of one failed login",
+    "Thread.sleep(300);",
+    "/** Waits (bounded) until {@code n} more ticks of the snapshot scheduler have finished. */",
+    "again.users = new FileUserStore(new File(dir, \"users.json\"));",
+    "private SQLiteDataSource sqlite(File dbFile) throws Exception {",
+    "// files in the same directory, JdbcUserStore -> JDBC; a custom store -> memory with exactly one restart-logout",
+    "JdbcUserStore jdbcUsers = JdbcUserStore.builder(sqlite(new File(tmp.newFolder(), \"a.db\")))",
+    "/** Two nodes over one SQLite database: users, throttle and device trust follow the shared JdbcUserStore. */",
+    "a.users = users;",
+    "// REL-FLOW-001 AC-6: two Auth instances sharing one JDBC throttle table (SQLite): 3 failures on node A and 2 on node",
+    "public void REL_FLOW_001_AC6_sharedJdbcThrottleCountsAcrossNodes() throws Exception {",
+    "// REL-FLOW-001 AC-7: two Auth instances sharing one JDBC device-trust table (SQLite): 3 failures with device token D",
+    "public void REL_FLOW_001_AC7_sharedJdbcDeviceTrustInvalidatesOnEveryNode() throws Exception {",
+    "f.users = fileUsers(dir);",
+    "proxied(f, b -> b.groups(groupStore));",
+    "// failures, 25 hours and a cleanup, the 6th attempt is still 429, over the in-memory and the JDBC defaults",
+    "// the JDBC default keeps its row for the 48-hour window too"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave12TokenTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "FileUserStore users = new FileUserStore(new File(dir, \"users.json\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave5ComponentsTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "import java.util.concurrent.TimeUnit;",
+    "import org.junit.After;",
+    "/** The apps this test made; each is shut down after the test (its adapter pool and the auth cleanup scheduler). */",
+    "TestApp t = app(adapter);",
+    "TestApp t = TestApp.create(adapter);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave6ComponentsTest.java",
+   "hunks_total": 13,
+   "anchors": [
+    "import java.util.ArrayList;",
+    "import org.junit.After;",
+    "/** The fixtures this test made; each is stopped after the test (its app, auth scheduler and pools). */",
+    "AdminFixture f = new AdminFixture().start(b -> b.lockout(Lockout.after(5).forMinutes(15)));",
+    "assertNull(new AdminFixture().start().auth.lockouts());",
+    "start",
+    "fixture",
+    "AdminFixture",
+    "AdminFixture g = new AdminFixture().start(b -> b, x -> x.app.get(\"/api/bad\",",
+    "AdminFixture f = new AdminFixture().start(b -> b.events(new AuthEvents() {",
+    "AdminFixture f = fixture().start();",
+    "AdminFixture g = new AdminFixture().start(b -> b, x -> x.app.get(\"/api/sa\", (req, res) -> x.auth.users()",
+    "AdminFixture f = new AdminFixture().start();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave6ReviewFixesTest.java",
+   "hunks_total": 12,
+   "anchors": [
+    "import java.util.ArrayList;",
+    "/** The fixtures this test made; each is stopped after the test (its app, auth scheduler and pools). */",
+    "AdminFixture f = new AdminFixture().start(b -> b.hashConcurrency(1));",
+    "long base = f.auth.hashSlots().requested();",
+    "Thread.sleep(200); // the first grant check has passed; the A4 waits for the slot",
+    "fixture",
+    "AdminFixture",
+    "AdminFixture f = fixture().start(b -> b.apiKeys(keys));",
+    "AdminFixture f = fixture().start();",
+    "AdminFixture f = new AdminFixture().start(b -> b, x -> x.app.ws(\"/ws\", x.auth.webSocket((req, ws) -> {",
+    "AdminFixture f = new AdminFixture().start(b -> b.apiKeys(keys));",
+    "AdminFixture f = new AdminFixture().start();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7CsrfTest.java",
+   "hunks_total": 4,
+   "anchors": [
+    "private ClientResponse sendTo(String path, String at, List<String> csrfCookies, String header) {",
+    "Auth file = builder(TokenTransport.HEADER).users(new FileUserStore(new File(tmp.getRoot(), \"u.json\"))).build();",
+    "FileUserStore store = new FileUserStore(new File(tmp.getRoot(), \"users.json\"));",
+    "// SEC-FLOW-006: a guarded cookie write on a public path (outside .protectOnly) needs the CSRF token too: without"
+   ],
+   "findings": []
+  }
+ ],
+ "resolved_findings": [
+  "M1-F01",
+  "M1-F02",
+  "M1-F03",
+  "M2-F01",
+  "M2-F02",
+  "M2-F04",
+  "M2-F06",
+  "M2-F07",
+  "M3-F02",
+  "M3-F03",
+  "M3-F04",
+  "M3-F08",
+  "T1-F01",
+  "T1-F02",
+  "T1-F03",
+  "T1-F04",
+  "T1-F07",
+  "T2-F01",
+  "T2-F02",
+  "T2-F03",
+  "T2-F04",
+  "T2-F05",
+  "T2-F06",
+  "T2-F14"
+ ],
+ "not_resolved": [],
+ "summary": {
+  "total": 3,
+  "by_severity": {
+   "CRITICAL": 0,
+   "HIGH": 0,
+   "MEDIUM": 1,
+   "LOW": 2
+  }
+ }
+}

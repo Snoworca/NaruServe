@@ -1,0 +1,48 @@
+{
+ "run_id": "2026-11-14.naruserve.naruserve-proxy-wave-20-fr-proxy-020",
+ "run_id_requested": "2026-11-14.NaruServe.naruserve-proxy-wave-20-fr-proxy-020",
+ "base_sha": "40e91ea4bde91a2086af900e1c9830702c232bf2",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-020"
+ ],
+ "req_filter": [
+  "FR-PROXY-020"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBackendConnectionTest.java"
+ ],
+ "started_at": "2026-11-18T13:59:32Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "FR-PROXY-020",
+    "test_sha": "cc66dd4",
+    "implementation_sha": null
+   }
+  ],
+  "changed": true,
+  "commit_sha": null,
+  "ended_at": "2026-11-18T14:01:05Z",
+  "coder_run_id": "2026-11-14.naruserve.naruserve-proxy-wave-20-fr-proxy-020",
+  "result_summary": "ProxyBackendConnectionTest 6 tests green at HEAD; AC-1 retry case red against base c900c9d main sources (expected 3 got 1), green after FR-PROXY-018 implementation 40e91ea; AC-1 sequential, AC-2, AC-3, AC-4 already held at base \u2014 no implementation commit"
+ },
+ "lifecycle_gate_state": {
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-PROXY-020": "evolving"
+  },
+  "status_snapshot": {
+   "FR-PROXY-020": "planned"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.naruserve.naruserve-proxy-wave-20-fr-proxy-020/lanes/w20s14l1/reports/pm-2026-11-18T140105Z.md",
+ "last_updated_at": "2026-11-18T14:01:05Z"
+}

@@ -1,0 +1,703 @@
+{
+ "chunk": "M3",
+ "round": 1,
+ "findings": [
+  {
+   "id": "M3-F01",
+   "axis": "P3",
+   "severity": "MEDIUM",
+   "title": "Concurrent refresh: reuse revocation can miss the winner's new refresh record (and logout can miss it too)",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenService.java",
+    "line_range": "113-125,180-192"
+   },
+   "description": "refresh() marks the presented record used (store.markUsed) and only then saves the new record in pair() -> store.save. With reuseGrace 0, a second concurrent presentation of the same token loses markUsed (or sees usedAt set) and calls reused() -> store.revokeFamily(fam). revokeFamily only flips the records that exist at that moment (InMemoryRefreshTokenStore.revokeFamily iterates existing entries; a SQL UPDATE behaves the same). Interleaving: A.markUsed=true; B.markUsed=false; B.revokeFamily(fam); A.pair() -> save(new record, revoked=false). Result: onRefreshTokenReused fired and the family is reported revoked, but A's freshly issued refresh token is unrevoked and keeps rotating. If A is the attacker who stole the token and raced the legitimate client, the attacker keeps a live session despite reuse detection (RFC 9700 4.14 intent). The same window lets a POST /auth/logout that revokes the family concurrently with a refresh leave the new token alive. Window = markUsed..save, i.e. JWT signing plus one store round trip (milliseconds with a JDBC store).",
+   "suggested_fix": "After pair() has saved the new record, re-read the presented record (store.find(jti)); if it is now revoked, revoke the family again and answer invalid_refresh_token without returning the pair. Alternatively save the new record before markUsed in a not-yet-active state, or keep a revoked-family marker that save/refresh consult. Add a test that interleaves markUsed/revokeFamily/save with a latch-instrumented store.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "security"
+   ]
+  },
+  {
+   "id": "M3-F02",
+   "axis": "P2",
+   "severity": "MEDIUM",
+   "title": "GrantRule treats a missing or disabled actor as 'no scopes' and still allows writes on scope-less targets",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/GrantRule.java",
+    "line_range": "66-74,101-122,130-141"
+   },
+   "description": "scopesOf(actorId) returns an empty set for a missing or disabled actor, and check() only tests coverage: for MODIFY, PASSWORD_RESET, DISABLE and DELETE with gained empty, a target whose effective scopes are empty passes every loop, so the write is allowed. The route guard that admitted the actor reads the principal cache, so an admin disabled (or deleted) directly in the store, or on another node within userCacheTtl, can still reset the password of or delete a user that holds no scopes (AdminEndpoints 374, 572-578 call check with an empty gained set). The class contract says the actor is re-read from the store precisely to close this cache window (SEC-IAM-004 AC-4), but a re-read that finds the actor gone or disabled does not refuse.",
+   "suggested_fix": "In check(), checkGrant() and checkAffected() re-read the actor row once and refuse (403 insufficient_scope or 401 invalid_token, plus a grant_denied audit event) when it is null or !isEnabled(), before any coverage test. Add an AC-4-style test: actor disabled in the store while the principal cache still admits it -> PASSWORD_RESET of a role-less user is refused.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "security"
+   ]
+  },
+  {
+   "id": "M3-F03",
+   "axis": "P3",
+   "severity": "MEDIUM",
+   "title": "KeySources.fromFile can overwrite a key file another process just created (rename replaces on POSIX)",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeySources.java",
+    "line_range": "117-163"
+   },
+   "description": "signingKey() checks file.exists() and create() later does 'if (!file.exists() && !tmp.renameTo(file) ...)'. On POSIX File.renameTo replaces an existing target, so two processes starting together on a fresh data dir (two instances on one host or a shared volume, or two Auth builds in one JVM) can both pass the exists check: A renames and reads key A, B renames over it and reads key B. A keeps signing with A while the file holds B; tokens issued by A fail on B and every A session dies at A's next restart. This contradicts the documented and SRS (SEC-TOKEN-004 AC-5) guarantee that an existing file is never overwritten.",
+   "suggested_fix": "Make the publish step non-replacing: e.g. take an exclusive creation lock (new File(dir, name + \".lock\").createNewFile() or FileChannel.lock on a lock file) around exists/create/read, or after renaming re-read the file and, if its content differs from the bytes written, use the file's bytes (the last writer wins consistently for every reader). Re-read after create in all cases so every process uses what is on disk.",
+   "is_behavioral": true,
+   "tags": [
+    "bug"
+   ]
+  },
+  {
+   "id": "M3-F04",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "PasswordChanges.selfService is a test-only second implementation of POST /auth/password without throttle, hold, slot or floor",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/PasswordChanges.java",
+    "line_range": "46-101"
+   },
+   "description": "selfService() is never called from main code (the endpoint AccountEndpoints.changePassword/changePasswordHeld has its own sequence and only reuses beforeUpdate/afterUpdate). Yet TokenServiceTest (370, 457, 491, 502), Wave8AccountTest 531 and Wave8RevocationTest 55 drive REL-IAM-002/FR-TOKEN-004 behaviour through it, so those tests verify a duplicate path rather than the production one: a regression in the endpoint's conflict/retry or revocation logic would not fail them. The duplicate is also weaker: a wrong current password answers 401 at once with no confirm throttle (CONFIRM_MAX), no per-user confirmation hold, no hash slot and no failure floor, so if anyone later wires it to a route it is an unthrottled password oracle for a stolen access token.",
+   "suggested_fix": "Delete selfService (keep beforeUpdate/afterUpdate) and move the tests to the HTTP endpoint (POST /auth/password through the test app), or make the endpoint delegate to one shared implementation so tests and production run the same code.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "regression"
+   ]
+  },
+  {
+   "id": "M3-F05",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "Custom-authenticator login for another user skips that user's pre-hash IP/user-only waits",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/PasswordLogin.java",
+    "line_range": "308-320"
+   },
+   "description": "Steps 1-3 check the IP, (user,IP) and user-only keys for key(name). When a custom Authenticator answers with a different user (finish() replaces user with users.findById(found)), that user's own user-only and lockout-independent waits are never consulted, and the failure counting/success path is keyed by the typed name. A user B that is currently throttled can still be logged in by name A if the authenticator maps A to B. Carried from the 0.11.0-w08 review (prickly r4).",
+   "suggested_fix": "When the authenticator's user id differs from the step-3 user, re-run limits.userWait(key of the returned user's normalized name) (and userIpWait) before issuing, answering THROTTLED; or document it as the authenticator's responsibility in docs/api auth.md (ko+en).",
+   "is_behavioral": true,
+   "tags": [
+    "security",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M3-F06",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "PAT issuance re-reads the caller in the slot but does not compare the request token's ver",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeyIssuance.java",
+    "line_range": "192-194,236-276"
+   },
+   "description": "confirmThenIssue receives only callerId; the slot re-reads the caller and checks only null/enabled. A session cut off by logout-all or a password change (ver raised) that is still admitted by another node's principal cache can, with the password, mint a personal API key bound to the new ver (owner = re-read caller), outliving the revocation. PasswordChanges/the password endpoint guard the same window with expectedVer. Carried from the 0.11.0-w10 review.",
+   "suggested_fix": "Pass the principal's tokenVersion into confirmThenIssue and answer 401 invalid_token when caller.getTokenVersion() differs, as the password change does.",
+   "is_behavioral": true,
+   "tags": [
+    "security",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M3-F07",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Unused 4-argument TokenPair constructor yields empty userId/familyId",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenPair.java",
+    "line_range": "22-24"
+   },
+   "description": "TokenPair(String,long,String,long) is unused (only the 6-argument form is called, TokenService.pair line 124). If it is ever used, TokenDelivery.deliver would call csrf.issue(\"\", \"\") and bind the CSRF token to an empty user and family. Carried from the 0.11.0-w07 review (L9).",
+   "suggested_fix": "Delete the 4-argument constructor.",
+   "is_behavioral": false,
+   "tags": [
+    "style",
+    "deferred"
+   ]
+  },
+  {
+   "id": "M3-F08",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "AtomicFiles.load reads a whole store file into memory with no size bound",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "125-151"
+   },
+   "description": "read() copies the file into a growing ByteArrayOutputStream before the parser sees it, with no limit (toByteArray doubles the peak). A corrupt or attacker-grown file (e.g. a huge naru-groups file) makes start-up OOM instead of failing with the FAIL message; on Android the heap is small. Carried from the 0.11.0-w05 review.",
+   "suggested_fix": "Check f.length() against a per-store limit before reading (fail with the FAIL message), and size the buffer from the length.",
+   "is_behavioral": true,
+   "tags": [
+    "deferred",
+    "performance"
+   ]
+  },
+  {
+   "id": "M3-F09",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "Auth store files are written with the process umask, unlike the key file",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "59-95"
+   },
+   "description": "write() creates <name>.tmp with default permissions (typically 0644 on a JVM host) and renames it over the store file, so a FileUserStore file (PBKDF2 hashes, token versions) and the throttle/refresh snapshots are readable by other local users; KeySources.fromFile restricts its file to the owner. Not an Android issue (app-private dir), but a shared Linux host leaks the hashes for offline cracking.",
+   "suggested_fix": "Restrict the temp file to the owner (setReadable/setWritable(false,false) then (true,true), as KeySources.ownerOnly) before writing the content.",
+   "is_behavioral": true,
+   "tags": [
+    "security"
+   ]
+  },
+  {
+   "id": "M3-F10",
+   "axis": "P6",
+   "severity": "LOW",
+   "title": "ApiKeyUsage.lastWrite is only cleared by auth.apiKeys().revoke",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/ApiKeyUsage.java",
+    "line_range": "26,71-74"
+   },
+   "description": "forget() is called only from DefaultAuthApiKeys.revoke; keys deleted through DELETE /auth/me/apikeys/:id, DELETE /auth/admin/apikeys/:id, user deletion (deleteAllByOwner), stale cleanup and the expiry purge keep their entry forever. Growth is bounded by keys ever used in the process, but on a long-running server with short-lived keys it never shrinks.",
+   "suggested_fix": "Call forget from every delete path, or drop entries older than INTERVAL_MILLIS during the existing periodic cleanup.",
+   "is_behavioral": true,
+   "tags": [
+    "performance"
+   ]
+  },
+  {
+   "id": "M3-F11",
+   "axis": "P2",
+   "severity": "LOW",
+   "title": "AccessTokens trusts the codec for expiry although it re-checks the type",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AccessTokens.java",
+    "line_range": "87-105"
+   },
+   "description": "claims() defends against a codec that ignores the expected type but not one that ignores exp: a custom TokenCodec wrapping a library without expiry validation would make access tokens never expire, while the time field is already available here and unused for verification.",
+   "suggested_fix": "After decode, refuse when c.getExpiresAt() <= time.nowMillis() (invalid_token), mirroring the type re-check.",
+   "is_behavioral": true,
+   "tags": [
+    "security"
+   ]
+  },
+  {
+   "id": "M3-F12",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Audit log line is not unambiguously parseable",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/audit/AuditSinks.java",
+    "line_range": "58-93"
+   },
+   "description": "line() writes key=value pairs separated by spaces without quoting; action values already contain spaces (\"POST /auth/me/apikeys\") and a value containing ' actor=x' would read as a second field. clean() escapes C0 controls but not U+0085/U+2028/U+2029, which some log viewers treat as line breaks.",
+   "suggested_fix": "Quote values containing space, '=' or '\"' (escaping quotes) and escape U+0085/U+2028/U+2029 as ErrorBodies.quote does.",
+   "is_behavioral": true,
+   "tags": [
+    "style"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/InMemoryLoginThrottle.java",
+   "hunks_total": 1,
+   "anchors": [
+    "InMemoryLoginThrottle"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/InMemoryRefreshTokenStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "InMemoryRefreshTokenStore"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeyIssuance.java",
+   "hunks_total": 1,
+   "anchors": [
+    "KeyIssuance"
+   ],
+   "findings": [
+    "M3-F06"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeySources.java",
+   "hunks_total": 1,
+   "anchors": [
+    "KeySources"
+   ],
+   "findings": [
+    "M3-F03"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Lockout.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Lockout"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/NewPasswords.java",
+   "hunks_total": 1,
+   "anchors": [
+    "NewPasswords"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/PasswordChanges.java",
+   "hunks_total": 1,
+   "anchors": [
+    "PasswordChanges"
+   ],
+   "findings": [
+    "M3-F04"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/PasswordLogin.java",
+   "hunks_total": 1,
+   "anchors": [
+    "PasswordLogin"
+   ],
+   "findings": [
+    "M3-F05"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/PasswordPolicy.java",
+   "hunks_total": 1,
+   "anchors": [
+    "PasswordPolicy"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenDelivery.java",
+   "hunks_total": 1,
+   "anchors": [
+    "TokenDelivery"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenPair.java",
+   "hunks_total": 1,
+   "anchors": [
+    "TokenPair"
+   ],
+   "findings": [
+    "M3-F07"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenService.java",
+   "hunks_total": 1,
+   "anchors": [
+    "TokenService"
+   ],
+   "findings": [
+    "M3-F01"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenTransport.java",
+   "hunks_total": 1,
+   "anchors": [
+    "TokenTransport"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/UserChange.java",
+   "hunks_total": 1,
+   "anchors": [
+    "UserChange"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/UserOrigin.java",
+   "hunks_total": 1,
+   "anchors": [
+    "UserOrigin"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/ApiKey.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ApiKey"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/ApiKeyPrefixCollisionException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ApiKeyPrefixCollisionException"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/ApiKeyStatus.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ApiKeyStatus"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/ApiKeyStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ApiKeyStore"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/AuthApiKeys.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthApiKeys"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/InMemoryApiKeyStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "InMemoryApiKeyStore"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/IssuedApiKey.java",
+   "hunks_total": 1,
+   "anchors": [
+    "IssuedApiKey"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/StoredApiKey.java",
+   "hunks_total": 1,
+   "anchors": [
+    "StoredApiKey"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/apikey/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth.apikey;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/audit/AuditEvent.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AuditEvent"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/audit/AuditSink.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AuditSink"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/audit/AuditSinks.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AuditSinks"
+   ],
+   "findings": [
+    "M3-F12"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/audit/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth.audit;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/FileGroupStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "FileGroupStore"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/GroupAdminStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "GroupAdminStore"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/GroupGraph.java",
+   "hunks_total": 1,
+   "anchors": [
+    "GroupGraph"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/GroupLimits.java",
+   "hunks_total": 1,
+   "anchors": [
+    "GroupLimits"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/GroupStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "GroupStore"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/InMemoryGroupStore.java",
+   "hunks_total": 1,
+   "anchors": [
+    "InMemoryGroupStore"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.utils.auth.group;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AccessTokens.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AccessTokens"
+   ],
+   "findings": [
+    "M3-F11"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/ApiKeyFormat.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ApiKeyFormat"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/ApiKeyUsage.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ApiKeyUsage"
+   ],
+   "findings": [
+    "M3-F10"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AtomicFiles"
+   ],
+   "findings": [
+    "M3-F08",
+    "M3-F09"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AuditTrail.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AuditTrail"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AuthArgumentException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthArgumentException"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AuthCookies.java",
+   "hunks_total": 1,
+   "anchors": [
+    "AuthCookies"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Base64Url.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Base64Url"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Blowfish.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Blowfish"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/ConstantTime.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ConstantTime"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Credential.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Credential"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/CredentialResolver.java",
+   "hunks_total": 1,
+   "anchors": [
+    "CredentialResolver"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/CsrfTokens.java",
+   "hunks_total": 1,
+   "anchors": [
+    "CsrfTokens"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/DeviceTokens.java",
+   "hunks_total": 1,
+   "anchors": [
+    "DeviceTokens"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Doctor.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Doctor"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/EffectiveGrants.java",
+   "hunks_total": 1,
+   "anchors": [
+    "EffectiveGrants"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/ErrorBodies.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ErrorBodies"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/EventCalls.java",
+   "hunks_total": 1,
+   "anchors": [
+    "EventCalls"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/FailureFloor.java",
+   "hunks_total": 1,
+   "anchors": [
+    "FailureFloor"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/GrantRule.java",
+   "hunks_total": 1,
+   "anchors": [
+    "GrantRule"
+   ],
+   "findings": [
+    "M3-F02"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/GroupEdges.java",
+   "hunks_total": 1,
+   "anchors": [
+    "GroupEdges"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/GroupExpander.java",
+   "hunks_total": 1,
+   "anchors": [
+    "GroupExpander"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/GroupIds.java",
+   "hunks_total": 1,
+   "anchors": [
+    "GroupIds"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 12,
+  "by_severity": {
+   "CRITICAL": 0,
+   "HIGH": 0,
+   "MEDIUM": 4,
+   "LOW": 8
+  }
+ }
+}

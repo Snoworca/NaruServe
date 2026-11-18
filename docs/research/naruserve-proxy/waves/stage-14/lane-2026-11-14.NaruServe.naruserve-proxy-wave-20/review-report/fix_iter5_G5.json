@@ -1,0 +1,48 @@
+{
+ "run": "G5",
+ "fixes": [
+  {
+   "finding_id": "N4-01",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+     "line_range": "24-29, 73, 79-124, 163"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java",
+     "line_range": "308"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+     "line_range": "284-394"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "747"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "747"
+    }
+   ],
+   "red_test": "AtomicFilesTest.racingFirstCreatesThroughUnicodeNormalizationSpellingsLoseNothing -- assertEquals(\"unreadable files\", 0, unreadable) failed before the fix: java.lang.AssertionError: unreadable files expected:<0> but was:<50> (100 rounds of two FileUserStores over dir/caf\\u00e9.json (NFC) and dir/cafe\\u0301.json (NFD) racing a first create at a barrier, on APFS); green after the fix",
+   "why_no_red": null,
+   "mutation_check": "Reverted only the two synchronized sites (AtomicFiles.write and FileUserStore.commit) back to AtomicFiles.lockFor(file): the NFC/NFD race test failed again (unreadable files expected:<0> but was:<49>); restored the fix, 14/14 AtomicFilesTest green.",
+   "rationale_full": "Root fix per the hint, without a third per-spelling normalisation. Added AtomicFiles.directoryLockFor(File): a process-wide monitor keyed on the canonical path of the file's parent directory (own map DIRECTORY_LOCKS; IOException falls back to the absolute spelling). The file name is not part of the key, so no spelling the file system treats as one name (case, NFC/NFD, Windows short names, ./, .., symlinks) can split the monitor, and the key does not change across the first create (verified on this JDK/APFS: getCanonicalPath of an existing directory resolves NFD and case to the on-disk name). AtomicFiles.write and FileUserStore.commit (the only check-and-write holder) now synchronize on directoryLockFor instead of lockFor, so all writes into one directory are serialized; auth writes a few small files per directory so contention is negligible. Additive alternative to the hint where it conflicted with hard rule 2: making lockFor itself return the directory monitor would break the existing assertions assertNotSame(lockFor(users.json), lockFor(groups.txt)) in lockForKeysOnTheCanonicalPath and assertNotSame(before, lockFor(users.json.bak)) in lockForFoldsTheCaseOfAFileThatDoesNotExistYet, so lockFor is kept unchanged (per-path key, case-folded) and its Javadoc now says writes hold directoryLockFor instead; it is not nested inside write because holding lockFor then taking the directory monitor would invert the lock order and could deadlock. Temp/staging naming: the staging directory .<name>.tmp.new-<hex> was already unique per write; the <name>.tmp name is kept because it is asserted by AC1/tempFileIsOwnerOnlyBeforeItIsOpenedForWriting, FileUserStoreTest and Wave11DoctorTest and is what the doctor's file-state check looks for; two spellings can no longer share it concurrently because every write into the directory holds one monitor. Tests: the existing case race body moved unchanged (same assertions, 60 rounds) into a helper assertRacingFirstCreatesLoseNothing(nameA, nameB, rounds); new racingFirstCreatesThroughUnicodeNormalizationSpellingsLoseNothing (red test, assumes a normalization-insensitive FS by probe) and directoryLockForIsIndependentOfTheNameSpelling (NFC, NFD, case, ./, .., symlink, same before and after the first create, a subdirectory differs). The earlier case race and the ./ / symlink lockFor tests stay green. Docs ko+en line 747 now describe per-directory serialization including NFC/NFD."
+  }
+ ],
+ "public_api_changes": [
+  "Added public static Object AtomicFiles.directoryLockFor(File) in internal package com.snoworca.naruserve.utils.auth.internal (additive; not a documented user API). AtomicFiles.lockFor(File) unchanged in signature and key semantics; it is no longer held by write or FileUserStore."
+ ],
+ "docs_changed": [
+  "docs/api/auth.md:747",
+  "docs/api/en/auth.md:747"
+ ],
+ "build": {
+  "tests": 3377,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+ }
+}

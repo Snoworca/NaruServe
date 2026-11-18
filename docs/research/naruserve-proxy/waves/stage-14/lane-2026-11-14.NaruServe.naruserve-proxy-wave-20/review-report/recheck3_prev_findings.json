@@ -1,0 +1,545 @@
+[
+ {
+  "id": "F7-N01",
+  "title": "The 1/8 'reserve' does not keep existing sessions refreshing: after new sign-ins are refused, a few rotations fill the file and every refresh (and login) answers 503 again",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java",
+   "line_range": "28-33, 199-210"
+  },
+  "evidence": {
+   "command": "Tmp501ReserveTest (temporary): FileRefreshTokenStore(f, 32 KB); save new families t<i>/fam<i> until save throws; then for each stored family markUsed(t<i>) + save(t<i>r1, fam<i>) as TokenService.refresh does. ./gradlew :NaruServe-api:test --offline --tests '*Tmp501*' -i | grep TMP501",
+   "output": "TMP501 signed-in families before refusal: 142, file=28520\nTMP501 rotations that succeeded: 21 of 142; file=32742; failure=com.snoworca.naruserve.utils.auth.internal.MiniJson$JsonFormatException: the written document is larger than 32768 bytes (the FILE limit)",
+   "intent_output": "Class Javadoc (lines 31-33): the last eighth 'stays for the existing sessions' rotations', and the refusal message says 'existing sessions keep refreshing'; so all 142 admitted sessions should be able to refresh. Instead only 21 (15%) can refresh once; the 22nd refresh and every later refresh/login is 503 (TokenService.call -> AuthUnavailableException) until records expire \u2014 the M1-F01 end state. At the 8 MB default the same ratio holds (1 MB reserve ~4.6k records vs ~31k admitted families). The failing refresh also leaves its token already markUsed, so the client's retry is treated as reuse and revokes the family."
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java",
+     "line_range": "20-61, 159-327"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+     "line_range": "515-605"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "1045"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "1045"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M1-F04",
+  "title": "A shared Router keeps strong references to every app it was ever mounted in",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationLog.java",
+   "line_range": "125-137, 204-215"
+  },
+  "evidence": {
+   "command": "./gradlew :NaruServe-api:test --offline --tests '*Tmp501JudgeTest.m1f04*' -i | grep TMP501   (temporary NaruServe-api test, deleted after the run) \u2014 50 apps (never started) each app.use(\"/r\", sharedRouter), WeakReference to each, 5x System.gc(); then 20 apps listen(0)+shutdown with the same pattern",
+   "output": "TMP501 M1-F04 never-started apps that mounted the shared router, still reachable after GC: 50/50\nTMP501 M1-F04 after a later registration on the router: 50/50\nTMP501 M1-F04b shut-down apps still reachable before any later router registration: 20/20\nTMP501 M1-F04b after a later router registration: 0/20",
+   "intent_output": "RegistrationLog.owners() is documented as 'the distinct live apps that mount router ... drops terminated ones': apps that are no longer live should not stay reachable through the Router. Observed: every never-started app is retained forever (0 of 50 collected even after a later registration), and even shut-down apps (with their RegistrationLog, records and DefaultRestApp) stay reachable until some later registration happens on that Router."
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/RegistrationLog.java",
+     "line_range": "204-215, 264-275, 337-356"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+     "line_range": "385-440"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M2-F09",
+  "title": "A Pattern registration racing onStart escapes the protectOnly FAIL",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "579-586, 629-645"
+  },
+  "evidence": {
+   "command": "./gradlew :NaruServe-api:test --offline --tests '*Tmp501JudgeTest.m2f09_registrationDuringSeed' -i | grep TMP501   (temporary NaruServe-api test, deleted after the run) \u2014 W8 with protectOnly(\"/api\") and .user(\"seeded\",...), a ForwardingUserStore whose create(\"seeded\") blocks on a latch (inside onStart: doctor already ran, started still false); while blocked, main thread calls app.get(Pattern.compile(\"^/raced$\"), h); then release",
+   "output": "TMP501 M2-F09 reached seed window: true; Pattern registration during it: registered; start error: null\nTMP501 M2-F09 GET /raced without credentials: 200 served",
+   "intent_output": "SEC-AUTH-006 AC-3: with .protectOnly(\"/api\") a regex path registration before start fails the start with doctor FAIL, and after start app.get(Pattern, h) throws IllegalStateException and the route is not served. Observed: neither \u2014 the start succeeds, the registration is accepted and the route is served."
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "296-301, 596-599, 663-684"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/ProtectOnlyTest.java",
+     "line_range": "155-205"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M2-F12",
+  "title": "webSocketWrappers counts webSocket() calls, not WEBSOCKET registrations",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "1064-1080, 2573-2576"
+  },
+  "evidence": {
+   "command": "./gradlew :NaruServe-api:test --offline --tests '*Tmp501JudgeTest.m2f12_wrapperCount' -i | grep TMP501   (temporary NaruServe-api test, deleted after the run) \u2014 AdminFixture: (1) ws(\"/ws\", auth.webSocket(h)); auth.webSocket(h2) never registered; ws(\"/raw\", raw); (2) one wrapper object registered on /a and /b",
+   "output": "TMP501 M2-F12 one wrapped + one raw route + one unregistered wrapper: websocket wrapper item = none\nTMP501 M2-F12 one wrapper reused for two routes (both wrapped): item = WARN 2 WebSocket routes but 1 use of auth.webSocket(handler); without it a connection is authenticated only at the upgrade and is never closed at token expiry or revocation",
+   "intent_output": "FR-FLOW-008 AC-6 / OPS-AUTH-001 AC-2 (R40): the doctor WARNs when a WebSocket route is not wrapped ('without it a connection ... is never closed at token expiry or revocation'). Case 1: /raw is unwrapped and the WARN is missing (false negative on a security diagnostic). Case 2: both routes are wrapped and the WARN claims they are not (false positive)."
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "1109-1130, 2680-2712"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/WebSocketWrapperTest.java",
+     "line_range": "192-215"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "1164"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "1164"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M2-F19",
+  "title": "Per-FileUserStore file throttle/device trust keep the first builder's TimeSource and Logger",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "3921-3970"
+  },
+  "evidence": {
+   "command": "./gradlew :NaruServe-api:test --offline --tests '*Tmp501JudgeTest.m2f19_secondAuthUsesFirstClock' -i | grep TMP501   (temporary NaruServe-api test, deleted after the run) \u2014 FileUserStore users; Auth a over users with a fixed clock T0; Auth b over the same users with an AtomicLong clock; 3x b.loginThrottle().recordFailure(\"k\",3,60000); advance b's clock 10 min; b.loginThrottle().retryAfter(\"k\",3,60000)",
+   "output": "TMP501 M2-F19 same throttle instance: true\nTMP501 M2-F19 retryAfter right after 3 failures: 60000\nTMP501 M2-F19 retryAfter 10 min later on b's clock (b's .timeSource): 60000",
+   "intent_output": "docs/api/auth.md:696: 'auth\uc758 \uacf5\uac1c \uc2dc\uac01\uc740 \ubaa8\ub450 \uc774 \uc18c\uc2a4\uc5d0\uc11c \uc77d\uc740 epoch \ubc00\ub9ac\ucd08' (every auth time comes from the builder's .timeSource), and IR-FLOW-003 AC-2: after 60 seconds (TimeSource) retryAfter returns 0. With b's clock 10 minutes later the 60 s block should be over (0); it is still 60000 because the shared throttle reads a's frozen clock."
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "169-174, 233-235, 566-571, 1489-1536, 3953-3963, 4028-4034, 4070-4110"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthStoreDefaultsTest.java",
+     "line_range": "117-137"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "915"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "915"
+    }
+   ]
+  }
+ },
+ {
+  "id": "R2-M1-F02",
+  "title": "onStop: an interrupt during the new awaits skips stopCleanup, so the cleanup executor is never shut down and the final snapshot is lost",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "587-603"
+  },
+  "evidence": {
+   "command": "./gradlew :NaruServe-api:test --offline --tests '*Tmp501JudgeTest.r2m1f02_interruptDuringStop' -i | grep TMP501   (temporary NaruServe-api test, deleted after the run) \u2014 W8 start (InMemoryUserStore), 3 logins (hash-slot workers exist), Thread.currentThread().interrupt(); app.shutdown(5, SECONDS); count live 'naru-auth-cleanup-' threads",
+   "output": "TMP501 R2-M1-F02 cleanup threads after start: 1\nTMP501 R2-M1-F02 interrupt flag after shutdown: false; state TERMINATED; cleanup threads still alive: 1\nTMP501 R2-M1-F02 logger lines: [ERROR onStop callback failed null][]",
+   "intent_output": "FR-TOKEN-002 AC-5: 'after onStop the scheduler thread has terminated and neither method is called again'. Observed: the app is TERMINATED, onStop logged 'onStop callback failed' (InterruptedException from awaitTermination), and the cleanup thread is still alive; stopCleanup() (and with file stores the final throttle/device snapshot) never ran."
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "614-638, 707-726"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+     "line_range": "312-335"
+    }
+   ]
+  }
+ },
+ {
+  "id": "R2-M1-F08",
+  "title": "Shared file default stores keep the first Auth's ComponentLogger, so after that app stops they log to its closed logger",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "3770, 3921-3970"
+  },
+  "evidence": {
+   "command": "./gradlew :NaruServe-api:test --offline --tests '*Tmp501JudgeTest.r2m1f08_secondAppLogsToFirstAppLogger' -i | grep TMP501   (temporary NaruServe-api test, deleted after the run) \u2014 FileUserStore users; app A (logger LA) + Auth a (no .logger) installed, listen, shutdown; app B (logger LB) + Auth b over the same users installed, listen; 100,002 distinct keys through b.loginThrottle().recordFailure to hit the 100,000-key cap WARN",
+   "output": "TMP501 R2-M1-F08 app A (stopped) logger new lines: [WARN auth: the in-memory login throttle reached its cap of 100000 keys; the oldest keys are dropped from now on (logged once)]\nTMP501 R2-M1-F08 app B (running) logger new lines with 'key': []",
+   "intent_output": "docs/api/auth.md:90: `.logger(Logger)` default is 'install \ub4a4 \uc571 \ub85c\uac70' (the app's logger after install), and Auth.ComponentLogger Javadoc: components forward to the app's logger from install on. App B's Auth should log the cap WARN to LB; it went to the stopped app A's logger and LB saw nothing."
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "169-174, 566-571, 1489-1536, 3953-3963, 4028-4034, 4070-4110"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AuthStoreDefaultsTest.java",
+     "line_range": "139-176"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "915"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "915"
+    }
+   ]
+  }
+ },
+ {
+  "id": "R2-M1-F09",
+  "title": "PROD file-key policy and doctor count only see a bare FileUserStore; a decorated one writes plain hashes in PROD",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "line_range": "3836-3850, 896-905"
+  },
+  "evidence": {
+   "command": "./gradlew :NaruServe-api:test --offline --tests '*Tmp501JudgeTest.r2m1f09_prodDecoratedFileStore' -i | grep TMP501   (temporary NaruServe-api test, deleted after the run) \u2014 Auth.builder(KeySources.of(SECRET)).mode(PROD).users(new FileUserStore(f)).build(), then the same with .users(new ForwardingUserStore(new FileUserStore(f)){}) and a user created through the inner store",
+   "output": "TMP501 R2-M1-F09 bare FileUserStore PROD: AuthConfigException Auth configuration is invalid: PROD keeps no secret unencrypted in an auth file: pass an AuthFileKey to new FileUserStore(file, AuthFileKey) ...\nTMP501 R2-M1-F09 ForwardingUserStore(FileUserStore) PROD: built Auth{mode=PROD, ...}\nTMP501 R2-M1-F09 users.json after create: {\"format\":\"naru-users\",\"version\":1,...\"passwordHash\":\"pbkdf2-sha256$1000$mAnv...\"",
+   "intent_output": "FR-IAM-015: 'when mode is PROD and a FileUserStore ... has no key, build() shall throw AuthConfigException naming the missing key option'; docs/api/auth.md documents ForwardingUserStore as the required base for decorators (cache/tenant/audit) and documents a class-check limitation only for MULTI_INSTANCE (auth.md:535), not for the PROD key rule. A decorated FileUserStore builds in PROD and writes plain (version 1) password hashes."
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "938-948, 1014-1019, 1449-1465, 3969-3976"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/UserStoreDelegates.java",
+     "line_range": "1-37 (new internal class)"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/ForwardingUserStore.java",
+     "line_range": "23-27"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/FileSecretsTest.java",
+     "line_range": "669-707"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "1648"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "1648"
+    }
+   ]
+  }
+ },
+ {
+  "id": "R2-M1-F03",
+  "title": "AtomicFiles.lockFor keys on the absolute, not canonical, path: two FileUserStores over one file spelled differently bypass the per-path lock",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "line_range": "72-83"
+  },
+  "evidence": {
+   "command": "./gradlew :NaruServe-api:test --offline --tests '*Tmp501P2Test*' -i  (temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Tmp501P2Test.java, deleted afterwards) ; test lockForSpelling: AtomicFiles.lockFor(new File(dir,\"users.json\")) vs lockFor(new File(new File(dir,\".\"),\"users.json\")); then 1500 trials, two FileUserStore instances over the same file, spelled differently vs identically, each create()s one user at a CyclicBarrier, then the file is reopened",
+   "output": "TMP501 F03 sameMonitor=false\nTMP501 F03 differentSpelling oneSuccessButNotOnDisk=1205 oneSuccessUnreadable=104 zeroSuccess=0\nTMP501 F03 sameSpelling oneSuccessButNotOnDisk=0 oneSuccessUnreadable=0 zeroSuccess=0",
+   "intent_output": "docs/api/auth.md L747 (and AtomicFiles Javadoc L68-70): writes to one path are serialized in the process and a FileUserStore refuses (IOException) a write when another FileUserStore changed the file, so a create() that returns normally is on disk and the file stays readable: expected oneSuccessButNotOnDisk=0 and oneSuccessUnreadable=0 for both spellings (as the same-spelling run shows)"
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+     "line_range": "14-31, 76-96"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+     "line_range": "241-261"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java",
+     "line_range": "281-333"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "747"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "747"
+    }
+   ]
+  }
+ },
+ {
+  "id": "R2-M1-F04",
+  "title": "M3-F08 partially resolved: FileGroupStore still loads its file through the unbounded overload",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "line_range": "153-155"
+  },
+  "evidence": {
+   "command": "./gradlew :NaruServe-api:test --offline --tests '*Tmp501P2Test*' -i  (temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Tmp501P2Test.java, deleted afterwards) ; test hugeGroupsFile: a sparse 900 MB groups file starting 'naru-groups 1\\n' then NUL bytes (corrupt), opened with new FileGroupStore(file, GroupLimits.defaults(), logger); control: same-size users.json with new FileUserStore(file); test JVM maxHeap=536870912",
+   "output": "TMP501 F04 FileUserStore: java.io.IOException: FAIL: auth store file .../users.json is unreadable (the users file has 943718400 bytes, above the limit of 8388608 bytes; ...)\nTMP501 F04 FileGroupStore: java.lang.OutOfMemoryError: Java heap space",
+   "intent_output": "docs/api/auth.md L747: '\uc800\uc7a5\uc18c\ub9c8\ub2e4\uc758 \ud06c\uae30 \ud55c\ub3c4\ub294 \uc77d\uae30 \uc804\uc5d0 \ud30c\uc77c \uae38\uc774\uc640 \ube44\uad50\ud558\ubbc0\ub85c, \uc544\uc8fc \ud06c\uac70\ub098 \ub9dd\uac00\uc9c4 \ud30c\uc77c\uc740 \ud799\uc744 \ub2e4 \uc4f0\uc9c0 \uc54a\uace0 FAIL ... above the limit \uba54\uc2dc\uc9c0\ub85c \uae30\ub3d9\uc774 \uc2e4\ud328\ud569\ub2c8\ub2e4'; REL-IAM-004 AC-4: a corrupt main file fails start with a FAIL message -> expected java.io.IOException 'FAIL: ...' for the groups file, not OutOfMemoryError"
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/group/FileGroupStore.java",
+     "line_range": "13-69, 136-152"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+     "line_range": "206-218"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/group/GroupAdminStoreTest.java",
+     "line_range": "344-399"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+     "line_range": "296-313"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "511"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "511"
+    }
+   ]
+  }
+ },
+ {
+  "id": "R2-M1-F05",
+  "title": "AtomicFiles restricts the temp file only after FileOutputStream created it with umask permissions",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "line_range": "102-113, 140-146"
+  },
+  "evidence": {
+   "command": "./gradlew :NaruServe-api:test --offline --tests '*Tmp501P2Test*' -i  (temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Tmp501P2Test.java, deleted afterwards) ; test tempFilePermissionWindow: a watcher thread polls Files.getPosixFilePermissions(users.json.tmp) while the main thread calls AtomicFiles.write(users.json, 64 bytes) 20000 times (default umask 022)",
+   "output": "TMP501 F05 writeFailures=12\nTMP501 F05 umask-file-perms observations=1294199 seen=[[OWNER_READ], [OWNER_WRITE, GROUP_READ, OWNER_READ, OTHERS_READ], [OWNER_WRITE, OWNER_READ], [OWNER_WRITE]]",
+   "intent_output": "docs/api/auth.md L747: the temp file is made owner-only so the store file holding password hashes and token versions is not readable by other local users regardless of umask ('umask\uc640 \uad00\uacc4\uc5c6\uc774') -> the temp file should never be observable with GROUP_READ/OTHERS_READ; observed 0644. A descriptor opened by another user in that window keeps reading the content written next (POSIX: chmod does not revoke open descriptors; that step was not run as a second OS user)."
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+     "line_range": "46-69, 115-195"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+     "line_range": "263-294"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "747"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "747"
+    }
+   ]
+  }
+ },
+ {
+  "id": "M4-F09",
+  "title": "An accepted but malformed stored hash is refused with no derivation, unlike the documented constant work",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Passwords.java",
+   "line_range": "120-179"
+  },
+  "evidence": {
+   "command": "./gradlew :NaruServe-api:test --offline --tests '*Tmp501P2Test*' -i  (temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Tmp501P2Test.java, deleted afterwards) ; test malformedHashTiming: new Passwords(200_000).prepare(); verifyForLogin(\"wrong\", real 200k-iteration PBKDF2 hash) vs verifyForLogin(\"wrong\", null) vs verifyForLogin(\"wrong\", \"pbkdf2-sha256$x$y$z\"), 5 attempts each after warm-up; Passwords.verify with the same two hashes",
+   "output": "TMP501 M4F09 verifyForLogin ms/attempt: wrongPasswordRealHash=147 nullHash(dummy)=147 malformedAcceptedHash=0\nTMP501 M4F09 Passwords.verify ms: real=148 malformed=0",
+   "intent_output": "SEC-TOKEN-009 statement (docs/spec/18 L988): every password login attempt runs exactly one PBKDF2 computation inside its slot (a target-cost dummy for unknown/missing hashes); Passwords.verifyForLogin Javadoc: 'exactly one PBKDF2 computation whatever the account' -> expected ~147 ms for the malformed accepted hash, observed 0 ms (no derivation)"
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Passwords.java",
+     "line_range": "10-16, 120-133, 157-196"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/Pbkdf2.java",
+     "line_range": "96-145"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/password/Pbkdf2PasswordHasher.java",
+     "line_range": "76-107"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7ReviewFixesTest.java",
+     "line_range": "115-204"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "754, 1298"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "754, 1298"
+    }
+   ]
+  }
+ },
+ {
+  "id": "R2-T1-F03",
+  "title": "hugeRefreshFileFailsBeforeItIsRead depends on a 3 GB sparse file the test file system may not support",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+   "line_range": "514-531"
+  },
+  "evidence": {
+   "command": "hdiutil create -size 64m -fs MS-DOS -volname TMP501 -o tmp501fat.dmg && hdiutil attach tmp501fat.dmg -mountpoint <scratchpad>/fatmnt -nobrowse; then temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Tmp501SparseTest.java (TemporaryFolder rooted on the FAT32 mount, the test's exact first step: new RandomAccessFile(f,\"rw\").setLength(3L*1024*1024*1024)); ./gradlew :NaruServe-api:test --offline --tests '*Tmp501*' -i",
+   "output": "TMP501 setLength threw java.io.IOException: No space left on device\nTMP501 ms=1\nTmp501SparseTest > setLength3GbOnFat FAILED",
+   "intent_output": "The test should reach new FileRefreshTokenStore(f) and assert the FAIL 'above the limit' message (size check before read); on a file system without sparse-on-extend it errors in its own setup with IOException ENOSPC and never exercises the store."
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java",
+     "line_range": "15, 632-656"
+    }
+   ]
+  }
+ },
+ {
+  "id": "T2-F07",
+  "title": "Forged-signature token is identical to the original about 1 run in 1024",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7TokenTest.java",
+   "line_range": "381-388"
+  },
+  "evidence": {
+   "command": "temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Tmp501ForgeTest.java: same Auth/WrappingCodec(Hs256TokenCodec) setup as customCodecIssuesAndAuthenticates, issue access tokens in a loop, build forged = \"x.\" + at.substring(2, at.length()-2) + \"AA\" exactly as line 381, stop when forged.equals(at), then GET /api/me with Bearer forged; ./gradlew :NaruServe-api:test --offline --tests '*Tmp501*' -i",
+   "output": "TMP501 issues=445 forgedEqualsToken=true token=x.eyJhbGciOiJIUzI1NiIsInR5cCI6ImF0K2p3dCIsImtpZCI6Ijh2OF9KREFuIn0....Q1PRYNjEhAA\nTMP501 forged status=200 body=me:1",
+   "intent_output": "The 'forged signature' request must answer 401 invalid_token like the throwing-decode request (assertEquals(sig.status(), bad.status())); when the random signature already ends in \"AA\" (~1/1024 issues, here hit at issue 445) the forged token equals the valid one and answers 200, so the test fails spuriously. The round-1 rejection ('x.' replaces 'ey') was a misread: the token itself starts with 'x.', so substring(2) re-adds the same prefix."
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7TokenTest.java",
+     "line_range": "5, 382-417"
+    }
+   ]
+  }
+ },
+ {
+  "id": "R2-T2-F06",
+  "title": "hugeFileFailsBeforeItIsRead needs 3 GB of free disk wherever the file system does not support sparse files",
+  "location": {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java",
+   "line_range": "210-226"
+  },
+  "evidence": {
+   "command": "hdiutil create -size 64m -fs MS-DOS -volname TMP501 -o tmp501fat.dmg && hdiutil attach tmp501fat.dmg -mountpoint <scratchpad>/fatmnt -nobrowse; then temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Tmp501SparseTest.java (TemporaryFolder rooted on the FAT32 mount, the test's exact first step: new RandomAccessFile(f,\"rw\").setLength(3L*1024*1024*1024)); ./gradlew :NaruServe-api:test --offline --tests '*Tmp501*' -i",
+   "output": "TMP501 setLength threw java.io.IOException: No space left on device\nTMP501 ms=1\nTmp501SparseTest > setLength3GbOnFat FAILED",
+   "intent_output": "SEC_TOKEN_002_AC6_hugeFileFailsBeforeItIsRead must reach new FileUserStore(f) and assert the FAIL/8388608 message; on a non-sparse file system with less than 3 GB free its identical setLength(3 GB) setup throws IOException 'No space left on device' and the test errors without checking AC-6."
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java",
+     "line_range": "210-231"
+    }
+   ]
+  }
+ },
+ {
+  "id": "R2-T2-F04",
+  "title": "Kotlin tests reworked for T4-F05/T4-F06 now start apps and auth instances and never shut them down",
+  "location": {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave6KotlinTest.kt",
+   "line_range": "33-81 (and AuthWave7KotlinTest.kt 107-131, 147-165)"
+  },
+  "evidence": {
+   "command": "temporary NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/Tmp501LeakKotlinTest.kt: for each test, snapshot live threads, run it via JUnitCore.run(Request.method(cls, name)), sleep 1.5 s, print new live threads; ./gradlew :NaruServe-api:test --offline --tests '*Tmp501*' -i",
+   "output": "TMP501 AuthWave6KotlinTest.token service, lockout and websocket wrapper from Kotlin ok=true newLiveThreads=15 [in-memory-http-1, naru-auth-background-1..4, naru-auth-cleanup-2, naru-auth-hash-2-1..6, naru-auth-websocket-3, naruserve-49153-ws-idle, naruserve-49153-ws-sender-1]\nTMP501 AuthWave7KotlinTest.docs auth csrf guarded route ok=true newLiveThreads=3 [naru-auth-cleanup-4, naru-auth-hash-3-1, naru-auth-hash-3-2]\nTMP501 AuthWave7KotlinTest.docs auth cors before install ok=true newLiveThreads=3 [naru-auth-cleanup-5, naru-auth-hash-4-1, naru-auth-hash-4-2]\nTMP501 AuthFileKeyKotlinTest.FR-IAM-015 AC-9 file keys from Kotlin ok=true newLiveThreads=0 []",
+   "intent_output": "A test that starts a TestApp/Auth leaves no live threads once it returns (the T1-F02 cleanup pattern; AuthFileKeyKotlinTest shuts down in finally and leaves 0). The three reworked tests leave 15, 3 and 3 live threads (app adapter, websocket, auth cleanup scheduler and hash pools) for the rest of the test JVM."
+  },
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave6KotlinTest.kt",
+     "line_range": "51-76"
+    },
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave7KotlinTest.kt",
+     "line_range": "108-136, 153-174"
+    },
+    {
+     "path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthKotlinTestsStopKotlinTest.kt",
+     "line_range": "1-47 (new)"
+    }
+   ]
+  }
+ },
+ {
+  "id": "R2-M1-F06",
+  "title": "Key-file migration on Windows: a failed delete of the raw .bak fails the build after a successful migration and leaves the raw key, which createOnce later restores",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeySources.java",
+   "line_range": "254-263, 334-353"
+  },
+  "evidence": null,
+  "fix_meta": {
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/KeySources.java",
+     "line_range": "3-5, 134-180, 186-240, 251, 270, 312-325, 396-428"
+    },
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+     "line_range": "4126-4128"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/FileSecretsTest.java",
+     "line_range": "277-318"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "1651"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "1651"
+    }
+   ]
+  },
+  "note": "residual; user decided: fix"
+ }
+]

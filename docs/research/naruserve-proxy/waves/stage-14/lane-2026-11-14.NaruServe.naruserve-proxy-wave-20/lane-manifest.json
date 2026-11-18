@@ -1,0 +1,157 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-20",
+ "wave": "wave-20",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-20",
+ "base_sha": "c900c9dd276513e149c74883beaf93881bd8fe67",
+ "head_sha": "25454cc11e8ac5ce7327a9af72f20459c892499a",
+ "commits": [
+  {
+   "sha": "a74b9a4256266d57420ed591efe472d537c1f8c1",
+   "subject": "test(proxy): cover retries of connect failures and 502/503 answers",
+   "req": "FR-PROXY-018",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "40e91ea4bde91a2086af900e1c9830702c232bf2",
+   "subject": "feat(proxy): retry connect failures and bodyless 502/503 answers",
+   "req": "FR-PROXY-018",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "cc66dd41d0f739439cd79ac55f65c95131489cc4",
+   "subject": "test(proxy): cover the backend client's one connection per attempt",
+   "req": "FR-PROXY-020",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "64cba5c053bed27fe86d1339e6431fc8290a17b7",
+   "subject": "fix(proxy): end retries on an interrupted wait and guard retried closes",
+   "req": "FR-PROXY-018",
+   "kind": "review",
+   "missing_trailers": false
+  },
+  {
+   "sha": "54e6f0c8628f93ebb0953dac88c820299ae8c4ab",
+   "subject": "fix(proxy): relay the last 502/503 when the wait before its retry is interrupted",
+   "req": "FR-PROXY-018",
+   "kind": "review",
+   "missing_trailers": false
+  },
+  {
+   "sha": "2891b4316fbf9c877dd7df8d8e6263ae74ed9801",
+   "subject": "fix(proxy): close a retried 502/503 before the wait again",
+   "req": "FR-PROXY-018",
+   "kind": "review",
+   "missing_trailers": false
+  },
+  {
+   "sha": "3b7065b220a274c49e12389d729e5652270af01e",
+   "subject": "refactor(proxy): decide every retry by one rule at the moment of the decision",
+   "req": "FR-PROXY-018",
+   "kind": "review",
+   "missing_trailers": false
+  },
+  {
+   "sha": "25454cc11e8ac5ce7327a9af72f20459c892499a",
+   "subject": "style(proxy): mark the interrupt tests as declared behaviour",
+   "req": "FR-PROXY-018",
+   "kind": "review",
+   "missing_trailers": false
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "FR-PROXY-018",
+   "FR-PROXY-020"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-20/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-20/.kiwi/sessions/2026-11-14.naruserve.naruserve-proxy-wave-20-fr-proxy-018/lanes/w20s14l1/reports",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-20/.kiwi/sessions/2026-11-14.naruserve.naruserve-proxy-wave-20-fr-proxy-020/lanes/w20s14l1/reports",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-20/.kiwi/sessions/2026-11-18.naruserve.self-w20s14l1/state.json",
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-20/.kiwi/sessions/2026-11-18.naruserve.self-w20s14l1/test_sufficiency.json"
+ ],
+ "red_evidence": [
+  {
+   "req": "FR-PROXY-018",
+   "test": "ProxyRetryTest (12 of 20 before 40e91ea)",
+   "red_output": "AC2 bodyless GET expected:<3> but was:<1>; AC3 expected:<3> but was:<1>; AC5 expected:<3> but was:<1>; AC6 AssertionError; AC8 expected:<2> but was:<1>; AC9 expected:<2> but was:<1>; AC10 expected:<3> but was:<1>; AC11 expected:<3> but was:<1> (AC-1, AC-4, AC-7 and the bodyless-POST/body-GET AC-2 case are negative criteria that already held at base)"
+  },
+  {
+   "req": "FR-PROXY-020",
+   "test": "ProxyBackendConnectionTest.fr_PROXY_020_AC1_aRequestRetriedTwiceUsesThreeConnections",
+   "red_output": "against base c900c9d main sources: expected:<3> but was:<1>; green after 40e91ea"
+  },
+  {
+   "req": "FR-PROXY-018",
+   "test": "review regressions fr_PROXY_018_AC9_anInterruptedWaitEndsTheRetries / AC9_anInterruptedWaitBeforeA503RetryEndsWithThatStatus / AC2_theConnectionOfARetried503IsClosedBeforeTheWait / AC9_anInterruptDuringTheAttemptRelaysItsResponseUnchanged",
+   "red_output": "attempts expected:<1> but was:<4>; X-Attempt expected:<0> but was:<1>; first connection not closed while the delay ran; expected:<[busy]> but was:<[]>"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "rounds": 5,
+  "resolved": [
+   "FND-001",
+   "FND-002",
+   "FND-101",
+   "FND-102",
+   "FND-201",
+   "FND-301",
+   "FND-302"
+  ],
+  "dropped": [
+   "FND-003",
+   "FND-004",
+   "FND-401"
+  ],
+  "declared_limits": [
+   "interrupt behaviour (see srs_deltas)"
+  ],
+  "clean_code": "1 round applied; CC-001, CC-003 dismissed as project convention"
+ },
+ "intentionally_empty": {
+  "req": "FR-PROXY-020",
+  "detail": "no implementation commit: AC-1 (sequential), AC-2, AC-3 and AC-4 already held at base c900c9d; AC-1 (retried twice -> three connections) was red at base and is met by the FR-PROXY-018 implementation 40e91ea. Evidence: .kiwi/sessions/2026-11-14.naruserve.naruserve-proxy-wave-20-fr-proxy-020/lanes/w20s14l1/red-at-base-c900c9d.txt; ProxyBackendConnectionTest 6/6 green at HEAD"
+ },
+ "design_refuted": [],
+ "srs_deltas": [
+  {
+   "req": "FR-PROXY-018",
+   "kind": "unspecified-behaviour",
+   "detail": "Interrupts are not covered by the SRS. Implemented and tested as declared behaviour: a thread whose interrupt status is set when a retry is decided makes no retry (the last failure or 502/503 is relayed unchanged, interrupt status kept); a wait interrupted after a connect failure throws that failure; a wait interrupted after a closed 502/503 (closed before waiting per the Implementation Note) answers through the error flow with an HttpException of that status, or the fired deadline's kind. Suggest an AC or Implementation Note recording this.",
+   "evidence": "ProxyRetryTest fr_PROXY_018_AC9_anInterruptedWaitEndsTheRetries, _AC9_anInterruptedWaitBeforeA503RetryEndsWithThatStatus, _AC9_aPendingInterruptMakesNoRetryAndIsKept, _AC9_anInterruptDuringTheAttemptRelaysItsResponseUnchanged"
+  },
+  {
+   "req": "FR-PROXY-018",
+   "kind": "clarification",
+   "detail": "'Body sent to the backend was zero bytes' is implemented as: not chunked and length 0 (no body found by the pre-read, or Content-Length: 0). A client Transfer-Encoding: chunked request with an empty body is treated as not bodyless, since a streamed chunked body cannot be sent again.",
+   "evidence": "Proxy.BodyFraming.bodyless(); ProxyRetryTest AC-2 tests"
+  }
+ ],
+ "out_of_lease_paths": [],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "speckiwi coverage --tests --ids FR-PROXY-018,FR-PROXY-020: passed=true, every AC cited (FR-PROXY-018 AC-1..AC-11, FR-PROXY-020 AC-1..AC-4); citing tests green in the final build"
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4710,
+  "failures": 0,
+  "exit_code": 0,
+  "note": "baseline at integration head 4678/0; +32 new tests (ProxyRetryTest 26, ProxyBackendConnectionTest 6); first full run at cc66dd4 executed every task fresh (6m52s, 4704/0); later runs re-ran the changed module"
+ },
+ "bootstrap": "not-applicable",
+ "notes": [
+  "kiwi-pm run_ids from the card contain upper case (NaruServe), which kiwi-pm's run_id pattern [a-z0-9.-] rejects; session directories use the lower-cased id",
+  "The Agent tool started subagents asynchronously in this environment: the kiwi-coder subagent for FR-PROXY-018 was stopped before any edit and the kiwi-coder work (TDD, implementation, regression) for both requirements ran inline in the worker's foreground; review-fix-loop reviewers ran as subagents (5 rounds), each awaited inside the turn while the full build ran in the foreground; classification and fixes were done by the worker"
+ ]
+}

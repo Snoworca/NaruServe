@@ -1,0 +1,36 @@
+{
+  "run": "G4",
+  "fixes": [
+    {
+      "finding_id": "N3-01",
+      "status": "fixed",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/UserStoreDelegates.java", "line_range": "1-79"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/FileSecretsTest.java", "line_range": "710-777"},
+        {"path": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFileKeyKotlinTest.kt", "line_range": "9-23, 76-90"}
+      ],
+      "red_test": "FileSecretsTest.FR_IAM_015_AC3_valueEqualityDecoratorsAreHeldToTheKeyRule: java.lang.AssertionError: PROD built over TenantUsers(FileUserStore) without a key (FileSecretsTest.java:772 via :758); with the Objects.hash case removed first it threw java.lang.NullPointerException: Cannot invoke \"String.hashCode()\" because \"this.tenant\" is null (StrictTenantUsers). AuthFileKeyKotlinTest.`FR-IAM-015 AC-3 data class decorator is held to the key rule`: java.lang.NullPointerException: Cannot invoke \"String.hashCode()\" because \"this.tenant\" is null (Kotlin data class N301TenantStore : ForwardingUserStore)",
+      "why_no_red": null,
+      "rationale_full": "Reproduced both evidence lines: a Java decorator with equals/hashCode = Objects.hash(tenant) was recorded under the hash of a null field, so Auth.fileUserStoreIn missed the inner FileUserStore and PROD built without a key; a decorator whose hashCode dereferences its field (and a Kotlin data class) threw an NPE from WeakHashMap.put in the ForwardingUserStore constructor. Fix (hint 1, identity-based registration): UserStoreDelegates now keys a synchronized HashMap on a private weak Key (WeakReference subclass with System.identityHashCode and reference equality, a cleared key equal only to itself, expunged through a ReferenceQueue on each record/delegateOf). No hashCode/equals of the half-built decorator runs, the decorator is still held weakly, and the public signatures record(Object,Object)/delegateOf(Object) and ForwardingUserStore are unchanged. Mutation check: restoring the original WeakHashMap registry made both new tests fail again (AssertionError 'PROD built over TenantUsers(FileUserStore) without a key' and the Kotlin NPE); with the fix restored they pass. Existing FR_IAM_015_AC3_decoratedFileUserStoreIsHeldToTheKeyRule stays green."
+    },
+    {
+      "finding_id": "N3-02",
+      "status": "fixed",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java", "line_range": "11, 25, 79-116"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java", "line_range": "262-341"},
+        {"path": "docs/api/auth.md", "line_range": "747"},
+        {"path": "docs/api/en/auth.md", "line_range": "747"}
+      ],
+      "red_test": "AtomicFilesTest.lockForFoldsTheCaseOfAFileThatDoesNotExistYet: java.lang.AssertionError: expected same:<java.lang.Object@628c4ac0> was not:<java.lang.Object@7b84fcf8> (lockFor(dir/users.json) vs lockFor(dir/USERS.json) for a not-yet-existing file); AtomicFilesTest.racingFirstCreatesThroughCaseSpellingsLoseNothing (APFS, case-insensitive): java.lang.AssertionError: unreadable files expected:<0> but was:<18>",
+      "why_no_red": null,
+      "rationale_full": "Reproduced: for a file that does not exist yet getCanonicalPath() does not fold case, so users.json and USERS.json got two monitors while sharing one temp file on a case-insensitive file system; a 60-round race of two FileUserStores creating at a CyclicBarrier left 18 unreadable files. Fix (hint 2): AtomicFiles.lockFor now uses a private lockKey(file): the canonical path when the file exists, otherwise the canonical parent directory plus the name, and the key is lower-cased with Locale.ROOT. The key is therefore the same before and after the first create and for every case spelling; on a case-sensitive file system two names differing only in case merely share a monitor (more serialization, no correctness loss; no store monitor is taken while a file lock is held, so no new lock-order cycle). Symlinked directories and ./.. spellings still resolve through the canonical parent/leaf (existing lockForKeysOnTheCanonicalPath stays green). Docs ko+en line 747 now say the comparison is case-folded. The race test uses a 10 s barrier and 30 s future deadlines (no sleeps) and is skipped only on a case-sensitive file system; it ran (not skipped) here. Mutation check: making lockKey return the old getCanonicalPath() made both tests fail again (assertSame and 'unreadable files expected:<0> but was:<14>'); restored, both pass."
+    }
+  ],
+  "public_api_changes": [],
+  "docs_changed": [
+    "docs/api/auth.md:747 (write serialization compares case-folded canonical paths; USERS.json spelling; case-sensitive FS note)",
+    "docs/api/en/auth.md:747 (same, English)"
+  ],
+  "build": {"tests": 3375, "failures": 0, "errors": 0, "skipped": 0}
+}

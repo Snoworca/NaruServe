@@ -1,0 +1,41 @@
+{
+ "run": "G6",
+ "fixes": [
+  {
+   "finding_id": "N5-01",
+   "status": "fixed",
+   "files_changed": [
+    {
+     "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+     "line_range": "16-34,72-114,171-192"
+    },
+    {
+     "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+     "line_range": "334-431"
+    },
+    {
+     "path": "docs/api/auth.md",
+     "line_range": "747"
+    },
+    {
+     "path": "docs/api/en/auth.md",
+     "line_range": "747"
+    }
+   ],
+   "red_test": "AtomicFilesTest.racingCreatesIntoADirectoryCreatedMidRetryLoseNothing: java.lang.AssertionError: unreadable files expected:<0> but was:<29> (AtomicFilesTest.java assertEquals(\"unreadable files\", 0, unreadable)); also AtomicFilesTest.directoryLockForSharesOneMonitorForEverySpellingOfAMissingDirectory: java.lang.AssertionError: expected same:<java.lang.Object@119cbf96> was not:<java.lang.Object@71329995> (assertSame for root/Missing vs root/MISSING)",
+   "why_no_red": null,
+   "rationale_full": "Reproduced the finding on the default APFS (case-insensitive) volume with a new test of the same shape as the evidence (300 rounds, fresh root, FileUserStore A over root/store/users.json and B over root/STORE/users.json, both retrying create after one barrier while a third thread mkdirs root/store after 2000 yields; reopen and count lost/unreadable): red with unreadable=29. A second deterministic test asserts that every spelling of a missing directory gets one monitor and that a write into a missing directory fails without creating it (red: two monitors). Fix in AtomicFiles, following the user-approved hint: directoryLockFor returns one fixed process-wide MISSING_DIRECTORY_LOCK when the parent directory is not a directory yet or cannot be canonicalised, and the per-directory canonical monitor otherwise. write() makes the switch safe: (1) when the lookup gives the fallback lock and the directory still does not exist, it throws IOException without writing; (2) when the directory exists by then it recomputes the lock (closing the check-then-act gap I hit in a first version, which still left 6 empty files: the directory appeared between the lookup and the isDirectory re-check and the write ran under the fallback lock only); (3) when the lock to use is a directory monitor but the calling thread holds the fallback lock (FileUserStore.commit took it while the directory was missing and ran refuseForeignChange outside the directory monitor), it throws IOException ('its directory was created while the write was being prepared; retry') without writing, so the retry re-checks the file under the directory monitor and is refused as a foreign change instead of overwriting. No deadlock: write never acquires a directory monitor while holding the fallback lock (rule 3 throws first) and never acquires the fallback lock for a missing directory; the fallback lock is only taken nested for an existing directory that cannot be canonicalised (order directory -> fallback only), and commit takes its lock outermost. Class and method Javadoc updated. Mutation check: reverting write() to the original `synchronized (directoryLockFor(file)) { writeLocked(...) }` turned the race test red again (creates that reported success but are not on disk expected:<0> but was:<75>); fix restored, AtomicFilesTest + FileUserStoreTest green on three consecutive --rerun-tasks runs. All earlier race tests (racingFirstCreatesThroughCaseSpellingsLoseNothing, ...UnicodeNormalizationSpellings..., directoryLockForIsIndependentOfTheNameSpelling, lockFor tests) stay green unchanged. No public signature changed; behaviour change: a write into a missing directory fails with an IOException carrying a clear message instead of a FileNotFoundException, documented in docs/api/auth.md and docs/api/en/auth.md (durability section)."
+  }
+ ],
+ "public_api_changes": [],
+ "docs_changed": [
+  "docs/api/auth.md",
+  "docs/api/en/auth.md"
+ ],
+ "build": {
+  "tests": 3379,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+ }
+}

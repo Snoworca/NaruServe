@@ -1,0 +1,112 @@
+{
+  "run": "F2",
+  "fixes": [
+    {
+      "finding_id": "M2-F01",
+      "status": "fixed",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java", "line_range": "21-32 (class Javadoc), 39 (USED_PER_FAMILY), 150-193 (save + pruneUsed + usedAt)"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java", "line_range": "380-428"},
+        {"path": "docs/api/auth.md", "line_range": "923 (FileRefreshTokenStore row)"},
+        {"path": "docs/api/en/auth.md", "line_range": "923 (FileRefreshTokenStore row)"}
+      ],
+      "red_test": "RefreshTokenStoreTest.fileStoreKeepsABoundedHistoryPerFamily (first version): java.lang.AssertionError: FileRefreshTokenStore{file=.../refresh-tokens.json, records=502}",
+      "why_no_red": null,
+      "rationale_full": "FileRefreshTokenStore.save(record) now prunes the family of the record being saved before it is added: of that family's used records only the USED_PER_FAMILY=32 most recently used stay (stable sort by usedAt, so the later stored record wins a tie), older used records are dropped in the same commit (no extra file write, so FR-TOKEN-002 AC-4 write-set is unchanged). A long-lived session therefore holds at most 33 records instead of one per rotation for the whole refresh TTL, and the 8 MB MiniJson limit is no longer reached by rotations. The classifier's hypothesis (keep only the single latest used record) was adjusted: the existing assertion FR_TOKEN_002_AC1_markUsedIsAtomic expects find(\"t0\") to still exist after 20 rotations of family f, and assertions may not be weakened, so a bounded history of 32 (8 h of reuse detection at a 15 min access TTL) was chosen; it still bounds the file. Reuse of a kept predecessor still revokes the family (SEC-TOKEN-006 AC-1 is checked on the file store in the new test: after 51 rotations the store holds 33 records, presenting the previous token is 401 and the current one then also fails). Residual trade-off documented in the Javadoc and in docs/api auth.md (ko+en): a token older than the kept history is a plain 401 without family revocation. No optional WARN at 75% of the size limit was added."
+    },
+    {
+      "finding_id": "M3-F01",
+      "status": "fixed",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/TokenService.java", "line_range": "140-148 (Javadoc), 186-203 (refresh tail)"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave7TokenTest.java", "line_range": "52-66 (CountingStore.beforeSave seam), 245-276 (two new tests)"}
+      ],
+      "red_test": "Wave7TokenTest.concurrentReuseBetweenMarkUsedAndSaveRevokesTheWinnersNewRecord and Wave7TokenTest.familyRevokedBetweenMarkUsedAndSaveRefusesTheRefresh: java.lang.AssertionError: the refresh token was accepted (Wave7TokenTest.refusal:109)",
+      "why_no_red": null,
+      "rationale_full": "After pair() has saved the new record, refresh() re-reads the presented record; if it is now missing or revoked (a concurrent reuse or a logout revoked the family between markUsed and save, which only revokes records existing at that moment), it calls revokeFamily(fam) again, which now also revokes the new record, and throws invalid_refresh_token instead of returning the pair. The test seam is a beforeSave hook on the test's real in-memory CountingStore that runs the competing request (a second refresh of the same token -> reuse -> revokeFamily, or a direct revokeFamily as a logout) exactly between the winner's markUsed and its save; deterministic, no sleeps. Asserted: winner and loser both get invalid_refresh_token, onRefreshTokenReused fired once, and the winner's saved record is revoked; a logout-style revocation fires no reuse event. Cost: one extra store find per successful refresh."
+    },
+    {
+      "finding_id": "M3-F02",
+      "status": "fixed",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/GrantRule.java", "line_range": "13-23 (class Javadoc), 76-93 (new actorScopes), 128, 151, 162-167"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/AdminEndpoints.java", "line_range": "929 (protectAffected)"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/AdminEndpointsTest.java", "line_range": "500-535"}
+      ],
+      "red_test": "AdminEndpointsTest.SEC_IAM_004_AC4_disabledOrMissingActorIsRefusedOnScopeLessTargets: java.lang.AssertionError: PATCH /auth/admin/users/2 {\"password\":\"new-password-1\"}: {...} expected:<403> but was:<200>",
+      "why_no_red": null,
+      "rationale_full": "New GrantRule.actorScopes(req, actorId, targetId, action) (internal package) re-reads the actor once and, when it is missing or disabled in the store, emits a grant_denied audit event and throws 403 insufficient_scope before any coverage test. check() and checkGrant() use it instead of scopesOf(); checkAffected() keeps its signature and takes the actor scopes its only caller, AdminEndpoints.protectAffected, now reads once through actorScopes (so a group delete/edge removal by a disabled actor is refused too, without a per-affected-user re-read). scopesOf() is kept unchanged. Test: actor with userswriter+groupswriter, principal cached, then setEnabled(false) straight in the store (no ver bump): password reset, attribute change, disable, delete of a role-less user and an admin create without roles are all 403 insufficient_scope with grant_denied, nothing changes; deleting an empty group is 403; after the actor row is deleted, DELETE of the user is 403 too."
+    },
+    {
+      "finding_id": "M3-F06",
+      "status": "skipped",
+      "files_changed": [],
+      "red_test": null,
+      "why_no_red": "A red test was written and failed as expected (POST /auth/me/apikeys with a cached ver-0 token after a direct ver bump returned 201), and the fix (pass the principal's tokenVersion into confirmThenIssue and answer 401 invalid_token on mismatch) was implemented, but it broke the existing SRS acceptance test Wave10PatTest.SEC_APIKEY_010_AC1_aPatTakesTheStoreVer (expected:<201> but was:<401>).",
+      "rationale_full": "SEC-APIKEY-010 AC-1 (docs/spec/21.auth-api-keys.srs.md) explicitly requires the opposite behaviour: 'Node B's principal cache holds ver 5 while the store holds ver 6; a PAT issued on node B gets ownerVer 6 and authenticates on its first use.' Applying the finding would violate an SRS AC and weaken an existing test, both forbidden, so the change and the new test were fully reverted (KeyIssuance, AccountEndpoints, AdminEndpoints are back to their original text). Needs an SRS decision (discussion): either amend SEC-APIKEY-010 AC-1 to require ver equality at issuance, or accept the residual window (a key minted by a cut-off session is bound to the new ver, so it is not stale-revoked)."
+    },
+    {
+      "finding_id": "M3-F08",
+      "status": "fixed",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java", "line_range": "13-28 (class Javadoc), 39-45 (TooLarge), 151-226 (load overload, size pre-check in parse, bounded sized read)"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java", "line_range": "65, 84-88, 97-100"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileRefreshTokenStore.java", "line_range": "56-57, 66-77"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileLoginThrottle.java", "line_range": "59-60, 168-178"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/FileDeviceTrust.java", "line_range": "46-47, 126-136"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java", "line_range": "206-224"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/RefreshTokenStoreTest.java", "line_range": "430-445"}
+      ],
+      "red_test": "FileUserStoreTest.SEC_TOKEN_002_AC6_hugeFileFailsBeforeItIsRead and RefreshTokenStoreTest.hugeRefreshFileFailsBeforeItIsRead (3 GB sparse file): java.lang.OutOfMemoryError: Java heap space at AtomicFiles.read(AtomicFiles.java:145)",
+      "why_no_red": null,
+      "rationale_full": "New AtomicFiles.load(file, maxBytes, TooLarge, parser, logger): before reading the main file or the backup it compares File.length() with maxBytes and throws the existing 'FAIL: auth store file <f> is unreadable (<reason>)<hint>' IOException, the reason coming from the store; the read buffer is sized from the length and the read stops with an IOException if the file grows above the limit while it is read. The old load(file, parser, logger) delegates with no limit. FileUserStore, FileRefreshTokenStore, FileLoginThrottle and FileDeviceTrust pass their existing limits and their existing limit message (extracted into a tooLarge(length) helper, still used by parse), so the FAIL text is unchanged (SEC_TOKEN_002_AC6_oversizedFileIsNotLoaded still passes). FileGroupStore was not changed: it has no existing byte limit (not in the batch's file set; adding a limit would be new behaviour)."
+    },
+    {
+      "finding_id": "M3-F09",
+      "status": "fixed",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java", "line_range": "104-108 (ownerOnly call), 136-147 (ownerOnly)"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java", "line_range": "223-239"}
+      ],
+      "red_test": "AtomicFilesTest.storeFilesAreOwnerOnly: java.lang.AssertionError: expected:<[OWNER_READ, OWNER_WRITE]> but was:<[OWNER_READ, OWNER_WRITE, OTHERS_READ, GROUP_READ]>",
+      "why_no_red": null,
+      "rationale_full": "AtomicFiles.write restricts the temp file to its owner (setReadable/setWritable(false,false) then (true,true), setExecutable(false,false)) right after creating it and before writing the content; the rename keeps the inode, so the store file is 0600 regardless of umask. Failures of the java.io.File permission calls are ignored, so file systems without those permissions keep working. The test is skipped via Assume when the default file system has no POSIX view."
+    },
+    {
+      "finding_id": "M5-F01",
+      "status": "fixed",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java", "line_range": "19-30 (class Javadoc), 44-48 (fields), 90-94 (fingerprint), 101 (seen at load), 214-280 (commit under path lock, crcOf, refuseForeignChange)"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java", "line_range": "48-82 (LOCKS, lockFor), 94-100 (write holds the path lock)"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java", "line_range": "226-260"},
+        {"path": "docs/api/auth.md", "line_range": "437, 625"},
+        {"path": "docs/api/en/auth.md", "line_range": "437, 625"}
+      ],
+      "red_test": "FileUserStoreTest.aSecondInstanceCannotRollTheFileBack: java.lang.AssertionError: the second instance overwrote the first's change (FileUserStoreTest.java:240)",
+      "why_no_red": null,
+      "rationale_full": "FileUserStore remembers the length and CRC-32 of the file as it last read (at load, inside parse) or wrote it. commit() renders the content, then under the process-wide AtomicFiles.lockFor(file) monitor checks the on-disk file (missing/appeared, length, then CRC-32 of the bytes) and, when another writer changed it, throws IOException('the users file ... was changed by another writer ...', which auth maps to 503) and logs one ERROR (once per instance) instead of overwriting; otherwise it writes and records the new fingerprint. Memory is untouched on refusal. AtomicFiles.write itself now holds the same per-path monitor, so two in-process instances (of any store) can no longer interleave the shared .tmp. The hypothesis' per-instance unique tmp name was NOT applied: AtomicFilesTest.REL_IAM_004_AC1 asserts the temp file is '<name>.tmp' (and FileUserStoreTest/Wave11DoctorTest rely on that name), so the additive per-path lock is used instead; cross-process concurrent writes remain detected only best-effort (check-then-write). Test: A bumps ver and changes the hash; B's create and update are refused with 'another writer', one ERROR is logged, the file bytes equal A's write, a reopened store has ver 4 and the new hash, and A keeps writing normally."
+    },
+    {
+      "finding_id": "M5-F11",
+      "status": "fixed",
+      "files_changed": [
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/FileUserStore.java", "line_range": "346"},
+        {"path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/user/InMemoryUserStore.java", "line_range": "92"},
+        {"path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java", "line_range": "262-276"}
+      ],
+      "red_test": "FileUserStoreTest.listSearchIgnoresTheCaseOfStoredNames: java.lang.AssertionError: InMemoryUserStore{users=2} ali expected:<1> but was:<0>",
+      "why_no_red": null,
+      "rationale_full": "Both stores now compare u.getUsername().toLowerCase(Locale.ROOT).contains(needle), matching the documented 'ignoring case'. Test covers both stores with a stored 'Alice' and searches ali/ALI/Alice."
+    }
+  ],
+  "public_api_changes": [],
+  "internal_api_changes": [
+    "internal.AtomicFiles: new public TooLarge functional interface, new public load(File, long, TooLarge, Parser, Logger) overload, new public lockFor(File); write(File, byte[]) now holds the per-path lock and makes the temp file owner-only (signatures unchanged)",
+    "internal.GrantRule: new public actorScopes(Request, String, String, String); check/checkGrant now refuse a missing or disabled actor (signatures unchanged)"
+  ],
+  "docs_changed": [
+    "docs/api/auth.md: FileRefreshTokenStore row (bounded per-family history, older token = plain 401), FileUserStore entry (one writer, foreign change refused), 'Durability of the store files' section (owner-only temp file, size check before read, per-path write serialization, FileUserStore foreign-write refusal)",
+    "docs/api/en/auth.md: the same three changes in English"
+  ],
+  "build": {"tests": 3374, "failures": 0, "errors": 0, "skipped": 0}
+}

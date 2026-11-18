@@ -1,0 +1,165 @@
+round1 M1-F04 auto_low_skip: Real (Mounts pruned lazily) but a memory-retention edge for long-lived shared Routers; not a behavioural bug with a small fix (needs a lifecycle callback or weak references).
+round1 M1-F05 auto_low_skip: Style/two sources of truth for proxy trust; behaviour is correct today because every construction site calls proxyTrust(..). Refactor only.
+round1 M1-F06 auto_low_skip: API-surface hygiene (internal class reachable through a default method); no behaviour defect.
+round1 M1-F07 auto_low_skip: Class size / structure (deferred L16); refactor, no defect.
+round1 M1-F08 auto_low_skip: Duplicated helpers between AccountEndpoints and AdminEndpoints; refactor, no current defect.
+round1 M1-F09 auto_low_skip: Real (lastUsedAt bumped at verification before a 403 api_key_not_allowed), but changing when usage is recorded touches the documented lastUsedAt timing and both credential paths; medium change for a reporting inaccuracy.
+round1 M1-F10 auto_low_skip: Performance (two store reads per ver++) and a WARN-only drop on executor rejection, with later requests rescheduling; not a small behavioural fix.
+round1 M2-F05 auto_low_skip: Doctor-message coverage gap for custom throttles; documentation/diagnostic, no behaviour bug.
+round1 M2-F08 auto_low_skip: Per-request recomputation; performance only.
+round1 M2-F09 auto_low_skip: Narrow startup race (deferred W5); fix needs a doctor-ran state redesign, not a small change.
+round1 M2-F10 auto_low_skip: WARN wording only.
+round1 M2-F11 auto_low_skip: Real: onStop shuts background/hashSlots/floor pools and nothing recreates them, so an Auth reused on another app answers 503. Choosing restartable pools vs refusing a second install is a design decision and not small; skipped. Primary for M4-F11.
+round1 M2-F12 auto_low_skip: Doctor counting heuristic; WARN accuracy only.
+round1 M2-F13 auto_low_skip: accessTtl > refreshTtl is accepted; adding a build() violation would reject existing configurations and needs a product decision.
+round1 M2-F14 auto_low_skip: Real config gap (default JDBC throttle/device/refresh stores ignore the JdbcUserStore schema prefix), but deriving schemas or adding builders is a medium API-adjacent change; skipped. Related to M4-F10.
+round1 M2-F15 auto_low_skip: Lock contention on the first failed login; performance.
+round1 M2-F16 duplicate: Same defect as M1-F09 (lastUsedAt recorded for a key refused at an auth endpoint).
+round1 M2-F17 auto_low_skip: Ticker thread does store reads sequentially; performance.
+round1 M2-F18 auto_low_skip: Real cross-user interference on the static confirmation stripe, but the fix (hold order, one budget, Retry-After) changes REL-IAM/SEC-IAM-002 AC-3-tested behaviour that was deliberately reverted in w10; needs a decision. Primary for T2-F10.
+round1 M2-F19 auto_low_skip: Static per-store cache keeps the first build's TimeSource/Logger; affects only multiple Auth builds over one FileUserStore (tests); medium cache-key redesign.
+round1 M2-F20 auto_low_skip: Two FileUserStore objects over one file give two side-file writers; same misuse scenario as M5-F01 but in the Auth static caches (keying by canonical path); kept out of this round.
+round1 M2-F21 auto_low_skip: Duplicate doctor FAIL lines; cosmetic.
+round1 M2-F22 auto_low_skip: Missing WARN and deferred retry for a failed immediate invalidation write; the login already answers 503 and the snapshot retries; not a small behavioural fix.
+round1 M2-F23 auto_low_skip: Duplicated versioned-JSON helpers across file stores; refactor. Primary for M5-F08.
+round1 M2-F24 duplicate: Same defect as M3-F08 (store file size checked only after reading it into memory).
+round1 M3-F05 auto_low_skip: Custom Authenticator mapping one name to another user skips that user's waits; whether auth or the authenticator owns this is a design decision (deferred w08).
+round1 M3-F07 auto_low_skip: Unused constructor; dead code.
+round1 M3-F10 auto_low_skip: Unbounded-but-small growth of ApiKeyUsage.lastWrite; performance.
+round1 M3-F11 auto_low_skip: Defense in depth against a custom TokenCodec that ignores exp; the shipped codec validates exp. Not a defect in shipped code.
+round1 M3-F12 auto_low_skip: Audit line quoting/format; style.
+round1 M4-F04 auto_low_skip: Relies on pools resetting autocommit (HikariCP/DBCP2/c3p0 do); documentation-level issue for plain DataSources.
+round1 M4-F05 auto_low_skip: Unused DDL column; cleanup.
+round1 M4-F07 auto_low_skip: Diagnosability (cause not logged); no behaviour change.
+round1 M4-F08 auto_low_skip: Duplicate constant; style.
+round1 M4-F09 auto_low_skip: Timing difference only for malformed stored hashes outside the login floor; low impact, needs a dummy-verify policy decision.
+round1 M4-F10 auto_low_skip: Missing table()/schema support in JdbcRefreshTokenStore/JdbcGroupStore; additive builder API, medium; related to M2-F14.
+round1 M4-F11 duplicate: Same defect as M2-F11 (HashSlots shut down permanently in onStop).
+round1 M4-F13 auto_low_skip: Stale Javadoc; doc only.
+round1 M4-F14 auto_low_skip: Sweep cost above 10,000 live entries; performance.
+round1 M4-F15 auto_low_skip: Original exception lost when rollback fails; diagnosability, not a behavioural bug of the store result.
+round1 M5-F04 duplicate: Same defect as M3-F08 (size limit applied after reading the whole file).
+round1 M5-F05 auto_low_skip: Missing ERROR log for a PBKDF2 hash above the iteration cap; diagnosability.
+round1 M5-F06 already_intended: FR-TOKEN-003 AC-2 explicitly allows logging at most 4 leading characters of an unknown stored format; the current behaviour is within the AC. Tightening it is a spec change.
+round1 M5-F07 auto_low_skip: Readers wait on the monitor during a rewrite; performance.
+round1 M5-F08 duplicate: Same duplication as M2-F23 (versioned-JSON helpers copied across file stores).
+round1 M5-F09 auto_low_skip: Missing @Nullable on an equals parameter and a private method; annotation hygiene, no runtime effect.
+round1 M5-F10 auto_low_skip: Partly misread: the Javadoc says the kit 'only reads and deletes the rows it created', not that it always deletes them; rows left after a failing rule use fresh random owners and cannot collide with later runs. Hygiene only.
+round1 T1-F05 auto_low_skip: The handler-not-run proof is weak (inferred from the body) but can still fail; coverage strengthening, not a test that cannot fail.
+round1 T1-F06 auto_low_skip: Coverage gap (encoded key forms); the existing assertion is meaningful.
+round1 T1-F08 auto_low_skip: Hand-maintained package lists; a guard for future packages, no current gap.
+round1 T1-F09 auto_low_skip: Stale Javadoc and a request for real-JWT variants; the stand-ins isolate the transport rule and RealJwtPathTest covers the real verifier; coverage extension.
+round1 T2-F07 misunderstanding: Misread: forged = "x." + token.substring(2, len-2) + "AA" also replaces the first two characters of the token ('ey' of the JWT header) with 'x.', so forged can never equal the valid token regardless of the signature suffix; the test is not flaky.
+round1 T2-F10 duplicate: Same underlying issue as M2-F18 (static confirmation stripe interference); the test pins current, deliberately kept behaviour.
+round1 T2-F11 duplicate: Same defect as T1-F02 (started TestApps never shut down); covered by the T1-F02 fix scope (Wave5ComponentsTest, Wave11ClosureTest).
+round1 T2-F12 duplicate: Same defect as T1-F02 (AdminFixture apps never stopped in Wave6ComponentsTest/Wave6ReviewFixesTest).
+round1 T2-F13 auto_low_skip: Inaccurate comment plus a coverage gap that REL_FLOW_001_AC4 already covers; not a test that cannot fail.
+round1 T2-F15 auto_low_skip: The comment states the Java 8 evidence is the recorded runs; the check is an intentional marker. Re-labelling citations is out of this fix round.
+round1 T2-F16 auto_low_skip: Wrong failure message only; the assertion still fails correctly.
+round1 T2-F17 auto_low_skip: Overly broad catch in a helper; the test still fails on a token that decodes successfully. Hygiene.
+round1 T3-F03 duplicate: Same defect as T1-F02 (WebSocketWrapperTest AdminFixtures never stopped); covered by the T1-F02 fix scope.
+round1 T3-F12 auto_low_skip: Unused local map; dead code without an assertion.
+round1 T3-F13 auto_low_skip: Superseded duplicate tests; maintenance only.
+round1 T3-F14 auto_low_skip: Copy-pasted test helpers; refactor.
+round1 T3-F15 auto_low_skip: Temp file in the system temp dir with deleteOnExit; hygiene, no false pass.
+round1 T4-F08 auto_low_skip: Temp file in the system temp dir with deleteOnExit; hygiene.
+round1 T4-F09 auto_low_skip: Hard-coded 0.10.0 jar names and exact-whitespace match; the project version is still 0.10.0 (build.gradle), so the test passes today; a future bump issue.
+round1 T4-F11 auto_low_skip: Citation-gate heuristic could accept a nearby token; theoretical, no current miss.
+round1 T4-F12 auto_low_skip: Reviewer itself recommends accepting it; no page hits the edge cases.
+round1 T4-F13 duplicate: Same defect as T1-F02 (in-memory TestApps started by ServletProxyTrustTest never shut down); covered by the T1-F02 fix scope.
+5.0.1 R2-M1-F01 drop: already resolved: save() now rebuilds the map without revoked records and without records expired at the new record's createdAt (lines 187-198), so login/logout churn and abandoned sessions no longer accumulate; executed: RefreshTokenStoreTest (12 tests, 0 failures) including fileStoreStaysBoundedUn
+5.0.1 R2-T1-F01 drop: already resolved: the test now calls scheduleStale(u1, 5) after the ver-6 observation and asserts pendingStale==6 and one queued deletion. Mutation run in a scratch copy of the repo with ApiKeyOwners.java:366 changed from 'pending >= ver || staleVers.replace(..)' to 'staleVers.replace(..)': the new 
+5.0.1 M1-F05 drop: style/maintainability only (two sources of truth, a hypothetical future construction site); no wrong behaviour is claimed or reproducible today — ProxyTrustAcceptanceTest covers the current construction sites.
+5.0.1 M1-F06 drop: API-surface/style only: the internal package is not a documented public API (same accepted pattern as AsyncMiddleware); no behaviour is wrong.
+5.0.1 M1-F08 drop: duplication/maintainability only; no current behavioural divergence is claimed or shown.
+5.0.1 M1-F07 drop: size/structure only (maintainability), not a defect.
+5.0.1 M1-F09 drop: intended: docs/api/auth.md:1194 says 'when key authentication succeeds auth calls ApiKeyStore.updateLastUsed ... for every request authenticated by a key'. A 403 api_key_not_allowed on /auth/me/apikeys etc. is an authorization refusal after the key authenticated (Wave10AccountTest SEC-APIKEY-008 AC-
+5.0.1 M1-F10 drop: performance (an extra read on a rare admin/logout-all path) plus housekeeping: on RejectedExecutionException the pending entry is removed with a WARN (line 385-387), which docs/api/auth.md describes for background work ('WARN only, request unaffected'); stale keys are still refused at use (ownerVer 
+5.0.1 M2-F05 drop: intended by IR-FLOW-003: AC-6 requires the Javadoc to state that 'an implementation not overriding the limit-argument methods applies its own limits', and AC-4 fixes the doctor WARN only for API keys enabled; the behaviour described is the specified one.
+5.0.1 M2-F08 drop: performance only (allocations per request); no functional defect and no measured budget breach.
+5.0.1 M2-F10 drop: intended: OPS-AUTH-001 AC-6 (docs/spec/17.auth.srs.md:1817) requires 'exactly one WARN stating that a restart logs every user out, however many of the three fall back'; wording is mandated by the AC.
+5.0.1 M2-F11 drop: not a defect against any contract: executed reuse of one Auth in a second app after the first stopped (W8 start/stop, then auth.install(app2); app2.listen(0)) -> listen throws 'AuthUnavailableException: the password hash slots are shut down; retry later' (fail closed at start, not silent 503s). Rest
+5.0.1 M2-F13 drop: not a defect against the contract: docs/api/auth.md:1123 fixes only 'each TTL >= 1 s' and no SRS AC requires accessTtl <= refreshTtl; an app may choose a long access token deliberately.
+5.0.1 M2-F14 drop: already resolved: there are no built-in JDBC default stores any more (CON-IAM-003, FR-TOKEN-002 Research 2026-11-03 'There is no built-in database refresh store'); `grep -n Jdbc Auth.java` finds nothing and utils/auth/jdbc no longer exists; an app-provided UserStore falls back to in-memory with the 
+5.0.1 M2-F15 drop: performance only (a one-time calibration latency on the first failed login while holding the monitor); no wrong result, deadlock or lost close is claimed.
+5.0.1 M2-F17 drop: performance only (slow store delays the 1 s tick); no AC sets a close-latency bound that is shown to be broken.
+5.0.1 M2-F20 drop: out of contract: FileUserStore's Javadoc (user/FileUserStore.java:35) states 'one file has one writer', so two FileUserStore objects over the same users.json are already an unsupported configuration; the side stores inherit that rule.
+5.0.1 M2-F21 drop: report noise/style only; each FAIL names a real file that cannot be written.
+5.0.1 M2-F18 drop: intended/perf: the hash-slot requirement (docs/spec/18.auth-tokens.srs.md:919) specifies '503 and Retry-After, or AuthUnavailableException for synchronous app calls' — AuthUsers.checkPassword is the synchronous app call, so AuthUnavailableException without a Retry-After is the specified outcome; the
+5.0.1 M2-F22 drop: behaviour matches the contract on a failed write: executed with an unwritable directory -> recordFailure throws FileNotFoundException (auth maps it to 503 and the error layer logs AuthUnavailableException, OPS errors AC-3), memory keeps the token invalidated so it is still refused, and the next snap
+5.0.1 M2-F23 drop: duplication/maintainability only.
+5.0.1 M2-F01 drop: already resolved for the reported scenarios: pruneUsed keeps at most 32 used predecessors per family and save() drops revoked/expired records. Executed: one family rotated 2000 times -> records=33, file 4544 bytes (the 'client looping POST /auth/refresh ~35k times' and '450-1,300 records per active 
+5.0.1 M3-F06 drop: not a defect: issuance requires the account password verified against the re-read (current) hash, and the password alone already regains full access after a ver++ — executed: logout?all=true 204, then a fresh login with only the password 200. A password change also changes the hash, so the old sessi
+5.0.1 M3-F05 drop: Not a defect against intent: SEC-FLOW-012 (docs/spec/19 L1381-1394) keys the IP, (user,IP) and user-only limits on the typed login name before findByUsername, and IR-TOKEN-001 leaves what a custom Authenticator answers to the app (app-defined identifier mapping). The resolved user's own Lockout is s
+5.0.1 M3-F07 drop: Style/dead-code only: the 4-argument TokenPair constructor has no caller (only TokenService.java:124 uses the 6-argument form); no reachable behaviour.
+5.0.1 M3-F12 drop: Format/style only: no AC of FR-AUTH-009 (docs/spec/17 L1999-2012) or docs/api/auth.md L1022 ('이벤트마다 INFO 한 줄') requires a machine-parseable key=value line; C0/DEL are escaped so no forged log line through the Logger. U+2028/U+0085 handling is a viewer concern.
+5.0.1 M3-F11 drop: Intended by IR-TOKEN-002 AC-2 (docs/spec/18 L1285) and docs/api/auth.md L1248: a protected request is authenticated from the claims the configured codec's decode returns, and the codec owns validation (the default HS256 codec checks exp). 0.11.0 ships no other codec; a custom codec that skips expiry
+5.0.1 M3-F10 drop: No intent contradicted: PERF-APIKEY-001 (docs/spec/21 L2103-2114) only fixes once-per-minute, off-path, best-effort updates. The map holds one Long per key id ever used in the process (bounded by distinct keys), an accepted memory/maintainability trade-off with no AC requiring eviction on every dele
+5.0.1 M3-F08 drop: already resolved: AtomicFiles.load(File,long,TooLarge,...) now compares the file length with the store limit before reading (AtomicFiles.java:164-207, buffer sized from length), and the user, refresh, throttle and device-trust stores use it (executed: a 900 MB users.json -> IOException 'FAIL: ... ab
+5.0.1 R2-M1-F07 drop: Style/maintainability only: GrantRule.scopesOf(String) has no main-code caller (AdminEndpoints:593 calls EffectiveGrants.scopesOf(AuthUser)); every actor check goes through actorScopes(), so no reachable bypass today.
+5.0.1 M4-F14 drop: Performance only, no intent contradicted: SEC-AUTH-007 ACs (docs/spec/17 L1744-1749) fix TTL semantics, not a cache cap or sweep cost; the map is bounded by users active within one TTL (default 5 s) and sweep removes expired entries. No functional defect claimed.
+5.0.1 M4-F07 drop: Behaviour confirmed (the refresh path logs no cause) but it contradicts no stated intent: the logging rule of IR-TOKEN-002 AC-2 / docs/api/auth.md L1248 is stated for the access-token invalid_token path, which does log the cause. Diagnostic improvement only.
+5.0.1 M4-F08 drop: Duplication/maintainability only: RefreshTokens.TYPE and TokenCodec.REFRESH are both "rt+jwt" today; no behaviour differs.
+5.0.1 M4-F13 drop: Comment only: stale Javadoc in TokenVerifier.java:3-7; no behaviour.
+5.0.1 M4-F05 drop: already resolved: the utils.auth.jdbc package (AuthSchema, JdbcDeviceTrust) no longer exists in NaruServe-api/src/main/java; docs/api/auth.md L533 states auth ships no built-in database stores.
+5.0.1 M4-F04 drop: already resolved: utils/auth/jdbc/Connections.java was removed with the whole jdbc package; docs/api/auth.md L533: persistence is SPI-only, no built-in JDBC store.
+5.0.1 M4-F15 drop: already resolved: utils/auth/jdbc/JdbcGroupStore.java no longer exists (jdbc package removed; docs/api/auth.md L533).
+5.0.1 M4-F10 drop: already resolved: JdbcRefreshTokenStore and JdbcGroupStore were removed with the jdbc package; there is no default JDBC refresh store in Auth any more (docs/api/auth.md L533, L1044-1046).
+5.0.1 M5-F06 drop: Intended by FR-TOKEN-003 AC-2 (docs/spec/18 L854): one ERROR per unknown prefix showing at most the first 4 characters; the code logs <= 4 (min(4, len-1)).
+5.0.1 M5-F05 drop: Intended by docs/api/auth.md L754: a stored count above 2,000,000 (MAX_STORED_ITERATIONS) is refused without hashing and verify returns false; no AC asks for an ERROR log on that path.
+5.0.1 M5-F09 drop: Annotation/style only: Java equals overrides map to Kotlin Any.equals(Any?) regardless of the parameter annotation, and Pbkdf2PasswordHasher.parse is private; no observable behaviour or compile failure.
+5.0.1 M5-F10 drop: No intent contradicted: the class Javadoc (ApiKeyStoreContract.java:23-27) promises only that a run reads and deletes rows it created (fresh random 'contract-*' owners per run), not cleanup after a failed rule; FR-APIKEY-009 ACs and docs/api/auth.md L1378 define the checks and the AssertionError, no
+5.0.1 M5-F07 drop: Performance only: commit() holds the instance monitor during AtomicFiles.write; correctness is unaffected and no AC sets a latency bound for concurrent reads during a write.
+5.0.1 T1-F08 drop: Test-coverage/maintainability only (hand-maintained package lists in tests); no product behaviour is shown to contradict intent.
+5.0.1 T1-F05 drop: Test-strength only (assertion style in AdminEndpointsTest); no product behaviour is shown to contradict SEC-IAM-007.
+5.0.1 T1-F09 drop: Stale test Javadoc and test-coverage gap only; no execution shows a real-verifier regression on SEC-FLOW-004 AC-1/6/8/9.
+5.0.1 T1-F06 drop: Not a defect: executed a temp test (Tmp501DescribeTest) that started a PROD Auth with the DescribeTest marker secret and searched describe(), toString() and every startup log line for the base64, base64url, hex and upper-hex forms of the secret bytes: output 'TMP501 encodedHits=0 chars=1125' (the on
+5.0.1 R2-T1-F02 drop: Style/doc only: an orphaned Javadoc line (now line 1214 above assertAll401's Javadoc at 1215, assertReleased at 1272 without one). No behaviour.
+5.0.1 T2-F13 drop: Comment/coverage-placement only: the snapshot-buffered stores' flush on stop is covered by Wave12ThrottleTest REL_FLOW_001_AC4 (as the finding itself states) and Auth.onStop runs the final snapshot; no wrong behaviour is claimed or shown.
+5.0.1 T2-F15 drop: Intended by design: the test comment (Wave12AuthTest 142-144) states the AC-3 evidence is the two recorded build runs including the real Java 8 run under -I gradle/java8-tests.gradle, and this test is the per-run anchor. Test-strength note, no defect.
+5.0.1 T2-F17 drop: Not a defect: executed Tmp501TypTest decoding an access token as REFRESH and a refresh token as ACCESS with the default Hs256TokenCodec: both threw 'com.snoworca.naruserve.utils.auth.jwt.JwtException: the signature does not match' (purpose-key separation), not an NPE or parser bug. The broad catch i
+5.0.1 T2-F16 drop: Style only: the try/catch with an inverted message (Wave8LogoutTest 601-605) still fails the test when the token is not usable; the assertion outcome is correct, only the failure text is misleading.
+5.0.1 R2-T2-F07 drop: Comment/redundant assertion only: the real post-onStop check (the 20 ms ticking scheduler) follows at 910+ and resolves the behaviour; a leftover assertion that cannot fail plus its comment is not a defect.
+5.0.1 T3-F13 drop: Duplication/maintainability only; both copies pass and assert the same lock order. No behaviour defect.
+5.0.1 R2-T2-F05 drop: Comment placement/traceability only: the '// SEC-TOKEN-002 AC-4' line (MiniJsonTest 127) now sits above the AC-3 comment and test; test method names still carry the correct AC ids and both tests run. No behaviour defect.
+5.0.1 T3-F12 drop: Dead code only (unused 'big' map, JwtTest 284/294); no behaviour.
+5.0.1 T3-F09 drop: Redundant assertion only; assertEquals(down, e) already proves propagation of the store's exception (FR-IAM-006 component). Superseded by R2-T2-F01, same verdict.
+5.0.1 R2-T2-F01 drop: Redundant assertions that cannot fail; assertEquals(down, e) (line 140) carries the real check. Test-strength/style only, no product behaviour wrong.
+5.0.1 T3-F14 drop: already resolved: the jdbc test package (JdbcThrottleTest, FakeJdbc, RecordingJdbc, SqliteFixture) no longer exists; only one classFiles(...) copy remains (VerifyUserStoreTest.java:443) and no DataSource plumbing (getLogWriter) is left in NaruServe-api/src/test. Duplication was maintainability-only 
+5.0.1 T3-F15 drop: already resolved: AuthDocsExamplesKotlinTest no longer has a 'docs auth schema' SQLite test or any File.createTempFile/deleteOnExit (grep finds none in NaruServe-api/src/test/kotlin); the docs example now uses AppStores with no JDBC driver.
+5.0.1 T4-F08 drop: already resolved: AuthWave7KotlinTest no longer creates a SQLite database with File.createTempFile/deleteOnExit (no createTempFile anywhere in NaruServe-api/src/test/kotlin).
+5.0.1 T4-F03 drop: already resolved (the fixed-sleep half): the max(20, floor/4) sleep was replaced by limit.expect(2) latch (AuthFailureFloorSocketTest 270-276); the remaining idle-floor margin concern is carried by R2-T2-F03 (residual).
+5.0.1 T4-F09 drop: Not a current defect: build.gradle line 25 still has version = '0.10.0', so jar() resolves the built jars and the tests pass; breakage on a future version bump and whitespace-exact matching are maintainability concerns, not shown wrong behaviour.
+5.0.1 T4-F11 drop: Hypothetical gate weakness: the scenario (an owner test deleted while an assertion string with the AC token sits within four lines above another @Test) does not exist in the tree; no AC is reported cited without an owner test. Test-heuristic strength only.
+5.0.1 T4-F10 drop: Partly already resolved: the CON_AUTH_005_AC2 negative control now runs unnamedTypes on a synthetic NoSuchAuthType entry (AuthDocsTest 188-191). The remaining duplicate KO_HASH/EN_HASH assertions are maintainability only.
+5.0.1 R2-T2-F02 drop: Duplication/maintainability only (two tests assert the same docs text); both pass and check correct content.
+5.0.1 T4-F12 drop: No current page hits the edge cases (stated by the finding itself); a heuristic-edge note with no counter-example in the tree, not a defect.
+round3 F7-N01 drop: already resolved: on the exact original scenario (32 KB, new families t<i>/fam<i> until refusal, then markUsed+save per family) every admitted family now rotates, 5 full rounds, file stays <= 32768; save() now admits a new family only when a compact form leaves room for one more rotation of every li
+round3 M1-F04 drop: already resolved: Mount now holds the app's RegistrationLog through a WeakReference and owners() prunes cleared mounts; dropped apps are collected without any later registration and the shared Router still serves a live app
+round3 M2-F09 drop: already resolved: onStart sets rangeClosed under the unjudgeable lock before the doctor runs, and watchRange throws IllegalStateException when rangeClosed||started; the fixer's ProtectOnlyTest.SEC_AUTH_006_AC3_registrationRacingOnStartIsRefused reproduces the original latch scenario (create('seeded'
+round3 M2-F12 drop: already resolved: the doctor now counts WEBSOCKET registrations whose getTarget() is this auth's WrappedWebSocket instead of webSocket() calls; WebSocketWrapperTest.FR_FLOW_008_AC6_wrappedRegistrationsAreCounted runs both original cases (unregistered wrapper + raw route -> WARN '2 WebSocket routes b
+round3 M2-F19 drop: already resolved: the shared file throttle/device trust/refresh defaults read a SwitchedTime/ComponentLogger per FileUserStore that build() and install() re-point to the latest Auth (docs/api/auth.md:915)
+round3 R2-M1-F02 drop: already resolved: onStop catches InterruptedException from the awaits, still calls stopCleanup() (which itself runs the final snapshot before rethrowing), then restores the interrupt flag
+round3 R2-M1-F08 drop: already resolved: install() re-points the shared targets to the installing Auth's ComponentLogger, so the cap WARN goes to the running app B
+round3 R2-M1-F09 drop: already resolved for the original evidence (an anonymous ForwardingUserStore over FileUserStore): Auth.fileUserStoreIn unwraps decorators through UserStoreDelegates and the PROD key rule fires; the remaining gap for decorators that override hashCode/equals is reported separately as N3-01
+round3 R2-M1-F03 drop: already resolved for the original spellings: lockFor keys on getCanonicalPath(), so dir/users.json and dir/./users.json share one monitor and 400 racing trials lose nothing; the case-variant gap on case-insensitive file systems is reported separately as N3-02
+round3 R2-M1-F04 drop: already resolved: FileGroupStore loads through the bounded overload with an 8 MB default (and the 3-arg AtomicFiles.load is bounded by MiniJson.DEFAULT_FILE_BYTES and now has no callers)
+round3 R2-M1-F05 drop: already resolved: the temp file is created inside an owner-only staging directory, restricted, then renamed to users.json.tmp before the stream opens; the watcher never sees the temp file with group/other bits (the staging directory is briefly 0755 after mkdir but holds no file until after its chmod
+round3 M4-F09 drop: already resolved: Passwords treats a 'pbkdf2-sha256$' string that Pbkdf2.parseStored rejects as malformed and verifies against the target-cost dummy
+round3 R2-T1-F03 drop: already resolved: the test now sets the file to MiniJson.DEFAULT_FILE_BYTES + 1 (8,388,609 bytes) instead of 3 GB; on the same 64 MB FAT32 volume the setup succeeds and the store reaches the length-check FAIL
+round3 T2-F07 drop: already resolved: forgedSignature() replaces the last two characters with 'BB' when the token already ends in 'AA' (else 'AA'), so the forged token can never equal the original; the test also asserts assertNotEquals and exercises a token ending in AA explicitly
+round3 R2-T2-F06 drop: already resolved: SEC_TOKEN_002_AC6_hugeFileFailsBeforeItIsRead now uses FileUserStore.DEFAULT_MAX_FILE_BYTES + 1 bytes; on a 64 MB FAT32 volume the setup succeeds and the FAIL/limit message is reached
+round3 R2-T2-F04 drop: already resolved: the three Kotlin tests shut their app down in finally; AuthKotlinTestsStopKotlinTest runs each of them alone through JUnitCore and asserts no new naru*/in-memory-http thread survives a 10 s deadline (the original evidence method)
+round3 R2-M1-F06 drop: already resolved: an undeletable raw .bak after a successful migration is one WARN (no key material), build() succeeds with the migrated key, and the next read of the enc(...) key file deletes the .bak (so createOnce has nothing to restore)
+round3 N3-03 drop: intended: docs/api/auth.md:915 now states the shared stores use the .timeSource and logger of the Auth last built or installed over that FileUserStore; one shared store cannot follow two clocks, and the original sequential cases (M2-F19, R2-M1-F08) are resolved by execution
+round3 N3-04 drop: not a defect: no rotation of an admitted family failed and the file never exceeded the limit in 18,046 rotations under random churn; admission at about 45% of the limit is the documented need-based rule
+round4 N3-01 drop: already resolved: UserStoreDelegates now keys by an identity WeakReference Key (System.identityHashCode, ==) and never calls the decorator's hashCode/equals; the Java value-equality and strict decorators and the Kotlin data class are constructible and PROD without a key is refused; value-equal decor
+round4 N3-02 drop: already resolved: lockKey uses canonical parent + name for a missing file and case-folds the key (Locale.ROOT), so users.json / USERS.json share one monitor before and after the first create; the 400-round race that gave 287 lost / 103 unreadable now gives 0 / 0
+round5 N4-01 drop: already resolved: AtomicFiles.write and FileUserStore.commit now hold directoryLockFor(file), keyed on the parent directory's canonical path without the file name; the N4-01 harness (400 rounds, FileUserStore over dir/caf\u00e9.json NFC vs NFD, fresh directory, barrier, reopen NFC) now gives lost=0 
+round5 N5-02 drop: not a defect, proven by execution: directoryLockFor is a leaf monitor (inside it FileUserStore.commit only runs refuseForeignChange/AtomicFiles.write/fingerprint, which take no other monitor; every caller takes its store monitor or writeLock first, then the directory monitor), and 4 threads mixing F
+round5 N5-03 drop: not a defect: the new tests can fail -- racingFirstCreatesThroughUnicodeNormalizationSpellingsLoseNothing runs (skipped=0) on APFS with the same harness that produced lost=249 unreadable=131 over 400 rounds against the previous key (N4-01 evidence), so 100 rounds would fail it; directoryLockForIsInd
+round6 N5-01 drop: already resolved: directoryLockFor now returns the single MISSING_DIRECTORY_LOCK for every spelling of a missing directory, and write() refuses ('its directory was created while the write was being prepared; retry') when the caller holds that fallback lock but the directory now exists, so a check ma
+round6 N6-01 drop: not a defect: no deadlock reproduced. Lock order is store monitor -> directory monitor (D) or store monitor -> MISSING_DIRECTORY_LOCK; a holder of MISSING never takes D (write() throws before synchronizing when it would), and D -> MISSING only on a canonicalisation failure of an existing directory, 
+round6 N6-02 drop: not a defect: no livelock or endless retry. The 'retry' refusal happens at most once per directory creation (about one per round: retry=308 in 300 rounds) and the next attempt takes the directory's own monitor; the library has no internal retry loop.
+round6 N6-03 drop: not a defect: a store whose directory never exists fails each write with IOException ('its directory does not exist'), as before the diff (open of the temp file failed then), leaves memory unchanged (FileUserStore user absent, FileGroupStore graph rolled back), creates nothing, and works normally on
+round6 N6-04 drop: not a defect: no spelling escapes. Missing directories in case, NFC and NFD spellings and a dangling symlink parent all map to the one fallback lock; once created, case/NFC/NFD spellings and the symlink resolve to one canonical monitor. The only remaining fallback (getCanonicalPath throwing for an e

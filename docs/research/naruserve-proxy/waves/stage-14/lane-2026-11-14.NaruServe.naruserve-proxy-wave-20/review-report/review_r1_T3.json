@@ -1,0 +1,749 @@
+{
+ "chunk": "T3",
+ "round": 1,
+ "findings": [
+  {
+   "id": "T3-F01",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "IR-IAM-004 AC-6 'one lock' race test almost never runs into the race it is named for",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/group/GroupAdminStoreTest.java",
+    "line_range": "171-216"
+   },
+   "description": "IR_IAM_004_AC6_oneLockAndDurableFile starts two threads on a latch, and each one calls addParent(a,b) or addParent(b,a) once on a two-group graph. The check-then-insert takes microseconds, and thread wake-up jitter after go.countDown() is usually larger than that, so the two calls nearly always run one after the other. Then the second call sees the first edge and is refused as a cycle (refused.size()==1), whether or not InMemoryGroupStore holds one lock over the check and the insert. Example: remove the synchronization from InMemoryGroupStore.addParent (check under one lock, insert under another, or no lock) and all 20 rounds would still pass on almost every run. So the AC's concurrency guarantee has no real evidence.",
+   "suggested_fix": "Make the race deterministic. Add a package-private hook to InMemoryGroupStore/GroupEdges that runs between the cycle check and the insert (or override a protected step in a test subclass). Thread x parks in the hook on a latch while thread y calls addParent(b,a). Then assert that y blocks until x releases it (lock held) and that exactly one edge exists at the end. Or drop the concurrency claim from the citation and keep only the durable-file half.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T3-F02",
+   "axis": "P7",
+   "severity": "MEDIUM",
+   "title": "200 ms wall-clock upper bound in the bcrypt cost-cap test fails on slow CI",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/password/BcryptPasswordHasherTest.java",
+    "line_range": "73-89"
+   },
+   "description": "SEC_TOKEN_008_AC3 measures one verify() with System.nanoTime() and asserts millis < 200 to prove that the cost-15 key schedule was skipped. On a loaded CI agent or an Android-speed JVM, a GC pause or scheduler stall, or the first-call class loading and static S-box init of Blowfish/BcryptPasswordHasher (this is the first bcrypt call in the method), can push a cheap refused verify past 200 ms. The test then fails while the product is correct. The same method then runs a real cost-15 verify (raised.verify), which takes about 2-3 s on a desktop JVM and longer on CI, with no timeout. The skipped-work property is better proven structurally.",
+   "suggested_fix": "Prove 'no key schedule' with a counter seam (for example a package-private Blowfish/eksBlowfish invocation counter, or a hasher hook the test can read), or at least warm the class up with a cheap verify before timing it and raise the bound to well below the cost-15 time (for example < 1000 ms). Move the cost-15 positive verify into its own test with @Test(timeout=...).",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T3-F03",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Started apps and Auth instances are never shut down (deferred: started TestApps / fixtures not stopped)",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/WebSocketWrapperTest.java",
+    "line_range": "64-213"
+   },
+   "description": "Every test in WebSocketWrapperTest builds an AdminFixture, which calls app.listen(0) with auth installed, and never shuts it down. FR_FLOW_008_AC8 builds two and FR_FLOW_008_AC6 two, so 10 apps stay alive in all. Each keeps its worker pool, Auth hash-slot pool and timer, cleanup scheduler, WebSocket ticker and an open server session alive in the shared test JVM. The same pattern is in OriginsTest.check (one TestApp per call), GroupAdminStoreTest.status (one TestApp per call), AuthCoreKotlinTest, AuthFacadeKotlinTest, AuthWave11KotlinTest, CallbackMatrixKotlinTest (new tests i, j, k), AuthDocsExamplesKotlinTest (about 30 Auth/TestApp builds) and Wave9KeyOwnersTest.FR_APIKEY_006_AC6 (three Auth instances whose create() starts hash threads). Thread names are unique, so no current test collides, but threads and memory grow with the suite. This was carried from the w05/w06 reviews and is still present.",
+   "suggested_fix": "Keep the fixtures in a list and shut them down in an @After (AdminFixture.app.shutdown(5, SECONDS), TestApp's app().shutdown, Auth stop through the app's onStop). For the Kotlin tests use a try/finally or a JUnit rule.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "deferred"
+   ]
+  },
+  {
+   "id": "T3-F04",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "A fixed 50 ms sleep is the only guard against an asynchronous wrong close",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/WebSocketWrapperTest.java",
+    "line_range": "204-210"
+   },
+   "description": "FR_FLOW_008_AC8 asserts o.server.isOpen() after each tick, then sleeps 50 ms ('a wrong asynchronous close would have reached the channel by now') and asserts channel.isOpen(). If a regression closes the session asynchronously, for example on the ticker's executor, and that close arrives later than 50 ms on a slow CI JVM, the test passes. The negative check depends on timing and gets weaker exactly where it matters.",
+   "suggested_fix": "Register a close listener on the server session (ws.onClose) that counts down a latch, run the ticks, then assert !latch.await(<bounded>, ...). Or make the recheck path synchronous through a test seam and drop the sleep.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T3-F05",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "shutdown test may never put the synchronous caller in the queue before shutdown",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/HashSlotsTest.java",
+    "line_range": "186-224"
+   },
+   "description": "shutdownFailsWaitersAndRefusesLaterRequests starts the sync caller and sleeps 100 ms, assuming the caller is blocked in the queue by then. On a slow JVM the thread may reach slots.call() only after slots.shutdown(). Its AuthUnavailableException then comes from the 'refused after shutdown' path, so the test passes without proving that shutdown wakes and fails a queued synchronous waiter. Also, the finally block only counts hold down and never calls slots.shutdown(). If started.await or an earlier assertion fails, the 1-slot pool's hash and timer threads leak.",
+   "suggested_fix": "Wait until the sync thread is actually parked, using the RehashQueueTest pattern: loop on sync.getState() until it is WAITING or TIMED_WAITING with a deadline, or use a queued-count accessor on HashSlots. Call slots.shutdown() in finally (it is idempotent).",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T3-F06",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "FR-APIKEY-002 AC-5 tail assertion can never fail; 'after onStop no further call' is not checked by call count",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java",
+    "line_range": "895-905"
+   },
+   "description": "After f.stop() the test builds a fresh W8 'none' without .apiKeys(keys), calls none.auth.cleanupRun() and asserts keys.expiredCalls is unchanged. 'none' has no reference to the test's Keys instance, so the count cannot change and assertEquals(calls, keys.expiredCalls.get()) is always true. The 'after onStop no further call' half is covered only by the cleanupScheduled() flag. A regression where onStop clears the flag but a still-running scheduled task calls deleteExpired again would pass.",
+   "suggested_fix": "Delete the vacuous assertion (the assertNull(none.auth.apiKeyStore()) above it is the real check for the 'without .apiKeys' half). For the onStop half, after f.stop() trigger or await the scheduler (or take the executor through a seam and assert isTerminated()), then assert keys.expiredCalls is unchanged.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T3-F07",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "CLAIMS 8 KB total is never accepted at its boundary; the 'eightKb' document is 16 bytes",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/MiniJsonTest.java",
+    "line_range": "57-87"
+   },
+   "description": "SEC_TOKEN_002_AC2 builds justFits (exactly 8192 bytes) but expects it to be refused for its 1 KB string. It then parses 'eightKb', which is {\"s\":\"\",\"t\":[1]} (repeat(' ',0) and repeat('1',1)), only 16 bytes. 'many' is over 8192. No CLAIMS document of exactly 8192 bytes is ever accepted, so an off-by-one that refuses total == 8192 passes this AC test. The variable name suggests the boundary was meant to be covered.",
+   "suggested_fix": "Build a CLAIMS document of exactly 8192 UTF-8 bytes whose strings are each at most 1 KB (for example an array of short strings padded to length), assert that it parses, then assert that one more byte is refused with the 8192 message. Rename or remove eightKb.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T3-F08",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "assertEquals(null, made) in the catch block cannot fail",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/password/PasswordHashersTest.java",
+    "line_range": "177-185"
+   },
+   "description": "In FR_TOKEN_003_AC5 'made' is assigned only if hash() returns, and in that case fail() throws before the catch. Inside catch(UnsupportedOperationException), made is therefore always null, so the assertion checks a value the test itself set.",
+   "suggested_fix": "Drop the assertion (the fail() already proves that no hash string was returned), or restructure it as assertThrows-style code.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T3-F09",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Assertion on the test's own exception message",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/rbac/RolePolicyTest.java",
+    "line_range": "139-141"
+   },
+   "description": "throwingRoleStorePropagates ends with assertFalse(down.getMessage().isEmpty()), where 'down' is the IllegalStateException(\"db down\") the test created. It checks no product behavior.",
+   "suggested_fix": "Remove the line, or assert something about the propagated exception (already done by assertEquals(down, e)).",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T3-F10",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "IR-AUTH-004 AC-8 test ends with an assertion on a local null",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFacadeKotlinTest.kt",
+    "line_range": "57-62"
+   },
+   "description": "val p: AuthPrincipal? = null; assertEquals(null, p?.apiKeyId) is always true. If the intent is a compile-time probe that AuthPrincipal.apiKeyId is a nullable property, the runtime assertion adds nothing and looks like a check.",
+   "suggested_fix": "Replace it with a typed compile probe (val k: String? = principal.apiKeyId inside the check lambda, on the real principal) or remove it.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T3-F11",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Dead set and tautological assertion in the Javadoc test",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/ForwardingUserStoreTest.java",
+    "line_range": "181-182"
+   },
+   "description": "IR_IAM_002_AC5 ends with Set<String> unused = Collections.emptySet(); assertTrue(unused.isEmpty()); — dead code with an assertion that cannot fail.",
+   "suggested_fix": "Delete both lines.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "style"
+   ]
+  },
+  {
+   "id": "T3-F12",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Unused map in builderRefusesMisuse",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jwt/JwtTest.java",
+    "line_range": "284-293"
+   },
+   "description": "Map<String,Object> big is created and has 'unused' put into it, but it is never read. The oversize claim set is built through the builder b. This is leftover dead code that misleads readers about what is under test.",
+   "suggested_fix": "Remove 'big' and the put.",
+   "is_behavioral": false,
+   "tags": [
+    "style"
+   ]
+  },
+  {
+   "id": "T3-F13",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Superseded duplicate tests left beside their promoted versions",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java",
+    "line_range": "215-249"
+   },
+   "description": "lockOrderOnEveryVerBumpAndOnTheAppIssue (215-249) repeats the five ver++ calls and the key-lock/user-lock assertions of REL_APIKEY_003_AC6_lockOrderOnTheVerBumpsAndTheThreeIssuers (1163-1198) line for line. The latter calls itself its promotion and adds the PAT and admin issuers. In the same way, appIssueBehindTheFutureKeyDeletion (895-919) overlaps REL_APIKEY_003_AC4 and REL_APIKEY_004_AC2. The duplicates double the maintenance work, and one copy can drift from the other.",
+   "suggested_fix": "Delete the two pre-promotion tests, or fold their only extra assertion (the app-issue marker staying at 5 on a failed retry) into REL_APIKEY_004_AC2.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "style"
+   ]
+  },
+  {
+   "id": "T3-F14",
+   "axis": "P8",
+   "severity": "LOW",
+   "title": "Copy-pasted class-file reader and JDBC fake plumbing across test files",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/testing/VerifyUserStoreTest.java",
+    "line_range": "380-425"
+   },
+   "description": "classFiles(...) and matches(...) are copied verbatim in VerifyUserStoreTest (380-425) and jdbc/JdbcThrottleTest (398-443). The DataSource plumbing (getLogWriter, setLoginTimeout, unwrap and so on) and the proxy, zero and invoke helpers are written four times: jdbc/FakeJdbc, jdbc/RecordingJdbc (twice, including the Delegating base), jdbc/SqliteFixture and IamJdbcDialectTest.OneRowJdbc. A fix to one copy, for example handling a JarFile code source, will not reach the others.",
+   "suggested_fix": "Move classFiles/matches into one shared test helper (the testFixtures or auth test package). Have FakeJdbc, SqliteFixture and OneRowJdbc extend RecordingJdbc.Delegating and share one proxy/zero helper.",
+   "is_behavioral": false,
+   "tags": [
+    "test",
+    "style"
+   ]
+  },
+  {
+   "id": "T3-F15",
+   "axis": "P4",
+   "severity": "LOW",
+   "title": "Docs-example test writes its SQLite database to the system temp directory",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthDocsExamplesKotlinTest.kt",
+    "line_range": "122-135"
+   },
+   "description": "'docs auth schema' uses java.io.File.createTempFile(\"auth-docs\", \".db\") with deleteOnExit(). The database, and any -journal or -wal file SQLite creates next to it, live in the shared /tmp until the JVM exits. A crashed or killed test run leaves them behind, and deleteOnExit never removes the side files. Every other SQLite test in the chunk uses a JUnit TemporaryFolder.",
+   "suggested_fix": "Add a TemporaryFolder @get:Rule (Kotlin: @get:Rule val tmp = TemporaryFolder()) and create the database under it.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  },
+  {
+   "id": "T3-F16",
+   "axis": "P7",
+   "severity": "LOW",
+   "title": "Wall-clock upper bounds used as proof that a call does not block",
+   "location": {
+    "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/RehashQueueTest.java",
+    "line_range": "168-171"
+   },
+   "description": "fullQueueDropsWithoutBlockingAndAcceptsLater asserts that the 101st offer returns within 1 s of System.nanoTime(). The same pattern is in Wave9KeyAuthTest.SEC_APIKEY_004_AC8 (two in-memory requests < 3 s, lines 381-384) and HashSlotsTest.fullQueueRefusesImmediatelyWithoutRunningTheWork (< 1000 ms at line 83, already implied by the await(1, SECONDS) on line 82). A stalled CI JVM can break these bounds while the code is correct. In the HashSlots case the bound is redundant. The non-blocking property is better shown structurally: offer() returned false while the worker is still parked in the hasher, and nothing waited on the queue.",
+   "suggested_fix": "Keep the structural assertions and drop the timing ones, or raise the bounds well above the blocking alternative (the blocking alternative here is 'forever', so any generous bound such as 10 s works) and remove the redundant HashSlots line.",
+   "is_behavioral": false,
+   "tags": [
+    "test"
+   ]
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyAuthTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave9KeyAuthTest {"
+   ],
+   "findings": [
+    "T3-F06"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9KeyOwnersTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave9KeyOwnersTest {"
+   ],
+   "findings": [
+    "T3-F13"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9PasswordTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave9PasswordTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/Wave9RefreshTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Wave9RefreshTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/WebSocketWrapperTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class WebSocketWrapperTest {"
+   ],
+   "findings": [
+    "T3-F03",
+    "T3-F04"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/apikey/ApiKeyTypesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class ApiKeyTypesTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/audit/AuditEventTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class AuditEventTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/group/GroupAdminStoreAccess.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class GroupAdminStoreAccess {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/group/GroupAdminStoreTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class GroupAdminStoreTest {"
+   ],
+   "findings": [
+    "T3-F01"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/group/GroupExpansionTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class GroupExpansionTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/ApiKeyFormatTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class ApiKeyFormatTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class AtomicFilesTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/HashSlotsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class HashSlotsTest {"
+   ],
+   "findings": [
+    "T3-F05"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/HashTimingTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class HashTimingTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/MiniJsonTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class MiniJsonTest {"
+   ],
+   "findings": [
+    "T3-F07"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/OriginsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class OriginsTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/Pbkdf2Test.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Pbkdf2Test {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/RehashQueueTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class RehashQueueTest {"
+   ],
+   "findings": [
+    "T3-F16"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/TokenPrimitivesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class TokenPrimitivesTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/ApiKeySchemaTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class ApiKeySchemaTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/AuthSchemaTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class AuthSchemaTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/FakeJdbc.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class FakeJdbc implements DataSource {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/IamJdbcDialectTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class IamJdbcDialectTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcApiKeyStoreDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** The documented limits of JdbcApiKeyStore: its class Javadoc and the reference pages docs/api/auth.md (ko, en). */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcApiKeyStoreTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class JdbcApiKeyStoreTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcGroupStoreTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class JdbcGroupStoreTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcManualCommitTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class JdbcManualCommitTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcRefreshTokenStoreTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class JdbcRefreshTokenStoreTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcTestSeams.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class JdbcTestSeams {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcThrottleTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class JdbcThrottleTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/JdbcUserStoreTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class JdbcUserStoreTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/RecordingJdbc.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class RecordingJdbc implements DataSource {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jdbc/SqliteFixture.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class SqliteFixture implements DataSource {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/jwt/JwtTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class JwtTest {"
+   ],
+   "findings": [
+    "T3-F12"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/password/BcryptPasswordHasherTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class BcryptPasswordHasherTest {"
+   ],
+   "findings": [
+    "T3-F02"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/password/PasswordHashersTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class PasswordHashersTest {"
+   ],
+   "findings": [
+    "T3-F08"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/password/Pbkdf2PasswordHasherTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class Pbkdf2PasswordHasherTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/rbac/RolePolicyTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class RolePolicyTest {"
+   ],
+   "findings": [
+    "T3-F09"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/rbac/ScopesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class ScopesTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/testing/VerifyApiKeyStoreTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class VerifyApiKeyStoreTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/testing/VerifyUserStoreTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class VerifyUserStoreTest {"
+   ],
+   "findings": [
+    "T3-F14"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/AuthUserTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class AuthUserTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/FileUserStoreTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class FileUserStoreTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/ForwardingUserStoreTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** ForwardingUserStore, the decorator base class (IR-IAM-002). */"
+   ],
+   "findings": [
+    "T3-F11"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/user/UserStoreContractTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class UserStoreContractTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/AuthCoreKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class AuthCoreKotlinTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrix.kt",
+   "hunks_total": 2,
+   "anchors": [
+    "RegistrationListener::class.java,",
+    "com.snoworca.naruserve.utils.TimeSource::class.java,"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/CallbackMatrixKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "app.onRegistration { r -> hit(RegistrationListener::class.java); paths += r.path }"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthDocsExamplesKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class AuthDocsExamplesKotlinTest {"
+   ],
+   "findings": [
+    "T3-F15"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFacadeKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class AuthFacadeKotlinTest {"
+   ],
+   "findings": [
+    "T3-F10"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthFoundationKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class AuthFoundationKotlinTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave10KotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class AuthWave10KotlinTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave11KotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class AuthWave11KotlinTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave12KotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class AuthWave12KotlinTest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/utils/auth/AuthWave4KotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "class AuthWave4KotlinTest {"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 16,
+  "by_severity": {
+   "CRITICAL": 0,
+   "HIGH": 0,
+   "MEDIUM": 2,
+   "LOW": 14
+  }
+ }
+}

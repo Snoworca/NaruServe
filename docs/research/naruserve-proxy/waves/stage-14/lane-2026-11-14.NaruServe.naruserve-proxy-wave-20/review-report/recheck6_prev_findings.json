@@ -1,0 +1,33 @@
+[
+ {
+  "id": "N5-01",
+  "title": "directoryLockFor keys a parent directory that does not exist yet by its raw spelling: two spellings (case, NFC/NFD) of a directory created while writes are retried get two monitors, racing creates are lost and the file is left unreadable",
+  "location": {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+   "line_range": "91-102"
+  },
+  "evidence": {
+   "command": "temporary NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/Tmp501R5Test.java (deleted after the run); ./gradlew :NaruServe-api:test --offline --tests '*Tmp501R5Test.missingDir*' -i | grep TMP501 (300 rounds: fresh root, directory not yet created; FileUserStore A over root/store/users.json and B over root/<spellB>/users.json; A and B retry create(alice|bob) in a loop after one barrier while a third thread does root/store.mkdir() after ~2000 yields; reopen root/store/users.json and count creates that reported success but are missing, and unreadable files; spellB=STORE vs control spellB=store) on the default APFS volume (case-insensitive)",
+   "output": "TMP501 missingDirConcurrentMkdir spellB=STORE lost=219 unreadable=17\nTMP501 missingDirConcurrentMkdir spellB=store lost=0 unreadable=0\n(also: TMP501 missing dir: sameBefore=false beforeEqAfter(upper)=false lowerEqAfter=true -- directoryLockFor(root/Missing/u.json) and directoryLockFor(root/MISSING/u.json) are two monitors while the directory is missing, and the MISSING key changes when the directory is created)",
+   "intent_output": "AtomicFiles class Javadoc ('the key does not depend on how the file name is spelled, so \"users.json\", \"USERS.json\" ... never get two writers, whether the file exists yet or not') and docs/api/auth.md:747 / en/auth.md:747 (two spellings never have two writers at once; another writer's change is refused, the file stays readable): expected lost=0 unreadable=0 for the case spelling as for the identical-spelling control. Observed: directoryLockFor canonicalises a parent directory that does not exist yet textually (getCanonicalPath keeps the raw spelling of missing components) and, unlike the replaced lockKey, no longer case-folds, so two spellings of a not-yet-created directory get two monitors; a write whose key was taken before the directory appeared runs unserialised against the other spelling (shared .tmp), losing reported creates and leaving unreadable files. The replaced lockFor key lower-cased the whole path, so case spellings of a missing directory shared one monitor before this diff (regression for case; NFC/NFD of a missing directory was split before and still is)."
+  },
+  "fix_meta": [
+   {
+    "path": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/internal/AtomicFiles.java",
+    "line_range": "16-34,72-114,171-192"
+   },
+   {
+    "path": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/internal/AtomicFilesTest.java",
+    "line_range": "334-431"
+   },
+   {
+    "path": "docs/api/auth.md",
+    "line_range": "747"
+   },
+   {
+    "path": "docs/api/en/auth.md",
+    "line_range": "747"
+   }
+  ]
+ }
+]
