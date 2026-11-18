@@ -143,6 +143,7 @@ def scanClassRefs = { FileCollection classesDirs, List<String> prefixes ->
 // @req CON-BUILD-008
 // @req CON-BUILD-013
 // @req CON-APP-001
+// @req CON-BUILD-020
 def classRefPrefixes = { String path ->
     def prefixes = path in androidModules ? ['javax/servlet/'] : []
     if (path == ':NaruServe-api') {
@@ -161,6 +162,14 @@ def classRefPrefixes = { String path ->
     // v1 is javax.servlet 3.1 only; a jakarta.servlet module is a later decision.
     if (path == ':NaruServe-servlet') {
         prefixes += ['jakarta/servlet/']
+    }
+    // @req CON-BUILD-020
+    // The proxy uses only the public API of NaruServe-api: not its internal or SPI packages, and no platform,
+    // JSON, engine or Kotlin type. Prefixes match from the start of the name, so com/snoworca/naruserve/proxy/ is
+    // not com/snoworca/naruserve/internal/ and com/snoworca/naruserve/kotlin/ is not kotlin/.
+    if (path == ':NaruServe-proxy') {
+        prefixes += ['com/snoworca/naruserve/internal/', 'com/snoworca/naruserve/spi/', 'android/',
+                     'com/google/gson/', 'com/snoworca/tinyhttpd/', 'kotlin/']
     }
     prefixes
 }
