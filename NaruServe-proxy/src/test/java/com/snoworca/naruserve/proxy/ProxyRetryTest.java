@@ -382,23 +382,11 @@ public class ProxyRetryTest {
     @Test(timeout = 30000)
     public void fr_PROXY_018_AC9_anInterruptedWaitEndsTheRetries() throws Exception {
         final AtomicInteger attempts = new AtomicInteger();
-        final List<Thread> workers = Collections.synchronizedList(new ArrayList<Thread>());
         BackendClient.plainSockets = () -> new Socket() {
             @Override
             public void connect(SocketAddress endpoint, int timeout) throws IOException {
                 if (attempts.getAndIncrement() == 0) {
-                    final Thread worker = Thread.currentThread();
-                    workers.add(worker);
-                    Thread interrupter = new Thread(() -> {
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException e) {
-                            return;
-                        }
-                        worker.interrupt();
-                    });
-                    interrupter.setDaemon(true);
-                    interrupter.start();
+                    interruptLater(Thread.currentThread(), 100);
                 }
                 throw new ConnectException("Connection refused (simulated)");
             }
@@ -412,6 +400,64 @@ public class ProxyRetryTest {
         assertEquals(502, r.status());
         assertSame(ProxyException.Kind.CONNECT_FAILED, onlyProxyError().kind());
         assertEquals("connection attempts", 1, attempts.get());
+    }
+
+    // FR-PROXY-018 AC-9: a request whose worker thread is interrupted during the wait before retrying a 503 makes no
+    // further attempt, so no two arrivals are closer than the delay; the client receives that 503 unchanged
+    @Test(timeout = 30000)
+    public void fr_PROXY_018_AC9_anInterruptedWaitBeforeA503RetryRelaysThat503() throws Exception {
+        final List<Long> arrivals = Collections.synchronizedList(new ArrayList<Long>());
+        RawBackend backend = track(RawBackend.start((index, request, out) -> {
+            arrivals.add(System.nanoTime());
+            out.write(("HTTP/1.1 503 X\r\nX-Attempt: " + index + "\r\nContent-Length: 4\r\n\r\nbusy")
+                    .getBytes(StandardCharsets.ISO_8859_1));
+        }));
+        final AtomicInteger connects = new AtomicInteger();
+        BackendClient.plainSockets = () -> new Socket() {
+            @Override
+            public void connect(SocketAddress endpoint, int timeout) throws IOException {
+                if (connects.getAndIncrement() == 0) {
+                    interruptLater(Thread.currentThread(), 100);
+                }
+                super.connect(endpoint, timeout);
+            }
+        };
+        String path = mount(Proxy.to(backend.url()).retries(3).retryDelay(400, TimeUnit.MILLISECONDS));
+        start();
+
+        ClientResponse r = send(ClientRequest.of("GET", path + "/x"));
+
+        assertEquals(503, r.status());
+        assertEquals("busy", r.text());
+        assertEquals("0", r.header("X-Attempt"));
+        assertEquals("arrivals", 1, arrivals.size());
+        assertEquals("connection attempts", 1, connects.get());
+    }
+
+    // FR-PROXY-018 AC-1 (declared): a request handled on a thread whose interrupt status is already set makes no retry,
+    // since it cannot wait the retry delay, and the proxy keeps that interrupt status for its caller
+    @Test(timeout = 30000)
+    public void fr_PROXY_018_AC1_aPendingInterruptMakesNoRetryAndIsKept() throws Exception {
+        RawBackend backend = numbered(503);
+        final Proxy proxy = Proxy.to(backend.url()).retries(2).retryDelay(20, TimeUnit.MILLISECONDS);
+        final List<Boolean> interruptedAfter = Collections.synchronizedList(new ArrayList<Boolean>());
+        app.use("/pending", (req, res, next) -> {
+            Thread.currentThread().interrupt();
+            try {
+                proxy.handle(req, res, next);
+            } finally {
+                // Thread.interrupted() reads and clears the status, so the adapter's thread is left as it was.
+                interruptedAfter.add(Thread.interrupted());
+            }
+        });
+        start();
+
+        ClientResponse r = send(ClientRequest.of("GET", "/pending/x"));
+
+        assertEquals(503, r.status());
+        assertEquals("attempt-0", r.text());
+        assertEquals(1, backend.requestCount());
+        assertEquals(Collections.singletonList(Boolean.TRUE), interruptedAfter);
     }
 
     // FR-PROXY-018 AC-2 (REL-PROXY-001, FR-PROXY-019): the connection of a retried 503 is closed by the proxy before
@@ -559,6 +605,20 @@ public class ProxyRetryTest {
             assertTrue("a ProxyException: " + t, t instanceof ProxyException);
             return (ProxyException) t;
         }
+    }
+
+    /** Interrupts {@code worker} after {@code millis} milliseconds, from a daemon thread. */
+    private static void interruptLater(final Thread worker, final long millis) {
+        Thread interrupter = new Thread(() -> {
+            try {
+                Thread.sleep(millis);
+            } catch (InterruptedException e) {
+                return;
+            }
+            worker.interrupt();
+        }, "test-interrupter");
+        interrupter.setDaemon(true);
+        interrupter.start();
     }
 
     /** A loopback port no backend listens on: bound once to find it, then closed. */

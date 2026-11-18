@@ -538,12 +538,12 @@ public final class Proxy implements Middleware {
      * attempt is followed by up to {@code .retries(n)} more (FR-PROXY-018): after a TCP-level connect failure, for
      * every method, with the client body not yet touched beyond the pre-read byte, which the next attempt still sends;
      * after a backend 502 or 503, only when {@link RetryPolicy#retriesStatus} allows it, the retried response's header
-     * block having been read and its connection closed. Each retry waits {@code .retryDelay} first; when that wait would
-     * end past the total deadline, or no retry is left, the last failure is thrown, or the last 502 or 503 returned
-     * for relaying unchanged. A deadline that already fired is never retried, and neither is anything on an
-     * interrupted thread: an interrupted wait after a connect failure throws that failure, and one after a closed
-     * 502 or 503 leaves the attempt it was waiting for as the last. Every connection belongs to {@code exchange},
-     * which closes the current one on release, and to its one slot (FR-PROXY-019).
+     * block having been read and its connection closed after the wait. Each retry waits {@code .retryDelay} first; when
+     * that wait would end past the total deadline, or no retry is left, the last failure is thrown, or the last 502 or
+     * 503 returned for relaying unchanged. A deadline that already fired is never retried, and nothing is retried on an
+     * interrupted thread, which cannot wait the delay: an interrupted wait ends the retries with the last failure or
+     * the 502 or 503 it followed, and the interrupt status is kept for the caller. Every connection belongs to
+     * {@code exchange}, which closes the current one on release, and to its one slot (FR-PROXY-019).
      */
     // @req FR-PROXY-018
     // @req FR-PROXY-020
@@ -582,11 +582,10 @@ public final class Proxy implements Middleware {
             if (retryLeft && writeFailure == null && exchange.firedKind() == null
                     && RetryPolicy.retriesStatus(head.status, req.methodToken(), outgoing.framing.bodyless(),
                             options.retryUnsafeMethods)
-                    && retryWaitFits(startNanos)) {
-                // The header block was read; the rest of the response is dropped with its connection. The response is
-                // gone, so even an interrupted wait goes on to the attempt it was for, which is then the last.
+                    && retryWaitFits(startNanos) && waitRetryDelay()) {
+                // The header block was read; the rest of the response is dropped with its connection. It stays open
+                // through the wait, so a wait that is interrupted leaves this response to be relayed as the last.
                 closeQuietly(socket);
-                waitRetryDelay();
                 continue;
             }
             return new Attempt(socket, in, head);
