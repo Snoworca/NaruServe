@@ -933,6 +933,62 @@ class ProxyDocsKotlinTest {
         }
     }
 
+    // FR-PROXY-005 AC-2 (SEC-PROXY-002 AC-7, FR-PROXY-002 AC-4; OPS-DX-010): the real proxy drops the client's
+    // Forwarded, X-Real-IP, X-Forwarded-Port and X-Forwarded-Prefix, sends the value .requestHeader sets for the last
+    // three, and refuses Forwarded and X-Forwarded-For/-Proto/-Host at the call; the X-Forwarded-* table of both pages
+    // must say, per header name, what happens to a client value and what .requestHeader does
+    @Test
+    fun `FR-PROXY-005 AC-2 the forwarding header table states per name what a client value and requestHeader do`() {
+        val b = backend(RawBackend.response(200, "ok"))
+        app.use("/plain", Proxy.to(b.url()))
+        app.use("/api", Proxy.to(b.url()).stripPrefix(true)
+            .requestHeader("X-Forwarded-Prefix", "/api")
+            .requestHeader("X-Real-IP", "10.0.0.1")
+            .requestHeader("X-Forwarded-Port", "443"))
+        val spoofed = arrayOf("Forwarded", "for=6.6.6.6", "X-Real-IP", "6.6.6.6", "X-Forwarded-Port", "1",
+            "X-Forwarded-Prefix", "/evil")
+
+        assertEquals(200, send("GET", "/plain/x", *spoofed).status())
+        assertEquals(200, send("GET", "/api/x", *spoofed).status())
+        val (plain, api) = b.requests()
+        for (name in listOf("Forwarded", "X-Real-IP", "X-Forwarded-Port", "X-Forwarded-Prefix")) {
+            assertEquals("client $name without requestHeader", emptyList<String>(), plain.headerValues(name))
+        }
+        assertEquals(listOf("/api"), api.headerValues("X-Forwarded-Prefix"))
+        assertEquals(listOf("10.0.0.1"), api.headerValues("X-Real-IP"))
+        assertEquals(listOf("443"), api.headerValues("X-Forwarded-Port"))
+        assertEquals(emptyList<String>(), api.headerValues("Forwarded"))
+        for (name in listOf("Forwarded", "X-Forwarded-For", "X-Forwarded-Proto", "X-Forwarded-Host", "x-forwarded-host")) {
+            try {
+                Proxy.to(b.url()).requestHeader(name, "x")
+                throw AssertionError("requestHeader($name) was accepted")
+            } catch (expected: IllegalArgumentException) {
+                // a managed name is refused at the call
+            }
+        }
+
+        val ko = section(ko(), "### X-Forwarded-* 헤더")
+        val en = section(en(), "### X-Forwarded-* headers")
+        has("proxy.md table head", ko, "| 헤더 | 클라이언트가 보낸 값 | `.requestHeader(name, value)` |")
+        has("en/proxy.md table head", en, "| Header | A value the client sent | `.requestHeader(name, value)` |")
+        for (name in listOf("`X-Forwarded-For`", "`X-Forwarded-Proto`", "`X-Forwarded-Host`", "`Forwarded`")) {
+            has("proxy.md $name", row("proxy.md", ko, "| $name |"), "관리하는 이름이라 호출할 때 `IllegalArgumentException`")
+            has("en/proxy.md $name", row("en/proxy.md", en, "| $name |"), "A managed name: `IllegalArgumentException` at the call")
+        }
+        val sent = "| `X-Real-IP`, `X-Forwarded-Port`, `X-Forwarded-Prefix` |"
+        has("proxy.md sent row", row("proxy.md", ko, sent), "신뢰 설정과 상관없이 버립니다", "받습니다. 정한 값이 정확히 한 줄 백엔드에 갑니다")
+        has("en/proxy.md sent row", row("en/proxy.md", en, sent), "Dropped whatever the trust setting",
+            "Accepted: exactly one line with the configured value reaches the backend")
+        has("proxy.md", ko, ".requestHeader(\"X-Forwarded-Prefix\", \"/api\")")
+        has("en/proxy.md", en, ".requestHeader(\"X-Forwarded-Prefix\", \"/api\")")
+        assertFalse("proxy.md still says always removed: $ko", ko.contains("언제나 뺍니다"))
+        assertFalse("en/proxy.md still says always removed: $en", en.contains("Always removed"))
+        has("proxy.md fixed headers", section(ko(), "### 고정 헤더"),
+            "프록시가 버리는 `X-Real-IP`, `X-Forwarded-Port`, `X-Forwarded-Prefix`도")
+        has("en/proxy.md fixed headers", section(en(), "### Fixed headers"),
+            "the `X-Real-IP`, `X-Forwarded-Port` and `X-Forwarded-Prefix` the proxy drops")
+    }
+
     /** Reads up to and including the blank line that ends an HTTP head. */
     private fun readHead(input: java.io.InputStream): String {
         val head = java.io.ByteArrayOutputStream()
