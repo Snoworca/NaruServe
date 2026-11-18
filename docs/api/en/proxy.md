@@ -183,7 +183,7 @@ While `rewriteLocation` is on (default `true`), a backend `Location` that is an 
 
 ### Failures before the response
 
-Backend-side failures reach the app's error flow (`onError`, `ErrorMiddleware`) as a `ProxyException`. The proxy writes no error body of its own and no app-logger entry; logging is left to the error flow.
+Backend-side failures reach the app's error flow (`onError`, `ErrorMiddleware`) as a `ProxyException`. The proxy writes no error body of its own. Neither the proxy nor the default error flow writes this failure to the app logger. The default error flow logs only failures with status `500`, and a `ProxyException` is `502`, `503` or `504`. To get a log entry, log it yourself in `onError` through `req.application().logger()` (example below).
 
 `ProxyException` is a subclass of `HttpException`, and `kind()` returns the kind of failure (`ProxyException.Kind`). The status code follows from the kind.
 
@@ -198,13 +198,13 @@ Backend-side failures reach the app's error flow (`onError`, `ErrorMiddleware`) 
 | `CONCURRENCY_LIMIT` | 503 | The `maxConcurrent` limit was reached |
 
 - The message (`getMessage()`) is always `null`, so the default error response never echoes the backend address. The underlying failure is in `getCause()` (for example `java.net.ConnectException` or `java.net.UnknownHostException`).
-- Without `onError`, the default error page shows the causes of a `ProxyException` by class name only, so the target host and port are not revealed. The app logger and `getCause()` keep the full cause.
+- Without `onError`, the default error page shows the causes of a `ProxyException` by class name only, so the target host and port are not revealed. The cause stays whole in `getCause()`.
 - The proxy's own answers `400` (bad method, path, header or framing), `405` (`CONNECT`, `TRACE`) and `501` (unsupported transfer coding) are plain `HttpException`, not `ProxyException`, with a `null` message. The `413` of an over-limit body is a plain `HttpException` too.
 - The public constructor `new ProxyException(kind, cause)` lets a test build one and throw it through `next.error(e)` to exercise `onError`.
 
 Express counterpart: compare `kind()` the way you compare `err.code` (`ECONNREFUSED` and so on) in `createProxyMiddleware({ on: { error: (err, req, res) => ... } })`.
 
-An `onError` that answers JSON by `kind()`:
+An `onError` that answers JSON by `kind()` and logs the `ProxyException` to the app logger:
 
 ```java
 import com.snoworca.naruserve.proxy.ProxyException;
@@ -212,6 +212,7 @@ import com.snoworca.naruserve.proxy.ProxyException;
 app.onError((error, req, res) -> {
     if (error instanceof ProxyException) {             // backend-side failure: 502, 503, 504
         ProxyException e = (ProxyException) error;
+        req.application().logger().error("upstream " + e.kind().name(), e);   // logs the cause (getCause()) too
         Map<String, String> body = new LinkedHashMap<>();
         body.put("error", "upstream");
         body.put("kind", e.kind().name());
@@ -229,7 +230,10 @@ Kotlin:
 ```kotlin
 app.onError { error, req, res ->
     when (error) {
-        is ProxyException -> res.status(error.status()).json(mapOf("error" to "upstream", "kind" to error.kind().name))
+        is ProxyException -> {
+            req.application().logger().error("upstream ${error.kind().name}", error)
+            res.status(error.status()).json(mapOf("error" to "upstream", "kind" to error.kind().name))
+        }
         is HttpException -> res.status(error.status()).json(mapOf("error" to "request"))
         else -> res.status(500).json(mapOf("error" to "internal"))
     }

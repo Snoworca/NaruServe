@@ -183,7 +183,7 @@ Express 대응: `xfwd: true`.
 
 ### 응답을 보내기 전의 실패
 
-백엔드 쪽 실패는 `ProxyException`으로 앱의 오류 흐름(`onError`, `ErrorMiddleware`)에 갑니다. 프록시는 자기 오류 본문을 쓰지 않고 앱 로거에도 쓰지 않습니다. 로깅은 오류 흐름에 맡깁니다.
+백엔드 쪽 실패는 `ProxyException`으로 앱의 오류 흐름(`onError`, `ErrorMiddleware`)에 갑니다. 프록시는 자기 오류 본문을 쓰지 않습니다. 프록시도 기본 오류 흐름도 이 실패를 앱 로거에 기록하지 않습니다. 기본 오류 흐름은 상태가 `500`인 실패만 기록하고, `ProxyException`은 `502`·`503`·`504`입니다. 기록이 필요하면 `onError`에서 `req.application().logger()`로 직접 기록하세요(아래 예).
 
 `ProxyException`은 `HttpException`의 하위 클래스이고 `kind()`가 실패의 종류(`ProxyException.Kind`)를 돌려줍니다. 상태 코드는 종류에서 정해집니다.
 
@@ -198,13 +198,13 @@ Express 대응: `xfwd: true`.
 | `CONCURRENCY_LIMIT` | 503 | `maxConcurrent` 한도에 걸림 |
 
 - 메시지(`getMessage()`)는 언제나 `null`입니다. 기본 오류 응답이 백엔드 주소를 내보내지 않게 하려는 것입니다. 실패의 원인은 `getCause()`에 있습니다(예: `java.net.ConnectException`, `java.net.UnknownHostException`).
-- `onError`가 없을 때의 기본 오류 페이지는 `ProxyException`의 원인을 클래스 이름으로만 보여 주므로 대상 호스트와 포트가 드러나지 않습니다. 앱 로거와 `getCause()`에는 원인이 그대로 남습니다.
+- `onError`가 없을 때의 기본 오류 페이지는 `ProxyException`의 원인을 클래스 이름으로만 보여 주므로 대상 호스트와 포트가 드러나지 않습니다. 원인은 `getCause()`에 그대로 남습니다.
 - 프록시가 스스로 답하는 `400`(잘못된 메서드·경로·헤더·프레이밍), `405`(`CONNECT`·`TRACE`), `501`(지원하지 않는 전송 코딩)은 `ProxyException`이 아닌 보통 `HttpException`이고 메시지는 `null`입니다. 한도를 넘은 본문의 `413`도 보통 `HttpException`입니다.
 - 공개 생성자 `new ProxyException(kind, cause)`가 있으므로 테스트에서 직접 만들어 `next.error(e)`로 `onError`를 시험할 수 있습니다.
 
 Express 대응: `createProxyMiddleware({ on: { error: (err, req, res) => ... } })`의 `err.code`(`ECONNREFUSED` 등)를 `kind()`로 비교합니다.
 
-`kind()`에 따라 JSON으로 답하는 `onError`:
+`kind()`에 따라 JSON으로 답하고 `ProxyException`을 앱 로거에 기록하는 `onError`:
 
 ```java
 import com.snoworca.naruserve.proxy.ProxyException;
@@ -212,6 +212,7 @@ import com.snoworca.naruserve.proxy.ProxyException;
 app.onError((error, req, res) -> {
     if (error instanceof ProxyException) {             // 백엔드 쪽 실패: 502, 503, 504
         ProxyException e = (ProxyException) error;
+        req.application().logger().error("upstream " + e.kind().name(), e);   // 원인(getCause())까지 기록합니다
         Map<String, String> body = new LinkedHashMap<>();
         body.put("error", "upstream");
         body.put("kind", e.kind().name());
@@ -229,7 +230,10 @@ Kotlin:
 ```kotlin
 app.onError { error, req, res ->
     when (error) {
-        is ProxyException -> res.status(error.status()).json(mapOf("error" to "upstream", "kind" to error.kind().name))
+        is ProxyException -> {
+            req.application().logger().error("upstream ${error.kind().name}", error)
+            res.status(error.status()).json(mapOf("error" to "upstream", "kind" to error.kind().name))
+        }
         is HttpException -> res.status(error.status()).json(mapOf("error" to "request"))
         else -> res.status(500).json(mapOf("error" to "internal"))
     }

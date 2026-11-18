@@ -394,7 +394,7 @@ app.put("/backup") { req, res ->
 | 선언한 `Content-Length`가 한도보다 큼 | `status()`가 `413`인 `HttpException` | `bodyStream` 호출 자체. 본문을 한 바이트도 읽기 전에 던집니다 |
 | 길이를 선언하지 않은 본문(chunked)이 한도를 넘음 | `BodyTooLargeException`(`IOException`의 하위 클래스, `limit()`은 넘은 한도) | 스트림. 한도까지의 바이트는 그대로 읽히고, 한도를 넘는 바이트를 읽으려는 `read`가 던집니다 |
 
-`onError`에서 본문 한도 초과를 알아보려면 두 모양을 모두 확인하세요. 감싸지 않은 채 핸들러 밖으로 나간 `BodyTooLargeException`은 `413` 응답(표준 오류 본문, 코드 `PAYLOAD_TOO_LARGE`)이 되고, `onError`는 그 예외 객체를 그대로 받습니다. 다른 예외로 감싼 것(예: `new RuntimeException(e)`)은 일반 예외로 처리되어 `500`이 됩니다(감싼 예외가 `HttpException`이면 그 예외의 상태입니다). `onError`가 응답하지 않으면 오류는 다음 오류 처리로 넘어갑니다([app.onError](middleware.md#apponerror)).
+`onError`에서 본문 한도 초과를 알아보려면 두 모양을 모두 확인하세요. 감싸지 않은 채 핸들러 밖으로 나간 `BodyTooLargeException`은 `413` 응답이 되고, `onError`는 그 예외 객체를 그대로 받습니다. `onError`가 응답하지 않으면 이 `413`은 공통 HTTP 기본 오류 페이지입니다. 본문은 예외의 클래스·메시지·스택을 이스케이프한 `text/html; charset=utf-8`이고, `code`가 있는 JSON 오류 본문이 아닙니다([기본 오류 본문과 노출 정보](defaults.md#기본-오류-본문과-노출-정보)). 이 `413`은 `500`이 아니므로 앱 로거에 기록하지 않습니다. JSON이나 다른 본문으로 답하려면 아래 예처럼 `onError`에서 직접 응답하세요. 다른 예외로 감싼 것(예: `new RuntimeException(e)`)은 일반 예외로 처리되어 `500`이 됩니다(감싼 예외가 `HttpException`이면 그 예외의 상태입니다). `onError`가 응답하지 않으면 오류는 다음 오류 처리로 넘어갑니다([app.onError](middleware.md#apponerror)).
 
 ```java
 app.onError((error, req, res) -> {
