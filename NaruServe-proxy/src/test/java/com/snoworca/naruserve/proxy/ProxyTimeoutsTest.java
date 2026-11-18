@@ -325,6 +325,68 @@ public class ProxyTimeoutsTest {
                 backend.closedByProxy.await(WAIT_SECONDS, TimeUnit.SECONDS));
     }
 
+    // FR-PROXY-017 AC-7, FR-PROXY-017 AC-8 (FND-001): a timeout reached after the backend head was read but before
+    // the response is handed to res.relay is a 504 through onError, not a relayed status and an aborted client. With
+    // .totalTimeout(1, SECONDS).maxConcurrent(1), a backend that sends its header block and then stays silent, and a
+    // request whose application() stalls the request thread 1500 ms (the proxy reads the app logger after the head,
+    // while it prepares the hand-off), the total deadline fires before res.relay: the client gets 504, onError
+    // receives TOTAL_TIMEOUT, the app logger receives no ProxyException, and the slot is returned
+    @Test(timeout = 30000)
+    public void fr_PROXY_017_AC7_AC8_aTotalTimeoutAfterTheHeadButBeforeTheRelayIsA504() throws Exception {
+        ScriptedBackend backend = backend((b, index, in, out) -> {
+            readHead(in);
+            out.write("HTTP/1.1 200 OK\r\nContent-Length: 1000\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
+            out.flush();
+            drainUntilClosed(b, in);
+        });
+        Proxy p = Proxy.to(backend.url()).totalTimeout(1, TimeUnit.SECONDS).maxConcurrent(1);
+        String path = mountWithSlowApplication(p, 1500);
+        start();
+
+        ClientResponse r = get(path);
+
+        assertEquals("errors: " + errors + ", logged: " + log.lines, 504, r.status());
+        assertTrue("the 504 is a complete response", !r.abnormallyClosed());
+        assertKinds(ProxyException.Kind.TOTAL_TIMEOUT);
+        synchronized (log.errors) {
+            for (Throwable logged : log.errors) {
+                assertTrue("no ProxyException is logged: " + log.lines, !(logged instanceof ProxyException));
+            }
+        }
+        awaitCounterZero(p);
+        assertTrue("the backend observed its connection closed",
+                backend.closedByProxy.await(WAIT_SECONDS, TimeUnit.SECONDS));
+    }
+
+    // FR-PROXY-017 AC-7, FR-PROXY-017 AC-8 (FND-101): the 504 of a timeout reached after the backend head was read
+    // carries none of the backend's header lines (Set-Cookie, Cache-Control, a custom header) and, like every error
+    // before the hand-off, none of the .responseHeader values, which FR-PROXY-012 applies to the relayed response
+    // only, after the backend header copy
+    @Test(timeout = 30000)
+    public void fr_PROXY_017_AC7_AC8_a504AfterTheHeadCarriesNoBackendHeaders() throws Exception {
+        ScriptedBackend backend = backend((b, index, in, out) -> {
+            readHead(in);
+            out.write(("HTTP/1.1 200 OK\r\nSet-Cookie: sid=backend; Path=/\r\nCache-Control: public, max-age=600\r\n"
+                    + "X-Backend: yes\r\nStrict-Transport-Security: max-age=0\r\nContent-Length: 1000\r\n\r\n")
+                    .getBytes(StandardCharsets.ISO_8859_1));
+            out.flush();
+            drainUntilClosed(b, in);
+        });
+        Proxy p = Proxy.to(backend.url()).totalTimeout(1, TimeUnit.SECONDS).maxConcurrent(1)
+                .responseHeader("Strict-Transport-Security", "max-age=31536000");
+        String path = mountWithSlowApplication(p, 1500);
+        start();
+
+        ClientResponse r = get(path);
+
+        assertEquals("errors: " + errors + ", logged: " + log.lines, 504, r.status());
+        assertKinds(ProxyException.Kind.TOTAL_TIMEOUT);
+        for (String name : Arrays.asList("Set-Cookie", "Cache-Control", "X-Backend", "Strict-Transport-Security")) {
+            assertEquals("no " + name + " on the 504: " + r.headers(), null, r.header(name));
+        }
+        awaitCounterZero(p);
+    }
+
     // ---- AC-9 ----
 
     // FR-PROXY-017 AC-9: timeouts are set per mount: on one backend that answers after 3 seconds, a mount with
@@ -455,6 +517,30 @@ public class ProxyTimeoutsTest {
                         }
                     });
             proxy.handle(paced, res, next);
+        });
+        return path;
+    }
+
+    /**
+     * Mounts {@code proxy} at a new path behind a request wrapper whose {@code application()} sleeps {@code millis}
+     * before it passes the call on. The proxy calls it once, for the app logger, after the backend head was read and
+     * before the hand-off to {@code res.relay}, so the request thread stalls in that window.
+     */
+    private String mountWithSlowApplication(Proxy proxy, long millis) {
+        String path = "/m" + routes++;
+        app.use(path, (req, res, next) -> {
+            Request slow = (Request) java.lang.reflect.Proxy.newProxyInstance(Request.class.getClassLoader(),
+                    new Class<?>[] {Request.class}, (self, method, args) -> {
+                        if (method.getName().equals("application") && (args == null || args.length == 0)) {
+                            Thread.sleep(millis);
+                        }
+                        try {
+                            return method.invoke(req, args);
+                        } catch (InvocationTargetException e) {
+                            throw e.getCause();
+                        }
+                    });
+            proxy.handle(slow, res, next);
         });
         return path;
     }
