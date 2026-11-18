@@ -119,7 +119,7 @@ Recoverable body-read `400`, `408` and `413` can still produce their declared HT
 
 ### Default error body and exposed details
 
-Common HTTP final handling sends `text/html; charset=utf-8`, `Content-Security-Policy: default-src 'none'`, `X-Content-Type-Options: nosniff` and the exact byte `Content-Length`. A route miss uses `Cannot METHOD /path` with the original pathname and no query. An exception HTML-escapes the class, message and stack from Java `Throwable.printStackTrace`. Stacks are exposed; frames vary with Java version and adapter. No JavaScript stack is invented. To hide details, register a later error handler that writes a safe response.
+Common HTTP final handling sends `text/html; charset=utf-8`, `Content-Security-Policy: default-src 'none'`, `X-Content-Type-Options: nosniff` and the exact byte `Content-Length`. A route miss uses `Cannot METHOD /path` with the original pathname and no query. An exception HTML-escapes the class, message and stack from Java `Throwable.printStackTrace`. The one exception is the proxy's `ProxyException`: its causes (`Caused by`) and suppressed exceptions appear by class name only, without their messages, because a cause message can name the target address; the cause stays whole in `getCause()` and in logs (`printStackTrace`). Stacks are exposed; frames vary with Java version and adapter. No JavaScript stack is invented. To hide details, register a later error handler that writes a safe response.
 
 Standard JSON remains available through explicit error renderers/`StandardErrors`, pre-request adapter rejection and retained WS/static extension boundaries. Do not assume every common HTTP default error is JSON. An error after response commit does not produce a second HTTP response.
 

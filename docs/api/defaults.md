@@ -119,7 +119,7 @@ TinyHttpd가 요청을 해석하기 전에 거부하는 `400`(요청 형식), `4
 
 ### 기본 오류 본문과 노출 정보
 
-공통 HTTP의 최종 처리는 `text/html; charset=utf-8`, `Content-Security-Policy: default-src 'none'`, `X-Content-Type-Options: nosniff`와 정확한 바이트 `Content-Length`를 보냅니다. 라우트 미일치는 쿼리를 제외한 원본 경로를 사용한 `Cannot METHOD /path`이고, 예외는 Java `Throwable.printStackTrace`의 클래스·메시지·스택을 HTML 이스케이프합니다. 스택을 숨기지 않으며 Java 버전·어댑터에 따라 프레임은 달라집니다. JavaScript 스택을 모방하지 않습니다. 상세 정보를 노출하지 않으려면 뒤쪽 오류 핸들러에서 안전한 응답을 직접 작성하세요.
+공통 HTTP의 최종 처리는 `text/html; charset=utf-8`, `Content-Security-Policy: default-src 'none'`, `X-Content-Type-Options: nosniff`와 정확한 바이트 `Content-Length`를 보냅니다. 라우트 미일치는 쿼리를 제외한 원본 경로를 사용한 `Cannot METHOD /path`이고, 예외는 Java `Throwable.printStackTrace`의 클래스·메시지·스택을 HTML 이스케이프합니다. 다만 프록시의 `ProxyException`은 원인(`Caused by`)과 `Suppressed`를 클래스 이름으로만 보여 주고 메시지는 싣지 않습니다. 원인 메시지에 대상 주소가 들어 있을 수 있기 때문이며, 원인은 `getCause()`와 로그(`printStackTrace`)에 그대로 남습니다. 스택을 숨기지 않으며 Java 버전·어댑터에 따라 프레임은 달라집니다. JavaScript 스택을 모방하지 않습니다. 상세 정보를 노출하지 않으려면 뒤쪽 오류 핸들러에서 안전한 응답을 직접 작성하세요.
 
 표준 JSON은 명시적인 오류 렌더러·`StandardErrors` 도우미, 어댑터의 요청 전 거부 및 유지되는 WS/정적 확장 경계에 남습니다. 공통 HTTP 기본 오류 전체를 JSON으로 가정하지 마세요. 응답 커밋 뒤의 오류는 두 번째 HTTP 응답을 만들지 않습니다.
 

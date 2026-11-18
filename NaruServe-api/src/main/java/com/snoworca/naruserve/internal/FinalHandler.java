@@ -12,7 +12,7 @@ import org.jspecify.annotations.Nullable;
  * fallthrough uses the original raw pathname, excludes query, and preserves valid percent escapes.
  * Behavior reference: finalhandler/encodeurl (MIT), see HTTP-FINALHANDLER-LICENSE.txt.
  */
-// @req FR-APP-024 AC-3 AC-4 AC-5; FR-HTTP-028 AC-3 AC-5
+// @req FR-APP-024 AC-3 AC-4 AC-5; FR-HTTP-028 AC-3 AC-5; FR-PROXY-015 AC-4
 final class FinalHandler {
     private FinalHandler() { }
     static void finish(DefaultRequest request,DefaultResponse response,@Nullable Throwable error,SafeLogger logger) {
@@ -30,8 +30,13 @@ final class FinalHandler {
             // otherwise the status the response already carries.
             status=StandardErrors.statusOr(error,response.statusCode());
             if(status<400 || status>599)status=500;
-            StringWriter stack=new StringWriter();error.printStackTrace(new PrintWriter(stack));
-            message=stack.toString().replace("\r\n","\n");
+            if(ConcealedCauses.covers(error)) {
+                // FR-PROXY-015 AC-4: a ProxyException's causes may name the target, so they appear by class only.
+                message=ConcealedCauses.trace(error);
+            }else{
+                StringWriter stack=new StringWriter();error.printStackTrace(new PrintWriter(stack));
+                message=stack.toString().replace("\r\n","\n");
+            }
         }
         response.prepareFinalErrorHeaders(error);
         String escaped=HtmlEscaping.escape(message).replace("\n","<br>").replace("  "," &nbsp;");

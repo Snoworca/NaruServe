@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
  * {@link #kind()} like its {@code err.code}. The status follows the kind: 502 for {@link Kind#CONNECT_FAILED} and
  * {@link Kind#INVALID_RESPONSE}, 504 for the timeouts, 503 for {@link Kind#CONCURRENCY_LIMIT}. The message is always
  * {@code null}, so the default error response never echoes the backend address; the underlying failure, if any, is
- * {@link #getCause()}.
+ * {@link #getCause()}. The default error page names the causes by class only (FR-PROXY-015 AC-4).
  */
 // @req IR-PROXY-002
 public final class ProxyException extends HttpException {
