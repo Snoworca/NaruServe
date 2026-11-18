@@ -462,6 +462,7 @@ public final class Proxy implements Middleware {
     // @req FR-PROXY-019
     // @req SEC-PROXY-004
     // @req FR-PROXY-014
+    // @req FR-PROXY-016
     private void forward(Request req, Response res, Outgoing outgoing, ProxyExchange exchange) {
         boolean relayed = false;
         try {
@@ -492,8 +493,11 @@ public final class Proxy implements Middleware {
             InputStream body = new SocketBodyStream(bodySource(framing, in), socket);
             // From here the relayed body owns the exchange: the first of its close and the abort notification ends it
             // (FR-PROXY-019, REL-PROXY-001). The listener comes first, since one registered after an abort runs at once.
-            RelayedBodyStream relayedBody = new RelayedBodyStream(body, exchange);
-            releaseOnAbort(res, exchange);
+            // A bodyless response is never read, so it declares no length the stream could fall short of.
+            RelayedBodyStream relayedBody = new RelayedBodyStream(body, exchange,
+                    framing.bodyless ? -1 : framing.relayLength, req.application().logger(),
+                    target.scheme + "://" + target.authority);
+            releaseOnAbort(res, relayedBody, exchange);
             res.relay(relayedBody, framing.relayLength);
             relayed = true;
         } catch (IOException e) {
@@ -543,15 +547,20 @@ public final class Proxy implements Middleware {
 
     /**
      * Registers the release of {@code exchange} as an abort listener of {@code res}, so a client that goes away while
-     * the relay waits on a quiet backend frees the slot and the connection at once. A response without abort listeners
-     * still ends the exchange through the relayed body's close.
+     * the relay waits on a quiet backend frees the slot and the connection at once; {@code relayedBody} learns of the
+     * abort first, so the failed read that closing the connection causes is not logged as a backend failure. A
+     * response without abort listeners still ends the exchange through the relayed body's close.
      */
     // @req REL-PROXY-001
-    private static void releaseOnAbort(Response res, final ProxyExchange exchange) {
+    // @req FR-PROXY-016
+    private static void releaseOnAbort(Response res, final RelayedBodyStream relayedBody,
+            final ProxyExchange exchange) {
         try {
             res.onAbort(new Runnable() {
                 @Override
                 public void run() {
+                    // Before the release closes the backend connection, so the read it fails is not logged.
+                    relayedBody.abandon();
                     exchange.release();
                 }
             });
