@@ -6,6 +6,7 @@ import com.snoworca.naruserve.Next;
 import com.snoworca.naruserve.Request;
 import com.snoworca.naruserve.Response;
 import com.snoworca.naruserve.common.HttpHeaderValues;
+import com.snoworca.naruserve.routing.Router;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.EOFException;
@@ -72,6 +73,11 @@ public final class Proxy implements Middleware {
      */
     private static final Set<String> EMPTY_BODY_LENGTH_METHODS =
             Collections.unmodifiableSet(new HashSet<>(Arrays.asList("POST", "PUT", "PATCH")));
+    /**
+     * The {@code Allow} value of the 405 to {@code CONNECT} and {@code TRACE}: the standard methods only, since
+     * extension methods differ per backend.
+     */
+    private static final String ALLOW_METHODS = "GET, HEAD, POST, PUT, DELETE, PATCH, OPTIONS";
 
     private final TargetUrl target;
     private final Options options;
@@ -349,7 +355,11 @@ public final class Proxy implements Middleware {
 
     /**
      * Forwards the request to the backend over a new connection and hands the response body to {@code res.relay},
-     * which owns the backend socket from then on; never calls {@code next.run()}. A backend that cannot be reached
+     * which owns the backend socket from then on; never calls {@code next.run()} for a request it forwarded. A
+     * WebSocket upgrade, judged as {@link Router#isWebSocketUpgrade} judges it on each header's lines joined by
+     * {@code ", "}, goes to {@code next.run()} without a backend connection, so an {@code app.ws} route under the mount
+     * gets it; a method that is not a token answers 400 and {@code CONNECT} and {@code TRACE}, in any letter case,
+     * answer 405 with {@code Allow}, both before any backend connection. A backend that cannot be reached
      * or answers with a response this proxy cannot read gives 502 through the error flow; a failure while reading
      * the client body is the client's and reaches the error flow as itself, an over-limit body as 413.
      */
@@ -359,8 +369,23 @@ public final class Proxy implements Middleware {
     // @req FR-PROXY-008
     // @req SEC-PROXY-001
     // @req FR-PROXY-004
+    // @req FR-PROXY-009
     @Override
     public void handle(Request req, Response res, Next next) throws Exception {
+        // The upgrade check comes first, then the method checks, then the request-target and header checks (D-050).
+        if (Router.isWebSocketUpgrade(req.methodToken(), joinedHeader(req, "Connection"),
+                joinedHeader(req, "Upgrade"))) {
+            next.run();
+            return;
+        }
+        String method = req.methodToken();
+        if (!HttpHeaderValues.isToken(method)) {
+            throw new HttpException(400);
+        }
+        // A token is ASCII, so equalsIgnoreCase matches CONNECT and TRACE in any letter case without locale effects.
+        if ("CONNECT".equalsIgnoreCase(method) || "TRACE".equalsIgnoreCase(method)) {
+            throw new HttpException(405, null).withHeader("Allow", ALLOW_METHODS);
+        }
         // The request-target check (400) runs on the raw originalUrl() path and query whatever stripPrefix says
         // (D-052); then the header check and the multiple-Host check (400) and the framing answers (400/501), from
         // the header lines alone, for every target scheme (D-050). A null message, like every other 400 of the
@@ -381,6 +406,19 @@ public final class Proxy implements Middleware {
         } catch (RequestBodyCopier.ClientBodyFailure f) {
             throw f.forErrorFlow();
         }
+    }
+
+    /** Every value of the request header {@code name} (case-insensitive) joined by {@code ", "}, or null for none. */
+    // @req FR-PROXY-009
+    private static @Nullable String joinedHeader(Request req, String name) {
+        StringBuilder joined = null;
+        for (Map.Entry<String, String> h : req.rawHeaders()) {
+            if (h.getKey().equalsIgnoreCase(name)) {
+                joined = joined == null ? new StringBuilder() : joined.append(", ");
+                joined.append(h.getValue());
+            }
+        }
+        return joined == null ? null : joined.toString();
     }
 
     // @req IR-PROXY-001
