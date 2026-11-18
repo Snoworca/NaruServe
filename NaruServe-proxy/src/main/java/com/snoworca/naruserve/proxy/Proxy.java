@@ -180,15 +180,24 @@ public final class Proxy implements Middleware {
         return derived(options.withMaxConcurrent(limit));
     }
 
-    /** Sends {@code value} as request header {@code name} in place of the client's lines of that name. */
+    /**
+     * Sends {@code value} as request header {@code name}, exactly one line, in place of every client line of that name.
+     * The line follows the forwarding headers, in the call order of the rules that count. Names compare
+     * case-insensitively and the later {@code requestHeader} or {@code removeRequestHeader} call for a name wins.
+     */
     // @req IR-PROXY-001
+    // @req FR-PROXY-005
     public Proxy requestHeader(String name, String value) {
         HeaderRules.checkRequestRule(name, value, "requestHeader");
         return derived(options.withRequestHeaderRules(appended(options.requestHeaderRules, name, value)));
     }
 
-    /** Drops the client's request header {@code name}. */
+    /**
+     * Drops every client line of request header {@code name}. Names compare case-insensitively and the later
+     * {@code requestHeader} or {@code removeRequestHeader} call for a name wins.
+     */
     // @req IR-PROXY-001
+    // @req FR-PROXY-005
     public Proxy removeRequestHeader(String name) {
         HeaderRules.checkRequestRule(name, "removeRequestHeader");
         return derived(options.withRequestHeaderRules(appended(options.requestHeaderRules, name, null)));
@@ -280,6 +289,12 @@ public final class Proxy implements Middleware {
     // @req REL-PROXY-001
     Proxy withWatchdog(ProxyExchange.Watchdog watchdog) {
         return new Proxy(target, options, watchdog);
+    }
+
+    /** Package-private test accessor: the watchdog this proxy's requests reserve (REL-PROXY-002 AC-2). */
+    // @req REL-PROXY-002
+    ProxyExchange.Watchdog watchdog() {
+        return watchdog;
     }
 
     // Package-private accessors: the configured values, read by unit tests only (D-046).
@@ -701,7 +716,8 @@ public final class Proxy implements Middleware {
      * {@link #bodyFraming}. The exceptions {@code req.bodyStream} throws for a body earlier code took pass through
      * unwrapped, and the body is closed on every failure. {@code Host} is the received one ({@code receivedHost},
      * null for none) under {@code .preserveHost(true)} and the target host otherwise; the received one also goes out
-     * as {@code X-Forwarded-Host}.
+     * as {@code X-Forwarded-Host}, after {@code X-Forwarded-For} and {@code X-Forwarded-Proto}, and the client's own
+     * forwarding headers are dropped.
      */
     // @req IR-PROXY-001
     // @req SEC-PROXY-003
@@ -710,17 +726,23 @@ public final class Proxy implements Middleware {
     // @req FR-PROXY-008
     // @req FR-PROXY-004
     // @req FR-PROXY-006
+    // @req SEC-PROXY-002
+    // @req FR-PROXY-005
     private Outgoing prepare(Request req, String requestTarget, long declaredFraming, @Nullable String receivedHost) {
         InputStream body = options.bodyLimit == NO_BODY_LIMIT ? req.bodyStream() : req.bodyStream(options.bodyLimit);
         try {
             BodyFraming framing = bodyFraming(req, body, declaredFraming);
             String host = backendHost(receivedHost);
-            // X-Forwarded-For and X-Forwarded-Proto (SEC-PROXY-002) join X-Forwarded-Host in the forwarding slot, and
-            // the .requestHeader values (FR-PROXY-005) fill theirs (D-053).
+            // Trust, scheme and peer come only from the request's public view (SEC-PROXY-002); the client lines of
+            // every .requestHeader or .removeRequestHeader name are left out and the .requestHeader values
+            // (FR-PROXY-005) fill their own slot after the forwarding lines (D-053).
+            List<Map.Entry<String, String>> rawHeaders = req.rawHeaders();
+            @Nullable String forwardedFor = BackendRequest.forwardedFor(rawHeaders, req.isFromTrustedProxy(),
+                    req.socketAddress());
             byte[] head = BackendRequest.head(req.methodToken() + " " + requestTarget + " HTTP/1.1", host,
-                    BackendRequest.forwardedClientHeaders(req.rawHeaders()),
-                    BackendRequest.forwardingHeaders(receivedHost),
-                    Collections.<Map.Entry<String, String>>emptyList(), framing.header);
+                    BackendRequest.forwardedClientHeaders(rawHeaders, options.ruledRequestNames),
+                    BackendRequest.forwardingHeaders(forwardedFor, req.isSecure(), receivedHost),
+                    options.fixedRequestHeaders, framing.header);
             return new Outgoing(head, body, framing);
         } catch (RuntimeException | Error e) {
             closeQuietly(body);
@@ -910,6 +932,10 @@ public final class Proxy implements Middleware {
         final @Nullable ConcurrencyLimiter limiter;
         final List<Map.Entry<String, @Nullable String>> requestHeaderRules;
         final List<Map.Entry<String, @Nullable String>> responseHeaderRules;
+        /** The lower-case names with a request rule of either kind: their client lines are not forwarded. */
+        final Set<String> ruledRequestNames;
+        /** The later {@code .requestHeader} call of each name not removed afterwards, as (name, value) in call order. */
+        final List<Map.Entry<String, String>> fixedRequestHeaders;
         /** The lower-case names whose later response rule is a removal: their backend lines are not copied. */
         final Set<String> hiddenResponseNames;
         /** The later {@code .responseHeader} call of each name not removed afterwards, as (name, value) in call order. */
@@ -937,19 +963,14 @@ public final class Proxy implements Middleware {
             this.limiter = limiter;
             this.requestHeaderRules = requestHeaderRules;
             this.responseHeaderRules = responseHeaderRules;
-            Map<String, Map.Entry<String, @Nullable String>> resolved = laterRuleOfEachName(responseHeaderRules);
-            Set<String> hidden = new HashSet<>();
-            List<Map.Entry<String, String>> fixed = new ArrayList<>();
-            for (Map.Entry<String, Map.Entry<String, @Nullable String>> e : resolved.entrySet()) {
-                String value = e.getValue().getValue();
-                if (value == null) {
-                    hidden.add(e.getKey());
-                } else {
-                    fixed.add(new SimpleImmutableEntry<>(e.getValue().getKey(), value));
-                }
-            }
-            this.hiddenResponseNames = Collections.unmodifiableSet(hidden);
-            this.fixedResponseHeaders = Collections.unmodifiableList(fixed);
+            Map<String, Map.Entry<String, @Nullable String>> requestResolved =
+                    laterRuleOfEachName(requestHeaderRules);
+            this.ruledRequestNames = Collections.unmodifiableSet(new HashSet<>(requestResolved.keySet()));
+            this.fixedRequestHeaders = valueRules(requestResolved);
+            Map<String, Map.Entry<String, @Nullable String>> responseResolved =
+                    laterRuleOfEachName(responseHeaderRules);
+            this.hiddenResponseNames = removalNames(responseResolved);
+            this.fixedResponseHeaders = valueRules(responseResolved);
             this.rewriteLocation = rewriteLocation;
             this.sslSocketFactory = sslSocketFactory;
         }
@@ -960,6 +981,7 @@ public final class Proxy implements Middleware {
          * entry keeps the name as the later call wrote it with its value, null for a removal.
          */
         // @req FR-PROXY-012
+        // @req FR-PROXY-005
         private static Map<String, Map.Entry<String, @Nullable String>> laterRuleOfEachName(
                 List<Map.Entry<String, @Nullable String>> rules) {
             Map<String, Map.Entry<String, @Nullable String>> resolved = new LinkedHashMap<>();
@@ -969,6 +991,33 @@ public final class Proxy implements Middleware {
                 resolved.put(lower, rule);
             }
             return resolved;
+        }
+
+        /** The (name, value) of each resolved rule that sets a value, in map order; the removals are left out. */
+        // @req FR-PROXY-005
+        // @req FR-PROXY-012
+        private static List<Map.Entry<String, String>> valueRules(
+                Map<String, Map.Entry<String, @Nullable String>> resolved) {
+            List<Map.Entry<String, String>> values = new ArrayList<>();
+            for (Map.Entry<String, @Nullable String> rule : resolved.values()) {
+                String value = rule.getValue();
+                if (value != null) {
+                    values.add(new SimpleImmutableEntry<>(rule.getKey(), value));
+                }
+            }
+            return Collections.unmodifiableList(values);
+        }
+
+        /** The lower-case name of each resolved rule that is a removal; the value rules are left out. */
+        // @req FR-PROXY-012
+        private static Set<String> removalNames(Map<String, Map.Entry<String, @Nullable String>> resolved) {
+            Set<String> names = new HashSet<>();
+            for (Map.Entry<String, Map.Entry<String, @Nullable String>> e : resolved.entrySet()) {
+                if (e.getValue().getValue() == null) {
+                    names.add(e.getKey());
+                }
+            }
+            return Collections.unmodifiableSet(names);
         }
 
         /** Every option at its default. */

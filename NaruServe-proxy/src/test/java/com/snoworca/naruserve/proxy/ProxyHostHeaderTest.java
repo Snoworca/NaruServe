@@ -127,7 +127,8 @@ public class ProxyHostHeaderTest {
                 "gw.example", "X-B", "2", "Content-Length", "5").body("hello".getBytes(StandardCharsets.ISO_8859_1)));
 
         assertEquals(got.head, Arrays.asList("Host: 127.0.0.1:" + backend.port(), "X-A: 1", "X-B: 2",
-                "X-Forwarded-Host: gw.example", "Content-Length: 5", "Connection: close"), got.headerLines());
+                "X-Forwarded-For: 127.0.0.1", "X-Forwarded-Proto: http", "X-Forwarded-Host: gw.example",
+                "Content-Length: 5", "Connection: close"), got.headerLines());
     }
 
     // FR-PROXY-004 AC-1: over a TinyHttpd socket whose allowlist admits gw.example, the real client Host line becomes

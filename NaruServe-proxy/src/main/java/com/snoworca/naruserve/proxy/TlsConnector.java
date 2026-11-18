@@ -6,9 +6,6 @@ import java.lang.reflect.Method;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLParameters;
@@ -40,9 +37,6 @@ final class TlsConnector {
 
     /** The built-in certificate host name matcher, the held verifier unless a test injects another. */
     private static final HostnameVerifier BUILT_IN_VERIFIER = new CertificateHostnames();
-
-    /** The watchdog thread that closes the plain socket of a handshake past the total-timeout deadline. */
-    private static final ScheduledThreadPoolExecutor WATCHDOG = watchdog();
 
     /**
      * Package-private test switch: {@code false} skips the reflective endpoint identification, as on Android before
@@ -143,23 +137,12 @@ final class TlsConnector {
         }
     }
 
-    private static ScheduledThreadPoolExecutor watchdog() {
-        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable r) {
-                Thread t = new Thread(r, "naruserve-proxy-tls-watchdog");
-                t.setDaemon(true);
-                return t;
-            }
-        });
-        executor.setRemoveOnCancelPolicy(true);
-        return executor;
-    }
-
     /**
      * Closes the plain socket when the total-timeout deadline passes before {@link #disarm()}; never the
-     * {@link SSLSocket}, whose close sends {@code close_notify} and may block behind a writer.
+     * {@link SSLSocket}, whose close sends {@code close_notify} and may block behind a writer. The deadline runs on
+     * the proxy's one JVM-wide scheduler, {@link ProxyExchange.Scheduler}, like the write and total deadlines.
      */
+    // @req REL-PROXY-002
     private static final class Watchdog implements Runnable {
         private final Socket plain;
         private static final int ARMED = 0;
@@ -172,10 +155,11 @@ final class TlsConnector {
             this.plain = plain;
         }
 
+        // @req REL-PROXY-002
         static Watchdog arm(Socket plain, long deadlineNanos) {
             Watchdog w = new Watchdog(plain);
             long delay = Math.max(0, deadlineNanos - System.nanoTime());
-            w.future = WATCHDOG.schedule(w, delay, TimeUnit.NANOSECONDS);
+            w.future = ProxyExchange.Scheduler.INSTANCE.schedule(w, delay);
             return w;
         }
 
