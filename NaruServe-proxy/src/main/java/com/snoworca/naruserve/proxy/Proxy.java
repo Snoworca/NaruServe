@@ -424,6 +424,7 @@ public final class Proxy implements Middleware {
     // @req IR-PROXY-001
     // @req FR-PROXY-011
     // @req FR-PROXY-007
+    // @req FR-PROXY-013
     private void forward(Request req, Response res, Outgoing outgoing) {
         Socket socket = new Socket();
         boolean relayed = false;
@@ -449,7 +450,11 @@ public final class Proxy implements Middleware {
             }
             // The adapter writes its own reason phrase for the status (D-059); the backend phrase is not kept.
             res.status(head.status);
-            ResponseHeaderCopier.copy(head.headers, res);
+            List<Map.Entry<String, String>> copied = ResponseHeaderCopier.copy(head.headers, res);
+            // The Location rewrite follows the copy and comes before the .responseHeader values (FR-PROXY-012).
+            if (options.rewriteLocation) {
+                LocationRewriter.apply(copied, target, options.stripPrefix ? req.baseUrl() : "", res);
+            }
             long length = head.status == 204 || head.transferEncoding != null ? -1 : head.contentLength;
             InputStream body = chunked ? new ChunkedBodyStream(in, socket) : new SocketBodyStream(in, socket);
             res.relay(body, length);

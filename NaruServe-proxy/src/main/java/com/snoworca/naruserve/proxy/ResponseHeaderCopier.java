@@ -1,6 +1,7 @@
 package com.snoworca.naruserve.proxy;
 
 import com.snoworca.naruserve.Response;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -22,24 +23,29 @@ final class ResponseHeaderCopier {
 
     /**
      * Copies {@code lines} (backend name as received, value without surrounding whitespace) onto {@code res}. The
-     * names and values must already have passed the {@code res.header} check.
+     * names and values must already have passed the {@code res.header} check. Returns the lines it copied, in
+     * order, for the {@code Location} rewrite that follows the copy (FR-PROXY-013).
      */
     // @req FR-PROXY-011
-    static void copy(List<Map.Entry<String, String>> lines, Response res) {
+    // @req FR-PROXY-013
+    static List<Map.Entry<String, String>> copy(List<Map.Entry<String, String>> lines, Response res) {
         Set<String> connectionNames = connectionNames(lines);
         Set<String> seen = new HashSet<>();
+        List<Map.Entry<String, String>> copied = new ArrayList<>();
         for (Map.Entry<String, String> line : lines) {
             String name = line.getKey();
             String lower = name.toLowerCase(Locale.ROOT);
             if (HeaderRules.RESPONSE_MANAGED.contains(lower) || connectionNames.contains(lower)) {
                 continue;
             }
+            copied.add(line);
             if (lower.equals("set-cookie") || lower.equals("vary") || !seen.add(lower)) {
                 res.append(name, line.getValue());
             } else {
                 res.header(name, line.getValue());
             }
         }
+        return copied;
     }
 
     /** The lower-case names listed in every {@code Connection} line: comma-separated, OWS trimmed, empty skipped. */
