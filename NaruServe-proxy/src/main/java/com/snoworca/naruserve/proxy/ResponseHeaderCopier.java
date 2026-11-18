@@ -41,6 +41,20 @@ final class ResponseHeaderCopier {
     // @req FR-PROXY-012
     static List<Map.Entry<String, String>> copy(List<Map.Entry<String, String>> lines, Set<String> hiddenNames,
             Response res) {
+        PendingResponseHeaders pending = new PendingResponseHeaders();
+        List<Map.Entry<String, String>> copied = copy(lines, hiddenNames, pending);
+        pending.applyTo(res);
+        return copied;
+    }
+
+    /**
+     * As {@link #copy(List, Set, Response)}, but holds the writes in {@code pending} instead of making them on the
+     * client response, so the proxy can make them after its last deadline check before the hand-off (FR-PROXY-017).
+     */
+    // @req FR-PROXY-012
+    // @req FR-PROXY-017
+    static List<Map.Entry<String, String>> copy(List<Map.Entry<String, String>> lines, Set<String> hiddenNames,
+            PendingResponseHeaders res) {
         Set<String> connectionNames = connectionNames(lines);
         Set<String> seen = new HashSet<>();
         List<Map.Entry<String, String>> copied = new ArrayList<>();

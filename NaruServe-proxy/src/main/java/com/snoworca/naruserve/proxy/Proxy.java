@@ -490,16 +490,24 @@ public final class Proxy implements Middleware {
             // failed write the response the backend may have left on the socket is read instead (FR-PROXY-015).
             ResponseParser.Head head = writeFailure == null ? ResponseParser.read(in) : earlyResponse(in, writeFailure);
             ResponseParser.Framing framing = ResponseParser.framing(head, "HEAD".equals(req.methodToken()));
-            // The adapter writes its own reason phrase for the status (D-059); the backend phrase is not kept.
-            res.status(head.status);
-            applyResponseHeaders(req, res, head.headers);
+            // Everything the hand-off sends is computed before res is touched, so a deadline found fired at the check
+            // below gives a 504 that carries no backend header line and no .responseHeader value (FR-PROXY-017).
+            PendingResponseHeaders headers = responseHeaders(req, head.headers);
             InputStream body = new SocketBodyStream(bodySource(framing, in), socket);
-            // From here the relayed body owns the exchange: the first of its close and the abort notification ends it
-            // (FR-PROXY-019, REL-PROXY-001). The listener comes first, since one registered after an abort runs at once.
             // A bodyless response is never read, so it declares no length the stream could fall short of.
             RelayedBodyStream relayedBody = new RelayedBodyStream(body, exchange,
                     framing.bodyless ? -1 : framing.relayLength, req.application().logger(),
                     target.scheme + "://" + target.authority);
+            // The last deadline check, right before the first write to res: a write or total deadline that fired
+            // after the head was read is a 504 of its kind through the error flow, released by the finally below. One
+            // that fires after this check counts as after the hand-off: the relay meets the closed socket and takes
+            // the abort-and-log path of FR-PROXY-016.
+            throwIfFired(exchange);
+            // The adapter writes its own reason phrase for the status (D-059); the backend phrase is not kept.
+            res.status(head.status);
+            headers.applyTo(res);
+            // From here the relayed body owns the exchange: the first of its close and the abort notification ends it
+            // (FR-PROXY-019, REL-PROXY-001). The listener comes first, since one registered after an abort runs at once.
             releaseOnAbort(res, relayedBody, exchange);
             res.relay(relayedBody, framing.relayLength);
             relayed = true;
@@ -610,13 +618,16 @@ public final class Proxy implements Middleware {
     }
 
     /**
-     * Sets the response headers of {@code res} from the backend header lines {@code headers} in this order: the
-     * backend header copy, then the {@code Location} rewrite, then the {@code .responseHeader} values (FR-PROXY-012).
+     * The response header writes of the backend header lines {@code headers}, held until the hand-off, in this order:
+     * the backend header copy, then the {@code Location} rewrite, then the {@code .responseHeader} values
+     * (FR-PROXY-012). Nothing is written to the client response here (FR-PROXY-017).
      */
     // @req FR-PROXY-011
     // @req FR-PROXY-013
     // @req FR-PROXY-012
-    private void applyResponseHeaders(Request req, Response res, List<Map.Entry<String, String>> headers) {
+    // @req FR-PROXY-017
+    private PendingResponseHeaders responseHeaders(Request req, List<Map.Entry<String, String>> headers) {
+        PendingResponseHeaders res = new PendingResponseHeaders();
         // A removed name's backend lines are skipped, so an app value of it stays and the rewrite never sees them.
         List<Map.Entry<String, String>> copied =
                 ResponseHeaderCopier.copy(headers, options.hiddenResponseNames, res);
@@ -626,6 +637,20 @@ public final class Proxy implements Middleware {
         }
         for (Map.Entry<String, String> fixed : options.fixedResponseHeaders) {
             res.header(fixed.getKey(), fixed.getValue());
+        }
+        return res;
+    }
+
+    /**
+     * Throws a {@link ProxyException} of the kind of the deadline that fired, if one did: the last check before the
+     * hand-off to {@code res.relay}, so a deadline reached after the response head was read is a 504 of its kind
+     * through the error flow (FR-PROXY-017).
+     */
+    // @req FR-PROXY-017
+    private static void throwIfFired(ProxyExchange exchange) {
+        ProxyException.Kind fired = exchange.firedKind();
+        if (fired != null) {
+            throw new ProxyException(fired, null);
         }
     }
 
