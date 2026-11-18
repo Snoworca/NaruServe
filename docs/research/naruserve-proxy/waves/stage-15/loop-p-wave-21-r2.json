@@ -1,0 +1,249 @@
+{
+  "wave": "wave-21",
+  "round": 2,
+  "verifier": "loop-p-wave-21-r2",
+  "base": "9150c04e83b004ad22e989d041a327fb2625dd3f..1177893 + 56ba544, 11e9618",
+  "tested_at": "f4c07ef",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "FR-PROXY-018 AC-13",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java::FR_PROXY_018_AC13_interruptedWaitAfterA502IsAnHttpExceptionTheRetrySectionsState",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: docs/api/proxy.md retry section does not say that an interrupted wait after a 502 or 503 answers through the error flow with an HttpException of that status instead of relaying the backend response: ## 재시도 ... - 마지막 재시도 뒤에도 `502`나 `503`이면 그 백엔드 응답을 그대로 넘깁니다. - 요청 스레드가 인터럽트되면 재시도를 멈추고 인터럽트 상태를 유지합니다. (runtime part passed: client got 502 without the backend's X-From-Backend header, onError got a plain HttpException, not a ProxyException; en/proxy.md Retries has the same gap)",
+      "note": "Retry sections (ko/en) say a remaining 502/503 is relayed unchanged and an interrupt only stops retries; the code answers an interrupted wait after a closed 502/503 with a plain HttpException through onError (the onError example comments list only 400/405/501/413 for that branch)."
+    },
+    {
+      "id": "LP-2",
+      "cites": "REL-PROXY-001 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2SocketDocsTest.java::REL_PROXY_001_AC1_silentBackendMidBodyKeepsTheSlotUntilTheReadTimeoutAsThePagesMustState",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: the slot was held 2599 ms after the client reset (read timeout 4 s); en bullet: - The slot is taken after every check and `req.bodyStream(...)` pass, right before the backend connect, and returned when the request ends (the response body fully relayed or the client gone). (reproduced twice: 2707 ms, 2599 ms)",
+      "note": "Over real TinyHttpd sockets, a client that resets while the backend is silent mid-body keeps the maxConcurrent(1) slot until the read timeout; proxy.md/en ¶Concurrency say the slot returns when the client is gone, and Thread model covers only the wait before the response starts. The declared adapter limit of REL-PROXY-001 AC-1 is not stated."
+    },
+    {
+      "id": "LP-3",
+      "cites": "OPS-DX-010 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java::OPS_DX_010_AC10_counterSharingIsAsTheConcurrencySectionStates",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-4",
+      "cites": "OPS-DX-010 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java::OPS_DX_010_AC10_overTheLimitIs503AtOnceWithoutConnecting",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-5",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java::OPS_DX_010_AC2_optionDefaultsRangesAndExceptionsAreAsTheTableStates",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "defaults, ranges, IAE/NPE of every option; managed request/response name lists equal HeaderRules"
+    },
+    {
+      "id": "LP-6",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java::OPS_DX_010_AC2_forwardedPathAndLocationTablesHold",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "stripPrefix table rows"
+    },
+    {
+      "id": "LP-7",
+      "cites": "OPS-DX-010 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java::OPS_DX_010_AC2_locationTableRowsHold",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Location rewrite table rows"
+    },
+    {
+      "id": "LP-8",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java::OPS_DX_010_AC3_kindsStatusesAndNullMessageAreAsTheErrorTableStates",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-9",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java::OPS_DX_010_AC3_defaultPageConcealsTheTargetAndNothingIsLogged",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "UnknownHostException cause by class only; no logger entry before the response"
+    },
+    {
+      "id": "LP-10",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java::OPS_DX_010_AC3_failureAfterTheResponseStartedIsLoggedOnceAndAborts",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-11",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java::OPS_DX_010_AC3_consumedBodyIs500AndAChunkedOverrunIs413WithItsCause",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-12",
+      "cites": "OPS-DX-010 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java::OPS_DX_010_AC5_forwardingHeadersAreAsTheTableStates",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-13",
+      "cites": "OPS-DX-010 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java::OPS_DX_010_AC5_trustedPeerKeepsTheClientValuesBeforeTheSocketAddress",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "also preserveHost(true)"
+    },
+    {
+      "id": "LP-14",
+      "cites": "OPS-DX-010 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java::OPS_DX_010_AC6_responseHeaderRelayIsAsStated",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-15",
+      "cites": "OPS-DX-010 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2SocketDocsTest.java::OPS_DX_010_AC6_dateReasonAndHeaderBytesOverTinyHttpdAreAsThePageStates",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "reason phrase and Date from TinyHttpd; 0xE9 arrives as 0xC3 0xA9 (SEC-PROXY-004 AC-9 limit as stated)"
+    },
+    {
+      "id": "LP-16",
+      "cites": "OPS-DX-010 AC-7",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java::OPS_DX_010_AC7_firstTimeoutReachedApplies",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-17",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21R2RawRequestDocsTest.java::OPS_DX_008_AC1_repeatedCallRulesAreAsStated",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-18",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21R2RawRequestDocsTest.java::OPS_DX_008_AC1_oneReadRuleIsAsStated",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-19",
+      "cites": "OPS-DX-008 AC-2",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21R2RawRequestDocsTest.java::OPS_DX_008_AC2_twoOverLimitFormsAreAsTheTableStates",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-20",
+      "cites": "OPS-DX-008 AC-2",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21R2RawRequestDocsTest.java::OPS_DX_008_AC2_unwrappedAndWrappedOverrunsAreAnsweredAsStated",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-21",
+      "cites": "OPS-DX-008 AC-3",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21R2RawRequestDocsTest.java::OPS_DX_008_AC3_headerEnumerationIsAsStated",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-22",
+      "cites": "OPS-DX-008 AC-4",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21R2RawRequestDocsTest.java::OPS_DX_008_AC4_isFromTrustedProxyTableIsAsStated",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-23",
+      "cites": "OPS-DX-008 AC-5",
+      "test": "NaruServe-api/src/test/java/com/snoworca/naruserve/LoopPWave21R2RawRequestDocsTest.java::OPS_DX_008_AC5_rawBodyLimitRangeDefaultAndStateAreAsStated",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": ""
+    },
+    {
+      "id": "LP-24",
+      "cites": "OPS-DX-011 AC-1",
+      "test": "shell::mkdocs build --strict (+ -f mkdocs.en.yml) with tools/docs-site/requirements.txt in a Python 3.11 venv, then python tools/docs-site/check_site.py --site build/docs-site",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "both builds succeeded; 'docs site check passed: 40 guide pages, workflow and requirements pinned'"
+    },
+    {
+      "id": "LP-25",
+      "cites": "C-005",
+      "test": "manual+grep::docs/api ko/en mention every public API added since main (Request.bodyStream/headerNames/rawHeaders/isFromTrustedProxy, RestApp.rawBodyLimit, BodyTooLargeException, Response.append/onAbort/relay, HttpHeaderValues.isFieldValue, Proxy, ProxyException); inline-code spans of proxy.md and en/proxy.md are identical",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "C-005 holds"
+    }
+  ],
+  "summary": {
+    "tests_written": 25,
+    "kept": 2
+  },
+  "constraints": {
+    "C-005": "holds"
+  },
+  "commands": [
+    "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.LoopPWave21R2*' --rerun",
+    "./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests 'com.snoworca.naruserve.LoopPWave21R2RawRequestDocsTest' --rerun"
+  ],
+  "red_test_sources": {
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2ProxyDocsTest.java": "package com.snoworca.naruserve.proxy;\n\nimport static org.junit.Assert.assertEquals;\nimport static org.junit.Assert.assertFalse;\nimport static org.junit.Assert.assertNotNull;\nimport static org.junit.Assert.assertNotSame;\nimport static org.junit.Assert.assertNull;\nimport static org.junit.Assert.assertSame;\nimport static org.junit.Assert.assertTrue;\nimport static org.junit.Assert.fail;\n\nimport com.snoworca.naruserve.HttpException;\nimport com.snoworca.naruserve.RestApp;\nimport com.snoworca.naruserve.testing.InMemoryHttpAdapter;\nimport com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;\nimport com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;\nimport com.snoworca.naruserve.testing.RecordingLogger;\nimport com.snoworca.naruserve.testing.StubJsonCodec;\nimport java.io.Closeable;\nimport java.io.File;\nimport java.io.IOException;\nimport java.net.InetAddress;\nimport java.net.ServerSocket;\nimport java.net.Socket;\nimport java.net.SocketAddress;\nimport java.nio.charset.StandardCharsets;\nimport java.nio.file.Files;\nimport java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.HashSet;\nimport java.util.List;\nimport java.util.Locale;\nimport java.util.Set;\nimport java.util.concurrent.TimeUnit;\nimport java.util.concurrent.atomic.AtomicInteger;\nimport org.junit.After;\nimport org.junit.Test;\n\n/** Loop P wave-21 round 2: the facts proxy.md and en/proxy.md state, compared with the running proxy. */\npublic class LoopPWave21R2ProxyDocsTest {\n\n    private final InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();\n    private final RecordingLogger logger = new RecordingLogger();\n    private final RestApp app = RestApp.builder().httpAdapter(adapter).jsonCodec(new StubJsonCodec())\n            .logger(logger).build();\n    private final List<Throwable> errors = Collections.synchronizedList(new ArrayList<Throwable>());\n    private final List<Closeable> closeables = new ArrayList<>();\n    private boolean started;\n    private int routes;\n\n    @After\n    public void tearDown() throws IOException {\n        BackendClient.plainSockets = BackendClient.SYSTEM_SOCKETS;\n        Thread.interrupted();\n        if (started) {\n            app.shutdown(2, TimeUnit.SECONDS);\n        }\n        for (Closeable c : closeables) {\n            c.close();\n        }\n    }\n\n    private static String read(String page) throws IOException {\n        File root = new File(System.getProperty(\"user.dir\")).getParentFile();\n        return new String(Files.readAllBytes(new File(root, page).toPath()), StandardCharsets.UTF_8);\n    }\n\n    /** The text from {@code heading} up to the next heading of level 2 or higher. */\n    private static String section(String doc, String heading) {\n        int start = doc.indexOf(\"\\n\" + heading + \"\\n\");\n        assertTrue(\"missing \" + heading, start >= 0);\n        int end = doc.indexOf(\"\\n## \", start + heading.length() + 1);\n        return end < 0 ? doc.substring(start) : doc.substring(start, end);\n    }\n\n    private <T extends Closeable> T track(T c) {\n        closeables.add(c);\n        return c;\n    }\n\n    private String mount(Proxy proxy) {\n        String path = \"/m\" + routes++;\n        app.use(path, proxy);\n        return path;\n    }\n\n    private void start() {\n        app.onError((error, req, res) -> {\n            errors.add(error);\n            res.status(error instanceof HttpException ? ((HttpException) error).status() : 500).send(\"onError\");\n        });\n        app.listen(0);\n        started = true;\n    }\n\n    private ClientResponse send(ClientRequest request) throws Exception {\n        return adapter.submit(request).get(20, TimeUnit.SECONDS);\n    }\n\n    private static void interruptLater(final Thread worker, final long millis) {\n        Thread t = new Thread(() -> {\n            try {\n                Thread.sleep(millis);\n            } catch (InterruptedException e) {\n                return;\n            }\n            worker.interrupt();\n        }, \"lp-interrupter\");\n        t.setDaemon(true);\n        t.start();\n    }\n\n    private static int closedPort() throws IOException {\n        try (ServerSocket s = new ServerSocket(0, 1, InetAddress.getByName(\"127.0.0.1\"))) {\n            return s.getLocalPort();\n        }\n    }\n\n    // FR-PROXY-018 AC-13: a retry wait interrupted after a closed 502 answers through the error flow with a plain\n    // HttpException of that status, not the backend's 502; both retry sections must say so, since they only state that\n    // a remaining 502 is relayed unchanged and that an interrupt stops the retries\n    @Test(timeout = 30000)\n    public void FR_PROXY_018_AC13_interruptedWaitAfterA502IsAnHttpExceptionTheRetrySectionsState() throws Exception {\n        RawBackend backend = track(RawBackend.answering(\n                \"HTTP/1.1 502 X\\r\\nX-From-Backend: yes\\r\\nContent-Length: 7\\r\\n\\r\\nbackend\"));\n        final AtomicInteger connects = new AtomicInteger();\n        BackendClient.plainSockets = () -> new Socket() {\n            @Override\n            public void connect(SocketAddress endpoint, int timeout) throws IOException {\n                if (connects.getAndIncrement() == 0) {\n                    interruptLater(Thread.currentThread(), 100);\n                }\n                super.connect(endpoint, timeout);\n            }\n        };\n        String path = mount(Proxy.to(backend.url()).retries(2).retryDelay(2, TimeUnit.SECONDS));\n        start();\n\n        ClientResponse r = send(ClientRequest.of(\"GET\", path + \"/x\"));\n\n        assertEquals(502, r.status());\n        assertNull(\"the backend 502 is not relayed\", r.header(\"X-From-Backend\"));\n        assertEquals(1, errors.size());\n        assertFalse(errors.get(0) instanceof ProxyException);\n        assertTrue(errors.get(0) instanceof HttpException);\n\n        for (String[] page : new String[][] {{\"docs/api/proxy.md\", \"## 재시도\"}, {\"docs/api/en/proxy.md\", \"## Retries\"}}) {\n            String retries = section(read(page[0]), page[1]);\n            assertTrue(page[0] + \" retry section does not say that an interrupted wait after a 502 or 503 answers \"\n                    + \"through the error flow with an HttpException of that status instead of relaying the backend \"\n                    + \"response:\\n\" + retries, retries.contains(\"HttpException\"));\n        }\n    }\n\n    // OPS-DX-010 AC-10: p and p.retries(0) share one counter, p.retries(0).maxConcurrent(16) starts a new one, another\n    // Proxy.to call never shares, a proxy without maxConcurrent has none\n    @Test\n    public void OPS_DX_010_AC10_counterSharingIsAsTheConcurrencySectionStates() {\n        String url = \"http://127.0.0.1:8081\";\n        Proxy p = Proxy.to(url).maxConcurrent(16);\n        assertNotNull(p.concurrencyCounter());\n        assertSame(p.concurrencyCounter(), p.retries(0).concurrencyCounter());\n        assertSame(p.concurrencyCounter(), p.stripPrefix(true).requestHeader(\"X-A\", \"1\").concurrencyCounter());\n        assertNotSame(p.concurrencyCounter(), p.retries(0).maxConcurrent(16).concurrencyCounter());\n        assertNotSame(p.concurrencyCounter(), Proxy.to(url).maxConcurrent(16).concurrencyCounter());\n        assertNull(Proxy.to(url).retries(1).concurrencyCounter());\n    }\n\n    // OPS-DX-010 AC-10: a request over the limit gets 503 CONCURRENCY_LIMIT at once without a backend connection\n    @Test(timeout = 30000)\n    public void OPS_DX_010_AC10_overTheLimitIs503AtOnceWithoutConnecting() throws Exception {\n        final AtomicInteger connects = new AtomicInteger();\n        BackendClient.plainSockets = () -> new Socket() {\n            @Override\n            public void connect(SocketAddress endpoint, int timeout) throws IOException {\n                connects.incrementAndGet();\n                super.connect(endpoint, timeout);\n            }\n        };\n        Proxy p = Proxy.to(\"http://127.0.0.1:\" + closedPort()).maxConcurrent(1);\n        assertTrue(p.concurrencyCounter().compareAndSet(0, 1)); // the one slot is held\n        String path = mount(p.retries(0));\n        start();\n        long t0 = System.nanoTime();\n        ClientResponse r = send(ClientRequest.of(\"GET\", path + \"/x\"));\n        long ms = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);\n        p.concurrencyCounter().set(0);\n        assertEquals(503, r.status());\n        assertSame(ProxyException.Kind.CONCURRENCY_LIMIT, ((ProxyException) errors.get(0)).kind());\n        assertEquals(0, connects.get());\n        assertTrue(ms + \" ms\", ms < 2000);\n    }\n\n    // OPS-DX-010 AC-2: every row of the option table: default, accepted range and the exception the call throws\n    @Test\n    public void OPS_DX_010_AC2_optionDefaultsRangesAndExceptionsAreAsTheTableStates() {\n        Proxy d = Proxy.to(\"http://127.0.0.1:8081\");\n        assertEquals(TimeUnit.SECONDS.toNanos(10), d.connectTimeoutNanos());\n        assertEquals(TimeUnit.SECONDS.toNanos(60), d.writeTimeoutNanos());\n        assertEquals(TimeUnit.SECONDS.toNanos(60), d.readTimeoutNanos());\n        assertEquals(TimeUnit.MINUTES.toNanos(5), d.totalTimeoutNanos());\n        assertEquals(0, d.retries());\n        assertEquals(TimeUnit.MILLISECONDS.toNanos(200), d.retryDelayNanos());\n        assertFalse(d.retryUnsafeMethods());\n        assertFalse(d.stripPrefix());\n        assertFalse(d.preserveHost());\n        assertEquals(Proxy.NO_BODY_LIMIT, d.bodyLimit());\n        assertEquals(Proxy.NO_CONCURRENCY_LIMIT, d.maxConcurrent());\n        assertTrue(d.rewriteLocation());\n        assertNull(d.sslSocketFactory());\n\n        for (String opt : new String[] {\"connect\", \"write\", \"read\", \"total\"}) {\n            iae(() -> timeout(d, opt, 0, TimeUnit.SECONDS));\n            iae(() -> timeout(d, opt, -1, TimeUnit.SECONDS));\n            npe(() -> timeout(d, opt, 1, null));\n            timeout(d, opt, 1, TimeUnit.NANOSECONDS);\n        }\n        iae(() -> d.retries(-1));\n        d.retries(0);\n        iae(() -> d.retryDelay(-1, TimeUnit.MILLISECONDS));\n        npe(() -> d.retryDelay(1, null));\n        d.retryDelay(0, TimeUnit.MILLISECONDS);\n        iae(() -> d.bodyLimit(0));\n        iae(() -> d.bodyLimit(1073741825L));\n        d.bodyLimit(1);\n        d.bodyLimit(1073741824L);\n        iae(() -> d.maxConcurrent(0));\n        d.maxConcurrent(1);\n        npe(() -> d.sslSocketFactory(null));\n        npe(() -> d.requestHeader(null, \"v\"));\n        npe(() -> d.requestHeader(\"X-A\", null));\n        npe(() -> d.removeRequestHeader(null));\n        npe(() -> d.responseHeader(null, \"v\"));\n        npe(() -> d.responseHeader(\"X-A\", null));\n        npe(() -> d.removeResponseHeader(null));\n        iae(() -> d.requestHeader(\"X A\", \"v\"));\n        iae(() -> d.requestHeader(\"X-A\", \"a\\r\\nb\"));\n        iae(() -> d.responseHeader(\"X-A\", \"a\\nb\"));\n\n        // The managed request names the page lists, in any letter case\n        List<String> managedRequest = Arrays.asList(\"Connection\", \"Keep-Alive\", \"Proxy-Connection\", \"TE\",\n                \"Transfer-Encoding\", \"Upgrade\", \"Proxy-Authenticate\", \"Proxy-Authorization\", \"Trailer\", \"Host\",\n                \"Content-Length\", \"Expect\", \"Forwarded\", \"X-Forwarded-For\", \"X-Forwarded-Proto\", \"X-Forwarded-Host\");\n        Set<String> lower = new HashSet<>();\n        for (String n : managedRequest) {\n            lower.add(n.toLowerCase(Locale.ROOT));\n            iae(() -> d.requestHeader(n.toUpperCase(Locale.ROOT), \"v\"));\n            iae(() -> d.removeRequestHeader(n.toLowerCase(Locale.ROOT)));\n        }\n        assertEquals(lower, HeaderRules.REQUEST_MANAGED);\n        List<String> managedResponse = Arrays.asList(\"Connection\", \"Keep-Alive\", \"Proxy-Connection\", \"TE\",\n                \"Transfer-Encoding\", \"Upgrade\", \"Proxy-Authenticate\", \"Proxy-Authorization\", \"Trailer\",\n                \"Content-Length\");\n        Set<String> lowerResponse = new HashSet<>();\n        for (String n : managedResponse) {\n            lowerResponse.add(n.toLowerCase(Locale.ROOT));\n            iae(() -> d.responseHeader(n, \"v\"));\n            iae(() -> d.removeResponseHeader(n));\n        }\n        assertEquals(lowerResponse, HeaderRules.RESPONSE_MANAGED);\n        d.responseHeader(\"Set-Cookie\", \"a=1\");\n        d.removeResponseHeader(\"Server\");\n    }\n\n    private static Proxy timeout(Proxy p, String opt, long amount, TimeUnit unit) {\n        switch (opt) {\n            case \"connect\":\n                return p.connectTimeout(amount, unit);\n            case \"write\":\n                return p.writeTimeout(amount, unit);\n            case \"read\":\n                return p.readTimeout(amount, unit);\n            default:\n                return p.totalTimeout(amount, unit);\n        }\n    }\n\n    private static void iae(Runnable r) {\n        try {\n            r.run();\n            fail(\"no IllegalArgumentException\");\n        } catch (IllegalArgumentException expected) {\n            // stated\n        }\n    }\n\n    private static void npe(Runnable r) {\n        try {\n            r.run();\n            fail(\"no NullPointerException\");\n        } catch (NullPointerException expected) {\n            // stated\n        }\n    }\n\n    // OPS-DX-010 AC-3: the seven kinds and their statuses, the null message\n    @Test\n    public void OPS_DX_010_AC3_kindsStatusesAndNullMessageAreAsTheErrorTableStates() {\n        Object[][] rows = {{\"CONNECT_FAILED\", 502}, {\"CONNECT_TIMEOUT\", 504}, {\"WRITE_TIMEOUT\", 504},\n            {\"READ_TIMEOUT\", 504}, {\"TOTAL_TIMEOUT\", 504}, {\"INVALID_RESPONSE\", 502}, {\"CONCURRENCY_LIMIT\", 503}};\n        assertEquals(rows.length, ProxyException.Kind.values().length);\n        for (Object[] row : rows) {\n            ProxyException e = new ProxyException(ProxyException.Kind.valueOf((String) row[0]),\n                    new IOException(\"backend.example:8081\"));\n            assertEquals(row[0].toString(), row[1], e.status());\n            assertNull(e.getMessage());\n            assertTrue(e instanceof HttpException);\n        }\n    }\n\n    // OPS-DX-010 AC-3: without onError the default page of a CONNECT_FAILED to an unresolvable host does not reveal\n    // the host, and nothing is written to the app logger for that failure before the response\n    @Test(timeout = 30000)\n    public void OPS_DX_010_AC3_defaultPageConcealsTheTargetAndNothingIsLogged() throws Exception {\n        String host = \"lp-wave21-nohost.invalid\";\n        app.use(\"/x\", Proxy.to(\"http://\" + host + \":8081\"));\n        app.listen(0);\n        started = true;\n        ClientResponse r = send(ClientRequest.of(\"GET\", \"/x/y\"));\n        assertEquals(502, r.status());\n        assertFalse(r.text(), r.text().contains(host));\n        assertFalse(r.text(), r.text().contains(\"8081\"));\n        assertTrue(r.text(), r.text().contains(\"UnknownHostException\"));\n        assertTrue(\"logger errors: \" + logger.errors, logger.errors.isEmpty());\n    }\n\n    // OPS-DX-010 AC-3: a failure after the response started aborts the client connection and is logged once\n    @Test(timeout = 30000)\n    public void OPS_DX_010_AC3_failureAfterTheResponseStartedIsLoggedOnceAndAborts() throws Exception {\n        RawBackend backend = track(RawBackend.answering(\"HTTP/1.1 200 X\\r\\nContent-Length: 100\\r\\n\\r\\n0123456789\"));\n        String path = mount(Proxy.to(backend.url()));\n        start();\n        ClientResponse r = send(ClientRequest.of(\"GET\", path + \"/x\"));\n        assertEquals(200, r.status());\n        assertTrue(\"aborted\", r.abnormallyClosed());\n        long deadline = System.currentTimeMillis() + 5000;\n        while (logger.errors.isEmpty() && System.currentTimeMillis() < deadline) {\n            Thread.sleep(20);\n        }\n        Thread.sleep(200);\n        assertEquals(\"logged errors: \" + logger.errors, 1, logger.errors.size());\n        assertTrue(logger.errors.get(0) instanceof ProxyException);\n        assertTrue(\"onError is not called: \" + errors, errors.isEmpty());\n    }\n\n    // OPS-DX-010 AC-5: X-Forwarded-For is the socket address alone for an untrusted peer and the received values\n    // followed by the socket address for a trusted one; the other forwarding headers follow the table\n    @Test(timeout = 30000)\n    public void OPS_DX_010_AC5_forwardingHeadersAreAsTheTableStates() throws Exception {\n        RawBackend backend = track(RawBackend.answering(RawBackend.response(200, \"ok\")));\n        String path = mount(Proxy.to(backend.url()));\n        start();\n        send(ClientRequest.of(\"GET\", path + \"/x\").header(\"Host\", \"front.example\").header(\"X-Forwarded-For\", \"6.6.6.6\")\n                .header(\"X-Forwarded-Proto\", \"https\").header(\"Forwarded\", \"for=1.1.1.1\").header(\"X-Real-IP\", \"1.1.1.1\")\n                .header(\"X-Forwarded-Port\", \"1\").header(\"X-Forwarded-Prefix\", \"/p\")\n                .header(\"X-Forwarded-Host\", \"evil.example\"));\n        RawBackend.Received got = backend.onlyRequest();\n        String peer = got.headerValues(\"X-Forwarded-For\").get(0);\n        assertEquals(Collections.singletonList(peer), got.headerValues(\"X-Forwarded-For\"));\n        assertFalse(peer.contains(\"6.6.6.6\"));\n        assertEquals(Collections.singletonList(\"http\"), got.headerValues(\"X-Forwarded-Proto\"));\n        assertEquals(Collections.singletonList(\"front.example\"), got.headerValues(\"X-Forwarded-Host\"));\n        for (String gone : new String[] {\"Forwarded\", \"X-Real-IP\", \"X-Forwarded-Port\", \"X-Forwarded-Prefix\"}) {\n            assertTrue(gone, got.headerValues(gone).isEmpty());\n        }\n        assertEquals(Collections.singletonList(\"127.0.0.1:\" + backend.port()), got.headerValues(\"Host\"));\n    }\n\n    @Test(timeout = 30000)\n    public void OPS_DX_010_AC5_trustedPeerKeepsTheClientValuesBeforeTheSocketAddress() throws Exception {\n        RawBackend backend = track(RawBackend.answering(RawBackend.response(200, \"ok\")));\n        app.trustProxyHops(1);\n        String path = mount(Proxy.to(backend.url()).preserveHost(true));\n        start();\n        send(ClientRequest.of(\"GET\", path + \"/x\").header(\"Host\", \"front.example\").header(\"X-Forwarded-For\", \"6.6.6.6\"));\n        RawBackend.Received got = backend.onlyRequest();\n        List<String> xff = got.headerValues(\"X-Forwarded-For\");\n        assertEquals(1, xff.size());\n        assertTrue(xff.get(0), xff.get(0).startsWith(\"6.6.6.6, \"));\n        assertEquals(Collections.singletonList(\"front.example\"), got.headerValues(\"Host\"));\n    }\n\n    // OPS-DX-010 AC-2: the forwarded path table (stripPrefix) and the Location table (rewriteLocation)\n    @Test(timeout = 30000)\n    public void OPS_DX_010_AC2_forwardedPathAndLocationTablesHold() throws Exception {\n        RawBackend b1 = track(RawBackend.answering(RawBackend.response(200, \"ok\")));\n        RawBackend b2 = track(RawBackend.answering(RawBackend.response(200, \"ok\")));\n        RawBackend b3 = track(RawBackend.answering(RawBackend.response(200, \"ok\")));\n        app.use(\"/api\", Proxy.to(b1.url()));\n        app.use(\"/bpi\", Proxy.to(b2.url()).stripPrefix(true));\n        app.use(\"/cpi\", Proxy.to(b3.url() + \"/v1\").stripPrefix(true));\n        start();\n        send(ClientRequest.of(\"GET\", \"/api/orders?x=1\"));\n        send(ClientRequest.of(\"GET\", \"/bpi/orders?x=1\"));\n        send(ClientRequest.of(\"GET\", \"/cpi/orders\"));\n        assertEquals(\"GET /api/orders?x=1 HTTP/1.1\", b1.onlyRequest().requestLine());\n        assertEquals(\"GET /orders?x=1 HTTP/1.1\", b2.onlyRequest().requestLine());\n        assertEquals(\"GET /v1/orders HTTP/1.1\", b3.onlyRequest().requestLine());\n    }\n\n    @Test(timeout = 30000)\n    public void OPS_DX_010_AC2_locationTableRowsHold() throws Exception {\n        final int[] port = new int[1];\n        RawBackend b = track(RawBackend.start((index, request, out) -> {\n            String loc;\n            if (request.requestLine().contains(\"/same\")) {\n                loc = \"http://127.0.0.1:\" + port[0] + \"/api/orders/x\";\n            } else if (request.requestLine().contains(\"/strip\")) {\n                loc = \"http://127.0.0.1:\" + port[0] + \"/x\";\n            } else {\n                loc = \"http://other.example/x\";\n            }\n            out.write((\"HTTP/1.1 302 X\\r\\nLocation: \" + loc + \"\\r\\nContent-Length: 0\\r\\n\\r\\n\")\n                    .getBytes(StandardCharsets.ISO_8859_1));\n        }));\n        port[0] = b.port();\n        app.use(\"/api/orders\", Proxy.to(b.url()));\n        app.use(\"/s/api/orders\", Proxy.to(b.url()).stripPrefix(true));\n        app.use(\"/n/api/orders\", Proxy.to(b.url()).rewriteLocation(false));\n        start();\n        assertEquals(\"/api/orders/x\", send(ClientRequest.of(\"GET\", \"/api/orders/same\")).header(\"Location\"));\n        assertEquals(\"/s/api/orders/x\", send(ClientRequest.of(\"GET\", \"/s/api/orders/strip\")).header(\"Location\"));\n        assertEquals(\"http://other.example/x\", send(ClientRequest.of(\"GET\", \"/api/orders/o\")).header(\"Location\"));\n        assertEquals(\"http://127.0.0.1:\" + b.port() + \"/api/orders/x\",\n                send(ClientRequest.of(\"GET\", \"/n/api/orders/same\")).header(\"Location\"));\n    }\n\n    // OPS-DX-010 AC-7: the first timeout reached applies: read 60 s and total 1 s give TOTAL_TIMEOUT after about 1 s\n    @Test(timeout = 30000)\n    public void OPS_DX_010_AC7_firstTimeoutReachedApplies() throws Exception {\n        final ServerSocket silent = new ServerSocket(0, 50, InetAddress.getByName(\"127.0.0.1\"));\n        track(silent);\n        final List<Socket> held = Collections.synchronizedList(new ArrayList<Socket>());\n        Thread acceptor = new Thread(() -> {\n            try {\n                while (true) {\n                    held.add(silent.accept());\n                }\n            } catch (IOException e) {\n                // closed\n            }\n        });\n        acceptor.setDaemon(true);\n        acceptor.start();\n        String path = mount(Proxy.to(\"http://127.0.0.1:\" + silent.getLocalPort())\n                .readTimeout(60, TimeUnit.SECONDS).totalTimeout(1, TimeUnit.SECONDS));\n        start();\n        long t0 = System.nanoTime();\n        ClientResponse r = send(ClientRequest.of(\"GET\", path + \"/x\"));\n        long ms = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);\n        assertEquals(504, r.status());\n        assertSame(ProxyException.Kind.TOTAL_TIMEOUT, ((ProxyException) errors.get(0)).kind());\n        assertTrue(ms + \" ms\", ms >= 900 && ms < 5000);\n        for (Socket s : held) {\n            s.close();\n        }\n    }\n\n    // OPS-DX-010 AC-6: no Content-Type the backend did not send is added; Set-Cookie and Vary are appended so the app's\n    // values stay; the first backend line of another name replaces the app's value\n    @Test(timeout = 30000)\n    public void OPS_DX_010_AC6_responseHeaderRelayIsAsStated() throws Exception {\n        RawBackend plain = track(RawBackend.answering(\"HTTP/1.1 200 X\\r\\nContent-Length: 2\\r\\n\\r\\nok\"));\n        RawBackend withHeaders = track(RawBackend.answering(\"HTTP/1.1 200 X\\r\\nVary: Accept\\r\\nSet-Cookie: b=2\\r\\n\"\n                + \"X-Tag: backend\\r\\nContent-Length: 2\\r\\n\\r\\nok\"));\n        app.use(\"/p\", Proxy.to(plain.url()));\n        app.use(\"/h\", (req, res, next) -> {\n            res.header(\"Vary\", \"Origin\").header(\"X-Tag\", \"app\").append(\"Set-Cookie\", \"a=1\");\n            next.run();\n        });\n        app.use(\"/h\", Proxy.to(withHeaders.url()));\n        start();\n        ClientResponse r = send(ClientRequest.of(\"GET\", \"/p/x\"));\n        assertEquals(200, r.status());\n        assertNull(\"headers: \" + r.headers(), r.header(\"Content-Type\"));\n        ClientResponse h = send(ClientRequest.of(\"GET\", \"/h/x\"));\n        List<String> vary = new ArrayList<>();\n        List<String> cookies = new ArrayList<>();\n        List<String> tags = new ArrayList<>();\n        for (java.util.Map.Entry<String, String> e : h.headers()) {\n            if (e.getKey().equalsIgnoreCase(\"Vary\")) vary.add(e.getValue());\n            if (e.getKey().equalsIgnoreCase(\"Set-Cookie\")) cookies.add(e.getValue());\n            if (e.getKey().equalsIgnoreCase(\"X-Tag\")) tags.add(e.getValue());\n        }\n        assertTrue(\"vary \" + vary, String.join(\",\", vary).contains(\"Origin\") && String.join(\",\", vary).contains(\"Accept\"));\n        assertEquals(Arrays.asList(\"a=1\", \"b=2\"), cookies);\n        assertEquals(Collections.singletonList(\"backend\"), tags);\n    }\n\n    // OPS-DX-010 AC-3: a body an earlier middleware already read gets 500 without a backend connection; a chunked body\n    // over bodyLimit gets 413 and onError receives an HttpException whose cause is a BodyTooLargeException\n    @Test(timeout = 30000)\n    public void OPS_DX_010_AC3_consumedBodyIs500AndAChunkedOverrunIs413WithItsCause() throws Exception {\n        RawBackend b = track(RawBackend.answering(RawBackend.response(200, \"ok\")));\n        app.use(\"/c\", (req, res, next) -> {\n            java.io.InputStream in = req.bodyStream();\n            while (in.read() >= 0) {\n                // consume\n            }\n            next.run();\n        });\n        app.use(\"/c\", Proxy.to(b.url()));\n        app.use(\"/l\", Proxy.to(b.url()).bodyLimit(10));\n        start();\n        ClientResponse c = send(ClientRequest.of(\"POST\", \"/c/x\").body(new byte[5]));\n        assertEquals(500, c.status());\n        assertEquals(0, b.requestCount());\n        ClientResponse l = send(ClientRequest.of(\"POST\", \"/l/x\").body(new byte[50]));\n        assertEquals(413, l.status());\n        Throwable last = errors.get(errors.size() - 1);\n        assertTrue(String.valueOf(last), last instanceof HttpException && !(last instanceof ProxyException));\n        assertTrue(String.valueOf(last.getCause()), last.getCause() instanceof com.snoworca.naruserve.BodyTooLargeException);\n    }\n}\n",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R2SocketDocsTest.java": "package com.snoworca.naruserve.proxy;\n\nimport static org.junit.Assert.assertEquals;\nimport static org.junit.Assert.assertTrue;\n\nimport com.snoworca.naruserve.RestApp;\nimport com.snoworca.naruserve.testing.RecordingLogger;\nimport com.snoworca.naruserve.testing.StubJsonCodec;\nimport com.snoworca.naruserve.tinyhttpd.TinyHttpdAdapter;\nimport java.io.ByteArrayOutputStream;\nimport java.io.EOFException;\nimport java.io.File;\nimport java.io.IOException;\nimport java.io.InputStream;\nimport java.io.OutputStream;\nimport java.net.InetAddress;\nimport java.net.InetSocketAddress;\nimport java.net.ServerSocket;\nimport java.net.Socket;\nimport java.nio.charset.StandardCharsets;\nimport java.nio.file.Files;\nimport java.util.ArrayList;\nimport java.util.Collections;\nimport java.util.List;\nimport java.util.concurrent.TimeUnit;\nimport org.junit.After;\nimport org.junit.Test;\n\n/** Loop P wave-21 round 2: the adapter limit of REL-PROXY-001 AC-1 against what proxy.md states about the slot. */\npublic class LoopPWave21R2SocketDocsTest {\n\n    private RestApp app;\n    private ServerSocket backend;\n    private final List<Socket> held = Collections.synchronizedList(new ArrayList<Socket>());\n\n    @After\n    public void tearDown() throws IOException {\n        if (app != null) {\n            app.shutdown(2, TimeUnit.SECONDS);\n        }\n        if (backend != null) {\n            backend.close();\n        }\n        for (Socket s : held) {\n            s.close();\n        }\n    }\n\n    private static String read(String page) throws IOException {\n        File root = new File(System.getProperty(\"user.dir\")).getParentFile();\n        return new String(Files.readAllBytes(new File(root, page).toPath()), StandardCharsets.UTF_8);\n    }\n\n    /** The one line of {@code doc} that contains {@code marker}. */\n    private static String line(String doc, String marker) {\n        String found = null;\n        for (String l : doc.split(\"\\n\")) {\n            if (l.contains(marker)) {\n                assertTrue(\"two lines hold \" + marker, found == null);\n                found = l;\n            }\n        }\n        assertTrue(\"no line holds \" + marker, found != null);\n        return found;\n    }\n\n    private static String readHead(InputStream in) throws IOException {\n        ByteArrayOutputStream head = new ByteArrayOutputStream();\n        int matched = 0;\n        byte[] end = {'\\r', '\\n', '\\r', '\\n'};\n        while (matched < 4) {\n            int b = in.read();\n            if (b < 0) {\n                throw new EOFException(\"closed inside the head: \" + head);\n            }\n            head.write(b);\n            matched = b == end[matched] ? matched + 1 : (b == '\\r' ? 1 : 0);\n        }\n        return new String(head.toByteArray(), StandardCharsets.ISO_8859_1);\n    }\n\n    // REL-PROXY-001 AC-1: a client that disconnects while the backend has gone silent mid-body is not seen by the\n    // adapter, so the slot stays held until the read timeout; proxy.md and en/proxy.md say the slot is returned when\n    // \"the client [is] gone\" and must state this limit in that bullet\n    @Test(timeout = 60000)\n    public void REL_PROXY_001_AC1_silentBackendMidBodyKeepsTheSlotUntilTheReadTimeoutAsThePagesMustState()\n            throws Exception {\n        backend = new ServerSocket(0, 50, InetAddress.getByName(\"127.0.0.1\"));\n        Thread acceptor = new Thread(() -> {\n            while (!backend.isClosed()) {\n                try {\n                    Socket s = backend.accept();\n                    held.add(s);\n                    readHead(s.getInputStream());\n                    OutputStream out = s.getOutputStream();\n                    out.write(\"HTTP/1.1 200 X\\r\\nContent-Length: 10000000\\r\\n\\r\\n\"\n                            .getBytes(StandardCharsets.ISO_8859_1));\n                    out.write(new byte[262144]);\n                    out.flush(); // then silent, the connection held open\n                } catch (IOException e) {\n                    return;\n                }\n            }\n        }, \"lp-silent-backend\");\n        acceptor.setDaemon(true);\n        acceptor.start();\n\n        Proxy p = Proxy.to(\"http://127.0.0.1:\" + backend.getLocalPort()).maxConcurrent(1)\n                .readTimeout(4, TimeUnit.SECONDS);\n        app = RestApp.builder().httpAdapter(new TinyHttpdAdapter()).jsonCodec(new StubJsonCodec())\n                .logger(new RecordingLogger()).build();\n        app.use(\"/api\", p);\n        int port = app.listen(0).port();\n\n        try (Socket client = new Socket()) {\n            client.connect(new InetSocketAddress(\"127.0.0.1\", port), 5000);\n            client.setSoTimeout(10_000);\n            client.getOutputStream().write(\"GET /api/x HTTP/1.1\\r\\nHost: 127.0.0.1\\r\\n\\r\\n\"\n                    .getBytes(StandardCharsets.ISO_8859_1));\n            client.getOutputStream().flush();\n            String head = readHead(client.getInputStream());\n            assertTrue(head, head.startsWith(\"HTTP/1.1 200 \"));\n            // Read until nothing more arrives: the relay has handed every backend byte on and waits on the silent backend.\n            client.setSoTimeout(1000);\n            byte[] buf = new byte[8192];\n            long got = 0;\n            try {\n                for (int n; (n = client.getInputStream().read(buf)) > 0; ) {\n                    got += n;\n                }\n            } catch (java.net.SocketTimeoutException quiet) {\n                // the stream went quiet\n            }\n            assertTrue(\"body bytes received \" + got, got > 0);\n            Thread.sleep(300);\n            assertEquals(1, p.concurrencyCounter().get());\n            client.setSoLinger(true, 0);\n        }\n        long gone = System.nanoTime();\n        Thread.sleep(1500);\n        int afterClientGone = p.concurrencyCounter().get();\n        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(15);\n        while (p.concurrencyCounter().get() != 0 && System.nanoTime() < deadline) {\n            Thread.sleep(50);\n        }\n        long releasedAfterMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - gone);\n        assertEquals(\"released in the end\", 0, p.concurrencyCounter().get());\n\n        if (afterClientGone == 1) {\n            // The slot outlived the client by the read timeout; the pages must say so where they say when it returns.\n            String ko = line(read(\"docs/api/proxy.md\"), \"슬롯은 모든 검사\");\n            String en = line(read(\"docs/api/en/proxy.md\"), \"The slot is taken\");\n            String why = \"the slot was held \" + releasedAfterMs + \" ms after the client reset (read timeout 4 s); \";\n            assertTrue(why + \"en bullet: \" + en, en.contains(\"timeout\"));\n            assertTrue(why + \"ko bullet: \" + ko, ko.contains(\"타임아웃\"));\n        }\n    }\n\n    /** Sends a raw GET to the TinyHttpd port and returns everything until the close, as ISO-8859-1 text. */\n    private static byte[] exchange(int port, String path) throws IOException {\n        try (Socket s = new Socket()) {\n            s.connect(new InetSocketAddress(\"127.0.0.1\", port), 5000);\n            s.setSoTimeout(10000);\n            s.getOutputStream().write((\"GET \" + path + \" HTTP/1.1\\r\\nHost: 127.0.0.1\\r\\nConnection: close\\r\\n\\r\\n\")\n                    .getBytes(StandardCharsets.ISO_8859_1));\n            ByteArrayOutputStream all = new ByteArrayOutputStream();\n            byte[] b = new byte[4096];\n            try {\n                for (int n; (n = s.getInputStream().read(b)) >= 0; ) {\n                    all.write(b, 0, n);\n                }\n            } catch (java.net.SocketException reset) {\n                // the end\n            }\n            return all.toByteArray();\n        }\n    }\n\n    // OPS-DX-010 AC-6 (SEC-PROXY-004 AC-9 limit as the page states it): over TinyHttpd the client sees the adapter's\n    // reason phrase and Date, not the backend's, and a backend header byte 0xE9 arrives as 0xC3 0xA9\n    @Test(timeout = 60000)\n    public void OPS_DX_010_AC6_dateReasonAndHeaderBytesOverTinyHttpdAreAsThePageStates() throws Exception {\n        backend = new ServerSocket(0, 50, InetAddress.getByName(\"127.0.0.1\"));\n        Thread acceptor = new Thread(() -> {\n            while (!backend.isClosed()) {\n                try (Socket s = backend.accept()) {\n                    readHead(s.getInputStream());\n                    OutputStream out = s.getOutputStream();\n                    out.write(\"HTTP/1.1 404 Nope\\r\\nDate: Mon, 01 Jan 2001 00:00:00 GMT\\r\\nX-E: caf\\u00e9\\r\\nContent-Length: 2\\r\\n\\r\\nno\"\n                            .getBytes(StandardCharsets.ISO_8859_1));\n                    out.flush();\n                } catch (IOException e) {\n                    return;\n                }\n            }\n        }, \"lp-404-backend\");\n        acceptor.setDaemon(true);\n        acceptor.start();\n        app = RestApp.builder().httpAdapter(new TinyHttpdAdapter()).jsonCodec(new StubJsonCodec())\n                .logger(new RecordingLogger()).build();\n        app.use(\"/api\", Proxy.to(\"http://127.0.0.1:\" + backend.getLocalPort()));\n        int port = app.listen(0).port();\n        byte[] raw = exchange(port, \"/api/x\");\n        String text = new String(raw, StandardCharsets.ISO_8859_1);\n        assertTrue(text, text.startsWith(\"HTTP/1.1 404 \"));\n        assertTrue(text, !text.startsWith(\"HTTP/1.1 404 Nope\"));\n        assertTrue(text, !text.contains(\"2001\"));\n        assertTrue(text, text.contains(\"X-E: caf\\u00c3\\u00a9\\r\\n\"));\n    }\n}\n"
+  }
+}
