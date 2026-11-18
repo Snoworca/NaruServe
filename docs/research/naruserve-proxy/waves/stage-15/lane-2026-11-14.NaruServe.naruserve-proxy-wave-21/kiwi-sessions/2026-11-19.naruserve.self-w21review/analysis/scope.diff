@@ -1,0 +1,1389 @@
+diff --git a/NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java b/NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java
+index 0640097..99470cd 100644
+--- a/NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java
++++ b/NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java
+@@ -21 +21,4 @@ public final class KotlinDocsMarkersTest {
+-    /** The Kotlin test source roots that may hold docs-example markers; a missing one holds none. */
++    /**
++     * The Kotlin test source roots that may hold docs-example markers; a missing one holds none. The proxy root holds
++     * the marked runs of the proxy.md Kotlin blocks (OPS-DX-010 AC-12).
++     */
+@@ -23,0 +27 @@ public final class KotlinDocsMarkersTest {
++        "NaruServe-proxy/src/test/kotlin",
+@@ -170,0 +175,27 @@ public final class KotlinDocsMarkersTest {
++    // OPS-DX-010 AC-12: every Kotlin block of proxy.md and en/proxy.md has exactly one compiled, run marker, found in
++    // the proxy module's Kotlin test root
++    @Test
++    public void OPS_DX_010_AC12_proxyPageKotlinBlocksHaveTheirProxyModuleMarkers() throws IOException {
++        Map<String, String> docs = docs();
++        for (String page : new String[] {"proxy.md", "en/proxy.md"}) {
++            String text = docs.get(page);
++            assertTrue("proxy page " + page, text != null);
++            assertTrue(page + " holds kotlin blocks", text.split("```kotlin", -1).length - 1 >= 5);
++        }
++        Map<String, String> sources = kotlinSources();
++        List<String> proxyFailures = new ArrayList<>();
++        for (String f : KotlinDocsMarkers.failures(docs, sources)) {
++            if (f.startsWith("proxy.md#") || f.startsWith("en/proxy.md#")) proxyFailures.add(f);
++        }
++        assertEquals(String.join("\n", proxyFailures), Collections.<String>emptyList(), proxyFailures);
++        int markers = 0;
++        for (Map.Entry<String, String> source : sources.entrySet()) {
++            if (source.getValue().contains("// docs-example: proxy.md#")) {
++                assertTrue("proxy.md markers live in the proxy module: " + source.getKey(),
++                        source.getKey().startsWith("NaruServe-proxy/src/test/kotlin/"));
++                markers++;
++            }
++        }
++        assertTrue("a Kotlin source of NaruServe-proxy marks the proxy.md blocks", markers > 0);
++    }
++
+diff --git a/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt b/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt
+new file mode 100644
+index 0000000..41dde04
+--- /dev/null
++++ b/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt
+@@ -0,0 +1,456 @@
++package com.snoworca.naruserve
++
++import com.snoworca.naruserve.testing.InMemoryHttpAdapter
++import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest
++import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse
++import com.snoworca.naruserve.testing.TestApp
++import java.io.ByteArrayOutputStream
++import java.io.File
++import java.nio.file.Files
++import java.util.concurrent.TimeUnit
++import org.junit.After
++import org.junit.Assert.assertEquals
++import org.junit.Assert.assertFalse
++import org.junit.Assert.assertTrue
++import org.junit.Assert.fail
++import org.junit.Test
++
++/**
++ * docs/api/request.md, docs/api/app.md and their English mirrors document the raw request API (req.bodyStream,
++ * the two over-limit forms for onError, req.headerNames, req.rawHeaders, req.isFromTrustedProxy, app.rawBodyLimit)
++ * and the 0.12.0 compatibility changes: the stated facts are read from the four pages, and the pages' Kotlin blocks
++ * for those members run here over the in-memory adapter (KotlinDocsMarkers ordinals of request.md and app.md).
++ */
++class RawRequestDocsKotlinTest {
++
++    private val adapter = InMemoryHttpAdapter()
++    private val t = TestApp.create(adapter)
++    private val app: RestApp = t.app()
++    private var started = false
++    private val others = ArrayList<RestApp>()
++
++    @After
++    fun tearDown() {
++        if (started) {
++            app.shutdown(2, TimeUnit.SECONDS)
++        }
++        for (o in others) {
++            o.shutdown(2, TimeUnit.SECONDS)
++        }
++    }
++
++    private fun send(request: ClientRequest): ClientResponse {
++        if (!started) {
++            t.start()
++            started = true
++        }
++        return adapter.send(request)
++    }
++
++    private fun root(): File = File(System.getProperty("user.dir")).parentFile
++
++    private fun read(path: String): String = String(Files.readAllBytes(File(root(), path).toPath()), Charsets.UTF_8)
++
++    private fun ko(): String = read("docs/api/request.md")
++
++    private fun en(): String = read("docs/api/en/request.md")
++
++    private fun koApp(): String = read("docs/api/app.md")
++
++    private fun enApp(): String = read("docs/api/en/app.md")
++
++    /** The text from the `## heading` line up to the next `## ` heading outside a code fence. */
++    private fun section(doc: String, heading: String): String {
++        val start = doc.indexOf("\n$heading\n")
++        assertTrue("missing heading $heading", start >= 0)
++        val out = StringBuilder()
++        var fence = false
++        for ((i, line) in doc.substring(start + 1).split("\n").withIndex()) {
++            if (line.startsWith("```")) fence = !fence
++            if (i > 0 && !fence && line.startsWith("## ")) break
++            out.append(line).append('\n')
++        }
++        return out.toString()
++    }
++
++    /** The one table line that starts with [prefix]. */
++    private fun row(where: String, doc: String, prefix: String): String {
++        val rows = doc.split("\n").filter { it.startsWith(prefix) }
++        assertEquals("$where rows starting with $prefix", 1, rows.size)
++        return rows[0]
++    }
++
++    private fun has(where: String, text: String, vararg needles: String) {
++        for (n in needles) {
++            assertTrue("$where lacks: $n", text.contains(n))
++        }
++    }
++
++    /** The ```lang blocks of [text], in order. */
++    private fun blocks(text: String, lang: String): List<String> {
++        val out = ArrayList<String>()
++        var current: StringBuilder? = null
++        for (line in text.split("\n")) {
++            val trimmed = line.trim()
++            if (current == null && trimmed == "```$lang") {
++                current = StringBuilder()
++            } else if (current != null && trimmed.startsWith("```")) {
++                out.add(current.toString())
++                current = null
++            } else {
++                current?.append(line)?.append('\n')
++            }
++        }
++        return out
++    }
++
++    /** Asserts that [s] holds exactly one Java and one Kotlin block and that each holds every [needles] entry. */
++    private fun oneJavaAndOneKotlin(where: String, s: String, java: List<String>, kotlin: List<String>) {
++        for ((lang, needles) in listOf("java" to java, "kotlin" to kotlin)) {
++            val b = blocks(s, lang)
++            assertEquals("$where $lang blocks", 1, b.size)
++            for (n in needles) {
++                assertTrue("$where $lang block lacks $n: ${b[0]}", b[0].contains(n))
++            }
++        }
++    }
++
++    private fun bytes(n: Int): ByteArray = ByteArray(n) { (it % 251).toByte() }
++
++    @Test
++    fun `OPS-DX-008 AC-1 request md documents bodyStream and bodyStream maxBytes with their rules and examples`() {
++        val k = section(ko(), "## 원시 본문 스트림")
++        has("request.md bodyStream", k, "`req.bodyStream()`", "`req.bodyStream(maxBytes)`",
++            "Express에서 `req`를 스트림으로 읽던 것", "`express.raw({ limit })`",
++            "chunked 전송 코딩만 벗기고 `Content-Encoding`(예: gzip)은 풀지 않습니다",
++            "`null`이 아닌 빈 스트림", "첫 `read()`가 `-1`",
++            "`body(...)`, `form(...)`, `parts()`가 `BodyAlreadyConsumedException`",
++            "`body(...)`가 본문을 읽은 뒤에 부른 `bodyStream`도 `BodyAlreadyConsumedException`",
++            "같은 한도로 다시 부르면 같은 스트림 객체를 돌려주고", "다른 한도로 부르면 `IllegalStateException`",
++            "한도와 상관없이 `BodyAlreadyConsumedException`",
++            "`bodyStream()`의 한도는 `app.rawBodyLimit(bytes)`", "`1..1073741824`", "`IllegalArgumentException`",
++            "프레임워크가 닫습니다")
++        val e = section(en(), "## Raw body stream")
++        has("en/request.md bodyStream", e, "`req.bodyStream()`", "`req.bodyStream(maxBytes)`",
++            "reading Express `req` as a stream", "`express.raw({ limit })`",
++            "removes only the chunked transfer coding and keeps `Content-Encoding` (for example gzip)",
++            "an empty, non-null stream", "its first `read()` returns `-1`",
++            "`body(...)`, `form(...)` and `parts()` throw `BodyAlreadyConsumedException`",
++            "a `bodyStream` call after `body(...)` read the body throws `BodyAlreadyConsumedException`",
++            "a repeated call with the same limit returns the same stream object", "another limit throws `IllegalStateException`",
++            "throws `BodyAlreadyConsumedException` whatever the limit",
++            "the limit of `bodyStream()` is `app.rawBodyLimit(bytes)`", "`1..1073741824`", "`IllegalArgumentException`",
++            "the framework closes it")
++        for ((where, s) in listOf("request.md" to k, "en/request.md" to e)) {
++            oneJavaAndOneKotlin("$where bodyStream", s, listOf("req.bodyStream()", "req.bodyStream(64L * 1024 * 1024)"),
++                listOf("req.bodyStream()", "req.bodyStream(64L * 1024 * 1024)"))
++        }
++        has("request.md", row("request.md", ko(), "| `bodyStream()` |"), "`InputStream`", "`req`")
++        has("request.md", row("request.md", ko(), "| `bodyStream(maxBytes)` |"), "`express.raw({ limit })`")
++        has("en/request.md", row("en/request.md", en(), "| `bodyStream()` |"), "`InputStream`", "`req`")
++        has("en/request.md", row("en/request.md", en(), "| `bodyStream(maxBytes)` |"), "`express.raw({ limit })`")
++    }
++
++    @Test
++    fun `OPS-DX-008 AC-2 request md states the two over-limit forms and how onError recognises them`() {
++        val k = section(ko(), "## 한도를 넘은 원시 본문")
++        has("request.md over-limit", k, "두 가지 모양", "선언한 `Content-Length`가 한도보다 큼",
++            "`status()`가 `413`인 `HttpException`", "`bodyStream` 호출 자체", "한 바이트도 읽기 전에",
++            "길이를 선언하지 않은 본문", "`BodyTooLargeException`",
++            "`onError`에서 본문 한도 초과를 알아보려면 두 모양을 모두 확인하세요",
++            "감싸지 않은 채 핸들러 밖으로 나간 `BodyTooLargeException`은 `413` 응답",
++            "다른 예외로 감싼 것", "일반 예외로 처리되어 `500`")
++        val e = section(en(), "## Raw body over the limit")
++        has("en/request.md over-limit", e, "two forms", "the declared `Content-Length` exceeds the limit",
++            "`HttpException` with `status()` `413`", "the `bodyStream` call itself", "before any byte is read",
++            "a body without a declared length", "`BodyTooLargeException`",
++            "an `onError` handler that wants to recognise an over-limit body must check both forms",
++            "an unwrapped `BodyTooLargeException` that leaves the handler becomes a `413` response",
++            "wrapped in another exception", "handled as an ordinary exception and answered `500`")
++        for ((where, s) in listOf("request.md" to k, "en/request.md" to e)) {
++            oneJavaAndOneKotlin("$where over-limit", s,
++                listOf("instanceof BodyTooLargeException", "instanceof HttpException", "status() == 413", "app.onError("),
++                listOf("is BodyTooLargeException", "is HttpException", "status() == 413", "app.onError {"))
++        }
++        // Each form sits in its own table row, so swapped rows fail.
++        has("request.md", row("request.md", k, "| 선언한 `Content-Length`가 한도보다 큼 |"),
++            "`status()`가 `413`인 `HttpException`", "`bodyStream` 호출 자체", "한 바이트도 읽기 전에")
++        has("request.md", row("request.md", k, "| 길이를 선언하지 않은 본문(chunked)이 한도를 넘음 |"),
++            "`BodyTooLargeException`", "`IOException`", "`limit()`", "`read`가 던집니다")
++        has("en/request.md", row("en/request.md", e, "| the declared `Content-Length` exceeds the limit |"),
++            "`HttpException` with `status()` `413`", "the `bodyStream` call itself", "before any byte is read")
++        has("en/request.md", row("en/request.md", e, "| a body without a declared length (chunked) passes the limit |"),
++            "`BodyTooLargeException`", "`IOException`", "`limit()`", "the `read` that would return a byte beyond the limit throws")
++    }
++
++    @Test
++    fun `OPS-DX-008 AC-3 request md documents headerNames and rawHeaders with their Express counterparts`() {
++        val k = section(ko(), "## 헤더 목록")
++        has("request.md headers", k, "`req.headerNames()`", "Express `Object.keys(req.headers)`",
++            "`req.rawHeaders()`", "Express `req.rawHeaders`", "소문자로 바꾼 이름", "어댑터가 알려 준 순서",
++            "대소문자와 중복을 그대로", "`UnsupportedOperationException`", "서블릿 어댑터",
++            "컨테이너가 헤더 이름을 열거하는 순서대로 이름마다 값을 묶어")
++        val e = section(en(), "## Header enumeration")
++        has("en/request.md headers", e, "`req.headerNames()`", "Express `Object.keys(req.headers)`",
++            "`req.rawHeaders()`", "Express `req.rawHeaders`", "lowercase names", "in the order the adapter reported",
++            "keeps case and duplicates", "`UnsupportedOperationException`", "servlet adapter",
++            "groups the values by name in the container's enumeration order")
++        for ((where, s) in listOf("request.md" to k, "en/request.md" to e)) {
++            oneJavaAndOneKotlin("$where headers", s, listOf("req.headerNames()", "req.rawHeaders()"),
++                listOf("req.headerNames()", "req.rawHeaders()"))
++        }
++        // The header table of "Path parameters, query and headers" lists both with their Express counterparts.
++        for ((where, doc) in listOf("request.md" to ko(), "en/request.md" to en())) {
++            val rows = doc.split("\n")
++            assertTrue("$where header table row of headerNames()",
++                rows.any { it.startsWith("| `headerNames()` |") && it.contains("`Object.keys(req.headers)`") })
++            assertTrue("$where header table row of rawHeaders()",
++                rows.any { it.startsWith("| `rawHeaders()` |") && it.contains("`req.rawHeaders`") })
++        }
++    }
++
++    @Test
++    fun `OPS-DX-008 AC-4 request md documents isFromTrustedProxy with its Express counterpart and result table`() {
++        val k = section(ko(), "## 프록시에서 온 요청")
++        has("request.md trusted proxy", k, "`req.isFromTrustedProxy()`",
++            "Express `app.get('trust proxy fn')(req.socket.remoteAddress, 0)`",
++            "| 신뢰 설정 없음 | `false` |", "| `trustProxyHops(0)` | `false` |", "| 빈 `trustProxyCidrs()` | `false` |",
++            "| `trustProxyHops(n)`, n ≥ 1 | `true` |", "| 레거시 `trustProxy(true)` | `true` |",
++            "| `trustProxyCidrs(...)` | 직접 연결한 상대(`socketAddress()`)가 목록의 CIDR 안일 때만 `true` |")
++        val e = section(en(), "## Requests from a trusted proxy")
++        has("en/request.md trusted proxy", e, "`req.isFromTrustedProxy()`",
++            "Express `app.get('trust proxy fn')(req.socket.remoteAddress, 0)`",
++            "| no trust setting | `false` |", "| `trustProxyHops(0)` | `false` |", "| empty `trustProxyCidrs()` | `false` |",
++            "| `trustProxyHops(n)`, n ≥ 1 | `true` |", "| legacy `trustProxy(true)` | `true` |",
++            "| `trustProxyCidrs(...)` | `true` only when the direct peer (`socketAddress()`) lies inside a listed CIDR |")
++        for ((where, s) in listOf("request.md" to k, "en/request.md" to e)) {
++            oneJavaAndOneKotlin("$where trusted proxy", s, listOf("req.isFromTrustedProxy()"), listOf("req.isFromTrustedProxy"))
++        }
++        has("request.md", row("request.md", ko(), "| `isFromTrustedProxy()` |"), "`boolean`", "trust proxy fn")
++        has("en/request.md", row("en/request.md", en(), "| `isFromTrustedProxy()` |"), "boolean", "trust proxy fn")
++        // AuthCoreDocsTest pins these proxy-trust lines; the new section keeps them.
++        has("request.md", ko(), "`remoteAddress()`는 프록시 신뢰 설정을 따릅니다", "`app.trustProxy(true)`")
++        has("en/request.md", en(), "`remoteAddress()` follows the proxy trust setting", "app.trustProxy(true)")
++    }
++
++    /** What isFromTrustedProxy answers on a fresh app whose proxy trust is set by [configure], peer [peer]. */
++    private fun trusted(peer: String, configure: (RestApp) -> Unit): Boolean {
++        val a = InMemoryHttpAdapter(peer, false)
++        val other = TestApp.create(a)
++        configure(other.app())
++        other.app().get("/t") { req, res -> res.send(req.isFromTrustedProxy.toString()) }
++        other.start()
++        others.add(other.app())
++        return a.send(ClientRequest.of("GET", "/t")).text().toBoolean()
++    }
++
++    @Test
++    fun `OPS-DX-008 AC-4 the result table of isFromTrustedProxy is what the code answers`() {
++        assertFalse("no trust setting", trusted("10.1.2.3") { })
++        assertFalse("trustProxyHops(0)", trusted("10.1.2.3") { it.trustProxyHops(0) })
++        assertFalse("empty trustProxyCidrs()", trusted("10.1.2.3") { it.trustProxyCidrs() })
++        assertTrue("trustProxyHops(1)", trusted("10.1.2.3") { it.trustProxyHops(1) })
++        assertTrue("trustProxyHops(3)", trusted("10.1.2.3") { it.trustProxyHops(3) })
++        assertTrue("legacy trustProxy(true)", trusted("10.1.2.3") { it.trustProxy(true) })
++        assertTrue("peer inside a listed CIDR", trusted("10.1.2.3") { it.trustProxyCidrs("10.0.0.0/8") })
++        assertFalse("peer outside every listed CIDR", trusted("192.168.0.1") { it.trustProxyCidrs("10.0.0.0/8") })
++    }
++
++    @Test
++    fun `OPS-DX-008 AC-5 app md documents rawBodyLimit next to jsonLimit and formLimit with its Express counterpart`() {
++        val k = section(koApp(), "## 원시 본문 한도")
++        has("app.md rawBodyLimit", k, "`app.rawBodyLimit(bytes)`", "`jsonLimit`", "`formLimit`",
++            "Express `express.raw({ limit })`", "`1..1073741824`", "기본값은 1 MiB", "`IllegalArgumentException`",
++            "`jsonLimit`처럼 앱을 설정할 수 있는 동안(`NEW`)만 받습니다", "`IllegalStateException`",
++            "앱 전체 한도를 올리지 말고", "`bodyStream(maxBytes)`")
++        val e = section(enApp(), "## Raw body limit")
++        has("en/app.md rawBodyLimit", e, "`app.rawBodyLimit(bytes)`", "`jsonLimit`", "`formLimit`",
++            "Express `express.raw({ limit })`", "`1..1073741824`", "default is 1 MiB", "`IllegalArgumentException`",
++            "only while the app is configurable (`NEW`), like `jsonLimit`", "`IllegalStateException`",
++            "rather than raising the limit for the whole app", "`bodyStream(maxBytes)`")
++        for ((where, s) in listOf("app.md" to k, "en/app.md" to e)) {
++            oneJavaAndOneKotlin("$where rawBodyLimit", s, listOf("app.rawBodyLimit(256L * 1024)", "req.bodyStream(8L * 1024 * 1024)"),
++                listOf("app.rawBodyLimit(256L * 1024)", "req.bodyStream(8L * 1024 * 1024)"))
++        }
++        // The configuration table lists rawBodyLimit right after jsonLimit and formLimit.
++        for ((where, doc) in listOf("app.md" to koApp(), "en/app.md" to enApp())) {
++            val lines = doc.split("\n")
++            val json = lines.indexOfFirst { it.startsWith("| `jsonLimit(bytes)` |") }
++            val form = lines.indexOfFirst { it.startsWith("| `formLimit(bytes)` |") }
++            val raw = lines.indexOfFirst { it.startsWith("| `rawBodyLimit(bytes)` |") }
++            assertTrue("$where configuration table rows: json $json form $form raw $raw", json >= 0 && form == json + 1 && raw == form + 1)
++            has(where, lines[raw], "1 MiB", "1 GiB", "bodyStream")
++        }
++    }
++
++    @Test
++    fun `OPS-DX-008 AC-6 request md holds the 0_12_0 compatibility note on BodyTooLargeException`() {
++        val k = section(ko(), "## 0.12.0 호환성 메모")
++        has("request.md compatibility", k, "두 가지 동작", "감싸지 않은 `BodyTooLargeException`", "이제 `413`",
++            "0.11.0에서는 `500`", "`com.snoworca.naruserve.internal`에서 `com.snoworca.naruserve`로 옮겨졌습니다",
++            "import를 바꿔야 합니다")
++        val e = section(en(), "## 0.12.0 compatibility notes")
++        has("en/request.md compatibility", e, "two behaviour changes", "an unwrapped `BodyTooLargeException`",
++            "now gives `413`", "0.11.0 gave `500`",
++            "moved from `com.snoworca.naruserve.internal` to `com.snoworca.naruserve`", "must change its import")
++        // The note is true of the code: the public class exists and the internal one is gone.
++        assertEquals("com.snoworca.naruserve", BodyTooLargeException::class.java.`package`.name)
++        try {
++            Class.forName("com.snoworca.naruserve.internal.BodyTooLargeException")
++            fail("the internal BodyTooLargeException still exists")
++        } catch (expected: ClassNotFoundException) {
++        }
++    }
++
++    @Test
++    fun `OPS-DX-008 AC-7 C-005 both request pages document bodyStream headerNames rawHeaders and isFromTrustedProxy`() {
++        // C-005 (wave-3 LP-3): a page that lacks any of these members fails here.
++        for ((where, doc) in listOf("request.md" to ko(), "en/request.md" to en())) {
++            for (member in listOf("bodyStream(", "bodyStream(maxBytes)", "headerNames(", "rawHeaders(", "isFromTrustedProxy(")) {
++                assertTrue("$where lacks $member", doc.contains(member))
++            }
++        }
++        for ((where, doc) in listOf("app.md" to koApp(), "en/app.md" to enApp())) {
++            assertTrue("$where lacks rawBodyLimit(", doc.contains("rawBodyLimit("))
++        }
++    }
++
++    @Test
++    fun `OPS-DX-008 AC-7 the Kotlin blocks of request md and app md have one marker each in both languages`() {
++        val docs = sortedMapOf("request.md" to ko(), "en/request.md" to en(), "app.md" to koApp(), "en/app.md" to enApp())
++        val sources = sortedMapOf<String, String>()
++        for (r in listOf("NaruServe-api/src/test/kotlin", "NaruServe-kotlin/src/test/kotlin", "NaruServe-servlet/src/test/kotlin")) {
++            File(root(), r).walkTopDown().filter { it.isFile && it.name.endsWith(".kt") }
++                .forEach { sources["$r/${it.relativeTo(File(root(), r)).invariantSeparatorsPath}"] = it.readText() }
++        }
++        // Markers of other pages have no block in this four-page map, so only the request and app page failures count.
++        val failures = KotlinDocsMarkers.failures(docs, sources).filter {
++            it.startsWith("request.md#") || it.startsWith("en/request.md#") || it.startsWith("app.md#") || it.startsWith("en/app.md#")
++        }
++        assertEquals(failures.joinToString("\n"), emptyList<String>(), failures)
++        assertTrue("request.md holds the raw request Kotlin blocks", blocks(ko(), "kotlin").size >= 7)
++        assertEquals(blocks(ko(), "kotlin").size, blocks(en(), "kotlin").size)
++        assertTrue("app.md holds the rawBodyLimit Kotlin block", blocks(koApp(), "kotlin").size >= 6)
++        assertEquals(blocks(koApp(), "kotlin").size, blocks(enApp(), "kotlin").size)
++    }
++
++    // docs-example: request.md#4
++    @Test
++    fun `OPS-DX-008 AC-1 the bodyStream example reads the raw body under the app limit and a per-call limit`() {
++        app.post("/webhook") { req, res ->
++            val raw = req.bodyStream().use { it.readBytes() }
++            res.send("received ${raw.size} bytes")
++        }
++
++        app.put("/backup") { req, res ->
++            var size = 0L
++            req.bodyStream(64L * 1024 * 1024).use { input ->
++                val buf = ByteArray(8192)
++                var n = input.read(buf)
++                while (n != -1) {
++                    size += n
++                    n = input.read(buf)
++                }
++            }
++            res.send("stored $size bytes")
++        }
++        assertEquals("received 5 bytes", send(ClientRequest.of("POST", "/webhook").body("{ }\n\n".toByteArray())).text())
++        assertEquals("received 0 bytes", send(ClientRequest.of("POST", "/webhook")).text())
++        // 2 MiB passes the per-call 64 MiB limit although the app's rawBodyLimit is 1 MiB.
++        assertEquals("stored 2097152 bytes", send(ClientRequest.of("PUT", "/backup").body(bytes(2 * 1024 * 1024))).text())
++        assertEquals(413, send(ClientRequest.of("POST", "/webhook").body(bytes(2 * 1024 * 1024))).status())
++    }
++
++    // docs-example: request.md#5
++    @Test
++    fun `OPS-DX-008 AC-2 the onError example recognises both over-limit forms and leaves a wrapped one to the 500 answer`() {
++        app.rawBodyLimit(16)
++        app.post("/hooks") { req, res ->
++            val raw = req.bodyStream().use { it.readBytes() }
++            res.send("received ${raw.size} bytes")
++        }
++        app.post("/wrapped") { req, res ->
++            try {
++                req.bodyStream().use { it.readBytes() }
++            } catch (e: BodyTooLargeException) {
++                throw RuntimeException(e)
++            }
++            res.send("unreachable")
++        }
++        val seen = ArrayList<Throwable>()
++        app.use(ErrorMiddleware { error, _, _, next ->
++            seen.add(error)
++            next.error(error)
++        })
++        app.onError { error, req, res ->
++            val tooLarge = error is BodyTooLargeException ||
++                (error is HttpException && error.status() == 413)
++            if (tooLarge) {
++                res.status(413).send("body too large")
++            }
++        }
++        val undeclared = send(ClientRequest.of("POST", "/hooks").body(bytes(32)))
++        assertEquals(413, undeclared.status())
++        assertEquals("body too large", undeclared.text())
++        assertTrue("undeclared length overrun is BodyTooLargeException: $seen", seen.last() is BodyTooLargeException)
++        assertEquals(16L, (seen.last() as BodyTooLargeException).limit())
++        val declared = send(ClientRequest.of("POST", "/hooks").header("Content-Length", "32").body(bytes(32)))
++        assertEquals(413, declared.status())
++        assertEquals("body too large", declared.text())
++        val declaredError = seen.last()
++        assertTrue("declared length overrun is HttpException: $seen",
++            declaredError is HttpException && declaredError.status() == 413)
++        assertEquals("received 16 bytes", send(ClientRequest.of("POST", "/hooks").body(bytes(16))).text())
++        assertEquals(500, send(ClientRequest.of("POST", "/wrapped").body(bytes(32))).status())
++        assertTrue("the wrapped overrun reached the error layers wrapped: $seen",
++            seen.last() is RuntimeException && seen.last().cause is BodyTooLargeException)
++    }
++
++    // docs-example: request.md#6
++    @Test
++    fun `OPS-DX-008 AC-3 the header enumeration example lists lowercase names and the raw lines`() {
++        app.get("/headers") { req, res ->
++            val names: Set<String> = req.headerNames()
++            val raw: List<Map.Entry<String, String>> = req.rawHeaders()
++            val lines = raw.joinToString("") { "${it.key}: ${it.value}\n" }
++            res.send("$names\n$lines")
++        }
++        val response = send(ClientRequest.of("GET", "/headers").header("X-A", "1").header("x-a", "2").header("X-B", "3"))
++        assertEquals("[x-a, x-b]\nX-A: 1\nx-a: 2\nX-B: 3\n", response.text())
++    }
++
++    // docs-example: request.md#7
++    @Test
++    fun `OPS-DX-008 AC-4 the isFromTrustedProxy example tells a forwarded request from a direct one`() {
++        app.trustProxyHops(1)
++        app.get("/via") { req, res ->
++            if (req.isFromTrustedProxy) {
++                res.send("forwarded for ${req.remoteAddress()} by ${req.socketAddress()}")
++            } else {
++                res.send("direct from ${req.socketAddress()}")
++            }
++        }
++        val response = send(ClientRequest.of("GET", "/via").header("X-Forwarded-For", "203.0.113.7"))
++        assertEquals("forwarded for 203.0.113.7 by 127.0.0.1", response.text())
++    }
++
++    // docs-example: app.md#6
++    @Test
++    fun `OPS-DX-008 AC-5 the rawBodyLimit example keeps a small app limit and raises it for one route`() {
++        app.rawBodyLimit(256L * 1024).jsonLimit(64L * 1024)
++
++        app.put("/archive") { req, res ->
++            val bytes = req.bodyStream(8L * 1024 * 1024).use { it.readBytes() }
++            res.send("stored ${bytes.size} bytes")
++        }
++        app.post("/small") { req, res ->
++            val out = ByteArrayOutputStream()
++            req.bodyStream().use { it.copyTo(out) }
++            res.send("small ${out.size()}")
++        }
++        val body = bytes(300 * 1024)
++        assertEquals("stored 307200 bytes", send(ClientRequest.of("PUT", "/archive").body(body)).text())
++        assertEquals(413, send(ClientRequest.of("POST", "/small").body(body)).status())
++        assertEquals("small 1024", send(ClientRequest.of("POST", "/small").body(bytes(1024))).text())
++    }
++}
+diff --git a/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt b/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt
+new file mode 100644
+index 0000000..5aa65a2
+--- /dev/null
++++ b/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt
+@@ -0,0 +1,572 @@
++package com.snoworca.naruserve.proxy
++
++import com.snoworca.naruserve.HttpException
++import com.snoworca.naruserve.RestApp
++import com.snoworca.naruserve.spi.JsonCodec
++import com.snoworca.naruserve.testing.InMemoryHttpAdapter
++import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest
++import com.snoworca.naruserve.testing.TestApp
++import java.io.File
++import java.io.Reader
++import java.io.Writer
++import java.lang.reflect.Type
++import java.net.InetAddress
++import java.net.ServerSocket
++import java.nio.file.Files
++import java.util.concurrent.TimeUnit
++import javax.net.ssl.SSLContext
++import org.junit.After
++import org.junit.Assert.assertEquals
++import org.junit.Assert.assertFalse
++import org.junit.Assert.assertNotNull
++import org.junit.Assert.assertNotSame
++import org.junit.Assert.assertNull
++import org.junit.Assert.assertSame
++import org.junit.Assert.assertTrue
++import org.junit.Test
++
++/**
++ * docs/api/proxy.md and its English mirror document Proxy, its options, ProxyException and every limit and warning of
++ * the proxy (OPS-DX-010): the stated facts are read from both pages, and the pages' Kotlin blocks run here against
++ * raw test backends (KotlinDocsMarkers ordinals of proxy.md).
++ */
++class ProxyDocsKotlinTest {
++
++    private val t = TestApp.create()
++    private val app: RestApp = t.app()
++    private var started = false
++    private val backends = ArrayList<RawBackend>()
++
++    @After
++    fun tearDown() {
++        if (started) {
++            app.shutdown(2, TimeUnit.SECONDS)
++        }
++        for (b in backends) {
++            b.close()
++        }
++    }
++
++    private fun backend(raw: String): RawBackend {
++        val b = RawBackend.answering(raw)
++        backends.add(b)
++        return b
++    }
++
++    private fun send(method: String, target: String, vararg headerPairs: String) =
++        t.send(method, target, *headerPairs).also { started = true }
++
++    private fun root(): File = File(System.getProperty("user.dir")).parentFile
++
++    private fun read(path: String): String = String(Files.readAllBytes(File(root(), path).toPath()), Charsets.UTF_8)
++
++    private fun ko(): String = read("docs/api/proxy.md")
++
++    private fun en(): String = read("docs/api/en/proxy.md")
++
++    /** The text from the heading line up to the next heading of the same or a higher level outside a code fence. */
++    private fun section(doc: String, heading: String): String {
++        val start = doc.indexOf("\n$heading\n")
++        assertTrue("missing heading $heading", start >= 0)
++        val level = heading.takeWhile { it == '#' }.length
++        val out = StringBuilder()
++        var fence = false
++        for ((i, line) in doc.substring(start + 1).split("\n").withIndex()) {
++            if (line.startsWith("```")) fence = !fence
++            if (i > 0 && !fence && line.startsWith("#")) {
++                val l = line.takeWhile { it == '#' }.length
++                if (l in 1..level && line.length > l && line[l] == ' ') break
++            }
++            out.append(line).append('\n')
++        }
++        return out.toString()
++    }
++
++    private fun has(where: String, text: String, vararg needles: String) {
++        for (n in needles) {
++            assertTrue("$where lacks: $n", text.contains(n))
++        }
++    }
++
++    /** The one table line that starts with [prefix]. */
++    private fun row(where: String, doc: String, prefix: String): String {
++        val rows = doc.split("\n").filter { it.startsWith(prefix) }
++        assertEquals("$where rows starting with $prefix", 1, rows.size)
++        return rows[0]
++    }
++
++    /** The ```lang blocks of [text], in order. */
++    private fun blocks(text: String, lang: String): List<String> {
++        val out = ArrayList<String>()
++        var current: StringBuilder? = null
++        for (line in text.split("\n")) {
++            val trimmed = line.trim()
++            if (current == null && trimmed == "```$lang") {
++                current = StringBuilder()
++            } else if (current != null && trimmed.startsWith("```")) {
++                out.add(current.toString())
++                current = null
++            } else {
++                current?.append(line)?.append('\n')
++            }
++        }
++        return out
++    }
++
++    /** Asserts that [s] holds exactly one Java and one Kotlin block and that each holds every [needles] entry. */
++    private fun oneJavaAndOneKotlin(where: String, s: String, java: List<String>, kotlin: List<String>) {
++        for ((lang, needles) in listOf("java" to java, "kotlin" to kotlin)) {
++            val b = blocks(s, lang)
++            assertEquals("$where $lang blocks", 1, b.size)
++            for (n in needles) {
++                assertTrue("$where $lang block lacks $n: ${b[0]}", b[0].contains(n))
++            }
++        }
++    }
++
++    /** A code block with its `//` comments and trailing spaces removed, for comparing the two languages' code. */
++    private fun code(block: String): String =
++        block.split("\n").joinToString("\n") { it.replace(Regex("\\s*//.*$"), "").trimEnd() }.trim()
++
++    private fun freeUrl(): String {
++        val port = ServerSocket(0, 1, InetAddress.getByName("127.0.0.1")).use { it.localPort }
++        return "http://127.0.0.1:$port"
++    }
++
++    @Test
++    fun `OPS-DX-010 AC-1 both pages start with their navigation line and name the module, artifact, package and the Express counterpart`() {
++        assertEquals("[English](en/proxy.md) | [문서 목록](README.md)", ko().split("\n")[2])
++        assertEquals("[한국어](../proxy.md) | [API index](README.md)", en().split("\n")[2])
++        has("proxy.md", section(ko(), "## 모듈"), "| 모듈 | `NaruServe-proxy` |",
++            "| 아티팩트 | `com.snoworca.naruserve:naruserve-proxy` |", "| 의존성 | `NaruServe-api`만 |",
++            "| 패키지 | `com.snoworca.naruserve.proxy` |", "`NaruServe-proxy`는 `NaruServe-api`에만 의존하고",
++            "`import com.snoworca.naruserve.proxy.Proxy;`",
++            "| `app.use(path, createProxyMiddleware({ target }))` | `app.use(path, Proxy.to(url))` |",
++            "Express (`http-proxy-middleware`)")
++        has("en/proxy.md", section(en(), "## Module"), "| Module | `NaruServe-proxy` |",
++            "| Artifact | `com.snoworca.naruserve:naruserve-proxy` |", "| Dependencies | `NaruServe-api` only |",
++            "| Package | `com.snoworca.naruserve.proxy` |", "`NaruServe-proxy` depends on `NaruServe-api` only",
++            "`import com.snoworca.naruserve.proxy.Proxy;`",
++            "| `app.use(path, createProxyMiddleware({ target }))` | `app.use(path, Proxy.to(url))` |",
++            "Express (`http-proxy-middleware`)")
++    }
++
++    /** One option row: its signature, default per language, the exceptions it names and its http-proxy-middleware cell. */
++    private class OptionRow(val sig: String, val koDefault: String, val enDefault: String, val exceptions: List<String>,
++        val counterpart: String)
++
++    private val iae = listOf("`IllegalArgumentException`")
++    private val iaeNpe = listOf("`IllegalArgumentException`", "`NullPointerException`")
++
++    private val optionRows = listOf(
++        OptionRow("`connectTimeout(long, TimeUnit)`", "| 10초 |", "| 10 seconds |", iaeNpe, "No counterpart"),
++        OptionRow("`writeTimeout(long, TimeUnit)`", "| 60초 |", "| 60 seconds |", iaeNpe, "No counterpart"),
++        OptionRow("`readTimeout(long, TimeUnit)`", "| 60초 |", "| 60 seconds |", iaeNpe, "`proxyTimeout`"),
++        OptionRow("`totalTimeout(long, TimeUnit)`", "| 5분 |", "| 5 minutes |", iaeNpe, "`timeout`"),
++        OptionRow("`retries(int)`", "| 0(재시도 없음) |", "| 0 (no retries) |", iae, "No counterpart"),
++        OptionRow("`retryDelay(long, TimeUnit)`", "| 200밀리초 |", "| 200 milliseconds |", iaeNpe, "No counterpart"),
++        OptionRow("`retryUnsafeMethods(boolean)`", "| `false` |", "| `false` |", emptyList(), "No counterpart"),
++        OptionRow("`stripPrefix(boolean)`", "| `false`(접두사를 남깁니다) |", "| `false` (the prefix is kept) |", emptyList(),
++            "`pathRewrite`"),
++        OptionRow("`preserveHost(boolean)`", "| `false`(대상 호스트를 `Host`로 보냅니다) |",
++            "| `false` (the target host is sent as `Host`) |", emptyList(), "`changeOrigin: false`"),
++        OptionRow("`bodyLimit(long)`", "| 앱의 `rawBodyLimit`(기본 1 MiB) |", "| The app's `rawBodyLimit` (default 1 MiB) |",
++            iae + "`1..1073741824`", "No counterpart"),
++        OptionRow("`maxConcurrent(int)`", "| 한도 없음 |", "| No limit |", iae, "`maxSockets`"),
++        OptionRow("`requestHeader(String, String)`", "| 없음 |", "| None |", iaeNpe, "`headers: { name: value }`"),
++        OptionRow("`removeRequestHeader(String)`", "| 없음 |", "| None |", iaeNpe, "`proxyReq.removeHeader(name)`"),
++        OptionRow("`responseHeader(String, String)`", "| 없음 |", "| None |", iaeNpe + "`Content-Length`",
++            "`proxyRes.headers[name] = value`"),
++        OptionRow("`removeResponseHeader(String)`", "| 없음 |", "| None |", iaeNpe + "`Content-Length`",
++            "`delete proxyRes.headers[name]`"),
++        OptionRow("`rewriteLocation(boolean)`", "| `true` |", "| `true` |", emptyList(), "`autoRewrite`"),
++        OptionRow("`sslSocketFactory(SSLSocketFactory)`", "| JDK 기본 팩토리 |", "| The JDK default factory |",
++            listOf("`NullPointerException`"), "`secure: false`"),
++    )
++
++    @Test
++    fun `OPS-DX-010 AC-2 the option table lists every option with its types, default, range, exceptions and http-proxy-middleware counterpart`() {
++        // Every public option method of Proxy has its row: the table is checked against the class, not a copied list.
++        val publicOptions = Proxy::class.java.declaredMethods
++            .filter { java.lang.reflect.Modifier.isPublic(it.modifiers) && it.returnType == Proxy::class.java && it.name != "to" }
++            .map { it.name }.toSet()
++        assertEquals(publicOptions, optionRows.map { it.sig.substring(1, it.sig.indexOf('(')) }.toSet())
++        for ((where, doc, heading) in listOf(Triple("proxy.md", ko(), "## 옵션"), Triple("en/proxy.md", en(), "## Options"))) {
++            val s = section(doc, heading)
++            for (o in optionRows) {
++                val r = row(where, s, "| ${o.sig} |")
++                has("$where ${o.sig}", r, if (where == "proxy.md") o.koDefault else o.enDefault, *o.exceptions.toTypedArray())
++                val cells = r.split(" | ")
++                assertEquals("$where ${o.sig} cells", 4, cells.size)
++                assertTrue("$where ${o.sig} counterpart ${o.counterpart}: $r",
++                    cells[3].contains(o.counterpart) || (o.counterpart == "No counterpart" && cells[3].contains("대응 옵션 없음")))
++                if (o.exceptions.isEmpty()) {
++                    has("$where ${o.sig}", r, if (where == "proxy.md") "모든 값을 받습니다" else "Accepts every value")
++                }
++            }
++        }
++        has("proxy.md", section(ko(), "## 기본 사용"), "`Proxy`는 `Middleware`를 구현하므로",
++            "옵션 메서드는 모두 새 `Proxy`를 돌려주고 받는 쪽은 그대로 두므로", "`Proxy`는 바뀌지 않는(immutable) 값입니다")
++        has("en/proxy.md", section(en(), "## Basic use"), "`Proxy` implements `Middleware`",
++            "Every option method returns a new `Proxy` and leaves its receiver unchanged", "A `Proxy` is immutable")
++        has("proxy.md", section(ko(), "## 옵션"), "`Connection`, `Keep-Alive`, `Proxy-Connection`, `TE`, `Transfer-Encoding`",
++            "`Host`, `Content-Length`, `Expect`, `Forwarded`, `X-Forwarded-For`, `X-Forwarded-Proto`, `X-Forwarded-Host`",
++            "`requestHeader(\"host\", \"h\")`도 `IllegalArgumentException`",
++            "밀리초로 올림해서 적어도 1 ms, 많아야 `Integer.MAX_VALUE` ms")
++        has("en/proxy.md", section(en(), "## Options"), "`Connection`, `Keep-Alive`, `Proxy-Connection`, `TE`, `Transfer-Encoding`",
++            "`Host`, `Content-Length`, `Expect`, `Forwarded`, `X-Forwarded-For`, `X-Forwarded-Proto` and `X-Forwarded-Host`",
++            "`requestHeader(\"host\", \"h\")` also throws `IllegalArgumentException`",
++            "rounded up to at least 1 ms and at most `Integer.MAX_VALUE` ms")
++    }
++
++    @Test
++    fun `OPS-DX-010 AC-2 the stated ranges and defaults match the Proxy class`() {
++        val p = Proxy.to("http://127.0.0.1:1")
++        assertEquals(TimeUnit.SECONDS.toNanos(10), p.connectTimeoutNanos())
++        assertEquals(TimeUnit.SECONDS.toNanos(60), p.writeTimeoutNanos())
++        assertEquals(TimeUnit.SECONDS.toNanos(60), p.readTimeoutNanos())
++        assertEquals(TimeUnit.MINUTES.toNanos(5), p.totalTimeoutNanos())
++        assertEquals(0, p.retries())
++        assertEquals(TimeUnit.MILLISECONDS.toNanos(200), p.retryDelayNanos())
++        assertFalse(p.retryUnsafeMethods() || p.stripPrefix() || p.preserveHost())
++        assertTrue(p.rewriteLocation())
++        assertEquals(Proxy.NO_CONCURRENCY_LIMIT, p.maxConcurrent())
++        assertEquals(Proxy.NO_BODY_LIMIT, p.bodyLimit())
++        assertEquals(1073741824L, Proxy.MAX_BODY_LIMIT)
++        for (bad in listOf<() -> Any>({ p.connectTimeout(0, TimeUnit.SECONDS) }, { p.retries(-1) },
++                { p.retryDelay(-1, TimeUnit.MILLISECONDS) }, { p.bodyLimit(0) }, { p.bodyLimit(1073741825) },
++                { p.maxConcurrent(0) }, { p.requestHeader("host", "h") }, { p.responseHeader("Content-Length", "1") })) {
++            try {
++                bad()
++                throw AssertionError("no IllegalArgumentException")
++            } catch (expected: IllegalArgumentException) {
++            }
++        }
++    }
++
++    @Test
++    fun `OPS-DX-010 AC-3 the error section documents ProxyException, its kinds and statuses, the plain HttpException answers and the abort after the response`() {
++        val kinds = ProxyException.Kind.values()
++        val statuses = mapOf("CONNECT_FAILED" to 502, "CONNECT_TIMEOUT" to 504, "WRITE_TIMEOUT" to 504,
++            "READ_TIMEOUT" to 504, "TOTAL_TIMEOUT" to 504, "INVALID_RESPONSE" to 502, "CONCURRENCY_LIMIT" to 503)
++        assertEquals(kinds.map { it.name }.toSet(), statuses.keys)
++        for (k in kinds) {
++            assertEquals(k.name, statuses[k.name], ProxyException(k, null).status())
++        }
++        for ((where, doc, heading) in listOf(Triple("proxy.md", ko(), "## 오류"), Triple("en/proxy.md", en(), "## Errors"))) {
++            val s = section(doc, heading)
++            for ((name, status) in statuses) {
++                row(where, s, "| `$name` | $status |")
++            }
++        }
++        val k = section(ko(), "## 오류")
++        has("proxy.md errors", k, "`ProxyException`은 `HttpException`의 하위 클래스이고 `kind()`가",
++            "메시지(`getMessage()`)는 언제나 `null`입니다", "실패의 원인은 `getCause()`에 있습니다",
++            "`400`(잘못된 메서드·경로·헤더·프레이밍), `405`(`CONNECT`·`TRACE`), `501`(지원하지 않는 전송 코딩)은 `ProxyException`이 아닌 보통 `HttpException`",
++            "원인을 클래스 이름으로만 보여 주므로", "앱 로거(`req.application().logger()`)에 한 번 기록하고, 프레임워크가 클라이언트 연결을 중단합니다",
++            "`new ProxyException(kind, cause)`", "`err.code`")
++        val e = section(en(), "## Errors")
++        has("en/proxy.md errors", e, "`ProxyException` is a subclass of `HttpException`, and `kind()` returns",
++            "The message (`getMessage()`) is always `null`", "The underlying failure is in `getCause()`",
++            "`400` (bad method, path, header or framing), `405` (`CONNECT`, `TRACE`) and `501` (unsupported transfer coding) are plain `HttpException`, not `ProxyException`",
++            "shows the causes of a `ProxyException` by class name only", "logs a `ProxyException` of that kind once to the app logger (`req.application().logger()`), and the framework aborts the client connection",
++            "`new ProxyException(kind, cause)`", "`err.code`")
++        oneJavaAndOneKotlin("proxy.md errors", k, listOf("app.onError(", "instanceof ProxyException", "e.kind().name()", ".json("),
++            listOf("app.onError {", "is ProxyException ->", "error.kind().name", ".json("))
++        oneJavaAndOneKotlin("en/proxy.md errors", e, listOf("app.onError(", "instanceof ProxyException", "e.kind().name()", ".json("),
++            listOf("app.onError {", "is ProxyException ->", "error.kind().name", ".json("))
++    }
++
++    @Test
++    fun `OPS-DX-010 AC-4 the basic use section shares one Proxy, mounts the no-retry path first and states that no next() follows a forward`() {
++        val java = listOf("Proxy.to(url).readTimeout(30, TimeUnit.SECONDS)", ".totalTimeout(10, TimeUnit.MINUTES)",
++            ".requestHeader(\"X-Gateway-Source\", \"gateway\")", "app.use(\"/api/payments\", api);", "app.use(\"/api\", api.retries(2));")
++        val kotlin = listOf("val api = Proxy.to(url).readTimeout(30, TimeUnit.SECONDS)", ".totalTimeout(10, TimeUnit.MINUTES)",
++            ".requestHeader(\"X-Gateway-Source\", \"gateway\")", "app.use(\"/api/payments\", api)", "app.use(\"/api\", api.retries(2))")
++        val k = section(ko(), "## 기본 사용")
++        val e = section(en(), "## Basic use")
++        oneJavaAndOneKotlin("proxy.md basic use", k.substring(0, k.indexOf("\n### ")), java, kotlin)
++        oneJavaAndOneKotlin("en/proxy.md basic use", e.substring(0, e.indexOf("\n### ")), java, kotlin)
++        for (s in listOf(k, e)) {
++            val kt = blocks(s, "kotlin")[0]
++            assertTrue(kt.indexOf("\"/api/payments\"") < kt.indexOf("\"/api\", api.retries(2)"))
++        }
++        has("proxy.md basic use", k, "프록시는 요청을 백엔드로 넘긴 뒤에는 `next()`를 부르지 않습니다",
++            "같은 접두사 아래에서는 **먼저 등록한 마운트**가 요청을 처리하고", "감싸는 함수나 확장 없이")
++        has("en/proxy.md basic use", e, "The proxy never calls `next()` after it forwarded a request",
++            "under one prefix the **mount registered first** handles the request", "without a wrapper function or extension")
++    }
++
++    @Test
++    fun `OPS-DX-010 AC-5 the page warns that address-based checks are not reliable behind the proxy and advises against trustProxy(true)`() {
++        has("proxy.md", section(ko(), "### 주소로 하는 검사는 프록시 뒤에서 믿을 수 없습니다"),
++            "소켓 주소를 보는 백엔드에는 모든 요청이 프록시에서 온 것으로 보입니다(같은 호스트면 `127.0.0.1`)",
++            "`X-Forwarded-For`의 맨 왼쪽 값을 보는 백엔드는 속을 수 있습니다", "클라이언트가 보낸 값을 그대로 둔 채",
++            "\"localhost에서 온 요청만 허용\" 같은 검사는 외부 클라이언트에게도 통과됩니다", "주소가 아닌 수단으로 옮기세요",
++            "관리자 키", "밖에 열지 않은 별도 포트", "레거시 `trustProxy(true)`는 프록시와 함께 쓰지 마세요",
++            "클라이언트가 주소를 위조할 수 있습니다")
++        has("en/proxy.md", section(en(), "### Address-based checks are not reliable behind the proxy"),
++            "A backend that looks at the socket address sees every request coming from the proxy (`127.0.0.1` on the same host)",
++            "A backend that looks at the leftmost `X-Forwarded-For` value can be fooled", "it keeps the values the client sent",
++            "A check such as \"allow only localhost\" lets outside clients through", "to means other than the address",
++            "an admin key", "a separate port that is not exposed outside", "Do not use the legacy `trustProxy(true)` with the proxy",
++            "clients can forge the address")
++    }
++
++    @Test
++    fun `OPS-DX-010 AC-6 the page warns against representation headers set before the proxy and names the gateway's Date and reason phrase`() {
++        has("proxy.md", section(ko(), "## 응답 전달"), "**프록시 앞에서 표현 메타데이터 헤더를 정하지 마세요.**",
++            "`Content-Type`, `Content-Encoding`, `ETag`", "공개 `Response`에는 헤더를 지우는 메서드가 없으므로",
++            "앱의 값이 백엔드 본문에 그대로 붙어 나갑니다",
++            "클라이언트가 보는 `Date` 헤더와 상태 줄의 reason phrase는 백엔드의 것이 아니라 게이트웨이 어댑터가 쓴 것입니다")
++        has("en/proxy.md", section(en(), "## Response relay"), "**Do not set representation metadata headers before the proxy.**",
++            "`Content-Type`, `Content-Encoding` or `ETag`", "The public `Response` has no method that removes a header",
++            "the app's value stays on the relayed backend body",
++            "The `Date` header and the reason phrase of the status line that clients see come from the gateway's adapter, not from the backend")
++    }
++
++    @Test
++    fun `OPS-DX-010 AC-7 the timeout section states the four defaults, that none is unlimited, the first reached and the two cases the total timeout cannot release`() {
++        val k = section(ko(), "## 타임아웃")
++        row("proxy.md", k, "| `connectTimeout` | 10초 |")
++        row("proxy.md", k, "| `writeTimeout` | 60초 |")
++        row("proxy.md", k, "| `readTimeout` | 60초 |")
++        row("proxy.md", k, "| `totalTimeout` | 5분 |")
++        has("proxy.md timeouts", k, "무제한을 뜻하는 값은 없고", "먼저 닿은 타임아웃이 적용됩니다",
++            "응답을 넘기기 전에 닿으면 `504`가 오류 흐름으로 가고, 응답을 넘기기 시작한 뒤에 닿으면 클라이언트 연결을 중단하고",
++            "기본 전체 타임아웃 5분은 긴 다운로드도 자릅니다", "`totalTimeout`을 늘리세요",
++            "소켓이 생기기 전의 이름 풀이(DNS)는 JDK 리졸버를 따르고",
++            "클라이언트와의 I/O에 막혀 있는 시간(천천히 도착하는 요청 본문, 응답을 천천히 읽는 클라이언트)은 어댑터의 시간 제한에 맡깁니다")
++        val e = section(en(), "## Timeouts")
++        row("en/proxy.md", e, "| `connectTimeout` | 10 seconds |")
++        row("en/proxy.md", e, "| `writeTimeout` | 60 seconds |")
++        row("en/proxy.md", e, "| `readTimeout` | 60 seconds |")
++        row("en/proxy.md", e, "| `totalTimeout` | 5 minutes |")
++        has("en/proxy.md timeouts", e, "No value means unlimited", "The first timeout reached applies",
++            "Reached before the response is relayed, a timeout is a `504` through the error flow; reached after the relay started, it aborts the client connection",
++            "The default 5-minute total timeout also cuts long downloads", "Raise `totalTimeout`",
++            "name resolution (DNS) before the socket exists follows the JDK resolver",
++            "time blocked in I/O with the client (a slowly arriving request body, a client that reads the response slowly) is left to the adapter's time limits")
++        oneJavaAndOneKotlin("proxy.md timeouts", k, listOf(".totalTimeout(2, TimeUnit.HOURS)"), listOf(".totalTimeout(2, TimeUnit.HOURS)"))
++        oneJavaAndOneKotlin("en/proxy.md timeouts", e, listOf(".totalTimeout(2, TimeUnit.HOURS)"), listOf(".totalTimeout(2, TimeUnit.HOURS)"))
++    }
++
++    @Test
++    fun `OPS-DX-010 AC-8 the retry section states retries are off, what retries(n) and retryUnsafeMethods retry, and the side-effect GET warning`() {
++        has("proxy.md", section(ko(), "## 재시도"), "재시도는 기본으로 꺼져 있습니다(`retries(0)`)",
++            "새 연결로 최대 `n`번 더 보냅니다", "TCP 수준의 연결 실패(연결 거부, 이름 풀이 실패, 경로 없음) 뒤에는 모든 메서드를 재시도합니다",
++            "연결 타임아웃과 TLS 실패는 재시도하지 않습니다",
++            "백엔드에 보낸 본문이 0바이트(chunked가 아니고 길이가 0)이고 메서드가 `GET`, `HEAD`, `OPTIONS`일 때만 재시도합니다",
++            "`retryUnsafeMethods(true)`면 본문이 0바이트인 모든 메서드를 재시도합니다", "`retryDelay`(기본 200밀리초)",
++            "**안전한 메서드는 HTTP 의미의 구분일 뿐입니다.**", "부수 효과가 있는 `GET` 엔드포인트", "재시도로 두 번 실행될 수 있습니다",
++            "재시도를 끈 프록시를 따로 두고")
++        has("en/proxy.md", section(en(), "## Retries"), "Retries are off by default (`retries(0)`)",
++            "sent up to `n` more times, each time over a new connection",
++            "After a TCP-level connect failure (connection refused, unresolved name, no route) every method is retried",
++            "A connect timeout and a TLS failure are not retried",
++            "only when the body sent to the backend was zero bytes (not chunked and length 0) and the method is `GET`, `HEAD` or `OPTIONS`",
++            "With `retryUnsafeMethods(true)` every method with a zero-byte body is retried", "`retryDelay` (default 200 milliseconds)",
++            "**Safe methods are an HTTP semantics distinction only.**", "A `GET` endpoint with side effects", "may run twice under retries",
++            "Give such a path its own proxy with retries off")
++    }
++
++    @Test
++    fun `OPS-DX-010 AC-9 the thread model section states the bound worker thread, the late disconnect, the pool exhaustion and what bounds the threads`() {
++        has("proxy.md", section(ko(), "## 스레드 모델"), "프록시를 거치는 요청은 끝날 때까지 작업 스레드 하나를 잡고 있습니다",
++            "어댑터는 응답을 보내기 시작할 때에야 그것을 알 수 있습니다",
++            "스레드는 백엔드가 답하거나 읽기 타임아웃이나 전체 타임아웃이 끝날 때까지 묶여 있습니다",
++            "작업 스레드 풀(`maxWorkers`, 기본 64)을 다 써서 프록시가 아닌 라우트까지 기다리게 만들 수 있습니다",
++            "읽기 타임아웃을 길게 잡을수록 더 그렇습니다",
++            "기본으로는 `maxConcurrent` 한도가 없으므로, 프록시가 잡는 스레드 수를 묶는 것은 `maxWorkers`와 `totalTimeout`입니다")
++        has("en/proxy.md", section(en(), "## Thread model"), "A proxied request holds one worker thread until it ends",
++            "the adapter may notice only when the response starts",
++            "the thread stays bound until the backend answers, the read timeout or the total timeout",
++            "Slow backends can use up the worker pool (`maxWorkers`, default 64) and make non-proxy routes wait",
++            "more so with a longer read timeout",
++            "Since there is no `maxConcurrent` limit by default, `maxWorkers` and `totalTimeout` are what bound the threads a proxy holds")
++    }
++
++    @Test
++    fun `OPS-DX-010 AC-10 the concurrency section states the shared counter rules, the immediate 503 and the maxConcurrent(16) example`() {
++        val java = listOf("Proxy p = Proxy.to(url).maxConcurrent(16);", "app.use(\"/search\", p);", "app.use(\"/export\", p.retries(0));")
++        val kotlin = listOf("val p = Proxy.to(url).maxConcurrent(16)", "app.use(\"/search\", p)", "app.use(\"/export\", p.retries(0))")
++        val k = section(ko(), "## 동시 요청 한도")
++        val e = section(en(), "## Concurrency limit")
++        oneJavaAndOneKotlin("proxy.md concurrency", k, java, kotlin)
++        oneJavaAndOneKotlin("en/proxy.md concurrency", e, java, kotlin)
++        has("proxy.md concurrency", k, "`maxConcurrent`로 만든 객체와 그 객체에서 다른 옵션 메서드로 파생한 객체들은 카운터 하나를 함께 씁니다",
++            "파생한 객체에 `maxConcurrent`를 다시 부르면 새 카운터가 생깁니다",
++            "`Proxy.to`를 따로 불러 만든 `Proxy`는 같은 대상이라도 카운터를 나누지 않습니다", "한도가 없는 마운트의 요청은 세지 않습니다",
++            "같은 객체를 두 앱에 붙이면 두 앱의 요청을 함께 셉니다",
++            "한도를 넘는 요청은 기다리지 않고 곧바로 `503`(`CONCURRENCY_LIMIT`)이며", "p.retries(0)은 한도 16을 함께 씁니다")
++        has("en/proxy.md concurrency", e, "An object created by `maxConcurrent` and the objects derived from it through other option methods share one counter",
++            "Calling `maxConcurrent` again on a derived object starts a new counter",
++            "A `Proxy` created by another `Proxy.to` call never shares a counter", "Requests of mounts without a limit are not counted",
++            "The same object mounted in two apps counts the requests of both apps",
++            "A request over the limit gets `503` (`CONCURRENCY_LIMIT`) at once, without waiting", "p.retries(0) share the limit of 16")
++    }
++
++    @Test
++    fun `OPS-DX-010 AC-11 the backend connection section states the new connection per request, the TIME_WAIT warning and the JVM-wide watchdog`() {
++        has("proxy.md", section(ko(), "## 백엔드 연결"), "새 연결을 열고 `Connection: close`를 보내며, 연결을 다시 쓰지 않습니다",
++            "TIME_WAIT", "임시 포트(ephemeral port)가 바닥날 수 있습니다", "근본 해결은 연결 풀이며 이 버전에는 없습니다",
++            "JVM 전체에 하나뿐인 스케줄러", "첫 프록시 요청이 필요할 때 만들고", "앱 수명주기 밖에 있어",
++            "데몬 스레드 하나", "늦어도 30초 안에", "종료 훅이 필요 없습니다")
++        has("en/proxy.md", section(en(), "## Backend connections"), "opens a new connection and sends `Connection: close`, with no reuse",
++            "TIME_WAIT", "the ephemeral ports of the proxy host can run out", "The root remedy is a connection pool, which this version does not have",
++            "one JVM-wide scheduler", "The first proxy request that needs it creates it lazily", "it lives outside the app lifecycle",
++            "one daemon thread", "within 30 seconds at the latest", "it needs no shutdown hook")
++    }
++
++    @Test
++    fun `OPS-DX-010 AC-12 the English page mirrors the Korean page section by section with the same code`() {
++        fun headings(doc: String) = doc.split("\n").filter { it.startsWith("## ") || it.startsWith("### ") }.size
++        assertEquals(headings(ko()), headings(en()))
++        fun tableRows(doc: String) = doc.split("\n").count { it.startsWith("| ") }
++        assertEquals(tableRows(ko()), tableRows(en()))
++        for (lang in listOf("java", "kotlin")) {
++            val kb = blocks(ko(), lang).map { code(it) }
++            val eb = blocks(en(), lang).map { code(it) }
++            assertEquals("$lang blocks", kb, eb)
++            assertTrue("$lang blocks present", kb.size >= 5)
++        }
++    }
++
++    // docs-example: proxy.md#1
++    @Test
++    fun `OPS-DX-010 AC-4 the basic example forwards with the fixed header and retries only the general mount`() {
++        val backend = backend(RawBackend.response(503, "busy"))
++        val url = backend.url()
++        val api = Proxy.to(url).readTimeout(30, TimeUnit.SECONDS)
++            .totalTimeout(10, TimeUnit.MINUTES)
++            .requestHeader("X-Gateway-Source", "gateway")
++        app.use("/api/payments", api)
++        app.use("/api", api.retries(2))
++
++        assertEquals(503, send("GET", "/api/payments/charge").status())
++        assertEquals("the first mount handles it once, without retries", 1, backend.requestCount())
++        assertEquals("GET /api/payments/charge HTTP/1.1", backend.requests()[0].requestLine())
++        assertEquals(503, send("GET", "/api/orders/7").status())
++        assertEquals("the /api mount retries twice", 4, backend.requestCount())
++        for (r in backend.requests()) {
++            assertEquals(listOf("gateway"), r.headerValues("X-Gateway-Source"))
++        }
++        assertEquals(TimeUnit.SECONDS.toNanos(30), api.readTimeoutNanos())
++    }
++
++    // docs-example: proxy.md#2
++    @Test
++    fun `OPS-DX-010 AC-2 the fixed header example strips the prefix and sets and removes the named headers`() {
++        val backend = backend("HTTP/1.1 200 X\r\nServer: backend/1\r\nCache-Control: max-age=60\r\nContent-Length: 2\r\n\r\nok")
++        val url = backend.url()
++        val users = Proxy.to(url)
++            .stripPrefix(true)
++            .requestHeader("X-Api-Key", "internal-key")
++            .removeRequestHeader("Cookie")
++            .responseHeader("Cache-Control", "no-store")
++            .removeResponseHeader("Server")
++        app.use("/users", users)
++
++        val r = send("GET", "/users/42", "X-Api-Key", "client-key", "Cookie", "sid=1")
++        val received = backend.onlyRequest()
++        assertEquals("GET /42 HTTP/1.1", received.requestLine())
++        assertEquals(listOf("internal-key"), received.headerValues("X-Api-Key"))
++        assertEquals(emptyList<String>(), received.headerValues("Cookie"))
++        assertEquals("ok", r.text())
++        assertEquals("no-store", r.header("Cache-Control"))
++        assertNull(r.header("Server"))
++    }
++
++    /** Encodes a map of strings as a JSON object, enough for the onError example. */
++    private class MapCodec : JsonCodec {
++        override fun <T : Any> decode(reader: Reader, type: Type): T = throw UnsupportedOperationException("decode")
++
++        override fun encode(value: Any?, writer: Writer) {
++            val map = value as Map<*, *>
++            writer.write(map.entries.joinToString(",", "{", "}") { "\"${it.key}\":\"${it.value}\"" })
++        }
++    }
++
++    // docs-example: proxy.md#3
++    @Test
++    fun `OPS-DX-010 AC-3 the onError example answers JSON by kind and plain HttpException answers apart`() {
++        val adapter = InMemoryHttpAdapter()
++        val app = RestApp.builder().httpAdapter(adapter).jsonCodec(MapCodec()).build()
++        try {
++            val url = freeUrl()
++            app.use("/api", Proxy.to(url))
++            app.get("/late") { req, res -> throw ProxyException(ProxyException.Kind.READ_TIMEOUT, null) }
++            app.get("/bug") { req, res -> throw IllegalStateException("bug") }
++            app.onError { error, req, res ->
++                when (error) {
++                    is ProxyException -> res.status(error.status()).json(mapOf("error" to "upstream", "kind" to error.kind().name))
++                    is HttpException -> res.status(error.status()).json(mapOf("error" to "request"))
++                    else -> res.status(500).json(mapOf("error" to "internal"))
++                }
++            }
++            app.listen(0)
++
++            val down = adapter.send(ClientRequest.of("GET", "/api/orders"))
++            assertEquals(502, down.status())
++            assertEquals("{\"error\":\"upstream\",\"kind\":\"CONNECT_FAILED\"}", down.text())
++            val late = adapter.send(ClientRequest.of("GET", "/late"))
++            assertEquals(504, late.status())
++            assertEquals("{\"error\":\"upstream\",\"kind\":\"READ_TIMEOUT\"}", late.text())
++            val trace = adapter.send(ClientRequest.of("TRACE", "/api/orders"))
++            assertEquals(405, trace.status())
++            assertEquals("the proxy's own 405 is a plain HttpException", "{\"error\":\"request\"}", trace.text())
++            val bug = adapter.send(ClientRequest.of("GET", "/bug"))
++            assertEquals(500, bug.status())
++            assertEquals("{\"error\":\"internal\"}", bug.text())
++        } finally {
++            app.shutdown(2, TimeUnit.SECONDS)
++        }
++    }
++
++    // docs-example: proxy.md#4
++    @Test
++    fun `OPS-DX-010 AC-7 the download example raises the total timeout and forwards`() {
++        val backend = backend(RawBackend.response(200, "file"))
++        val url = backend.url()
++        app.use("/downloads", Proxy.to(url)
++            .totalTimeout(2, TimeUnit.HOURS)
++            .connectTimeout(3, TimeUnit.SECONDS))
++
++        val r = send("GET", "/downloads/a.bin")
++        assertEquals(200, r.status())
++        assertEquals("file", r.text())
++        assertEquals("GET /downloads/a.bin HTTP/1.1", backend.onlyRequest().requestLine())
++    }
++
++    // docs-example: proxy.md#5
++    @Test
++    fun `OPS-DX-010 AC-10 the maxConcurrent example shares one counter between p and p retries(0) only`() {
++        val backend = backend(RawBackend.response(200, "hit"))
++        val url = backend.url()
++        val p = Proxy.to(url).maxConcurrent(16)
++        app.use("/search", p)
++        app.use("/export", p.retries(0))
++        app.use("/other", Proxy.to(url).maxConcurrent(16))
++
++        assertEquals(16, p.maxConcurrent())
++        assertSame(p.concurrencyCounter(), p.retries(0).concurrencyCounter())
++        assertNotSame(p.concurrencyCounter(), Proxy.to(url).maxConcurrent(16).concurrencyCounter())
++        assertNotSame(p.concurrencyCounter(), p.maxConcurrent(16).concurrencyCounter())
++        for (path in listOf("/search/q", "/export/all", "/other/x")) {
++            assertEquals("hit", send("GET", path).text())
++        }
++        assertEquals(3, backend.requestCount())
++        assertEquals(0, p.concurrencyCounter()!!.get())
++    }
++
++    // docs-example: proxy.md#6
++    @Test
++    fun `OPS-DX-010 AC-2 the private CA example passes an SSLSocketFactory`() {
++        val tls = SSLContext.getDefault()
++        app.use("/internal", Proxy.to("https://backend.internal:8443").sslSocketFactory(tls.socketFactory))
++
++        t.start()
++        started = true
++        assertNotNull(Proxy.to("https://backend.internal:8443").sslSocketFactory(tls.socketFactory).sslSocketFactory())
++    }
++}
+diff --git a/build.gradle b/build.gradle
+index 8424ebb..3b7f8a3 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -652,0 +653,2 @@ dependencies {
++    // @req OPS-DX-010 — the proxy.md Java blocks compile in DocsExamplesCompileTest against the proxy module.
++    testImplementation project(':NaruServe-proxy')
+diff --git a/mkdocs.en.yml b/mkdocs.en.yml
+index 6e9023e..16b67c9 100644
+--- a/mkdocs.en.yml
++++ b/mkdocs.en.yml
+@@ -65,0 +66 @@ nav:
++  - proxy.md
+diff --git a/mkdocs.yml b/mkdocs.yml
+index 509af4a..02ae176 100644
+--- a/mkdocs.yml
++++ b/mkdocs.yml
+@@ -136,0 +137 @@ nav:
++  - proxy.md
+diff --git a/src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java b/src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java
+index 0143d31..53e48fa 100644
+--- a/src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java
++++ b/src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java
+@@ -1033,0 +1034,62 @@ public final class DocsExamplesCompileTest {
++
++    // OPS-DX-008 AC-7: every Java block of request.md, app.md and their English mirrors that uses the raw request API
++    // (req.bodyStream, BodyTooLargeException in onError, req.headerNames, req.rawHeaders, req.isFromTrustedProxy,
++    // app.rawBodyLimit) is compiled, not skipped, and no diagnostic names any of the four pages
++    @Test
++    public void OPS_DX_008_AC7_rawRequestJavaBlocksOfTheFourPagesCompile() throws IOException {
++        List<String> diagnostics = docsDiagnostics();
++        Map<String, String[]> membersByPage = new TreeMap<>();
++        String[] requestMembers = {".bodyStream()", ".bodyStream(", "instanceof BodyTooLargeException", ".headerNames()",
++            ".rawHeaders()", ".isFromTrustedProxy()"};
++        String[] appMembers = {".rawBodyLimit(", ".bodyStream("};
++        membersByPage.put("request.md", requestMembers);
++        membersByPage.put("en/request.md", requestMembers);
++        membersByPage.put("app.md", appMembers);
++        membersByPage.put("en/app.md", appMembers);
++        for (Map.Entry<String, String[]> e : membersByPage.entrySet()) {
++            String page = e.getKey();
++            List<String> blocks = docs().get(page);
++            assertNotNull("guide page " + page, blocks);
++            for (String d : diagnostics) {
++                assertFalse("compile diagnostic on " + page + ": " + d, d.startsWith(page + " #"));
++            }
++            List<String> members = new ArrayList<>();
++            for (int i = 0; i < blocks.size(); i++) {
++                String body = blocks.get(i);
++                for (String member : e.getValue()) {
++                    if (body.contains(member)) {
++                        members.add(member);
++                        assertNull("skipped raw request block " + page + " #" + (i + 1), skipFor(page, i + 1, body));
++                    }
++                }
++            }
++            for (String member : e.getValue()) {
++                assertTrue(page + " has a compiled Java block using " + member, members.contains(member));
++            }
++        }
++        assertTrue(String.join("\n", diagnostics), diagnostics.isEmpty());
++    }
++
++    // OPS-DX-010 AC-12: every Java block of proxy.md and en/proxy.md compiles against NaruServe-proxy on the root test
++    // classpath; none sits on the skip list and no diagnostic names either page
++    @Test
++    public void OPS_DX_010_AC12_proxyJavaBlocksOfBothPagesCompile() throws IOException {
++        List<String> diagnostics = docsDiagnostics();
++        for (String page : new String[] {"proxy.md", "en/proxy.md"}) {
++            List<String> blocks = docs().get(page);
++            assertNotNull("proxy page " + page, blocks);
++            assertTrue(page + " holds Java blocks", blocks.size() >= 5);
++            for (String d : diagnostics) {
++                assertFalse("compile diagnostic on " + page + ": " + d, d.startsWith(page + " #"));
++            }
++            boolean importsProxy = false;
++            for (int i = 0; i < blocks.size(); i++) {
++                assertNull("skipped proxy block " + page + " #" + (i + 1), skipFor(page, i + 1, blocks.get(i)));
++                importsProxy |= blocks.get(i).contains("import com.snoworca.naruserve.proxy.Proxy;");
++            }
++            assertTrue(page + " has a compiled block importing Proxy", importsProxy);
++            assertEquals("every Java block of " + page + " is compiled", blocks.size(),
++                    compiledPerFile.getOrDefault(page, 0).intValue());
++        }
++        assertTrue(String.join("\n", diagnostics), diagnostics.isEmpty());
++    }
+diff --git a/src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java b/src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java
+index b25fce9..19560dc 100644
+--- a/src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java
++++ b/src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java
+@@ -135 +135,2 @@ public class GuideConsistencyDocsTest {
+-    // OPS-DX-007 AC-3: every guide pair starts with the same navigation line shape
++    // OPS-DX-011 AC-2; OPS-DX-007 AC-3; OPS-DX-010 AC-12: every guide pair starts with the same navigation line shape,
++    // for the 18 pairs of 0.11.0 and proxy.md
+@@ -139 +140,2 @@ public class GuideConsistencyDocsTest {
+-        assertEquals("18 guide pairs besides README.md", 18, pages.size());
++        assertEquals("19 guide pairs besides README.md (the 18 of 0.11.0 and proxy.md)", 19, pages.size());
++        assertTrue("proxy.md is a guide pair", pages.contains("proxy.md"));
+@@ -145,0 +148,58 @@ public class GuideConsistencyDocsTest {
++    /** The guide pages of 0.11.0, README.md excluded; the pages a later release adds are listed by their own test. */
++    static final List<String> PAGES_0_11_0 = Arrays.asList("app.md", "auth.md", "cookie.md", "defaults.md",
++            "express-migration.md", "json.md", "kotlin.md", "lifecycle.md", "logging.md", "middleware.md",
++            "multipart.md", "request.md", "response.md", "routing.md", "servlet.md", "sse.md", "static.md",
++            "websocket.md");
++
++    // OPS-DX-011 AC-2: the guide pairs are the 18 of 0.11.0 and proxy.md, each page has its English counterpart,
++    // and every pair starts with the same navigation line shape
++    @Test
++    public void OPS_DX_011_AC2_theNineteenGuidePairsAreThoseOf0110AndProxy() throws IOException {
++        List<String> expected = new ArrayList<>(PAGES_0_11_0);
++        expected.add("proxy.md");
++        java.util.Collections.sort(expected);
++        assertEquals("guide pages of docs/api", expected, pages());
++        String[] english = new File(ReadmeDocsTest.root(), "docs/api/en").list((d, n) -> n.endsWith(".md") && !n.equals("README.md"));
++        assertTrue("docs/api/en lists its guides", english != null);
++        List<String> en = new ArrayList<>(Arrays.asList(english));
++        java.util.Collections.sort(en);
++        assertEquals("guide pages of docs/api/en", expected, en);
++        for (String page : expected) {
++            assertEquals(page, "[English](en/" + page + ") | [문서 목록](README.md)", ko(page).split("\n")[2]);
++            assertEquals("en/" + page, "[한국어](../" + page + ") | [API index](README.md)", en(page).split("\n")[2]);
++        }
++    }
++
++    /** The page entries of the top-level {@code nav} list of a MkDocs configuration, in order (titles dropped). */
++    static List<String> nav(String config) throws IOException {
++        String text = ReadmeDocsTest.read(config);
++        int start = text.indexOf("\nnav:\n");
++        assertTrue(config + " has a top-level nav", start >= 0);
++        List<String> out = new ArrayList<>();
++        for (String l : text.substring(start + "\nnav:\n".length()).split("\n")) {
++            if (!l.startsWith("  - ")) {
++                break;
++            }
++            String entry = l.substring(4).trim();
++            int colon = entry.indexOf(": ");
++            out.add(colon >= 0 ? entry.substring(colon + 2).trim() : entry);
++        }
++        return out;
++    }
++
++    // OPS-DX-011 AC-1: mkdocs.yml and mkdocs.en.yml list every guide page, proxy.md included, in their nav, before the
++    // external Javadoc entry, so the strict site builds have no page left out of the navigation
++    @Test
++    public void OPS_DX_011_AC1_bothSiteNavigationsListEveryGuidePageIncludingProxy() throws IOException {
++        for (String config : new String[] {"mkdocs.yml", "mkdocs.en.yml"}) {
++            List<String> entries = nav(config);
++            assertEquals(config + " starts its nav with README.md", "README.md", entries.get(0));
++            assertTrue(config + " ends its nav with the Javadoc link", entries.get(entries.size() - 1).startsWith("https://javadoc.io/"));
++            for (String page : pages()) {
++                assertTrue(config + " nav lists " + page, entries.contains(page));
++            }
++            assertTrue(config + " nav lists proxy.md", entries.contains("proxy.md"));
++            assertEquals(config + " lists each guide once", new java.util.TreeSet<>(entries).size(), entries.size());
++        }
++    }
++
+diff --git a/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java b/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java
+index e9f93a5..9bb46e3 100644
+--- a/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java
++++ b/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java
+@@ -111 +111,36 @@ public final class ReadmeDocsTest {
+-    // SDS-AC-9; OPS-REL-001 AC-1: the nine JAR modules and NaruServe-android
++    /** The version of the published release the READMEs install. */
++    static final String PUBLISHED_VERSION = "0.11.0";
++
++    /** The publication record of {@link #PUBLISHED_VERSION}. */
++    static final String PUBLISHED_RECORD = "docs/release/verification/central-0.11.0.md";
++
++    /** The artifactIds the published release staged, read from the Staging row of its publication record. */
++    static Set<String> publishedArtifacts() throws IOException {
++        String staging = null;
++        for (String l : read(PUBLISHED_RECORD).split("\n")) {
++            if (l.startsWith("| Staging |")) {
++                staging = l;
++            }
++        }
++        assertNotNull(PUBLISHED_RECORD + " has a Staging row", staging);
++        Set<String> out = new TreeSet<>();
++        Matcher m = Pattern.compile("`(naruserve[\\w-]*)`").matcher(staging);
++        while (m.find()) {
++            out.add(m.group(1));
++        }
++        return out;
++    }
++
++    /** The coordinates ({@code group:artifactId}) of the module table rows of {@code docs/api/README.md}. */
++    static Set<String> apiModuleTable(String path) throws IOException {
++        Set<String> table = new TreeSet<>();
++        Matcher row = Pattern.compile("(?m)^\\| `[\\w-]+` \\| `(com\\.snoworca\\.naruserve:[\\w-]+)` \\|")
++                .matcher(read(path));
++        while (row.find()) {
++            table.add(row.group(1));
++        }
++        return table;
++    }
++
++    // SDS-AC-9; OPS-REL-001 AC-1; OPS-DX-011 AC-5: README.md lists the coordinates of the module table rows the published
++    // release contains (the nine JAR modules and NaruServe-android of 0.11.0) and of no other row, plus the install lines
+@@ -114,0 +150 @@ public final class ReadmeDocsTest {
++        Set<String> published = publishedArtifacts();
+@@ -116,4 +152,7 @@ public final class ReadmeDocsTest {
+-        Matcher row = Pattern.compile("(?m)^\\| `[\\w-]+` \\| `(com\\.snoworca\\.naruserve:[\\w-]+)` \\|")
+-                .matcher(read("docs/api/README.md"));
+-        while (row.find()) {
+-            table.add(row.group(1) + ":0.11.0");
++        Set<String> unpublished = new TreeSet<>();
++        for (String c : apiModuleTable("docs/api/README.md")) {
++            if (published.contains(c.substring(c.indexOf(':') + 1))) {
++                table.add(c + ":" + PUBLISHED_VERSION);
++            } else {
++                unpublished.add(c);
++            }
+@@ -121 +160,2 @@ public final class ReadmeDocsTest {
+-        assertEquals("module table rows of docs/api/README.md", 10, table.size());
++        assertEquals("module table rows of docs/api/README.md that " + PUBLISHED_VERSION + " contains", 10, table.size());
++        assertEquals("every module the release staged has a row: " + published, published.size(), table.size());
+@@ -129,0 +170,4 @@ public final class ReadmeDocsTest {
++        for (String c : unpublished) {
++            assertFalse("README.md shows a versioned coordinate of the unpublished " + c,
++                    Pattern.compile(Pattern.quote(c) + ":[0-9]").matcher(readme).find());
++        }
+@@ -135,0 +180,86 @@ public final class ReadmeDocsTest {
++    // OPS-DX-011 AC-5: the module table holds NaruServe-proxy, a module the published release does not contain, so the
++    // README coordinates are the published rows only and neither README gives naruserve-proxy a version
++    @Test
++    public void OPS_DX_011_AC5_proxyRowIsInTheTableButNotAmongThePublishedCoordinates() throws IOException {
++        assertTrue("docs/api/README.md has the naruserve-proxy row",
++                apiModuleTable("docs/api/README.md").contains("com.snoworca.naruserve:naruserve-proxy"));
++        assertFalse(PUBLISHED_RECORD + " does not stage naruserve-proxy", publishedArtifacts().contains("naruserve-proxy"));
++        for (String f : new String[] {"README.md", "README.ko.md"}) {
++            // the READMEs install published artifacts only; any form of a naruserve-proxy dependency (colon
++            // coordinate, Gradle map notation, a version variable) names the artifactId, so none may appear
++            assertFalse(f + " names the unpublished artifact naruserve-proxy", read(f).contains("naruserve-proxy"));
++        }
++    }
++
++    /** The backticked module names ({@code NaruServe} or {@code NaruServe-x}) of a line. */
++    static Set<String> moduleNames(String line) {
++        Set<String> out = new TreeSet<>();
++        Matcher m = Pattern.compile("`(NaruServe(?:-[\\w]+)?)`").matcher(line);
++        while (m.find()) {
++            out.add(m.group(1));
++        }
++        return out;
++    }
++
++    /** The one line of {@code text} that starts with {@code prefix}. */
++    static String row(String where, String text, String prefix) {
++        String found = null;
++        for (String l : text.split("\n")) {
++            if (l.startsWith(prefix)) {
++                assertTrue(where + ": one line starts with " + prefix, found == null);
++                found = l;
++            }
++        }
++        assertNotNull(where + ": a line starts with " + prefix, found);
++        return found;
++    }
++
++    // OPS-DX-011 AC-3: both API indexes have a NaruServe-proxy module row (coordinate, NaruServe-api only, API 21,
++    // proxy.md link) and count ten modules built without an Android SDK
++    @Test
++    public void OPS_DX_011_AC3_apiIndexesHaveTheProxyRowAndCountTenModulesWithoutAnSdk() throws IOException {
++        String[][] cases = {
++            {"docs/api/README.md", "`NaruServe-api`에만 의존", "지원(API 21+)", "SDK가 없으면 경고만 내고 나머지 열 모듈을 빌드합니다",
++                "아홉 모듈"},
++            {"docs/api/en/README.md", "depends only on `NaruServe-api`", "Supported (API 21+)",
++                "Without an SDK, it warns and builds the other ten modules", "nine modules"}};
++        for (String[] c : cases) {
++            String doc = read(c[0]);
++            String line = row(c[0], doc, "| `NaruServe-proxy` | `com.snoworca.naruserve:naruserve-proxy` |");
++            for (String part : new String[] {c[1], "](proxy.md)"}) {
++                assertTrue(c[0] + " proxy row lacks " + part + ": " + line, line.contains(part));
++            }
++            assertTrue(c[0] + " proxy row ends with " + c[2] + ": " + line, line.endsWith("| " + c[2] + " |"));
++            assertEquals(c[0] + " proxy row names no module besides NaruServe-api: " + line,
++                    new TreeSet<>(Arrays.asList("NaruServe-api", "NaruServe-proxy")), moduleNames(line));
++            assertTrue(c[0] + " counts ten modules built without an Android SDK", doc.contains(c[3]));
++            assertFalse(c[0] + " still counts nine modules", doc.contains(c[4]));
++        }
++    }
++
++    // OPS-DX-011 AC-4: both READMEs name NaruServe-proxy in their module tables with its contents and a link to
++    // docs/api/proxy.md, state that 0.11.0 does not contain it and show no Maven Central coordinate for it
++    @Test
++    public void OPS_DX_011_AC4_readmesNameTheProxyModuleWithoutAPublishedCoordinate() throws IOException {
++        String[][] cases = {
++            {"README.md", "reverse proxy middleware", "depends only on `NaruServe-api`", "| Not in 0.11.0;",
++                "Without an SDK, the ten JAR modules still build.", "nine JAR modules"},
++            {"README.ko.md", "리버스 프록시 미들웨어", "`NaruServe-api`에만 의존", "| 0.11.0에는 없음.",
++                "SDK가 없어도 열 JAR 모듈을 빌드합니다.", "아홉 JAR 모듈"}};
++        for (String[] c : cases) {
++            String doc = read(c[0]);
++            // the source build counts NaruServe-proxy among the JAR modules built without an Android SDK
++            assertTrue(c[0] + " counts ten JAR modules built without an Android SDK", doc.contains(c[4]));
++            assertFalse(c[0] + " still counts nine JAR modules", doc.contains(c[5]));
++            String line = row(c[0], doc, "| `NaruServe-proxy` |");
++            for (String part : new String[] {c[1], c[2], c[3], "](docs/api/proxy.md)"}) {
++                assertTrue(c[0] + " proxy row lacks " + part + ": " + line, line.contains(part));
++            }
++            assertFalse(c[0] + " proxy row shows a coordinate: " + line, line.contains("com.snoworca.naruserve:"));
++            assertEquals(c[0] + " proxy row names no module besides NaruServe-api: " + line,
++                    new TreeSet<>(Arrays.asList("NaruServe-api", "NaruServe-proxy")), moduleNames(line));
++            assertFalse(c[0] + " proxy row gives a version to the artifact: " + line,
++                    Pattern.compile("naruserve-proxy:[0-9]").matcher(line).find());
++        }
++    }
++

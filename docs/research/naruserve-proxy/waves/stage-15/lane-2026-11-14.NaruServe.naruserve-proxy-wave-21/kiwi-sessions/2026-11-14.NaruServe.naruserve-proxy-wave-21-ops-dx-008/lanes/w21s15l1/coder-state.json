@@ -1,0 +1,5 @@
+{"schema_version":"1.0.0","run_id":"2026-11-14.NaruServe.naruserve-proxy-wave-21-ops-dx-008","sds_path":null,"target":"0.12.0","req_ids":["OPS-DX-008"],"spawn_context":"pm-child","phase":"done","failed":false,"next_resume_hint":null,
+"red_evidence":{"command":"./gradlew -PtinyHttpdFromMaven=true :NaruServe-api:test --tests RawRequestDocsKotlinTest :test --tests DocsExamplesCompileTest","exit_code":1,"captured_failure":"14 tests completed, 8 failed (missing heading ## 원시 본문 스트림 / ## 한도를 넘은 원시 본문 / ## 헤더 목록 / ## 프록시에서 온 요청 / ## 원시 본문 한도 / ## 0.12.0 호환성 메모; request.md lacks bodyStream(; request.md#4..#7, app.md#6 stale marker); 30 tests completed, 1 failed (OPS_DX_008_AC7: app.md has a compiled Java block using .rawBodyLimit()"},
+"green_evidence":{"command":"./gradlew -PtinyHttpdFromMaven=true build","exit_code":0,"tests":4727,"failures":0},
+"review":{"rounds":1,"kept":3,"fixed":3,"dropped":4},
+"deferred_queue":".kiwi/deferred-srs-mutations.jsonl","deferred_calls":24}

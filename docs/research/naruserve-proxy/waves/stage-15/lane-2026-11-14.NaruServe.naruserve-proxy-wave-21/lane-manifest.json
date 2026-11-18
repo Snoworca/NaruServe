@@ -1,0 +1,196 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-21",
+ "wave": "wave-21",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-21",
+ "base_sha": "9150c04e83b004ad22e989d041a327fb2625dd3f",
+ "head_sha": "11778935f3bf24c31655a91d12aab576d10b7599",
+ "commits": [
+  {
+   "sha": "52ee4772a0984fba7bbe607c3dac9141ac1d08aa",
+   "subject": "test(docs): pin the raw request API sections of request.md and app.md",
+   "req": "OPS-DX-008",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "fecf4a250ddcd50be651ce451956e6ded0072a23",
+   "subject": "docs(api): document the raw request API in request.md and app.md",
+   "req": "OPS-DX-008",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "b9f4979a5c1f59c1dcdbb8c408376fb93cb5844d",
+   "subject": "test(docs): pin the proxy guide pages and their examples",
+   "req": "OPS-DX-010",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "4d5f958e02957d17a1c270ccc440df61d4b11203",
+   "subject": "docs(api): add the reverse proxy guide in Korean and English",
+   "req": "OPS-DX-010",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "3aab24141f423fa6e618c263ce79c0c1c884deff",
+   "subject": "test(docs): pin the proxy navigation, module rows and README coordinates",
+   "req": "OPS-DX-011",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "0444ce742d22ad7498340902038feaad9e232578",
+   "subject": "docs: list the proxy guide in the navigation and module tables",
+   "req": "OPS-DX-011",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "11778935f3bf24c31655a91d12aab576d10b7599",
+   "subject": "test(docs): compare guide table cells whole and lock the module table rows",
+   "req": "OPS-DX-008, OPS-DX-010, OPS-DX-011",
+   "kind": "review",
+   "missing_trailers": false
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "OPS-DX-008",
+   "OPS-DX-010",
+   "OPS-DX-011"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-21/.kiwi/deferred-srs-mutations.jsonl",
+ "deferred_queue_calls": 53,
+ "deferred_queue_replay_plan": "ok, inputRefusals []",
+ "reports": [
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-21-ops-dx-008/lanes/w21s15l1/reports",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-21-ops-dx-010/lanes/w21s15l1/reports",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-21-ops-dx-011/lanes/w21s15l1/reports",
+  ".kiwi/sessions/2026-11-19.naruserve.self-w21review/analysis/report.md"
+ ],
+ "red_evidence": [
+  {
+   "req": "OPS-DX-008",
+   "test": "RawRequestDocsKotlinTest (AC-1..AC-7, C-005)",
+   "red_output": "14 tests completed, 8 failed: missing heading '## 원시 본문 스트림', ..., 'request.md lacks bodyStream(' (C-005), stale markers request.md#4..#7, app.md#6"
+  },
+  {
+   "req": "OPS-DX-008",
+   "test": "DocsExamplesCompileTest.OPS_DX_008_AC7_rawRequestJavaBlocksOfTheFourPagesCompile",
+   "red_output": "AssertionError: app.md has a compiled Java block using .rawBodyLimit("
+  },
+  {
+   "req": "OPS-DX-010",
+   "test": "ProxyDocsKotlinTest (AC-1..AC-12)",
+   "red_output": "19 tests completed, 12 failed: NoSuchFileException docs/api/proxy.md"
+  },
+  {
+   "req": "OPS-DX-010",
+   "test": "GuideConsistencyDocsTest.OPS_DX_007_AC3_everyGuideHasTheSameNavigationLine",
+   "red_output": "expected:<19> but was:<18>"
+  },
+  {
+   "req": "OPS-DX-010",
+   "test": "KotlinDocsMarkersTest / DocsExamplesCompileTest OPS_DX_010_AC12",
+   "red_output": "proxy.md#1: stale marker ... no such kotlin block / AssertionError: proxy page proxy.md"
+  },
+  {
+   "req": "OPS-DX-011",
+   "test": "GuideConsistencyDocsTest#OPS_DX_011_AC1_bothSiteNavigationsListEveryGuidePageIncludingProxy",
+   "red_output": "AssertionError: mkdocs.yml nav lists proxy.md; mkdocs build --strict exit 1 (page not in nav)"
+  },
+  {
+   "req": "OPS-DX-011",
+   "test": "ReadmeDocsTest#OPS_DX_011_AC3/AC4/AC5",
+   "red_output": "docs/api/README.md: a line starts with | `NaruServe-proxy` | ... ; README.md: a line starts with | `NaruServe-proxy` | ; docs/api/README.md has the naruserve-proxy row"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "blocking_fixed": 6,
+  "declared_limits": [
+   "FND-301",
+   "FND-302"
+  ],
+  "residual_decided_by_recommended_option": [
+   "FND-003",
+   "FND-303"
+  ],
+  "rounds": 4,
+  "check_review_round": "PASS at round 4",
+  "clean_code": {
+   "fixed": [
+    "CC-002",
+    "CC-003",
+    "CC-101",
+    "CC-102",
+    "CC-201",
+    "CC-202"
+   ],
+   "dismissed": [
+    "CC-001",
+    "CC-004",
+    "CC-103",
+    "CC-301",
+    "CC-302"
+   ],
+   "unresolved": [
+    "CC-303"
+   ]
+  }
+ },
+ "intentionally_empty": null,
+ "already_holds": [
+  {
+   "req": "OPS-DX-011",
+   "ac": "AC-2",
+   "evidence": "held after the OPS-DX-010 test commit b9f4979 (GuideConsistencyDocsTest 19 pairs); new test OPS_DX_011_AC2_theNineteenGuidePairsAreThoseOf0110AndProxy green from the start"
+  }
+ ],
+ "design_refuted": [],
+ "srs_deltas": [
+  {
+   "req": "OPS-DX-010",
+   "ac": "AC-4",
+   "kind": "self-contradiction",
+   "detail": "AC-4 says 'longer read and total timeouts' but fixes readTimeout(30, TimeUnit.SECONDS) for the Kotlin example while the read timeout default is 60 s (FR-PROXY-017); only totalTimeout is longer. Docs say 'read shortened to 30 s, total raised to 10 min'. Suggested wording: 'a shorter read timeout (30 s) and a longer total timeout'.",
+   "evidence": "Proxy.DEFAULT_READ_TIMEOUT_NANOS = 60 s; ProxyDocsKotlinTest AC-4"
+  }
+ ],
+ "out_of_lease_paths": [],
+ "carried_inputs": [
+  {
+   "id": "wave-3 LP-3",
+   "constraint": "C-005",
+   "owner": "OPS-DX-008",
+   "status": "closed",
+   "evidence": "docs/api/request.md and docs/api/en/request.md document bodyStream, headerNames, rawHeaders, isFromTrustedProxy; RawRequestDocsKotlinTest cites OPS-DX-008 / C-005 and was red ('request.md lacks bodyStream(') before fecf4a2"
+  }
+ ],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "check_test_sufficiency(ids=[OPS-DX-008,OPS-DX-010,OPS-DX-011], workspaceRoot=worktree) passed=true; every AC cited (7+12+5)"
+ },
+ "site_check": "mkdocs build --strict (ko, en) exit 0 and tools/docs-site/check_site.py passed (pinned toolchain in build/docs-venv)",
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4753,
+  "failures": 0,
+  "exit_code": 0,
+  "note": "integration-head baseline 4712/0; +41 new doc tests"
+ },
+ "bootstrap": "not-applicable",
+ "notes": [
+  "The Agent tool started every subagent (kiwi-coder x3, reviewer x4, classifier x4, fixer x3) asynchronously even without run_in_background; the worker waited for each in the foreground by polling its transcript and never ended its turn on a background task.",
+  "kiwi-pm was loaded once and its instructions followed for all three requirements (one kiwi-coder run each, --no-final, no promotion by the PM).",
+  "Review analysis files live under .kiwi/sessions/2026-11-19.naruserve.self-w21review/analysis instead of docs/analysis to stay inside the write set.",
+  "Deferred queue holds update_status implemented entries appended by kiwi-coder for each requirement; the host decides at replay."
+ ]
+}

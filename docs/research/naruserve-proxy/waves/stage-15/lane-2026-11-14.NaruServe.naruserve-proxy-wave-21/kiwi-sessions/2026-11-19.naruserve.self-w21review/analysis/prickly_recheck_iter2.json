@@ -1,0 +1,145 @@
+{
+ "resolved_findings": [
+  "FND-001",
+  "FND-002"
+ ],
+ "findings": [
+  {
+   "id": "FND-101",
+   "axis": "test-strength",
+   "verdict": "keep",
+   "evidence": {
+    "command": "cd <worktree> && python3 mut.py docs/api/README.md '| `NaruServe-proxy` | `com.snoworca.naruserve:naruserve-proxy`' '| `NaruServe-bogus` | `com.snoworca.naruserve:naruserve-gson` | 가짜 | 지원(API 21+) |\\n| `NaruServe-proxy` | ...' && ./gradlew -PtinyHttpdFromMaven=true :test --tests '*Docs*' --rerun --continue -q; git checkout -- docs",
+    "output": "docs/api/README.md | 1 + (지어낸 행 추가). 테스트 결과 XML 28개 클래스, 267 tests, failures 0. ReadmeDocsTest(ops_REL_001_AC1 포함)가 통과했다.",
+    "intent_output": "새 단언의 주석은 'an invented module row fails here'이므로 지어낸 모듈 행 `NaruServe-bogus`가 있으면 ops_REL_001_AC1 이 실패해야 한다."
+   },
+   "drop_reason": null,
+   "title": "모듈 표 행 수 단언이 행이 아닌 좌표 집합을 세서, 이미 발행된 artifactId를 다시 쓰는 지어낸 행은 통과한다",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java",
+    "line_range": "135-166"
+   },
+   "description": "apiModuleTable 은 artifactId 좌표를 TreeSet 에 모으므로 같은 좌표가 두 번 나오면 하나로 합쳐진다. 그래서 `11, apiModuleTable(...).size()` 단언은 행 수가 아니라 서로 다른 좌표 수를 센다. 1회차 변조(`naruserve-bogus`)는 이제 unpublished 집합 단언에서 실패하므로 FND-001 은 해소됐다. 그러나 모듈 이름 열만 지어내고 발행된 artifactId(`naruserve-gson`)를 다시 쓴 행을 넣으면 docs 테스트 267개가 모두 통과했다. 주석이 약속한 '지어낸 모듈 행은 실패한다'가 지켜지지 않는다.",
+   "suggested_fix": "apiModuleTable 이 행을 List 로 모으게 하거나, 모듈 이름 열(`[\\w-]+`)을 함께 캡처해 행 수 11과 좌표 중복 0을 단언한다. 또는 모듈 이름과 artifactId 의 대응(`NaruServe-x` ↔ `naruserve-x`)을 행마다 확인한다.",
+   "is_behavioral": true,
+   "tags": [
+    "OPS-DX-011 AC-5",
+    "OPS-REL-001 AC-1",
+    "mutation-survivor"
+   ]
+  },
+  {
+   "id": "FND-102",
+   "axis": "test-strength",
+   "verdict": "keep",
+   "evidence": {
+    "command": "cd <worktree> && python3 mut.py docs/api/en/proxy.md '| 10 seconds | Must be above 0. 0 or less' '| 10 seconds | Must be above 0.5 seconds. 0.5 seconds or less' && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests '*ProxyDocsKotlinTest' --rerun -q; git checkout -- docs",
+    "output": "+| `connectTimeout(long, TimeUnit)` | 10 seconds | Must be above 0.5 seconds. 0.5 seconds or less throws `IllegalArgumentException`, ... | No counterpart |\ntests=\"19\" skipped=\"0\" failures=\"0\"",
+    "intent_output": "Proxy 는 1 ns 도 받으므로(같은 diff 의 p.connectTimeout(1, NANOSECONDS) 단언) 'Must be above 0.5 seconds' 는 틀린 범위다. 이 문구면 OPS-DX-010 AC-2 범위 검사가 실패해야 한다."
+   },
+   "drop_reason": null,
+   "title": "영문 타임아웃 범위 접두사 'Must be above 0.'가 소수점으로 읽혀 'Must be above 0.5 seconds' 같은 틀린 범위가 통과한다",
+   "location": {
+    "file": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+    "line_range": "167, 227-229"
+   },
+   "description": "새 범위 검사는 cells[2].startsWith(range) 다. positiveEn 의 끝 '.'은 마침표이지만 소수점으로도 읽히므로, '0.5 seconds'처럼 범위를 바꾼 문구도 같은 접두사로 시작한다. en/proxy.md 의 connect/write/read/totalTimeout 네 행에서 이렇게 틀린 범위를 막지 못한다. 한국어 쪽('0보다 커야 합니다.')과 다른 행('0 or more.', '1 or more.')은 같은 문제가 없다.",
+   "suggested_fix": "셀이 범위 문구 다음에 공백이 오거나 범위 문구와 같을 때만 통과시킨다(cells[2] == range || cells[2].startsWith(\"$range \")). 또는 범위 다음 문장(예: '0 or less throws')까지 기대 문자열에 넣는다.",
+   "is_behavioral": true,
+   "tags": [
+    "OPS-DX-010 AC-2",
+    "mutation-survivor"
+   ]
+  }
+ ],
+ "clean_code": [
+  {
+   "id": "CC-101",
+   "principle": "중복(DRY)",
+   "location": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt:232-234",
+   "description": "예외가 없는 행에 대한 `if (o.exceptions.isEmpty()) has(... \"모든 값을 받습니다\"/\"Accepts every value\")` 검사는 새 startsWith(anyKo/anyEn) 검사에 포함돼 이제 중복이다. bodyLimit 행의 exceptions 에 들어 있는 \"`1..1073741824`\"도 새 koRange/enRange 와 겹친다."
+  },
+  {
+   "id": "CC-102",
+   "principle": "캡슐화",
+   "location": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java:25",
+   "description": "CC-002 를 고치려고 KOTLIN_ROOTS 를 package-private `static final String[]`로 열었다. 배열이라 다른 테스트가 원소를 바꿀 수 있다. 수정할 수 없는 `List<String>`(Collections.unmodifiableList)으로 공개하면 더 안전하다."
+  },
+  {
+   "id": "CC-103",
+   "principle": "취약한 단언(리터럴 결합)",
+   "location": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:1042-1044",
+   "description": "`.bodyStream(64L`은 예제의 리터럴 값에 묶여 있다. en/request.md 의 Java·Kotlin 블록을 같은 뜻의 `bodyStream(67108864L)`로 바꾸면 'en/request.md has a compiled Java block using .bodyStream(64L'로 실패한다(실행해서 확인함). `\\.bodyStream\\([^)]` 같은 정규식으로 '인자가 있는 호출'을 찾게 하면 CC-003 의 의도를 지키면서 리터럴에 덜 묶인다."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "KOTLIN_ROOTS"
+   ],
+   "findings": [
+    "CC-102"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "for (r in KotlinDocsMarkersTest.KOTLIN_ROOTS) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+   "hunks_total": 8,
+   "anchors": [
+    "koDefault",
+    "positiveKo",
+    "writeTimeout",
+    "anyEn",
+    "requestHeader",
+    "NullPointerException",
+    "startsWith",
+    "retryDelayNanos"
+   ],
+   "findings": [
+    "FND-102",
+    "CC-101"
+   ]
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "requestMembers"
+   ],
+   "findings": [
+    "CC-103"
+   ]
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "unpublished"
+   ],
+   "findings": [
+    "FND-101"
+   ]
+  }
+ ],
+ "summary": {
+  "baseline": "영향받는 다섯 클래스(ReadmeDocsTest 12, DocsExamplesCompileTest 31, ProxyDocsKotlinTest 19, RawRequestDocsKotlinTest 14, KotlinDocsMarkersTest 15)를 --rerun 으로 돌렸고 실패 0이다.",
+  "FND-001": "해소. 1회차의 `NaruServe-bogus`/`naruserve-bogus` 행이 이제 'module table rows ... does not contain expected:<[...naruserve-proxy]> but was:<[...naruserve-bogus, ...naruserve-proxy]>'로 실패한다. 남은 변형(발행된 artifactId 재사용)은 FND-101 로 냈다.",
+  "FND-002": "해소. 두 페이지의 retries '5 이상'/'5 or more'와 maxConcurrent '100 이상'/'100 or more'를 하나씩 따로 바꿔 넷 다 실패를 확인했다. 추가로 en retryDelay '10 or more', en totalTimeout 'Must be above 1000.'도 실패한다. 남은 소수점 틈은 FND-102 로 냈다.",
+  "CC-002": "해소. RawRequestDocsKotlinTest 가 KotlinDocsMarkersTest.KOTLIN_ROOTS 를 쓴다. request.md#5 마커를 지우면 여전히 실패하는 것을 확인했다(원복함).",
+  "CC-003": "해소. `.bodyStream(64L`이 실제로 검사한다. 64L 형식을 지우면 실패한다. 리터럴에 묶인 점은 CC-103 으로 냈다.",
+  "new_defects": "기존 단언을 약화한 곳은 없다. 새로 추가한 하한·상한 단언(retries 0, retryDelay 0, maxConcurrent 1, bodyLimit 1과 MAX, connectTimeout 1ns)은 모두 통과했고 문서 범위와 맞는다.",
+  "kept": 2,
+  "residual": 0,
+  "dropped": 0
+ },
+ "worktree_clean_after_review": true
+}

@@ -1,0 +1,212 @@
+{
+ "findings": [
+  {
+   "id": "FND-001",
+   "axis": "P4",
+   "verdict": "keep",
+   "evidence": {
+    "command": "cd <worktree> && python3 (docs/api/README.md 의 NaruServe-proxy 행 바로 앞에 \"| `NaruServe-bogus` | `com.snoworca.naruserve:naruserve-bogus` | 오타 행 | 지원(API 21+) |\" 한 줄 삽입) && ./gradlew -PtinyHttpdFromMaven=true :test --tests 'com.snoworca.naruserve.docs.*' --tests 'com.snoworca.naruserve.build.BuildLayoutTest' --rerun -q; grep -l '<failure' build/test-results/test/*.xml; git checkout -- docs/api/README.md; git status --short",
+    "output": "ReadmeDocsTest tests=12 failures=0 errors=0, BuildLayoutTest tests=45 failures=0 errors=0, grep '<failure' 결과 없음 (docs.* 테스트 전부 통과). 원복한 뒤 git status 는 '?? .kiwi/'(원래 있던 것)만 보임",
+    "intent_output": "base(9150c04)의 ops_REL_001_AC1 은 모듈 표의 모든 행을 세어 assertEquals(10, table.size()) 했다. 그래서 정체 모를 행이 하나 더 있으면 실패했다. 지금은 published 에 없는 행을 모두 unpublished 로 빼고, README 에 'c:[0-9]' 좌표가 없는지만 본다. 그래서 오타 행이나 가짜 모듈 행을 몇 개 넣어도 통과한다."
+   },
+   "drop_reason": null,
+   "title": "ops_REL_001_AC1 이 약해졌다: docs/api/README.md 모듈 표에 출처를 알 수 없는 행이 몇 개 있어도 통과한다",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java",
+    "line_range": "148-178"
+   },
+   "description": "OPS-DX-011 AC-5 를 맞추려고 '발행된 행만 README 좌표와 비교'하도록 바꿨다. 그런데 발행되지 않은 행 집합에는 상한이 없다. 원래는 표 전체가 10행이라고 고정해서 모듈 표가 실제 모듈 집합과 같은지도 함께 지켰다. 이제는 naruserve-proxy 말고 다른 발행되지 않은 행(오타, 삭제된 모듈, 가짜 모듈)이 들어와도 docs 테스트와 BuildLayoutTest 어디에서도 실패하지 않는다. BuildLayoutTest 는 'MODULES 의 각 모듈이 표에 있는가' 한 방향만 검사하므로 이 구멍을 막지 못한다. 실행으로 확인했다.",
+   "suggested_fix": "unpublished 집합을 정확히 고정한다. 예: assertEquals(Collections.singleton(\"com.snoworca.naruserve:naruserve-proxy\"), unpublished). 또는 apiModuleTable 의 전체 행 수가 11인지 단언한다. 둘 중 하나로 표의 행 집합이 '발행된 10개 + proxy' 와 같도록 다시 잠근다.",
+   "is_behavioral": true,
+   "tags": [
+    "test-weakening",
+    "docs"
+   ]
+  },
+  {
+   "id": "FND-002",
+   "axis": "P2",
+   "verdict": "keep",
+   "evidence": {
+    "command": "cd <worktree> && sed -i '' 로 docs/api/proxy.md 와 docs/api/en/proxy.md 의 retries 행 범위를 '0 이상/0 or more' 에서 '5 이상. 4 이하는/5 or more. 4 or less throws' 로, maxConcurrent 행 범위를 '1 이상/1 or more' 에서 '100 이상. 99 이하는/100 or more. 99 or less throws' 로 바꿈 && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ProxyDocsKotlinTest' --rerun :test --tests 'com.snoworca.naruserve.docs.*' --rerun :NaruServe-api:test --tests 'com.snoworca.naruserve.KotlinDocsMarkersTest' --rerun -q; grep -l '<failure' ...; git checkout -- docs/api/proxy.md docs/api/en/proxy.md; git status --short",
+    "output": "ProxyDocsKotlinTest tests=19 failures=0 errors=0. root docs.* 와 KotlinDocsMarkersTest 에서도 '<failure' 없음. 원복한 뒤 git status 는 '?? .kiwi/' 만 보임",
+    "intent_output": "OPS-DX-010 AC-2 는 옵션마다 'accepted range' 를 문서화하라고 요구한다. 그런데 범위를 틀린 값(retries 5 이상, maxConcurrent 100 이상)으로 바꿔도 모든 테스트가 통과한다."
+   },
+   "drop_reason": null,
+   "title": "OPS-DX-010 AC-2 의 '허용 범위'를 검사하지 않는다: 옵션 표에 틀린 범위가 적혀도 통과한다",
+   "location": {
+    "file": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+    "line_range": "154-206"
+   },
+   "description": "OptionRow 는 시그니처, 기본값, 예외 이름, http-proxy-middleware 대응만 담고 범위 셀은 담지 않는다. 범위를 보는 건 bodyLimit 의 `1..1073741824` 하나뿐이다. 'the stated ranges and defaults match the Proxy class' 테스트는 클래스 동작만 확인하고 문서 문구는 읽지 않는다. AC-12 미러 테스트는 표 행 수만 비교한다. 그래서 두 언어 페이지의 범위를 똑같이 틀리게 바꾸면 아무 테스트도 잡지 못한다. 실행으로 확인했다.",
+   "suggested_fix": "OptionRow 에 언어별 범위 문구를 추가한다. 예: connectTimeout '0보다 커야'/'Must be above 0', retries/retryDelay '0 이상'/'0 or more', maxConcurrent '1 이상'/'1 or more'. 그리고 각 행의 3번째 셀(cells[2])에 그 문구가 있는지 단언한다.",
+   "is_behavioral": true,
+   "tags": [
+    "weak-assertion",
+    "docs"
+   ]
+  },
+  {
+   "id": "FND-003",
+   "axis": "P3",
+   "verdict": "residual",
+   "evidence": {
+    "command": "코드 읽기: ProxyDocsKotlinTest.freeUrl() (131-134) 은 ServerSocket(0) 으로 포트를 받아 닫은 뒤 그 포트로 프록시를 보낸다. proxy.md#3 테스트는 CONNECT_FAILED 502 를 기대한다.",
+    "output": "재현하지 않음. 이번 실행(19 tests)은 모두 통과",
+    "intent_output": "포트를 닫은 뒤 요청하기 전에 같은 머신의 다른 프로세스나 병렬 테스트가 그 포트를 잡으면 502 대신 다른 응답이 오거나 타임아웃이 난다."
+   },
+   "drop_reason": null,
+   "title": "freeUrl() 의 '닫힌 포트' 가정은 경쟁 상태가 생길 수 있다(플래키 가능성)",
+   "location": {
+    "file": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+    "line_range": "131-134, 491-524"
+   },
+   "description": "닫은 임시 포트가 '연결 거부'로 남아 있다고 가정한다. 확률은 낮지만 CI 에서 병렬로 돌면 다른 소켓이 그 포트를 재사용해 테스트가 흔들릴 수 있다. 실행으로 입증하지는 못했다.",
+   "suggested_fix": "연결 거부가 확정적으로 나는 대상을 쓴다. 예: 포트 1, 또는 바인드만 하고 accept 하지 않는 ServerSocket(backlog 0) 대신 RawBackend 의 즉시 종료 모드. 아니면 기존 프록시 테스트에서 CONNECT_FAILED 를 만드는 헬퍼를 재사용한다.",
+   "is_behavioral": true,
+   "tags": [
+    "flaky-risk"
+   ]
+  }
+ ],
+ "clean_code": [
+  {
+   "id": "CC-001",
+   "principle": "DRY (중복 테스트)",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java",
+    "line_range": "137-147, 157-173"
+   },
+   "description": "OPS_DX_007_AC3_everyGuideHasTheSameNavigationLine(19쌍과 내비게이션 줄)와 OPS_DX_011_AC2_theNineteenGuidePairsAreThoseOf0110AndProxy 가 같은 내비게이션 줄 루프를 되풀이한다. 앞의 테스트는 개수와 proxy 포함만 남기거나, 뒤의 테스트에 합칠 수 있다."
+  },
+  {
+   "id": "CC-002",
+   "principle": "DRY / 단일 출처",
+   "location": {
+    "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt",
+    "line_range": "374-391"
+   },
+   "description": "'Kotlin blocks of request md and app md have one marker each' 테스트는 KotlinDocsMarkersTest 의 마커 검사를 다시 구현한다. 게다가 KOTLIN_ROOTS 를 세 개만 하드코딩해서 이번에 추가된 NaruServe-proxy 루트가 빠졌다. 두 곳의 루트 목록이 벌써 어긋났다."
+  },
+  {
+   "id": "CC-003",
+   "principle": "죽은 검사(중복 조건)",
+   "location": {
+    "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+    "line_range": "1040-1041"
+   },
+   "description": "requestMembers 의 \".bodyStream(\" 은 \".bodyStream()\" 이 있으면 항상 같이 맞는다. 별도로 확인하는 것이 없다(maxBytes 형태를 보려면 \".bodyStream(64L\" 같은 구체적 토큰이 필요하다). 페이지별 diagnostic 루프도 마지막 diagnostics.isEmpty() 단언에 포함되어 중복이다."
+  },
+  {
+   "id": "CC-004",
+   "principle": "DRY (헬퍼 중복)",
+   "location": {
+    "file": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+    "line_range": "59-125"
+   },
+   "description": "read/section/has/row/blocks/oneJavaAndOneKotlin 헬퍼가 RawRequestDocsKotlinTest 와 거의 똑같이 복사되어 있다. 모듈이 달라서 공유가 어렵다면 api testFixtures 에 docs 헬퍼를 두는 방안을 검토할 수 있다."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "/** The Kotlin test source roots that may hold docs-example markers; a missing one holds none. */",
+    "\"NaruServe-proxy/src/test/kotlin\",",
+    "OPS_DX_010_AC12_proxyPageKotlinBlocksHaveTheirProxyModuleMarkers"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "RawRequestDocsKotlinTest"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "ProxyDocsKotlinTest"
+   ],
+   "findings": [
+    "FND-002",
+    "FND-003"
+   ]
+  },
+  {
+   "file": "build.gradle",
+   "hunks_total": 1,
+   "anchors": [
+    "testImplementation project(':NaruServe-proxy')"
+   ],
+   "findings": []
+  },
+  {
+   "file": "mkdocs.en.yml",
+   "hunks_total": 1,
+   "anchors": [
+    "- proxy.md"
+   ],
+   "findings": []
+  },
+  {
+   "file": "mkdocs.yml",
+   "hunks_total": 1,
+   "anchors": [
+    "proxy.md"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "OPS_DX_008_AC7_rawRequestJavaBlocksOfTheFourPagesCompile"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "// OPS-DX-007 AC-3: every guide pair starts with the same navigation line shape",
+    "assertEquals(\"18 guide pairs besides README.md\", 18, pages.size());",
+    "PAGES_0_11_0"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java",
+   "hunks_total": 6,
+   "anchors": [
+    "PUBLISHED_VERSION",
+    "Set<String> published = publishedArtifacts();",
+    "Set<String> unpublished = new TreeSet<>();",
+    "assertEquals(\"module table rows of docs/api/README.md\", 10, table.size());",
+    "for (String c : unpublished) {",
+    "OPS_DX_011_AC5_proxyRowIsInTheTableButNotAmongThePublishedCoordinates"
+   ],
+   "findings": [
+    "FND-001"
+   ]
+  }
+ ],
+ "summary": {
+  "total": 3,
+  "by_verdict": {
+   "keep": 2,
+   "residual": 1,
+   "drop": 0
+  },
+  "by_axis": {
+   "P4": 1,
+   "P2": 1,
+   "P3": 1
+  }
+ },
+ "worktree_clean_after_review": true
+}

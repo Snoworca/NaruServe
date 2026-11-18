@@ -1,0 +1,55 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-21-ops-dx-011",
+ "base_sha": "4d5f958",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "OPS-DX-011"
+ ],
+ "req_filter": [
+  "OPS-DX-011"
+ ],
+ "write_set": [
+  "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java",
+  "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java",
+  "mkdocs.yml",
+  "mkdocs.en.yml",
+  "docs/api/README.md",
+  "docs/api/en/README.md",
+  "README.md",
+  "README.ko.md"
+ ],
+ "started_at": "2026-11-18T15:22:07Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "OPS-DX-011",
+    "test_sha": "3aab241",
+    "implementation_sha": "0444ce7"
+   }
+  ],
+  "changed": true,
+  "ended_at": "2026-11-18T15:56:59Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-21-ops-dx-011",
+  "result_summary": "nav, module rows, README tests; mkdocs strict + check_site pass; build 4753/0",
+  "commit_sha": "0444ce7"
+ },
+ "lifecycle_gate_state": {
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "OPS-DX-011": "evolving"
+  },
+  "status_snapshot": {
+   "OPS-DX-011": "planned"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "clean_code_skip": false,
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-21-ops-dx-011/lanes/w21s15l1/reports/pm-2026-11-18T155659Z.md",
+ "last_updated_at": "2026-11-18T15:56:59Z"
+}

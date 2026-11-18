@@ -1,0 +1,364 @@
+diff --git a/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt b/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt
+index bf2e98c..036cf1a 100644
+--- a/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt
++++ b/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt
+@@ -155,2 +155,2 @@ class ProxyDocsKotlinTest {
+-     * One option row: its signature, default per language, the accepted range per language (the text the range and
+-     * exceptions cell starts with), the exceptions it names and its http-proxy-middleware cell.
++     * The cells of a Markdown table line: the leading and trailing `|` are removed and the rest is split at every `|`
++     * outside a backtick code span (a `\|` stays in its cell). A line that does not start and end with `|` fails.
+@@ -158,2 +158,27 @@ class ProxyDocsKotlinTest {
+-    private class OptionRow(val sig: String, val koDefault: String, val enDefault: String, val koRange: String,
+-        val enRange: String, val exceptions: List<String>, val counterpart: String)
++    private fun cells(where: String, line: String): List<String> {
++        assertTrue("$where: a table line starts and ends with |: $line", line.length >= 2 && line.startsWith("|") && line.endsWith("|"))
++        val out = ArrayList<String>()
++        val cell = StringBuilder()
++        var code = false
++        val inner = line.substring(1, line.length - 1)
++        var i = 0
++        while (i < inner.length) {
++            val c = inner[i]
++            if (c == '\\' && i + 1 < inner.length && inner[i + 1] == '|') {
++                cell.append("\\|")
++                i += 2
++                continue
++            }
++            if (c == '`') code = !code
++            if (c == '|' && !code) {
++                out.add(cell.toString().trim())
++                cell.setLength(0)
++            } else {
++                cell.append(c)
++            }
++            i++
++        }
++        assertFalse("$where: a code span is left open: $line", code)
++        out.add(cell.toString().trim())
++        return out
++    }
+@@ -161,2 +186,25 @@ class ProxyDocsKotlinTest {
+-    private val iae = listOf("`IllegalArgumentException`")
+-    private val iaeNpe = listOf("`IllegalArgumentException`", "`NullPointerException`")
++    /**
++     * The rows of the one table of [text] whose head line is [head], as cells: every line after the delimiter line
++     * (`|---`) up to the first line that does not start with `|` is a row, and each row has as many cells as the head.
++     */
++    private fun table(where: String, text: String, head: String): List<List<String>> {
++        val lines = text.split("\n")
++        val heads = lines.withIndex().filter { it.value == head }.map { it.index }
++        assertEquals("$where tables headed $head", 1, heads.size)
++        assertTrue("$where: the line after $head is the delimiter line", lines.getOrElse(heads[0] + 1) { "" }.startsWith("|---"))
++        val width = cells(where, head).size
++        val out = ArrayList<List<String>>()
++        for (line in lines.drop(heads[0] + 2)) {
++            if (!line.startsWith("|")) break
++            val c = cells(where, line)
++            assertEquals("$where cells of the table row $line", width, c.size)
++            out.add(c)
++        }
++        return out
++    }
++
++    /**
++     * One option row: its signature cell and, per language, the whole default, range and exceptions, and
++     * http-proxy-middleware cells as the page states them.
++     */
++    private class OptionRow(val sig: String, val ko: List<String>, val en: List<String>)
+@@ -165,3 +213,4 @@ class ProxyDocsKotlinTest {
+-    // 0 or more, bodyLimit 1..MAX_BODY_LIMIT, maxConcurrent 1 or more, header names checked by HeaderRules
+-    private val positiveKo = "0보다 커야 합니다."
+-    private val positiveEn = "Must be above 0."
++    // 0 or more, bodyLimit 1..MAX_BODY_LIMIT, maxConcurrent 1 or more, header names checked by HeaderRules; each range
++    // cell names the exceptions the option throws
++    private val positiveKo = "0보다 커야 합니다. 0 이하는 `IllegalArgumentException`, `unit`이 `null`이면 `NullPointerException`"
++    private val positiveEn = "Must be above 0. 0 or less throws `IllegalArgumentException`, a `null` `unit` throws `NullPointerException`"
+@@ -172,39 +221,85 @@ class ProxyDocsKotlinTest {
+-        OptionRow("`connectTimeout(long, TimeUnit)`", "| 10초 |", "| 10 seconds |", positiveKo, positiveEn, iaeNpe,
+-            "No counterpart"),
+-        OptionRow("`writeTimeout(long, TimeUnit)`", "| 60초 |", "| 60 seconds |", positiveKo, positiveEn, iaeNpe,
+-            "No counterpart"),
+-        OptionRow("`readTimeout(long, TimeUnit)`", "| 60초 |", "| 60 seconds |", positiveKo, positiveEn, iaeNpe,
+-            "`proxyTimeout`"),
+-        OptionRow("`totalTimeout(long, TimeUnit)`", "| 5분 |", "| 5 minutes |", positiveKo, positiveEn, iaeNpe, "`timeout`"),
+-        OptionRow("`retries(int)`", "| 0(재시도 없음) |", "| 0 (no retries) |", "0 이상.", "0 or more.", iae,
+-            "No counterpart"),
+-        OptionRow("`retryDelay(long, TimeUnit)`", "| 200밀리초 |", "| 200 milliseconds |", "0 이상.", "0 or more.", iaeNpe,
+-            "No counterpart"),
+-        OptionRow("`retryUnsafeMethods(boolean)`", "| `false` |", "| `false` |", anyKo, anyEn, emptyList(), "No counterpart"),
+-        OptionRow("`stripPrefix(boolean)`", "| `false`(접두사를 남깁니다) |", "| `false` (the prefix is kept) |", anyKo, anyEn,
+-            emptyList(), "`pathRewrite`"),
+-        OptionRow("`preserveHost(boolean)`", "| `false`(대상 호스트를 `Host`로 보냅니다) |",
+-            "| `false` (the target host is sent as `Host`) |", anyKo, anyEn, emptyList(), "`changeOrigin: false`"),
+-        OptionRow("`bodyLimit(long)`", "| 앱의 `rawBodyLimit`(기본 1 MiB) |", "| The app's `rawBodyLimit` (default 1 MiB) |",
+-            "`1..1073741824`(1 GiB).", "`1..1073741824` (1 GiB).", iae, "No counterpart"),
+-        OptionRow("`maxConcurrent(int)`", "| 한도 없음 |", "| No limit |", "1 이상.", "1 or more.", iae, "`maxSockets`"),
+-        OptionRow("`requestHeader(String, String)`", "| 없음 |", "| None |",
+-            "이름은 HTTP 토큰이면서 프록시가 관리하는 이름이 아니어야 하고, 값은 헤더 값이어야 합니다.",
+-            "The name must be an HTTP token that the proxy does not manage, and the value a header value.", iaeNpe,
+-            "`headers: { name: value }`"),
+-        OptionRow("`removeRequestHeader(String)`", "| 없음 |", "| None |",
+-            "이름은 HTTP 토큰이면서 프록시가 관리하는 이름이 아니어야 합니다.",
+-            "The name must be an HTTP token that the proxy does not manage.", iaeNpe, "`proxyReq.removeHeader(name)`"),
+-        OptionRow("`responseHeader(String, String)`", "| 없음 |", "| None |",
+-            "이름은 HTTP 토큰이면서 hop-by-hop 헤더나 `Content-Length`가 아니어야 하고, 값은 헤더 값이어야 합니다.",
+-            "The name must be an HTTP token that is neither a hop-by-hop header nor `Content-Length`, and the value a header value.",
+-            iaeNpe + "`Content-Length`", "`proxyRes.headers[name] = value`"),
+-        OptionRow("`removeResponseHeader(String)`", "| 없음 |", "| None |",
+-            "이름은 HTTP 토큰이면서 hop-by-hop 헤더나 `Content-Length`가 아니어야 합니다.",
+-            "The name must be an HTTP token that is neither a hop-by-hop header nor `Content-Length`.",
+-            iaeNpe + "`Content-Length`", "`delete proxyRes.headers[name]`"),
+-        OptionRow("`rewriteLocation(boolean)`", "| `true` |", "| `true` |", anyKo, anyEn, emptyList(), "`autoRewrite`"),
+-        OptionRow("`sslSocketFactory(SSLSocketFactory)`", "| JDK 기본 팩토리 |", "| The JDK default factory |",
+-            "`null`이면 `NullPointerException`. `http` 대상도 받지만 쓰지 않습니다",
+-            "`null` throws `NullPointerException`. An `http` target accepts it and never uses it",
+-            listOf("`NullPointerException`"), "`secure: false`"),
++        OptionRow("`connectTimeout(long, TimeUnit)`",
++            ko = listOf("10초", positiveKo,
++                "대응 옵션 없음"),
++            en = listOf("10 seconds", positiveEn,
++                "No counterpart")),
++        OptionRow("`writeTimeout(long, TimeUnit)`",
++            ko = listOf("60초", positiveKo,
++                "대응 옵션 없음"),
++            en = listOf("60 seconds", positiveEn,
++                "No counterpart")),
++        OptionRow("`readTimeout(long, TimeUnit)`",
++            ko = listOf("60초", positiveKo,
++                "`proxyTimeout`"),
++            en = listOf("60 seconds", positiveEn,
++                "`proxyTimeout`")),
++        OptionRow("`totalTimeout(long, TimeUnit)`",
++            ko = listOf("5분", positiveKo,
++                "대응 옵션 없음(`timeout`은 들어오는 소켓의 유휴 제한입니다)"),
++            en = listOf("5 minutes", positiveEn,
++                "No counterpart (`timeout` is the idle limit of the incoming socket)")),
++        OptionRow("`retries(int)`",
++            ko = listOf("0(재시도 없음)", "0 이상. 음수는 `IllegalArgumentException`",
++                "대응 옵션 없음(재시도 기능이 없습니다)"),
++            en = listOf("0 (no retries)", "0 or more. A negative value throws `IllegalArgumentException`",
++                "No counterpart (it has no retries)")),
++        OptionRow("`retryDelay(long, TimeUnit)`",
++            ko = listOf("200밀리초", "0 이상. 음수는 `IllegalArgumentException`, `unit`이 `null`이면 `NullPointerException`",
++                "대응 옵션 없음"),
++            en = listOf("200 milliseconds", "0 or more. A negative value throws `IllegalArgumentException`, a `null` `unit` throws `NullPointerException`",
++                "No counterpart")),
++        OptionRow("`retryUnsafeMethods(boolean)`",
++            ko = listOf("`false`", anyKo,
++                "대응 옵션 없음"),
++            en = listOf("`false`", anyEn,
++                "No counterpart")),
++        OptionRow("`stripPrefix(boolean)`",
++            ko = listOf("`false`(접두사를 남깁니다)", anyKo,
++                "`pathRewrite`, 또는 3.x에서 마운트 경로를 빼는 `app.use(path, ...)`"),
++            en = listOf("`false` (the prefix is kept)", anyEn,
++                "`pathRewrite`, or the 3.x `app.use(path, ...)` that removes the mount path")),
++        OptionRow("`preserveHost(boolean)`",
++            ko = listOf("`false`(대상 호스트를 `Host`로 보냅니다)", anyKo,
++                "`changeOrigin: false`(http-proxy-middleware의 기본값). NaruServe의 기본값은 `changeOrigin: true`에 해당합니다"),
++            en = listOf("`false` (the target host is sent as `Host`)", anyEn,
++                "`changeOrigin: false` (the http-proxy-middleware default). The NaruServe default corresponds to `changeOrigin: true`")),
++        OptionRow("`bodyLimit(long)`",
++            ko = listOf("앱의 `rawBodyLimit`(기본 1 MiB)", "`1..1073741824`(1 GiB). 밖이면 `IllegalArgumentException`",
++                "대응 옵션 없음"),
++            en = listOf("The app's `rawBodyLimit` (default 1 MiB)", "`1..1073741824` (1 GiB). Outside it throws `IllegalArgumentException`",
++                "No counterpart")),
++        OptionRow("`maxConcurrent(int)`",
++            ko = listOf("한도 없음", "1 이상. 0 이하는 `IllegalArgumentException`",
++                "대응 옵션 없음(`agent`의 `maxSockets`는 넘친 요청을 기다리게 합니다)"),
++            en = listOf("No limit", "1 or more. 0 or less throws `IllegalArgumentException`",
++                "No counterpart (the `maxSockets` of an `agent` makes excess requests wait)")),
++        OptionRow("`requestHeader(String, String)`",
++            ko = listOf("없음", "이름은 HTTP 토큰이면서 프록시가 관리하는 이름이 아니어야 하고, 값은 헤더 값이어야 합니다. 어기면 `IllegalArgumentException`, `null`이면 `NullPointerException`",
++                "`headers: { name: value }`"),
++            en = listOf("None", "The name must be an HTTP token that the proxy does not manage, and the value a header value. Otherwise `IllegalArgumentException`; `null` throws `NullPointerException`",
++                "`headers: { name: value }`")),
++        OptionRow("`removeRequestHeader(String)`",
++            ko = listOf("없음", "이름은 HTTP 토큰이면서 프록시가 관리하는 이름이 아니어야 합니다. 어기면 `IllegalArgumentException`, `null`이면 `NullPointerException`",
++                "`on.proxyReq`에서 `proxyReq.removeHeader(name)`"),
++            en = listOf("None", "The name must be an HTTP token that the proxy does not manage. Otherwise `IllegalArgumentException`; `null` throws `NullPointerException`",
++                "`proxyReq.removeHeader(name)` in `on.proxyReq`")),
++        OptionRow("`responseHeader(String, String)`",
++            ko = listOf("없음", "이름은 HTTP 토큰이면서 hop-by-hop 헤더나 `Content-Length`가 아니어야 하고, 값은 헤더 값이어야 합니다. 어기면 `IllegalArgumentException`, `null`이면 `NullPointerException`",
++                "`on.proxyRes`에서 `proxyRes.headers[name] = value`"),
++            en = listOf("None", "The name must be an HTTP token that is neither a hop-by-hop header nor `Content-Length`, and the value a header value. Otherwise `IllegalArgumentException`; `null` throws `NullPointerException`",
++                "`proxyRes.headers[name] = value` in `on.proxyRes`")),
++        OptionRow("`removeResponseHeader(String)`",
++            ko = listOf("없음", "이름은 HTTP 토큰이면서 hop-by-hop 헤더나 `Content-Length`가 아니어야 합니다. 어기면 `IllegalArgumentException`, `null`이면 `NullPointerException`",
++                "`on.proxyRes`에서 `delete proxyRes.headers[name]`"),
++            en = listOf("None", "The name must be an HTTP token that is neither a hop-by-hop header nor `Content-Length`. Otherwise `IllegalArgumentException`; `null` throws `NullPointerException`",
++                "`delete proxyRes.headers[name]` in `on.proxyRes`")),
++        OptionRow("`rewriteLocation(boolean)`",
++            ko = listOf("`true`", anyKo,
++                "`autoRewrite`, `hostRewrite`, `protocolRewrite`"),
++            en = listOf("`true`", anyEn,
++                "`autoRewrite`, `hostRewrite`, `protocolRewrite`")),
++        OptionRow("`sslSocketFactory(SSLSocketFactory)`",
++            ko = listOf("JDK 기본 팩토리", "`null`이면 `NullPointerException`. `http` 대상도 받지만 쓰지 않습니다",
++                "`agent`(예: `new https.Agent({ ca })`). `secure: false`에 해당하는 옵션은 없습니다"),
++            en = listOf("The JDK default factory", "`null` throws `NullPointerException`. An `http` target accepts it and never uses it",
++                "`agent` (for example `new https.Agent({ ca })`). Nothing corresponds to `secure: false`")),
+@@ -220,15 +315,13 @@ class ProxyDocsKotlinTest {
+-        for ((where, doc, heading) in listOf(Triple("proxy.md", ko(), "## 옵션"), Triple("en/proxy.md", en(), "## Options"))) {
+-            val s = section(doc, heading)
+-            for (o in optionRows) {
+-                val r = row(where, s, "| ${o.sig} |")
+-                has("$where ${o.sig}", r, if (where == "proxy.md") o.koDefault else o.enDefault, *o.exceptions.toTypedArray())
+-                val cells = r.split(" | ")
+-                assertEquals("$where ${o.sig} cells", 4, cells.size)
+-                // OPS-DX-010 AC-2: the range and exceptions cell states the accepted range Proxy checks, first
+-                val range = if (where == "proxy.md") o.koRange else o.enRange
+-                // the range is the whole cell or a sentence followed by a space, so "Must be above 0." cannot pass as
+-                // the prefix of a different range such as "Must be above 0.5 seconds"
+-                assertTrue("$where ${o.sig} accepted range $range: ${cells[2]}",
+-                    cells[2] == range || cells[2].startsWith("$range "))
+-                assertTrue("$where ${o.sig} counterpart ${o.counterpart}: $r",
+-                    cells[3].contains(o.counterpart) || (o.counterpart == "No counterpart" && cells[3].contains("대응 옵션 없음")))
++        for ((where, s, head) in listOf(
++                Triple("proxy.md", section(ko(), "## 옵션"), "| 옵션 | 기본값 | 허용 범위와 예외 | http-proxy-middleware |"),
++                Triple("en/proxy.md", section(en(), "## Options"),
++                    "| Option | Default | Accepted range and exceptions | http-proxy-middleware |"))) {
++            // OPS-DX-010 AC-2: the whole table block is one row per option, in order, and every cell is compared whole,
++            // so a range with a different bound or an added exception ("... except `true`") fails here
++            val rows = table(where, s, head)
++            assertEquals("$where option table rows", optionRows.map { it.sig }, rows.map { it[0] })
++            for ((o, r) in optionRows.zip(rows)) {
++                val expected = if (where == "proxy.md") o.ko else o.en
++                assertEquals("$where ${o.sig} default", expected[0], r[1])
++                assertEquals("$where ${o.sig} accepted range and exceptions", expected[1], r[2])
++                assertEquals("$where ${o.sig} http-proxy-middleware counterpart", expected[2], r[3])
+diff --git a/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java b/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java
+index 468ab89..c534655 100644
+--- a/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java
++++ b/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java
+@@ -134,7 +134,31 @@ public final class ReadmeDocsTest {
+-    /** The coordinates ({@code group:artifactId}) of the module table rows of {@code docs/api/README.md}. */
+-    static Set<String> apiModuleTable(String path) throws IOException {
+-        Set<String> table = new TreeSet<>();
+-        Matcher row = Pattern.compile("(?m)^\\| `[\\w-]+` \\| `(com\\.snoworca\\.naruserve:[\\w-]+)` \\|")
+-                .matcher(read(path));
+-        while (row.find()) {
+-            table.add(row.group(1));
++    /** The head line of the module table of {@code docs/api/README.md}. */
++    static final String API_MODULE_TABLE_HEAD = "| 모듈 | 좌표 | 내용 | Android |";
++
++    /**
++     * The cells of a Markdown table line: the leading and trailing {@code |} are removed and the rest is split at every
++     * {@code |} outside a backtick code span (a {@code \|} stays in its cell). A line that does not start and end with
++     * {@code |} fails.
++     */
++    static List<String> cells(String where, String line) {
++        assertTrue(where + ": a table line starts and ends with |: " + line,
++                line.length() >= 2 && line.startsWith("|") && line.endsWith("|"));
++        List<String> out = new ArrayList<>();
++        StringBuilder cell = new StringBuilder();
++        boolean code = false;
++        String inner = line.substring(1, line.length() - 1);
++        for (int i = 0; i < inner.length(); i++) {
++            char c = inner.charAt(i);
++            if (c == '\\' && i + 1 < inner.length() && inner.charAt(i + 1) == '|') {
++                cell.append("\\|");
++                i++;
++                continue;
++            }
++            if (c == '`') {
++                code = !code;
++            }
++            if (c == '|' && !code) {
++                out.add(cell.toString().trim());
++                cell.setLength(0);
++            } else {
++                cell.append(c);
++            }
+@@ -142 +166,3 @@ public final class ReadmeDocsTest {
+-        return table;
++        assertFalse(where + ": a code span is left open: " + line, code);
++        out.add(cell.toString().trim());
++        return out;
+@@ -146,2 +172,30 @@ public final class ReadmeDocsTest {
+-     * The module table rows of {@code docs/api/README.md}, in order, as {@code {module name, group:artifactId}}; unlike
+-     * {@link #apiModuleTable(String)} a repeated coordinate stays as its own row.
++     * The rows of the one table of {@code text} whose head line is {@code head}, as cells: every line after the
++     * delimiter line ({@code |---}) up to the first line that does not start with {@code |} is a row, and each row has
++     * as many cells as the head.
++     */
++    static List<List<String>> tableRows(String where, String text, String head) {
++        String[] lines = text.split("\n", -1);
++        int at = -1;
++        for (int i = 0; i < lines.length; i++) {
++            if (lines[i].equals(head)) {
++                assertTrue(where + ": one table is headed " + head, at < 0);
++                at = i;
++            }
++        }
++        assertTrue(where + ": a table is headed " + head, at >= 0);
++        assertTrue(where + ": the line after " + head + " is the delimiter line",
++                at + 1 < lines.length && lines[at + 1].startsWith("|---"));
++        int width = cells(where, head).size();
++        List<List<String>> rows = new ArrayList<>();
++        for (int i = at + 2; i < lines.length && lines[i].startsWith("|"); i++) {
++            List<String> c = cells(where, lines[i]);
++            assertEquals(where + ": cells of the table row " + lines[i], width, c.size());
++            rows.add(c);
++        }
++        return rows;
++    }
++
++    /**
++     * Every row of the module table of {@code docs/api/README.md}, in order, as {@code {module name, group:artifactId}}.
++     * The module cell must be exactly one backticked module name and the coordinate cell exactly
++     * {@code `com.snoworca.naruserve:<module name in lower case>`}, so a row in any other form fails here.
+@@ -151,4 +205,8 @@ public final class ReadmeDocsTest {
+-        Matcher row = Pattern.compile("(?m)^\\| `([\\w-]+)` \\| `(com\\.snoworca\\.naruserve:[\\w-]+)` \\|")
+-                .matcher(read(path));
+-        while (row.find()) {
+-            rows.add(new String[] {row.group(1), row.group(2)});
++        for (List<String> row : tableRows(path, read(path), API_MODULE_TABLE_HEAD)) {
++            String cell = row.get(0);
++            assertTrue(path + ": the module cell is one backticked module name: " + row,
++                    cell.matches("`NaruServe(-[A-Za-z0-9]+)?`"));
++            String module = cell.substring(1, cell.length() - 1);
++            String coordinate = "com.snoworca.naruserve:" + module.toLowerCase(Locale.ROOT);
++            assertEquals(path + ": the coordinate cell of the module " + module, "`" + coordinate + "`", row.get(1));
++            rows.add(new String[] {module, coordinate});
+@@ -164,0 +223,5 @@ public final class ReadmeDocsTest {
++        // OPS-DX-011 AC-5: every line of the table block is a row (a row in another form fails in apiModuleRows), so a
++        // row that invents a module name fails here: eleven rows, no coordinate twice, each artifactId its module name
++        List<String[]> rows = apiModuleRows("docs/api/README.md");
++        assertEquals("rows (not distinct coordinates) of the module table of docs/api/README.md", 11, rows.size());
++        Set<String> coordinates = new TreeSet<>();
+@@ -167,3 +230,4 @@ public final class ReadmeDocsTest {
+-        for (String c : apiModuleTable("docs/api/README.md")) {
+-            if (published.contains(c.substring(c.indexOf(':') + 1))) {
+-                table.add(c + ":" + PUBLISHED_VERSION);
++        for (String[] r : rows) {
++            assertTrue("module table coordinate " + r[1] + " appears once", coordinates.add(r[1]));
++            if (published.contains(r[1].substring(r[1].indexOf(':') + 1))) {
++                table.add(r[1] + ":" + PUBLISHED_VERSION);
+@@ -171 +235 @@ public final class ReadmeDocsTest {
+-                unpublished.add(c);
++                unpublished.add(r[1]);
+@@ -177 +241 @@ public final class ReadmeDocsTest {
+-        // is exactly the ten published rows plus naruserve-proxy and an invented module row fails here
++        // is exactly the ten published rows plus naruserve-proxy
+@@ -180,11 +243,0 @@ public final class ReadmeDocsTest {
+-        assertEquals("module table rows of docs/api/README.md", 11, apiModuleTable("docs/api/README.md").size());
+-        // OPS-DX-011 AC-5: count the rows themselves, so a row that invents a module name but repeats a published
+-        // artifactId fails here: eleven rows, no coordinate twice, and each artifactId is its module name in lower case
+-        List<String[]> rows = apiModuleRows("docs/api/README.md");
+-        assertEquals("rows (not distinct coordinates) of the module table of docs/api/README.md", 11, rows.size());
+-        Set<String> coordinates = new TreeSet<>();
+-        for (String[] r : rows) {
+-            assertTrue("module table coordinate " + r[1] + " appears once", coordinates.add(r[1]));
+-            assertEquals("artifactId of the module table row " + r[0], "com.snoworca.naruserve:" + r[0].toLowerCase(Locale.ROOT),
+-                    r[1]);
+-        }
+@@ -213,2 +266,6 @@ public final class ReadmeDocsTest {
+-        assertTrue("docs/api/README.md has the naruserve-proxy row",
+-                apiModuleTable("docs/api/README.md").contains("com.snoworca.naruserve:naruserve-proxy"));
++        Set<String> coordinates = new TreeSet<>();
++        for (String[] r : apiModuleRows("docs/api/README.md")) {
++            coordinates.add(r[1]);
++        }
++        assertTrue("docs/api/README.md has the naruserve-proxy row: " + coordinates,
++                coordinates.contains("com.snoworca.naruserve:naruserve-proxy"));

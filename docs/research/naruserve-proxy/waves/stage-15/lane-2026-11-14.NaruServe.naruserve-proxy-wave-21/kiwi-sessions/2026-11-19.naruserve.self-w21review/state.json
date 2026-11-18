@@ -1,0 +1,238 @@
+{
+ "run_id": "2026-11-19.naruserve.self-w21review",
+ "skill": "kiwi-review-fix-loop",
+ "schema_version": "1.0.0",
+ "started_at": "2026-11-18T15:57:18Z",
+ "mode": "self",
+ "mode_flags": [
+  "--loops 20",
+  "--keep-clean-code",
+  "--no-pipeline-emit",
+  "--req-filter OPS-DX-008,OPS-DX-010,OPS-DX-011"
+ ],
+ "phase": "8",
+ "finding_queue": [],
+ "fix_iter": 3,
+ "recheck_iter": 2,
+ "clean_code_round": 3,
+ "clean_code_dismissed": [
+  {
+   "id": "CC-001",
+   "principle": "DRY",
+   "location": "GuideConsistencyDocsTest.java:137-173",
+   "reason": "requires merging/weakening existing OPS-DX-007 AC-3 test"
+  },
+  {
+   "id": "CC-004",
+   "principle": "DRY",
+   "location": "ProxyDocsKotlinTest.kt:59-125",
+   "reason": "cross-module helper copy is project convention; testFixtures change out of lane scope"
+  },
+  {
+   "id": "CC-103",
+   "principle": "brittle literal",
+   "location": "DocsExamplesCompileTest.java:1042-1044",
+   "reason": "literal-token matching is the docs test convention"
+  },
+  {
+   "id": "CC-301",
+   "reason": "module boundary, same as CC-004"
+  },
+  {
+   "id": "CC-302",
+   "reason": "class-scoped names, no misuse path"
+  }
+ ],
+ "clean_code_skip": false,
+ "guarantee_scope": "wave-21 lane diff 9150c04e83b004ad22e989d041a327fb2625dd3f..HEAD: documentation tests (Kotlin/Java) and build/site config that pin docs/api request/app/proxy pages, navigation and README module rows; test-only code, no product code",
+ "declared_limits": [
+  {
+   "id": "FND-301",
+   "reason": "Doc tests (ReadmeDocsTest, ProxyDocsKotlinTest table reading) check that the docs hold the required facts and that ordinary table rows (lines starting and ending with '|') match expected cells exactly; they do not reproduce GFM renderer edge behaviour (pipe-less continuation lines after a table, indented '| ...' lines, unescaped '|' inside code spans splitting cells).",
+   "evidence": "prickly_recheck_iter4.json HX1/HX2 pass; all real tables end with a blank line"
+  },
+  {
+   "id": "FND-302",
+   "reason": "Doc tests (ReadmeDocsTest, ProxyDocsKotlinTest table reading) check that the docs hold the required facts and that ordinary table rows (lines starting and ending with '|') match expected cells exactly; they do not reproduce GFM renderer edge behaviour (pipe-less continuation lines after a table, indented '| ...' lines, unescaped '|' inside code spans splitting cells).",
+   "evidence": "prickly_recheck_iter4.json PX1/PX2 pass; all 8 proxy tables end with a blank line"
+  }
+ ],
+ "limits": {
+  "round_cap": 20,
+  "token_budget": null
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "tree_sha": "c3fc228dacf9561eb9ddfe64cf22369d6acab97e",
+   "scope": "full",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt",
+    "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+    "build.gradle",
+    "mkdocs.en.yml",
+    "mkdocs.yml",
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java"
+   ],
+   "tokens_used": 260560,
+   "residual_count": 1,
+   "coverage_passed": false,
+   "coverage_mismatch": [
+    "mkdocs.yml anchor 'proxy.md' is neither the whole added line '- proxy.md' nor an identifier token"
+   ],
+   "findings": [
+    {
+     "id": "FND-001",
+     "tier": "block",
+     "family": "test-weakening",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-002",
+     "tier": "block",
+     "family": "weak-assertion",
+     "introduced_by_round": null
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "tree_sha": "33053e2ff843c9cfd047864a374b43743661cf92",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt",
+    "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java"
+   ],
+   "tokens_used": 297067,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-101",
+     "tier": "block",
+     "family": "weak-assertion",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-102",
+     "tier": "block",
+     "family": "weak-assertion",
+     "introduced_by_round": 1
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "tree_sha": "ec89d561c1cac98e76bbb471c20fbe251a3422c0",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+    "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+    "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java"
+   ],
+   "tokens_used": 295540,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-201",
+     "tier": "block",
+     "family": "weak-assertion",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-202",
+     "tier": "block",
+     "family": "weak-assertion",
+     "introduced_by_round": null
+    }
+   ],
+   "family_action": "single-rule"
+  },
+  {
+   "round": 4,
+   "tree_sha": "0f57aa31d4cf59444397d1e4be12671f1527df2c",
+   "scope": "since-prev",
+   "scope_widen_reason": null,
+   "files": [
+    "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+    "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java"
+   ],
+   "tokens_used": 338587,
+   "residual_count": 0,
+   "coverage_passed": true,
+   "findings": [
+    {
+     "id": "FND-301",
+     "tier": "record",
+     "family": "weak-assertion",
+     "introduced_by_round": null
+    },
+    {
+     "id": "FND-302",
+     "tier": "record",
+     "family": "weak-assertion",
+     "introduced_by_round": null
+    }
+   ],
+   "family_action": "declare-limit",
+   "note": "classifier wrote introduced_by_round=4 for the record findings; recorded null per its own rationale (base regex missed the same rows)"
+  }
+ ],
+ "regression_baseline": {
+  "source": "lane build at HEAD 0444ce7",
+  "tests": 4753,
+  "failures": 0
+ },
+ "regression_pass": true,
+ "pr_responded": false,
+ "failed": false,
+ "residual_decisions": [
+  {
+   "id": "FND-003",
+   "decision": "reject-with-reason",
+   "by": "recommended option applied per dispatch instruction (decision gate)",
+   "reason": "not reproduced; same closed-port pattern as ProxyErrorsTest/ProxyAccessLogTest/ProxyMethodTest"
+  },
+  {
+   "id": "FND-303",
+   "decision": "reject-with-reason",
+   "by": "recommended option applied per dispatch instruction (decision gate)",
+   "reason": "covered by declared GFM limit; no real doc row has '|' in a code span; column unchecked at base"
+  }
+ ],
+ "clean_code_unresolved": [
+  {
+   "id": "CC-303",
+   "principle": "positional list indices",
+   "location": "ProxyDocsKotlinTest.kt:207,324-326",
+   "reason": "clean-code round cap (3) reached"
+  }
+ ],
+ "regression_result": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4753,
+  "failures": 0,
+  "exit_code": 0
+ },
+ "test_sufficiency": {
+  "verdict": "pass",
+  "ids": [
+   "OPS-DX-008",
+   "OPS-DX-010",
+   "OPS-DX-011"
+  ],
+  "gaps": 0
+ },
+ "status": "TASK_DONE",
+ "review_commit": "11778935f3bf24c31655a91d12aab576d10b7599"
+}

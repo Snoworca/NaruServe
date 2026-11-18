@@ -1,0 +1,44 @@
+[
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-19",
+   "summary": "[req] OPS-DX-008 - request.md and app.md with English mirrors document req.bodyStream and bodyStream(maxBytes), the two over-limit forms for onError, req.headerNames, req.rawHeaders, req.isFromTrustedProxy, app.rawBodyLimit and the 0.12.0 BodyTooLargeException compatibility note, with Express counterparts and Java and Kotlin examples; closes carried input C-005 (wave-3 LP-3). green=PASS (15/15). files: docs/api/request.md, docs/api/en/request.md, docs/api/app.md, docs/api/en/app.md, RawRequestDocsKotlinTest.kt, DocsExamplesCompileTest.java. AC: OPS-DX-008 AC-1..7 PASS",
+   "requirementIds": [
+    "OPS-DX-008"
+   ],
+   "target": "0.12.0",
+   "scope": "DX"
+  },
+  "argsHash": "303b4883eb017d86083f72b368c55555d89a3626",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-19",
+   "summary": "[req] OPS-DX-010 - docs/api/proxy.md and docs/api/en/proxy.md document the NaruServe-proxy module, Proxy.to and its 17 options with defaults ranges exceptions and http-proxy-middleware counterparts, ProxyException kinds and statuses with an onError JSON example, the timeouts, retries, maxConcurrent, thread model, connection-per-request and TIME_WAIT warning, the JVM-wide watchdog, the address-check and representation-header warnings and TLS rules, with Java and Kotlin examples. green=PASS (21/21 new tests). files: docs/api/proxy.md, docs/api/en/proxy.md, build.gradle, ProxyDocsKotlinTest.kt, KotlinDocsMarkersTest.java, DocsExamplesCompileTest.java, GuideConsistencyDocsTest.java. AC: OPS-DX-010 AC-1..12 PASS",
+   "requirementIds": [
+    "OPS-DX-010"
+   ],
+   "target": "0.12.0",
+   "scope": "DX"
+  },
+  "argsHash": "ecc699a9269c91eddf00336fb4aed6c208500d36",
+  "action": "apply"
+ },
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-19",
+   "summary": "[req] OPS-DX-011 - proxy.md joins the Korean and English site nav; docs/api/README.md and en/README.md gain a NaruServe-proxy module row and guide row and count ten modules built without an Android SDK; README.md and README.ko.md name NaruServe-proxy in their module tables without a coordinate and count ten JAR modules; ReadmeDocsTest takes the published modules from the 0.11.0 publication record. green=PASS (5 new tests, 1 re-pointed). files: mkdocs.yml, mkdocs.en.yml, docs/api/README.md, docs/api/en/README.md, README.md, README.ko.md, GuideConsistencyDocsTest.java, ReadmeDocsTest.java. AC: OPS-DX-011 AC-1..5 PASS",
+   "requirementIds": [
+    "OPS-DX-011"
+   ],
+   "target": "0.12.0",
+   "scope": "DX"
+  },
+  "argsHash": "73f7488d1d443adf89762932aa600dad3a0f6e28",
+  "action": "apply"
+ }
+]

@@ -1,0 +1,60 @@
+diff --git a/NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java b/NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java
+index 7b06e09..ee4b720 100644
+--- a/NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java
++++ b/NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java
+@@ -11,0 +12 @@ import java.util.ArrayList;
++import java.util.Arrays;
+@@ -25 +26 @@ public final class KotlinDocsMarkersTest {
+-    static final String[] KOTLIN_ROOTS = {
++    static final List<String> KOTLIN_ROOTS = Collections.unmodifiableList(Arrays.asList(
+@@ -27,2 +28 @@ public final class KotlinDocsMarkersTest {
+-        "NaruServe-proxy/src/test/kotlin",
+-    };
++        "NaruServe-proxy/src/test/kotlin"));
+diff --git a/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt b/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt
+index bb703a7..bf2e98c 100644
+--- a/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt
++++ b/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt
+@@ -189 +189 @@ class ProxyDocsKotlinTest {
+-            "`1..1073741824`(1 GiB).", "`1..1073741824` (1 GiB).", iae + "`1..1073741824`", "No counterpart"),
++            "`1..1073741824`(1 GiB).", "`1..1073741824` (1 GiB).", iae, "No counterpart"),
+@@ -229 +229,4 @@ class ProxyDocsKotlinTest {
+-                assertTrue("$where ${o.sig} accepted range $range: ${cells[2]}", cells[2].startsWith(range))
++                // the range is the whole cell or a sentence followed by a space, so "Must be above 0." cannot pass as
++                // the prefix of a different range such as "Must be above 0.5 seconds"
++                assertTrue("$where ${o.sig} accepted range $range: ${cells[2]}",
++                    cells[2] == range || cells[2].startsWith("$range "))
+@@ -232,3 +234,0 @@ class ProxyDocsKotlinTest {
+-                if (o.exceptions.isEmpty()) {
+-                    has("$where ${o.sig}", r, if (where == "proxy.md") "모든 값을 받습니다" else "Accepts every value")
+-                }
+diff --git a/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java b/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java
+index 02e74ca..468ab89 100644
+--- a/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java
++++ b/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java
+@@ -144,0 +145,14 @@ public final class ReadmeDocsTest {
++    /**
++     * The module table rows of {@code docs/api/README.md}, in order, as {@code {module name, group:artifactId}}; unlike
++     * {@link #apiModuleTable(String)} a repeated coordinate stays as its own row.
++     */
++    static List<String[]> apiModuleRows(String path) throws IOException {
++        List<String[]> rows = new ArrayList<>();
++        Matcher row = Pattern.compile("(?m)^\\| `([\\w-]+)` \\| `(com\\.snoworca\\.naruserve:[\\w-]+)` \\|")
++                .matcher(read(path));
++        while (row.find()) {
++            rows.add(new String[] {row.group(1), row.group(2)});
++        }
++        return rows;
++    }
++
+@@ -166,0 +181,10 @@ public final class ReadmeDocsTest {
++        // OPS-DX-011 AC-5: count the rows themselves, so a row that invents a module name but repeats a published
++        // artifactId fails here: eleven rows, no coordinate twice, and each artifactId is its module name in lower case
++        List<String[]> rows = apiModuleRows("docs/api/README.md");
++        assertEquals("rows (not distinct coordinates) of the module table of docs/api/README.md", 11, rows.size());
++        Set<String> coordinates = new TreeSet<>();
++        for (String[] r : rows) {
++            assertTrue("module table coordinate " + r[1] + " appears once", coordinates.add(r[1]));
++            assertEquals("artifactId of the module table row " + r[0], "com.snoworca.naruserve:" + r[0].toLowerCase(Locale.ROOT),
++                    r[1]);
++        }

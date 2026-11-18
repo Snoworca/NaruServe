@@ -1,0 +1,655 @@
+{
+ "ok": true,
+ "violations": [],
+ "calls": [
+  {
+   "tool": "update_status",
+   "args": {
+    "id": "OPS-DX-008",
+    "status": "in_progress"
+   },
+   "argsHash": "60c023affda740375e0b88d4e41d9ce3c5077096",
+   "action": "apply"
+  },
+  {
+   "tool": "add_trace_link",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "Code",
+    "reference": "docs/api/request.md:326-387",
+    "relation": "implements",
+    "notes": "raw body stream section (bodyStream, bodyStream(maxBytes))"
+   },
+   "argsHash": "d21c055b8ef7bac1cd38e19575550d67b37993f7",
+   "action": "apply"
+  },
+  {
+   "tool": "add_trace_link",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "Code",
+    "reference": "docs/api/request.md:497-503",
+    "relation": "implements",
+    "notes": "0.12.0 compatibility note"
+   },
+   "argsHash": "5f3c17cf3363187f691850c600fe58b75a44fe40",
+   "action": "apply"
+  },
+  {
+   "tool": "add_trace_link",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "Code",
+    "reference": "docs/api/en/request.md:307-368",
+    "relation": "implements",
+    "notes": "English raw body stream section"
+   },
+   "argsHash": "1d484ed2191750dc0ee433eb415bf1977b0e9e8f",
+   "action": "apply"
+  },
+  {
+   "tool": "add_trace_link",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "Code",
+    "reference": "docs/api/en/request.md:478-484",
+    "relation": "implements",
+    "notes": "English 0.12.0 compatibility notes"
+   },
+   "argsHash": "a146ce484a778dd63c922f0e03a9ffe1670e910e",
+   "action": "apply"
+  },
+  {
+   "tool": "add_trace_link",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "Code",
+    "reference": "docs/api/app.md:409-446",
+    "relation": "implements",
+    "notes": "rawBodyLimit section"
+   },
+   "argsHash": "3bd3868166ed9487663941a8c20522a7fb674750",
+   "action": "apply"
+  },
+  {
+   "tool": "add_trace_link",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "Code",
+    "reference": "docs/api/en/app.md:394-431",
+    "relation": "implements",
+    "notes": "English rawBodyLimit section"
+   },
+   "argsHash": "876414e861bde2911ac0ee4cb9f011e212c569ed",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt:121",
+    "covers": "AC-1",
+    "notes": "OPS-DX-008 AC-1 request md documents bodyStream and bodyStream maxBytes with their rules and examples green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "281ea0b22a791afff5a0770603fe756f86cd5782",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt:339",
+    "covers": "AC-1",
+    "notes": "OPS-DX-008 AC-1 the bodyStream example reads the raw body under the app limit and a per-call limit green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "a3c20e698e64df28b214ffdad6f4e4ae8ada8403",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt:155",
+    "covers": "AC-2",
+    "notes": "OPS-DX-008 AC-2 request md states the two over-limit forms and how onError recognises them green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "63084a6cc24a1ea8a904ebe24deddad25557fe3d",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt:366",
+    "covers": "AC-2",
+    "notes": "OPS-DX-008 AC-2 the onError example recognises both over-limit forms and leaves a wrapped one to the 500 answer green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "8ed5c6107018d44c031a62f75dd935f5373d5dda",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt:187",
+    "covers": "AC-3",
+    "notes": "OPS-DX-008 AC-3 request md documents headerNames and rawHeaders with their Express counterparts green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "b69ba4ef5b01e0a37b37ed8663d678e6a3f89ff9",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt:411",
+    "covers": "AC-3",
+    "notes": "OPS-DX-008 AC-3 the header enumeration example lists lowercase names and the raw lines green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "8b129a42cadb5403e918e12dfa47a7f70b443e7f",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt:213",
+    "covers": "AC-4",
+    "notes": "OPS-DX-008 AC-4 request md documents isFromTrustedProxy with its Express counterpart and result table green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "98fb74bbac37a7d7e84d6d419550377c752d09cf",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt:248",
+    "covers": "AC-4",
+    "notes": "OPS-DX-008 AC-4 the result table of isFromTrustedProxy is what the code answers green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "2a4f380786747e08fcf869227fed43a96a020ed3",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt:424",
+    "covers": "AC-4",
+    "notes": "OPS-DX-008 AC-4 the isFromTrustedProxy example tells a forwarded request from a direct one green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "e37e76a7bdf5d238e7de7dcf28effc6fc4ace877",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt:260",
+    "covers": "AC-5",
+    "notes": "OPS-DX-008 AC-5 app md documents rawBodyLimit next to jsonLimit and formLimit with its Express counterpart green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "69013414a43d9f7617f7f1d0a39c929ab7124af9",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt:439",
+    "covers": "AC-5",
+    "notes": "OPS-DX-008 AC-5 the rawBodyLimit example keeps a small app limit and raises it for one route green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "55cf445e37a9335fb9585bc099af521f0c751895",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt:287",
+    "covers": "AC-6",
+    "notes": "OPS-DX-008 AC-6 request md holds the 0_12_0 compatibility note on BodyTooLargeException green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "c61b66e65454e2a9003a17d3c588c0a9a6acb75c",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt:306",
+    "covers": "AC-7",
+    "notes": "OPS-DX-008 AC-7 C-005 both request pages document bodyStream headerNames rawHeaders and isFromTrustedProxy green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "9f1a4fc98dff5a87e5b22e771271c8c340e708dd",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt:319",
+    "covers": "AC-7",
+    "notes": "OPS-DX-008 AC-7 the Kotlin blocks of request md and app md have one marker each in both languages green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "feffa05c698974accc012d62fd7a69d2ac6e4962",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-008",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:1039",
+    "covers": "AC-7",
+    "notes": "OPS_DX_008_AC7_rawRequestJavaBlocksOfTheFourPagesCompile green under ./gradlew -PtinyHttpdFromMaven=true build (4727 tests 0 failures)"
+   },
+   "argsHash": "0b3ae7f8f2b578b14ab982b2c086373f7e193e5f",
+   "action": "apply"
+  },
+  {
+   "tool": "update_status",
+   "args": {
+    "id": "OPS-DX-008",
+    "status": "implemented"
+   },
+   "argsHash": "f3ecc269b2bf0abe180fd596ad95e0779ddb758b",
+   "action": "apply"
+  },
+  {
+   "tool": "update_status",
+   "args": {
+    "id": "OPS-DX-010",
+    "status": "in_progress"
+   },
+   "argsHash": "9c403f35b080c2f523f77952ea0686c574d1c691",
+   "action": "apply"
+  },
+  {
+   "tool": "add_trace_link",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "Code",
+    "reference": "docs/api/proxy.md",
+    "relation": "implements",
+    "notes": "Korean proxy guide: module, Proxy.to, options, ProxyException, timeouts, retries, maxConcurrent, thread model, backend connections, TLS"
+   },
+   "argsHash": "ddb0f7de9e00a3a00a88f75c2cff3980e79d77be",
+   "action": "apply"
+  },
+  {
+   "tool": "add_trace_link",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "Code",
+    "reference": "docs/api/en/proxy.md",
+    "relation": "implements",
+    "notes": "English mirror of the proxy guide"
+   },
+   "argsHash": "b9a9ac81a3db2c9e0cbc426eb58b6f53292c5d4a",
+   "action": "apply"
+  },
+  {
+   "tool": "add_trace_link",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "Code",
+    "reference": "build.gradle",
+    "relation": "implements",
+    "notes": "root testImplementation project(':NaruServe-proxy') for DocsExamplesCompileTest"
+   },
+   "argsHash": "460d55151d65a91acbc66f09b3fc77e3586b0878",
+   "action": "apply"
+  },
+  {
+   "tool": "add_trace_link",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "Code",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+    "relation": "implements",
+    "notes": "KOTLIN_ROOTS gains NaruServe-proxy/src/test/kotlin"
+   },
+   "argsHash": "2e7c24442d78e81f8ac73fefe15df1e86e41c21c",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt:137",
+    "covers": "AC-1",
+    "notes": "OPS-DX-010 AC-1 both pages start with their navigation line and name the module, artifact, package and the Express counterpart green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "5b2428edfd70ce1146a171bad6f8e2bcd69d1b7f",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt:188",
+    "covers": "AC-2",
+    "notes": "OPS-DX-010 AC-2 the option table lists every option with its types, default, range, exceptions and http-proxy-middleware counterpart green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "c53863cac06d6bb3d59c64d32e3366e7e03c6f5a",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt:248",
+    "covers": "AC-3",
+    "notes": "OPS-DX-010 AC-3 the error section documents ProxyException, its kinds and statuses, the plain HttpException answers and the abort after the response green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "bb5e0d2b6a51247a60b5c7e46d80c27aab2c4f1a",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt:281",
+    "covers": "AC-4",
+    "notes": "OPS-DX-010 AC-4 the basic use section shares one Proxy, mounts the no-retry path first and states that no next() follows a forward green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "502786ac9a5984666fc02807b4848104548a9dca",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt:301",
+    "covers": "AC-5",
+    "notes": "OPS-DX-010 AC-5 the page warns that address-based checks are not reliable behind the proxy and advises against trustProxy(true) green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "e2b3e837dc993a77d5740cb09695ebcf1ebb93cb",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt:317",
+    "covers": "AC-6",
+    "notes": "OPS-DX-010 AC-6 the page warns against representation headers set before the proxy and names the gateway's Date and reason phrase green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "e8ff4a7f4b2a8049feb9c8a445ada3830f496aff",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt:329",
+    "covers": "AC-7",
+    "notes": "OPS-DX-010 AC-7 the timeout section states the four defaults, that none is unlimited, the first reached and the two cases the total timeout cannot release green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "161ebe7b421898d2e878564ce80a146a211995b6",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt:355",
+    "covers": "AC-8",
+    "notes": "OPS-DX-010 AC-8 the retry section states retries are off, what retries(n) and retryUnsafeMethods retry, and the side-effect GET warning green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "aab6522f8dc3b428c8986c44bc7f5e61551672df",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt:374",
+    "covers": "AC-9",
+    "notes": "OPS-DX-010 AC-9 the thread model section states the bound worker thread, the late disconnect, the pool exhaustion and what bounds the threads green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "fd87d9f6ea4a1f77d2d6ee8748be6d95f5b44b93",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt:390",
+    "covers": "AC-10",
+    "notes": "OPS-DX-010 AC-10 the concurrency section states the shared counter rules, the immediate 503 and the maxConcurrent(16) example green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "30c6f6374377127c012728a3d049e7ae95483062",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt:410",
+    "covers": "AC-11",
+    "notes": "OPS-DX-010 AC-11 the backend connection section states the new connection per request, the TIME_WAIT warning and the JVM-wide watchdog green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "62562a755e7063db8ba5c7927f5419444c2a2e15",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt:422",
+    "covers": "AC-12",
+    "notes": "OPS-DX-010 AC-12 the English page mirrors the Korean page section by section with the same code green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "fa008e8d96b53bc6a34fadae93b2d44ad23220ef",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java:1076",
+    "covers": "AC-12",
+    "notes": "OPS_DX_010_AC12_proxyJavaBlocksOfBothPagesCompile green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "5844849a11c81c457ae13dc66bb41baaf13e439a",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java:178",
+    "covers": "AC-12",
+    "notes": "OPS_DX_010_AC12_proxyPageKotlinBlocksHaveTheirProxyModuleMarkers green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "69147ef3c21e11b91fdd8ce7045daf2a1736c5a8",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-010",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java:138",
+    "covers": "AC-12",
+    "notes": "OPS_DX_007_AC3_everyGuideHasTheSameNavigationLine (19 guide pairs) green under ./gradlew -PtinyHttpdFromMaven=true build (4748 tests 0 failures)"
+   },
+   "argsHash": "ef5aa6d0aa397fa57ef2fdfc02e958b66977c877",
+   "action": "apply"
+  },
+  {
+   "tool": "update_status",
+   "args": {
+    "id": "OPS-DX-010",
+    "status": "implemented"
+   },
+   "argsHash": "e16d1ed70a1cf45ec3c25d385141d8e8b0544f3b",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-011",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java:193",
+    "covers": "AC-1",
+    "notes": "OPS_DX_011_AC1_bothSiteNavigationsListEveryGuidePageIncludingProxy green under ./gradlew -PtinyHttpdFromMaven=true build (4753 tests 0 failures); pinned toolchain mkdocs build --strict exit 0 for mkdocs.yml and mkdocs.en.yml and tools/docs-site/check_site.py passed (40 guide pages)"
+   },
+   "argsHash": "8ae34e7317af224aa6473ea5219fb02a9174c8a3",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-011",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java:157",
+    "covers": "AC-2",
+    "notes": "OPS_DX_011_AC2_theNineteenGuidePairsAreThoseOf0110AndProxy and OPS_DX_007_AC3_everyGuideHasTheSameNavigationLine (19 guide pairs) green under ./gradlew -PtinyHttpdFromMaven=true build (4753 tests 0 failures)"
+   },
+   "argsHash": "0c3b50b522644dfae2d801d4a87a4ed06cec25d2",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-011",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java:220",
+    "covers": "AC-3",
+    "notes": "OPS_DX_011_AC3_apiIndexesHaveTheProxyRowAndCountTenModulesWithoutAnSdk green under ./gradlew -PtinyHttpdFromMaven=true build (4753 tests 0 failures)"
+   },
+   "argsHash": "c2fed73fbae8f2c04a3bc6f1bf2184c3715cac36",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-011",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java:243",
+    "covers": "AC-4",
+    "notes": "OPS_DX_011_AC4_readmesNameTheProxyModuleWithoutAPublishedCoordinate green under ./gradlew -PtinyHttpdFromMaven=true build (4753 tests 0 failures)"
+   },
+   "argsHash": "41fdfbaeaf3515b480174e3f89097a9050f2365e",
+   "action": "apply"
+  },
+  {
+   "tool": "add_verification_evidence",
+   "args": {
+    "id": "OPS-DX-011",
+    "type": "test",
+    "reference": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java:148",
+    "covers": "AC-5",
+    "notes": "ops_REL_001_AC1_readmeListsTheTenCoordinatesOfTheApiModuleTableAndTheInstallLines and OPS_DX_011_AC5_proxyRowIsInTheTableButNotAmongThePublishedCoordinates green under ./gradlew -PtinyHttpdFromMaven=true build (4753 tests 0 failures)"
+   },
+   "argsHash": "c50c7863e425e823917ef0cce6f13ae171f6b362",
+   "action": "apply"
+  },
+  {
+   "tool": "update_status",
+   "args": {
+    "id": "OPS-DX-011",
+    "status": "implemented"
+   },
+   "argsHash": "a2a7cb4a69b6a3b35154b7c0954d610b704b4d69",
+   "action": "apply"
+  }
+ ],
+ "indexAfter": {
+  "update_status": [
+   "60c023affda740375e0b88d4e41d9ce3c5077096",
+   "9c403f35b080c2f523f77952ea0686c574d1c691",
+   "a2a7cb4a69b6a3b35154b7c0954d610b704b4d69",
+   "e16d1ed70a1cf45ec3c25d385141d8e8b0544f3b",
+   "f3ecc269b2bf0abe180fd596ad95e0779ddb758b"
+  ],
+  "add_trace_link": [
+   "1d484ed2191750dc0ee433eb415bf1977b0e9e8f",
+   "2e7c24442d78e81f8ac73fefe15df1e86e41c21c",
+   "3bd3868166ed9487663941a8c20522a7fb674750",
+   "460d55151d65a91acbc66f09b3fc77e3586b0878",
+   "5f3c17cf3363187f691850c600fe58b75a44fe40",
+   "876414e861bde2911ac0ee4cb9f011e212c569ed",
+   "a146ce484a778dd63c922f0e03a9ffe1670e910e",
+   "b9a9ac81a3db2c9e0cbc426eb58b6f53292c5d4a",
+   "d21c055b8ef7bac1cd38e19575550d67b37993f7",
+   "ddb0f7de9e00a3a00a88f75c2cff3980e79d77be"
+  ],
+  "add_verification_evidence": [
+   "0b3ae7f8f2b578b14ab982b2c086373f7e193e5f",
+   "0c3b50b522644dfae2d801d4a87a4ed06cec25d2",
+   "161ebe7b421898d2e878564ce80a146a211995b6",
+   "281ea0b22a791afff5a0770603fe756f86cd5782",
+   "2a4f380786747e08fcf869227fed43a96a020ed3",
+   "30c6f6374377127c012728a3d049e7ae95483062",
+   "41fdfbaeaf3515b480174e3f89097a9050f2365e",
+   "502786ac9a5984666fc02807b4848104548a9dca",
+   "55cf445e37a9335fb9585bc099af521f0c751895",
+   "5844849a11c81c457ae13dc66bb41baaf13e439a",
+   "5b2428edfd70ce1146a171bad6f8e2bcd69d1b7f",
+   "62562a755e7063db8ba5c7927f5419444c2a2e15",
+   "63084a6cc24a1ea8a904ebe24deddad25557fe3d",
+   "69013414a43d9f7617f7f1d0a39c929ab7124af9",
+   "69147ef3c21e11b91fdd8ce7045daf2a1736c5a8",
+   "8ae34e7317af224aa6473ea5219fb02a9174c8a3",
+   "8b129a42cadb5403e918e12dfa47a7f70b443e7f",
+   "8ed5c6107018d44c031a62f75dd935f5373d5dda",
+   "98fb74bbac37a7d7e84d6d419550377c752d09cf",
+   "9f1a4fc98dff5a87e5b22e771271c8c340e708dd",
+   "a3c20e698e64df28b214ffdad6f4e4ae8ada8403",
+   "aab6522f8dc3b428c8986c44bc7f5e61551672df",
+   "b69ba4ef5b01e0a37b37ed8663d678e6a3f89ff9",
+   "bb5e0d2b6a51247a60b5c7e46d80c27aab2c4f1a",
+   "c2fed73fbae8f2c04a3bc6f1bf2184c3715cac36",
+   "c50c7863e425e823917ef0cce6f13ae171f6b362",
+   "c53863cac06d6bb3d59c64d32e3366e7e03c6f5a",
+   "c61b66e65454e2a9003a17d3c588c0a9a6acb75c",
+   "e2b3e837dc993a77d5740cb09695ebcf1ebb93cb",
+   "e37e76a7bdf5d238e7de7dcf28effc6fc4ace877",
+   "e8ff4a7f4b2a8049feb9c8a445ada3830f496aff",
+   "ef5aa6d0aa397fa57ef2fdfc02e958b66977c877",
+   "fa008e8d96b53bc6a34fadae93b2d44ad23220ef",
+   "fd87d9f6ea4a1f77d2d6ee8748be6d95f5b44b93",
+   "feffa05c698974accc012d62fd7a69d2ac6e4962"
+  ],
+  "add_completed_work": [
+   "303b4883eb017d86083f72b368c55555d89a3626",
+   "73f7488d1d443adf89762932aa600dad3a0f6e28",
+   "ecc699a9269c91eddf00336fb4aed6c208500d36"
+  ]
+ },
+ "inputRefusals": []
+}

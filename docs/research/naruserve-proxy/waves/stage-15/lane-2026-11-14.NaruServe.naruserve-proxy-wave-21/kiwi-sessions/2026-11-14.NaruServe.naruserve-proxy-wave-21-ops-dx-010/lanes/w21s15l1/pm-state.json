@@ -1,0 +1,54 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-21-ops-dx-010",
+ "base_sha": "fecf4a250ddcd50be651ce451956e6ded0072a23",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "OPS-DX-010"
+ ],
+ "req_filter": [
+  "OPS-DX-010"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+  "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+  "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+  "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java",
+  "docs/api/proxy.md",
+  "docs/api/en/proxy.md",
+  "build.gradle"
+ ],
+ "started_at": "2026-11-18T15:22:07Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "OPS-DX-010",
+    "test_sha": "b9f4979",
+    "implementation_sha": "4d5f958"
+   }
+  ],
+  "changed": true,
+  "ended_at": "2026-11-18T15:45:56Z",
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-21-ops-dx-010",
+  "result_summary": "proxy.md ko/en + ProxyDocsKotlinTest; build 4748/0",
+  "commit_sha": "4d5f958"
+ },
+ "lifecycle_gate_state": {
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "OPS-DX-010": "evolving"
+  },
+  "status_snapshot": {
+   "OPS-DX-010": "planned"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "clean_code_skip": false,
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-21-ops-dx-010/lanes/w21s15l1/reports/pm-2026-11-18T154556Z.md",
+ "last_updated_at": "2026-11-18T15:45:56Z"
+}

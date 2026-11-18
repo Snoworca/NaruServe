@@ -11,7 +11,8 @@
       "carried_into": "wave-21",
       "owner_requirement": "OPS-DX-008",
       "reason_class": "cross-wave-carry-forward",
-      "note": "docs/api/request.md must document bodyStream, headerNames, rawHeaders, isFromTrustedProxy; the run decomposition assigns this documentation to OPS-DX-008 in wave-21, which is not yet dispatched (verify-loop.md §8: carry to a remaining wave). The wave-21 worker must make this red check green; loop P for wave-21 re-checks it."
+      "note": "docs/api/request.md must document bodyStream, headerNames, rawHeaders, isFromTrustedProxy; the run decomposition assigns this documentation to OPS-DX-008 in wave-21, which is not yet dispatched (verify-loop.md §8: carry to a remaining wave). The wave-21 worker must make this red check green; loop P for wave-21 re-checks it.",
+      "closed": "wave-21 (merged 9ca1df5): docs/api/request.md and en/request.md document bodyStream, headerNames, rawHeaders, isFromTrustedProxy with a failing-when-missing doc test (OPS-DX-008)"
     },
     {
       "from": "wave-4",

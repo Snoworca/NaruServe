@@ -1,0 +1,126 @@
+diff --git a/NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java b/NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java
+index 99470cd..7b06e09 100644
+--- a/NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java
++++ b/NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java
+@@ -25 +25 @@ public final class KotlinDocsMarkersTest {
+-    private static final String[] KOTLIN_ROOTS = {
++    static final String[] KOTLIN_ROOTS = {
+diff --git a/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt b/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt
+index 41dde04..a098111 100644
+--- a/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt
++++ b/NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt
+@@ -322 +322,2 @@ class RawRequestDocsKotlinTest {
+-        for (r in listOf("NaruServe-api/src/test/kotlin", "NaruServe-kotlin/src/test/kotlin", "NaruServe-servlet/src/test/kotlin")) {
++        // the same Kotlin test roots KotlinDocsMarkersTest scans, so a marked run under any of them counts here too
++        for (r in KotlinDocsMarkersTest.KOTLIN_ROOTS) {
+diff --git a/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt b/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt
+index 5aa65a2..bb703a7 100644
+--- a/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt
++++ b/NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt
+@@ -154,3 +154,6 @@ class ProxyDocsKotlinTest {
+-    /** One option row: its signature, default per language, the exceptions it names and its http-proxy-middleware cell. */
+-    private class OptionRow(val sig: String, val koDefault: String, val enDefault: String, val exceptions: List<String>,
+-        val counterpart: String)
++    /**
++     * One option row: its signature, default per language, the accepted range per language (the text the range and
++     * exceptions cell starts with), the exceptions it names and its http-proxy-middleware cell.
++     */
++    private class OptionRow(val sig: String, val koDefault: String, val enDefault: String, val koRange: String,
++        val enRange: String, val exceptions: List<String>, val counterpart: String)
+@@ -160,0 +164,7 @@ class ProxyDocsKotlinTest {
++    // OPS-DX-010 AC-2 accepted ranges, as Proxy (FR-PROXY-002) checks them: timeouts above 0, retries and retryDelay
++    // 0 or more, bodyLimit 1..MAX_BODY_LIMIT, maxConcurrent 1 or more, header names checked by HeaderRules
++    private val positiveKo = "0보다 커야 합니다."
++    private val positiveEn = "Must be above 0."
++    private val anyKo = "모든 값을 받습니다"
++    private val anyEn = "Accepts every value"
++
+@@ -162,9 +172,14 @@ class ProxyDocsKotlinTest {
+-        OptionRow("`connectTimeout(long, TimeUnit)`", "| 10초 |", "| 10 seconds |", iaeNpe, "No counterpart"),
+-        OptionRow("`writeTimeout(long, TimeUnit)`", "| 60초 |", "| 60 seconds |", iaeNpe, "No counterpart"),
+-        OptionRow("`readTimeout(long, TimeUnit)`", "| 60초 |", "| 60 seconds |", iaeNpe, "`proxyTimeout`"),
+-        OptionRow("`totalTimeout(long, TimeUnit)`", "| 5분 |", "| 5 minutes |", iaeNpe, "`timeout`"),
+-        OptionRow("`retries(int)`", "| 0(재시도 없음) |", "| 0 (no retries) |", iae, "No counterpart"),
+-        OptionRow("`retryDelay(long, TimeUnit)`", "| 200밀리초 |", "| 200 milliseconds |", iaeNpe, "No counterpart"),
+-        OptionRow("`retryUnsafeMethods(boolean)`", "| `false` |", "| `false` |", emptyList(), "No counterpart"),
+-        OptionRow("`stripPrefix(boolean)`", "| `false`(접두사를 남깁니다) |", "| `false` (the prefix is kept) |", emptyList(),
+-            "`pathRewrite`"),
++        OptionRow("`connectTimeout(long, TimeUnit)`", "| 10초 |", "| 10 seconds |", positiveKo, positiveEn, iaeNpe,
++            "No counterpart"),
++        OptionRow("`writeTimeout(long, TimeUnit)`", "| 60초 |", "| 60 seconds |", positiveKo, positiveEn, iaeNpe,
++            "No counterpart"),
++        OptionRow("`readTimeout(long, TimeUnit)`", "| 60초 |", "| 60 seconds |", positiveKo, positiveEn, iaeNpe,
++            "`proxyTimeout`"),
++        OptionRow("`totalTimeout(long, TimeUnit)`", "| 5분 |", "| 5 minutes |", positiveKo, positiveEn, iaeNpe, "`timeout`"),
++        OptionRow("`retries(int)`", "| 0(재시도 없음) |", "| 0 (no retries) |", "0 이상.", "0 or more.", iae,
++            "No counterpart"),
++        OptionRow("`retryDelay(long, TimeUnit)`", "| 200밀리초 |", "| 200 milliseconds |", "0 이상.", "0 or more.", iaeNpe,
++            "No counterpart"),
++        OptionRow("`retryUnsafeMethods(boolean)`", "| `false` |", "| `false` |", anyKo, anyEn, emptyList(), "No counterpart"),
++        OptionRow("`stripPrefix(boolean)`", "| `false`(접두사를 남깁니다) |", "| `false` (the prefix is kept) |", anyKo, anyEn,
++            emptyList(), "`pathRewrite`"),
+@@ -172 +187 @@ class ProxyDocsKotlinTest {
+-            "| `false` (the target host is sent as `Host`) |", emptyList(), "`changeOrigin: false`"),
++            "| `false` (the target host is sent as `Host`) |", anyKo, anyEn, emptyList(), "`changeOrigin: false`"),
+@@ -174,9 +189,18 @@ class ProxyDocsKotlinTest {
+-            iae + "`1..1073741824`", "No counterpart"),
+-        OptionRow("`maxConcurrent(int)`", "| 한도 없음 |", "| No limit |", iae, "`maxSockets`"),
+-        OptionRow("`requestHeader(String, String)`", "| 없음 |", "| None |", iaeNpe, "`headers: { name: value }`"),
+-        OptionRow("`removeRequestHeader(String)`", "| 없음 |", "| None |", iaeNpe, "`proxyReq.removeHeader(name)`"),
+-        OptionRow("`responseHeader(String, String)`", "| 없음 |", "| None |", iaeNpe + "`Content-Length`",
+-            "`proxyRes.headers[name] = value`"),
+-        OptionRow("`removeResponseHeader(String)`", "| 없음 |", "| None |", iaeNpe + "`Content-Length`",
+-            "`delete proxyRes.headers[name]`"),
+-        OptionRow("`rewriteLocation(boolean)`", "| `true` |", "| `true` |", emptyList(), "`autoRewrite`"),
++            "`1..1073741824`(1 GiB).", "`1..1073741824` (1 GiB).", iae + "`1..1073741824`", "No counterpart"),
++        OptionRow("`maxConcurrent(int)`", "| 한도 없음 |", "| No limit |", "1 이상.", "1 or more.", iae, "`maxSockets`"),
++        OptionRow("`requestHeader(String, String)`", "| 없음 |", "| None |",
++            "이름은 HTTP 토큰이면서 프록시가 관리하는 이름이 아니어야 하고, 값은 헤더 값이어야 합니다.",
++            "The name must be an HTTP token that the proxy does not manage, and the value a header value.", iaeNpe,
++            "`headers: { name: value }`"),
++        OptionRow("`removeRequestHeader(String)`", "| 없음 |", "| None |",
++            "이름은 HTTP 토큰이면서 프록시가 관리하는 이름이 아니어야 합니다.",
++            "The name must be an HTTP token that the proxy does not manage.", iaeNpe, "`proxyReq.removeHeader(name)`"),
++        OptionRow("`responseHeader(String, String)`", "| 없음 |", "| None |",
++            "이름은 HTTP 토큰이면서 hop-by-hop 헤더나 `Content-Length`가 아니어야 하고, 값은 헤더 값이어야 합니다.",
++            "The name must be an HTTP token that is neither a hop-by-hop header nor `Content-Length`, and the value a header value.",
++            iaeNpe + "`Content-Length`", "`proxyRes.headers[name] = value`"),
++        OptionRow("`removeResponseHeader(String)`", "| 없음 |", "| None |",
++            "이름은 HTTP 토큰이면서 hop-by-hop 헤더나 `Content-Length`가 아니어야 합니다.",
++            "The name must be an HTTP token that is neither a hop-by-hop header nor `Content-Length`.",
++            iaeNpe + "`Content-Length`", "`delete proxyRes.headers[name]`"),
++        OptionRow("`rewriteLocation(boolean)`", "| `true` |", "| `true` |", anyKo, anyEn, emptyList(), "`autoRewrite`"),
+@@ -183,0 +208,2 @@ class ProxyDocsKotlinTest {
++            "`null`이면 `NullPointerException`. `http` 대상도 받지만 쓰지 않습니다",
++            "`null` throws `NullPointerException`. An `http` target accepts it and never uses it",
+@@ -200,0 +227,3 @@ class ProxyDocsKotlinTest {
++                // OPS-DX-010 AC-2: the range and exceptions cell states the accepted range Proxy checks, first
++                val range = if (where == "proxy.md") o.koRange else o.enRange
++                assertTrue("$where ${o.sig} accepted range $range: ${cells[2]}", cells[2].startsWith(range))
+@@ -235,0 +265,7 @@ class ProxyDocsKotlinTest {
++        // the lower and upper ends of each stated range are accepted
++        assertEquals(0, p.retries(0).retries())
++        assertEquals(0L, p.retryDelay(0, TimeUnit.MILLISECONDS).retryDelayNanos())
++        assertEquals(1, p.maxConcurrent(1).maxConcurrent())
++        assertEquals(1L, p.bodyLimit(1).bodyLimit())
++        assertEquals(Proxy.MAX_BODY_LIMIT, p.bodyLimit(1073741824).bodyLimit())
++        assertEquals(1L, p.connectTimeout(1, TimeUnit.NANOSECONDS).connectTimeoutNanos())
+diff --git a/src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java b/src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java
+index 53e48fa..977e554 100644
+--- a/src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java
++++ b/src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java
+@@ -1042 +1042,3 @@ public final class DocsExamplesCompileTest {
+-        String[] requestMembers = {".bodyStream()", ".bodyStream(", "instanceof BodyTooLargeException", ".headerNames()",
++        // ".bodyStream(64L" is the per-call limit form (bodyStream(long)) of the request pages' Java blocks; a bare
++        // ".bodyStream(" would already match ".bodyStream()"
++        String[] requestMembers = {".bodyStream()", ".bodyStream(64L", "instanceof BodyTooLargeException", ".headerNames()",
+diff --git a/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java b/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java
+index 9bb46e3..02e74ca 100644
+--- a/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java
++++ b/src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java
+@@ -161,0 +162,5 @@ public final class ReadmeDocsTest {
++        // OPS-DX-011 AC-5; OPS-REL-001 AC-1: the only row the published release lacks is NaruServe-proxy, so the table
++        // is exactly the ten published rows plus naruserve-proxy and an invented module row fails here
++        assertEquals("module table rows of docs/api/README.md that " + PUBLISHED_VERSION + " does not contain",
++                new TreeSet<>(Arrays.asList("com.snoworca.naruserve:naruserve-proxy")), unpublished);
++        assertEquals("module table rows of docs/api/README.md", 11, apiModuleTable("docs/api/README.md").size());

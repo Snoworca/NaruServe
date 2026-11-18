@@ -1,0 +1,53 @@
+{
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-21": {
+  "head": "11778935f3bf24c31655a91d12aab576d10b7599",
+  "commits": 7,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "blocking_fixed": 6,
+   "declared_limits": [
+    "FND-301",
+    "FND-302"
+   ],
+   "residual_decided_by_recommended_option": [
+    "FND-003",
+    "FND-303"
+   ],
+   "rounds": 4,
+   "check_review_round": "PASS at round 4",
+   "clean_code": {
+    "fixed": [
+     "CC-002",
+     "CC-003",
+     "CC-101",
+     "CC-102",
+     "CC-201",
+     "CC-202"
+    ],
+    "dismissed": [
+     "CC-001",
+     "CC-004",
+     "CC-103",
+     "CC-301",
+     "CC-302"
+    ],
+    "unresolved": [
+     "CC-303"
+    ]
+   }
+  },
+  "landed": [
+   "OPS-DX-008",
+   "OPS-DX-010",
+   "OPS-DX-011"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [],
+  "outside_reason": "",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build (4753 tests, 0 failures)",
+  "verdict": "pass"
+ }
+}
