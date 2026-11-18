@@ -170,12 +170,18 @@ So move checks that relied on the address, such as protecting admin paths, to me
 
 ### Location rewrite
 
-While `rewriteLocation` is on (default `true`), a backend `Location` that is an absolute URL (or `//host/...`) with the target's origin (scheme, host and port) and a path that equals the target's base path or continues it with `/` gets its origin and base path replaced by the client-side prefix. The prefix is `req.baseUrl()` under `stripPrefix(true)` and the empty string otherwise. The rest of the path, the query and the fragment stay, and an empty resulting path becomes `/`. The result never holds an origin or the received `Host`. Relative references and URLs of another origin stay unchanged.
+While `rewriteLocation` is on (default `true`), a backend `Location` that is an absolute URL (or `//host/...`, read with the target's scheme) with the target's origin (scheme, host and port) and a path that equals the target's base path or continues it with `/` gets its origin and base path replaced by the client-side prefix. The prefix is `req.baseUrl()` under `stripPrefix(true)` (the whole matched prefix, outer router mounts included) and the empty string otherwise. The rest of the path after the base path, the query and the fragment stay as received (percent-encodings are not decoded), and an empty resulting path becomes `/`. The result never holds an origin, the received `Host` or `X-Forwarded-Host`. Relative references and URLs of another origin stay unchanged.
+
+The origin comparison ignores the letter case of the scheme and host, and an omitted port equals 80 for `http` and 443 for `https`; an empty port (the `:` of `http://h:/x`) counts as an omitted port. User information (`user:pw@`) is dropped before the comparison and never reaches the result. The base path compares character by character, so `/basement/y` does not continue the base path `/base`. A value whose host or port the `Proxy.to` grammar refuses (for example the port `99999`) stays unchanged.
+
+When a client would read the rewritten value as a network-path reference to another host, that is, when its first two characters, tab, CR and LF skipped, are each `/` or `\`, it gets a leading `/.`. The value then stays a path on the client's origin and cannot become an open redirect. For example, for the target `http://h`, `Location: http://h//evil.example/x` becomes `/.//evil.example/x`, not `//evil.example/x`.
 
 | Target and mount | Backend `Location` | `Location` the client receives |
 |---|---|---|
 | `app.use("/api/orders", Proxy.to("http://127.0.0.1:8081"))` | `http://127.0.0.1:8081/api/orders/x` | `/api/orders/x` |
 | The same mount with `stripPrefix(true)` | `http://127.0.0.1:8081/x` | `/api/orders/x` |
+| The same mount | `http://user:pw@127.0.0.1:8081/api/orders/x` | `/api/orders/x` |
+| The same mount | `http://127.0.0.1:8081//evil.example/x` | `/.//evil.example/x` |
 | The same mount | `http://other.example/x` | Unchanged |
 | The same mount with `rewriteLocation(false)` | `http://127.0.0.1:8081/api/orders/x` | Unchanged |
 
