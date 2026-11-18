@@ -5,6 +5,7 @@ import com.snoworca.naruserve.RestApp
 import com.snoworca.naruserve.spi.JsonCodec
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest
+import com.snoworca.naruserve.testing.RecordingLogger
 import com.snoworca.naruserve.testing.TestApp
 import java.io.File
 import java.io.Reader
@@ -406,6 +407,46 @@ class ProxyDocsKotlinTest {
             listOf("app.onError {", "is ProxyException ->", "error.kind().name", ".json("))
     }
 
+    // OPS-DX-010 AC-3: a failure before the response, without onError, is read from a proxy to a closed port with a
+    // recording app logger: neither the proxy nor the default error flow (which logs status 500 only) writes an entry,
+    // so both pages must say so and their onError examples log the ProxyException themselves.
+    @Test
+    fun `OPS-DX-010 AC-3 a failure before the response leaves no logger entry and the pages leave logging to onError`() {
+        val log = RecordingLogger()
+        app.logger(log)
+        app.use("/api", Proxy.to(freeUrl()))
+        val r = send("GET", "/api/x")
+        assertEquals(502, r.status())
+        assertEquals("a 502 without onError writes no logger error or warning: ${log.lines}", emptyList<String>(),
+            log.lines.filter { !it.startsWith("INFO ") })
+        assertTrue("no Throwable reached the app logger: ${log.errors}", log.errors.isEmpty())
+
+        val k = section(ko(), "### 응답을 보내기 전의 실패")
+        val e = section(en(), "### Failures before the response")
+        for ((where, s) in listOf("proxy.md" to k, "en/proxy.md" to e)) {
+            for (wrong in listOf("로깅은 오류 흐름에 맡깁니다", "앱 로거와 `getCause()`에는 원인이 그대로 남습니다",
+                    "logging is left to the error flow", "The app logger and `getCause()` keep the full cause")) {
+                assertFalse("$where still promises a log the default flow never writes: $wrong", s.contains(wrong))
+            }
+            for (lang in listOf("java", "kotlin")) {
+                val b = blocks(s, lang)
+                assertEquals("$where $lang blocks", 1, b.size)
+                assertTrue("$where $lang onError example logs the ProxyException: ${b[0]}",
+                    b[0].contains("req.application().logger().error("))
+            }
+        }
+        has("proxy.md before the response", k,
+            "프록시도 기본 오류 흐름도 이 실패를 앱 로거에 기록하지 않습니다",
+            "기본 오류 흐름은 상태가 `500`인 실패만 기록하고, `ProxyException`은 `502`·`503`·`504`입니다",
+            "기록이 필요하면 `onError`에서 `req.application().logger()`로 직접 기록하세요",
+            "원인은 `getCause()`에 그대로 남습니다")
+        has("en/proxy.md before the response", e,
+            "Neither the proxy nor the default error flow writes this failure to the app logger",
+            "The default error flow logs only failures with status `500`, and a `ProxyException` is `502`, `503` or `504`",
+            "To get a log entry, log it yourself in `onError` through `req.application().logger()`",
+            "The cause stays whole in `getCause()`")
+    }
+
     @Test
     fun `OPS-DX-010 AC-4 the basic use section shares one Proxy, mounts the no-retry path first and states that no next() follows a forward`() {
         val java = listOf("Proxy.to(url).readTimeout(30, TimeUnit.SECONDS)", ".totalTimeout(10, TimeUnit.MINUTES)",
@@ -620,7 +661,8 @@ class ProxyDocsKotlinTest {
     @Test
     fun `OPS-DX-010 AC-3 the onError example answers JSON by kind and plain HttpException answers apart`() {
         val adapter = InMemoryHttpAdapter()
-        val app = RestApp.builder().httpAdapter(adapter).jsonCodec(MapCodec()).build()
+        val log = RecordingLogger()
+        val app = RestApp.builder().httpAdapter(adapter).jsonCodec(MapCodec()).logger(log).build()
         try {
             val url = freeUrl()
             app.use("/api", Proxy.to(url))
@@ -628,7 +670,10 @@ class ProxyDocsKotlinTest {
             app.get("/bug") { req, res -> throw IllegalStateException("bug") }
             app.onError { error, req, res ->
                 when (error) {
-                    is ProxyException -> res.status(error.status()).json(mapOf("error" to "upstream", "kind" to error.kind().name))
+                    is ProxyException -> {
+                        req.application().logger().error("upstream ${error.kind().name}", error)
+                        res.status(error.status()).json(mapOf("error" to "upstream", "kind" to error.kind().name))
+                    }
                     is HttpException -> res.status(error.status()).json(mapOf("error" to "request"))
                     else -> res.status(500).json(mapOf("error" to "internal"))
                 }
@@ -638,6 +683,11 @@ class ProxyDocsKotlinTest {
             val down = adapter.send(ClientRequest.of("GET", "/api/orders"))
             assertEquals(502, down.status())
             assertEquals("{\"error\":\"upstream\",\"kind\":\"CONNECT_FAILED\"}", down.text())
+            // OPS-DX-010 AC-3: the example's own log line is the only logger entry of the 502, and it keeps the cause
+            assertEquals(listOf("ERROR upstream CONNECT_FAILED null"), log.lines.filter { !it.startsWith("INFO ") })
+            val logged = log.errors.single() as ProxyException
+            assertEquals(ProxyException.Kind.CONNECT_FAILED, logged.kind())
+            assertTrue("the logged cause is the connect failure: ${logged.cause}", logged.cause is java.net.ConnectException)
             val late = adapter.send(ClientRequest.of("GET", "/late"))
             assertEquals(504, late.status())
             assertEquals("{\"error\":\"upstream\",\"kind\":\"READ_TIMEOUT\"}", late.text())

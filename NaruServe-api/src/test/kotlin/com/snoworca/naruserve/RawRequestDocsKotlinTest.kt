@@ -3,6 +3,7 @@ package com.snoworca.naruserve
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse
+import com.snoworca.naruserve.testing.RecordingLogger
 import com.snoworca.naruserve.testing.TestApp
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -181,6 +182,40 @@ class RawRequestDocsKotlinTest {
             "`HttpException` with `status()` `413`", "the `bodyStream` call itself", "before any byte is read")
         has("en/request.md", row("en/request.md", e, "| a body without a declared length (chunked) passes the limit |"),
             "`BodyTooLargeException`", "`IOException`", "`limit()`", "the `read` that would return a byte beyond the limit throws")
+    }
+
+    // OPS-DX-008 AC-2: the default answer to an unwrapped overrun is read from a default app (no onError) and both
+    // pages must describe that answer: the common HTTP default error page, not a JSON body with a code, and no log.
+    @Test
+    fun `OPS-DX-008 AC-2 both pages describe the default 413 of an unwrapped overrun as the app gives it`() {
+        val log = RecordingLogger()
+        app.logger(log)
+        app.rawBodyLimit(10)
+        app.post("/hooks") { req, res ->
+            val raw = req.bodyStream().use { it.readBytes() }
+            res.send("received ${raw.size} bytes")
+        }
+        val r = send(ClientRequest.of("POST", "/hooks").body(bytes(32)))
+        assertEquals(413, r.status())
+        val type = r.header("Content-Type")
+        assertEquals("the default 413 is the common HTTP error page", "text/html; charset=utf-8", type)
+        assertTrue("the page carries the escaped stack: ${r.text()}", r.text().contains("BodyTooLargeException"))
+        assertFalse("no JSON error code in the default 413: ${r.text()}", r.text().contains("PAYLOAD_TOO_LARGE"))
+        assertFalse("no JSON error body in the default 413", r.text().trim().startsWith("{"))
+        assertEquals("the default 413 writes no logger error or warning: ${log.lines}", emptyList<String>(),
+            log.lines.filter { !it.startsWith("INFO ") })
+
+        val k = section(ko(), "## 한도를 넘은 원시 본문")
+        val e = section(en(), "## Raw body over the limit")
+        for ((where, s) in listOf("request.md" to k, "en/request.md" to e)) {
+            assertFalse("$where must not promise a JSON body with a code for the default 413", s.contains("PAYLOAD_TOO_LARGE"))
+        }
+        has("request.md over-limit default answer", k, "`onError`가 응답하지 않으면 이 `413`은 공통 HTTP 기본 오류 페이지입니다",
+            "`$type`", "`code`가 있는 JSON 오류 본문이 아닙니다", "(defaults.md#기본-오류-본문과-노출-정보)",
+            "앱 로거에 기록하지 않습니다")
+        has("en/request.md over-limit default answer", e, "When `onError` does not answer, this `413` is the common HTTP default error page",
+            "`$type`", "not a JSON error body with a `code`", "(defaults.md#default-error-body-and-exposed-details)",
+            "is not written to the app logger")
     }
 
     @Test
