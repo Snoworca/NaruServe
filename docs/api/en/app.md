@@ -94,6 +94,7 @@ See [middleware and errors](middleware.md).
 | `jsonCodec(codec)` | Replace the JSON engine | [JSON](json.md) |
 | `jsonLimit(bytes)` | JSON body limit; default 1 MiB, maximum 1 GiB | [Limits](json.md#limits) |
 | `formLimit(bytes)` | Urlencoded body and aggregate multipart text limit; default 1 MiB, maximum 1 GiB | [Forms](request.md#forms-and-files) |
+| `rawBodyLimit(bytes)` | Default raw body limit of `req.bodyStream()`; default 1 MiB, maximum 1 GiB | [Raw body limit](#raw-body-limit) |
 | `cors(options -> ...)` | HTTP allowed origins and preflight | [CORS](middleware.md#http-cors) |
 | `group(prefix, configurer)` | Routes sharing a prefix and middleware | [Groups](middleware.md#route-groups) |
 | `server(options -> ...)` | Bind address, allowed hosts, size, time and connection limits | [Server options](#server-options) |
@@ -388,4 +389,42 @@ app.onRegistration { r ->
 }
 app.get("/users") { _, res -> res.send("users") }
 for (r in app.registrations()) println("${r.kind} ${r.method} ${r.path}")
+```
+
+## Raw body limit
+
+`app.rawBodyLimit(bytes)` is the app-wide default limit of `req.bodyStream()` (see [Raw body stream](request.md#raw-body-stream)). It is shaped like `jsonLimit` and `formLimit` and corresponds to Express `express.raw({ limit })`.
+
+| Setting | Default | Range | Express |
+|---|---|---|---|
+| `rawBodyLimit(bytes)` | 1048576 (1 MiB) | `1..1073741824` (1 GiB) | `express.raw({ limit })` |
+
+- The default is 1 MiB. A value outside the range throws `IllegalArgumentException`.
+- It is accepted only while the app is configurable (`NEW`), like `jsonLimit`; a call after `listen` throws `IllegalStateException` and changes nothing.
+- The limit applies to every route that calls `bodyStream()`. When one route takes large bodies, raise the limit in that call with `req.bodyStream(maxBytes)` rather than raising the limit for the whole app. `bodyStream(maxBytes)` applies to that call only and leaves the app's limit unchanged.
+
+```java
+app.rawBodyLimit(256L * 1024).jsonLimit(64L * 1024);              // default limit of every bodyStream(): 256 KiB
+
+app.put("/archive", (req, res) -> {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    try (InputStream in = req.bodyStream(8L * 1024 * 1024)) {     // 8 MiB for this route only
+        byte[] buf = new byte[8192];
+        for (int n = in.read(buf); n != -1; n = in.read(buf)) {
+            out.write(buf, 0, n);
+        }
+    }
+    res.send("stored " + out.size() + " bytes");
+});
+```
+
+Kotlin:
+
+```kotlin
+app.rawBodyLimit(256L * 1024).jsonLimit(64L * 1024)
+
+app.put("/archive") { req, res ->
+    val bytes = req.bodyStream(8L * 1024 * 1024).use { it.readBytes() }
+    res.send("stored ${bytes.size} bytes")
+}
 ```

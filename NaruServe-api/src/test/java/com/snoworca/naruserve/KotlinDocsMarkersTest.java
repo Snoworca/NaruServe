@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -18,10 +19,13 @@ import org.junit.Test;
 /** Every ```kotlin block of docs/api has exactly one marked Kotlin test, and every marker names a block. */
 public final class KotlinDocsMarkersTest {
 
-    /** The Kotlin test source roots that may hold docs-example markers; a missing one holds none. */
-    private static final String[] KOTLIN_ROOTS = {
+    /**
+     * The Kotlin test source roots that may hold docs-example markers; a missing one holds none. The proxy root holds
+     * the marked runs of the proxy.md Kotlin blocks (OPS-DX-010 AC-12).
+     */
+    static final List<String> KOTLIN_ROOTS = Collections.unmodifiableList(Arrays.asList(
         "NaruServe-api/src/test/kotlin", "NaruServe-kotlin/src/test/kotlin", "NaruServe-servlet/src/test/kotlin",
-    };
+        "NaruServe-proxy/src/test/kotlin"));
 
     private static File root() {
         return new File(System.getProperty("user.dir")).getParentFile();
@@ -166,6 +170,33 @@ public final class KotlinDocsMarkersTest {
             if (f.startsWith("auth.md#") || f.startsWith("en/auth.md#")) authFailures.add(f);
         }
         assertEquals(String.join("\n", authFailures), Collections.<String>emptyList(), authFailures);
+    }
+
+    // OPS-DX-010 AC-12: every Kotlin block of proxy.md and en/proxy.md has exactly one compiled, run marker, found in
+    // the proxy module's Kotlin test root
+    @Test
+    public void OPS_DX_010_AC12_proxyPageKotlinBlocksHaveTheirProxyModuleMarkers() throws IOException {
+        Map<String, String> docs = docs();
+        for (String page : new String[] {"proxy.md", "en/proxy.md"}) {
+            String text = docs.get(page);
+            assertTrue("proxy page " + page, text != null);
+            assertTrue(page + " holds kotlin blocks", text.split("```kotlin", -1).length - 1 >= 5);
+        }
+        Map<String, String> sources = kotlinSources();
+        List<String> proxyFailures = new ArrayList<>();
+        for (String f : KotlinDocsMarkers.failures(docs, sources)) {
+            if (f.startsWith("proxy.md#") || f.startsWith("en/proxy.md#")) proxyFailures.add(f);
+        }
+        assertEquals(String.join("\n", proxyFailures), Collections.<String>emptyList(), proxyFailures);
+        int markers = 0;
+        for (Map.Entry<String, String> source : sources.entrySet()) {
+            if (source.getValue().contains("// docs-example: proxy.md#")) {
+                assertTrue("proxy.md markers live in the proxy module: " + source.getKey(),
+                        source.getKey().startsWith("NaruServe-proxy/src/test/kotlin/"));
+                markers++;
+            }
+        }
+        assertTrue("a Kotlin source of NaruServe-proxy marks the proxy.md blocks", markers > 0);
     }
 
     @Test

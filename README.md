@@ -87,6 +87,7 @@ Each artifactId is the module name in lower case (`NaruServe-api` is published a
 | `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog:0.11.0` | Rotating file `Logger` |
 | `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j:0.11.0` | SLF4J `Logger` adapter (JVM only) |
 | `NaruServe-servlet` | `com.snoworca.naruserve:naruserve-servlet:0.11.0` | Runs a NaruServe app on a Servlet 3.1+ container (JVM only) |
+| `NaruServe-proxy` | Not in 0.11.0; joins the next release (0.12.0) | `Proxy.to(url)`, the reverse proxy middleware that depends only on `NaruServe-api`; guide: [Reverse proxy](docs/api/en/proxy.md), [리버스 프록시](docs/api/proxy.md) |
 
 ### Build from a source checkout
 
@@ -111,7 +112,7 @@ repositories {
 
 While `mavenLocal()` comes first, this local build shadows the Maven Central 0.11.0 for that consumer. To return to the released artifacts, remove `mavenLocal()` or delete `~/.m2/repository/com/snoworca/naruserve`.
 
-The Android AAR is included only when an SDK directory is found in `local.properties` (`sdk.dir`), `ANDROID_HOME`, or `ANDROID_SDK_ROOT`, in that order. It uses Android Gradle Plugin 8.13.2, `compileSdk 36` and `minSdk 21`. Without an SDK, the nine JAR modules still build.
+The Android AAR is included only when an SDK directory is found in `local.properties` (`sdk.dir`), `ANDROID_HOME`, or `ANDROID_SDK_ROOT`, in that order. It uses Android Gradle Plugin 8.13.2, `compileSdk 36` and `minSdk 21`. Without an SDK, the ten JAR modules still build.
 
 To work on TinyHttpd source, replace `-PtinyHttpdFromMaven=true` with `-PtinyHttpdDir=/absolute/path/to/TinyHttpd`. The default source path is specific to the original development machine; set one of these properties explicitly on a new checkout.
 
@@ -257,6 +258,7 @@ NaruServe-gson/         Default JSON codec
 NaruServe-kotlin/       Reified Kotlin extensions
 NaruServe-android/      Manifest-only Android AAR
 NaruServe-servlet/      Servlet 3.1 adapter
+NaruServe-proxy/        Reverse proxy middleware (next release)
 NaruServe-{filelog,slf4j,logcat}/  Optional logger adapters
 examples/{java,kotlin}/ Runnable applications
 src/test/              Build, publication and documentation checks

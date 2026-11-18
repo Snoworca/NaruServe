@@ -70,10 +70,11 @@ DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답
 | [인증 모듈](auth.md) | `passport`, `express-jwt` | 0.11.0: `app.use(auth)` 한 줄로 내장 `/auth/login`·refresh·logout·계정·관리 엔드포인트, 가드(`auth.require`), 그룹과 역할, API 키. 저장은 `UserStore` 등 인터페이스(SPI)와 메모리·파일 기본 저장소 |
 | [Kotlin](kotlin.md) | — | Kotlin에서 쓰는 법, null 처리, JSON 주의 |
 | [Servlet 모듈](servlet.md) | — | `NaruServe-servlet`으로 WAS 위에서 실행 |
+| [리버스 프록시](proxy.md) | `http-proxy-middleware` | 다음 릴리스(0.12.0)의 `NaruServe-proxy`: `Proxy.to(url)`로 요청을 백엔드 서버에 넘기는 미들웨어, 옵션, `ProxyException` |
 
 ## 모듈
 
-모든 모듈의 Maven group은 `com.snoworca.naruserve`, 버전은 `0.11.0`입니다. artifactId는 모듈 이름을 소문자로 쓴 것입니다(`NaruServe-api` → `naruserve-api`).
+모든 모듈의 Maven group은 `com.snoworca.naruserve`, 버전은 `0.11.0`입니다. artifactId는 모듈 이름을 소문자로 쓴 것입니다(`NaruServe-api` → `naruserve-api`). 표의 `NaruServe-proxy`만 0.11.0에 없는 모듈입니다.
 
 | 모듈 | 좌표 | 내용 | Android |
 |---|---|---|---|
@@ -87,10 +88,11 @@ DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답
 | `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog` | 파일 로테이션 `Logger` | 지원(API 21+) |
 | `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j` | SLF4J `Logger` 어댑터(`org.slf4j:slf4j-api:1.7.36`) | 미지원(JVM 전용) |
 | `NaruServe-servlet` | `com.snoworca.naruserve:naruserve-servlet` | Servlet 3.1+ 컨테이너 위에서 NaruServe 앱을 실행하는 어댑터 | 미지원(JVM 전용) |
+| `NaruServe-proxy` | `com.snoworca.naruserve:naruserve-proxy` | 리버스 프록시 미들웨어 `Proxy.to(url)`([리버스 프록시](proxy.md)). `NaruServe-api`에만 의존합니다. 0.11.0에는 없고 다음 릴리스(0.12.0)에 더해집니다 | 지원(API 21+) |
 
 "지원(API 21+)" 모듈은 빌드 때 animal-sniffer `android-api-level-21` 검사를 받습니다.
 `NaruServe-proxy`(`com.snoworca.naruserve:naruserve-proxy`)는 다음 릴리스에 더해지는 리버스 프록시 모듈입니다. `NaruServe-api`에만 의존하고, `NaruServe`·`NaruServe-kotlin`·`NaruServe-android`는 이 모듈을 포함하지 않으므로 프록시를 쓰는 앱만 따로 넣습니다.
-`NaruServe-android`는 Android Gradle Plugin으로 만드는 AAR이라 Android SDK가 있을 때만 빌드됩니다(`local.properties`의 `sdk.dir`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` 순서로 찾습니다). SDK가 없으면 경고만 내고 나머지 모듈을 빌드합니다. 이 모듈에는 자체 코드가 없고 `minSdk`는 21입니다.
+`NaruServe-android`는 Android Gradle Plugin으로 만드는 AAR이라 Android SDK가 있을 때만 빌드됩니다(`local.properties`의 `sdk.dir`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` 순서로 찾습니다). SDK가 없으면 경고만 내고 나머지 열 모듈을 빌드합니다. 이 모듈에는 자체 코드가 없고 `minSdk`는 21입니다.
 기본 HTTP 엔진 빌드는 TinyHttpd 체크아웃을 사용하며, 커밋 `e73cd5d`(TinyHttpd 3.1.1, 태그 `v3.1.1`: RAW 요청 대상 정책)에서 검증했습니다. 체크아웃 HEAD가 다르면 빌드는 실패하지 않고 경고만 냅니다. `-PtinyHttpdFromMaven=true`를 지정하면 체크아웃 없이 Maven Central의 3.1.1 JAR로 빌드합니다. 어댑터는 `RequestTargetPolicy.RAW`로 인코딩된 경로와 원본 쿼리를 보존합니다. HTTP 구문·Host·프레이밍 검사와 WebSocket 경로 검사는 유지됩니다.
 
 `RestApp.create()`는 `NaruServe` 모듈이 기본 HTTP 엔진(TinyHttpd)과 Gson을 자동으로 조립합니다.

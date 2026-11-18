@@ -100,6 +100,7 @@ public interface RouteHandler {
 | `jsonCodec(codec)` | JSON 엔진 교체 | [JSON](json.md) |
 | `jsonLimit(bytes)` | JSON 요청 본문 한도(기본 1 MiB, 최대 1 GiB) | [JSON](json.md#한도) |
 | `formLimit(bytes)` | urlencoded 본문 및 multipart 텍스트 필드 합계 한도(기본 1 MiB, 최대 1 GiB) | [Request](request.md#폼과-파일) |
+| `rawBodyLimit(bytes)` | `req.bodyStream()`의 원시 본문 기본 한도(기본 1 MiB, 최대 1 GiB) | [원시 본문 한도](#원시-본문-한도) |
 | `cors(options -> ...)` | HTTP CORS 허용 출처·preflight 설정 | [HTTP CORS](middleware.md#http-cors) |
 | `group(prefix, configurer)` | 공통 접두사와 미들웨어로 라우트 묶기 | [라우트 그룹](middleware.md#라우트-그룹) |
 | `server(options -> ...)` | 바인딩 주소, 허용 Host, 크기·시간·연결 한도 | [서버 설정](#서버-설정) |
@@ -403,4 +404,42 @@ app.onRegistration { r ->
 }
 app.get("/users") { _, res -> res.send("users") }
 for (r in app.registrations()) println("${r.kind} ${r.method} ${r.path}")
+```
+
+## 원시 본문 한도
+
+`app.rawBodyLimit(bytes)`는 `req.bodyStream()`의 앱 전체 기본 한도입니다([원시 본문 스트림](request.md#원시-본문-스트림)). `jsonLimit`·`formLimit`과 같은 모양의 설정이고 Express `express.raw({ limit })`에 해당합니다.
+
+| 설정 | 기본값 | 범위 | Express |
+|---|---|---|---|
+| `rawBodyLimit(bytes)` | 1048576(1 MiB) | `1..1073741824`(1 GiB) | `express.raw({ limit })` |
+
+- 기본값은 1 MiB입니다. 범위 밖의 값은 `IllegalArgumentException`입니다.
+- `jsonLimit`처럼 앱을 설정할 수 있는 동안(`NEW`)만 받습니다. `listen` 뒤에 부르면 `IllegalStateException`을 던지고 아무것도 바꾸지 않습니다.
+- 이 한도는 `bodyStream()`을 부르는 모든 라우트에 적용됩니다. 큰 본문을 받는 라우트가 있으면 앱 전체 한도를 올리지 말고 그 호출에서 `req.bodyStream(maxBytes)`로 한도를 올리세요. `bodyStream(maxBytes)`는 그 호출에만 적용되고 앱의 한도를 바꾸지 않습니다.
+
+```java
+app.rawBodyLimit(256L * 1024).jsonLimit(64L * 1024);              // 모든 bodyStream()의 기본 한도 256 KiB
+
+app.put("/archive", (req, res) -> {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    try (InputStream in = req.bodyStream(8L * 1024 * 1024)) {     // 이 라우트만 8 MiB
+        byte[] buf = new byte[8192];
+        for (int n = in.read(buf); n != -1; n = in.read(buf)) {
+            out.write(buf, 0, n);
+        }
+    }
+    res.send("stored " + out.size() + " bytes");
+});
+```
+
+Kotlin:
+
+```kotlin
+app.rawBodyLimit(256L * 1024).jsonLimit(64L * 1024)
+
+app.put("/archive") { req, res ->
+    val bytes = req.bodyStream(8L * 1024 * 1024).use { it.readBytes() }
+    res.send("stored ${bytes.size} bytes")
+}
 ```
