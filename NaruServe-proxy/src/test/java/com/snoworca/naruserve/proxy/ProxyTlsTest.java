@@ -110,6 +110,7 @@ public class ProxyTlsTest {
     public void tearDown() throws IOException {
         TlsConnector.endpointIdentification = true;
         TlsConnector.hostnameVerifier = null;
+        TlsConnector.verifyAfterIdentification = TlsConnector.androidRuntime(System.getProperty("java.vm.name"));
         BackendClient.resolver = BackendClient.SYSTEM_RESOLVER;
         if (started) {
             app.shutdown(2, TimeUnit.SECONDS);
@@ -410,8 +411,8 @@ public class ProxyTlsTest {
         assertTrue(backend.requestHead(), backend.requestHead().startsWith("GET /api/x HTTP/1.1\r\n"));
     }
 
-    // SEC-PROXY-005 AC-6: with the reflective path on (this JVM), the injected verifier is not consulted: the
-    // endpoint identification of the handshake checks the host
+    // SEC-PROXY-005 AC-6: with the reflective path on and off Android (this JVM), the injected verifier is not
+    // consulted: the endpoint identification of the handshake checks the host
     @Test(timeout = 30000)
     public void sec_PROXY_005_AC6_theVerifierIsTheFallbackOnly() throws IOException {
         TlsBackend backend = tlsBackend(goodServer);
@@ -421,6 +422,33 @@ public class ProxyTlsTest {
 
         assertEquals(200, get().status());
         assertEquals(Collections.<String>emptyList(), verifier.hosts());
+    }
+
+    // SEC-PROXY-005 AC-6: on Android the held verifier also runs after an identified handshake, because there the
+    // endpoint identification may not reach an app's plain X509TrustManager; on the JDK, whose default verifier
+    // rejects every host, only the identification checks the host
+    @Test
+    public void sec_PROXY_005_AC6_theVerifierAlsoRunsAfterIdentificationOnAndroidOnly() {
+        assertTrue(TlsConnector.androidRuntime("Dalvik"));
+        assertFalse(TlsConnector.androidRuntime("OpenJDK 64-Bit Server VM"));
+        assertFalse(TlsConnector.androidRuntime(null));
+        assertEquals(TlsConnector.androidRuntime(System.getProperty("java.vm.name")),
+                TlsConnector.verifyAfterIdentification);
+    }
+
+    // SEC-PROXY-005 AC-6: with the Android behaviour switched on, a rejecting verifier gives 502 CONNECT_FAILED after
+    // an identified handshake, called once with the target host, and no request bytes are sent
+    @Test(timeout = 30000)
+    public void sec_PROXY_005_AC6_aRejectingVerifierAfterIdentificationIsConnectFailed() throws IOException {
+        TlsBackend backend = tlsBackend(goodServer);
+        RecordingVerifier verifier = new RecordingVerifier(false);
+        TlsConnector.hostnameVerifier = verifier;
+        TlsConnector.verifyAfterIdentification = true;
+        mount(Proxy.to("https://localhost:" + backend.port()).sslSocketFactory(trustingClient.getSocketFactory()));
+
+        assertConnectFailed(get());
+        assertEquals(Collections.singletonList("localhost"), verifier.hosts());
+        assertEquals("request bytes the backend read", 0, backend.requestBytes());
     }
 
     // ---- AC-7 ----
