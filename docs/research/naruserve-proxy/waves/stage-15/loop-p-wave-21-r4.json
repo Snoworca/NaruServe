@@ -1,0 +1,150 @@
+{
+  "wave": "wave-21",
+  "round": 4,
+  "verifier": "loop-p-wave-21-r4",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "FR-PROXY-005 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp1_FR_PROXY_005_AC2_forwardedPrefixRowAgreesWithRequestHeader",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: en/proxy.md row says the header is always removed although .requestHeader sends it: | `Forwarded`, `X-Real-IP`, `X-Forwarded-Port`, `X-Forwarded-Prefix` | Always removed, whatever the trust setting | (runtime part passed first: over TinyHttpd, Proxy.to(url).stripPrefix(true).requestHeader(\"X-Forwarded-Prefix\", \"/api\") made the backend receive exactly [/api] while the client sent X-Forwarded-Prefix: /evil; the Korean row '신뢰 설정과 상관없이 언제나 뺍니다' has the same gap)",
+      "note": "The X-Forwarded-* table of proxy.md and en/proxy.md (column 'What the backend receives') says Forwarded, X-Real-IP, X-Forwarded-Port and X-Forwarded-Prefix are always removed, but only the client's lines are; .requestHeader accepts these four names (they are not managed) and sends them, as FR-PROXY-005 AC-2 requires for X-Forwarded-Prefix."
+    },
+    {
+      "id": "LP-2",
+      "cites": "FR-PROXY-009 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp2_FR_PROXY_009_AC1_extensionMethodsOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "PURGE and PROPFIND reach the backend unchanged over TinyHttpd, as the page states."
+    },
+    {
+      "id": "LP-3",
+      "cites": "FR-PROXY-009 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp3_FR_PROXY_009_AC3_connectAndTraceOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "TRACE, trace and origin-form CONNECT get 405 with the documented Allow over TinyHttpd, no backend request."
+    },
+    {
+      "id": "LP-4",
+      "cites": "SEC-PROXY-003 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp4_SEC_PROXY_003_AC4_gzipChunkedOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Transfer-Encoding: gzip, chunked gets 501 over TinyHttpd without a backend request."
+    },
+    {
+      "id": "LP-5",
+      "cites": "SEC-PROXY-003 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp5_SEC_PROXY_003_AC1_lengthAndChunkedOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Content-Length with Transfer-Encoding gets 400 over TinyHttpd without a backend request."
+    },
+    {
+      "id": "LP-6",
+      "cites": "FR-PROXY-008 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp6_FR_PROXY_008_AC3_chunkedOverLimitOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Chunked body over bodyLimit(10) gets 413; onError receives HttpException 413 caused by BodyTooLargeException, as documented."
+    },
+    {
+      "id": "LP-7",
+      "cites": "FR-PROXY-011 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp7_FR_PROXY_011_AC2_duplicateLinesOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Duplicate backend X-A and Set-Cookie lines reach the TinyHttpd client in order with duplicates."
+    },
+    {
+      "id": "LP-8",
+      "cites": "FR-PROXY-011 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp8_FR_PROXY_011_AC4_noContentTypeOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "No Content-Type is added over TinyHttpd when the backend sends none."
+    },
+    {
+      "id": "LP-9",
+      "cites": "SEC-PROXY-004 AC-9",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp9_SEC_PROXY_004_AC9_latin1HeaderOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Backend header byte 0xE9 reaches the TinyHttpd client as 0xC3 0xA9, as the page states."
+    },
+    {
+      "id": "LP-10",
+      "cites": "FR-PROXY-004 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp10_FR_PROXY_004_AC5_twoHostLinesOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Two Host lines get 400 over TinyHttpd without a backend request."
+    },
+    {
+      "id": "LP-11",
+      "cites": "OPS-DX-008 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp11_OPS_DX_008_AC3_rawHeadersOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "TinyHttpd rawHeaders keep received order and case with no synthetic lines; headerNames lowercase in first-seen order."
+    },
+    {
+      "id": "LP-12",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp12_OPS_DX_008_AC1_availableIsNotConsumption",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "available() is not consumption: repeated bodyStream() returns the same object."
+    },
+    {
+      "id": "LP-13",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp13_OPS_DX_008_AC1_skipThatAdvancedConsumes",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "A skip that advanced makes a further bodyStream() throw BodyAlreadyConsumedException."
+    },
+    {
+      "id": "LP-14",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp14_OPS_DX_008_AC1_formOnJsonLeavesTheBody",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "form() and parts() on a JSON request leave the body; bodyStream() returns it whole."
+    },
+    {
+      "id": "LP-15",
+      "cites": "OPS-DX-008 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R4DocsTest.java::lp15_OPS_DX_008_AC2_chunkedOverLimitReadsUpToTheLimit",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Chunked body over bodyStream(10): 10 bytes read, then BodyTooLargeException with limit() 10."
+    }
+  ],
+  "summary": {
+    "tests_written": 15,
+    "kept": 1
+  },
+  "constraints": {
+    "C-005": "holds: every public method of Proxy and ProxyException and the raw request API (bodyStream, headerNames, rawHeaders, isFromTrustedProxy, rawBodyLimit) is documented in docs/api ko and en with the Express counterpart and Java and Kotlin examples; NaruServe-proxy runtimeClasspath is NaruServe-api only, as the pages state."
+  },
+  "notes": "All tests run against integration head b03f675 over a real TinyHttpd gateway (Maven mode, --rerun): ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.LoopPWave21R4DocsTest' --rerun -> 15 tests, 1 failed (LP-1)."
+}
