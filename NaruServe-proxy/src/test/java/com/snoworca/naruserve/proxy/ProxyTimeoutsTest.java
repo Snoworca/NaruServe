@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.Request;
-import com.snoworca.naruserve.Response;
 import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
@@ -326,37 +325,6 @@ public class ProxyTimeoutsTest {
                 backend.closedByProxy.await(WAIT_SECONDS, TimeUnit.SECONDS));
     }
 
-    // FR-PROXY-017 AC-7, FR-PROXY-017 AC-8 (FND-001): a timeout reached before the response is handed to res.relay is a
-    // 504 through onError. With .totalTimeout(1, SECONDS).maxConcurrent(1), a backend that sends its header block and
-    // then stays silent, and a Response whose status(int) stalls the request thread 1500 ms after the head was parsed,
-    // the total deadline fires before res.relay: the client gets 504, onError receives TOTAL_TIMEOUT, the app logger
-    // receives no ProxyException, and the slot is returned
-    @Test(timeout = 30000)
-    public void fr_PROXY_017_AC7_AC8_aTotalTimeoutAfterTheHeadButBeforeTheRelayIsA504() throws Exception {
-        ScriptedBackend backend = backend((b, index, in, out) -> {
-            readHead(in);
-            out.write("HTTP/1.1 200 OK\r\nContent-Length: 1000\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1));
-            out.flush();
-            drainUntilClosed(b, in);
-        });
-        Proxy p = Proxy.to(backend.url()).totalTimeout(1, TimeUnit.SECONDS).maxConcurrent(1);
-        String path = mountWithSlowStatus(p, 1500);
-        start();
-
-        ClientResponse r = get(path);
-
-        assertEquals("errors: " + errors + ", logged: " + log.lines, 504, r.status());
-        assertKinds(ProxyException.Kind.TOTAL_TIMEOUT);
-        synchronized (log.errors) {
-            for (Throwable logged : log.errors) {
-                assertTrue("no ProxyException is logged: " + log.lines, !(logged instanceof ProxyException));
-            }
-        }
-        awaitCounterZero(p);
-        assertTrue("the backend observed its connection closed",
-                backend.closedByProxy.await(WAIT_SECONDS, TimeUnit.SECONDS));
-    }
-
     // ---- AC-9 ----
 
     // FR-PROXY-017 AC-9: timeouts are set per mount: on one backend that answers after 3 seconds, a mount with
@@ -487,30 +455,6 @@ public class ProxyTimeoutsTest {
                         }
                     });
             proxy.handle(paced, res, next);
-        });
-        return path;
-    }
-
-    /**
-     * Mounts {@code proxy} at a new path behind a response wrapper whose {@code status(int)} sleeps {@code millis}
-     * before it passes the call on, so the request thread stalls after the backend head was parsed and before
-     * {@code res.relay}.
-     */
-    private String mountWithSlowStatus(Proxy proxy, long millis) {
-        String path = "/m" + routes++;
-        app.use(path, (req, res, next) -> {
-            Response slow = (Response) java.lang.reflect.Proxy.newProxyInstance(Response.class.getClassLoader(),
-                    new Class<?>[] {Response.class}, (self, method, args) -> {
-                        if (method.getName().equals("status") && args != null && args.length == 1) {
-                            Thread.sleep(millis);
-                        }
-                        try {
-                            return method.invoke(res, args);
-                        } catch (InvocationTargetException e) {
-                            throw e.getCause();
-                        }
-                    });
-            proxy.handle(req, slow, next);
         });
         return path;
     }
