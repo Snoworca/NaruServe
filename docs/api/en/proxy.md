@@ -199,7 +199,7 @@ Backend-side failures reach the app's error flow (`onError`, `ErrorMiddleware`) 
 
 - The message (`getMessage()`) is always `null`, so the default error response never echoes the backend address. The underlying failure is in `getCause()` (for example `java.net.ConnectException` or `java.net.UnknownHostException`).
 - Without `onError`, the default error page shows the causes of a `ProxyException` by class name only, so the target host and port are not revealed. The cause stays whole in `getCause()`.
-- The proxy's own answers `400` (bad method, path, header or framing), `405` (`CONNECT`, `TRACE`) and `501` (unsupported transfer coding) are plain `HttpException`, not `ProxyException`, with a `null` message. The `413` of an over-limit body is a plain `HttpException` too.
+- The proxy's own answers `400` (bad method, path, header or framing), `405` (`CONNECT`, `TRACE`) and `501` (unsupported transfer coding) are plain `HttpException`, not `ProxyException`, with a `null` message. The `413` of an over-limit body is a plain `HttpException` too. So is the `502` or `503` of an interrupted retry wait ([Retries](#retries)).
 - The public constructor `new ProxyException(kind, cause)` lets a test build one and throw it through `next.error(e)` to exercise `onError`.
 
 Express counterpart: compare `kind()` the way you compare `err.code` (`ECONNREFUSED` and so on) in `createProxyMiddleware({ on: { error: (err, req, res) => ... } })`.
@@ -217,7 +217,7 @@ app.onError((error, req, res) -> {
         body.put("error", "upstream");
         body.put("kind", e.kind().name());
         res.status(e.status()).json(body);
-    } else if (error instanceof HttpException) {       // the proxy's 400, 405, 501 and 413 come here too
+    } else if (error instanceof HttpException) {       // the proxy's 400, 405, 501, 413 and the 502, 503 of an interrupted retry wait come here too
         res.status(((HttpException) error).status()).json(Collections.singletonMap("error", "request"));
     } else {
         res.status(500).json(Collections.singletonMap("error", "internal"));
@@ -291,7 +291,10 @@ Retries are off by default (`retries(0)`). With `retries(n)` a failed request is
 - Write, read and total timeouts, `INVALID_RESPONSE` and every other status are not retried.
 - Before each retry the proxy waits `retryDelay` (default 200 milliseconds). When that wait would end past the total-timeout deadline, the last failure is returned at once.
 - When `502` or `503` remains after the last retry, that backend response is relayed unchanged.
-- A request thread that is interrupted stops retrying and keeps its interrupt status.
+- A request thread that is interrupted stops retrying and keeps its interrupt status. The outcome depends on when the interrupt came.
+- When the interrupt status is already set as a retry is decided, no retry is made: the last failure goes to the error flow as it is and a `502` or `503` backend response is relayed unchanged. An interrupt during an attempt relays that attempt's response unchanged.
+- A retry wait interrupted after a connect failure throws that failure (`CONNECT_FAILED`, or the kind of a deadline that fired during the wait).
+- A retry wait interrupted after a `502` or `503`, whose connection is already closed, relays no backend response: a plain `HttpException` of that status (not a `ProxyException`) goes to the error flow (`onError`), or a `ProxyException` of the kind of a deadline that fired during the wait.
 
 **Safe methods are an HTTP semantics distinction only.** A `GET` endpoint with side effects (for example `GET /api/payments/charge?id=1`) may run twice under retries. Give such a path its own proxy with retries off and mount it before the general mount, as the example in [Basic use](#basic-use) does.
 
@@ -307,7 +310,7 @@ Express counterpart: http-proxy-middleware has no retries.
 - Requests of mounts without a limit are not counted.
 - The same object mounted in two apps counts the requests of both apps.
 - A request over the limit gets `503` (`CONCURRENCY_LIMIT`) at once, without waiting and without a backend connection.
-- The slot is taken after every check and `req.bodyStream(...)` pass, right before the backend connect, and returned when the request ends (the response body fully relayed or the client gone).
+- The slot is taken after every check and `req.bodyStream(...)` pass, right before the backend connect, and returned when the request ends (the response body fully relayed or the adapter seeing the client gone). While the adapter cannot see that the client is gone, the slot stays held until the read timeout or the total timeout ends the request ([Thread model](#thread-model)).
 
 ```java
 import com.snoworca.naruserve.proxy.Proxy;
@@ -334,6 +337,7 @@ Express counterpart: none. The `maxSockets` of an `agent` comes closest, but it 
 
 - The proxy runs synchronously on the request thread. A proxied request holds one worker thread until it ends.
 - When the client disconnects while the proxy waits for the backend, the adapter may notice only when the response starts. So the thread stays bound until the backend answers, the read timeout or the total timeout.
+- The same holds in the middle of the response body: when the backend goes silent and the client then disconnects, TinyHttpd cannot see the disconnect until something is written to the client, so the slot, the worker thread and the backend socket stay held until the read timeout or the total timeout ends the relay. A client that disconnects while the backend keeps sending is noticed at the next write and released at once.
 - Slow backends can use up the worker pool (`maxWorkers`, default 64) and make non-proxy routes wait, more so with a longer read timeout.
 - Since there is no `maxConcurrent` limit by default, `maxWorkers` and `totalTimeout` are what bound the threads a proxy holds. Give backends that may be slow a per-mount limit with `maxConcurrent`.
 

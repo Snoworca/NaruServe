@@ -199,7 +199,7 @@ Express 대응: `xfwd: true`.
 
 - 메시지(`getMessage()`)는 언제나 `null`입니다. 기본 오류 응답이 백엔드 주소를 내보내지 않게 하려는 것입니다. 실패의 원인은 `getCause()`에 있습니다(예: `java.net.ConnectException`, `java.net.UnknownHostException`).
 - `onError`가 없을 때의 기본 오류 페이지는 `ProxyException`의 원인을 클래스 이름으로만 보여 주므로 대상 호스트와 포트가 드러나지 않습니다. 원인은 `getCause()`에 그대로 남습니다.
-- 프록시가 스스로 답하는 `400`(잘못된 메서드·경로·헤더·프레이밍), `405`(`CONNECT`·`TRACE`), `501`(지원하지 않는 전송 코딩)은 `ProxyException`이 아닌 보통 `HttpException`이고 메시지는 `null`입니다. 한도를 넘은 본문의 `413`도 보통 `HttpException`입니다.
+- 프록시가 스스로 답하는 `400`(잘못된 메서드·경로·헤더·프레이밍), `405`(`CONNECT`·`TRACE`), `501`(지원하지 않는 전송 코딩)은 `ProxyException`이 아닌 보통 `HttpException`이고 메시지는 `null`입니다. 한도를 넘은 본문의 `413`도 보통 `HttpException`입니다. 재시도 대기가 인터럽트된 `502`·`503`도 보통 `HttpException`입니다([재시도](#재시도)).
 - 공개 생성자 `new ProxyException(kind, cause)`가 있으므로 테스트에서 직접 만들어 `next.error(e)`로 `onError`를 시험할 수 있습니다.
 
 Express 대응: `createProxyMiddleware({ on: { error: (err, req, res) => ... } })`의 `err.code`(`ECONNREFUSED` 등)를 `kind()`로 비교합니다.
@@ -217,7 +217,7 @@ app.onError((error, req, res) -> {
         body.put("error", "upstream");
         body.put("kind", e.kind().name());
         res.status(e.status()).json(body);
-    } else if (error instanceof HttpException) {       // 프록시의 400, 405, 501, 413도 여기로 옵니다
+    } else if (error instanceof HttpException) {       // 프록시의 400, 405, 501, 413과 재시도 대기가 인터럽트된 502, 503도 여기로 옵니다
         res.status(((HttpException) error).status()).json(Collections.singletonMap("error", "request"));
     } else {
         res.status(500).json(Collections.singletonMap("error", "internal"));
@@ -291,7 +291,10 @@ Express 대응: `proxyTimeout`은 `readTimeout`처럼 나가는 요청의 소켓
 - 쓰기·읽기·전체 타임아웃, `INVALID_RESPONSE`, 그 밖의 상태 코드는 재시도하지 않습니다.
 - 재시도 전마다 `retryDelay`(기본 200밀리초)를 기다립니다. 그 대기가 전체 타임아웃의 마감을 넘기게 되면 기다리지 않고 마지막 실패를 돌려줍니다.
 - 마지막 재시도 뒤에도 `502`나 `503`이면 그 백엔드 응답을 그대로 넘깁니다.
-- 요청 스레드가 인터럽트되면 재시도를 멈추고 인터럽트 상태를 유지합니다.
+- 요청 스레드가 인터럽트되면 재시도를 멈추고 인터럽트 상태를 유지합니다. 결과는 인터럽트된 때에 따라 다릅니다.
+- 재시도를 정할 때 인터럽트 상태가 이미 켜져 있으면 재시도하지 않습니다. 마지막 실패는 그대로 오류 흐름으로 가고 `502`·`503` 백엔드 응답은 그대로 넘깁니다. 시도하는 도중에 인터럽트되면 그 시도의 응답을 그대로 넘깁니다.
+- 연결 실패 뒤의 재시도 대기가 인터럽트되면 그 연결 실패를 던집니다(`CONNECT_FAILED`, 대기 중에 마감이 지났으면 그 마감의 종류).
+- `502`나 `503`을 받고 그 연결을 닫은 뒤의 재시도 대기가 인터럽트되면 백엔드 응답을 넘기지 않습니다. 응답은 이미 닫혔으므로 그 상태의 보통 `HttpException`(`ProxyException`이 아님)이 오류 흐름(`onError`)으로 갑니다. 대기 중에 마감이 지났으면 그 마감 종류의 `ProxyException`이 갑니다.
 
 **안전한 메서드는 HTTP 의미의 구분일 뿐입니다.** 부수 효과가 있는 `GET` 엔드포인트(예: `GET /api/payments/charge?id=1`)는 재시도로 두 번 실행될 수 있습니다. 그런 경로는 [기본 사용](#기본-사용)의 예제처럼 재시도를 끈 프록시를 따로 두고 일반 마운트보다 먼저 등록하세요.
 
@@ -307,7 +310,7 @@ Express 대응: http-proxy-middleware에는 재시도 기능이 없습니다.
 - 한도가 없는 마운트의 요청은 세지 않습니다.
 - 같은 객체를 두 앱에 붙이면 두 앱의 요청을 함께 셉니다.
 - 한도를 넘는 요청은 기다리지 않고 곧바로 `503`(`CONCURRENCY_LIMIT`)이며 백엔드에 연결하지 않습니다.
-- 슬롯은 모든 검사와 `req.bodyStream(...)`을 통과한 뒤 백엔드에 연결하기 직전에 잡고, 요청이 끝날 때(응답 본문을 다 넘기거나 클라이언트가 떠날 때) 돌려줍니다.
+- 슬롯은 모든 검사와 `req.bodyStream(...)`을 통과한 뒤 백엔드에 연결하기 직전에 잡고, 요청이 끝날 때(응답 본문을 다 넘기거나 클라이언트가 떠난 것을 어댑터가 알았을 때) 돌려줍니다. 어댑터가 클라이언트가 떠난 것을 알지 못하는 동안에는 읽기 타임아웃이나 전체 타임아웃이 요청을 끝낼 때까지 슬롯이 잡혀 있습니다([스레드 모델](#스레드-모델)).
 
 ```java
 import com.snoworca.naruserve.proxy.Proxy;
@@ -334,6 +337,7 @@ Express 대응: 없습니다. `agent`의 `maxSockets`가 가장 가깝지만 넘
 
 - 프록시는 요청 스레드에서 동기로 돕니다. 프록시를 거치는 요청은 끝날 때까지 작업 스레드 하나를 잡고 있습니다.
 - 프록시가 백엔드를 기다리는 동안 클라이언트가 연결을 끊어도, 어댑터는 응답을 보내기 시작할 때에야 그것을 알 수 있습니다. 그래서 스레드는 백엔드가 답하거나 읽기 타임아웃이나 전체 타임아웃이 끝날 때까지 묶여 있습니다.
+- 응답 본문을 넘기는 도중에 백엔드가 말이 없어진 뒤 클라이언트가 연결을 끊어도 같습니다. TinyHttpd 어댑터는 클라이언트에 무언가를 써야 연결이 끊긴 것을 알 수 있으므로, 슬롯과 작업 스레드와 백엔드 소켓은 읽기 타임아웃이나 전체 타임아웃이 넘기기를 끝낼 때까지 잡혀 있습니다. 백엔드가 계속 보내는 동안 클라이언트가 끊으면 다음 쓰기에서 알아채고 곧바로 돌려줍니다.
 - 느린 백엔드는 작업 스레드 풀(`maxWorkers`, 기본 64)을 다 써서 프록시가 아닌 라우트까지 기다리게 만들 수 있습니다. 읽기 타임아웃을 길게 잡을수록 더 그렇습니다.
 - 기본으로는 `maxConcurrent` 한도가 없으므로, 프록시가 잡는 스레드 수를 묶는 것은 `maxWorkers`와 `totalTimeout`입니다. 느릴 수 있는 백엔드에는 `maxConcurrent`로 마운트마다 한도를 두세요.
 
