@@ -136,6 +136,53 @@ public class ProxyTargetUrlTest {
         assertEquals("target=http://[1:2:3:4:5:6:7:8]", target("http://[1:2:3:4:5:6:7:8]"));
     }
 
+    // FR-PROXY-001 AC-2: "::" stands for at least one zero group, so seven written groups around it are the most
+    // accepted (head only, tail only or split) and "::" alone or after one group passes
+    @Test
+    public void fr_PROXY_001_AC2_ipv6DoubleColonWithSevenGroupsIsAccepted() {
+        assertEquals("target=http://[1:2:3:4:5:6::7]", target("http://[1:2:3:4:5:6::7]"));
+        assertEquals("target=http://[1:2:3:4:5:6:7::]", target("http://[1:2:3:4:5:6:7::]"));
+        assertEquals("target=http://[::2:3:4:5:6:7:8]", target("http://[::2:3:4:5:6:7:8]"));
+        assertEquals("target=http://[1::]", target("http://[1::]"));
+        assertEquals("target=http://[::]:8081", target("http://[::]:8081"));
+    }
+
+    // FR-PROXY-001 AC-2: eight written groups with a "::" are nine groups at least, so they are rejected
+    @Test
+    public void fr_PROXY_001_AC2_ipv6DoubleColonWithEightGroupsIsRejected() {
+        assertRejected("http://[1:2:3:4:5:6:7::8]", "http://[1:2:3:4:5:6:7:8::]", "http://[::1:2:3:4:5:6:7:8]",
+                "http://[1:2:3:4::5:6:7:8]");
+    }
+
+    // FR-PROXY-001 AC-2: a dotted-quad IPv4 part is only the last 32 bits, so one before "::" is rejected
+    @Test
+    public void fr_PROXY_001_AC2_ipv6WithIpv4BeforeDoubleColonIsRejected() {
+        assertRejected("http://[1.2.3.4::1]", "http://[1.2.3.4::]", "http://[::1:1.2.3.4:5]");
+    }
+
+    // FR-PROXY-001 AC-2: the octet bound 255 is accepted, in every position
+    @Test
+    public void fr_PROXY_001_AC2_ipv4OctetBound255IsAccepted() {
+        assertEquals("target=http://255.255.255.255", target("http://255.255.255.255"));
+        assertEquals("target=http://10.0.0.255:8081", target("http://10.0.0.255:8081"));
+        assertEquals("target=http://[::ffff:255.255.255.255]", target("http://[::ffff:255.255.255.255]"));
+    }
+
+    // FR-PROXY-001 AC-2: the host a bracketed IPv6 literal connects to is the address without brackets, while the
+    // Host header form keeps them
+    @Test
+    public void fr_PROXY_001_AC2_ipv6ConnectHostHasNoBrackets() {
+        TargetUrl u = TargetUrl.parse("http://[::1]:8081");
+        assertEquals("::1", u.host);
+        assertEquals("[::1]", u.hostLiteral);
+        assertEquals(8081, u.port);
+        assertEquals("[::1]:8081", u.hostHeader());
+        TargetUrl v = TargetUrl.parse("https://[2001:db8::1]/base");
+        assertEquals("2001:db8::1", v.host);
+        assertEquals("[2001:db8::1]", v.hostHeader());
+        assertEquals("127.0.0.1", TargetUrl.parse("http://127.0.0.1:8081").host);
+    }
+
     // FR-PROXY-001 AC-2: an IPv6 literal with a zone id is rejected, encoded or raw
     @Test
     public void fr_PROXY_001_AC2_ipv6ZoneIdIsRejected() {
