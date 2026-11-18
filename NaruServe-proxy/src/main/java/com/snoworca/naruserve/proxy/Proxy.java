@@ -8,13 +8,13 @@ import com.snoworca.naruserve.Response;
 import com.snoworca.naruserve.common.HttpHeaderValues;
 import com.snoworca.naruserve.routing.Router;
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,8 +79,10 @@ public final class Proxy implements Middleware {
     /** The total-timeout watchdog every forwarded request reserves; not an option, so describe() leaves it out. */
     private final ProxyExchange.Watchdog watchdog;
 
+    /** A proxy under the module's JVM-wide watchdog scheduler, which enforces the total timeout (FR-PROXY-017). */
+    // @req FR-PROXY-017
     private Proxy(TargetUrl target, Options options) {
-        this(target, options, ProxyExchange.NO_WATCHDOG);
+        this(target, options, ProxyExchange.Scheduler.INSTANCE);
     }
 
     private Proxy(TargetUrl target, Options options, ProxyExchange.Watchdog watchdog) {
@@ -393,8 +395,9 @@ public final class Proxy implements Middleware {
      * {@code ", "}, goes to {@code next.run()} without a backend connection, so an {@code app.ws} route under the mount
      * gets it; a method that is not a token answers 400 and {@code CONNECT} and {@code TRACE}, in any letter case,
      * answer 405 with {@code Allow}, both before any backend connection. A backend that cannot be reached
-     * or answers with a response this proxy cannot read gives 502 through the error flow; a failure while reading
-     * the client body is the client's and reaches the error flow as itself, an over-limit body as 413.
+     * or answers with a response this proxy cannot read gives 502 through the error flow; a connect, write, read or
+     * total timeout before the response is relayed gives 504 with the timeout's kind (FR-PROXY-017); a failure while
+     * reading the client body is the client's and reaches the error flow as itself, an over-limit body as 413.
      */
     // @req IR-PROXY-001
     // @req SEC-PROXY-003
@@ -463,6 +466,7 @@ public final class Proxy implements Middleware {
     // @req SEC-PROXY-004
     // @req FR-PROXY-014
     // @req FR-PROXY-016
+    // @req FR-PROXY-017
     private void forward(Request req, Response res, Outgoing outgoing, ProxyExchange exchange) {
         boolean relayed = false;
         try {
@@ -471,10 +475,11 @@ public final class Proxy implements Middleware {
             exchange.watch(watchdog, options.totalTimeoutNanos);
             // Plain for http; TLS-layered and verified for https, whose failures are ProxyExceptions (SEC-PROXY-005).
             Socket socket = BackendClient.open(target, connectTimeoutMillis(), options.totalTimeoutNanos,
-                    options.sslSocketFactory);
+                    options.sslSocketFactory, exchange);
             exchange.attach(socket);
             socket.setSoTimeout(readTimeoutMillis());
-            OutputStream out = new BufferedOutputStream(socket.getOutputStream());
+            // The write deadline covers each socket write under the buffer, never a wait for client body bytes.
+            OutputStream out = exchange.backendOutput(socket.getOutputStream(), options.writeTimeoutNanos);
             out.write(outgoing.head);
             BodyFraming requestFraming = outgoing.framing;
             if (requestFraming.chunked) {
@@ -501,8 +506,9 @@ public final class Proxy implements Middleware {
             res.relay(relayedBody, framing.relayLength);
             relayed = true;
         } catch (IOException e) {
-            // A null message: the default error handler echoes non-500 messages, which would name the backend.
-            throw new HttpException(502, null, e);
+            throw backendFailure(exchange, e);
+        } catch (ProxyException e) {
+            throw firedKindOr(exchange, e);
         } finally {
             if (!relayed) {
                 // A request that ends before res.relay took the body releases here, before its exception leaves.
@@ -510,6 +516,36 @@ public final class Proxy implements Middleware {
             }
             closeQuietly(outgoing.body);
         }
+    }
+
+    /**
+     * The error-flow exception of the backend I/O failure {@code e} before the relay (FR-PROXY-017): the kind of a
+     * deadline that fired and closed the socket, else {@code READ_TIMEOUT} for the response head's read timeout (the
+     * connect and the handshake turn their own timeouts into {@code CONNECT_TIMEOUT}), else 502.
+     */
+    // @req FR-PROXY-017
+    private static RuntimeException backendFailure(ProxyExchange exchange, IOException e) {
+        ProxyException.Kind kind = exchange.settle(e instanceof SocketTimeoutException
+                ? ProxyException.Kind.READ_TIMEOUT : null);
+        if (kind != null) {
+            return new ProxyException(kind, e);
+        }
+        // A null message: the default error handler echoes non-500 messages, which would name the backend.
+        return new HttpException(502, null, e);
+    }
+
+    /**
+     * {@code e}, or a {@link ProxyException} of the kind of the deadline that fired when one did: the closed socket
+     * fails the call in progress, which the parser or the TLS layer reports as its own kind (FR-PROXY-017).
+     */
+    // @req FR-PROXY-017
+    private static ProxyException firedKindOr(ProxyExchange exchange, ProxyException e) {
+        ProxyException.Kind fired = exchange.settle(e.kind());
+        if (fired == null || fired == e.kind()) {
+            return e;
+        }
+        Throwable cause = e.getCause();
+        return new ProxyException(fired, cause != null ? cause : e);
     }
 
     /**
