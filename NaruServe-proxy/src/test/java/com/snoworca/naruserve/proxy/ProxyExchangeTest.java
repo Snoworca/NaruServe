@@ -547,7 +547,7 @@ public class ProxyExchangeTest {
         assertTrue("nothing reached the response while writing: " + events, events.isEmpty());
         readGate.countDown();
         await("the backend read the whole request", backend.requestRead);
-        awaitFrame("the response head read", t, Proxy.class.getName() + "$ResponseHead", "read");
+        awaitFrame("the response head read", t, ResponseParser.class.getName(), "read");
         assertTrue("nothing reached the response while reading the head: " + events, events.isEmpty());
         headGate.countDown();
 

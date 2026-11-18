@@ -1,18 +1,27 @@
 package com.snoworca.naruserve.proxy;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * Reads the {@code Content-Length} and {@code Transfer-Encoding} field lines of one message as comma-joined lists
  * (design D-054, D-073): elements are split on commas and trimmed of optional whitespace. The request framing checks
- * use it now; the backend response parser is to adopt the same reading with the response framing requirement
- * (SEC-PROXY-004). What an invalid list answers is the caller's choice.
+ * (SEC-PROXY-003) and the backend response parser ({@link ResponseParser#framing}, SEC-PROXY-004) share this reading.
+ * What an invalid list answers is the caller's choice: 400 or 501 for a request, {@code INVALID_RESPONSE} for a
+ * response.
  */
 // @req SEC-PROXY-003
+// @req SEC-PROXY-004
 final class FramingLists {
 
     /** What {@link #contentLength} returns for a list that is not one agreed length. */
     static final long INVALID_LENGTH = -1;
+    /** The lower-cased {@code Content-Length} field name, for {@link #fieldValues}. */
+    static final String CONTENT_LENGTH = "content-length";
+    /** The lower-cased {@code Transfer-Encoding} field name, for {@link #fieldValues}. */
+    static final String TRANSFER_ENCODING = "transfer-encoding";
 
     /** How a {@code Transfer-Encoding} list frames the body. */
     enum TransferCoding {
@@ -25,6 +34,22 @@ final class FramingLists {
     }
 
     private FramingLists() { }
+
+    /**
+     * The values of the field lines in {@code headers} whose name, lower-cased in {@link Locale#ROOT}, is
+     * {@code lowerName}, in received order: the input of {@link #contentLength} and {@link #transferEncoding}.
+     */
+    // @req SEC-PROXY-003
+    // @req SEC-PROXY-004
+    static List<String> fieldValues(List<Map.Entry<String, String>> headers, String lowerName) {
+        List<String> values = new ArrayList<>();
+        for (Map.Entry<String, String> h : headers) {
+            if (h.getKey().toLowerCase(Locale.ROOT).equals(lowerName)) {
+                values.add(h.getValue());
+            }
+        }
+        return values;
+    }
 
     /**
      * The length every element of the {@code Content-Length} field values agrees on, or {@link #INVALID_LENGTH} when

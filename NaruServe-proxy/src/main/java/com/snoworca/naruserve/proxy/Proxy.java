@@ -9,7 +9,7 @@ import com.snoworca.naruserve.common.HttpHeaderValues;
 import com.snoworca.naruserve.routing.Router;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.EOFException;
+import java.io.ByteArrayInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,12 +52,6 @@ public final class Proxy implements Middleware {
     /** The largest {@code bodyLimit}, the same 1 GiB bound as {@code app.rawBodyLimit}. */
     static final long MAX_BODY_LIMIT = 1073741824L;
 
-    /** The longest status or header line the backend may send. */
-    private static final int MAX_LINE = 64 * 1024;
-    /** The most header lines one backend response head may hold. */
-    private static final int MAX_HEADER_LINES = 1000;
-    /** The most trailer lines one chunked backend response body may end with. */
-    private static final int MAX_TRAILER_LINES = 1000;
     /** The decided request framing of a chunked client body (see {@link #requestBodyLength}). */
     private static final long CHUNKED_BODY = -1;
     /** The decided request framing when the client sent neither Content-Length nor Transfer-Encoding. */
@@ -466,6 +460,9 @@ public final class Proxy implements Middleware {
     // @req FR-PROXY-013
     // @req FR-PROXY-012
     // @req FR-PROXY-019
+    // @req SEC-PROXY-004
+    // @req FR-PROXY-014
+    // @req FR-PROXY-016
     private void forward(Request req, Response res, Outgoing outgoing, ProxyExchange exchange) {
         boolean relayed = false;
         try {
@@ -479,31 +476,29 @@ public final class Proxy implements Middleware {
             socket.setSoTimeout(readTimeoutMillis());
             OutputStream out = new BufferedOutputStream(socket.getOutputStream());
             out.write(outgoing.head);
-            BodyFraming framing = outgoing.framing;
-            if (framing.chunked) {
-                RequestBodyCopier.copyChunked(outgoing.body, framing.firstByte, out);
+            BodyFraming requestFraming = outgoing.framing;
+            if (requestFraming.chunked) {
+                RequestBodyCopier.copyChunked(outgoing.body, requestFraming.firstByte, out);
             } else {
-                RequestBodyCopier.copyLength(outgoing.body, out, framing.contentLength);
+                RequestBodyCopier.copyLength(outgoing.body, out, requestFraming.contentLength);
             }
             out.flush();
             InputStream in = new BufferedInputStream(socket.getInputStream());
-            ResponseHead head = ResponseHead.read(in);
-            boolean bodyless = "HEAD".equals(req.methodToken()) || head.status == 204 || head.status == 304;
-            boolean chunked = head.transferEncoding != null && !bodyless;
-            if (chunked && !head.chunkedLast) {
-                // A body framed by another final coding is refused by the response parser rules (SEC-PROXY-004).
-                throw new HttpException(502);
-            }
+            // A malformed head or framing is a ProxyException INVALID_RESPONSE, which passes the catch below.
+            ResponseParser.Head head = ResponseParser.read(in);
+            ResponseParser.Framing framing = ResponseParser.framing(head, "HEAD".equals(req.methodToken()));
             // The adapter writes its own reason phrase for the status (D-059); the backend phrase is not kept.
             res.status(head.status);
-            applyResponseHeaders(req, res, head);
-            long length = head.status == 204 || head.transferEncoding != null ? -1 : head.contentLength;
-            InputStream body = chunked ? new ChunkedBodyStream(in, socket) : new SocketBodyStream(in, socket);
+            applyResponseHeaders(req, res, head.headers);
+            InputStream body = new SocketBodyStream(bodySource(framing, in), socket);
             // From here the relayed body owns the exchange: the first of its close and the abort notification ends it
             // (FR-PROXY-019, REL-PROXY-001). The listener comes first, since one registered after an abort runs at once.
-            RelayedBodyStream relayedBody = new RelayedBodyStream(body, exchange);
-            releaseOnAbort(res, exchange);
-            res.relay(relayedBody, length);
+            // A bodyless response is never read, so it declares no length the stream could fall short of.
+            RelayedBodyStream relayedBody = new RelayedBodyStream(body, exchange,
+                    framing.bodyless ? -1 : framing.relayLength, req.application().logger(),
+                    target.scheme + "://" + target.authority);
+            releaseOnAbort(res, relayedBody, exchange);
+            res.relay(relayedBody, framing.relayLength);
             relayed = true;
         } catch (IOException e) {
             // A null message: the default error handler echoes non-500 messages, which would name the backend.
@@ -518,16 +513,29 @@ public final class Proxy implements Middleware {
     }
 
     /**
-     * Sets the response headers of {@code res} from the backend {@code head} in this order: the backend header copy,
-     * then the {@code Location} rewrite, then the {@code .responseHeader} values (FR-PROXY-012).
+     * The body bytes of a backend response as {@code framing} reads them from {@code in}: none for a response to HEAD,
+     * a 204 and a 304, whatever the backend wrote after the header block; the decoded chunks of a chunked body; and
+     * the bytes of the connection otherwise, which the length passed to {@code res.relay} or the backend's close ends.
+     */
+    // @req FR-PROXY-014
+    private static InputStream bodySource(ResponseParser.Framing framing, InputStream in) {
+        if (framing.bodyless) {
+            return new ByteArrayInputStream(new byte[0]);
+        }
+        return framing.chunked ? new ChunkedBodyInputStream(in) : in;
+    }
+
+    /**
+     * Sets the response headers of {@code res} from the backend header lines {@code headers} in this order: the
+     * backend header copy, then the {@code Location} rewrite, then the {@code .responseHeader} values (FR-PROXY-012).
      */
     // @req FR-PROXY-011
     // @req FR-PROXY-013
     // @req FR-PROXY-012
-    private void applyResponseHeaders(Request req, Response res, ResponseHead head) {
+    private void applyResponseHeaders(Request req, Response res, List<Map.Entry<String, String>> headers) {
         // A removed name's backend lines are skipped, so an app value of it stays and the rewrite never sees them.
         List<Map.Entry<String, String>> copied =
-                ResponseHeaderCopier.copy(head.headers, options.hiddenResponseNames, res);
+                ResponseHeaderCopier.copy(headers, options.hiddenResponseNames, res);
         // The Location rewrite follows the copy and comes before the .responseHeader values (FR-PROXY-012).
         if (options.rewriteLocation) {
             LocationRewriter.apply(copied, target, options.stripPrefix ? req.baseUrl() : "", res);
@@ -539,15 +547,20 @@ public final class Proxy implements Middleware {
 
     /**
      * Registers the release of {@code exchange} as an abort listener of {@code res}, so a client that goes away while
-     * the relay waits on a quiet backend frees the slot and the connection at once. A response without abort listeners
-     * still ends the exchange through the relayed body's close.
+     * the relay waits on a quiet backend frees the slot and the connection at once; {@code relayedBody} learns of the
+     * abort first, so the failed read that closing the connection causes is not logged as a backend failure. A
+     * response without abort listeners still ends the exchange through the relayed body's close.
      */
     // @req REL-PROXY-001
-    private static void releaseOnAbort(Response res, final ProxyExchange exchange) {
+    // @req FR-PROXY-016
+    private static void releaseOnAbort(Response res, final RelayedBodyStream relayedBody,
+            final ProxyExchange exchange) {
         try {
             res.onAbort(new Runnable() {
                 @Override
                 public void run() {
+                    // Before the release closes the backend connection, so the read it fails is not logged.
+                    relayedBody.abandon();
                     exchange.release();
                 }
             });
@@ -684,17 +697,9 @@ public final class Proxy implements Middleware {
     /** {@link #requestBodyLength(List, List)} of the request's Content-Length and Transfer-Encoding field lines. */
     // @req SEC-PROXY-003
     private static long requestBodyLength(Request req) {
-        List<String> contentLengths = new ArrayList<>();
-        List<String> transferEncodings = new ArrayList<>();
-        for (Map.Entry<String, String> h : req.rawHeaders()) {
-            String lower = h.getKey().toLowerCase(Locale.ROOT);
-            if (lower.equals("content-length")) {
-                contentLengths.add(h.getValue());
-            } else if (lower.equals("transfer-encoding")) {
-                transferEncodings.add(h.getValue());
-            }
-        }
-        return requestBodyLength(contentLengths, transferEncodings);
+        List<Map.Entry<String, String>> headers = req.rawHeaders();
+        return requestBodyLength(FramingLists.fieldValues(headers, FramingLists.CONTENT_LENGTH),
+                FramingLists.fieldValues(headers, FramingLists.TRANSFER_ENCODING));
     }
 
     /**
@@ -956,221 +961,6 @@ public final class Proxy implements Middleware {
             return new Options(connectTimeoutNanos, writeTimeoutNanos, readTimeoutNanos, totalTimeoutNanos, retries,
                     retryDelayNanos, retryUnsafeMethods, stripPrefix, preserveHost, bodyLimit, limiter,
                     requestHeaderRules, responseHeaderRules, rewriteLocation, v);
-        }
-    }
-    /**
-     * The status, header lines and framing headers of one backend response head, interim 1xx heads skipped. Every
-     * header line must have a token name and a value {@code res.header} accepts, or the head is unreadable.
-     */
-    private static final class ResponseHead {
-        final int status;
-        /** The header lines in received order, duplicates kept: the name as received, the value without OWS. */
-        final List<Map.Entry<String, String>> headers;
-        /** The Content-Length, or -1 for a body that runs to the end of the connection. */
-        final long contentLength;
-        /** The Transfer-Encoding values joined with commas, or null when the backend sent none. */
-        final @Nullable String transferEncoding;
-        /** Whether the last transfer coding is {@code chunked}. */
-        final boolean chunkedLast;
-
-        private ResponseHead(int status, List<Map.Entry<String, String>> headers, long contentLength,
-                @Nullable String transferEncoding, boolean chunkedLast) {
-            this.status = status;
-            this.headers = headers;
-            this.contentLength = contentLength;
-            this.transferEncoding = transferEncoding;
-            this.chunkedLast = chunkedLast;
-        }
-
-        // @req IR-PROXY-001
-        // @req FR-PROXY-011
-        static ResponseHead read(InputStream in) throws IOException {
-            while (true) {
-                String statusLine = readLine(in);
-                if (statusLine.length() < 12 || !statusLine.startsWith("HTTP/1.") || statusLine.charAt(8) != ' '
-                        || (statusLine.length() > 12 && statusLine.charAt(12) != ' ')) {
-                    throw new IOException("malformed status line");
-                }
-                int status;
-                try {
-                    status = Integer.parseInt(statusLine.substring(9, 12));
-                } catch (NumberFormatException e) {
-                    throw new IOException("malformed status code");
-                }
-                if (status < 100 || status > 599 || status == 101) {
-                    throw new IOException("unexpected status " + status);
-                }
-                List<Map.Entry<String, String>> headers = new ArrayList<>();
-                @Nullable StringBuilder transferEncoding = null;
-                long contentLength = -1;
-                for (int lines = 0; ; lines++) {
-                    String line = readLine(in);
-                    if (line.isEmpty()) {
-                        break;
-                    }
-                    if (lines >= MAX_HEADER_LINES) {
-                        throw new IOException("too many header lines");
-                    }
-                    int colon = line.indexOf(':');
-                    if (colon <= 0) {
-                        throw new IOException("malformed header line");
-                    }
-                    String name = line.substring(0, colon);
-                    String value = HeaderRules.trimOws(line.substring(colon + 1));
-                    if (!HttpHeaderValues.isToken(name) || !HttpHeaderValues.isFieldValue(value)) {
-                        throw new IOException("malformed header line");
-                    }
-                    headers.add(new SimpleImmutableEntry<>(name, value));
-                    String lower = name.toLowerCase(Locale.ROOT);
-                    if (lower.equals("transfer-encoding")) {
-                        transferEncoding = transferEncoding == null ? new StringBuilder(value)
-                                : transferEncoding.append(',').append(value);
-                    } else if (lower.equals("content-length")) {
-                        try {
-                            contentLength = Long.parseLong(value);
-                        } catch (NumberFormatException e) {
-                            throw new IOException("malformed Content-Length");
-                        }
-                        if (contentLength < 0) {
-                            throw new IOException("malformed Content-Length");
-                        }
-                    }
-                }
-                if (status >= 200) {
-                    @Nullable String te = transferEncoding == null ? null : transferEncoding.toString();
-                    return new ResponseHead(status, headers, contentLength, te, te != null && lastCodingIsChunked(te));
-                }
-            }
-        }
-
-        /** Whether the last non-empty element of a Transfer-Encoding list is {@code chunked}, case-insensitively. */
-        private static boolean lastCodingIsChunked(String transferEncoding) {
-            String[] codings = transferEncoding.split(",", -1);
-            for (int i = codings.length - 1; i >= 0; i--) {
-                String coding = HeaderRules.trimOws(codings[i]);
-                if (!coding.isEmpty()) {
-                    return coding.equalsIgnoreCase("chunked");
-                }
-            }
-            return false;
-        }
-
-        private static String readLine(InputStream in) throws IOException {
-            StringBuilder line = new StringBuilder();
-            for (int b; (b = in.read()) != '\n'; ) {
-                if (b < 0) {
-                    throw new EOFException("the backend closed inside the response head");
-                }
-                if (line.length() >= MAX_LINE) {
-                    throw new IOException("response head line too long");
-                }
-                line.append((char) b);
-            }
-            int end = line.length();
-            if (end > 0 && line.charAt(end - 1) == '\r') {
-                end--;
-            }
-            return line.substring(0, end);
-        }
-    }
-
-    /**
-     * A chunked backend response body decoded to its data: chunk extensions are ignored and the trailer fields after
-     * the last chunk are read and dropped, so they never reach the client. Closing it closes the backend connection.
-     * The strict response parser rules belong to SEC-PROXY-004.
-     */
-    // @req FR-PROXY-011
-    private static final class ChunkedBodyStream extends InputStream {
-        /** At most 15 significant hex digits, so a chunk size always fits a non-negative long. */
-        private static final int MAX_SIZE_DIGITS = 15;
-        private final InputStream in;
-        private final Socket socket;
-        /** Data bytes left in the current chunk. */
-        private long remaining;
-        private boolean started;
-        private boolean done;
-
-        ChunkedBodyStream(InputStream in, Socket socket) {
-            this.in = in;
-            this.socket = socket;
-        }
-
-        @Override
-        public int read() throws IOException {
-            byte[] one = new byte[1];
-            int n = read(one, 0, 1);
-            return n < 0 ? -1 : one[0] & 0xff;
-        }
-
-        // @req FR-PROXY-011
-        @Override
-        public int read(byte[] b, int off, int len) throws IOException {
-            if (len == 0) {
-                return 0;
-            }
-            if (remaining == 0 && !nextChunk()) {
-                return -1;
-            }
-            int n = in.read(b, off, (int) Math.min(len, remaining));
-            if (n < 0) {
-                throw new EOFException("the backend closed inside a chunk");
-            }
-            remaining -= n;
-            return n;
-        }
-
-        /** Reads the next chunk-size line; false after the last chunk, whose trailer lines are read and dropped. */
-        private boolean nextChunk() throws IOException {
-            if (done) {
-                return false;
-            }
-            if (started && !ResponseHead.readLine(in).isEmpty()) {
-                throw new IOException("chunk data not followed by CRLF");
-            }
-            started = true;
-            String line = ResponseHead.readLine(in);
-            int semi = line.indexOf(';');
-            String digits = HeaderRules.trimOws(semi < 0 ? line : line.substring(0, semi));
-            if (digits.isEmpty()) {
-                throw new IOException("malformed chunk size");
-            }
-            int first = 0;
-            while (first < digits.length() - 1 && digits.charAt(first) == '0') {
-                first++; // leading zeros do not count toward the digit limit
-            }
-            if (digits.length() - first > MAX_SIZE_DIGITS) {
-                throw new IOException("chunk size too large");
-            }
-            long size = 0;
-            for (int i = 0; i < digits.length(); i++) {
-                char c = digits.charAt(i);
-                int d = c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'f' ? c - 'a' + 10
-                        : c >= 'A' && c <= 'F' ? c - 'A' + 10 : -1;
-                if (d < 0) {
-                    throw new IOException("malformed chunk size");
-                }
-                size = size * 16 + d;
-            }
-            if (size > 0) {
-                remaining = size;
-                return true;
-            }
-            for (int lines = 0; !ResponseHead.readLine(in).isEmpty(); lines++) {
-                if (lines >= MAX_TRAILER_LINES) {
-                    throw new IOException("too many trailer lines");
-                }
-            }
-            done = true;
-            return false;
-        }
-
-        @Override
-        public void close() throws IOException {
-            try {
-                in.close();
-            } finally {
-                socket.close();
-            }
         }
     }
 
