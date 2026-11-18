@@ -1,0 +1,173 @@
+{
+  "wave": "wave-17",
+  "round": 1,
+  "verifier": "loop-p-wave-17-r1",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "SEC-PROXY-004 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp1_processing102IsSkipped",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "102 Processing interim skipped; interim header does not leak. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-2",
+      "cites": "SEC-PROXY-004 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp2_switchingProtocolsAfterContinueIsInvalid",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "101 after a 100 Continue is still 502 INVALID_RESPONSE. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-3",
+      "cites": "SEC-PROXY-004 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp3_endlessInterimHeadsFailOnTheHeadBound",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "4000 x 100 Continue heads share the 64 KiB bound and fail with 502 INVALID_RESPONSE. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-4",
+      "cites": "SEC-PROXY-004 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp4_bareCrInsideHeaderValueIsInvalid",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "bare CR inside a header value (hidden Content-Length) rejected. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-5",
+      "cites": "SEC-PROXY-004 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp5_gzipAndChunkedOnTwoLinesIsInvalid",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Transfer-Encoding gzip and chunked on two lines rejected. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-6",
+      "cites": "SEC-PROXY-004 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp6_chunkDataWithoutCrlfAborts",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "chunk data not followed by CRLF aborts the client, INVALID_RESPONSE logged once. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-7",
+      "cites": "SEC-PROXY-004 AC-10",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp7_trailerFieldsDoNotLeakAsHeaders",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "trailer Set-Cookie/Content-Length dropped, body intact. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-8",
+      "cites": "FR-PROXY-014 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp8_chunkedKeptOpenEndsAtTheLastChunk",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "chunked backend kept open after the last chunk: relay ends at the last chunk, no timeout. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-9",
+      "cites": "FR-PROXY-014 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp9_extraBytesPastContentLengthAreCut",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "bytes past Content-Length (a smuggled response) are not relayed. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-10",
+      "cites": "FR-PROXY-016 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp10_tinyHttpdChunkedBreakDoesNotLookComplete",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "over TinyHttpd a broken chunked body never gets a terminal 0-chunk; connection closed; INVALID_RESPONSE logged once. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-11",
+      "cites": "FR-PROXY-016 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp11_tinyHttpdShortBodyClosesBeforeAPipelinedResponse",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "over TinyHttpd a short Content-Length body closes the client connection; a pipelined second response never fills the missing bytes. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-12",
+      "cites": "FR-PROXY-016 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp12_resetMidBodyAbortsAndLogsOnce",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "backend reset mid-body aborts the client, INVALID_RESPONSE logged exactly once. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-13",
+      "cites": "FR-PROXY-016 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp13_chunkedCloseBeforeLastChunkAborts",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "close before the last chunk aborts, INVALID_RESPONSE logged once. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-14",
+      "cites": "FR-PROXY-014 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp14_headAfterInterimArrivesWithoutBody",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "HEAD after a 100 Continue, kept-open 200 Content-Length 1234 arrives fast without body. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-15",
+      "cites": "SEC-PROXY-004 AC-12",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp15_http10WithEmptyTransferEncodingIsInvalid",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "HTTP/1.0 200 with an empty Transfer-Encoding line rejected. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-16",
+      "cites": "REL-PROXY-001 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp16_slotReturnsAfterAMidResponseFailure",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "maxConcurrent(1): slot back to 0 after a mid-response failure, next request served. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-17",
+      "cites": "FR-PROXY-016 AC-5",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp17_failingLoggerStillAborts",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "a throwing app logger is called once and the client is still aborted. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    },
+    {
+      "id": "LP-18",
+      "cites": "FR-PROXY-016 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave17Test.java::lp18_chunkedStallInsideSizeLineIsReadTimeout",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "stall inside a chunk-size line is READ_TIMEOUT after ~1 s, logged once. Green at integration head 6607091 (:NaruServe-proxy:test 525 tests, 0 failures with the probe class)."
+    }
+  ],
+  "summary": {
+    "tests_written": 18,
+    "kept": 0
+  }
+}

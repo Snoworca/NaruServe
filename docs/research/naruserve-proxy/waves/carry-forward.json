@@ -49,7 +49,8 @@
       "carried_into": "wave-17",
       "owner_requirement": "SEC-PROXY-004",
       "reason_class": "cross-wave-carry-forward",
-      "note": "SEC-PROXY-004 AC-9 owns backend obs-text header bytes reaching the client byte-for-byte. Over a real TinyHttpd socket the 0xE9 byte arrives as 0xC3 0xA9, because TinyHttpd 3.1.1 writes header chars as UTF-8 (the in-memory adapter keeps them, LP-20 green). Wave-17 must check AC-9 over TinyHttpd; if the library encoding cannot be changed from NaruServe (../TinyHttpd is not modified in this run), state it as an adapter-dependent limit or amend AC-9 through MCP."
+      "note": "SEC-PROXY-004 AC-9 owns backend obs-text header bytes reaching the client byte-for-byte. Over a real TinyHttpd socket the 0xE9 byte arrives as 0xC3 0xA9, because TinyHttpd 3.1.1 writes header chars as UTF-8 (the in-memory adapter keeps them, LP-20 green). Wave-17 must check AC-9 over TinyHttpd; if the library encoding cannot be changed from NaruServe (../TinyHttpd is not modified in this run), state it as an adapter-dependent limit or amend AC-9 through MCP.",
+      "closed": "wave-17 (SEC-PROXY-004 AC-9 reworded: TinyHttpd 3.1.1 UTF-8 header writing stated as an adapter-dependent limit; in-memory test green)"
     },
     {
       "from": "wave-12",
