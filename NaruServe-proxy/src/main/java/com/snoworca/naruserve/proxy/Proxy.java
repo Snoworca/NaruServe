@@ -9,6 +9,7 @@ import com.snoworca.naruserve.common.HttpHeaderValues;
 import com.snoworca.naruserve.routing.Router;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -460,6 +461,7 @@ public final class Proxy implements Middleware {
     // @req FR-PROXY-012
     // @req FR-PROXY-019
     // @req SEC-PROXY-004
+    // @req FR-PROXY-014
     private void forward(Request req, Response res, Outgoing outgoing, ProxyExchange exchange) {
         boolean relayed = false;
         try {
@@ -487,7 +489,7 @@ public final class Proxy implements Middleware {
             // The adapter writes its own reason phrase for the status (D-059); the backend phrase is not kept.
             res.status(head.status);
             applyResponseHeaders(req, res, head.headers);
-            InputStream body = new SocketBodyStream(framing.chunked ? new ChunkedBodyInputStream(in) : in, socket);
+            InputStream body = new SocketBodyStream(bodySource(framing, in), socket);
             // From here the relayed body owns the exchange: the first of its close and the abort notification ends it
             // (FR-PROXY-019, REL-PROXY-001). The listener comes first, since one registered after an abort runs at once.
             RelayedBodyStream relayedBody = new RelayedBodyStream(body, exchange);
@@ -504,6 +506,19 @@ public final class Proxy implements Middleware {
             }
             closeQuietly(outgoing.body);
         }
+    }
+
+    /**
+     * The body bytes of a backend response as {@code framing} reads them from {@code in}: none for a response to HEAD,
+     * a 204 and a 304, whatever the backend wrote after the header block; the decoded chunks of a chunked body; and
+     * the bytes of the connection otherwise, which the length passed to {@code res.relay} or the backend's close ends.
+     */
+    // @req FR-PROXY-014
+    private static InputStream bodySource(ResponseParser.Framing framing, InputStream in) {
+        if (framing.bodyless) {
+            return new ByteArrayInputStream(new byte[0]);
+        }
+        return framing.chunked ? new ChunkedBodyInputStream(in) : in;
     }
 
     /**
