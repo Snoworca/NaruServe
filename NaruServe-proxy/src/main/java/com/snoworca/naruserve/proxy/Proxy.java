@@ -82,10 +82,17 @@ public final class Proxy implements Middleware {
 
     private final TargetUrl target;
     private final Options options;
+    /** The total-timeout watchdog every forwarded request reserves; not an option, so describe() leaves it out. */
+    private final ProxyExchange.Watchdog watchdog;
 
     private Proxy(TargetUrl target, Options options) {
+        this(target, options, ProxyExchange.NO_WATCHDOG);
+    }
+
+    private Proxy(TargetUrl target, Options options, ProxyExchange.Watchdog watchdog) {
         this.target = target;
         this.options = options;
+        this.watchdog = watchdog;
     }
 
     /**
@@ -262,6 +269,16 @@ public final class Proxy implements Middleware {
         List<Map.Entry<String, @Nullable String>> out = new ArrayList<>(rules);
         out.add(new SimpleImmutableEntry<String, @Nullable String>(name, value));
         return Collections.unmodifiableList(out);
+    }
+
+    /**
+     * Package-private test seam: this proxy with {@code watchdog} as its total-timeout watchdog, so a test can record
+     * the reservations and their cancels (REL-PROXY-001). The option methods return proxies with the default watchdog,
+     * so a test calls this last.
+     */
+    // @req REL-PROXY-001
+    Proxy withWatchdog(ProxyExchange.Watchdog watchdog) {
+        return new Proxy(target, options, watchdog);
     }
 
     // Package-private accessors: the configured values, read by unit tests only (D-046).
@@ -447,6 +464,9 @@ public final class Proxy implements Middleware {
     private void forward(Request req, Response res, Outgoing outgoing, ProxyExchange exchange) {
         boolean relayed = false;
         try {
+            // The watchdog starts right after the slot, the last step before the backend connect (D-050), and the
+            // exchange's release cancels it.
+            exchange.watch(watchdog, options.totalTimeoutNanos);
             // Plain for http; TLS-layered and verified for https, whose failures are ProxyExceptions (SEC-PROXY-005).
             Socket socket = BackendClient.open(target, connectTimeoutMillis(), options.totalTimeoutNanos,
                     options.sslSocketFactory);
@@ -483,8 +503,11 @@ public final class Proxy implements Middleware {
             }
             long length = head.status == 204 || head.transferEncoding != null ? -1 : head.contentLength;
             InputStream body = chunked ? new ChunkedBodyStream(in, socket) : new SocketBodyStream(in, socket);
-            // From here the relayed body owns the exchange: its close returns the slot (FR-PROXY-019).
-            res.relay(new RelayedBodyStream(body, exchange), length);
+            // From here the relayed body owns the exchange: the first of its close and the abort notification ends it
+            // (FR-PROXY-019, REL-PROXY-001). The listener comes first, since one registered after an abort runs at once.
+            RelayedBodyStream relayedBody = new RelayedBodyStream(body, exchange);
+            releaseOnAbort(res, exchange);
+            res.relay(relayedBody, length);
             relayed = true;
         } catch (IOException e) {
             // A null message: the default error handler echoes non-500 messages, which would name the backend.
@@ -495,6 +518,25 @@ public final class Proxy implements Middleware {
                 exchange.release();
             }
             closeQuietly(outgoing.body);
+        }
+    }
+
+    /**
+     * Registers the release of {@code exchange} as an abort listener of {@code res}, so a client that goes away while
+     * the relay waits on a quiet backend frees the slot and the connection at once. A response without abort listeners
+     * still ends the exchange through the relayed body's close.
+     */
+    // @req REL-PROXY-001
+    private static void releaseOnAbort(Response res, final ProxyExchange exchange) {
+        try {
+            res.onAbort(new Runnable() {
+                @Override
+                public void run() {
+                    exchange.release();
+                }
+            });
+        } catch (UnsupportedOperationException noListeners) {
+            // the relayed body's close still releases the exchange
         }
     }
 
