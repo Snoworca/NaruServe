@@ -1,0 +1,22 @@
+{
+ "base": {
+  "wave-20": "c900c9dd276513e149c74883beaf93881bd8fe67"
+ },
+ "lock_digest": "9091aa10ddea688edf26d17520cc9099991ee7aa6e343981750c755f37d8d05a",
+ "lock_commit": "e5a6aa398ab81c8d3d0d4e1de4707e48c7fdc63d",
+ "lanes": [
+  {
+   "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-20",
+   "stage": 1,
+   "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-20",
+   "sds": null,
+   "writeSet": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RetryPolicy.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBackendConnectionTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRetryTest.java"
+   ]
+  }
+ ]
+}
