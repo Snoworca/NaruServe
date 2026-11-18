@@ -9,11 +9,13 @@ import javax.net.ssl.SSLSocketFactory;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Opens the connection to the backend: a plain {@link Socket} connected within the connect timeout, layered with TLS
- * by {@link TlsConnector} for an {@code https} target (SEC-PROXY-005). The caller owns the returned socket; on any
- * failure the connection is closed here.
+ * Opens one connection attempt to the backend: a plain {@link Socket} connected within the connect timeout
+ * ({@link #connect}), then layered with TLS by {@link TlsConnector} for an {@code https} target ({@link #secure},
+ * SEC-PROXY-005). The two steps are apart so that only a failure of the first may be retried (FR-PROXY-018). The
+ * caller owns the returned socket; on any failure the connection is closed here.
  */
 // @req SEC-PROXY-005
+// @req FR-PROXY-018
 // @req FR-PROXY-017
 // @req FR-PROXY-015
 final class BackendClient {
@@ -60,47 +62,69 @@ final class BackendClient {
     }
 
     /**
-     * A socket connected to {@code target}: plain for {@code http}, TLS-layered and verified for {@code https}. The
-     * plain socket is given to {@code exchange} before its connect, so a firing write or total deadline closes it
-     * (FR-PROXY-017). The TLS handshake's own total deadline counts from this call. A connect that outlasts
-     * {@code connectTimeoutMillis} is a {@link ProxyException} {@code CONNECT_TIMEOUT}; any other failure of the name
-     * resolution or the plain connect, such as a {@link java.net.ConnectException} or an
+     * The plain socket of one connection attempt, connected to {@code target} within {@code connectTimeoutMillis}. The
+     * socket is given to {@code exchange} before its connect, so a firing write or total deadline closes it
+     * (FR-PROXY-017). A connect that outlasts the timeout is a {@link ProxyException} {@code CONNECT_TIMEOUT}; any other
+     * failure of the name resolution or the plain connect, such as a {@link java.net.ConnectException} or an
      * {@link java.net.UnknownHostException}, is a {@link ProxyException} {@code CONNECT_FAILED} with that failure as its
-     * cause; a TLS failure is a {@link ProxyException} (see {@link TlsConnector#layer}).
+     * cause, the TCP-level connect failure a retry may follow (FR-PROXY-018). On failure the socket is closed here.
+     */
+    // @req FR-PROXY-017
+    // @req FR-PROXY-015
+    // @req FR-PROXY-018
+    static Socket connect(TargetUrl target, int connectTimeoutMillis, ProxyExchange exchange) {
+        Socket plain = plainSockets.create();
+        boolean connected = false;
+        try {
+            exchange.plainSocket(plain);
+            InetSocketAddress address = new InetSocketAddress(resolver.resolve(target.host), target.port);
+            plain.connect(address, connectTimeoutMillis);
+            connected = true;
+            return plain;
+        } catch (SocketTimeoutException e) {
+            throw new ProxyException(ProxyException.Kind.CONNECT_TIMEOUT, e);
+        } catch (IOException e) {
+            // A refused connection, an unresolvable host or an unreachable network (FR-PROXY-015).
+            throw new ProxyException(ProxyException.Kind.CONNECT_FAILED, e);
+        } finally {
+            if (!connected) {
+                closeQuietly(plain);
+            }
+        }
+    }
+
+    /**
+     * The connection over the connected {@code plain} socket: {@code plain} itself for {@code http}, TLS-layered and
+     * verified for {@code https}, whose handshake ends by {@code deadlineNanos}, the request's total deadline
+     * (FR-PROXY-017). A TLS failure is a {@link ProxyException} (see {@link TlsConnector#layer}) that is never retried
+     * (FR-PROXY-018). The caller owns the returned socket; on failure {@code plain} is closed here.
      */
     // @req SEC-PROXY-005
     // @req FR-PROXY-017
-    // @req FR-PROXY-015
-    static Socket open(TargetUrl target, int connectTimeoutMillis, long totalTimeoutNanos,
-            @Nullable SSLSocketFactory sslSocketFactory, ProxyExchange exchange) throws IOException {
-        long deadlineNanos = System.nanoTime() + totalTimeoutNanos;
-        Socket plain = plainSockets.create();
-        boolean opened = false;
+    // @req FR-PROXY-018
+    static Socket secure(Socket plain, TargetUrl target, int connectTimeoutMillis, long deadlineNanos,
+            @Nullable SSLSocketFactory sslSocketFactory) {
+        if (!"https".equals(target.scheme)) {
+            return plain;
+        }
+        boolean layered = false;
         try {
-            exchange.plainSocket(plain);
-            try {
-                InetSocketAddress address = new InetSocketAddress(resolver.resolve(target.host), target.port);
-                plain.connect(address, connectTimeoutMillis);
-            } catch (SocketTimeoutException e) {
-                throw new ProxyException(ProxyException.Kind.CONNECT_TIMEOUT, e);
-            } catch (IOException e) {
-                // A refused connection, an unresolvable host or an unreachable network (FR-PROXY-015).
-                throw new ProxyException(ProxyException.Kind.CONNECT_FAILED, e);
-            }
-            Socket socket = "https".equals(target.scheme)
-                    ? TlsConnector.layer(plain, target.host, target.port, connectTimeoutMillis, deadlineNanos,
-                            sslSocketFactory)
-                    : plain;
-            opened = true;
+            Socket socket = TlsConnector.layer(plain, target.host, target.port, connectTimeoutMillis, deadlineNanos,
+                    sslSocketFactory);
+            layered = true;
             return socket;
         } finally {
-            if (!opened) {
-                try {
-                    plain.close();
-                } catch (IOException ignored) {
-                    // the connection is dropped either way
-                }
+            if (!layered) {
+                closeQuietly(plain);
             }
+        }
+    }
+
+    private static void closeQuietly(Socket s) {
+        try {
+            s.close();
+        } catch (IOException ignored) {
+            // the connection is dropped either way
         }
     }
 }

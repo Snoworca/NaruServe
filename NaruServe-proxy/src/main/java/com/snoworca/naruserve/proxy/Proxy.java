@@ -486,24 +486,18 @@ public final class Proxy implements Middleware {
     // @req FR-PROXY-016
     // @req FR-PROXY-017
     // @req FR-PROXY-015
+    // @req FR-PROXY-018
     private void forward(Request req, Response res, Outgoing outgoing, ProxyExchange exchange) {
         boolean relayed = false;
         try {
             // The watchdog starts right after the slot, the last step before the backend connect (D-050), and the
-            // exchange's release cancels it.
+            // exchange's release cancels it. It runs through every attempt and every wait between them (FR-PROXY-018).
+            long startNanos = System.nanoTime();
             exchange.watch(watchdog, options.totalTimeoutNanos);
-            // Plain for http; TLS-layered and verified for https, whose failures are ProxyExceptions (SEC-PROXY-005).
-            Socket socket = BackendClient.open(target, connectTimeoutMillis(), options.totalTimeoutNanos,
-                    options.sslSocketFactory, exchange);
-            exchange.attach(socket);
-            socket.setSoTimeout(readTimeoutMillis());
-            // The write deadline covers each socket write under the buffer, never a wait for client body bytes.
-            OutputStream out = exchange.backendOutput(socket.getOutputStream(), options.writeTimeoutNanos);
-            @Nullable IOException writeFailure = sendRequest(out, outgoing, exchange);
-            InputStream in = new BufferedInputStream(socket.getInputStream());
-            // A malformed head or framing is a ProxyException INVALID_RESPONSE, which passes the catch below. After a
-            // failed write the response the backend may have left on the socket is read instead (FR-PROXY-015).
-            ResponseParser.Head head = writeFailure == null ? ResponseParser.read(in) : earlyResponse(in, writeFailure);
+            Attempt attempt = lastAttempt(req, outgoing, exchange, startNanos);
+            Socket socket = attempt.socket;
+            InputStream in = attempt.in;
+            ResponseParser.Head head = attempt.head;
             ResponseParser.Framing framing = ResponseParser.framing(head, "HEAD".equals(req.methodToken()));
             // Everything the hand-off sends is computed before res is touched, so a deadline found fired at the check
             // below gives a 504 that carries no backend header line and no .responseHeader value (FR-PROXY-017).
@@ -536,6 +530,100 @@ public final class Proxy implements Middleware {
                 exchange.release();
             }
             closeQuietly(outgoing.body);
+        }
+    }
+
+    /**
+     * The response head of the request's last attempt, read from a new backend connection for every attempt. The first
+     * attempt is followed by up to {@code .retries(n)} more (FR-PROXY-018): after a TCP-level connect failure, for
+     * every method, with the client body not yet touched beyond the pre-read byte, which the next attempt still sends;
+     * after a backend 502 or 503, only when {@link RetryPolicy#retriesStatus} allows it, the retried response's header
+     * block having been read and its connection closed before the wait. Each retry waits {@code .retryDelay} first;
+     * when that wait would end past the total deadline, or no retry is left, the last failure is thrown, or the last
+     * 502 or 503 returned for relaying unchanged; every such decision follows {@link #retryAllowed}. A wait that is
+     * interrupted ends the retries: after a connect failure that failure is thrown, which the caller turns into the
+     * kind of a deadline that fired, and after a closed 502 or 503, whose response is gone, the kind of a deadline that
+     * fired or else an {@link HttpException} of that status goes to the error flow; the interrupt status is kept for
+     * the caller. Every connection belongs to
+     * {@code exchange}, which closes the current one on release, and to its one slot (FR-PROXY-019).
+     */
+    // @req FR-PROXY-018
+    // @req FR-PROXY-020
+    // @req FR-PROXY-017
+    // @req FR-PROXY-015
+    // @req SEC-PROXY-005
+    private Attempt lastAttempt(Request req, Outgoing outgoing, ProxyExchange exchange, long startNanos)
+            throws IOException {
+        long deadlineNanos = startNanos + options.totalTimeoutNanos;
+        for (int retry = 0; ; retry++) {
+            Socket plain;
+            try {
+                plain = BackendClient.connect(target, connectTimeoutMillis(), exchange);
+            } catch (ProxyException e) {
+                // A connect ended by a fired deadline fails as a closed socket: that is the deadline's, never retried.
+                if (RetryPolicy.retriesConnectFailure(e) && retryAllowed(retry, exchange, startNanos)
+                        && waitRetryDelay()) {
+                    continue;
+                }
+                throw e;
+            }
+            // Plain for http; TLS-layered and verified for https, whose failures are ProxyExceptions (SEC-PROXY-005).
+            Socket socket = BackendClient.secure(plain, target, connectTimeoutMillis(), deadlineNanos,
+                    options.sslSocketFactory);
+            exchange.attach(socket);
+            socket.setSoTimeout(readTimeoutMillis());
+            // The write deadline covers each socket write under the buffer, never a wait for client body bytes.
+            OutputStream out = exchange.backendOutput(socket.getOutputStream(), options.writeTimeoutNanos);
+            @Nullable IOException writeFailure = sendRequest(out, outgoing, exchange);
+            InputStream in = new BufferedInputStream(socket.getInputStream());
+            // A malformed head or framing is a ProxyException INVALID_RESPONSE, which passes the caller's catch. After
+            // a failed write the response the backend may have left on the socket is read instead (FR-PROXY-015).
+            ResponseParser.Head head = writeFailure == null ? ResponseParser.read(in) : earlyResponse(in, writeFailure);
+            if (writeFailure == null
+                    && RetryPolicy.retriesStatus(head.status, req.methodToken(), outgoing.framing.bodyless(),
+                            options.retryUnsafeMethods)
+                    && retryAllowed(retry, exchange, startNanos)) {
+                // The header block was read; the rest of the response is dropped with its connection, before the wait.
+                closeQuietly(socket);
+                if (!waitRetryDelay()) {
+                    // Interrupted during the wait: no further attempt. A deadline that fired keeps its own kind;
+                    // otherwise the closed response can only be answered by its status.
+                    throwIfFired(exchange);
+                    throw new HttpException(head.status);
+                }
+                continue;
+            }
+            return new Attempt(socket, in, head);
+        }
+    }
+
+    /**
+     * The one rule every retry decision applies after the failure it answers, at the moment it is made (FR-PROXY-018):
+     * a retry is left after {@code retry} retries, no deadline has fired, the thread is not interrupted, since it
+     * could not wait the delay, and the {@code .retryDelay} wait starting now ends no later than the total deadline of
+     * the request started at {@code startNanos}. Otherwise the last failure, or the last 502 or 503, stands.
+     */
+    // @req FR-PROXY-018
+    // @req FR-PROXY-017
+    private boolean retryAllowed(int retry, ProxyExchange exchange, long startNanos) {
+        return retry < options.retries && exchange.firedKind() == null && !Thread.currentThread().isInterrupted()
+                && RetryPolicy.waitFits(startNanos, System.nanoTime(), options.totalTimeoutNanos,
+                        options.retryDelayNanos);
+    }
+
+    /**
+     * Waits {@code .retryDelay} before a retry and returns true (FR-PROXY-018), or returns false when the wait was
+     * interrupted, with the thread's interrupt status kept so no later retry starts. A deadline that fires during the
+     * wait closes the next attempt's socket at once, which keeps that deadline's kind.
+     */
+    // @req FR-PROXY-018
+    private boolean waitRetryDelay() {
+        try {
+            TimeUnit.NANOSECONDS.sleep(options.retryDelayNanos);
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         }
     }
 
@@ -594,7 +682,7 @@ public final class Proxy implements Middleware {
      * fired and closed the socket (FR-PROXY-017), else {@code READ_TIMEOUT} for the response head's read timeout (the
      * connect and the handshake turn their own timeouts into {@code CONNECT_TIMEOUT}), else {@code INVALID_RESPONSE},
      * the connection having ended before a complete header block (FR-PROXY-015). Connect failures are already
-     * {@code CONNECT_FAILED} ProxyExceptions from {@link BackendClient#open}.
+     * {@code CONNECT_FAILED} ProxyExceptions from {@link BackendClient#connect}.
      */
     // @req FR-PROXY-017
     // @req FR-PROXY-015
@@ -864,6 +952,14 @@ public final class Proxy implements Middleware {
         return length;
     }
 
+    private static void closeQuietly(Socket socket) {
+        try {
+            socket.close();
+        } catch (IOException ignored) {
+            // the connection is dropped either way
+        }
+    }
+
     private static void closeQuietly(InputStream in) {
         try {
             in.close();
@@ -893,6 +989,29 @@ public final class Proxy implements Middleware {
             this.contentLength = contentLength;
             this.firstByte = firstByte;
             this.header = header;
+        }
+
+        /**
+         * Whether zero body bytes go to the backend: no chunked body and a length of 0, the case of a request whose
+         * pre-read found no body or that declared {@code Content-Length: 0}; the only request a backend 502 or 503
+         * may be retried for (FR-PROXY-018). A chunked body is streamed once and cannot be sent again.
+         */
+        // @req FR-PROXY-018
+        boolean bodyless() {
+            return !chunked && contentLength == 0;
+        }
+    }
+
+    /** The connection, its buffered input and the response head of the attempt whose response is relayed. */
+    private static final class Attempt {
+        final Socket socket;
+        final InputStream in;
+        final ResponseParser.Head head;
+
+        Attempt(Socket socket, InputStream in, ResponseParser.Head head) {
+            this.socket = socket;
+            this.in = in;
+            this.head = head;
         }
     }
 
