@@ -233,7 +233,8 @@ public class ProxyCheckOrderTest {
 
     // FR-PROXY-010 AC-6: on a .maxConcurrent(1) mount whose only slot a pending request holds, a Content-Length over
     // the body limit is 413 and a body an earlier middleware read is 500, neither 503: req.bodyStream(limit) runs
-    // before the slot is taken. The pending request is the one the backend has read and not yet answered.
+    // before the slot is taken, while a clean request on the same mount is 503. The pending request is the one the
+    // backend has read and not yet answered.
     @Test(timeout = 30000)
     public void fr_PROXY_010_AC6_bodyStreamAnswersComeBeforeTheConcurrencySlot() throws Exception {
         CountDownLatch release = new CountDownLatch(1);
@@ -264,6 +265,10 @@ public class ProxyCheckOrderTest {
 
         assertEquals("Content-Length over the body limit while the slot is held", 413, overLimit.status());
         assertEquals("body an earlier middleware read while the slot is held", 500, alreadyRead.status());
+        // The contrast request passes every check before the slot, so the held slot is what answers it (FR-PROXY-019).
+        ClientResponse clean = adapter.send(request("POST", "/api/orders/x", new byte[] {'h'},
+                "Content-Length", "1"));
+        assertEquals("a clean request while the slot is held", 503, clean.status());
         assertEquals("backend requests while the slot is held", 1, backend.requestCount());
 
         release.countDown();
