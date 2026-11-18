@@ -1,0 +1,75 @@
+{
+  "lane_cap": 4,
+  "depends": {
+    "2026-11-14.NaruServe.naruserve-proxy-wave-16": [],
+    "2026-11-14.NaruServe.naruserve-proxy-wave-17": []
+  },
+  "declaration": "docs/research/naruserve-proxy/waves/waves.json",
+  "declaration_digests": {
+    "2026-11-14.NaruServe.naruserve-proxy-wave-16": "cac4dcbc208fd7b58342896ad106a8904f4a35ca01bc6fcb04426a261113a485",
+    "2026-11-14.NaruServe.naruserve-proxy-wave-17": "646e6e90b31d7d0b1f1573bc808079a325225818b2fca1ab971d50f560ab6c8e"
+  },
+  "sds_digests": {},
+  "lane_count": 2,
+  "stage_count": 2,
+  "lanes": [
+    {
+      "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-16",
+      "stage": 1,
+      "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-16",
+      "sds": null,
+      "writeSet": [
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ConcurrencyLimiter.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyLifetimeSocketTest.java"
+      ]
+    },
+    {
+      "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-17",
+      "stage": 2,
+      "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-17",
+      "sds": null,
+      "writeSet": [
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ChunkedBodyInputStream.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/FramingLists.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/HeaderRules.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/BackendResponseParserTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyMidResponseFailureTest.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyResponseBodyTest.java"
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "index": 1,
+      "laneIds": [
+        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-16"
+      ]
+    },
+    {
+      "index": 2,
+      "laneIds": [
+        "lane-2026-11-14.NaruServe.naruserve-proxy-wave-17"
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "a": "2026-11-14.NaruServe.naruserve-proxy-wave-16",
+      "b": "2026-11-14.NaruServe.naruserve-proxy-wave-17",
+      "reason": "write-set-overlap",
+      "paths": [
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java"
+      ]
+    }
+  ]
+}
