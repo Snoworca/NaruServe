@@ -1031,4 +1031,42 @@ public final class DocsExamplesCompileTest {
         }
         assertTrue(String.join("\n", diagnostics), diagnostics.isEmpty());
     }
+
+    // OPS-DX-008 AC-7: every Java block of request.md, app.md and their English mirrors that uses the raw request API
+    // (req.bodyStream, BodyTooLargeException in onError, req.headerNames, req.rawHeaders, req.isFromTrustedProxy,
+    // app.rawBodyLimit) is compiled, not skipped, and no diagnostic names any of the four pages
+    @Test
+    public void OPS_DX_008_AC7_rawRequestJavaBlocksOfTheFourPagesCompile() throws IOException {
+        List<String> diagnostics = docsDiagnostics();
+        Map<String, String[]> membersByPage = new TreeMap<>();
+        String[] requestMembers = {".bodyStream()", ".bodyStream(", "instanceof BodyTooLargeException", ".headerNames()",
+            ".rawHeaders()", ".isFromTrustedProxy()"};
+        String[] appMembers = {".rawBodyLimit(", ".bodyStream("};
+        membersByPage.put("request.md", requestMembers);
+        membersByPage.put("en/request.md", requestMembers);
+        membersByPage.put("app.md", appMembers);
+        membersByPage.put("en/app.md", appMembers);
+        for (Map.Entry<String, String[]> e : membersByPage.entrySet()) {
+            String page = e.getKey();
+            List<String> blocks = docs().get(page);
+            assertNotNull("guide page " + page, blocks);
+            for (String d : diagnostics) {
+                assertFalse("compile diagnostic on " + page + ": " + d, d.startsWith(page + " #"));
+            }
+            List<String> members = new ArrayList<>();
+            for (int i = 0; i < blocks.size(); i++) {
+                String body = blocks.get(i);
+                for (String member : e.getValue()) {
+                    if (body.contains(member)) {
+                        members.add(member);
+                        assertNull("skipped raw request block " + page + " #" + (i + 1), skipFor(page, i + 1, body));
+                    }
+                }
+            }
+            for (String member : e.getValue()) {
+                assertTrue(page + " has a compiled Java block using " + member, members.contains(member));
+            }
+        }
+        assertTrue(String.join("\n", diagnostics), diagnostics.isEmpty());
+    }
 }
