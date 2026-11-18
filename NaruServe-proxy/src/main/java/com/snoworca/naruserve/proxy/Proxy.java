@@ -541,9 +541,10 @@ public final class Proxy implements Middleware {
      * block having been read and its connection closed before the wait. Each retry waits {@code .retryDelay} first;
      * when that wait would end past the total deadline, or no retry is left, the last failure is thrown, or the last
      * 502 or 503 returned for relaying unchanged; every such decision follows {@link #retryAllowed}. A wait that is
-     * interrupted ends the retries: after a connect failure that failure is thrown, and after a closed 502 or 503,
-     * whose response is gone, the kind of a deadline that fired or else an {@link HttpException} of that status goes
-     * to the error flow; the interrupt status is kept for the caller. Every connection belongs to
+     * interrupted ends the retries: after a connect failure that failure is thrown, which the caller turns into the
+     * kind of a deadline that fired, and after a closed 502 or 503, whose response is gone, the kind of a deadline that
+     * fired or else an {@link HttpException} of that status goes to the error flow; the interrupt status is kept for
+     * the caller. Every connection belongs to
      * {@code exchange}, which closes the current one on release, and to its one slot (FR-PROXY-019).
      */
     // @req FR-PROXY-018

@@ -378,9 +378,9 @@ public class ProxyRetryTest {
         assertRetryGapAtLeast(p -> p.retries(1).retryDelay(300, TimeUnit.MILLISECONDS), 300);
     }
 
-    // FR-PROXY-018 AC-9 (REL-PROXY-001): a request whose worker thread is interrupted during the wait before a retry
-    // makes no further attempt, so its retries never reach the backend back to back without the delay; the client
-    // receives the last failure
+    // FR-PROXY-018 AC-9 (declared behaviour, REL-PROXY-001): a request whose worker thread is interrupted during the wait
+    // before a retry makes no further attempt, so its retries never reach the backend back to back without the delay;
+    // the client receives the last failure
     @Test(timeout = 30000)
     public void fr_PROXY_018_AC9_anInterruptedWaitEndsTheRetries() throws Exception {
         final AtomicInteger attempts = new AtomicInteger();
@@ -404,9 +404,10 @@ public class ProxyRetryTest {
         assertEquals("connection attempts", 1, attempts.get());
     }
 
-    // FR-PROXY-018 AC-9: a request whose worker thread is interrupted during the wait before retrying a 503 makes no
-    // further attempt, so no two arrivals are closer than the delay; the retried 503's connection is already closed, so
-    // the client gets that status through the error flow as a plain HttpException, not a ProxyException
+    // FR-PROXY-018 AC-9 (declared behaviour): a request whose worker thread is interrupted during the wait before
+    // retrying a 503 makes no further attempt, so no two arrivals are closer than the delay; the retried 503's
+    // connection is already closed, so the client gets that status through the error flow as a plain HttpException,
+    // not a ProxyException
     @Test(timeout = 30000)
     public void fr_PROXY_018_AC9_anInterruptedWaitBeforeA503RetryEndsWithThatStatus() throws Exception {
         final List<Long> arrivals = Collections.synchronizedList(new ArrayList<Long>());
@@ -485,8 +486,8 @@ public class ProxyRetryTest {
         assertEquals(2, backend.connectionsSnapshot().size());
     }
 
-    // FR-PROXY-018 AC-9: a request whose worker thread is interrupted while an attempt waits for its 503 makes no
-    // further attempt and relays that 503 unchanged, as a thread interrupted before the attempt does
+    // FR-PROXY-018 AC-9 (declared behaviour): a request whose worker thread is interrupted while an attempt waits for
+    // its 503 makes no further attempt and relays that 503 unchanged, as a thread interrupted before the attempt does
     @Test(timeout = 30000)
     public void fr_PROXY_018_AC9_anInterruptDuringTheAttemptRelaysItsResponseUnchanged() throws Exception {
         final List<Long> arrivals = Collections.synchronizedList(new ArrayList<Long>());
