@@ -707,7 +707,8 @@ public final class Proxy implements Middleware {
      * {@link #bodyFraming}. The exceptions {@code req.bodyStream} throws for a body earlier code took pass through
      * unwrapped, and the body is closed on every failure. {@code Host} is the received one ({@code receivedHost},
      * null for none) under {@code .preserveHost(true)} and the target host otherwise; the received one also goes out
-     * as {@code X-Forwarded-Host}.
+     * as {@code X-Forwarded-Host}, after {@code X-Forwarded-For} and {@code X-Forwarded-Proto}, and the client's own
+     * forwarding headers are dropped.
      */
     // @req IR-PROXY-001
     // @req SEC-PROXY-003
@@ -716,16 +717,20 @@ public final class Proxy implements Middleware {
     // @req FR-PROXY-008
     // @req FR-PROXY-004
     // @req FR-PROXY-006
+    // @req SEC-PROXY-002
     private Outgoing prepare(Request req, String requestTarget, long declaredFraming, @Nullable String receivedHost) {
         InputStream body = options.bodyLimit == NO_BODY_LIMIT ? req.bodyStream() : req.bodyStream(options.bodyLimit);
         try {
             BodyFraming framing = bodyFraming(req, body, declaredFraming);
             String host = backendHost(receivedHost);
-            // X-Forwarded-For and X-Forwarded-Proto (SEC-PROXY-002) join X-Forwarded-Host in the forwarding slot, and
-            // the .requestHeader values (FR-PROXY-005) fill theirs (D-053).
+            // Trust, scheme and peer come only from the request's public view (SEC-PROXY-002); the .requestHeader
+            // values (FR-PROXY-005) fill their own slot after the forwarding lines (D-053).
+            List<Map.Entry<String, String>> rawHeaders = req.rawHeaders();
+            @Nullable String forwardedFor = BackendRequest.forwardedFor(rawHeaders, req.isFromTrustedProxy(),
+                    req.socketAddress());
             byte[] head = BackendRequest.head(req.methodToken() + " " + requestTarget + " HTTP/1.1", host,
-                    BackendRequest.forwardedClientHeaders(req.rawHeaders()),
-                    BackendRequest.forwardingHeaders(receivedHost),
+                    BackendRequest.forwardedClientHeaders(rawHeaders),
+                    BackendRequest.forwardingHeaders(forwardedFor, req.isSecure(), receivedHost),
                     Collections.<Map.Entry<String, String>>emptyList(), framing.header);
             return new Outgoing(head, body, framing);
         } catch (RuntimeException | Error e) {
