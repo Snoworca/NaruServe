@@ -1,0 +1,46 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-14-ir-proxy-002",
+ "base_sha": "0537d7596f83b27e4c75e95df67d6463c4d30026",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "IR-PROXY-002"
+ ],
+ "req_filter": [
+  "IR-PROXY-002"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyException.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExceptionTest.java"
+ ],
+ "started_at": "2026-11-18T04:53:50Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "commits": [
+   {
+    "req_id": "IR-PROXY-002",
+    "test_sha": "d4935eb",
+    "implementation_sha": "9e9dc1c"
+   }
+  ],
+  "changed": true,
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-14-ir-proxy-002",
+  "commit_sha": "9e9dc1c",
+  "result_summary": "ProxyExceptionTest 8/8; :NaruServe-proxy:test 294/294; animalsnifferMain pass"
+ },
+ "lifecycle_gate_state": {
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "IR-PROXY-002": "evolving"
+  },
+  "status_snapshot": {
+   "IR-PROXY-002": "planned"
+  }
+ },
+ "final_mutations": [],
+ "pending_mutations": [],
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-14-ir-proxy-002/lanes/w14s9l1/reports/pm-final.md"
+}

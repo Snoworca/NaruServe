@@ -1,0 +1,15 @@
+[
+ {
+  "tool": "add_completed_work",
+  "args": {
+   "date": "2026-11-18",
+   "requirementIds": [
+    "FR-PROXY-009"
+   ],
+   "summary": "[req] FR-PROXY-009 - proxy method handling: WebSocket upgrade to next(), non-token method 400, CONNECT and TRACE 405 with Allow; tokens and Upgrade stripping already held. green=PASS (13/13). files: NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java, NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyMethodTest.java, ProxyRequestTargetTest.java (upgrade vehicle updated). AC: FR-PROXY-009 AC-1..7 PASS",
+   "target": "0.12.0"
+  },
+  "argsHash": "4cb7783a1e644ade3daed2516b25a3cf31106798",
+  "action": "apply"
+ }
+]

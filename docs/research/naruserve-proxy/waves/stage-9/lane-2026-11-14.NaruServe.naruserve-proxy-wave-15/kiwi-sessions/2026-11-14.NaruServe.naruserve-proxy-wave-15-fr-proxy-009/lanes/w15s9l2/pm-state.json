@@ -1,0 +1,48 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-15-fr-proxy-009",
+ "base_sha": "2f57538a4c592734d15306f009b5667595a31a45",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-009"
+ ],
+ "req_filter": [
+  "FR-PROXY-009"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyMethodTest.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestTargetTest.java"
+ ],
+ "started_at": "2026-11-18T04:54:11Z",
+ "pm_version": "0.1",
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-15-fr-proxy-009",
+  "result_summary": "FR-PROXY-009 AC-1..7 green; AC-1/6/7 held at base; full build 3890/0",
+  "changed": true,
+  "commit_sha": "9ba144be367fb07734e568588004da53bd60b3fc",
+  "commits": [
+   {
+    "req_id": "FR-PROXY-009",
+    "test_sha": "938b754792b24aabc85020dcfac8dd413643529a",
+    "implementation_sha": "9ba144be367fb07734e568588004da53bd60b3fc"
+   }
+  ],
+  "questions": []
+ },
+ "lifecycle_gate_state": {
+  "evaluated_at": "2026-11-18T04:54:11Z",
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-PROXY-009": "evolving"
+  },
+  "status_snapshot": {
+   "FR-PROXY-009": "planned"
+  }
+ },
+ "clean_code_skip": false,
+ "report_path": ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-15-fr-proxy-009/lanes/w15s9l2/reports/pm-final.md"
+}

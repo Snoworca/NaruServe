@@ -1,0 +1,169 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-15",
+ "wave": "wave-15",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-15",
+ "base_sha": "2f57538a4c592734d15306f009b5667595a31a45",
+ "head_sha": "052179908130c4d01fd87f0bd8e02981c1fb02fc",
+ "commits": [
+  {
+   "sha": "938b754792b24aabc85020dcfac8dd413643529a",
+   "subject": "test(proxy): cover method handling and WebSocket upgrade hand-off",
+   "req": "FR-PROXY-009",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "9ba144be367fb07734e568588004da53bd60b3fc",
+   "subject": "feat(proxy): answer CONNECT/TRACE 405 and hand WebSocket upgrades to next()",
+   "req": "FR-PROXY-009",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "10c3aa68fbe88c30c2c09f54a29d3740705caec9",
+   "subject": "test(proxy): cover the backend Location rewrite",
+   "req": "FR-PROXY-013",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "5e6a6c713020c15475dca4c6394fd0abffcdea7d",
+   "subject": "feat(proxy): rewrite same-origin backend Location to a client path",
+   "req": "FR-PROXY-013",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "7fc59e84dd8f9cb231571151e6456a520e4b4a8b",
+   "subject": "test(proxy): cover fixed and removed response headers",
+   "req": "FR-PROXY-012",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "dd3674c956f1cf73b5aa29e3db36b807cf9497df",
+   "subject": "feat(proxy): apply responseHeader and removeResponseHeader to responses",
+   "req": "FR-PROXY-012",
+   "kind": "implementation",
+   "missing_trailers": false
+  },
+  {
+   "sha": "67090be21d87eeded7f6d04739857277a9849d4f",
+   "subject": "test(proxy): pin Location rewrite for user information and empty ports",
+   "req": "FR-PROXY-013",
+   "kind": "test",
+   "missing_trailers": false
+  },
+  {
+   "sha": "052179908130c4d01fd87f0bd8e02981c1fb02fc",
+   "subject": "fix(proxy): compare Location origins without user information",
+   "req": "FR-PROXY-013",
+   "kind": "review",
+   "missing_trailers": false
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "FR-PROXY-009",
+   "FR-PROXY-013",
+   "FR-PROXY-012"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-15/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-15-fr-proxy-009/lanes/w15s9l2/",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-15-fr-proxy-013/lanes/w15s9l2/",
+  ".kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-15-fr-proxy-012/lanes/w15s9l2/",
+  ".kiwi/sessions/2026-11-18.naruserve.self-w15review/analysis/report.md"
+ ],
+ "red_evidence": [
+  {
+   "req": "FR-PROXY-009",
+   "test": "ProxyMethodTest (AC-2,3,4,5)",
+   "red_output": "13 tests completed, 8 failed: AC-2 expected 400 but was 502; AC-3 expected 405 but was 502 (x3); AC-4 expected 200 but was 502 (x2); AC-5 no WebSocket channel opened within 5 SECONDS (x2). AC-1, AC-6, AC-7 already held at base (green before implementation)"
+  },
+  {
+   "req": "FR-PROXY-013",
+   "test": "LocationRewriterTest + ProxyLocationRewriteTest",
+   "red_output": "25 tests completed, 20 failed (stub returning input): AC1 expected </api/orders/x> but was <http://127.0.0.1:8081/api/orders/x>; AC9 expected [/api/orders/x, //other.example/x] but was [//127.0.0.1:56519/api/orders/x, ...]; AC7 expected [/api/orders/x] but was [http://127.0.0.1:56529/x]. Review fix: 3 AC-8 tests red before 0521799"
+  },
+  {
+   "req": "FR-PROXY-012",
+   "test": "ProxyFixedResponseHeadersTest",
+   "red_output": "14 tests completed, 13 failed: AC1 expected [] but was [backend/1.0]; AC2 expected [max-age=31536000] but was [max-age=0]; AC4 expected [2] but was [9]; AC5 expected [/fixed] but was [/x]; AC6 expected [1] but was [9]"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "blocking_kept": 0,
+  "record_findings": 1,
+  "rounds": 2,
+  "check_review_round": "PASS",
+  "fixed": [
+   "FND-001"
+  ],
+  "declared_limits": [
+   {
+    "id": "FND-101",
+    "detail": "malformed backend authority 'http://h:80:/x' is rewritten to /x instead of left unchanged; origin-less result, no leak"
+   }
+  ],
+  "clean_code": {
+   "rounds": 1,
+   "dismissed": [
+    "CC-001",
+    "CC-002",
+    "CC-003",
+    "CC-004",
+    "CC-101"
+   ],
+   "unresolved": []
+  }
+ },
+ "intentionally_empty": null,
+ "design_refuted": [],
+ "srs_deltas": [
+  {
+   "req": "FR-PROXY-006",
+   "kind": "evidence-note",
+   "note": "VE-2 test fr_PROXY_006_AC2_aRemainderThatIsNotARawSuffixIsRefusedBeforeAnyConnection now checks the raw-suffix 400 via Proxy.requestTarget on a real upgrade request; the client sees 101 because FR-PROXY-009 AC-4 hands upgrades to next(). AC-2 wording 'gets 400' should say the guard refuses with 400 at requestTarget level."
+  },
+  {
+   "req": "FR-PROXY-013",
+   "kind": "acceptance-criterion-proposal",
+   "note": "A rewritten path a client would read as a network-path (two leading '/' or '\\\\', tab/CR/LF skipped) gets a leading '/.', e.g. target http://h, Location http://h//evil.example/x -> /.//evil.example/x (keeps 'never place an origin' and avoids open redirect). Implemented and tested."
+  },
+  {
+   "req": "FR-PROXY-013",
+   "kind": "interpretation-note",
+   "note": "User information is dropped and an empty port read as omitted before the origin comparison (review FND-001); values whose host/port the Proxy.to grammar refuses (0x port, other schemes, trailing-dot or alternate IPv6 spellings) are treated as other origins and left unchanged."
+  },
+  {
+   "req": "FR-PROXY-009",
+   "kind": "note",
+   "note": "AC-1, AC-6 and AC-7 already held at base; their tests were green before the implementation commit (DW-1 red-first holds for AC-2..AC-5 only)."
+  }
+ ],
+ "out_of_lease_paths": [
+  {
+   "path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestTargetTest.java",
+   "reason": "FR-PROXY-009 AC-4/AC-5 (and FR-PROXY-010 AC-1) require WebSocket upgrades to go to next(); the existing FR-PROXY-006 AC-2 test expected the proxy to answer such an upgrade with 400 and hung. It keeps both original checks (requestTarget refuses with 400 on the same decoded request; backend gets 0 requests) and now also asserts the upgrade reaches the app.ws route (101). Recommended option (accept) applied; reviewer confirmed no weakening (FND-003 dropped)."
+  }
+ ],
+ "test_sufficiency": {
+  "gaps": 0,
+  "detail": "check_test_sufficiency ids FR-PROXY-009,FR-PROXY-013,FR-PROXY-012 on the worktree: all 23 ACs cited, gaps [], passed true"
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4427,
+  "failures": 0,
+  "exit_code": 0
+ },
+ "bootstrap": "not-applicable",
+ "notes": "Agent spawns run in background in this environment; the worker waited on each in foreground polling windows. SRS mutations (51 lines) only in the deferred queue; kiwi-pm ran with --no-final so no promotion was made."
+}

@@ -1,0 +1,83 @@
+> Task :NaruServe-api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-api:compileKotlin NO-SOURCE
+> Task :NaruServe-api:compileJava UP-TO-DATE
+> Task :NaruServe-proxy:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-proxy:compileKotlin NO-SOURCE
+> Task :NaruServe-proxy:compileJava UP-TO-DATE
+> Task :NaruServe-proxy:processResources NO-SOURCE
+> Task :NaruServe-proxy:classes UP-TO-DATE
+> Task :NaruServe-proxy:jar UP-TO-DATE
+> Task :NaruServe-api:processResources UP-TO-DATE
+> Task :NaruServe-api:classes UP-TO-DATE
+> Task :NaruServe-api:jar UP-TO-DATE
+> Task :NaruServe-api:compileTestFixturesKotlin NO-SOURCE
+> Task :NaruServe-api:compileTestFixturesJava UP-TO-DATE
+> Task :NaruServe-api:processTestFixturesResources NO-SOURCE
+> Task :NaruServe-api:testFixturesClasses UP-TO-DATE
+> Task :NaruServe-api:testFixturesJar UP-TO-DATE
+> Task :NaruServe-tinyhttpd:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :NaruServe-tinyhttpd:compileKotlin NO-SOURCE
+> Task :NaruServe-tinyhttpd:compileJava UP-TO-DATE
+> Task :NaruServe-proxy:processTestResources NO-SOURCE
+> Task :NaruServe-tinyhttpd:processResources NO-SOURCE
+> Task :NaruServe-tinyhttpd:classes UP-TO-DATE
+> Task :NaruServe-tinyhttpd:jar UP-TO-DATE
+> Task :NaruServe-proxy:compileTestKotlin
+> Task :NaruServe-proxy:compileTestJava
+> Task :NaruServe-proxy:testClasses
+
+> Task :NaruServe-proxy:test FAILED
+
+ProxyFixedResponseHeadersTest > fr_PROXY_012_AC1_removedBackendServerLineDoesNotReachTheClient FAILED
+    java.lang.AssertionError at ProxyFixedResponseHeadersTest.java:109
+
+ProxyFixedResponseHeadersTest > fr_PROXY_012_AC2_fixedValueIsSetWhenTheBackendSendsNoLine FAILED
+    java.lang.AssertionError at ProxyFixedResponseHeadersTest.java:161
+
+ProxyFixedResponseHeadersTest > fr_PROXY_012_AC3_laterRemovalDropsTheEarlierFixedValueAndTheBackendLine FAILED
+    java.lang.AssertionError at ProxyFixedResponseHeadersTest.java:176
+
+ProxyFixedResponseHeadersTest > fr_PROXY_012_AC6_lowerCaseFixedValueReplacesTheBackendLine FAILED
+    java.lang.AssertionError at ProxyFixedResponseHeadersTest.java:259
+
+ProxyFixedResponseHeadersTest > fr_PROXY_012_AC2_fixedValueReplacesTheBackendAndAppValues FAILED
+    java.lang.AssertionError at ProxyFixedResponseHeadersTest.java:150
+
+ProxyFixedResponseHeadersTest > fr_PROXY_012_AC1_appServerValueSetBeforeTheProxyStays FAILED
+    java.lang.AssertionError at ProxyFixedResponseHeadersTest.java:123
+
+ProxyFixedResponseHeadersTest > fr_PROXY_012_AC1_removedLocationIsNotPutBackByTheRewrite FAILED
+    java.lang.AssertionError at ProxyFixedResponseHeadersTest.java:135
+
+ProxyFixedResponseHeadersTest > fr_PROXY_012_AC4_laterFixedValueWinsOverAnEarlierRemoval FAILED
+    java.lang.AssertionError at ProxyFixedResponseHeadersTest.java:187
+
+ProxyFixedResponseHeadersTest > fr_PROXY_012_AC5_fixedLocationAppliesAfterTheRewrite FAILED
+    java.lang.AssertionError at ProxyFixedResponseHeadersTest.java:223
+
+ProxyFixedResponseHeadersTest > fr_PROXY_012_AC4_laterFixedValueWinsOverAnEarlierFixedValue FAILED
+    java.lang.AssertionError at ProxyFixedResponseHeadersTest.java:198
+
+ProxyFixedResponseHeadersTest > fr_PROXY_012_AC6_laterCallInAnotherCaseWins FAILED
+    java.lang.AssertionError at ProxyFixedResponseHeadersTest.java:270
+
+ProxyFixedResponseHeadersTest > fr_PROXY_012_AC5_fixedValueReplacesTwoBackendLines FAILED
+    java.lang.AssertionError at ProxyFixedResponseHeadersTest.java:234
+
+ProxyFixedResponseHeadersTest > fr_PROXY_012_AC6_lowerCaseRemovalHidesTheBackendServerLine FAILED
+    java.lang.AssertionError at ProxyFixedResponseHeadersTest.java:248
+
+14 tests completed, 13 failed
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':NaruServe-proxy:test'.
+> There were failing tests. See the report at: file:///Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-15/NaruServe-proxy/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights.
+
+BUILD FAILED in 670ms
+12 actionable tasks: 3 executed, 9 up-to-date
+EXIT=1

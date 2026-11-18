@@ -1,0 +1,73 @@
+{
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-14": {
+  "head": "c00cde6816688c80a0cd9f99a063ff9d2b463242",
+  "commits": 10,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "detail": "round 1: 1 major (Android API 24+ plain X509TrustManager skipped host name check after reflective identification) fixed in 80bdf4b (test) + c00cde6 (fix); round 2: finding resolved, 1 minor SRS-wording item moved to srs_deltas. Review ran as read-only reviewer subagents, not the kiwi-review-fix-loop skill."
+  },
+  "landed": [
+   "IR-PROXY-002",
+   "SEC-PROXY-005",
+   "CON-BUILD-020",
+   "OPS-BUILD-004"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [
+   "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+   "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestFramingTest.java"
+  ],
+  "outside_reason": "wire BackendClient.open for https in Proxy.forward (removes the SEC-PROXY-005 placeholder 502); the framing test placeholder expectation now asserts one TLS connection and 502 from a non-TLS listener",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build (4403 tests, 0 failures)",
+  "verdict": "pass"
+ },
+ "lane-2026-11-14.NaruServe.naruserve-proxy-wave-15": {
+  "head": "052179908130c4d01fd87f0bd8e02981c1fb02fc",
+  "commits": 8,
+  "review": {
+   "status": "TASK_DONE",
+   "kept_findings": 0,
+   "blocking_kept": 0,
+   "record_findings": 1,
+   "rounds": 2,
+   "check_review_round": "PASS",
+   "fixed": [
+    "FND-001"
+   ],
+   "declared_limits": [
+    {
+     "id": "FND-101",
+     "detail": "malformed backend authority 'http://h:80:/x' is rewritten to /x instead of left unchanged; origin-less result, no leak"
+    }
+   ],
+   "clean_code": {
+    "rounds": 1,
+    "dismissed": [
+     "CC-001",
+     "CC-002",
+     "CC-003",
+     "CC-004",
+     "CC-101"
+    ],
+    "unresolved": []
+   }
+  },
+  "landed": [
+   "FR-PROXY-009",
+   "FR-PROXY-013",
+   "FR-PROXY-012"
+  ],
+  "failed": null,
+  "base_ancestor": true,
+  "outside_write_set": [
+   "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestTargetTest.java"
+  ],
+  "outside_reason": "FR-PROXY-009 AC-4 changes a request-target expectation; both original checks kept",
+  "spec_or_sds_changed": [],
+  "host_verification_cmd": "./gradlew -PtinyHttpdFromMaven=true build (4427 tests, 0 failures)",
+  "verdict": "pass"
+ }
+}

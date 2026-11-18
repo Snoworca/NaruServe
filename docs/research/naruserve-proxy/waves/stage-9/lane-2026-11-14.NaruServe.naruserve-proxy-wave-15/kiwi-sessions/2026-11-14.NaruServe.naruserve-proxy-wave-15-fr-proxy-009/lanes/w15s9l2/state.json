@@ -1,0 +1,74 @@
+{
+ "schema_version": "1.0.0",
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-15-fr-proxy-009",
+ "sds_path": null,
+ "sds_sha256": null,
+ "target": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-009"
+ ],
+ "write_set": [
+  "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyMethodTest.java"
+ ],
+ "out_of_lease_paths": [
+  "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestTargetTest.java"
+ ],
+ "mode": "normal",
+ "flags": [
+  "--loops 20",
+  "--defer-srs-mutation"
+ ],
+ "spawn_context": "pm-child",
+ "started_at": "2026-11-18T04:55:00Z",
+ "updated_at": "2026-11-18T05:21:00Z",
+ "frozen_at": null,
+ "phase": "done",
+ "next_resume_hint": null,
+ "failed": false,
+ "loop_counters": {
+  "phase1": {
+   "kept": 0,
+   "dropped": 0,
+   "rounds": 1
+  },
+  "phase2": {
+   "kept": 2,
+   "dropped": 8,
+   "rounds": 1
+  }
+ },
+ "red_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests com.snoworca.naruserve.proxy.ProxyMethodTest",
+  "exit_code": 1,
+  "captured_failure": "13 tests completed, 8 failed: AC-2 status expected:<400> but was:<502>; AC-3 (CONNECT, TRACE, trace) status expected:<405> but was:<502>; AC-4 (x2) status expected:<200> but was:<502>; AC-5 (x2) no WebSocket channel opened within 5 SECONDS",
+  "timestamp": "2026-11-18T04:59:00Z"
+ },
+ "green_evidence": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:check",
+  "exit_code": 0,
+  "timestamp": "2026-11-18T05:07:00Z"
+ },
+ "regression_baseline": {
+  "source": "/Users/beom/work/git/NaruServe/docs/research/naruserve-proxy/waves/regression-baseline.json",
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "failed": 0,
+  "total": 3829,
+  "head_sha": "853c7734784d13ae75f208bf16dd81e4fa1dbba4"
+ },
+ "mcp_call_log": [],
+ "pending_mutations": [
+  "deferred to .kiwi/deferred-srs-mutations.jsonl (18 calls)"
+ ],
+ "tool_versions": {
+  "kiwi_coder": "0.1.9"
+ },
+ "regression_summary": {
+  "last_run_at": "2026-11-18T05:18:00Z",
+  "scope": "full",
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "passed": 3890,
+  "failed": 0,
+  "regressed_files": []
+ }
+}

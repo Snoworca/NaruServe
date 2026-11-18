@@ -1,0 +1,8 @@
+{"event": "run_start", "sds_id": null}
+{"iter": 1, "file_paths": ["NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyMethodTest.java"], "event": "tdd_draft_done", "sds_id": null}
+{"exit_code": 1, "failed": 8, "passed_already": 5, "event": "tdd_red_confirmed", "sds_id": null}
+{"iter": 1, "files_changed": ["NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java"], "event": "impl_done", "sds_id": null}
+{"iter": 1, "finding_summary": {"kept": 2, "dropped": 8}, "event": "prickly_review_done", "sds_id": null}
+{"exit_code": 0, "event": "test_green", "sds_id": null}
+{"event": "regression_done", "sds_id": null, "scope": "full", "passed": 3890, "failed": 0}
+{"event": "run_done", "sds_id": null, "green": true, "regression": "pass"}

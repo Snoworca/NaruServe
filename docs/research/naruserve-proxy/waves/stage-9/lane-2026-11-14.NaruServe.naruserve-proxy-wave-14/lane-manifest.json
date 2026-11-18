@@ -1,0 +1,157 @@
+{
+ "lane_id": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-14",
+ "wave": "wave-14",
+ "status": "complete",
+ "branch": "kiwi/orch/2026-11-14.NaruServe.naruserve-proxy/lane-2026-11-14.NaruServe.naruserve-proxy-wave-14",
+ "base_sha": "0537d7596f83b27e4c75e95df67d6463c4d30026",
+ "head_sha": "c00cde6816688c80a0cd9f99a063ff9d2b463242",
+ "commits": [
+  {
+   "sha": "d4935eb403a52b7b0c3ebe2b35c8eedc41c23739",
+   "subject": "test(proxy): pin the ProxyException kinds, statuses and constructor",
+   "req": "IR-PROXY-002",
+   "kind": "test"
+  },
+  {
+   "sha": "9e9dc1ccd0c12f4c2768209c1b1b3e2834769516",
+   "subject": "feat(proxy): add ProxyException with a nested Kind enum",
+   "req": "IR-PROXY-002",
+   "kind": "implementation"
+  },
+  {
+   "sha": "c832d9c1d3243ffa1c4669548d04cf270ec9e8e7",
+   "subject": "test(proxy): pin https backends with verified TLS and CONNECT_FAILED kinds",
+   "req": "SEC-PROXY-005",
+   "kind": "test"
+  },
+  {
+   "sha": "8aaecfae8bb6c995ee555cd1ea887c041569352b",
+   "subject": "feat(proxy): reach https backends over verified TLS",
+   "req": "SEC-PROXY-005",
+   "kind": "implementation"
+  },
+  {
+   "sha": "83c7162fec0c360974e319241087ee4f2d4f3e70",
+   "subject": "test(build): probe the NaruServe-proxy API 21 and class-reference checks",
+   "req": "CON-BUILD-020",
+   "kind": "test"
+  },
+  {
+   "sha": "879983234d61c572f35d1d68b3cb8b7c8d5e13f6",
+   "subject": "build: forbid internal, SPI and platform references in NaruServe-proxy",
+   "req": "CON-BUILD-020",
+   "kind": "implementation"
+  },
+  {
+   "sha": "30a4d925dc8ad4cbe381a9b7a5301ca25ed7d324",
+   "subject": "test(build): expect NaruServe-proxy on the CLAUDE.md module line",
+   "req": "OPS-BUILD-004",
+   "kind": "test"
+  },
+  {
+   "sha": "64957d00dd7226c0a9e1b41c9f990824c3439b2e",
+   "subject": "docs: name NaruServe-proxy on the CLAUDE.md module line",
+   "req": "OPS-BUILD-004",
+   "kind": "implementation"
+  },
+  {
+   "sha": "80bdf4bc735c45334ba1cb100e2d636ef3ab16da",
+   "subject": "test(proxy): require the host verifier after identification on Android",
+   "req": "SEC-PROXY-005",
+   "kind": "test"
+  },
+  {
+   "sha": "c00cde6816688c80a0cd9f99a063ff9d2b463242",
+   "subject": "fix(proxy): also verify the backend host name after identification on Android",
+   "req": "SEC-PROXY-005",
+   "kind": "review"
+  }
+ ],
+ "requirements": {
+  "landed": [
+   "IR-PROXY-002",
+   "SEC-PROXY-005",
+   "CON-BUILD-020",
+   "OPS-BUILD-004"
+  ],
+  "failed": null,
+  "held": []
+ },
+ "deferred_queue": "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-14/.kiwi/deferred-srs-mutations.jsonl",
+ "reports": [
+  "/Users/beom/work/git/NaruServe/.claude/worktrees/naruserve-proxy-wave-14/.kiwi/sessions/2026-11-14.NaruServe.naruserve-proxy-wave-14-ir-proxy-002/lanes/w14s9l1/reports/pm-final.md"
+ ],
+ "red_evidence": [
+  {
+   "req": "IR-PROXY-002",
+   "test": "ProxyExceptionTest",
+   "red_output": ":NaruServe-proxy:compileTestJava FAILED - cannot find symbol ProxyException (44 errors) before ProxyException.java existed"
+  },
+  {
+   "req": "SEC-PROXY-005",
+   "test": "ProxyTlsTest",
+   "red_output": "ProxyTlsTest.java:111 error: cannot find symbol (TlsConnector/BackendClient seams) - compileTestJava FAILED before BackendClient/TlsConnector; ProxyRequestFramingTest https placeholder re-pointed in the same test commit"
+  },
+  {
+   "req": "CON-BUILD-020",
+   "test": "BuildChecksTest.con_BUILD_020_AC4_AC6_* and con_BUILD_020_AC5_*",
+   "red_output": "3 of 6 failed with org.gradle.testkit.runner.UnexpectedBuildSuccess for :NaruServe-proxy:checkClassReferences before the classRefPrefixes branch; AC-1/AC-2/AC-3 tests already held at base (javax/servlet prefix and animal-sniffer came with CON-BUILD-019)"
+  },
+  {
+   "req": "OPS-BUILD-004",
+   "test": "BuildLayoutTest.ops_BUILD_004_AC1_claudeMdModuleLineNamesTheProxy, ops_BUILD_003_AC3_AC4_claudeMdModuleLineAndNoRestKotlin",
+   "red_output": "2 failed (module line lacked `NaruServe-proxy` and '이 여덟은 API 21 검사 대상') before the CLAUDE.md edit"
+  },
+  {
+   "req": "SEC-PROXY-005",
+   "test": "ProxyTlsTest.sec_PROXY_005_AC6_theVerifierAlsoRunsAfterIdentificationOnAndroidOnly / aRejectingVerifierAfterIdentificationIsConnectFailed",
+   "red_output": "compileTestJava FAILED: cannot find symbol verifyAfterIdentification/androidRuntime (review fix c00cde6)"
+  }
+ ],
+ "review_outcome": {
+  "status": "TASK_DONE",
+  "kept_findings": 0,
+  "detail": "round 1: 1 major (Android API 24+ plain X509TrustManager skipped host name check after reflective identification) fixed in 80bdf4b (test) + c00cde6 (fix); round 2: finding resolved, 1 minor SRS-wording item moved to srs_deltas. Review ran as read-only reviewer subagents, not the kiwi-review-fix-loop skill."
+ },
+ "intentionally_empty": null,
+ "design_refuted": [],
+ "srs_deltas": [
+  {
+   "req": "SEC-PROXY-005",
+   "kind": "clarification",
+   "text": "Statement and AC-6 say the HostnameVerifier runs only where setEndpointIdentificationAlgorithm is absent; the code also runs it after identification on Android (java.vm.name Dalvik), because Conscrypt applies the identification only in its own trust managers, not to an app's plain X509TrustManager given via .sslSocketFactory. Evidence: ProxyTlsTest sec_PROXY_005_AC6_theVerifierAlsoRunsAfterIdentificationOnAndroidOnly and aRejectingVerifierAfterIdentificationIsConnectFailed."
+  },
+  {
+   "req": "OPS-BUILD-004",
+   "kind": "criterion-conflict",
+   "text": "AC-2 allows baseline tests to change only by adding to pinned lists, but ProxyRequestFramingTest.sec_PROXY_003_AC2_httpsTargetWellFramedRequestStillGives502 pinned the pre-TLS https placeholder (502 with no connection, 'until SEC-PROXY-005 arrives'); SEC-PROXY-005 necessarily makes a well-framed https request connect, so the test now expects 502 with exactly one connection. Red evidence: it failed with 1 backend connection after 8aaecfa's code (311 tests, 1 failed)."
+  },
+  {
+   "req": "OPS-BUILD-004",
+   "kind": "evidence-form",
+   "text": "AC-2 has no test-line citation (check_test_sufficiency gap); its evidence is the regression command: ./gradlew -PtinyHttpdFromMaven=true build exit 0, 4403 tests, 0 failures (baseline 4369 at the integration head, 3829 at P.4)."
+  }
+ ],
+ "out_of_lease_paths": [
+  {
+   "path": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+   "reason": "SEC-PROXY-005 cannot be wired otherwise: removed the https 502 placeholder in handle() and replaced the plain Socket connect in forward() with BackendClient.open (6 insertions, 8 deletions; owned by the wave-15 lane)"
+  },
+  {
+   "path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestFramingTest.java",
+   "reason": "its https-placeholder test asserted the pre-SEC-PROXY-005 behaviour (no connection to an https target); re-pointed to the new behaviour (one connection, 502) and two comments updated"
+  }
+ ],
+ "test_sufficiency": {
+  "gaps": 1,
+  "detail": "check_test_sufficiency over the four requirements: every AC cited except OPS-BUILD-004 AC-2, which is the full-build regression criterion evidenced by the build command (srs_deltas)"
+ },
+ "regression": {
+  "command": "./gradlew -PtinyHttpdFromMaven=true build",
+  "tests": 4403,
+  "failures": 0,
+  "exit_code": 0
+ },
+ "bootstrap": "not-applicable",
+ "process_notes": "IR-PROXY-002 ran through kiwi-pm with a kiwi-coder subagent. Agent spawns in this session run asynchronously, so to avoid stalling the worker implemented SEC-PROXY-005, CON-BUILD-020 and OPS-BUILD-004 inline in the kiwi-coder role (tests committed first, red confirmed), and the self-review used two read-only reviewer subagents instead of the kiwi-review-fix-loop skill. Declared limits: the total-timeout watchdog covers only the https connect+handshake (whole-exchange watchdog, retries and the http connect-timeout kind belong to wave-16); docs/api for ProxyException and TLS belong to wave-21; no Kotlin compile test was added for ProxyException (ProxyKotlinTest.kt is outside the lane)."
+}

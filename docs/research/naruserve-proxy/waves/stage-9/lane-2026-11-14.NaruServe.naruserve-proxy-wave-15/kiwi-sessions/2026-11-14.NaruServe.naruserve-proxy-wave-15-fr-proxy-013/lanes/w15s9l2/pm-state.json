@@ -1,0 +1,37 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-15-fr-proxy-013",
+ "base_sha": "9ba144be367fb07734e568588004da53bd60b3fc",
+ "sds_path": null,
+ "target_slug": "0.12.0",
+ "req_ids": [
+  "FR-PROXY-013"
+ ],
+ "req_filter": [
+  "FR-PROXY-013"
+ ],
+ "run": {
+  "status": "done",
+  "attempts": 1,
+  "coder_run_id": "2026-11-14.NaruServe.naruserve-proxy-wave-15-fr-proxy-013",
+  "result_summary": "FR-PROXY-013 AC-1..10 green; full build 3915/0",
+  "changed": true,
+  "commit_sha": "5e6a6c713020c15475dca4c6394fd0abffcdea7d",
+  "commits": [
+   {
+    "req_id": "FR-PROXY-013",
+    "test_sha": "10c3aa68fbe88c30c2c09f54a29d3740705caec9",
+    "implementation_sha": "5e6a6c713020c15475dca4c6394fd0abffcdea7d"
+   }
+  ]
+ },
+ "lifecycle_gate_state": {
+  "blocked_req_ids": [],
+  "stability_snapshot": {
+   "FR-PROXY-013": "evolving"
+  },
+  "status_snapshot": {
+   "FR-PROXY-013": "planned"
+  }
+ },
+ "clean_code_skip": false
+}
