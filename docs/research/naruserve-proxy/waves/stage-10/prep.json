@@ -1,0 +1,25 @@
+{
+ "base": {
+  "wave-16": "1f4974b3bff16141ff9e535df475819316421cd8"
+ },
+ "lock_digest": "732e1d88a15f376a9751b55216089e940cdf46fcefcf7a81137d96dc7befd868",
+ "lock_commit": "62aacfd918c4ff20775228f2d82073ae3d293e57",
+ "lanes": [
+  {
+   "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-16",
+   "stage": 1,
+   "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-16",
+   "sds": null,
+   "writeSet": [
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ConcurrencyLimiter.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+    "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyLifetimeSocketTest.java"
+   ]
+  }
+ ]
+}
