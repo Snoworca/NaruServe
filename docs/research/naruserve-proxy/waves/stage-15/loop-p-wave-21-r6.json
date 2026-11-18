@@ -1,0 +1,114 @@
+{
+  "wave": "wave-21",
+  "round": 6,
+  "verifier": "loop-p-wave-21-r6",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "OPS-DX-010 AC-9",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R6DocsTest.java::OPS_DX_010_AC9_maxWorkersBoundsTheThreadsAProxyHolds",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: proxy.md thread model says maxWorkers (2 here) bounds the threads a proxy holds and that slow backends use up the pool `maxWorkers`, but 5 proxied requests held a worker thread at the backend at once with maxWorkers(2).maxSseStreams(3); the section never names maxSseStreams: - 느린 백엔드는 작업 스레드 풀(`maxWorkers`, 기본 64)을 다 써서 ... - 기본으로는 `maxConcurrent` 한도가 없으므로, 프록시가 잡는 스레드 수를 묶는 것은 `maxWorkers`와 `totalTimeout`입니다.",
+      "note": "Over TinyHttpd the engine pool is maxWorkers + maxSseStreams (default 64+128=192) and ordinary requests use idle SSE slots, as defaults.md and app.md themselves state; proxy.md and en/proxy.md (lines 351-352) name maxWorkers (default 64) as the pool and the bound. 6 concurrent proxied requests to a holding backend: 5 reached it."
+    },
+    {
+      "id": "LP-2",
+      "cites": "C-005",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R6DocsTest.java::C_005_everyPublicProxyOptionHasAJavaAndAKotlinExample",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "org.junit.ComparisonFailure: public Proxy methods [...] without an example call expected:<[[]]> but was:<[[docs/api java .bodyLimit(, docs/api kotlin .bodyLimit(, docs/api java .preserveHost(, docs/api kotlin .preserveHost(, docs/api java .retryDelay(, docs/api kotlin .retryDelay(, docs/api java .retryUnsafeMethods(, docs/api kotlin .retryUnsafeMethods(, docs/api java .rewriteLocation(, docs/api kotlin .rewriteLocation(, docs/api java .writeTimeout(, docs/api kotlin .writeTimeout(, (same six for docs/api/en)]]>",
+      "note": "Six public 0.12.0 Proxy option methods (writeTimeout, retryDelay, retryUnsafeMethods, preserveHost, bodyLimit, rewriteLocation) appear only in the option table and prose; no Java or Kotlin block in docs/api or docs/api/en calls them."
+    },
+    {
+      "id": "LP-3",
+      "cites": "C-005",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R6DocsTest.java::C_005_theProxyExceptionConstructorHasAJavaAndAKotlinExample",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "org.junit.ComparisonFailure: pages without an example of the public ProxyException(kind, cause) constructor, which proxy.md names only in prose (`new ProxyException(kind, cause)`) expected:<[[]]> but was:<[[docs/api java, docs/api kotlin, docs/api/en java, docs/api/en kotlin]]>",
+      "note": "The public constructor new ProxyException(Kind, Throwable) is stated in a bullet but has no Java or Kotlin example in either language."
+    },
+    {
+      "id": "LP-4",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R6DocsTest.java::OPS_DX_010_AC3_traceGets405WithAllowOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "TRACE, trace and CONNECT /api/x get 405 with the documented Allow line over TinyHttpd, no backend connection."
+    },
+    {
+      "id": "LP-5",
+      "cites": "OPS-DX-010 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R6DocsTest.java::OPS_DX_010_AC6_noContentTypeIsAddedOverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "No Content-Type added when the backend sends none."
+    },
+    {
+      "id": "LP-6",
+      "cites": "OPS-DX-010 AC-6",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R6DocsTest.java::OPS_DX_010_AC6_latin1HeaderByteBecomesUtf8OverTinyHttpd",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Backend header byte 0xE9 reaches the client as 0xC3 0xA9, as stated."
+    },
+    {
+      "id": "LP-7",
+      "cites": "OPS-DX-008 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R6DocsTest.java::OPS_DX_008_AC3_tinyHttpdKeepsOrderAndCaseOfRawHeaders",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "TinyHttpd keeps received order and case in rawHeaders(); headerNames() lowercase first-seen."
+    },
+    {
+      "id": "LP-8",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R6DocsTest.java::OPS_DX_008_AC1_formAndPartsOnJsonLeaveTheBodyToBodyStream",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "form()/parts() on a JSON request leave the whole body to bodyStream(); a later call after reading is BodyAlreadyConsumedException."
+    },
+    {
+      "id": "LP-9",
+      "cites": "OPS-DX-008 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R6DocsTest.java::OPS_DX_008_AC1_repeatedBodyStreamCallRule",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "bodyStream() and bodyStream(rawBodyLimit) return the same stream; another limit is IllegalStateException."
+    },
+    {
+      "id": "LP-10",
+      "cites": "OPS-DX-010 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R6DocsTest.java::OPS_DX_010_AC4_webSocketUpgradeReachesTheAppWsRouteBehindTheProxyMount",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "A WebSocket upgrade under the proxy mount reaches app.ws (101), backend untouched."
+    },
+    {
+      "id": "LP-11",
+      "cites": "OPS-DX-010 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave21R6DocsTest.java::OPS_DX_010_AC3_bodyReadByEarlierMiddlewareGets500",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "A body drained by an earlier middleware gives 500 without a backend connection."
+    }
+  ],
+  "c005": {
+    "holds": false,
+    "note": "Request.bodyStream/bodyStream(long)/headerNames/rawHeaders/isFromTrustedProxy, RestApp.rawBodyLimit, BodyTooLargeException, Response.append/onAbort/relay and HttpHeaderValues.isFieldValue each have an Express counterpart and Java and Kotlin examples in ko and en; Proxy and ProxyException have Express counterparts, but six Proxy options and the ProxyException constructor have no Java/Kotlin example (LP-2, LP-3)."
+  },
+  "summary": {
+    "tests_written": 11,
+    "kept": 3
+  }
+}
