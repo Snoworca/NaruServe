@@ -15,6 +15,7 @@ import org.jspecify.annotations.Nullable;
  */
 // @req SEC-PROXY-005
 // @req FR-PROXY-017
+// @req FR-PROXY-015
 final class BackendClient {
 
     /** Resolves the target host to the address the plain socket connects to. */
@@ -62,12 +63,14 @@ final class BackendClient {
      * A socket connected to {@code target}: plain for {@code http}, TLS-layered and verified for {@code https}. The
      * plain socket is given to {@code exchange} before its connect, so a firing write or total deadline closes it
      * (FR-PROXY-017). The TLS handshake's own total deadline counts from this call. A connect that outlasts
-     * {@code connectTimeoutMillis} is a {@link ProxyException} {@code CONNECT_TIMEOUT}; any other failure of the plain
-     * connect is the {@link IOException} itself; a TLS failure is a {@link ProxyException} (see
-     * {@link TlsConnector#layer}).
+     * {@code connectTimeoutMillis} is a {@link ProxyException} {@code CONNECT_TIMEOUT}; any other failure of the name
+     * resolution or the plain connect, such as a {@link java.net.ConnectException} or an
+     * {@link java.net.UnknownHostException}, is a {@link ProxyException} {@code CONNECT_FAILED} with that failure as its
+     * cause; a TLS failure is a {@link ProxyException} (see {@link TlsConnector#layer}).
      */
     // @req SEC-PROXY-005
     // @req FR-PROXY-017
+    // @req FR-PROXY-015
     static Socket open(TargetUrl target, int connectTimeoutMillis, long totalTimeoutNanos,
             @Nullable SSLSocketFactory sslSocketFactory, ProxyExchange exchange) throws IOException {
         long deadlineNanos = System.nanoTime() + totalTimeoutNanos;
@@ -75,11 +78,14 @@ final class BackendClient {
         boolean opened = false;
         try {
             exchange.plainSocket(plain);
-            InetSocketAddress address = new InetSocketAddress(resolver.resolve(target.host), target.port);
             try {
+                InetSocketAddress address = new InetSocketAddress(resolver.resolve(target.host), target.port);
                 plain.connect(address, connectTimeoutMillis);
             } catch (SocketTimeoutException e) {
                 throw new ProxyException(ProxyException.Kind.CONNECT_TIMEOUT, e);
+            } catch (IOException e) {
+                // A refused connection, an unresolvable host or an unreachable network (FR-PROXY-015).
+                throw new ProxyException(ProxyException.Kind.CONNECT_FAILED, e);
             }
             Socket socket = "https".equals(target.scheme)
                     ? TlsConnector.layer(plain, target.host, target.port, connectTimeoutMillis, deadlineNanos,

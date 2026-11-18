@@ -395,7 +395,10 @@ public final class Proxy implements Middleware {
      * {@code ", "}, goes to {@code next.run()} without a backend connection, so an {@code app.ws} route under the mount
      * gets it; a method that is not a token answers 400 and {@code CONNECT} and {@code TRACE}, in any letter case,
      * answer 405 with {@code Allow}, both before any backend connection. A backend that cannot be reached
-     * or answers with a response this proxy cannot read gives 502 through the error flow; a connect, write, read or
+     * ({@code CONNECT_FAILED}) or answers with a response this proxy cannot read ({@code INVALID_RESPONSE}) gives a
+     * 502 {@link ProxyException} through the error flow, with no body or log entry of the proxy's own; a backend
+     * response that arrives while the request body is still being written is relayed on a best-effort basis
+     * (FR-PROXY-015); a connect, write, read or
      * total timeout before the response is relayed gives 504 with the timeout's kind (FR-PROXY-017); a failure while
      * reading the client body is the client's and reaches the error flow as itself, an over-limit body as 413.
      */
@@ -467,6 +470,7 @@ public final class Proxy implements Middleware {
     // @req FR-PROXY-014
     // @req FR-PROXY-016
     // @req FR-PROXY-017
+    // @req FR-PROXY-015
     private void forward(Request req, Response res, Outgoing outgoing, ProxyExchange exchange) {
         boolean relayed = false;
         try {
@@ -480,17 +484,11 @@ public final class Proxy implements Middleware {
             socket.setSoTimeout(readTimeoutMillis());
             // The write deadline covers each socket write under the buffer, never a wait for client body bytes.
             OutputStream out = exchange.backendOutput(socket.getOutputStream(), options.writeTimeoutNanos);
-            out.write(outgoing.head);
-            BodyFraming requestFraming = outgoing.framing;
-            if (requestFraming.chunked) {
-                RequestBodyCopier.copyChunked(outgoing.body, requestFraming.firstByte, out);
-            } else {
-                RequestBodyCopier.copyLength(outgoing.body, out, requestFraming.contentLength);
-            }
-            out.flush();
+            @Nullable IOException writeFailure = sendRequest(out, outgoing, exchange);
             InputStream in = new BufferedInputStream(socket.getInputStream());
-            // A malformed head or framing is a ProxyException INVALID_RESPONSE, which passes the catch below.
-            ResponseParser.Head head = ResponseParser.read(in);
+            // A malformed head or framing is a ProxyException INVALID_RESPONSE, which passes the catch below. After a
+            // failed write the response the backend may have left on the socket is read instead (FR-PROXY-015).
+            ResponseParser.Head head = writeFailure == null ? ResponseParser.read(in) : earlyResponse(in, writeFailure);
             ResponseParser.Framing framing = ResponseParser.framing(head, "HEAD".equals(req.methodToken()));
             // The adapter writes its own reason phrase for the status (D-059); the backend phrase is not kept.
             res.status(head.status);
@@ -519,19 +517,69 @@ public final class Proxy implements Middleware {
     }
 
     /**
-     * The error-flow exception of the backend I/O failure {@code e} before the relay (FR-PROXY-017): the kind of a
-     * deadline that fired and closed the socket, else {@code READ_TIMEOUT} for the response head's read timeout (the
-     * connect and the handshake turn their own timeouts into {@code CONNECT_TIMEOUT}), else 502.
+     * Writes the request head and the client body to the backend and flushes them. A write failure is returned, not
+     * thrown, so the caller can read an early response the backend left on the socket (FR-PROXY-015); the body copy
+     * stops at that failure and reads no more of the client body. A write failure after a write or total deadline
+     * fired is that deadline's (FR-PROXY-017) and is thrown, so the early-response rule never applies to it. A
+     * failure reading the client body passes as {@link RequestBodyCopier.ClientBodyFailure}.
+     */
+    // @req FR-PROXY-015
+    // @req FR-PROXY-007
+    private static @Nullable IOException sendRequest(OutputStream out, Outgoing outgoing, ProxyExchange exchange)
+            throws IOException {
+        try {
+            out.write(outgoing.head);
+            BodyFraming requestFraming = outgoing.framing;
+            if (requestFraming.chunked) {
+                RequestBodyCopier.copyChunked(outgoing.body, requestFraming.firstByte, out);
+            } else {
+                RequestBodyCopier.copyLength(outgoing.body, out, requestFraming.contentLength);
+            }
+            out.flush();
+            return null;
+        } catch (IOException e) {
+            // The watchdog records its kind before it closes the socket, so a write it failed is seen here.
+            if (exchange.firedKind() != null) {
+                throw e;
+            }
+            return e;
+        }
+    }
+
+    /**
+     * The head of the response a backend sent before it closed or reset the connection while the request was being
+     * written (best effort, FR-PROXY-015): relayed like any response once its status line and header block are
+     * complete; otherwise {@code INVALID_RESPONSE} with the read failure as cause and {@code writeFailure} suppressed.
+     */
+    // @req FR-PROXY-015
+    private static ResponseParser.Head earlyResponse(InputStream in, IOException writeFailure) {
+        try {
+            return ResponseParser.read(in);
+        } catch (ProxyException e) {
+            e.addSuppressed(writeFailure);
+            throw e;
+        } catch (IOException e) {
+            // A read timeout here still means no complete head arrived after the failed write.
+            ProxyException invalid = new ProxyException(ProxyException.Kind.INVALID_RESPONSE, e);
+            invalid.addSuppressed(writeFailure);
+            throw invalid;
+        }
+    }
+
+    /**
+     * The error-flow exception of the backend I/O failure {@code e} before the relay: the kind of a deadline that
+     * fired and closed the socket (FR-PROXY-017), else {@code READ_TIMEOUT} for the response head's read timeout (the
+     * connect and the handshake turn their own timeouts into {@code CONNECT_TIMEOUT}), else {@code INVALID_RESPONSE},
+     * the connection having ended before a complete header block (FR-PROXY-015). Connect failures are already
+     * {@code CONNECT_FAILED} ProxyExceptions from {@link BackendClient#open}.
      */
     // @req FR-PROXY-017
-    private static RuntimeException backendFailure(ProxyExchange exchange, IOException e) {
+    // @req FR-PROXY-015
+    private static ProxyException backendFailure(ProxyExchange exchange, IOException e) {
         ProxyException.Kind kind = exchange.settle(e instanceof SocketTimeoutException
-                ? ProxyException.Kind.READ_TIMEOUT : null);
-        if (kind != null) {
-            return new ProxyException(kind, e);
-        }
-        // A null message: the default error handler echoes non-500 messages, which would name the backend.
-        return new HttpException(502, null, e);
+                ? ProxyException.Kind.READ_TIMEOUT : ProxyException.Kind.INVALID_RESPONSE);
+        // settle never returns null for a non-null kind; the fallback keeps the type checker content.
+        return new ProxyException(kind != null ? kind : ProxyException.Kind.INVALID_RESPONSE, e);
     }
 
     /**
