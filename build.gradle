@@ -650,6 +650,8 @@ dependencies {
     testRuntimeOnly project(':NaruServe')
     // @req OPS-SVL-001
     testImplementation rootServletTestDependency
+    // @req OPS-DX-010 — the proxy.md Java blocks compile in DocsExamplesCompileTest against the proxy module.
+    testImplementation project(':NaruServe-proxy')
 }
 // @req FR-REL-005
 // checkCentralStaging stages every module from scratch and fails rather than stage the JAR modules without the AAR.
