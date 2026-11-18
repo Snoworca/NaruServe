@@ -1,0 +1,36 @@
+{
+ "base": {
+  "wave-21": "9150c04e83b004ad22e989d041a327fb2625dd3f"
+ },
+ "lock_digest": "1df1a94925189bb3d40749c9e1900e2e0a7cf1feea4e5124549c324b40d6c09f",
+ "lock_commit": "2b8484687b334fad2b1bd54f9e7c838169792950",
+ "lanes": [
+  {
+   "laneId": "lane-2026-11-14.NaruServe.naruserve-proxy-wave-21",
+   "stage": 1,
+   "wave": "2026-11-14.NaruServe.naruserve-proxy-wave-21",
+   "sds": null,
+   "writeSet": [
+    "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+    "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt",
+    "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+    "README.ko.md",
+    "README.md",
+    "build.gradle",
+    "docs/api/README.md",
+    "docs/api/app.md",
+    "docs/api/en/README.md",
+    "docs/api/en/app.md",
+    "docs/api/en/proxy.md",
+    "docs/api/en/request.md",
+    "docs/api/proxy.md",
+    "docs/api/request.md",
+    "mkdocs.en.yml",
+    "mkdocs.yml",
+    "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java",
+    "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java"
+   ]
+  }
+ ]
+}
