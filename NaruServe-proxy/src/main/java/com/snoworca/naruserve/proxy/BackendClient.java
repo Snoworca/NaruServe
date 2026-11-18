@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import javax.net.ssl.SSLSocketFactory;
 import org.jspecify.annotations.Nullable;
 
@@ -13,6 +14,8 @@ import org.jspecify.annotations.Nullable;
  * failure the connection is closed here.
  */
 // @req SEC-PROXY-005
+// @req FR-PROXY-017
+// @req FR-PROXY-015
 final class BackendClient {
 
     /** Resolves the target host to the address the plain socket connects to. */
@@ -34,21 +37,56 @@ final class BackendClient {
      */
     static volatile Resolver resolver = SYSTEM_RESOLVER;
 
+    /** Creates the unconnected plain socket of a backend connection. */
+    interface PlainSockets {
+        Socket create();
+    }
+
+    /** {@code new Socket()}. */
+    static final PlainSockets SYSTEM_SOCKETS = new PlainSockets() {
+        @Override
+        public Socket create() {
+            return new Socket();
+        }
+    };
+
+    /**
+     * Package-private test seam: the factory of every plain backend socket, so a test can record the
+     * {@code Socket.connect} call and make it throw (FR-PROXY-017 AC-2). Tests reset it.
+     */
+    static volatile PlainSockets plainSockets = SYSTEM_SOCKETS;
+
     private BackendClient() {
     }
 
     /**
      * A socket connected to {@code target}: plain for {@code http}, TLS-layered and verified for {@code https}. The
-     * total timeout counts from this call. A failure of the plain connect is the {@link IOException} itself; a TLS
-     * failure is a {@link ProxyException} (see {@link TlsConnector#layer}).
+     * plain socket is given to {@code exchange} before its connect, so a firing write or total deadline closes it
+     * (FR-PROXY-017). The TLS handshake's own total deadline counts from this call. A connect that outlasts
+     * {@code connectTimeoutMillis} is a {@link ProxyException} {@code CONNECT_TIMEOUT}; any other failure of the name
+     * resolution or the plain connect, such as a {@link java.net.ConnectException} or an
+     * {@link java.net.UnknownHostException}, is a {@link ProxyException} {@code CONNECT_FAILED} with that failure as its
+     * cause; a TLS failure is a {@link ProxyException} (see {@link TlsConnector#layer}).
      */
+    // @req SEC-PROXY-005
+    // @req FR-PROXY-017
+    // @req FR-PROXY-015
     static Socket open(TargetUrl target, int connectTimeoutMillis, long totalTimeoutNanos,
-            @Nullable SSLSocketFactory sslSocketFactory) throws IOException {
+            @Nullable SSLSocketFactory sslSocketFactory, ProxyExchange exchange) throws IOException {
         long deadlineNanos = System.nanoTime() + totalTimeoutNanos;
-        Socket plain = new Socket();
+        Socket plain = plainSockets.create();
         boolean opened = false;
         try {
-            plain.connect(new InetSocketAddress(resolver.resolve(target.host), target.port), connectTimeoutMillis);
+            exchange.plainSocket(plain);
+            try {
+                InetSocketAddress address = new InetSocketAddress(resolver.resolve(target.host), target.port);
+                plain.connect(address, connectTimeoutMillis);
+            } catch (SocketTimeoutException e) {
+                throw new ProxyException(ProxyException.Kind.CONNECT_TIMEOUT, e);
+            } catch (IOException e) {
+                // A refused connection, an unresolvable host or an unreachable network (FR-PROXY-015).
+                throw new ProxyException(ProxyException.Kind.CONNECT_FAILED, e);
+            }
             Socket socket = "https".equals(target.scheme)
                     ? TlsConnector.layer(plain, target.host, target.port, connectTimeoutMillis, deadlineNanos,
                             sslSocketFactory)

@@ -37,6 +37,19 @@ final class LocationRewriter {
      */
     // @req FR-PROXY-013
     static void apply(List<Map.Entry<String, String>> copied, TargetUrl target, String clientPrefix, Response res) {
+        PendingResponseHeaders pending = new PendingResponseHeaders();
+        apply(copied, target, clientPrefix, pending);
+        pending.applyTo(res);
+    }
+
+    /**
+     * As {@link #apply(List, TargetUrl, String, Response)}, but holds the writes in {@code pending} instead of making
+     * them on the client response (FR-PROXY-017).
+     */
+    // @req FR-PROXY-013
+    // @req FR-PROXY-017
+    static void apply(List<Map.Entry<String, String>> copied, TargetUrl target, String clientPrefix,
+            PendingResponseHeaders res) {
         List<String> values = new ArrayList<>();
         boolean changed = false;
         for (Map.Entry<String, String> line : copied) {

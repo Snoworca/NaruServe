@@ -14,7 +14,8 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>A backend failure while the framework copies the body (FR-PROXY-016) — the end of the stream before the declared
  * length, a read failure such as a malformed chunk, or a read timeout — becomes a {@link ProxyException} of its kind:
- * a failure already caused by a {@code ProxyException} keeps it, a {@link SocketTimeoutException} is
+ * a failure on the backend socket closed by a firing deadline is the kind that deadline recorded (FR-PROXY-017, the
+ * total timeout), a failure already caused by a {@code ProxyException} keeps it, a {@link SocketTimeoutException} is
  * {@code READ_TIMEOUT} and every other read failure is {@code INVALID_RESPONSE}. It is logged once to the app logger
  * and then thrown as an {@link IOException} caused by it, so the framework aborts the client connection; every later
  * read throws the same exception without logging again. A read failing after {@link #abandon} (the client went away
@@ -23,6 +24,7 @@ import org.jspecify.annotations.Nullable;
 // @req FR-PROXY-019
 // @req REL-PROXY-001
 // @req FR-PROXY-016
+// @req FR-PROXY-017
 final class RelayedBodyStream extends FilterInputStream {
 
     private final ProxyExchange exchange;
@@ -125,14 +127,19 @@ final class RelayedBodyStream extends FilterInputStream {
      * class comment, unless the client went away first.
      */
     // @req FR-PROXY-016
+    // @req FR-PROXY-017
     private IOException fail(IOException e) {
         if (abandoned) {
             return e;
         }
         Throwable cause = e.getCause();
-        ProxyException proxyException = cause instanceof ProxyException ? (ProxyException) cause
+        ProxyException own = cause instanceof ProxyException ? (ProxyException) cause
                 : new ProxyException(e instanceof SocketTimeoutException ? ProxyException.Kind.READ_TIMEOUT
                         : ProxyException.Kind.INVALID_RESPONSE, e);
+        // A deadline that fired first closed the socket this read failed on; otherwise the read's own kind stands.
+        ProxyException.Kind settled = exchange.settle(own.kind());
+        ProxyException proxyException = settled == null || settled == own.kind() ? own
+                : new ProxyException(settled, e);
         // The log comes before the throw: the framework's abort keeps no cause, so this record is the only one.
         try {
             logger.error("proxy: the response body from " + backend + " failed after the response started ("
