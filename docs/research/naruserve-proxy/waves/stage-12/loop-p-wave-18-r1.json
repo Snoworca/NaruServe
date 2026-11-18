@@ -1,0 +1,110 @@
+{
+  "wave": "wave-18",
+  "round": 1,
+  "verifier": "loop-p-wave-18-r1",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "PRD-99",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave18Test.java::lp1_defaultBodyOfAnUnresolvableHostNamesNoTarget",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: <!DOCTYPE html>...<pre>com.snoworca.naruserve.proxy.ProxyException<br>\tat com.snoworca.naruserve.proxy.BackendClient.open(BackendClient.java:88)...<br>Caused by: java.net.UnknownHostException: lp-backend.invalid: nodename nor servname provided, or not known<br>... (assertFalse body.contains(\"lp-backend\"))",
+      "note": "App without onError over TinyHttpd, Proxy.to(\"http://lp-backend.invalid:18087\"): the 502 default error body is the FinalHandler HTML page with error.printStackTrace(), which prints the ProxyException's cause chain, so the UnknownHostException message leaks the target host. ProxyException's null message (IR-PROXY-002) does not keep the cause out of the default body; FR-PROXY-015 AC-4's test passes only because ConnectException's message names no address. Same exposure applies to any cause whose message names the target (e.g. TLS host-name failures)."
+    },
+    {
+      "id": "LP-2",
+      "cites": "PRD-112",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave18Test.java::lp2_totalTimeoutDuringABlockedConnect",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Seam socket whose connect blocks until closed; .connectTimeout(5s).totalTimeout(1s) gives 504 TOTAL_TIMEOUT in ~1.1 s."
+    },
+    {
+      "id": "LP-3",
+      "cites": "PRD-112",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave18Test.java::lp3_totalTimeoutDuringASlowResolution",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Resolver seam sleeping 1.5 s with .totalTimeout(1s): 504 TOTAL_TIMEOUT, no backend connection made."
+    },
+    {
+      "id": "LP-4",
+      "cites": "PRD-112",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave18Test.java::lp4_totalTimeoutDuringTheTlsHandshake",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "https silent handshake, .connectTimeout(5s).totalTimeout(1s): 504 TOTAL_TIMEOUT ~1.1 s."
+    },
+    {
+      "id": "LP-5",
+      "cites": "PRD-110",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave18Test.java::lp5_httpsResponseWaitUsesTheReadTimeout",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "After the TLS handshake SO_TIMEOUT becomes the read timeout: .connectTimeout(1s).readTimeout(5s) relays a response sent 2 s after the request."
+    },
+    {
+      "id": "LP-6",
+      "cites": "REL-PROXY-001 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave18Test.java::lp6_noDeadlineIsLeftWhenOnErrorRuns",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "At onError for READ_TIMEOUT, TOTAL_TIMEOUT and WRITE_TIMEOUT the .maxConcurrent(1) counters are 0 and the JVM-wide watchdog queue is empty (no task leak). Watchdog thread properties are wave-19 and not checked."
+    },
+    {
+      "id": "LP-7",
+      "cites": "FR-PROXY-017 AC-12",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave18Test.java::lp7_totalTimeoutEndsATrickledChunkedBody",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Chunked (Transfer-Encoding) client body trickled one byte per 400 ms with .totalTimeout(1s): 504 TOTAL_TIMEOUT in ~1.6 s."
+    },
+    {
+      "id": "LP-8",
+      "cites": "PRD-230",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave18Test.java::lp8_timeoutsBeforeTheResponseAreNotLogged",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Direct middleware calls: READ/TOTAL/WRITE timeouts before the response throw their ProxyException and the app logger gets no error entry."
+    },
+    {
+      "id": "LP-9",
+      "cites": "FR-PROXY-015 AC-9",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave18Test.java::lp9_httpsWriteTimeoutKeepsItsKind",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Over https, a 64 MiB body to a backend that never reads it with .writeTimeout(1s): 504 WRITE_TIMEOUT, not INVALID_RESPONSE."
+    },
+    {
+      "id": "LP-10",
+      "cites": "FR-PROXY-017 AC-11",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave18Test.java::lp10_httpsTotalAfterTheHeadIsA504WithoutBackendHeaders",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Over https, total deadline after the head but before the final check: 504 TOTAL_TIMEOUT without X-Backend."
+    },
+    {
+      "id": "LP-11",
+      "cites": "FR-PROXY-017 AC-11",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave18Test.java::lp11_totalDeadlineRacingTheAnswer",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "30 requests with the backend answering 270-328 ms against .totalTimeout(300ms): every outcome is a complete 200, a 504 TOTAL_TIMEOUT or an abort with only TOTAL_TIMEOUT logged; slot back after each, watchdog queue empty at the end."
+    }
+  ],
+  "summary": {
+    "tests_written": 11,
+    "kept": 1
+  }
+}
