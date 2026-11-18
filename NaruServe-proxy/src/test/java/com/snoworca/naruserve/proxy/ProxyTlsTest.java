@@ -9,7 +9,10 @@ import com.snoworca.naruserve.RestApp;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.testing.RecordingLogger;
+import com.snoworca.naruserve.testing.StubJsonCodec;
 import com.snoworca.naruserve.testing.TestApp;
+import com.snoworca.naruserve.tinyhttpd.TinyHttpdAdapter;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.DataInputStream;
@@ -203,6 +206,30 @@ public class ProxyTlsTest {
         assertSame(ProxyException.Kind.CONNECT_FAILED, onlyProxyError().kind());
     }
 
+    /** Sends {@code raw} to the TinyHttpd app at {@code port} and returns everything it answers until it closes. */
+    private static String exchange(int port, String raw) throws IOException {
+        try (Socket s = new Socket()) {
+            s.connect(new java.net.InetSocketAddress("127.0.0.1", port), 5000);
+            s.setSoTimeout(10_000);
+            s.getOutputStream().write(raw.getBytes(StandardCharsets.ISO_8859_1));
+            s.getOutputStream().flush();
+            ByteArrayOutputStream got = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            try {
+                for (int n; (n = s.getInputStream().read(buf)) >= 0; ) {
+                    got.write(buf, 0, n);
+                }
+            } catch (java.net.SocketException reset) {
+                // a reset after the close counts as the end
+            }
+            String text = new String(got.toByteArray(), StandardCharsets.ISO_8859_1);
+            if (text.indexOf("\r\n") < 0) {
+                throw new java.io.EOFException("no status line: " + text);
+            }
+            return text;
+        }
+    }
+
     private TlsBackend tlsBackend(SSLContext context) throws IOException {
         TlsBackend b = new TlsBackend(context);
         closeables.add(b);
@@ -238,6 +265,37 @@ public class ProxyTlsTest {
 
         assertConnectFailed(get());
         assertEquals("TCP connections", 1, backend.connectionsBeforeSentinel());
+    }
+
+    // FR-PROXY-015 AC-4 (PRD-99): on an app without onError over TinyHttpd, a TLS host name failure (the JDK's endpoint
+    // identification names the target host in its message) gives the default 502 response whose body names neither the
+    // target host nor the target port
+    @Test(timeout = 30000)
+    public void fr_PROXY_015_AC4_theDefaultBodyOfATlsHostNameFailureNamesNeitherHostNorPort() throws Exception {
+        TlsBackend backend = tlsBackend(otherHostServer);
+        BackendClient.resolver = new BackendClient.Resolver() {
+            @Override
+            public InetAddress resolve(String host) throws IOException {
+                return InetAddress.getByName("127.0.0.1");
+            }
+        };
+        RestApp g = RestApp.builder().httpAdapter(new TinyHttpdAdapter()).jsonCodec(new StubJsonCodec())
+                .logger(new RecordingLogger()).build();
+        String response;
+        try {
+            g.use("/api", Proxy.to("https://lp-tls.test:" + backend.port())
+                    .sslSocketFactory(trustingClient.getSocketFactory()));
+            int port = g.listen(0).port();
+            response = exchange(port, "GET /api/x HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
+        } finally {
+            g.shutdown(2, TimeUnit.SECONDS);
+        }
+
+        assertEquals("HTTP/1.1 502 Bad Gateway", response.substring(0, response.indexOf("\r\n")));
+        String body = response.substring(response.indexOf("\r\n\r\n") + 4);
+        assertFalse("the body names the target host: " + body, body.contains("lp-tls"));
+        assertFalse("the body names the target port: " + body, body.contains(Integer.toString(backend.port())));
+        assertTrue("the body names a TLS cause: " + body, body.contains("Caused by: javax.net.ssl."));
     }
 
     // SEC-PROXY-005 AC-1: an https backend that closes the connection during the TLS handshake gives 502

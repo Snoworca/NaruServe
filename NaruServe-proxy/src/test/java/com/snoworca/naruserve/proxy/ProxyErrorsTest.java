@@ -159,6 +159,65 @@ public class ProxyErrorsTest {
         assertFalse("the body names the target port: " + body, body.contains(Integer.toString(stopped)));
     }
 
+    // FR-PROXY-015 AC-4 (PRD-99): on an app without onError over TinyHttpd, an unresolvable target host gives the default
+    // 502 response whose body names neither the host nor the port, although the cause's own message names the host;
+    // the cause still shows up by its class
+    @Test(timeout = 30000)
+    public void fr_PROXY_015_AC4_theDefaultBodyOfAnUnresolvableHostNamesNeitherHostNorPort() throws Exception {
+        RestApp g = RestApp.builder().httpAdapter(new TinyHttpdAdapter()).jsonCodec(new StubJsonCodec())
+                .logger(new RecordingLogger()).build();
+        started.add(g);
+        g.use("/api", Proxy.to("http://lp-backend.invalid:18087"));
+        int port = g.listen(0).port();
+
+        String response = exchange(port, "GET /api/x HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
+
+        assertEquals("HTTP/1.1 502 Bad Gateway", response.substring(0, response.indexOf("\r\n")));
+        String body = response.substring(response.indexOf("\r\n\r\n") + 4);
+        assertFalse("the body names the target host: " + body, body.contains("lp-backend"));
+        assertFalse("the body names the target port: " + body, body.contains("18087"));
+        assertTrue("the body names the cause class: " + body, body.contains("java.net.UnknownHostException"));
+    }
+
+    // FR-PROXY-015 AC-4 (PRD-99), IR-PROXY-002 AC-3: the target stays in getCause() and in the app logger's output. An
+    // onError that only logs the error through the app's ConsoleLogger (IR-APP-006, which prints the stack trace) leaves
+    // the response to the default error response: its body names neither host nor port, while getCause() keeps the
+    // UnknownHostException with its message and the logged trace names the target host
+    @Test(timeout = 30000)
+    public void fr_PROXY_015_AC4_theTargetStaysInTheCauseAndTheLoggedTrace() throws Exception {
+        java.io.PrintStream systemErr = System.err;
+        ByteArrayOutputStream captured = new ByteArrayOutputStream();
+        String response;
+        try {
+            System.setErr(new java.io.PrintStream(captured, true, "UTF-8"));
+            RestApp g = RestApp.builder().httpAdapter(new TinyHttpdAdapter()).jsonCodec(new StubJsonCodec())
+                    .logger(new com.snoworca.naruserve.ConsoleLogger()).build();
+            started.add(g);
+            g.use("/api", Proxy.to("http://lp-backend.invalid:18087"));
+            g.onError((error, req, res) -> {
+                errors.add(error);
+                req.application().logger().error("proxy failed", error);
+            });
+            int port = g.listen(0).port();
+
+            response = exchange(port, "GET /api/x HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
+        } finally {
+            System.setErr(systemErr);
+        }
+
+        assertEquals("HTTP/1.1 502 Bad Gateway", response.substring(0, response.indexOf("\r\n")));
+        String body = response.substring(response.indexOf("\r\n\r\n") + 4);
+        assertFalse("the body names the target host: " + body, body.contains("lp-backend"));
+        assertFalse("the body names the target port: " + body, body.contains("18087"));
+        ProxyException e = onlyProxyError();
+        assertTrue("cause: " + e.getCause(), e.getCause() instanceof UnknownHostException);
+        assertTrue("cause message: " + e.getCause().getMessage(),
+                String.valueOf(e.getCause().getMessage()).contains("lp-backend.invalid"));
+        String logged = new String(captured.toByteArray(), StandardCharsets.UTF_8);
+        assertTrue("the logged trace names the target host: " + logged,
+                logged.contains("Caused by: java.net.UnknownHostException") && logged.contains("lp-backend.invalid"));
+    }
+
     // ---- AC-5 ----
 
     // FR-PROXY-015 AC-5: calling the middleware directly with a recording logger, the failures of AC-1 (refused),
