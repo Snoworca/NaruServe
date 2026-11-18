@@ -1,0 +1,62 @@
+{
+  "wave": "wave-16",
+  "round": 1,
+  "verifier": "loop-p-wave-16-r1",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "REL-PROXY-001 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave16Test.java::rel_PROXY_001_AC1_clientDisconnectWhileTheRelayWaitsOnAQuietBackend",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: the backend observed its connection closed within 15s after the client disconnected (counter=1) (LoopPWave16Test.java:232, 17.9s). Setup: TinyHttpd app, Proxy.to(backend).maxConcurrent(1), backend sends 'Content-Length: 1000000' + 64 KiB then holds; client reads the head + 1 KiB and resets (SO_LINGER 0).",
+      "note": "When the relay is blocked on a quiet backend mid-body, nothing writes to the client, TinyHttpd never reports the disconnect, res.onAbort never fires, and the slot and backend socket stay held until the read timeout (default 60 s). Every later request on the mount gets 503 meanwhile. The existing AC-1 test only covers a backend that keeps sending (DRIP), where the next write fails. The comment on Proxy.releaseOnAbort says such a client is released 'at once', which is false over TinyHttpd. The root cause may be adapter-level disconnect detection (FR-ENGINE-014); classify it as a fix or as a declared limit bounded by readTimeout."
+    },
+    {
+      "id": "LP-2",
+      "cites": "FR-PROXY-019 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave16Test.java::fr_PROXY_019_AC2_aSequentialClientNeverSeesTheSlotOfItsFinishedRequest",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "400 sequential TinyHttpd requests on new connections, maxConcurrent(1), each sent as soon as the previous response was fully read: no 503. The window between ex.finish() and closing the relayed stream did not show up."
+    },
+    {
+      "id": "LP-3",
+      "cites": "FR-PROXY-019 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave16Test.java::fr_PROXY_019_AC1_parallelClientsNeverExceedOneInFlight",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "10 rounds of 40 parallel in-memory clients on maxConcurrent(1): at most 1 backend exchange at a time, only 200 or 503 CONCURRENCY_LIMIT, counter back to 0."
+    },
+    {
+      "id": "LP-4",
+      "cites": "REL-PROXY-001 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave16Test.java::rel_PROXY_001_AC3_racingCloseAndAbortReleaseOnce",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "5000 iterations racing RelayedBodyStream.close() against ProxyExchange.release() on two threads: the slot was returned once, the reservation cancelled once and the socket closed every time."
+    },
+    {
+      "id": "LP-5",
+      "cites": "REL-PROXY-001 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave16Test.java::rel_PROXY_001_AC4_anExceptionFromAnOuterMiddlewareAfterTheRelayReleases",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "An outer middleware that throws after next() returned from a relayed proxy: the core's afterFailure abort closes the relayed stream, the backend sees the close and the counter returns to 0."
+    },
+    {
+      "id": "LP-6",
+      "cites": "FR-PROXY-019 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave16Test.java::fr_PROXY_019_AC2_aHeadRequestReturnsItsSlot",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "A HEAD request through a keep-alive backend on maxConcurrent(1): the bodyless relay closes the stream, the backend sees the close, the counter returns to 0 and the next HEAD reaches the backend."
+    }
+  ],
+  "summary": { "tests_written": 6, "kept": 1 }
+}

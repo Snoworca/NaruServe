@@ -74,6 +74,18 @@
       "owner_requirement": "SEC-PROXY-002",
       "reason_class": "later-wave-observation",
       "note": "kept:false in wave-13 (not owned there): a client-sent X-Forwarded-Host is forwarded ahead of the proxy's own line. SEC-PROXY-002 drops other forwarding headers; the wave-19 worker must drop it and wave-19 loop P re-checks it together with FR-PROXY-003 AC-8."
+    },
+    {
+      "from": "wave-16",
+      "round": 1,
+      "finding": "LP-1",
+      "cites": "REL-PROXY-001 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPWave16Test.java::rel_PROXY_001_AC1_clientDisconnectWhileTheRelayWaitsOnAQuietBackend",
+      "evidence": "java.lang.AssertionError: the backend observed its connection closed within 15s after the client disconnected (counter=1) (LoopPWave16Test.java:232, 17.9s). Setup: TinyHttpd app, Proxy.to(backend).maxConcurrent(1), backend sends 'Content-Length: 1000000' + 64 KiB then holds; client reads the head + 1 KiB and resets (SO_LINGER 0).",
+      "carried_into": "wave-18",
+      "owner_requirement": "FR-PROXY-015",
+      "reason_class": "cross-wave-carry-forward",
+      "note": "REL-PROXY-001 AC-1 now bounds a silent-backend disconnect by the read timeout or the total timeout (TinyHttpd cannot see the disconnect without a write); the wave-18 worker and loop P must show that a silent backend with a disconnected client releases the slot and the backend socket by .readTimeout and by .totalTimeout on a .maxConcurrent(1) mount over real TinyHttpd sockets"
     }
   ]
 }
