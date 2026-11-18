@@ -5,6 +5,7 @@ import com.snoworca.naruserve.common.HttpHeaderValues;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -33,6 +34,40 @@ final class BackendRequest {
                 throw new HttpException(400);
             }
         }
+    }
+
+    /**
+     * The value of the client's one {@code Host} line without OWS, or null when there is no {@code Host} line or its
+     * value is empty. More than one {@code Host} line, whatever the values, answers 400: the target would be ambiguous
+     * (RFC 9112 §3.2).
+     */
+    // @req FR-PROXY-004
+    static @Nullable String receivedHost(List<Map.Entry<String, String>> rawHeaders) {
+        @Nullable String host = null;
+        boolean seen = false;
+        for (Map.Entry<String, String> h : rawHeaders) {
+            if (h.getKey().equalsIgnoreCase("Host")) {
+                if (seen) {
+                    throw new HttpException(400);
+                }
+                seen = true;
+                host = HeaderRules.trimOws(h.getValue());
+            }
+        }
+        return host == null || host.isEmpty() ? null : host;
+    }
+
+    /**
+     * The forwarding header lines (design D-053 slot): {@code X-Forwarded-Host} with the received {@code Host} when
+     * there is one, none otherwise.
+     */
+    // @req FR-PROXY-004
+    static List<Map.Entry<String, String>> forwardingHeaders(@Nullable String receivedHost) {
+        if (receivedHost == null) {
+            return Collections.emptyList();
+        }
+        return Collections.<Map.Entry<String, String>>singletonList(
+                new SimpleImmutableEntry<>("X-Forwarded-Host", receivedHost));
     }
 
     /**

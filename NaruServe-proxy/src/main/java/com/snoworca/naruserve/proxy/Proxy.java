@@ -73,21 +73,26 @@ public final class Proxy implements Middleware {
     private static final Set<String> EMPTY_BODY_LENGTH_METHODS =
             Collections.unmodifiableSet(new HashSet<>(Arrays.asList("POST", "PUT", "PATCH")));
 
-    private final Target target;
+    private final TargetUrl target;
     private final Options options;
 
-    private Proxy(Target target, Options options) {
+    private Proxy(TargetUrl target, Options options) {
         this.target = target;
         this.options = options;
     }
 
     /**
      * A proxy to {@code url}, an {@code http} or {@code https} origin with an optional base path, for example
-     * {@code Proxy.to("http://127.0.0.1:8081")}; every option has its default.
+     * {@code Proxy.to("http://127.0.0.1:8081")}; every option has its default. The URL is checked here: {@code null}
+     * throws {@code NullPointerException} and every other URL throws {@code IllegalArgumentException}: one with
+     * a query, a fragment or user information, another scheme, a host that is not an ASCII name, a dotted-quad IPv4
+     * literal or a bracketed IPv6 literal without a zone id, a port outside {@code 1..65535}, or a base path that
+     * fails the request path checks once its trailing slashes are removed.
      */
     // @req IR-PROXY-001
+    // @req FR-PROXY-001
     public static Proxy to(String url) {
-        return new Proxy(Target.parse(url), Options.defaults());
+        return new Proxy(TargetUrl.parse(url), Options.defaults());
     }
 
     /** The limit for the TCP connect to the backend (default 10 seconds). */
@@ -352,18 +357,27 @@ public final class Proxy implements Middleware {
     // @req SEC-PROXY-003
     // @req FR-PROXY-003
     // @req FR-PROXY-008
+    // @req SEC-PROXY-001
+    // @req FR-PROXY-004
     @Override
     public void handle(Request req, Response res, Next next) throws Exception {
-        // The header check (400) and then the framing answers (400/501) come first, from the header lines alone, for
-        // every target scheme (D-050).
+        // The request-target check (400) runs on the raw originalUrl() path and query whatever stripPrefix says
+        // (D-052); then the header check and the multiple-Host check (400) and the framing answers (400/501), from
+        // the header lines alone, for every target scheme (D-050). A null message, like every other 400 of the
+        // proxy (D-051).
+        if (!PathChecker.isSafeTarget(req.originalUrl())) {
+            throw new HttpException(400);
+        }
+        String requestTarget = requestTarget(req);
         BackendRequest.checkClientHeaders(req.rawHeaders());
+        @Nullable String receivedHost = BackendRequest.receivedHost(req.rawHeaders());
         long declaredFraming = requestBodyLength(req);
         if (!"http".equals(target.scheme)) {
             // https backends arrive with the TLS requirement (SEC-PROXY-005); until then they are not reached.
             throw new HttpException(502);
         }
         try {
-            forward(req, res, prepare(req, declaredFraming));
+            forward(req, res, prepare(req, requestTarget, declaredFraming, receivedHost));
         } catch (RequestBodyCopier.ClientBodyFailure f) {
             throw f.forErrorFlow();
         }
@@ -419,27 +433,75 @@ public final class Proxy implements Middleware {
      * connection. The body is taken once through {@code req.bodyStream(n)} for a mount with {@code .bodyLimit(n)} and
      * {@code req.bodyStream()} otherwise. The framing decision (the pre-read and the list-form 413) lives in
      * {@link #bodyFraming}. The exceptions {@code req.bodyStream} throws for a body earlier code took pass through
-     * unwrapped, and the body is closed on every failure.
+     * unwrapped, and the body is closed on every failure. {@code Host} is the received one ({@code receivedHost},
+     * null for none) under {@code .preserveHost(true)} and the target host otherwise; the received one also goes out
+     * as {@code X-Forwarded-Host}.
      */
     // @req IR-PROXY-001
     // @req SEC-PROXY-003
     // @req FR-PROXY-003
     // @req FR-PROXY-007
     // @req FR-PROXY-008
-    private Outgoing prepare(Request req, long declaredFraming) {
+    // @req FR-PROXY-004
+    // @req FR-PROXY-006
+    private Outgoing prepare(Request req, String requestTarget, long declaredFraming, @Nullable String receivedHost) {
         InputStream body = options.bodyLimit == NO_BODY_LIMIT ? req.bodyStream() : req.bodyStream(options.bodyLimit);
         try {
             BodyFraming framing = bodyFraming(req, body, declaredFraming);
-            // The forwarding headers (SEC-PROXY-002) and the .requestHeader values (FR-PROXY-005) fill their D-053 slots.
-            byte[] head = BackendRequest.head(req.methodToken() + " " + target.basePath + req.originalUrl()
-                    + " HTTP/1.1", target.authority, BackendRequest.forwardedClientHeaders(req.rawHeaders()),
-                    Collections.<Map.Entry<String, String>>emptyList(),
+            String host = backendHost(receivedHost);
+            // X-Forwarded-For and X-Forwarded-Proto (SEC-PROXY-002) join X-Forwarded-Host in the forwarding slot, and
+            // the .requestHeader values (FR-PROXY-005) fill theirs (D-053).
+            byte[] head = BackendRequest.head(req.methodToken() + " " + requestTarget + " HTTP/1.1", host,
+                    BackendRequest.forwardedClientHeaders(req.rawHeaders()),
+                    BackendRequest.forwardingHeaders(receivedHost),
                     Collections.<Map.Entry<String, String>>emptyList(), framing.header);
             return new Outgoing(head, body, framing);
         } catch (RuntimeException | Error e) {
             closeQuietly(body);
             throw e;
         }
+    }
+
+    /**
+     * The request target written to the backend: the target's base path followed by the raw {@code url()}, the
+     * remainder after the mount prefix, under {@code .stripPrefix(true)} and by the raw {@code originalUrl()}
+     * otherwise (design D-052). On a mounted request the path of {@code url()} is {@code /} (a request to the mount
+     * path itself) or a suffix of the raw path of {@code originalUrl()} that starts with {@code /}, followed by the
+     * same raw query, so the path and the query go out exactly as the client encoded them and the
+     * {@link PathChecker} check of {@code originalUrl()} covers them. A WebSocket upgrade to an {@code app.ws} route
+     * reaches the middleware without a mount view: its {@code url()} is the percent-decoded full path. The guard
+     * answers 400 before any backend connection when that decoded path differs from the raw one, so decoded
+     * characters never reach the backend request line; the WebSocket upgrade check of FR-PROXY-009, which hands such
+     * requests to {@code next()} first, is what keeps them away from this method altogether.
+     */
+    // @req FR-PROXY-006
+    String requestTarget(Request req) {
+        String original = req.originalUrl();
+        if (!options.stripPrefix) {
+            return target.basePath + original;
+        }
+        String remainder = req.url();
+        int q = original.indexOf('?');
+        String query = q < 0 ? "" : original.substring(q);
+        String originalPath = q < 0 ? original : original.substring(0, q);
+        if (!remainder.endsWith(query)) {
+            throw new HttpException(400);
+        }
+        String remainderPath = remainder.substring(0, remainder.length() - query.length());
+        if (!"/".equals(remainderPath)
+                && (!remainderPath.startsWith("/") || !originalPath.endsWith(remainderPath))) {
+            throw new HttpException(400);
+        }
+        return target.basePath + remainder;
+    }
+
+    /**
+     * The {@code Host} value written to the backend: {@code receivedHost} under {@code .preserveHost(true)} when the
+     * client sent one, and {@link TargetUrl#hostHeader} of the target otherwise.
+     */
+    // @req FR-PROXY-004
+    String backendHost(@Nullable String receivedHost) {
+        return options.preserveHost && receivedHost != null ? receivedHost : target.hostHeader();
     }
 
     /**
@@ -722,85 +784,6 @@ public final class Proxy implements Middleware {
                     requestHeaderRules, responseHeaderRules, rewriteLocation, v);
         }
     }
-    /**
-     * The backend origin and base path of {@link #to}. Only the shape needed to connect is read here; the full URL
-     * grammar and its rejections belong to the target URL requirement (FR-PROXY-001).
-     */
-    private static final class Target {
-        final String scheme;
-        /** The authority as written, used as the Host value. */
-        final String authority;
-        /** The host to connect to, without IPv6 brackets. */
-        final String host;
-        final int port;
-        /** The base path without trailing slashes; empty for none. */
-        final String basePath;
-
-        private Target(String scheme, String authority, String host, int port, String basePath) {
-            this.scheme = scheme;
-            this.authority = authority;
-            this.host = host;
-            this.port = port;
-            this.basePath = basePath;
-        }
-
-        // @req IR-PROXY-001
-        static Target parse(String url) {
-            if (url == null) {
-                throw new NullPointerException("url");
-            }
-            int sep = url.indexOf("://");
-            if (sep <= 0) {
-                throw new IllegalArgumentException("not an http or https URL");
-            }
-            String scheme = url.substring(0, sep).toLowerCase(Locale.ROOT);
-            if (!scheme.equals("http") && !scheme.equals("https")) {
-                throw new IllegalArgumentException("not an http or https URL");
-            }
-            String rest = url.substring(sep + 3);
-            int slash = rest.indexOf('/');
-            String authority = slash < 0 ? rest : rest.substring(0, slash);
-            String basePath = slash < 0 ? "" : rest.substring(slash);
-            while (basePath.endsWith("/")) {
-                basePath = basePath.substring(0, basePath.length() - 1);
-            }
-            String host;
-            String port = null;
-            if (authority.startsWith("[")) {
-                int close = authority.indexOf(']');
-                if (close < 0) {
-                    throw new IllegalArgumentException("unclosed IPv6 literal");
-                }
-                host = authority.substring(1, close);
-                if (close + 1 < authority.length()) {
-                    if (authority.charAt(close + 1) != ':') {
-                        throw new IllegalArgumentException("bad authority");
-                    }
-                    port = authority.substring(close + 2);
-                }
-            } else {
-                int colon = authority.lastIndexOf(':');
-                host = colon < 0 ? authority : authority.substring(0, colon);
-                port = colon < 0 ? null : authority.substring(colon + 1);
-            }
-            if (host.isEmpty()) {
-                throw new IllegalArgumentException("no host");
-            }
-            int portNumber = scheme.equals("https") ? 443 : 80;
-            if (port != null) {
-                try {
-                    portNumber = Integer.parseInt(port);
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("bad port");
-                }
-                if (portNumber < 1 || portNumber > 65535) {
-                    throw new IllegalArgumentException("bad port");
-                }
-            }
-            return new Target(scheme, authority, host, portNumber, basePath);
-        }
-    }
-
     /**
      * The status, header lines and framing headers of one backend response head, interim 1xx heads skipped. Every
      * header line must have a token name and a value {@code res.header} accepts, or the head is unreadable.
