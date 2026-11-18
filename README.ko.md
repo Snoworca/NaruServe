@@ -84,6 +84,7 @@ artifactId는 모듈 이름을 소문자로 쓴 값입니다(`NaruServe-api` →
 | `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog:0.11.0` | 파일 로테이션 `Logger` |
 | `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j:0.11.0` | SLF4J `Logger` 어댑터(JVM 전용) |
 | `NaruServe-servlet` | `com.snoworca.naruserve:naruserve-servlet:0.11.0` | Servlet 3.1 이상 컨테이너에서 NaruServe 앱을 실행하는 어댑터(JVM 전용) |
+| `NaruServe-proxy` | 0.11.0에는 없음. 다음 릴리스(0.12.0)에 추가 | `NaruServe-api`에만 의존하는 리버스 프록시 미들웨어 `Proxy.to(url)`. 가이드: [리버스 프록시](docs/api/proxy.md) |
 
 ### 소스 체크아웃 빌드
 
@@ -108,7 +109,7 @@ repositories {
 
 `mavenLocal()`이 앞에 있는 동안에는 이 로컬 빌드가 그 소비자에서 Maven Central의 0.11.0을 가립니다. 릴리스된 아티팩트로 돌아가려면 `mavenLocal()`을 빼거나 `~/.m2/repository/com/snoworca/naruserve`를 지우세요.
 
-Android AAR는 `local.properties`의 `sdk.dir`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` 순으로 SDK 디렉터리를 찾아 포함합니다. Android Gradle Plugin 8.13.2, `compileSdk 36`, `minSdk 21`을 사용합니다. SDK가 없어도 아홉 JAR 모듈을 빌드합니다.
+Android AAR는 `local.properties`의 `sdk.dir`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` 순으로 SDK 디렉터리를 찾아 포함합니다. Android Gradle Plugin 8.13.2, `compileSdk 36`, `minSdk 21`을 사용합니다. SDK가 없어도 열 JAR 모듈을 빌드합니다.
 
 TinyHttpd 소스를 수정하려면 `-PtinyHttpdFromMaven=true` 대신 `-PtinyHttpdDir=/absolute/path/to/TinyHttpd`를 사용하세요. 기본 소스 경로는 원래 개발 머신에 맞춰져 있으므로 새 체크아웃에서는 두 속성 중 하나를 명시하세요.
 
@@ -254,6 +255,7 @@ NaruServe-gson/         기본 JSON 코덱
 NaruServe-kotlin/       reified Kotlin 확장
 NaruServe-android/      매니페스트만 포함한 Android AAR
 NaruServe-servlet/      Servlet 3.1 어댑터
+NaruServe-proxy/        리버스 프록시 미들웨어(다음 릴리스)
 NaruServe-{filelog,slf4j,logcat}/  선택적 로거 어댑터
 examples/{java,kotlin}/ 실행 가능한 앱
 src/test/              빌드·게시·문서 검사

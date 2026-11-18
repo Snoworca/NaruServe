@@ -70,10 +70,11 @@ The complete [Java example](../../../examples/java) and [Kotlin example](../../.
 | [Auth module](auth.md) | `passport`, `express-jwt` | 0.11.0: one `app.use(auth)` adds the built-in `/auth/login`, refresh, logout, account and admin endpoints, guards (`auth.require`), groups and roles, and API keys. Storage is the `UserStore` and other interfaces (SPIs) plus in-memory and file defaults |
 | [Kotlin](kotlin.md) | — | Kotlin usage, null handling and JSON considerations |
 | [Servlet module](servlet.md) | — | Run on an application server with `NaruServe-servlet` |
+| [Reverse proxy](proxy.md) | `http-proxy-middleware` | `NaruServe-proxy` of the next release (0.12.0): `Proxy.to(url)`, a middleware that passes requests to a backend server, its options and `ProxyException` |
 
 ## Modules
 
-All modules use Maven group `com.snoworca.naruserve` and version `0.11.0`. The artifactId is the module name in lowercase (`NaruServe-api` → `naruserve-api`).
+All modules use Maven group `com.snoworca.naruserve` and version `0.11.0`. The artifactId is the module name in lowercase (`NaruServe-api` → `naruserve-api`). `NaruServe-proxy` is the only module of the table that 0.11.0 does not contain.
 
 | Module | Coordinates | Contents | Android |
 |---|---|---|---|
@@ -87,9 +88,11 @@ All modules use Maven group `com.snoworca.naruserve` and version `0.11.0`. The a
 | `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog` | Rotating file `Logger` | Supported (API 21+) |
 | `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j` | SLF4J `Logger` adapter (`org.slf4j:slf4j-api:1.7.36`) | Unsupported (JVM only) |
 | `NaruServe-servlet` | `com.snoworca.naruserve:naruserve-servlet` | Adapter that runs a NaruServe app on a Servlet 3.1+ container | Unsupported (JVM only) |
+| `NaruServe-proxy` | `com.snoworca.naruserve:naruserve-proxy` | Reverse proxy middleware `Proxy.to(url)` ([Reverse proxy](proxy.md)); depends only on `NaruServe-api`. Not in 0.11.0; it joins the next release (0.12.0) | Supported (API 21+) |
 
 Modules marked “Supported (API 21+)” undergo the animal-sniffer `android-api-level-21` check at build time.
-`NaruServe-android` is an Android Gradle Plugin AAR and builds only when an Android SDK is available. The build searches `local.properties` `sdk.dir`, `ANDROID_HOME` and `ANDROID_SDK_ROOT`, in that order. Without an SDK, it warns and builds the other nine modules. This module has no code of its own and uses `minSdk 21`.
+`NaruServe-proxy` (`com.snoworca.naruserve:naruserve-proxy`) is the reverse proxy module added in the next release. It depends only on `NaruServe-api`, and `NaruServe`, `NaruServe-kotlin` and `NaruServe-android` do not include it, so only an app that uses the proxy adds it.
+`NaruServe-android` is an Android Gradle Plugin AAR and builds only when an Android SDK is available. The build searches `local.properties` `sdk.dir`, `ANDROID_HOME` and `ANDROID_SDK_ROOT`, in that order. Without an SDK, it warns and builds the other ten modules. This module has no code of its own and uses `minSdk 21`.
 The default HTTP engine build uses a TinyHttpd checkout, verified at commit `e73cd5d` (TinyHttpd 3.1.1, tag `v3.1.1`: RAW request-target policy). A different checkout HEAD produces a warning rather than a build failure. Set `-PtinyHttpdFromMaven=true` to use the 3.1.1 JARs from Maven Central without a checkout. The adapter selects `RequestTargetPolicy.RAW` to preserve encoded paths and raw queries; HTTP syntax, Host, framing and WebSocket path checks remain active.
 
 `RestApp.create()` uses `NaruServe` to assemble the default HTTP engine (TinyHttpd) and Gson.
