@@ -3,18 +3,24 @@ package com.snoworca.naruserve.proxy
 import com.snoworca.naruserve.HttpException
 import com.snoworca.naruserve.RestApp
 import com.snoworca.naruserve.spi.JsonCodec
+import com.snoworca.naruserve.tinyhttpd.TinyHttpdAdapter
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter
 import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest
 import com.snoworca.naruserve.testing.RecordingLogger
+import com.snoworca.naruserve.testing.StubJsonCodec
 import com.snoworca.naruserve.testing.TestApp
 import java.io.File
 import java.io.Reader
 import java.io.Writer
 import java.lang.reflect.Type
 import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Socket
+import java.net.SocketAddress
 import java.net.ServerSocket
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import javax.net.ssl.SSLContext
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -747,5 +753,227 @@ class ProxyDocsKotlinTest {
         t.start()
         started = true
         assertNotNull(Proxy.to("https://backend.internal:8443").sslSocketFactory(tls.socketFactory).sslSocketFactory())
+    }
+
+    /** Interrupts [worker] after [millis] milliseconds, from a daemon thread. */
+    private fun interruptLater(worker: Thread, millis: Long) {
+        val t = Thread({
+            try {
+                Thread.sleep(millis)
+                worker.interrupt()
+            } catch (e: InterruptedException) {
+            }
+        }, "docs-interrupter")
+        t.isDaemon = true
+        t.start()
+    }
+
+    /** A plain backend socket whose first connect interrupts the request thread 100 ms later. */
+    private fun interruptingFirstConnect(fail: Boolean) = BackendClient.PlainSockets {
+        object : Socket() {
+            override fun connect(endpoint: SocketAddress?, timeout: Int) {
+                if (connectsSeen.getAndIncrement() == 0) {
+                    interruptLater(Thread.currentThread(), 100)
+                }
+                if (fail) {
+                    throw java.net.ConnectException("Connection refused (simulated)")
+                }
+                super.connect(endpoint, timeout)
+            }
+        }
+    }
+
+    private val connectsSeen = AtomicInteger()
+
+    // FR-PROXY-018 AC-13 (OPS-DX-010 AC-8, AC-3): the three interrupt outcomes, run on worker threads of an in-memory app
+    // whose onError records what reaches it, and then read from both retry sections and the plain HttpException bullet
+    // and onError example comment of both error sections: a pending interrupt relays the 502 unchanged, an interrupted
+    // wait after a connect failure throws that failure, an interrupted wait after a closed 502 answers through the error
+    // flow with a plain HttpException of that status and never relays the backend response
+    @Test
+    fun `FR-PROXY-018 AC-13 the retry sections state the three interrupt outcomes and onError lists the plain 502 and 503`() {
+        val bad = backend("HTTP/1.1 502 X\r\nX-From-Backend: yes\r\nContent-Length: 7\r\n\r\nbackend")
+        val adapter = InMemoryHttpAdapter()
+        val app = RestApp.builder().httpAdapter(adapter).jsonCodec(StubJsonCodec()).logger(RecordingLogger()).build()
+        val errors = java.util.Collections.synchronizedList(ArrayList<Throwable>())
+        val keptInterrupt = java.util.Collections.synchronizedList(ArrayList<Boolean>())
+        val pending = Proxy.to(bad.url()).retries(2).retryDelay(20, TimeUnit.MILLISECONDS)
+        try {
+            // Each mount records and clears the interrupt status the proxy kept, so no worker thread stays interrupted.
+            fun mount(path: String, proxy: Proxy, interruptFirst: Boolean) {
+                app.use(path) { req, res, next ->
+                    if (interruptFirst) Thread.currentThread().interrupt()
+                    try {
+                        proxy.handle(req, res, next)
+                    } finally {
+                        keptInterrupt.add(Thread.interrupted())
+                    }
+                }
+            }
+            mount("/pending", pending, true)
+            mount("/wait502", Proxy.to(bad.url()).retries(2).retryDelay(2, TimeUnit.SECONDS), false)
+            mount("/waitConnect", Proxy.to(freeUrl()).retries(2).retryDelay(2, TimeUnit.SECONDS), false)
+            app.onError { error, req, res ->
+                errors.add(error)
+                res.status(if (error is HttpException) error.status() else 500).send("onError")
+            }
+            app.listen(0)
+            fun get(path: String) = adapter.submit(ClientRequest.of("GET", path)).get(20, TimeUnit.SECONDS)
+
+            val relayed = get("/pending/x")
+            assertEquals(502, relayed.status())
+            assertEquals("a pending interrupt relays the backend 502 unchanged", "yes", relayed.header("X-From-Backend"))
+            assertEquals(1, bad.requestCount())
+            assertEquals(listOf(true), keptInterrupt.toList())
+            assertTrue(errors.isEmpty())
+
+            BackendClient.plainSockets = interruptingFirstConnect(false)
+            val answered = get("/wait502/x")
+            assertEquals(502, answered.status())
+            assertNull("the closed 502 is not relayed", answered.header("X-From-Backend"))
+            assertEquals("onError", answered.text())
+            assertEquals(2, bad.requestCount())
+            val plain = errors.single()
+            assertTrue("a plain HttpException: $plain", plain is HttpException && plain !is ProxyException)
+            assertEquals(502, (plain as HttpException).status())
+
+            errors.clear()
+            connectsSeen.set(0)
+            BackendClient.plainSockets = interruptingFirstConnect(true)
+            val failed = get("/waitConnect/x")
+            assertEquals(502, failed.status())
+            assertEquals(1, connectsSeen.get())
+            assertSame(ProxyException.Kind.CONNECT_FAILED, (errors.single() as ProxyException).kind())
+            assertEquals("every interrupt status was kept", listOf(true, true, true), keptInterrupt.toList())
+        } finally {
+            BackendClient.plainSockets = BackendClient.SYSTEM_SOCKETS
+            app.shutdown(2, TimeUnit.SECONDS)
+        }
+
+        has("proxy.md retries", section(ko(), "## 재시도"),
+            "재시도를 정할 때 인터럽트 상태가 이미 켜져 있으면 재시도하지 않습니다",
+            "마지막 실패는 그대로 오류 흐름으로 가고 `502`·`503` 백엔드 응답은 그대로 넘깁니다",
+            "시도하는 도중에 인터럽트되면 그 시도의 응답을 그대로 넘깁니다",
+            "연결 실패 뒤의 재시도 대기가 인터럽트되면 그 연결 실패를 던집니다",
+            "`502`나 `503`을 받고 그 연결을 닫은 뒤의 재시도 대기가 인터럽트되면 백엔드 응답을 넘기지 않습니다",
+            "그 상태의 보통 `HttpException`(`ProxyException`이 아님)이 오류 흐름(`onError`)으로 갑니다",
+            "대기 중에 마감이 지났으면 그 마감 종류의 `ProxyException`이 갑니다")
+        has("en/proxy.md retries", section(en(), "## Retries"),
+            "When the interrupt status is already set as a retry is decided, no retry is made",
+            "the last failure goes to the error flow as it is and a `502` or `503` backend response is relayed unchanged",
+            "An interrupt during an attempt relays that attempt's response unchanged",
+            "A retry wait interrupted after a connect failure throws that failure",
+            "A retry wait interrupted after a `502` or `503`, whose connection is already closed, relays no backend response",
+            "a plain `HttpException` of that status (not a `ProxyException`) goes to the error flow (`onError`)",
+            "or a `ProxyException` of the kind of a deadline that fired during the wait")
+        has("proxy.md errors", section(ko(), "### 응답을 보내기 전의 실패"),
+            "재시도 대기가 인터럽트된 `502`·`503`도 보통 `HttpException`입니다")
+        has("en/proxy.md errors", section(en(), "### Failures before the response"),
+            "So is the `502` or `503` of an interrupted retry wait")
+        for ((where, s) in listOf("proxy.md" to section(ko(), "### 응답을 보내기 전의 실패"),
+                "en/proxy.md" to section(en(), "### Failures before the response"))) {
+            val comment = blocks(s, "java").single().split("\n").single { it.contains("instanceof HttpException") }
+            for (status in listOf("400", "405", "501", "413", "502", "503")) {
+                assertTrue("$where onError comment of the plain HttpException branch lacks $status: $comment",
+                    comment.contains(status))
+            }
+        }
+    }
+
+    /** Reads up to and including the blank line that ends an HTTP head. */
+    private fun readHead(input: java.io.InputStream): String {
+        val head = java.io.ByteArrayOutputStream()
+        val end = byteArrayOf('\r'.code.toByte(), '\n'.code.toByte(), '\r'.code.toByte(), '\n'.code.toByte())
+        var matched = 0
+        while (matched < 4) {
+            val b = input.read()
+            if (b < 0) throw java.io.EOFException("closed inside the head: $head")
+            head.write(b)
+            matched = if (b.toByte() == end[matched]) matched + 1 else if (b == '\r'.code) 1 else 0
+        }
+        return String(head.toByteArray(), Charsets.ISO_8859_1)
+    }
+
+    // REL-PROXY-001 AC-1 (OPS-DX-010 AC-9, AC-10): over real TinyHttpd sockets on a .maxConcurrent(1) mount with a 4 s
+    // read timeout, a client that resets while the backend has gone silent mid-body is not seen by the adapter, so the
+    // slot stays held after the client is gone until the read timeout ends the relay; the concurrency bullet and the
+    // thread model section of both pages must state that limit
+    @Test(timeout = 60000)
+    fun `REL-PROXY-001 AC-1 the pages state that a silent backend mid-body holds the slot after the client left until a timeout`() {
+        val backend = ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))
+        val held = java.util.Collections.synchronizedList(ArrayList<Socket>())
+        val acceptor = Thread({
+            while (!backend.isClosed) {
+                try {
+                    val s = backend.accept()
+                    held.add(s)
+                    readHead(s.getInputStream())
+                    s.getOutputStream().write("HTTP/1.1 200 X\r\nContent-Length: 10000000\r\n\r\n".toByteArray(Charsets.ISO_8859_1))
+                    s.getOutputStream().write(ByteArray(262144))
+                    s.getOutputStream().flush() // then silent, the connection held open
+                } catch (e: java.io.IOException) {
+                    return@Thread
+                }
+            }
+        }, "docs-silent-backend")
+        acceptor.isDaemon = true
+        acceptor.start()
+        val p = Proxy.to("http://127.0.0.1:${backend.localPort}").maxConcurrent(1).readTimeout(4, TimeUnit.SECONDS)
+        val app = RestApp.builder().httpAdapter(TinyHttpdAdapter()).jsonCodec(StubJsonCodec()).logger(RecordingLogger()).build()
+        try {
+            app.use("/api", p)
+            val port = app.listen(0).port()
+            Socket().use { client ->
+                client.connect(InetSocketAddress("127.0.0.1", port), 5000)
+                client.soTimeout = 10000
+                client.getOutputStream().write("GET /api/x HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n".toByteArray(Charsets.ISO_8859_1))
+                client.getOutputStream().flush()
+                assertTrue(readHead(client.getInputStream()).startsWith("HTTP/1.1 200 "))
+                client.soTimeout = 1000
+                val buf = ByteArray(8192)
+                var got = 0L
+                try {
+                    while (true) {
+                        val n = client.getInputStream().read(buf)
+                        if (n <= 0) break
+                        got += n
+                    }
+                } catch (quiet: java.net.SocketTimeoutException) {
+                    // every relayed byte arrived; the relay now waits on the silent backend
+                }
+                assertTrue("body bytes received $got", got > 0)
+                Thread.sleep(300)
+                assertEquals(1, p.concurrencyCounter()!!.get())
+                client.setSoLinger(true, 0)
+            }
+            val gone = System.nanoTime()
+            Thread.sleep(1000)
+            assertEquals("the slot is still held 1 s after the client reset", 1, p.concurrencyCounter()!!.get())
+            val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(15)
+            while (p.concurrencyCounter()!!.get() != 0 && System.nanoTime() < deadline) {
+                Thread.sleep(50)
+            }
+            assertEquals("the read timeout released the slot", 0, p.concurrencyCounter()!!.get())
+            assertTrue(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - gone) >= 1000)
+        } finally {
+            app.shutdown(2, TimeUnit.SECONDS)
+            backend.close()
+            for (s in held) s.close()
+        }
+
+        has("proxy.md concurrency", section(ko(), "## 동시 요청 한도"),
+            "클라이언트가 떠난 것을 어댑터가 알았을 때",
+            "어댑터가 클라이언트가 떠난 것을 알지 못하는 동안에는 읽기 타임아웃이나 전체 타임아웃이 요청을 끝낼 때까지 슬롯이 잡혀 있습니다")
+        has("en/proxy.md concurrency", section(en(), "## Concurrency limit"),
+            "the adapter seeing the client gone",
+            "While the adapter cannot see that the client is gone, the slot stays held until the read timeout or the total timeout ends the request")
+        has("proxy.md thread model", section(ko(), "## 스레드 모델"),
+            "응답 본문을 넘기는 도중에 백엔드가 말이 없어진 뒤 클라이언트가 연결을 끊어도 같습니다",
+            "TinyHttpd 어댑터는 클라이언트에 무언가를 써야 연결이 끊긴 것을 알 수 있으므로",
+            "슬롯과 작업 스레드와 백엔드 소켓은 읽기 타임아웃이나 전체 타임아웃이 넘기기를 끝낼 때까지 잡혀 있습니다")
+        has("en/proxy.md thread model", section(en(), "## Thread model"),
+            "The same holds in the middle of the response body: when the backend goes silent and the client then disconnects",
+            "TinyHttpd cannot see the disconnect until something is written to the client",
+            "the slot, the worker thread and the backend socket stay held until the read timeout or the total timeout ends the relay")
     }
 }
