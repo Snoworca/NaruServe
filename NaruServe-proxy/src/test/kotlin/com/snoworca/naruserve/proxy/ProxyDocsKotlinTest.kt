@@ -880,6 +880,59 @@ class ProxyDocsKotlinTest {
         }
     }
 
+    // FR-PROXY-013 AC-11 (OPS-DX-010): the real proxy on app.use("/api/orders", Proxy.to(url)) turns a same-origin
+    // Location whose rewritten path would read as a network-path reference into "/." + path, drops user information,
+    // reads an empty port as omitted (80 here, so the value stays) and leaves a port the Proxy.to grammar refuses
+    // unchanged; the Location rewrite section of both pages must state those results and show the "/." example
+    @Test
+    fun `FR-PROXY-013 AC-11 the Location sections state the slash-dot guard, the dropped user information, the empty port and the refused value`() {
+        val holder = java.util.concurrent.atomic.AtomicReference<RawBackend>()
+        val b = RawBackend.start { _, request, out ->
+            val port = holder.get().port()
+            val location = when (request.requestLine().split(" ")[1]) {
+                "/api/orders/evil" -> "http://127.0.0.1:$port//evil.example/x"
+                "/api/orders/userinfo" -> "http://user:pw@127.0.0.1:$port/api/orders/x"
+                "/api/orders/emptyport" -> "http://127.0.0.1:/api/orders/x"
+                else -> "http://127.0.0.1:99999/api/orders/x"
+            }
+            out.write("HTTP/1.1 302 X\r\nLocation: $location\r\nContent-Length: 0\r\n\r\n".toByteArray(Charsets.ISO_8859_1))
+        }
+        holder.set(b)
+        backends.add(b)
+        val port = b.port()
+        app.use("/api/orders", Proxy.to(b.url()))
+
+        assertEquals("/.//evil.example/x", send("GET", "/api/orders/evil").header("Location"))
+        assertEquals("/api/orders/x", send("GET", "/api/orders/userinfo").header("Location"))
+        assertEquals("http://127.0.0.1:/api/orders/x", send("GET", "/api/orders/emptyport").header("Location"))
+        assertEquals("http://127.0.0.1:99999/api/orders/x", send("GET", "/api/orders/refused").header("Location"))
+        assertEquals("an empty port is the omitted one", "/x",
+            LocationRewriter.rewrite("http://h:/x", TargetUrl.parse("http://h"), ""))
+        assertTrue(port != 80)
+
+        val ko = section(ko(), "### Location 다시 쓰기")
+        val en = section(en(), "### Location rewrite")
+        has("proxy.md Location", ko,
+            "| 같은 마운트 | `http://127.0.0.1:8081//evil.example/x` | `/.//evil.example/x` |",
+            "| 같은 마운트 | `http://user:pw@127.0.0.1:8081/api/orders/x` | `/api/orders/x` |",
+            "탭·CR·LF를 빼고 처음 두 글자가 각각 `/`나 `\\`이면",
+            "앞에 `/.`를 붙입니다",
+            "사용자 정보(`user:pw@`)는 비교하기 전에 버리고 결과에도 넣지 않습니다",
+            "빈 포트(`http://h:/x`의 `:`)는 포트를 생략한 것으로 봅니다",
+            "호스트나 포트가 `Proxy.to`의 문법에 맞지 않는 값(예: 포트 `99999`)은 그대로 둡니다")
+        has("en/proxy.md Location", en,
+            "| The same mount | `http://127.0.0.1:8081//evil.example/x` | `/.//evil.example/x` |",
+            "| The same mount | `http://user:pw@127.0.0.1:8081/api/orders/x` | `/api/orders/x` |",
+            "its first two characters, tab, CR and LF skipped, are each `/` or `\\`",
+            "it gets a leading `/.`",
+            "User information (`user:pw@`) is dropped before the comparison and never reaches the result",
+            "an empty port (the `:` of `http://h:/x`) counts as an omitted port",
+            "A value whose host or port the `Proxy.to` grammar refuses (for example the port `99999`) stays unchanged")
+        for ((where, s) in listOf("proxy.md" to ko, "en/proxy.md" to en)) {
+            assertFalse("$where still predicts the open redirect: $s", s.contains("| `//evil.example/x` |"))
+        }
+    }
+
     /** Reads up to and including the blank line that ends an HTTP head. */
     private fun readHead(input: java.io.InputStream): String {
         val head = java.io.ByteArrayOutputStream()
