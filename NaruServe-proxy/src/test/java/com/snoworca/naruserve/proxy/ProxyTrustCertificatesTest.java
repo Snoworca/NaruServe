@@ -16,18 +16,24 @@ import com.snoworca.naruserve.testing.TestApp;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.net.Socket;
 import java.security.Key;
 import java.security.KeyStore;
+import java.security.Principal;
+import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509ExtendedKeyManager;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -41,7 +47,8 @@ import org.junit.Test;
  * {@code 127.0.0.1}, a self-signed one named only by its common name, an expired self-signed one, a private CA with a
  * certificate for {@code localhost} and one for {@code other.example}, a second CA with a certificate for
  * {@code localhost}, an expired and a not-yet-valid private CA each with a currently valid certificate for
- * {@code localhost}, and an expired CA certificate with the first CA's name but another key.
+ * {@code localhost}, an expired CA certificate with the first CA's name but another key, and a cross-signed
+ * intermediate (one name and key, issued once by the expired CA and once by the first CA) with a leaf it issued.
  */
 public class ProxyTrustCertificatesTest {
 
@@ -77,6 +84,15 @@ public class ProxyTrustCertificatesTest {
     private static SSLContext futureCaLeafServer;
     /** Serves only the private CA's leaf for localhost and 127.0.0.1, without the CA certificate. */
     private static SSLContext caLeafOnlyServer;
+    /** The private CA's certificate. */
+    private static X509Certificate caCert;
+    /** A currently valid intermediate CA certificate the expired CA issued. */
+    private static X509Certificate crossByExpiredCa;
+    /** The same intermediate (same name and key), issued by the private CA: a cross-signed intermediate. */
+    private static X509Certificate crossByCa;
+    /** A currently valid leaf for localhost and 127.0.0.1 that the cross-signed intermediate issued. */
+    private static X509Certificate crossLeaf;
+    private static PrivateKey crossLeafKey;
 
     private final InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
     private final TestApp t = TestApp.create(adapter);
@@ -118,6 +134,7 @@ public class ProxyTrustCertificatesTest {
         expiredCaLeafServer = leafOnlyServer(new File(dir, "expiredcaleaf.p12"));
         futureCaLeafServer = leafOnlyServer(new File(dir, "futurecaleaf.p12"));
         caLeafOnlyServer = leafOnlyServer(new File(dir, "good.p12"));
+        crossSigned();
 
         TestCertificates.keytool(dir, "-importcert", "-noprompt", "-alias", "ca", "-file", "ca.pem", "-keystore",
                 "trust.p12");
@@ -209,6 +226,97 @@ public class ProxyTrustCertificatesTest {
                 name + ".p12");
         TestCertificates.keytool(dir, "-importcert", "-noprompt", "-alias", "server", "-file", name + ".pem",
                 "-keystore", name + ".p12");
+    }
+
+    /**
+     * The cross-signed fixture: an intermediate key pair {@code cross}.p12 whose certificate request both the expired
+     * CA and the private CA sign (same subject, same key), and a leaf for localhost and 127.0.0.1 that the
+     * intermediate's key signs.
+     */
+    private static void crossSigned() throws Exception {
+        TestCertificates.keytool(dir, "-genkeypair", "-alias", "cross", "-keyalg", "RSA", "-keysize", "2048",
+                "-dname", "CN=NaruServe Cross Intermediate", "-ext", "bc:c", "-validity", "3", "-keystore",
+                "cross.p12");
+        TestCertificates.keytool(dir, "-certreq", "-alias", "cross", "-keystore", "cross.p12", "-file", "cross.csr");
+        TestCertificates.keytool(dir, "-gencert", "-rfc", "-alias", "expiredca", "-keystore", "expiredca.p12",
+                "-infile", "cross.csr", "-outfile", "crossbyexpired.pem", "-ext", "bc:c", "-validity", "3");
+        TestCertificates.keytool(dir, "-gencert", "-rfc", "-alias", "ca", "-keystore", "ca.p12", "-infile",
+                "cross.csr", "-outfile", "crossbyca.pem", "-ext", "bc:c", "-validity", "3");
+        TestCertificates.keytool(dir, "-genkeypair", "-alias", "server", "-keyalg", "RSA", "-keysize", "2048",
+                "-dname", "CN=localhost", "-validity", "3", "-keystore", "crossleaf.p12");
+        TestCertificates.keytool(dir, "-certreq", "-alias", "server", "-keystore", "crossleaf.p12", "-file",
+                "crossleaf.csr");
+        TestCertificates.keytool(dir, "-gencert", "-rfc", "-alias", "cross", "-keystore", "cross.p12", "-infile",
+                "crossleaf.csr", "-outfile", "crossleaf.pem", "-ext", "SAN=dns:localhost,ip:127.0.0.1", "-validity",
+                "3");
+        caCert = TestCertificates.parse(caPem);
+        crossByExpiredCa = TestCertificates.parse(TestCertificates.read(new File(dir, "crossbyexpired.pem")));
+        crossByCa = TestCertificates.parse(TestCertificates.read(new File(dir, "crossbyca.pem")));
+        crossLeaf = TestCertificates.parse(TestCertificates.read(new File(dir, "crossleaf.pem")));
+        crossLeafKey = (PrivateKey) TestCertificates.load(new File(dir, "crossleaf.p12"))
+                .getKey("server", TestCertificates.PASSWORD.toCharArray());
+        // the fixture: the expired CA and the private CA both issued the intermediate, which issued the leaf
+        X509Certificate expiredCa = TestCertificates.parse(expiredCaPem);
+        try {
+            expiredCa.checkValidity();
+            throw new AssertionError("the expired CA must be expired");
+        } catch (java.security.cert.CertificateExpiredException expected) {
+            // fixture ok
+        }
+        crossByExpiredCa.verify(expiredCa.getPublicKey());
+        crossByCa.verify(caCert.getPublicKey());
+        assertEquals(crossByExpiredCa.getSubjectX500Principal(), crossByCa.getSubjectX500Principal());
+        assertEquals(crossByExpiredCa.getPublicKey(), crossByCa.getPublicKey());
+        crossLeaf.verify(crossByCa.getPublicKey());
+        crossByExpiredCa.checkValidity();
+        crossByCa.checkValidity();
+        crossLeaf.checkValidity();
+    }
+
+    /**
+     * A server context that presents exactly {@code chain}, in that order, with the cross-signed leaf's key; a
+     * {@code KeyStore} entry cannot hold a chain whose issuer links are out of order.
+     */
+    private static SSLContext presenting(final X509Certificate... chain) throws Exception {
+        X509ExtendedKeyManager km = new X509ExtendedKeyManager() {
+            @Override
+            public String[] getClientAliases(String keyType, Principal[] issuers) {
+                return null;
+            }
+
+            @Override
+            public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket socket) {
+                return null;
+            }
+
+            @Override
+            public String[] getServerAliases(String keyType, Principal[] issuers) {
+                return new String[] {"server"};
+            }
+
+            @Override
+            public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket) {
+                return keyType.startsWith("RSA") ? "server" : null;
+            }
+
+            @Override
+            public String chooseEngineServerAlias(String keyType, Principal[] issuers, SSLEngine engine) {
+                return keyType.startsWith("RSA") ? "server" : null;
+            }
+
+            @Override
+            public X509Certificate[] getCertificateChain(String alias) {
+                return chain.clone();
+            }
+
+            @Override
+            public PrivateKey getPrivateKey(String alias) {
+                return crossLeafKey;
+            }
+        };
+        SSLContext c = SSLContext.getInstance("TLS");
+        c.init(new KeyManager[] {km}, null, null);
+        return c;
     }
 
     private static X509Certificate caCertificate() throws Exception {
@@ -382,6 +490,51 @@ public class ProxyTrustCertificatesTest {
         mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(bundle));
 
         assertReached(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-2: a cross-signed intermediate. With the expired CA and the valid private CA given, a backend
+    // presenting [leaf, intermediate by the expired CA, the same intermediate by the private CA] is reached: the leaf
+    // chains through the second intermediate to the valid private CA, which trusts what it issued, and the expired CA
+    // is a given certificate that path does not need
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC2_aCrossSignedChainReachingTheValidGivenCaIsReachedDespiteAnExpiredGivenRoot()
+            throws Exception {
+        TlsBackend backend = tlsBackend(presenting(crossLeaf, crossByExpiredCa, crossByCa));
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(expiredCaPem + caPem));
+
+        assertReached(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-2: the same cross-signed chain presented in the other order [leaf, intermediate by the private
+    // CA, intermediate by the expired CA] is reached as well; the order the backend sends does not decide
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC2_aCrossSignedChainInTheOtherOrderIsReachedDespiteAnExpiredGivenRoot()
+            throws Exception {
+        TlsBackend backend = tlsBackend(presenting(crossLeaf, crossByCa, crossByExpiredCa));
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(expiredCaPem + caPem));
+
+        assertReached(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-3: with only the expired CA given, the same cross-signed chain gives 502 CONNECT_FAILED: every
+    // path from the leaf to a given certificate ends at the expired CA
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC3_aCrossSignedChainWhoseOnlyGivenRootIsExpiredIsConnectFailed() throws Exception {
+        TlsBackend backend = tlsBackend(presenting(crossLeaf, crossByExpiredCa, crossByCa));
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(expiredCaPem));
+
+        assertConnectFailed(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-3: a valid given certificate the backend sends but the leaf does not chain through does not hide
+    // the expired given CA the leaf does chain to: [leaf, the private CA's certificate, intermediate by the expired
+    // CA] with both CAs given gives 502 CONNECT_FAILED
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC3_aValidGivenCertificateOffThePathDoesNotHideTheExpiredGivenCa() throws Exception {
+        TlsBackend backend = tlsBackend(presenting(crossLeaf, caCert, crossByExpiredCa));
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(expiredCaPem + caPem));
+
+        assertConnectFailed(get(), backend);
     }
 
     // ---- AC-4 ----
