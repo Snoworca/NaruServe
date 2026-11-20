@@ -1,0 +1,48 @@
+{
+  "round": 3,
+  "immediate_fix": [
+    {
+      "id": "R3-001",
+      "rationale": "Kept and execution-proven: a mutant that drops the SSLSocket close from BackendClient.closeConnection fails 4 of the 5 new ProxyTlsCloseTest tests, but sec_PROXY_005_anAbortOnAnotherThreadClosesTheSslSocketWithoutWaitingForTheReader stays green. On the JDK the blocked reader's own failure (fatal -> SSLSocketImpl.shutdown) sets isClosed(), and DefaultResponse.runTransfer's finally closeInput -> RelayedBodyStream.close -> SocketBodyStream.close also closes it, so assertAllClosed proves nothing about the abort-thread close the test comment claims. The round-2 fix of this loop added this test as its evidence for the abort path, so the loop's own verification is false on its main claim. No SRS AC is broken by it, but it is cheap to fix and must be rewritten anyway by the R3-003 fix (the abort thread will no longer close the SSLSocket), so it is handled as blocking in round 4 together with R3-003. Fix: have RecordingSslSockets wrap each created SSLSocket in a delegating SSLSocket (the delegating socket in ProxyTlsTest AC-9 can be reused) that records each close() call and its thread; assert that close() ran (at least once, within 5 s) on a thread other than the one that called res.abort, i.e. the copy thread after its read returned, and never on the abort thread; keep the abortMillis < 1000 bound. Re-run both mutants (closeConnection without the SSLSocket close; abort-listener release closing the SSLSocket) and confirm each turns the test red.",
+      "estimated_complexity": "low",
+      "is_behavioral": false,
+      "tags": ["test-quality", "weak-test", "loop-introduced"],
+      "req_ids": ["SEC-PROXY-005", "FR-PROXY-019", "REL-PROXY-001"]
+    }
+  ],
+  "declared_limit": [],
+  "kept_tiers": [
+    {
+      "id": "R3-001",
+      "tier": "block",
+      "family": "vacuous SSLSocket-close assertion",
+      "introduced_by_round": 2,
+      "family_action": null
+    }
+  ],
+  "discussion_needed": [
+    {
+      "id": "R3-003",
+      "rationale": "Residual: the cross-thread SSLSocket.close() run by ProxyExchange.release on the res.onAbort thread is shown non-blocking only on JDK 17/21/8u504 (25 varied aborts, worst 1 ms, 0 unclosed). On Conscrypt (Android API 21+) close() does ssl.interrupt() and then waits in awaitPendingOps for the reader's native SSL_read to leave readLock. Code reading says the wait should be short: the plain socket is closed first (Android's close signals threads blocked on that fd) and SSL_interrupt wakes the native select, and the slot is released in a finally after the close, so a slow close delays but never leaks the slot. Worst case, if neither wakeup reached the reader, is a wait bounded by the read timeout (SO_TIMEOUT), the same symptom class as A-001. No Android runtime is available, and device verification is out of scope by user decision. Code reading also shows the abort-thread SSLSocket close is redundant: DefaultResponse is the only Response implementation in main code, and every path that hands the body to res.relay ends in SocketBodyStream.close -> BackendClient.closeConnection(plain, ssl): (a) abort while no copy runs: DefaultResponse.abort calls closeInput before it runs the listeners, with no reader in SSL_read; (b) abort while the copy runs: abort skips closeInput, the copy's read fails on the closed plain socket and runTransfer's finally closeInput closes the input on the reader's own thread; (c) abort before res.relay (the listener runs at registration or between registration and relay): relay is refused and startBody runs closeQuietly(in); (d) an adapter without a relay writer: Response.relay's default closes in; (e) normal end or a read failure: runTransfer's finally closeInput. Worker-thread releases before the relay (forward's finally when relayed == false, attach after release) still close both sockets themselves. So if the abort-listener release closed only the plain socket, the worker would still close the SSLSocket on every path (no R2-001 regression), plain would still be closed first (no A-001 regression), and no SSLSocket close would ever run on a foreign thread while a reader is in SSL_read. Remaining dependency: a future Response implementation that does not close the relayed input would leave the SSLSocket to its finalizer, which Response.relay's ownership contract already forbids.",
+      "questions_for_user": [
+        "Should the res.onAbort listener stop closing the backend SSLSocket and close only the plain socket, so the SSLSocket is always closed by the relayed body's close on the reading thread and Conscrypt's close never waits for a pending SSL_read on the abort thread?",
+        "Or is the Conscrypt behaviour (ssl.interrupt plus the plain-socket close waking SSL_read at once) enough, so the current cross-thread close stays, with only its javadoc corrected from 'takes no lock it would wait for' to a JDK-specific statement?",
+        "Since Android devices cannot be tested here, should the Conscrypt timing be left as a recorded limit to check later on a device?"
+      ],
+      "recommended_option": "fix-now",
+      "recommendation_reason": "The fix is small and testable on the JVM, and it is strictly safer: it removes the only platform-dependent wait on the abort path without depending on Conscrypt internals that cannot be verified here. Code reading shows it reintroduces neither R2-001 (every relayed path ends in SocketBodyStream.close, which closes the SSLSocket on the reader's thread or with no reader active; worker-side releases before the relay still close both sockets) nor A-001 (plain is still closed first everywhere). R3-001 requires rewriting the same test in round 4 anyway, so both close together. Rejecting would rest on unverifiable device behaviour, and deferring would leave a known foreign-thread wait in code this loop introduced.",
+      "fix_guidance": "1) ProxyExchange: keep release() as is for worker-thread callers (forward's finally, RelayedBodyStream.close, attach after release). Add a package-private releaseOnAbortThread() (or release(boolean closeTls)) that runs the same exactly-once sequence (the released CAS, cancelling the reservation, the close, then limiter.release in nested finallys) but closes only the plain socket: Socket p = plain; Socket s = socket; if s != null, close p != null ? p : s, quietly; never close the SSLSocket. 2) Proxy.releaseOnAbort: the listener calls relayedBody.abandon() and then exchange.releaseOnAbortThread(). Add a comment that from res.relay on, the relayed body owns the SSLSocket close, because the response closes the relayed input on every path (abort with no copy running, the copy's finally, relay refusal, the default relay), and SocketBodyStream.close runs BackendClient.closeConnection(plain, ssl) regardless of the exchange's released flag. 3) Javadoc: in ProxyExchange.release / the new method and BackendClient.closeConnection, replace 'takes no lock it would wait for' with: the abort thread closes only the plain socket, and the SSLSocket is closed by the thread that owns the relayed body after its read returned; on the JDK the SSLSocket close after a closed plain fails at getSoLinger. Fix the ProxyExchange class and attach comments if they mention the abort path. 4) Tests (TDD first, red before the change): in ProxyTlsCloseTest, wrap the SSLSockets of RecordingSslSockets in a delegating SSLSocket that records close() calls and their threads. In the abort test, assert abortMillis < 1000, that the SSLSocket's close() was called within 5 s, and that no close() call ran on the thread that called res.abort. Add a case where the abort comes before the copy starts (for example abort right after the head, using a response that is not yet streaming, or via the listener-at-registration path) and assert the SSLSocket is still closed. Keep the other four tests asserting close() calls rather than isClosed(). 5) Re-run the mutants: (a) closeConnection without the SSLSocket close must fail the abort test; (b) the abort listener calling the old release() (an SSLSocket close on the abort thread) must fail the 'not on the abort thread' assertion. Run ProxyTlsCloseTest on JDK 17, JDK 21 and 8u504, the full :NaruServe-proxy:test, and :NaruServe-proxy:animalsnifferMain (the API 21 check)."
+    }
+  ],
+  "rejected": [
+    {
+      "id": "R3-002",
+      "rationale": "Reviewer verdict drop. A JDK handshake timeout leaves the SSLSocketImpl unclosed, but it holds no resource: the plain socket, the only OS resource, is closed by BackendClient.secure's finally, and on Android both Conscrypt sockets free or close themselves on any startHandshake exception. Only one javadoc sentence in TlsConnector is inaccurate for the JDK timeout case. Correcting it is optional and may be done while touching the file for R3-003.",
+      "rejection_category": "no-impact (doc wording only)"
+    }
+  ],
+  "clean_code": {
+    "accepted": [],
+    "dismissed": []
+  }
+}

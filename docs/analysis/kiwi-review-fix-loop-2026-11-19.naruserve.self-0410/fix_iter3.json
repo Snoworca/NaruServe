@@ -1,0 +1,38 @@
+{
+  "iter": 3,
+  "fixes": [
+    {
+      "finding_id": "R3-001",
+      "files_changed": [
+        {"path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsCloseTest.java", "line_range": "1-60 (imports, class doc), 280-375 (abort test rewritten, new abort-before-copy test, assertAllClosed on close() calls), 475-700 (RecordingSslSockets wraps each SSLSocket; new CloseCall and delegating RecordingSocket)", "loc_changed": 250}
+      ],
+      "red_signature": "ProxyTlsCloseTest on the round-2 tree (abort listener runs the full release): 9 tests completed, 1 failed — sec_PROXY_005_anAbortOnAnotherThreadClosesTheSslSocketWithoutWaitingForTheReader: 'the SSLSocket's close() ran on the thread that called res.abort, Time-limited test, while the request thread could still be reading it'. The new sec_PROXY_005_anAbortBeforeTheCopyStartsClosesTheSslSocket passed on RED (that path closes the SSLSocket through the relayed body's close with no reader active, before and after the fix).",
+      "green": "ProxyTlsCloseTest 9/9 pass in 5 of 5 consecutive runs (--rerun-tasks): cross-thread abort 0.588-0.662 s incl. 500 ms settle, abort-before-copy 0.011-0.018 s; abortMillis < 1000 and endMillis < 2500 bounds kept.",
+      "mutants": [
+        {"id": "A", "change": "BackendClient.closeConnection without the SSLSocket close", "result": "red: 6 of 9 fail, every SSLSocket test incl. the cross-thread abort test (the one that stayed green in round 3) — 'the proxy never called close() on an SSLSocket it created'", "reverted": true},
+        {"id": "B", "change": "abort listener calls the old full release() (SSLSocket close on the abort thread)", "result": "red: 1 of 9 fails, sec_PROXY_005_anAbortOnAnotherThreadClosesTheSslSocketWithoutWaitingForTheReader — 'the SSLSocket's close() ran on the thread that called res.abort'", "reverted": true},
+        {"id": "C", "change": "releaseOnAbortThread closes nothing (not even the plain socket)", "result": "red: 1 of 9 fails, the cross-thread abort test — 'the aborted response ended 9454 ms after res.abort'", "reverted": true}
+      ],
+      "full_build": {"tests": 4779, "failures": 0},
+      "rationale_strip": "",
+      "rationale_full": "The tests no longer read SSLSocket.isClosed(), which the JDK sets by itself when a read fails. RecordingSslSockets wraps every SSLSocket the real factory layers in RecordingSocket, a delegating SSLSocket (shape of ProxyTlsTest's DelegatingSocket, no mocking framework) that records each close() call with its thread and whether the plain socket under it was already closed, then delegates. assertAllClosed now requires, within 5 s, at least one recorded close() per created SSLSocket, every call made after the plain socket's close (A-001 order), and the real socket closed. The cross-thread abort test additionally asserts no close() was recorded before the abort and none ran on the thread that called res.abort; abortMillis < 1000 and endMillis < 2500 stay. New test sec_PROXY_005_anAbortBeforeTheCopyStartsClosesTheSslSocket: a middleware aborts after next.run() returned (res.relay has the body, the copy not started) and the SSLSocket must still get its close(). An abort-before-relay test (listener at registration) was tried and dropped: an aborted response never reaches the proxy (the dispatcher stops it), and the window between res.status and res.onAbort cannot be hit deterministically without a seam.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    },
+    {
+      "finding_id": "R3-003",
+      "files_changed": [
+        {"path": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java", "line_range": "16-22 (class doc), 172-235 (release() delegates to release(true); new package-private releaseOnAbortThread() = release(false); private release(boolean closeTls))", "loc_changed": 40},
+        {"path": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java", "line_range": "760-790 (releaseOnAbort javadoc and listener: exchange.releaseOnAbortThread() with ownership comment)", "loc_changed": 12},
+        {"path": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java", "line_range": "131-136 (closeConnection javadoc: 'takes no lock / returns at once on whichever thread ... even while another thread is still in a read' replaced)", "loc_changed": 4}
+      ],
+      "red_signature": "Same RED as R3-001 (the test and the fix land together): the cross-thread abort test fails because the SSLSocket's close() ran on the res.abort thread.",
+      "green": "ProxyTlsCloseTest 9/9 x5; :NaruServe-proxy:build (incl. animalsnifferMain, API 21) BUILD SUCCESSFUL, 663 proxy tests 0 failures.",
+      "full_build": {"tests": 4779, "failures": 0},
+      "rationale_strip": "",
+      "rationale_full": "Verified against the code before relying on the guidance: DefaultResponse.abort snapshots copying under the response lock and calls closeInput only when no copy runs, then the listeners; runTransfer sets copying under the same lock and its finally always runs closeInput; startBody's refusal and Response.relay's default close the given stream; RelayedBodyStream.close runs super.close (SocketBodyStream.close -> BackendClient.closeConnection(plain, ssl)) before exchange.release, independent of the released flag. So from res.relay on the relayed body's close always closes the SSLSocket, on the copy thread after its read returned or with no reader active. Change: ProxyExchange.release(boolean closeTls) keeps the exactly-once sequence (released CAS, reservation cancel, close, limiter.release in nested finallys); release() = full close (forward's finally, RelayedBodyStream.close; attach-after-release unchanged) and the new package-private releaseOnAbortThread() closes only the recorded plain socket (or the attached socket when none was recorded), never the SSLSocket. Proxy's onAbort listener now calls releaseOnAbortThread after abandon(). Properties kept: A-001 (plain closed first everywhere; the recorded close calls assert it), R2-001 (every created SSLSocket still gets close(), asserted by all six SSLSocket tests). Javadoc claims that became false were replaced in ProxyExchange.release, Proxy.releaseOnAbort and BackendClient.closeConnection; TlsConnector and RelayedBodyStream comments stay accurate and were not changed. Residual: path (c) (abort between res.status and res.onAbort registration) relies on startBody's refusal closing the stream, verified by code reading only; the Conscrypt timing itself is not run (no Android runtime, device verification out of scope). No public symbol or signature changed.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    }
+  ]
+}

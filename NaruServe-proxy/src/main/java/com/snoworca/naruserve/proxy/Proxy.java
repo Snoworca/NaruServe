@@ -495,14 +495,14 @@ public final class Proxy implements Middleware {
             long startNanos = System.nanoTime();
             exchange.watch(watchdog, options.totalTimeoutNanos);
             Attempt attempt = lastAttempt(req, outgoing, exchange, startNanos);
-            Socket socket = attempt.socket;
             InputStream in = attempt.in;
             ResponseParser.Head head = attempt.head;
             ResponseParser.Framing framing = ResponseParser.framing(head, "HEAD".equals(req.methodToken()));
             // Everything the hand-off sends is computed before res is touched, so a deadline found fired at the check
             // below gives a 504 that carries no backend header line and no .responseHeader value (FR-PROXY-017).
             PendingResponseHeaders headers = responseHeaders(req, head.headers);
-            InputStream body = new SocketBodyStream(bodySource(framing, in), socket);
+            // The body's close ends the connection by BackendClient.closeConnection (SEC-PROXY-005, FR-PROXY-020).
+            InputStream body = new SocketBodyStream(bodySource(framing, in), attempt.plain, attempt.socket);
             // A bodyless response is never read, so it declares no length the stream could fall short of.
             RelayedBodyStream relayedBody = new RelayedBodyStream(body, exchange,
                     framing.bodyless ? -1 : framing.relayLength, req.application().logger(),
@@ -584,7 +584,8 @@ public final class Proxy implements Middleware {
                             options.retryUnsafeMethods)
                     && retryAllowed(retry, exchange, startNanos)) {
                 // The header block was read; the rest of the response is dropped with its connection, before the wait.
-                closeQuietly(socket);
+                // The plain socket is closed first, so the SSLSocket's close after it cannot wait for the backend.
+                BackendClient.closeConnection(plain, socket);
                 if (!waitRetryDelay()) {
                     // Interrupted during the wait: no further attempt. A deadline that fired keeps its own kind;
                     // otherwise the closed response can only be answered by its status.
@@ -593,7 +594,7 @@ public final class Proxy implements Middleware {
                 }
                 continue;
             }
-            return new Attempt(socket, in, head);
+            return new Attempt(plain, socket, in, head);
         }
     }
 
@@ -760,8 +761,10 @@ public final class Proxy implements Middleware {
     /**
      * Registers the release of {@code exchange} as an abort listener of {@code res}, so a client that goes away while
      * the relay waits on a quiet backend frees the slot and the connection at once; {@code relayedBody} learns of the
-     * abort first, so the failed read that closing the connection causes is not logged as a backend failure. A
-     * response without abort listeners still ends the exchange through the relayed body's close.
+     * abort first, so the failed read that closing the connection causes is not logged as a backend failure. The
+     * listener closes only the plain socket ({@link ProxyExchange#releaseOnAbortThread}); the {@code SSLSocket} is
+     * closed by the relayed body's close. A response without abort listeners still ends the exchange through the
+     * relayed body's close.
      */
     // @req REL-PROXY-001
     // @req FR-PROXY-016
@@ -773,7 +776,12 @@ public final class Proxy implements Middleware {
                 public void run() {
                     // Before the release closes the backend connection, so the read it fails is not logged.
                     relayedBody.abandon();
-                    exchange.release();
+                    // Only the plain socket: from res.relay on, the relayed body owns the SSLSocket's close, since the
+                    // response closes the relayed input on every path (an abort with no copy running, the copy's
+                    // finally, a refused relay, the default relay) and SocketBodyStream.close runs
+                    // BackendClient.closeConnection whether or not the exchange was released, on a thread whose read
+                    // has returned (SEC-PROXY-005).
+                    exchange.releaseOnAbortThread();
                 }
             });
         } catch (UnsupportedOperationException noListeners) {
@@ -952,14 +960,6 @@ public final class Proxy implements Middleware {
         return length;
     }
 
-    private static void closeQuietly(Socket socket) {
-        try {
-            socket.close();
-        } catch (IOException ignored) {
-            // the connection is dropped either way
-        }
-    }
-
     private static void closeQuietly(InputStream in) {
         try {
             in.close();
@@ -1004,11 +1004,15 @@ public final class Proxy implements Middleware {
 
     /** The connection, its buffered input and the response head of the attempt whose response is relayed. */
     private static final class Attempt {
+        /** The plain backend socket: the connection itself for http, the one under TLS for https. */
+        final Socket plain;
+        /** The connection: {@link #plain} for http, the {@code SSLSocket} layered over it for https. */
         final Socket socket;
         final InputStream in;
         final ResponseParser.Head head;
 
-        Attempt(Socket socket, InputStream in, ResponseParser.Head head) {
+        Attempt(Socket plain, Socket socket, InputStream in, ResponseParser.Head head) {
+            this.plain = plain;
             this.socket = socket;
             this.in = in;
             this.head = head;
@@ -1241,22 +1245,31 @@ public final class Proxy implements Middleware {
         }
     }
 
-    /** The backend response body; closing it closes the backend connection. */
+    /**
+     * The backend response body; closing it ends the backend connection by {@link BackendClient#closeConnection}: the
+     * plain socket first and then the {@code SSLSocket} of an https connection (SEC-PROXY-005). The input stream of
+     * the {@code SSLSocket} is not closed: its close is a TLS duplex close of the open connection, which under TLS 1.3
+     * sends {@code close_notify} and then reads until the backend answers or the read timeout passes, so a backend that
+     * keeps the connection open would hold the worker and the slot for one more read timeout (FR-PROXY-020). The
+     * connection is never reused, so no {@code close_notify} exchange is needed; the streams layered over the socket
+     * hold no resource of their own.
+     */
     private static final class SocketBodyStream extends FilterInputStream {
-        private final Socket socket;
+        private final Socket plain;
+        private final Socket connection;
 
-        SocketBodyStream(InputStream in, Socket socket) {
+        SocketBodyStream(InputStream in, Socket plain, Socket connection) {
             super(in);
-            this.socket = socket;
+            this.plain = plain;
+            this.connection = connection;
         }
 
+        // @req FR-PROXY-020
+        // @req SEC-PROXY-005
+        // @req FR-PROXY-019
         @Override
-        public void close() throws IOException {
-            try {
-                super.close();
-            } finally {
-                socket.close();
-            }
+        public void close() {
+            BackendClient.closeConnection(plain, connection);
         }
     }
 }

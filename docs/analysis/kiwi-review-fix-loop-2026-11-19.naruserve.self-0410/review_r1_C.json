@@ -1,0 +1,867 @@
+{
+ "findings": [
+  {
+   "id": "C-001",
+   "axis": "P7",
+   "verdict": "drop",
+   "evidence": {
+    "command": "cd /Users/beom/work/git/NaruServe && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ReviewProbeRawBackendCloseTest' --console=plain",
+    "output": "ReviewProbeRawBackendCloseTest > aClientThatNeverClosesIsIndistinguishableFromOneThatDoes FAILED: java.lang.AssertionError: RawBackend closed the connection itself after 41 response bytes although the client never closed it; requestCount=1, so a proxy that leaks retried connections passes the test",
+    "intent_output": "Design note of FR-PROXY-018 (22.reverse-proxy.srs.md:2062): 'Read and discard the header block of a retried 502 or 503 and close its connection before waiting.' That intent is checked elsewhere: ProxyRetryTest#fr_PROXY_018_AC2_theConnectionOfARetried503IsClosedByTheProxy (line 533) and #fr_PROXY_018_AC9_theConnectionOfARetried503IsClosedBeforeTheWait use ConnectionBackend.closedByProxy with a keep-alive 503.",
+    "probe_file": "docs/analysis/kiwi-review-fix-loop-2026-11-19.naruserve.self-0410/probes/ReviewProbeRawBackendCloseTest.java",
+    "probe_dest": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ReviewProbeRawBackendCloseTest.java"
+   },
+   "drop_reason": "The probe is red: RawBackend closes every connection itself, so this test cannot see whether the proxy closes a retried connection. Two other tests in the same class already check that close with a keep-alive backend, so no intent goes unchecked. What is left is a test name that claims more than its assertions check.",
+   "title": "retriesKeepTheOneSlotAndCloseEveryRetriedConnection cannot observe the close its name claims",
+   "location": {
+    "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRetryTest.java",
+    "line_range": "154-171"
+   },
+   "description": "The only oracle is RawBackend.requestCount(). RawBackend's acceptLoop closes each socket itself (try-with-resources) right after it writes the response, so a proxy that never closed the retried connections would still pass this test.",
+   "suggested_fix": "Rename the test to its slot claim, or point its comment at the ConnectionBackend tests that check the close.",
+   "is_behavioral": false,
+   "tags": [
+    "test-quality",
+    "naming"
+   ],
+   "family": "test oracle blind to proxy-side close",
+   "req_hint": "FR-PROXY-018 AC-2"
+  },
+  {
+   "id": "C-002",
+   "axis": "P7",
+   "verdict": "drop",
+   "evidence": {
+    "command": "cd /Users/beom/work/git/NaruServe && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ReviewProbeChunkedRawLimitReachTest' --console=plain",
+    "output": "ReviewProbeChunkedRawLimitReachTest > chunkedOverTheRawLimitDoesNotReachTheBackend FAILED: java.lang.AssertionError: backend connections (bytes received: ) expected:<0> but was:<1>; stdout: INFO POST /api/orders/x 413 9ms in=9 ... PROBE accepted=1 received=",
+    "intent_output": "FR-PROXY-008 AC-3 (22.reverse-proxy.srs.md:1018): a chunked body that passes the limit while being forwarded makes the proxy close the backend connection. So opening a connection is expected for a chunked overrun.",
+    "probe_file": "docs/analysis/kiwi-review-fix-loop-2026-11-19.naruserve.self-0410/probes/ReviewProbeChunkedRawLimitReachTest.java",
+    "probe_dest": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ReviewProbeChunkedRawLimitReachTest.java"
+   },
+   "drop_reason": "The proxy does open a TCP connection, but it sends 0 bytes on it. That matches the test's assertion message ('the backend saw no request') and is what the spec allows (FR-PROXY-008 AC-3). Only the test name 'WithoutReachingTheBackend' overstates. RawBackend.requestCount() counts only requests whose body ended, so it could also miss a partly sent request, but no such case was shown here.",
+   "title": "chunkedClientBodyOverTheRawLimitGives413WithoutReachingTheBackend: a backend connection is opened",
+   "location": {
+    "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyApiTest.java",
+    "line_range": "279-294"
+   },
+   "description": "With rawBodyLimit(8) and a chunked 64-byte body, the proxy connects to the backend and then closes the connection without sending a byte. RawBackend.requestCount() stays 0 because it counts only requests whose head and body were read to the end.",
+   "suggested_fix": "Optional: name the test '...WithoutSendingARequest', or count accepted connections if 'no connection' is what is meant.",
+   "is_behavioral": false,
+   "tags": [
+    "test-quality",
+    "naming"
+   ],
+   "family": "RawBackend counts only complete requests",
+   "req_hint": "IR-PROXY-001 AC-1, FR-PROXY-008 AC-3"
+  }
+ ],
+ "clean_code": [
+  {
+   "id": "CC-001",
+   "principle": "DRY (duplicated test helpers)",
+   "location": {
+    "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyLifetimeSocketTest.java",
+    "line_range": "188-250"
+   },
+   "description": "awaitConnections is copied word for word in ProxyExchangeTest:190 and ProxyLifetimeSocketTest:203. awaitCounterZero is in ProxyConcurrencyTest:226, ProxyLifetimeSocketTest:188 and ProxyTimeoutsTest:605. Raw-socket readHead/readFully/readLine helpers are reimplemented in RawBackend:163/220, ProxyErrorsTest:531/546, ProxyExchangeTest:780/805, ProxyLifetimeSocketTest:229/244, ProxyRequestHeadersTest:404, ProxyRequestBodyTest:574/587, ProxyTimeoutsTest:644/659 and ProxyBackendConnectionTest:399. One package-private test utility (for example next to RawBackend) would remove about ten copies."
+  },
+  {
+   "id": "CC-002",
+   "principle": "Duplication across modules",
+   "location": {
+    "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletProxyAbsoluteFormTest.java",
+    "line_range": "117-183"
+   },
+   "description": "RecordingBackend copies the accept/record/answer loop of NaruServe-proxy's RawBackend because test classes are not shared between modules. A testFixtures source set in NaruServe-proxy, like the one NaruServe-api already has, would let the servlet test reuse it."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/BodyTooLargeExceptionTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(((IOException) e).getMessage(), ((IOException) e).getMessage().contains(String.valueOf(value)));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/HttpApiSurfaceTest.java",
+   "hunks_total": 8,
+   "anchors": [
+    "// bodyStream(long), headerNames, rawHeaders and isFromTrustedProxy with every earlier signature unchanged",
+    "\"bodyStream()->InputStream\", \"bodyStream(long)->InputStream\", \"headerNames()->Set\",",
+    "// cache, file and download",
+    "\"append(String,String)->Response\", \"onAbort(Runnable)->void\", \"relay(InputStream,long)->void\"),",
+    "// IR-APP-009 AC-5: rawBodyLimit adds no @Nullable position, so RestApp still has exactly defaultCache p0",
+    "// IR-STATIC-002 AC-5: the wave 6 set; IR-APP-008 AC-5 and IR-ENGINE-003 AC-5: the 0.11.0 set;",
+    "\"trustProxyHops()->int\", \"trustProxyCidrs()->List\"), signatures(RestApp.class));",
+    "public void IR_HTTP_013_AC1_requestDeclaresBodyStreamHeaderEnumerationAndTrustedProxyPredicate() throws Exception {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/JsonBodyAcceptanceTest.java",
+   "hunks_total": 4,
+   "anchors": [
+    "// SDS-AC-8; FR-JSON-001 AC-2",
+    "// SDS-AC-8; IR-HTTP-011 AC-9",
+    "// SDS-AC-8; FR-JSON-001 AC-2: the peeked first char still reaches the codec",
+    "assertDefaultError(413, HttpException.class, post(app, a, \"/b\", \"application/json\", repeat('1', 11), false));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/KotlinDocsMarkersTest.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import java.util.Arrays;",
+    "static final List<String> KOTLIN_ROOTS = Collections.unmodifiableList(Arrays.asList(",
+    "\"NaruServe-proxy/src/test/kotlin\"));",
+    "public void OPS_DX_010_AC12_proxyPageKotlinBlocksHaveTheirProxyModuleMarkers() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RawBodyAccessLogTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ClientResponse resp = adapter.send(ClientRequest.of(\"POST\", \"/p\").header(\"Content-Type\", \"application/json\")"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RawBodyLimitTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertFalse(simple, simple.equals(\"Nullable\") || simple.equals(\"NonNull\") || simple.equals(\"NullUnmarked\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestBodyStreamLimitsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private static Drained post(long rawBodyLimit, byte[] body, Take take, boolean singleByte, String... headerPairs) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestBodyStreamTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private static List<Object> probe(long rawBodyLimit, byte @Nullable [] body, Probe probe, String... headerPairs) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/RequestRawHeadersTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Arrays.asList(Arrays.asList(\"a\"), Arrays.asList(\"b\"), Arrays.asList(\"c\")), s.headersPerName);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseAppendTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Arrays.asList(\"IllegalStateException\", \"IllegalStateException\", \"IllegalStateException\"),"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseOnAbortTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void FR_HTTP_035_AC3_registrationDuringTheAbortCleanupRunsAtOnceOnTheRegisteringThread() throws Exception {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseRelayFramingTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(\"case \" + i + \": \" + thrown.get(0), thrown.get(0) instanceof IllegalStateException);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/ResponseRelayTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void FR_HTTP_036_AC4_committedHeaderListIsAppHeadersPlusContentLength() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/StaticCacheTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "import java.io.ByteArrayInputStream;",
+    "t.app().get(\"/stream\", (req, res) -> res.stream(new ByteArrayInputStream(new byte[] {'S'}), \"text/plain\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/TrustedProxyPeerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"false 192.168.0.1\", answer(\"192.168.0.1\", cidr, \"X-Forwarded-For\", \"203.0.113.7\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/common/HttpHeaderValuesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private static final String HELPER = \"    /** The header value check; 0xFF and charAt( in a comment are not code. */\\n\""
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/AppLifecycleGuardTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "// defaultCache and mimeTypes().register are refused after listen()",
+    "\"onRegistration\", \"trustProxyHops\", \"trustProxyCidrs\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/BodyStateTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "// and body(TypeRef) are the JSON readers; form, file, files and parts are the FORM-kind readers; bodyStream() and",
+    "java.util.Set<String> streamReaders = new java.util.TreeSet<>();",
+    "assertFalse(m.getName(), java.io.InputStream.class.isAssignableFrom(m.getReturnType()));",
+    "assertEquals(new java.util.TreeSet<>(Arrays.asList(\"bodyStream[]\", \"bodyStream[long]\")), streamReaders);",
+    "LifecycleExchange ex = new LifecycleExchange(\"POST\", \"/raw\", \"abc\".getBytes(java.nio.charset.StandardCharsets.UTF_8),"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ErrorPathTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "import com.snoworca.naruserve.BodyTooLargeException;",
+    "// SDS-AC-10; FR-APP-006 AC-3, FR-APP-006 AC-4, FR-APP-005 AC-2 (FR-APP-027 AC-4 below restates AC-4 with the overrun)",
+    "DispatcherTest.assertError(415, \"UNSUPPORTED_MEDIA_TYPE\", \"Unsupported Media Type\", t.send(\"GET\", \"/415\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/JsonBodyReaderTest.java",
+   "hunks_total": 11,
+   "anchors": [
+    "import static com.snoworca.naruserve.JsonBodyAcceptanceTest.overrunInChain;",
+    "import com.snoworca.naruserve.BodyTooLargeException;",
+    "import com.snoworca.naruserve.testing.RecordingLogger;",
+    "// SDS-AC-11; FR-JSON-001 AC-9",
+    "// SDS-AC-9; FR-JSON-001 AC-9: a codec that swallows the overrun still gives 413",
+    "// FR-JSON-001 AC-2: an unchecked codec failure without an HttpException cause stays itself (500)",
+    "// FR-JSON-001 AC-2: a codec IOException becomes 400 with it as the cause",
+    "// SDS-AC-9; FR-JSON-001 AC-9: the overrun stays readable after a codec wrapped the failure",
+    "assertSame(BodyTooLargeException.class, expected.getClass());",
+    "assertSame",
+    "ClientResponse r = adapter.send(ClientRequest.of(\"POST\", \"/b\").header(\"Content-Type\", \"application/json\")"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/LimitedInputStreamTest.java",
+   "hunks_total": 14,
+   "anchors": [
+    "import static org.junit.Assert.assertSame;",
+    "import com.snoworca.naruserve.BodyTooLargeException;",
+    "import java.nio.charset.StandardCharsets;",
+    "// SDS-AC-12; IR-HTTP-011 AC-6, IR-HTTP-011 AC-3",
+    "assertSame(BodyTooLargeException.class, e.getClass());",
+    "// SDS-AC-12; FR-HTTP-020 AC-3",
+    "assertEquals(10, expected.limit());",
+    "// SDS-AC-12; IR-HTTP-011 AC-6, IR-HTTP-011 AC-1",
+    "assertEquals(\"com.snoworca.naruserve.BodyTooLargeException\", BodyTooLargeException.class.getName());",
+    "// SDS-AC-12; IR-HTTP-011 AC-6",
+    "// SDS-AC-13; IR-HTTP-011 AC-7, IR-HTTP-011 AC-3",
+    "getClass",
+    "assertSame(BodyTooLargeException.class, expected.getClass());",
+    "public void IR_HTTP_011_AC3_multipartParserRecognisesTheOverrunThroughThePublicClass() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/ProxyTrustSettingPeerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private static void same(boolean expected, ProxyTrustSetting setting, String peer, Configurer<RestApp> trust) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/internal/StandardErrorsTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "import com.snoworca.naruserve.BodyTooLargeException;",
+    "// SDS-AC-10; FR-APP-006 AC-3, FR-APP-006 AC-4 (restated with its successor in FR-APP-027 AC-4 below)",
+    "public void FR_APP_027_AC4_statusOfMapsHttpExceptionsUnsupportedMediaTypeAndTheOverrunAndOthersTo500() {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/java/com/snoworca/naruserve/utils/auth/JuniorFinalItemsTest.java",
+   "hunks_total": 2,
+   "anchors": [
+    "import com.snoworca.naruserve.BodyTooLargeException;",
+    "assertTrue(f.logger.lines.toString(), f.logger.lines.toString().contains(\"auth: a store failed in GET /ops/io\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/BodyTooLargeExceptionKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "val stream = LimitedInputStream(ByteArrayInputStream(ByteArray(11)), 10, -1)"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpApiKotlinTest.kt",
+   "hunks_total": 4,
+   "anchors": [
+    "import java.io.IOException",
+    "import java.util.concurrent.atomic.AtomicBoolean",
+    "import org.junit.Assert.assertFalse",
+    "val chained: Response = res.append(\"Set-Cookie\", \"a=1\").append(\"Set-Cookie\", \"b=2\")"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/HttpHeaderValuesKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "val name: Boolean = HttpHeaderValues.isToken(\"X-Trace\")"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawBodyLimitKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "val chained: RestApp = app.rawBodyLimit(512L shl 20).jsonLimit(1024L)"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawRequestDocsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "has(\"en/request.md over-limit default answer\", e, \"When `onError` does not answer, this `413` is the common HTTP default error page\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/test/kotlin/com/snoworca/naruserve/RawResponseDocsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "has(\"en/response.md\", row(\"en/response.md\", en(), \"| `append(name, value)` |\"), \"Response\", \"`res.append(name, value)`\")"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-gson/src/test/java/com/snoworca/naruserve/gson/GsonBodyLimitTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ClientResponse ok = adapter.send(ClientRequest.of(\"POST\", \"/b\").header(\"Content-Type\", \"application/json\")"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/BackendResponseParserTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertGetIsInvalidResponse(\"HTTP/1.0 200 OK\\r\\nTransfer-Encoding: chunked\\r\\nContent-Length: 5\\r\\n\\r\\nhello\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/CertificateHostnamesTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "List<String> args = new ArrayList<>(Arrays.asList(\"-genkeypair\", \"-alias\", \"c\", \"-keyalg\", \"RSA\", \"-keysize\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/FramingListsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(FramingLists.INVALID_LENGTH, FramingLists.contentLength(Collections.<String>emptyList()));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LocationRewriterTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"/./\\t/evil.example/x\", rewrite(\"http://127.0.0.1:9\", \"\", \"http://127.0.0.1:9/\\t/evil.example/x\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/PathCheckerTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertFalse(\"expected a rejection: \" + printable(rawTarget), PathChecker.isSafeTarget(rawTarget));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyAccessLogTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "out.write((head + \"\\r\\nHost: 127.0.0.1\\r\\nConnection: close\\r\\n\\r\\n\").getBytes(StandardCharsets.ISO_8859_1));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyApiTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void ir_PROXY_001_AC1_chunkedClientBodyOverTheRawLimitGives413WithoutReachingTheBackend() throws IOException {"
+   ],
+   "findings": [
+    "C-002"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBackendConnectionTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final List<BackendConnection> connections = Collections.synchronizedList(new ArrayList<BackendConnection>());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyBodyLimitTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void fr_PROXY_008_AC1_contentLengthOverTheAppRawBodyLimitAnswers413WithoutConnecting() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyCheckOrderTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void fr_PROXY_010_AC7_ownAnswersReachOnErrorAsPlainHttpExceptionsWithANullMessage() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyConcurrencyTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private static void releaseAndAssertOk(HeldBackend backend, List<Future<ClientResponse>> pending) throws Exception {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyErrorsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void fr_PROXY_015_AC2_anUnresolvableHostIsConnectFailedCausedByUnknownHostException() throws Exception {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExceptionTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertArrayEquals(new Class<?>[] {ProxyException.Kind.class, Throwable.class}, ctors[0].getParameterTypes());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyExchangeTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private AtSeen sendRecordingAtError(Proxy p, RecordingWatchdog watchdog, ClientRequest request) throws Exception {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyFixedRequestHeadersTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private RawBackend.Received forward(RawBackend backend, UnaryOperator<Proxy> options, ClientRequest request) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyFixedResponseHeadersTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Arrays.asList(new SimpleImmutableEntry<>(\"X-A\", \"1\"), new SimpleImmutableEntry<>(\"x-a\", null),"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyForwardedHeadersTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "\"[::1\", \"%lo0\", \"[]\", \"::\\uFF21\", \"1:2:3:4:5:6:7:8:9\", \"::1:2:3:4:5:6:7:8\", \"1::2:3:4:5:6:7:8\", \"01.2.3.4\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyHostHeaderTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Collections.singletonList(\"127.0.0.1:\" + plain.port()), plain.onlyRequest().headerValues(\"Host\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyLifetimeSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "String next = exchange(port, \"GET /api/next HTTP/1.1\\r\\nHost: 127.0.0.1\\r\\nConnection: close\\r\\n\\r\\n\");"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyLocationRewriteTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "RawBackend backend = redirecting(\"http://\" + ORIGIN + \"/base/api/orders/y\", \"http://\" + ORIGIN + \"/basement/y\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyMethodTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(\"Connection lines\", Collections.singletonList(\"Connection: close\"), linesNamed(got, \"Connection\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyMidResponseFailureTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void fr_PROXY_016_AC3_stalledBodyAbortsTheClientAfterTheReadTimeoutAndLogsReadTimeout() throws Exception {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyOptionsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(Integer.MAX_VALUE, proxy().readTimeout(Long.MAX_VALUE, TimeUnit.NANOSECONDS).readTimeoutMillis());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyPathChecksTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sec_PROXY_001_AC3_encodedUnreservedAndSemicolonGet400WithoutABackendConnection() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestBodyTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void fr_PROXY_007_AC2_bodylessDeleteOptionsAndExtensionMethodArriveWithoutLengthHeader() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestFramingTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void sec_PROXY_003_AC1_transferEncodingBeforeContentLengthGives400WithoutConnecting() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestHeadersTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "RawBackend.Received got = forward(request(\"POST\", \"Transfer-Encoding\", \"chunked\", \"X-Keep\", \"1\").body(HELLO));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestTargetTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void fr_PROXY_006_AC3_basePathWithTrailingSlashUnderStripPrefixBuildsNoDoubleSlash() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyResponseBodyTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "Route notModified = mount(closing(\"HTTP/1.1 304 Not Modified\\r\\nContent-Length: 4\\r\\n\\r\\nbody\"), true);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyResponseHeadersTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "RawBackend backend = backend(\"HTTP/1.1 200 OK\\r\\nSet-Cookie: a=1; Path=/\\r\\nContent-Type: text/plain; charset=utf-8\""
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRetryTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ClientResponse r = send(ClientRequest.of(\"POST\", path + \"/x\").body(\"hello\".getBytes(StandardCharsets.ISO_8859_1)));"
+   ],
+   "findings": [
+    "C-001"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTargetUrlTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertRejected(\"http://.\", \"http://./x\", \"http://-\", \"http://-.-\", \"http://a..b\", \"http://.h\", \"http://_\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTimeoutsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "ClientResponse r = send(ClientRequest.of(\"POST\", path + \"/x\").header(\"Content-Length\", Long.toString(length)));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "keytool(\"-genkeypair\", \"-alias\", \"ca\", \"-keyalg\", \"RSA\", \"-keysize\", \"2048\", \"-dname\", \"CN=NaruServe Test CA\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/RawBackend.java",
+   "hunks_total": 1,
+   "anchors": [
+    "private final List<Received> received = Collections.synchronizedList(new ArrayList<Received>());"
+   ],
+   "findings": [
+    "C-001",
+    "C-002"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/WatchdogTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertEquals(504, a.submit(ClientRequest.of(\"GET\", \"/https/x\")).get(WAIT_SECONDS, TimeUnit.SECONDS).status());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(\"$where: a table line starts and ends with |: $line\", line.length >= 2 && line.startsWith(\"|\") && line.endsWith(\"|\"))"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyKotlinTest.kt",
+   "hunks_total": 1,
+   "anchors": [
+    "private val backend = RawBackend.answering(RawBackend.response(200, \"user 42\"))"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletProxyAbsoluteFormTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "byte[] bytes = (requestLineAndHost + \"Connection: close\\r\\n\\r\\n\").getBytes(StandardCharsets.ISO_8859_1);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletRawAccessTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "app.get(\"/relay\", (req, res) -> res.relay(new ByteArrayInputStream(\"hello\".getBytes(StandardCharsets.US_ASCII)), 5));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawRequestSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "assertTrue(String.valueOf(thrown.get()), thrown.get() instanceof com.snoworca.naruserve.BodyTooLargeException);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/RawResponseSocketTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "app.get(\"/relay\", (req, res) -> res.relay(new ByteArrayInputStream(\"hello\".getBytes(StandardCharsets.US_ASCII)), 5));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStreamTest.java",
+   "hunks_total": 6,
+   "anchors": [
+    "import static org.junit.Assert.assertFalse;",
+    "import com.snoworca.tinyhttpd.http.BodyTooLargeException;",
+    "import java.io.File;",
+    "import java.nio.file.Files;",
+    "assertMapped(413, new com.snoworca.tinyhttpd.http.BodyTooLargeException(\"too large\"));",
+    "public void FR_ENGINE_013_AC4_tinyHttpdBodyTooLargeExceptionMapsTo413KeepingTheCause() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/AuthPlacementTest.java",
+   "hunks_total": 4,
+   "anchors": [
+    "// CON-AUTH-001 AC-2: no auth Gradle project; the module list is the one of 0.10.0 plus NaruServe-proxy",
+    "+ \"':NaruServe-filelog', ':NaruServe-logcat', ':NaruServe-proxy']\"));",
+    "\":NaruServe-logcat\", \":NaruServe-proxy\", \":NaruServe-android\")), includes);",
+    "\"NaruServe-kotlin\", \"NaruServe-slf4j\", \"NaruServe-filelog\", \"NaruServe-logcat\", \"NaruServe-proxy\"}) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/BuildChecksTest.java",
+   "hunks_total": 7,
+   "anchors": [
+    "// Android-targeted modules, NaruServe-proxy included",
+    "\"NaruServe-kotlin\", \"NaruServe-filelog\", \"NaruServe-logcat\", \"NaruServe-proxy\")) {",
+    "// OPS-BUILD-002 AC-5: the Kotlin plugin is applied to all nine JAR modules (not to NaruServe-android).",
+    "// FR-BUILD-001 AC-1: without an Android SDK the build warns and includes the other nine modules only",
+    "// FR-REL-005 AC-7, FR-REL-006 AC-4: without an Android SDK the staging check refuses to stage the JAR modules alone",
+    "private static final List<String> STAGED_IDS = Arrays.asList(\"naruserve\", \"naruserve-android\", \"naruserve-api\",",
+    "BuildResult clean = runner(\":NaruServe-proxy:animalsnifferMain\", \":NaruServe-proxy:checkClassReferences\").build();"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/BuildLayoutTest.java",
+   "hunks_total": 9,
+   "anchors": [
+    "import static org.junit.Assert.assertNull;",
+    "public static final String PROXY_MODULE = \"NaruServe-proxy\";",
+    "packages.put(\"NaruServe-proxy\", \"com.snoworca.naruserve.proxy\");",
+    "// SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-1, body unchanged); FR-REL-007 AC-4",
+    "// SDS-AC-5, SDS-AC-7; CON-BUILD-017 AC-2, CON-BUILD-014 AC-1, FR-REL-001 AC-5 (re-pointed from CON-BUILD-003 AC-2, body unchanged)",
+    "// SDS-AC-5, SDS-AC-6; CON-BUILD-017 AC-1, FR-REL-001 AC-5; FR-REL-007 AC-4 (checks the conditional apply of FR-REL-007 AC-2)",
+    "// OPS-BUILD-004 AC-1 adds NaruServe-proxy to the module line (OPS-BUILD-003 AC-3 expired for 0.12.0).",
+    "for (String module : Arrays.asList(\"NaruServe-api\", \"NaruServe\", \"NaruServe-tinyhttpd\", \"NaruServe-gson\",",
+    "Matcher configured = Pattern.compile(\"configure\\\\(naruProjects\\\\) \\\\{ p ->[^}]*configureCompile\\\\(p\\\\)\").matcher(build);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/CentralStagingTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void fr_REL_006_AC3_proxyIsStagedWithTheFiveFilesAndTheirChecksums() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/PublishedPomTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "assertScope(deps(poms.get(\"naruserve-proxy\")), \"naruserve-api\", \"compile\");",
+    "assertEquals(id, \"scm:git:ssh://git@github.com/Snoworca/NaruServe.git\", text(scm, \"developerConnection\"));",
+    "assertTrue(\"generatePomFileForMavenPublication of NaruServe-proxy: \" + System.getProperty(\"naruserve.pomFiles\"),"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/build/ReleaseScriptTextTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "// SDS-AC-3; FR-REL-001 AC-3, FR-REL-007 AC-2",
+    "// SDS-AC-3; FR-REL-001 AC-3",
+    "public void fr_REL_007_AC2_bothReleasePluginNamesOccurInTheReleaseScriptAndNowhereElseScanned() throws IOException {",
+    "    // SDS-AC-3; FR-REL-001 AC-3",
+    "\"dependsOn publishedModules\\\\.collect\\\\s*\\\\{\\\\s*it\\\\.tasks\\\\.named\\\\('cyclonedxDirectBom'\\\\)\").matcher(script).find());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/DocsExamplesCompileTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "String[] requestMembers = {\".bodyStream()\", \".bodyStream(64L\", \"instanceof BodyTooLargeException\", \".headerNames()\","
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/GuideConsistencyDocsTest.java",
+   "hunks_total": 3,
+   "anchors": [
+    "// for the 18 pairs of 0.11.0 and proxy.md",
+    "assertEquals(\"19 guide pairs besides README.md (the 18 of 0.11.0 and proxy.md)\", 19, pages.size());",
+    "String[] english = new File(ReadmeDocsTest.root(), \"docs/api/en\").list((d, n) -> n.endsWith(\".md\") && !n.equals(\"README.md\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/ReadmeDocsTest.java",
+   "hunks_total": 6,
+   "anchors": [
+    "assertEquals(path + \": the coordinate cell of the module \" + module, \"`\" + coordinate + \"`\", row.get(1));",
+    "assertEquals(\"rows (not distinct coordinates) of the module table of docs/api/README.md\", 11, rows.size());",
+    "Matcher row = Pattern.compile(\"(?m)^\\\\| `[\\\\w-]+` \\\\| `(com\\\\.snoworca\\\\.naruserve:[\\\\w-]+)` \\\\|\")",
+    "assertEquals(\"module table rows of docs/api/README.md that \" + PUBLISHED_VERSION + \" contains\", 10, table.size());",
+    "assertFalse(\"README.md shows a versioned coordinate of the unpublished \" + c,",
+    "assertFalse(PUBLISHED_RECORD + \" does not stage naruserve-proxy\", publishedArtifacts().contains(\"naruserve-proxy\"));"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/RelayDefaultCacheDocsTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public void FR_HTTP_036_AC5_defaultsCacheControlRowStatesRelayException() throws IOException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "src/test/java/com/snoworca/naruserve/docs/ReleaseRecordsDocsTest.java",
+   "hunks_total": 5,
+   "anchors": [
+    "static final List<String> MODULES = java.util.Collections.unmodifiableList(Arrays.asList(\"NaruServe-api\",",
+    "/** The published modules of the recorded release: its JAR modules and, when an Android SDK resolved, NaruServe-android. */",
+    "// recorded release; the record of the next release is written by its release step, not by a build change)",
+    "// modules; the next release's record, NaruServe-proxy.cdx.json included, is written by its release step)",
+    "// SDS-AC-4; FR-REL-001 AC-4; FR-REL-007 AC-3 (recorded offline build of the recorded release)"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 2,
+  "by_verdict": {
+   "keep": 0,
+   "residual": 0,
+   "drop": 2
+  },
+  "by_axis": {
+   "P7": 2
+  }
+ }
+}

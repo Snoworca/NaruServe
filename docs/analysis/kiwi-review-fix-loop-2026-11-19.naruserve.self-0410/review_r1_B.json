@@ -1,0 +1,424 @@
+{
+ "findings": [
+  {
+   "id": "B-001",
+   "axis": "P1",
+   "verdict": "drop",
+   "evidence": {
+    "command": "cd /Users/beom/work/git/NaruServe && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-tinyhttpd:test --tests 'com.snoworca.naruserve.tinyhttpd.ReviewProbeHeadRelayUnknownLengthTest' --console=plain",
+    "output": "BUILD SUCCESSFUL in 534ms (probe green: the HEAD response to res.relay(in, -1) carries no Content-Length over a real TinyHttpd socket)",
+    "intent_output": "FR-HTTP-037 AC-5 / FR-PROXY-014 AC-6: HEAD relayed with -1 reaches the client with no Content-Length; holds.",
+    "probe_file": "",
+    "probe_dest": "NaruServe-tinyhttpd/src/test/java/com/snoworca/naruserve/tinyhttpd/ReviewProbeHeadRelayUnknownLengthTest.java (deleted after the green run)"
+   },
+   "drop_reason": "Refuted by execution: suspected that TinyHttpd ExchangeResponse.commit(last=true) would write 'Content-Length: 0' on a HEAD whose core commit carries no length, but the probe shows no Content-Length reaches the client.",
+   "title": "HEAD + res.relay(in, -1) over TinyHttpd might advertise Content-Length: 0",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "line_range": "617-624, 661-684"
+   },
+   "description": "Cross-wave check of core relay framing (FR-HTTP-037) vs TinyHttpd bodyless HEAD framing vs proxy FR-PROXY-014 AC-6. Not a defect.",
+   "suggested_fix": "",
+   "is_behavioral": true,
+   "tags": [
+    "refuted"
+   ],
+   "family": "relay framing",
+   "req_hint": "FR-HTTP-037, FR-ENGINE-014, FR-PROXY-014"
+  }
+ ],
+ "clean_code": [
+  {
+   "id": "BCC-001",
+   "principle": "DRY / single source of truth",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+    "line_range": "2658-2664, 2819-2820"
+   },
+   "description": "The FR-APP-027 status classification (HttpException status, 413 for an unwrapped BodyTooLargeException, else fallback) is re-implemented twice in Auth (routerError and prodAnswer) beside StandardErrors.statusOr (StandardErrors.java:33-39). A future classification change must be made in three places; expose one public/shared classifier instead."
+  },
+  {
+   "id": "BCC-002",
+   "principle": "DRY / misplaced responsibility",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+    "line_range": "116 (also Dispatcher.java:63, DefaultRequest.java:72, LimitedInputStream.java:84-94)"
+   },
+   "description": "The raw body limit default is initialised in three classes from JsonBodyReader.DEFAULT_LIMIT, and the generic LimitedInputStream.byteLimit range check reads JsonBodyReader.MAX_LIMIT: the raw/form/JSON limits are coupled to the JSON reader's constants. A shared BodyLimits constant holder would remove the duplication and the JSON-specific dependency."
+  },
+  {
+   "id": "BCC-003",
+   "principle": "Class size / single responsibility",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+    "line_range": "253-506"
+   },
+   "description": "DefaultRequest (897 lines) gained the raw body reader (rawStream + RawBodyStream), the header enumeration (HeaderEnumeration, headerKey, sameHeaderName) and proxy-trust exposure on top of JSON/form/cookie/query/upload handling. RawBodyStream and HeaderEnumeration are self-contained and could live in their own package-private classes as DeclaredLength already does."
+  },
+  {
+   "id": "BCC-004",
+   "principle": "Dead code",
+   "location": {
+    "file": "build.gradle",
+    "line_range": "277-281"
+   },
+   "description": "The javadoc onlyIf guard exists for 'NaruServe-proxy before its first class' (package-info.java only). The proxy module now has 20 classes, so the guard is a stale wave-local workaround that silently publishes an empty javadoc jar if a module's sources ever regress to package-info only."
+  },
+  {
+   "id": "BCC-005",
+   "principle": "Needless indirection",
+   "location": {
+    "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+    "line_range": "1152-1161"
+   },
+   "description": "After isFieldValue moved to HttpHeaderValues, DefaultResponse keeps one-line delegators isToken/isFieldValue; callers could call HttpHeaderValues directly."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/BodyTooLargeException.java",
+   "hunks_total": 1,
+   "anchors": [
+    " * The request body passed its byte limit. An {@code IOException}, so code reading a body stream already handles it;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Request.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import java.io.InputStream;",
+    "import java.util.Map;",
+    "// @req IR-HTTP-013",
+    "     * Every request header line as an unmodifiable list of name and value entries, as the adapter reported them, like"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/Response.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import java.io.IOException;",
+    "// @req IR-HTTP-014",
+    "     * {@link IllegalStateException} as {@link #header} does. The default throws {@link UnsupportedOperationException}",
+    "     * Streams {@code in} as the response body framed by {@code contentLength} ({@code -1} for an unknown length),"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/RestApp.java",
+   "hunks_total": 2,
+   "anchors": [
+    "     * The app-wide limit in bytes of {@link Request#bodyStream()}, {@code 1..1073741824}; default 1048576 (1 MiB),",
+    "     * header. A response sent with {@link Response#relay} never receives this policy."
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/common/HttpHeaderValues.java",
+   "hunks_total": 2,
+   "anchors": [
+    " * Shared HTTP header helpers: the public header name and value predicates ({@link #isToken}, {@link #isFieldValue})",
+    "     * adapter writing the low byte would turn U+010A into LF (cf. Node CVE-2018-12116), so headers stay ISO-8859-1,"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/BodyTooLargeException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "/** The request body passed its byte limit; body readers answer it with 413, unlike a transport IOException. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ConcealedCauses.java",
+   "hunks_total": 1,
+   "anchors": [
+    " * {@link Throwable#printStackTrace} stays untouched, so loggers and {@code getCause()} keep the full cause; every other"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DeclaredLength.java",
+   "hunks_total": 1,
+   "anchors": [
+    "    /** {@code s[from, to)} without surrounding spaces and tabs as a decimal, or -1 when empty, not digits or too large. */"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java",
+   "hunks_total": 20,
+   "anchors": [
+    "import java.util.AbstractMap;",
+    "import java.util.LinkedHashSet;",
+    "import java.util.Set;",
+    "    // Guarded by rawLock: the one stream bodyStream handed out and the limit of the call that created it.",
+    "    // Built once under headerLock on the first headerNames() or rawHeaders() call.",
+    "    /** The app's raw body limit of {@link #bodyStream()}; the Dispatcher sets it before any middleware runs. */",
+    "    // @req FR-HTTP-030",
+    "        released = true; // closes a bodyStream the handler left open; the input below is the one close of the source",
+    "     * The exchange body counted by {@link #body()}. The JSON, form, multipart and raw readers call this after taking",
+    "    InputStream exchangeInput() {",
+    "     * {@code headers(listedName)} returns exactly its group's values. On JDK 16+ names holding lone surrogates can match",
+    "                    return FormData.urlencoded(FormBodyReader.read(exchangeInput(), contentLength(), formLimit));",
+    "                return FormData.multipart(MultipartParser.parse(exchangeInput(), contentLength(), boundary, multipart,",
+    "     * The Content-Length header as {@link DeclaredLength} reads it: one number or a list of one agreed number, else -1",
+    "        return DeclaredLength.of(header(\"Content-Length\"));",
+    "    /** The app's raw body limit of {@link #bodyStream()}, set by the Dispatcher at request construction. */",
+    "    // @req FR-HTTP-032",
+    "            if (h.getKey().equalsIgnoreCase(name)) {",
+    "req",
+    "            if (sameHeaderName(name, h.getKey())) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java",
+   "hunks_total": 29,
+   "anchors": [
+    "import com.snoworca.naruserve.common.AbortListeners;",
+    "// @req IR-HTTP-014",
+    "    /** Set by {@link #openSession}: the exchange's abort reports now belong to the session. */",
+    "    /** The app logger an onAbort listener's RuntimeException goes to; unset means a console logger. */",
+    "                head = begin(0, EMPTY, false);",
+    "     * did, even while the aborting thread is still cleaning up; a failure it throws is logged and the next listener",
+    "     * Adds a Vary field without replacing existing cache dimensions or Vary: *; the dimensions of every Vary line,",
+    "    // @req IR-HTTP-014",
+    "            for (String token : existing.split(\",\")) {",
+    "                existing = existing == null ? line : existing + \", \" + line;",
+    "        put(\"Vary\", existing == null || existing.isEmpty() ? field : existing + \", \" + field);",
+    "     * The {@link #stream} copy with {@code contentLength} as the framing length: sends the headers the app set, drops",
+    "        startBody(in, status, null, length, false);",
+    "    private void startBody(InputStream in, int newStatus, @Nullable String contentType, long length, boolean relay) {",
+    "                if (length >= 0 && status != 204 && (relay || status != 304)) {",
+    "                c = begin(bodyless ? 0 : length, EMPTY, relay);",
+    "     * The onAbort listeners run once here, on the aborting thread, after the exchange abort and, unless a running",
+    "    // @req FR-HTTP-035",
+    "     * The exchange's onAbort hook: {@link #abort} with no error, a no-op once {@link #openSession} handed the",
+    "            if (state == ResponseState.COMPLETED || state == ResponseState.ABORTED || (byExchange && sessionOpen)) {",
+    "            abortListeners.abort(); // on this thread, also when the cleanup threw; no listener stops the rest",
+    "     * because the connection is already gone aborts instead, which runs the onAbort listeners. No-op when the",
+    "                abortListeners.abort();",
+    "     * The session's onOpen gate: false when the response already left NEW (an abort came first), so no 101 may be",
+    "        return bodyless() ? begin(0, EMPTY, false) : begin(body.length, body, false);",
+    "     * NEW to COMMITTED with a snapshot of status and headers; the caller holds the lock. The app's {@code defaultCache}",
+    "            put(\"Cache-Control\", fallback.getHeaderValue()); // FR-STATIC-008 AC-5: whatever set it, a value stays",
+    "    /** The header value check; {@link com.snoworca.naruserve.common.HttpHeaderValues#isFieldValue} holds the rule. */",
+    "        return com.snoworca.naruserve.common.HttpHeaderValues.isFieldValue(s);"
+   ],
+   "findings": [
+    "B-001"
+   ]
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java",
+   "hunks_total": 5,
+   "anchors": [
+    "    private volatile long rawBodyLimit = JsonBodyReader.DEFAULT_LIMIT;",
+    "            this.jsonLimit = LimitedInputStream.byteLimit(\"jsonLimit\", bytes);",
+    "            throw new IllegalArgumentException(name + \" must be in 1..\" + JsonBodyReader.MAX_LIMIT + \" bytes: \" + bytes);",
+    "    /** The raw body limit of {@code req.bodyStream()} in bytes; 1048576 unless {@link #rawBodyLimit(long)} changed it. */",
+    "            dispatcher.rawBodyLimit(rawBodyLimit());"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultWebSocketSession.java",
+   "hunks_total": 6,
+   "anchors": [
+    "    /** The upgrade's response, whose {@link DefaultResponse#openSession} gates onOpen; null opens unchecked. */",
+    "    /** The response of the upgrade request, asked in {@link #onOpen} before the 101 line is written. */",
+    "     * response was aborted first (an exchange-reported disconnect), the channel is dropped instead and nothing runs.",
+    "    // @req FR-HTTP-035",
+    "        if (r != null && !r.openSession()) {",
+    "        if (!refused) { // a refused open wrote no 101 line, so it writes no close line"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/Dispatcher.java",
+   "hunks_total": 5,
+   "anchors": [
+    "    /** The app's raw body limit of req.bodyStream(); DefaultRestApp.freeze sets it before the first request. */",
+    "    /** Replaces the raw body limit both request-construction sites pass; DefaultRestApp.freeze calls it. */",
+    "        req.requestId(rid);req.startNanos(start);req.proxyTrust(proxyTrust);req.rawBodyLimit(rawBodyLimit);",
+    "        req.rawBodyLimit(rawBodyLimit);",
+    "        // once it completed), registered before middleware runs so res.onAbort listeners see it on this path too."
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FinalHandler.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import com.snoworca.naruserve.HttpException;",
+    "// @req FR-APP-024 AC-3 AC-4 AC-5; FR-HTTP-028 AC-3 AC-5; FR-PROXY-015 AC-4",
+    "            // StandardErrors.statusOr classifies the error: an HttpException's status, 413 for an unwrapped overrun (FR-APP-027),",
+    "                // FR-PROXY-015 AC-4: a ProxyException's causes may name the target, so they appear by class only."
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/FormBodyReader.java",
+   "hunks_total": 1,
+   "anchors": [
+    "import com.snoworca.naruserve.BodyTooLargeException;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/HttpExecution.java",
+   "hunks_total": 1,
+   "anchors": [
+    "        response.listenerLogger(errors.logger); // FR-HTTP-035 AC-4: a failing onAbort listener logs to the app"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/JsonBodyReader.java",
+   "hunks_total": 3,
+   "anchors": [
+    "        long declared = DeclaredLength.of(req.header(\"Content-Length\"));",
+    "        LimitedInputStream in = new LimitedInputStream(req.exchangeInput(), limit, declared);",
+    "            return -1; // the adapter frames the body; a bad header never reaches a handler"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/LimitedInputStream.java",
+   "hunks_total": 2,
+   "anchors": [
+    "import com.snoworca.naruserve.BodyTooLargeException;",
+    "            throw new IllegalArgumentException(name + \" must be in 1..\" + JsonBodyReader.MAX_LIMIT + \" bytes: \" + bytes);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/MultipartParser.java",
+   "hunks_total": 1,
+   "anchors": [
+    "import com.snoworca.naruserve.BodyTooLargeException;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/ProxyTrustSetting.java",
+   "hunks_total": 8,
+   "anchors": [
+    "        if (!trustsPeer(peer)) {",
+    "                int at = clientIndex(peer, forwarded);",
+    "            return exchangeSecure;",
+    "                if (!peerTrusted(peer)) {",
+    "                int fromRight = mode == Mode.HOPS ? hops : forwarded.size() - clientIndex(peer, forwarded);",
+    "     * setting, always under the legacy rule, under hop mode when the count is at least 1 and under CIDR mode when",
+    "     * fewer), CIDR mode the first entry from the right outside every trusted CIDR (the left-most when all are inside).",
+    "    private int clientIndex(String peer, List<String> entries) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/StandardErrors.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import com.snoworca.naruserve.BodyTooLargeException;",
+    "     * {@link HttpException#status()}, 413 for an unwrapped {@link BodyTooLargeException}, otherwise 500; an exception",
+    "    // @req FR-APP-027",
+    "     * {@link BodyTooLargeException}, otherwise {@code fallback} for an error the table does not classify."
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/WebSocketUpgrade.java",
+   "hunks_total": 1,
+   "anchors": [
+    "        DefaultWebSocketSession session = new DefaultWebSocketSession(nextId(), rid, this, handler, req);"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java",
+   "hunks_total": 6,
+   "anchors": [
+    "import com.snoworca.naruserve.BodyTooLargeException;",
+    "    // @req FR-APP-027",
+    "            // FR-APP-027: an unwrapped overrun is 413. BodyTooLargeException is an IOException, so this branch must",
+    "     * logged a 500. An unwrapped BodyTooLargeException is 413 as in Core's status classification (FR-APP-027). DEV",
+    "req",
+    "        int status = err instanceof HttpException ? ((HttpException) err).status() : 500;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-tinyhttpd/src/main/java/com/snoworca/naruserve/tinyhttpd/TinyHttpdBodyStream.java",
+   "hunks_total": 4,
+   "anchors": [
+    "import com.snoworca.tinyhttpd.http.BodyTooLargeException;",
+    "     * rethrown as is. TinyHttpd's BodyTooLargeException is named in full so it cannot be confused with the public",
+    "    // @req FR-ENGINE-013",
+    "        if (e instanceof com.snoworca.tinyhttpd.http.BodyTooLargeException) {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "build.gradle",
+   "hunks_total": 21,
+   "anchors": [
+    "// @req CON-BUILD-019",
+    "                   ':NaruServe-kotlin', ':NaruServe-slf4j', ':NaruServe-filelog', ':NaruServe-logcat', ':NaruServe-proxy']",
+    "// Main (api/implementation) dependencies of CON-BUILD-019 AC-3, the list CON-BUILD-021 points to; ':' entries are projects.",
+    "    // api scope: GsonJsonCodec takes a caller-built Gson (CON-BUILD-021 AC-8).",
+    "    // api NaruServe-gson: a NaruServe caller compiles against GsonJsonCodec and Gson; no Logcat, any JDK (CON-BUILD-006 AC-9).",
+    "    // The proxy uses only the public API; NaruServe, NaruServe-kotlin and NaruServe-android never declare it.",
+    "// compileOnly dependencies of CON-BUILD-021 AC-1 besides the nullability library every module gets.",
+    "// @req CON-BUILD-021",
+    "// Constant-pool scan: CONSTANT_Class names and `L<name>;` descriptors whose internal name starts with a prefix, or,",
+    "// @req CON-BUILD-020",
+    "    // `spi` segment at any depth (internal/, spi/ and any nested .../internal/ package), and no platform, JSON, engine or Kotlin",
+    "    'NaruServe-proxy'    : 'NaruServe reverse proxy middleware that forwards requests to a backend HTTP server.',",
+    "    // javadoc fails with \"No public or protected classes found to document\" on a module whose main sources are only",
+    "// Test fixtures source set for the in-memory HttpAdapter of a later wave (CON-BUILD-021 AC-7).",
+    "// TinyHttpd socket where the adapter's own status line and framing are observed (D-059, FR-PROXY-011 AC-3, AC-9).",
+    "        // @req SEC-PROXY-001 — AC-8 drives the proxy over the servlet adapter (ServletProxyAbsoluteFormTest).",
+    "    // @req OPS-DX-010 — the proxy.md Java blocks compile in DocsExamplesCompileTest against the proxy module.",
+    "// checkCentralStaging stages every module from scratch and fails rather than stage the JAR modules without the AAR.",
+    "    description = 'Publishes the ten modules to build/central-staging and checks the files Maven Central needs.'",
+    "    // con_BUILD_006_AC8 and con_BUILD_021_AC7 read this jar.",
+    "// @req FR-REL-007"
+   ],
+   "findings": []
+  },
+  {
+   "file": "gradle/release.gradle",
+   "hunks_total": 4,
+   "anchors": [
+    "// ./gradlew build, online or offline, never resolves these plugins (FR-REL-001, FR-REL-007, CON-BUILD-017).",
+    "// The published modules are the subprojects of the root build: the nine JAR modules and, when settings.gradle found an",
+    "// @req FR-REL-007",
+    "req"
+   ],
+   "findings": []
+  },
+  {
+   "file": "settings.gradle",
+   "hunks_total": 2,
+   "anchors": [
+    "// The reverse proxy module: NaruServe-api only, and no other module depends on it.",
+    "// ANDROID_SDK_ROOT; without one the other nine modules still build."
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 1,
+  "by_verdict": {
+   "keep": 0,
+   "drop": 1,
+   "residual": 0
+  },
+  "by_axis": {
+   "P1": 1
+  }
+ }
+}

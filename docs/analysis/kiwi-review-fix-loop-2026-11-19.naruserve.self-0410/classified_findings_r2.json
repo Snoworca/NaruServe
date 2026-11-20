@@ -1,0 +1,8 @@
+{"round":2,
+ "immediate_fix":[],
+ "declared_limit":[],
+ "kept_tiers":[],
+ "discussion_needed":[{"id":"R2-001","rationale":"Residual (fixed mapping): Android/Conscrypt-only claim that the never-closed SSLSocket keeps native SSL state until GC and trips CloseGuard; not provable on the JVM, Android device verification is out of scope by user decision (2026-10-20).","questions_for_user":["fix-now (close the SSLSocket quietly after the plain socket is closed) / reject-with-reason / defer-to-user-later"],
+   "gate":"residual-finding-user-decision","decision":"fix-now","decided_by":"standing user instruction: at any decision gate pick the recommended option (memory auto-pick-recommended-option, repeated by the caller)","decision_reason":"Recommended option: the reviewer's suggested hardening is small, keeps the plain-first close so A-001 stays fixed (JDK: ssl.close after plain.close returns in 0 ms), and frees native TLS state on the library's stated API 21 runtime; rejecting would leave a per-request native-state hold on Android with no way to verify it in this run."}],
+ "rejected":[{"id":"R2-002","rationale":"Test-coverage gap only; onAbort and attach-after-release use the same release()/connection() path that ProxyTlsCloseTest exercises.","rejection_category":"dropped"}],
+ "clean_code":{"accepted":[],"dismissed":[]}}

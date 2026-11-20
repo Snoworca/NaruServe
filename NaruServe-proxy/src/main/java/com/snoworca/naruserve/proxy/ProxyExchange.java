@@ -17,8 +17,9 @@ import org.jspecify.annotations.Nullable;
  * The resources one proxied request holds from the moment its concurrency slot is taken to the end of the request:
  * the slot, when the proxy has a limit, the total-timeout watchdog's reservation and the backend socket once it is
  * open. {@link #release} gives all of them back exactly once, whichever end of the request calls it first: the close
- * of the relayed body, the {@code res.onAbort} notification, or the forward path when the request ends before the
- * body is handed to {@code res.relay}.
+ * of the relayed body, the {@code res.onAbort} notification ({@link #releaseOnAbortThread}, which leaves the
+ * {@code SSLSocket} to the relayed body's close), or the forward path when the request ends before the body is handed
+ * to {@code res.relay}.
  *
  * <p>The write timeout and the total timeout are enforced by closing the plain backend socket, never an
  * {@code SSLSocket} (FR-PROXY-017): a firing deadline first records its kind ({@link #firedKind}) and then closes the
@@ -97,14 +98,15 @@ final class ProxyExchange {
     }
 
     /**
-     * Records the backend socket so {@link #release} closes it; a socket attached after the release is closed at once,
-     * so no connection outlives its request.
+     * Records the backend socket so {@link #release} closes its connection; a socket attached after the release has its
+     * connection closed at once, so no connection outlives its request. The connection is closed the way
+     * {@link #release} closes it: the plain socket recorded by {@link #plainSocket} first, then the {@code SSLSocket}.
      */
     // @req FR-PROXY-019
     void attach(Socket backend) {
         socket = backend;
         if (released.get()) {
-            closeQuietly(backend);
+            closeConnection(backend);
         }
     }
 
@@ -169,12 +171,41 @@ final class ProxyExchange {
     }
 
     /**
-     * Cancels the watchdog reservation, closes the backend socket and returns the slot, in that order, so the slot is
-     * free only once the connection is gone; only the first call does anything.
+     * Cancels the watchdog reservation, closes the backend connection and returns the slot, in that order, so the slot
+     * is free only once the connection is gone; only the first call of this or {@link #releaseOnAbortThread} does
+     * anything. The connection is ended by {@link BackendClient#closeConnection}: its plain socket is closed first, so
+     * no TLS duplex close waits for the backend while the worker and the slot are held (FR-PROXY-020, FR-PROXY-017),
+     * and then the {@code SSLSocket} of an https backend, so none is left for its finalizer (SEC-PROXY-005). Its callers
+     * run only while no read of the connection is under way: the forward path on the request thread before the body is
+     * handed to {@code res.relay}, and the relayed body's close, which runs on the copy thread after its read returned,
+     * or on the thread that aborts the response while no copy is running (the response then closes the relayed input
+     * itself, before its abort listeners). The connection is never reused, so no {@code close_notify} exchange is
+     * needed.
      */
     // @req FR-PROXY-019
     // @req REL-PROXY-001
     void release() {
+        release(true);
+    }
+
+    /**
+     * The release run by the {@code res.onAbort} listener, on the adapter's or the {@code res.abort} caller's thread,
+     * while the request thread may still be blocked in a read of the backend connection: like {@link #release}, but it
+     * closes only the plain socket, which makes that read fail at once, and never the {@code SSLSocket}. The
+     * {@code SSLSocket} is closed by the relayed body's close, which the response runs on every path and which runs
+     * {@link BackendClient#closeConnection} whether or not the exchange was released: on the copy thread after its read
+     * returned, or, when the abort comes while no copy is running, on the aborting thread itself, where no read is under
+     * way. So no {@code SSLSocket} close ever runs under another thread's read (on Android, Conscrypt's close waits for
+     * a pending {@code SSL_read}).
+     */
+    // @req FR-PROXY-019
+    // @req REL-PROXY-001
+    // @req SEC-PROXY-005
+    void releaseOnAbortThread() {
+        release(false);
+    }
+
+    private void release(boolean closeTls) {
         if (!released.compareAndSet(false, true)) {
             return;
         }
@@ -187,7 +218,12 @@ final class ProxyExchange {
             try {
                 Socket s = socket;
                 if (s != null) {
-                    closeQuietly(s);
+                    if (closeTls) {
+                        closeConnection(s);
+                    } else {
+                        Socket p = plain;
+                        closeQuietly(p != null ? p : s);
+                    }
                 }
             } finally {
                 if (limiter != null) {
@@ -195,6 +231,18 @@ final class ProxyExchange {
                 }
             }
         }
+    }
+
+    /**
+     * Ends the connection of the attached {@code backend} by {@link BackendClient#closeConnection}: the recorded plain
+     * socket, the one under TLS for https and {@code backend} itself for http, first, then {@code backend}; when no
+     * plain socket was recorded, {@code backend} alone.
+     */
+    // @req SEC-PROXY-005
+    // @req FR-PROXY-019
+    private void closeConnection(Socket backend) {
+        Socket p = plain;
+        BackendClient.closeConnection(p != null ? p : backend, backend);
     }
 
     private static void closeQuietly(Socket s) {

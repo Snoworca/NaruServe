@@ -120,6 +120,31 @@ final class BackendClient {
         }
     }
 
+    /**
+     * Ends a backend connection, the one rule of every proxy-side close of it (SEC-PROXY-005, FR-PROXY-019): closes
+     * {@code plain}, the plain socket, first and then {@code connection}, the {@code SSLSocket} layered over it for
+     * https, both quietly; for http, where {@code connection} is {@code plain}, and for a null {@code connection}, the
+     * plain socket is closed once. Closing the plain socket first ends the connection without a TLS duplex close, which
+     * under TLS 1.3 sends {@code close_notify} and then reads until the backend answers or the read timeout passes
+     * (FR-PROXY-020, FR-PROXY-017), and makes every thread blocked in I/O on it fail at once, so it releases what it
+     * holds. The {@code SSLSocket} is still closed so that no TLS socket is left for its finalizer: on Android it owns
+     * native SSL state that only its close frees at once, and StrictMode reports one left to the finalizer as a leak.
+     * With its transport closed that close can neither send nor read: on the JDK it fails at its first transport call,
+     * {@code getSoLinger}. It runs only while no read of the connection is under way: on the request thread before
+     * {@code res.relay}, on the copy thread once its read returned, or on the thread that aborts the response while no
+     * copy is running, where the response closes the relayed input itself. The {@code res.onAbort} listener, which may
+     * run while a read is blocked, closes only the plain socket ({@link ProxyExchange#releaseOnAbortThread}).
+     */
+    // @req SEC-PROXY-005
+    // @req FR-PROXY-019
+    // @req FR-PROXY-020
+    static void closeConnection(Socket plain, @Nullable Socket connection) {
+        closeQuietly(plain);
+        if (connection != null && connection != plain) {
+            closeQuietly(connection);
+        }
+    }
+
     private static void closeQuietly(Socket s) {
         try {
             s.close();

@@ -1,0 +1,152 @@
+{
+ "resolved_findings": [
+  "A-001"
+ ],
+ "resolution_evidence": {
+  "A-001": {
+   "command": "cp docs/analysis/kiwi-review-fix-loop-2026-11-19.naruserve.self-0410/probes/ReviewProbeTlsKeptOpenTest.java NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ReviewProbeTlsKeptOpenTest' --tests 'com.snoworca.naruserve.proxy.ProxyTlsCloseTest' --console=plain; rm NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ReviewProbeTlsKeptOpenTest.java",
+   "output": "BUILD SUCCESSFUL. ReviewProbeTlsKeptOpenTest: tls12ContrastPasses 0.3s, httpsBackendThatKeepsTheConnectionOpenDelaysNeitherTheClientNorTheSlot 0.267s, httpsReadTimeoutIsAnsweredAfterOneReadTimeout 2.265s (readTimeout 2 s, previously ~4 s) - 0 failures. ProxyTlsCloseTest: fr_PROXY_017_AC4 2.085s, fr_PROXY_020_AC4 0.038s, fr_PROXY_018 0.031s - 0 failures. Full module: ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test -> 657 tests, 0 failures, 0 errors.",
+   "notes": "Every proxy-owned close of a backend connection now closes the plain socket: SocketBodyStream.close (body end), the 502/503 close before a retry, ProxyExchange.release (error path, onAbort listener, relayed-body close) and attach-after-release via ProxyExchange.connection(). grep of NaruServe-proxy main sources finds no remaining close of an SSLSocket or of its streams (TlsConnector watchdog and BackendClient.secure failure already closed only plain). The new test forces TLS 1.3 (server enabledProtocols = TLSv1.3 only, so a handshake either negotiates 1.3 or fails the test), discriminates against the old code (each scenario added one read timeout there: >=5 s vs the <2.5 s bound; 4 s vs the <3.5 s bound) and has no ordering or sleep dependency beyond generous wall-clock bounds."
+  }
+ },
+ "findings": [
+  {
+   "id": "R2-001",
+   "axis": "P2",
+   "verdict": "residual",
+   "evidence": {
+    "command": "javac/java FinProbe (scratchpad, standalone JDK 17.0.20.1): TLS 1.3 layered SSLSocket over plain, backend keeps connection open; plain.close() then ssl.close() (what BaseSSLSocketImpl.finalize does at GC)",
+    "output": "proto TLSv1.3 / ssl.close after plain.close ms=0 / ssl.isClosed=true",
+    "intent_output": "On the JDK the never-closed SSLSocketImpl holds no native resource and its finalizer close() returns at once once plain is closed (no finalizer-thread stall), so no JVM-side defect. The Android API 21 runtime (Conscrypt OpenSSLSocketImpl, fd-based) could not be exercised: Android device verification is out of scope for this run.",
+    "probe_file": "",
+    "probe_dest": ""
+   },
+   "drop_reason": "",
+   "title": "Android: the never-closed Conscrypt SSLSocket keeps its native SSL state until GC and trips CloseGuard",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+    "line_range": "182-213 (release/connection); Proxy.java 1262-1267 (SocketBodyStream.close)"
+   },
+   "description": "After the fix no SSLSocket is ever closed; only the plain socket under it. On the JDK this is harmless (verified). On Android (Conscrypt OpenSSLSocketImpl on API 21, ConscryptFileDescriptorSocket later) the SSL socket owns a native SSL*/SSL_CTX reference freed only by its finalizer, and its CloseGuard reports 'A resource was acquired ... but never released' for every https proxied request when StrictMode detectLeakedClosableObjects is on. Conscrypt's finalizer deliberately skips SSL_shutdown, so there is no stale-fd write; the cost is native memory held until GC plus StrictMode noise. Unproven on the target runtime.",
+   "suggested_fix": "Optionally, after the plain socket is closed (it is then closed, so the duplex close cannot wait), close the SSLSocket quietly as a second step on the same thread: ssl.close() returns immediately once the transport is closed (measured 0 ms on JDK 17), releasing native state on Android without reintroducing the TLS 1.3 wait. Keep the plain close first.",
+   "is_behavioral": true,
+   "tags": [
+    "resource",
+    "android"
+   ],
+   "family": "tls-close",
+   "req_hint": "SEC-PROXY-005, FR-PROXY-019"
+  },
+  {
+   "id": "R2-002",
+   "axis": "P7",
+   "verdict": "drop",
+   "evidence": {
+    "command": "",
+    "output": "",
+    "intent_output": "",
+    "probe_file": "",
+    "probe_dest": ""
+   },
+   "drop_reason": "Test-coverage gap only, no defect: the onAbort listener and attach-after-release over https go through the same ProxyExchange.release/connection() code that ProxyTlsCloseTest's 504 scenario exercises; no failing behaviour found.",
+   "title": "ProxyTlsCloseTest does not cover the onAbort release or attach-after-release over https",
+   "location": {
+    "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsCloseTest.java",
+    "line_range": "98-163"
+   },
+   "description": "The three scenarios cover the body-end close, the error-path release and the retry close. The client-abort release (res.onAbort listener, possibly on another thread while the relay reads the SSLSocket) and ProxyExchange.attach after release are not exercised over TLS 1.3.",
+   "suggested_fix": "Optionally add an https variant of the ProxyMidResponseFailureTest abort scenario with a kept-open TLS 1.3 backend.",
+   "is_behavioral": false,
+   "tags": [
+    "tests"
+   ],
+   "family": "tls-close",
+   "req_hint": "FR-PROXY-019, FR-PROXY-016"
+  }
+ ],
+ "clean_code": [],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+   "hunks_total": 12,
+   "anchors": [
+    "Socket socket = attempt.socket;",
+    "InputStream body = new SocketBodyStream(bodySource(framing, in), attempt.plain);",
+    "// The plain socket is closed, never an SSLSocket, whose TLS 1.3 close would wait for the backend.",
+    "return new Attempt(plain, in, head);",
+    "/** The plain backend socket: the connection itself for http, the one under TLS for https. */",
+    "Attempt(Socket plain, InputStream in, ResponseParser.Head head) {",
+    "/** The backend response body; closing it closes the backend connection. */",
+    "private final Socket plain;",
+    "SocketBodyStream(InputStream in, Socket plain) {",
+    "this.socket = socket;",
+    "// @req SEC-PROXY-005",
+    "plain.close();"
+   ],
+   "findings": [
+    "R2-001"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+   "hunks_total": 5,
+   "anchors": [
+    "* Records the backend socket so {@link #release} closes it; a socket attached after the release is closed at once,",
+    "closeQuietly(connection(backend));",
+    "* free only once the connection is gone; only the first call does anything.",
+    "closeQuietly(connection(s));",
+    "private Socket connection(Socket backend) {"
+   ],
+   "findings": [
+    "R2-001"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsCloseTest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public class ProxyTlsCloseTest {"
+   ],
+   "findings": [
+    "R2-002"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+   "hunks_total": 0,
+   "anchors": [],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TlsConnector.java",
+   "hunks_total": 0,
+   "anchors": [],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+   "hunks_total": 0,
+   "anchors": [],
+   "findings": []
+  }
+ ],
+ "interaction_notes": [
+  "RelayedBodyStream.close -> SocketBodyStream.close (plain only) -> exchange.release: read accounting (remaining, failure, abandoned) lives in read(), nothing depends on the inner stream's close; ChunkedBodyInputStream.close only forwarded to in.close().",
+  "http path: BackendClient.secure returns plain itself, so Attempt.plain and ProxyExchange.plain are the connection; connect() never returns null, so plain is never null on any path that builds an Attempt or a SocketBodyStream.",
+  "Retry: ProxyExchange.plain is overwritten by the next connect's plainSocket() before its connect, so a release after a failed retry connect/handshake closes the newest plain; the earlier plain was already closed before the wait.",
+  "TlsConnector watchdog and BackendClient.secure failure close only plain (unchanged); fire() closes plain (unchanged). After plain is closed a reader blocked in SSLSocketImpl fails at once; JDK 17 BaseSSLSocketImpl.finalize() -> close() also returns in 0 ms (measured), so no finalizer stall.",
+  "Regression: full :NaruServe-proxy:test 657 tests, 0 failures; :NaruServe-proxy:javadoc check BUILD SUCCESSFUL."
+ ],
+ "summary": {
+  "total": 2,
+  "by_verdict": {
+   "keep": 0,
+   "residual": 1,
+   "drop": 1
+  },
+  "by_axis": {
+   "P2": 1,
+   "P7": 1
+  }
+ }
+}

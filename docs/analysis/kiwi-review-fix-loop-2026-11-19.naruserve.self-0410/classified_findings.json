@@ -1,0 +1,111 @@
+{
+  "immediate_fix": [
+    {
+      "id": "A-001",
+      "rationale": "Reviewer keep evidence is credible and execution-proven: probe ReviewProbeTlsKeptOpenTest fails 2/3 (first https response 15017 ms with readTimeout 15 s and maxConcurrent(1), second request delayed to 30034 ms; 504 READ_TIMEOUT with readTimeout 2 s arrives after 4017 ms) while the TLSv1.2 contrast passes. AC text confirmed in docs/spec/22.reverse-proxy.srs.md: FR-PROXY-020 AC-4 ('When the backend sends a complete Content-Length response and then keeps the connection open without closing it, the client receives the complete response without waiting for the backend to close, and on a .maxConcurrent(1) mount the next request reaches the backend') and the requirement text 'a backend that keeps the connection open never delays the client's response or the release of the slot' are not scheme-restricted, so they are broken for https; FR-PROXY-017 AC-4 ('readTimeout(1 s) ... gives 504 after about 1 second') is broken over https (2x readTimeout). Code confirms the cause: SocketBodyStream.close() closes the wrapped SSLSocket stream and socket (Proxy.java:1253-1260), ProxyExchange.release() closeQuietly(socket) on the SSLSocket (ProxyExchange.java:187-191), and the 502/503 retry path closeQuietly(socket) (Proxy.java:587), whereas SEC-PROXY-005's design note already says to close the plain socket, never the SSLSocket. Reproduces on the real call path of every https mount against a TLS 1.3 backend (JDK 11+ default) and holds a worker thread plus a concurrency slot for an extra readTimeout (60 s default) per request. Blocking tier.",
+      "estimated_complexity": "medium",
+      "is_behavioral": true,
+      "tags": ["bug", "tls", "resource-hold", "timeout", "slot-lifetime"],
+      "req_ids": ["FR-PROXY-020", "FR-PROXY-017", "REL-PROXY-001", "SEC-PROXY-005", "FR-PROXY-018"]
+    }
+  ],
+  "declared_limit": [],
+  "kept_tiers": [
+    {
+      "id": "A-001",
+      "tier": "block",
+      "family": "TLS 1.3 SSLSocket duplex close waits SO_TIMEOUT",
+      "introduced_by_round": null,
+      "family_action": null
+    }
+  ],
+  "discussion_needed": [],
+  "rejected": [
+    {
+      "id": "B-001",
+      "rationale": "Refuted by execution: the probe over a real TinyHttpd socket is green; a HEAD answered with res.relay(in, -1) reaches the client with no Content-Length, as FR-HTTP-037 AC-5 / FR-PROXY-014 AC-6 require.",
+      "rejection_category": "refuted_by_execution"
+    },
+    {
+      "id": "C-001",
+      "rationale": "Test-naming issue only, no product defect: RawBackend closes every connection itself, so ProxyRetryTest#retriesKeepTheOneSlotAndCloseEveryRetriedConnection cannot observe the proxy-side close, but the FR-PROXY-018 AC-2 close is already checked by fr_PROXY_018_AC2_theConnectionOfARetried503IsClosedByTheProxy and fr_PROXY_018_AC9_theConnectionOfARetried503IsClosedBeforeTheWait with a keep-alive ConnectionBackend. No intent goes unchecked.",
+      "rejection_category": "test_naming_no_defect"
+    },
+    {
+      "id": "C-002",
+      "rationale": "Behavior matches the spec: the proxy opens a backend connection but sends 0 bytes for a chunked body over the raw limit, which FR-PROXY-008 AC-3 allows (closing the backend connection on a chunked overrun). Only the test name 'WithoutReachingTheBackend' overstates; its assertion ('the backend saw no request') holds.",
+      "rejection_category": "test_naming_no_defect"
+    }
+  ],
+  "clean_code": {
+    "accepted": [
+      {
+        "id": "CC-001",
+        "rationale": "Test-only, behavior-preserving, local: the private static awaitConnections helper is duplicated in ProxyExchangeTest:190 and ProxyLifetimeSocketTest:203, and awaitCounterZero in ProxyConcurrencyTest:226, ProxyLifetimeSocketTest:188 and ProxyTimeoutsTest:605.",
+        "fix_guidance": "Narrow scope only: move awaitConnections and awaitCounterZero into one package-private test utility class in NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ (e.g. a final class with static methods next to RawBackend) and call it from those files, but only for copies that are byte-for-byte identical in body, timeouts and failure messages; leave any copy that differs in place. Do NOT consolidate the readHead/readFully/readLine raw-socket helpers (they differ across files). Do not change any assertion, timeout value, or test method name; do not touch main sources; no test may be deleted or weakened."
+      }
+    ],
+    "dismissed": [
+      {
+        "id": "ACC-001",
+        "principle": "DRY (duplicated logic)",
+        "location": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java:78-94",
+        "reason": "The two connectionNames implementations differ in element rules (non-token elements kept vs dropped); merging them changes request or response Connection handling, so it is not behavior-preserving."
+      },
+      {
+        "id": "ACC-002",
+        "principle": "DRY (three IP literal parsers)",
+        "location": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java:213-302",
+        "reason": "Cross-class refactor of security-relevant parsers (TargetUrl, BackendRequest, CertificateHostnames host name matching for SEC-PROXY-005) whose accepted literal sets may legitimately differ; large and risky relative to value at the end of a release run."
+      },
+      {
+        "id": "ACC-003",
+        "principle": "Dead code in production (test-only overloads)",
+        "location": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java:32-48",
+        "reason": "The overloads carry @req FR-PROXY-011/012/013 tags and are the seam the requirement tests call; removing them requires rewriting those tests (risk of weakening them) for no runtime benefit."
+      },
+      {
+        "id": "ACC-004",
+        "principle": "Class size / mixed responsibility",
+        "location": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java:1-1262",
+        "reason": "Splitting a 1262-line class with the retry loop and framing logic is a large, risky restructuring at the end of a release run; not a small local refactor."
+      },
+      {
+        "id": "BCC-001",
+        "principle": "DRY / single source of truth",
+        "location": "NaruServe-api/src/main/java/com/snoworca/naruserve/utils/auth/Auth.java:2658-2664, 2819-2820",
+        "reason": "The suggested fix is to expose a public/shared classifier, which adds public API (Auth lives outside the internal package); out of the allowed scope."
+      },
+      {
+        "id": "BCC-002",
+        "principle": "DRY / misplaced responsibility",
+        "location": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRestApp.java:116 (also Dispatcher.java:63, DefaultRequest.java:72, LimitedInputStream.java:84-94)",
+        "reason": "There is no duplicated value: every site already references the single constant JsonBodyReader.DEFAULT_LIMIT/MAX_LIMIT. Moving them to a new holder class is cosmetic relocation across four core classes with low value."
+      },
+      {
+        "id": "BCC-003",
+        "principle": "Class size / single responsibility",
+        "location": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultRequest.java:253-506",
+        "reason": "Extracting RawBodyStream and HeaderEnumeration from the core request class is a structural change to a central class; large relative to value at the end of a release run."
+      },
+      {
+        "id": "BCC-004",
+        "principle": "Dead code",
+        "location": "build.gradle:277-281",
+        "reason": "Invalid as dead code: the onlyIf guard is a generic per-module safeguard tagged @req CON-BUILD-019 that applies to every configured module, not only NaruServe-proxy; removing it changes build behavior."
+      },
+      {
+        "id": "BCC-005",
+        "principle": "Needless indirection",
+        "location": "NaruServe-api/src/main/java/com/snoworca/naruserve/internal/DefaultResponse.java:1152-1161",
+        "reason": "DefaultResponse.isToken is a public static method (callers such as the cookie parser and Cookie use it); removing it changes an existing public symbol. Inlining only the package-private isFieldValue one-liner has negligible value."
+      },
+      {
+        "id": "CC-002",
+        "principle": "Duplication across modules",
+        "location": "NaruServe-servlet/src/test/java/com/snoworca/naruserve/servlet/ServletProxyAbsoluteFormTest.java:117-183",
+        "reason": "Requires a new testFixtures source set and build.gradle wiring between modules; a build-configuration change disproportionate to removing one test helper copy."
+      }
+    ]
+  }
+}

@@ -58,17 +58,27 @@ final class TlsConnector {
      * watchdog closes. A failure is a {@link ProxyException}: {@code TOTAL_TIMEOUT} when the watchdog's deadline fired,
      * otherwise {@code CONNECT_TIMEOUT} for a handshake {@link SocketTimeoutException} and {@code CONNECT_FAILED} for
      * every other TLS or I/O failure, a rejected certificate or host name included. The caller closes {@code plain}
-     * on failure.
+     * on failure. A TLS socket whose handshake completed and that is then refused, by the held verifier or by a
+     * deadline that fired, is closed here on the calling thread, after {@code plain}, by
+     * {@link BackendClient#closeConnection}, so the refused connect leaves no TLS socket for its finalizer. A handshake
+     * that failed ends its TLS socket in the provider itself (the JDK's fatal alert closes it, Conscrypt frees its
+     * native state), so that socket's {@code close()} is never called, and the watchdog never closes it (REL-PROXY-002
+     * AC-7).
      */
+    // @req SEC-PROXY-005
     static Socket layer(Socket plain, String host, int port, int connectTimeoutMillis, long deadlineNanos,
             @Nullable SSLSocketFactory factory) {
         SSLSocketFactory f = factory != null ? factory : (SSLSocketFactory) SSLSocketFactory.getDefault();
         Watchdog watchdog = Watchdog.arm(plain, deadlineNanos);
+        @Nullable SSLSocket ssl = null;
+        boolean handshaken = false;
+        boolean layered = false;
         try {
             plain.setSoTimeout(connectTimeoutMillis);
-            SSLSocket ssl = (SSLSocket) f.createSocket(plain, host, port, true);
+            ssl = (SSLSocket) f.createSocket(plain, host, port, true);
             endpointIdentification(ssl);
             ssl.startHandshake();
+            handshaken = true;
             // The proxy's own check runs whatever the identification did: a factory may handshake inside createSocket,
             // its trust manager may skip the endpoint check, or its socket may keep the parameters without applying
             // them (AC-9).
@@ -78,6 +88,7 @@ final class TlsConnector {
             if (watchdog.disarm()) {
                 throw new ProxyException(ProxyException.Kind.TOTAL_TIMEOUT, null);
             }
+            layered = true;
             return ssl;
         } catch (IOException e) {
             if (watchdog.disarm()) {
@@ -96,6 +107,9 @@ final class TlsConnector {
                     : ProxyException.Kind.CONNECT_FAILED, e);
         } finally {
             watchdog.disarm();
+            if (!layered && handshaken && ssl != null) {
+                BackendClient.closeConnection(plain, ssl);
+            }
         }
     }
 

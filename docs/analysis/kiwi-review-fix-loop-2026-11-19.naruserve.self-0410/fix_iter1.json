@@ -1,0 +1,20 @@
+{
+  "iter": 1,
+  "fixes": [
+    {
+      "finding_id": "A-001",
+      "files_changed": [
+        {"path": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java", "line_range": "497-505, 587-597, 1008-1014, 1246-1268", "loc_changed": 39},
+        {"path": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java", "line_range": "100-108, 173-214", "loc_changed": 27},
+        {"path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsCloseTest.java", "line_range": "1-272 (new)", "loc_changed": 272}
+      ],
+      "red_signature": "ProxyTlsCloseTest on unfixed main code, TLS 1.3 kept-open backend: 3 tests completed, 3 failed — fr_PROXY_017_AC4_anHttpsReadTimeoutIsAnsweredAfterOneReadTimeout: '504 READ_TIMEOUT with readTimeout 2 s arrived after 4062 ms'; fr_PROXY_020_AC4_theEndOfAnHttpsBodyFreesTheSlotWithoutWaitingForTheBackend: 'two https responses with readTimeout 5 s took 10057 ms'; fr_PROXY_018_theCloseBeforeAnHttpsRetryDoesNotWaitForTheBackend: 'a retried https request with readTimeout 5 s took 10130 ms'",
+      "green": "ProxyTlsCloseTest 3/3 pass (2.078 s = one read timeout, 0.038 s, 0.037 s); :NaruServe-proxy:build incl. animalsnifferMain BUILD SUCCESSFUL, 657 proxy tests 0 failures",
+      "full_build": {"tests": 4773, "failures": 0},
+      "rationale_strip": "",
+      "rationale_full": "Single rule: the proxy ends a backend connection only by closing its plain socket, never the SSLSocket or its streams (whose close is the JDK duplex close: under TLS 1.3 close_notify then a read until the peer answers or SO_TIMEOUT). Attempt now carries the plain socket; SocketBodyStream.close closes only the plain socket (the layered Buffered/Chunked streams hold no resources and super.close would reach SSLSocketImpl.close via AppInputStream.close); the 502/503 retry closes plain instead of socket; ProxyExchange.release and attach-after-release close connection(socket) = the recorded plain socket (fallback to the attached socket when none was recorded, e.g. unit tests). Deadline paths (fire, TlsConnector watchdog, BackendClient failure paths) already closed the plain socket. The connection is never reused (Connection: close), so no close_notify exchange is needed. No public symbol changed. docs/api/proxy.md (ko/en) do not describe the closing behaviour, so nothing contradicts it.",
+      "mock_scan_passed": true,
+      "external_module_touch": false
+    }
+  ]
+}

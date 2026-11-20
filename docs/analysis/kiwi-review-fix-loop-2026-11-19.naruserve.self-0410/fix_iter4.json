@@ -1,0 +1,31 @@
+{
+  "iter": 4,
+  "fixes": [
+    {
+      "finding_id": "R4-001",
+      "files_changed": [
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+        "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsCloseTest.java"
+      ],
+      "summary": "Javadoc only. ProxyExchange.release, ProxyExchange.releaseOnAbortThread and BackendClient.closeConnection now state the real invariant: the SSLSocket is closed only while no read of the connection is under way, on the request thread before res.relay, on the copy thread after its read returned, or on the thread that aborts the response while no copy is running (the response closes the relayed input itself, before its abort listeners). The res.onAbort listener still closes only the plain socket. The same incomplete thread list in the last sentence of the ProxyTlsCloseTest class javadoc was corrected the same way."
+    },
+    {
+      "finding_id": "R4-002",
+      "files_changed": [
+        "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsCloseTest.java"
+      ],
+      "summary": "Javadoc only. The stale pre-R2-001 phrase 'close the plain socket under TLS, never the SSLSocket' now reads 'close the plain socket under TLS first, never starting with the SSLSocket', which matches the later sentence that every path also closes the SSLSocket and the assertAllClosed check."
+    }
+  ],
+  "code_changed": false,
+  "build": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:build",
+    "result": "BUILD SUCCESSFUL in 1m 34s",
+    "tests": 663,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "notes": "javadoc, animalsnifferMain, test and check are part of the build; nothing was staged or committed"
+  }
+}

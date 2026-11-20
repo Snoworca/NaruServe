@@ -1,0 +1,264 @@
+{
+ "findings": [
+  {
+   "id": "A-001",
+   "axis": "P2",
+   "verdict": "keep",
+   "evidence": {
+    "command": "cd /Users/beom/work/git/NaruServe && ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ReviewProbeTlsKeptOpenTest' --console=plain",
+    "output": "3 tests completed, 2 failed. httpsBackendThatKeepsTheConnectionOpenDelaysNeitherTheClientNorTheSlot (30.4 s): AssertionError: first response took 15017 ms; the second (200) came 30034 ms after the first was sent [readTimeout 15 s, maxConcurrent(1)]. httpsReadTimeoutIsAnsweredAfterOneReadTimeout (4.4 s): AssertionError: 504 READ_TIMEOUT with readTimeout 2 s arrived after 4017 ms. tls12ContrastPasses (0.55 s): PASS - the same kept-open backend restricted to TLSv1.2 is answered at once.",
+    "intent_output": "FR-PROXY-020 AC-4: 'When the backend sends a complete Content-Length response and then keeps the connection open without closing it, the client receives the complete response without waiting for the backend to close, and on a .maxConcurrent(1) mount the next request reaches the backend' (the http test passes; over https the slot and worker are held one full readTimeout). FR-PROXY-017 AC-4: readTimeout(1 s) on a backend that never answers 'gives 504 after about 1 second' (over https it takes 2x readTimeout). docs/api/en/proxy.md promises https backends behave like http ones apart from TLS checks.",
+    "probe_file": "docs/analysis/kiwi-review-fix-loop-2026-11-19.naruserve.self-0410/probes/ReviewProbeTlsKeptOpenTest.java",
+    "probe_dest": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ReviewProbeTlsKeptOpenTest.java"
+   },
+   "drop_reason": "",
+   "title": "Closing the backend SSLSocket (TLS 1.3) blocks for a full read timeout: https slot, worker and 504 delayed by readTimeout",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "1253-1260 (SocketBodyStream.close), 587 (retry closeQuietly(socket)); ProxyExchange.java 187-191 (release closes the attached SSLSocket)"
+   },
+   "description": "Cross-wave interaction of the TLS wave (SEC-PROXY-005: the attached socket is the SSLSocket) with the relay/lifetime waves (FR-PROXY-020, REL-PROXY-001) and the error path. Every normal end of an https exchange closes the SSLSocket itself: RelayedBodyStream.close -> SocketBodyStream.close -> BufferedInputStream.close -> SSLSocket AppInputStream.close -> SSLSocketImpl.close(), and ProxyExchange.release() -> closeQuietly(socket) on the error path. On the JDK (17 checked: SSLSocketImpl.duplexCloseOutput -> bruteForceCloseInput(hasCloseReceipt=false for TLS 1.3) -> appInput.deplete() -> SSLSocketInputRecord.deplete(tryToRead = SO_TIMEOUT > 0) -> is.read()) a TLS 1.3 duplex close sends close_notify and then blocks reading the plain socket for up to SO_TIMEOUT, which the proxy set to readTimeout. So against an https backend that keeps the connection open after its response (the FR-PROXY-020 AC-4 case), each request holds the worker thread and its maxConcurrent slot for one extra readTimeout (60 s by default) after the body was delivered; the InMemory adapter completes the client response only after that; HEAD/204/304 responses (closed at once) are hit the same way. On the error path (READ_TIMEOUT, INVALID_RESPONSE, CONNECT/TLS done but backend silent) forward()'s finally release() closes the SSLSocket and waits another readTimeout before the 504/502 reaches the error flow (2x readTimeout measured). The 502/503 retry path closeQuietly(socket) on an SSLSocket does the same before the retry wait, after retryAllowed() already checked that the wait fits the total deadline. TlsConnector/BackendClient.secure and the deadlines already avoid this by closing the plain socket; the release and body-close paths do not. TLS 1.2 is not affected (contrast test passes), so this shows with every JDK 11+ / modern backend default.",
+   "suggested_fix": "Never close the SSLSocket itself on the proxy's paths: keep the plain socket in ProxyExchange (already recorded as `plain`) and have release() close the plain socket (or both, plain first), and make SocketBodyStream.close() close the plain socket instead of the stream/SSLSocket (the connection is not reused, so no close_notify exchange is needed); likewise use the plain socket in the 502/503 retry close. Add an https variant of FR-PROXY-020 AC-4 and FR-PROXY-017 AC-4 to ProxyTlsTest/ProxyBackendConnectionTest.",
+   "is_behavioral": true,
+   "tags": [
+    "bug",
+    "tls",
+    "resource-hold",
+    "timeout"
+   ],
+   "family": "TLS 1.3 SSLSocket duplex close waits SO_TIMEOUT",
+   "req_hint": "FR-PROXY-020, FR-PROXY-017, REL-PROXY-001, SEC-PROXY-005, FR-PROXY-018"
+  }
+ ],
+ "clean_code": [
+  {
+   "id": "ACC-001",
+   "principle": "DRY (duplicated logic)",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java",
+    "line_range": "78-94"
+   },
+   "description": "ResponseHeaderCopier.connectionNames re-implements HeaderRules.connectionNames (HeaderRules.java:122-136) with a slightly different element rule (non-token elements kept here, dropped there); one shared helper would keep request and response Connection handling consistent."
+  },
+  {
+   "id": "ACC-002",
+   "principle": "DRY (three IP literal parsers)",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+    "line_range": "213-302"
+   },
+   "description": "IPv4/IPv6 literal parsing exists three times: TargetUrl.isIpv4/isIpv6/countGroups, BackendRequest.isIpv4/isIpv6/groups (BackendRequest.java:141-220) and CertificateHostnames.ipv4/ipv6 (CertificateHostnames.java:156-263); hex-digit helpers are likewise repeated in PathChecker, CertificateHostnames and ChunkedBodyInputStream. Divergence between them (e.g. which literals TargetUrl accepts vs which CertificateHostnames can match) is a latent risk."
+  },
+  {
+   "id": "ACC-003",
+   "principle": "Dead code in production (test-only overloads)",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java",
+    "line_range": "32-48"
+   },
+   "description": "ResponseHeaderCopier.copy(List, Response), copy(List, Set, Response) and LocationRewriter.apply(List, TargetUrl, String, Response) (LocationRewriter.java:39-43) are called only from tests; production uses the PendingResponseHeaders variants."
+  },
+  {
+   "id": "ACC-004",
+   "principle": "Class size / mixed responsibility",
+   "location": {
+    "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+    "line_range": "1-1262"
+   },
+   "description": "Proxy.java (1262 lines) holds the public option API, the 15-argument Options copy constructors (one withX per option, order-sensitive same-type arguments), request-framing decisions, the retry loop, response header assembly and socket stream wrappers; the retry/attempt loop and the framing decision could live in their own package-private classes."
+  }
+ ],
+ "coverage_rows": [
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class BackendClient {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class BackendRequest {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/CertificateHostnames.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class CertificateHostnames implements HostnameVerifier {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ChunkedBodyInputStream.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class ChunkedBodyInputStream extends InputStream {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ConcurrencyLimiter.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class ConcurrencyLimiter {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/FramingLists.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class FramingLists {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/HeaderRules.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class HeaderRules {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/LocationRewriter.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class LocationRewriter {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/PathChecker.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class PathChecker {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/PendingResponseHeaders.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class PendingResponseHeaders {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class Proxy implements Middleware {"
+   ],
+   "findings": [
+    "A-001"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyException.java",
+   "hunks_total": 1,
+   "anchors": [
+    "public final class ProxyException extends HttpException {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class ProxyExchange {"
+   ],
+   "findings": [
+    "A-001"
+   ]
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RelayedBodyStream.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class RelayedBodyStream extends FilterInputStream {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RequestBodyCopier.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class RequestBodyCopier {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class ResponseHeaderCopier {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseParser.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class ResponseParser {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RetryPolicy.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class RetryPolicy {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class TargetUrl {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TlsConnector.java",
+   "hunks_total": 1,
+   "anchors": [
+    "final class TlsConnector {"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/package-info.java",
+   "hunks_total": 1,
+   "anchors": [
+    "package com.snoworca.naruserve.proxy;"
+   ],
+   "findings": []
+  },
+  {
+   "file": "NaruServe-proxy/src/main/resources/META-INF/proguard/naruserve-proxy.pro",
+   "hunks_total": 1,
+   "anchors": [
+    "-keepnames class com.snoworca.naruserve.proxy.ProxyException"
+   ],
+   "findings": []
+  }
+ ],
+ "summary": {
+  "total": 1,
+  "by_verdict": {
+   "keep": 1,
+   "residual": 0,
+   "drop": 0
+  },
+  "by_axis": {
+   "P2": 1
+  }
+ }
+}
