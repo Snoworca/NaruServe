@@ -905,7 +905,7 @@ class ProxyDocsKotlinTest {
             "CN만 있는 인증서는 `502`(`CONNECT_FAILED`)입니다",
             "`trustCertificates`와 `sslSocketFactory` 중 나중에 부른 것이 그 `Proxy`의 TLS 신뢰를 정합니다",
             "검사를 끄는 옵션이 아니라", "Node https 에이전트의 `ca` 옵션을 `http-proxy-middleware`에 넘기는 것",
-            "`agent: new https.Agent({ ca: fs.readFileSync('cert.pem') })`")
+            "`createProxyMiddleware({ target, agent: new https.Agent({ ca: fs.readFileSync('cert.pem') }) })`")
         has("en/proxy.md trustCertificates", e, "`trustCertificates(String pem)`", "`trustCertificates(X509Certificate... certificates)`",
             "On that mount only the given certificates are trusted", "the public CAs of the JDK default trust store are not",
             "A self-signed certificate trusts itself, and a private CA certificate trusts the certificates that CA issued",
@@ -914,7 +914,7 @@ class ProxyDocsKotlinTest {
             "a certificate with only a CN gets `502` (`CONNECT_FAILED`)",
             "Of `trustCertificates` and `sslSocketFactory`, the one called later decides the TLS trust of that `Proxy`",
             "It is not an option that turns verification off", "passing the `ca` option of Node's https agent to `http-proxy-middleware`",
-            "`agent: new https.Agent({ ca: fs.readFileSync('cert.pem') })`")
+            "`createProxyMiddleware({ target, agent: new https.Agent({ ca: fs.readFileSync('cert.pem') }) })`")
     }
 
     // docs-example: proxy.md#12

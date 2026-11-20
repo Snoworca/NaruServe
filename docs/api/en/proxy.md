@@ -120,6 +120,8 @@ Every option method returns a new `Proxy`, and its value is checked when the met
 | `removeResponseHeader(String)` | None | The name must be an HTTP token that is neither a hop-by-hop header nor `Content-Length`. Otherwise `IllegalArgumentException`; `null` throws `NullPointerException` | `delete proxyRes.headers[name]` in `on.proxyRes` |
 | `rewriteLocation(boolean)` | `true` | Accepts every value | `autoRewrite`, `hostRewrite`, `protocolRewrite` |
 | `sslSocketFactory(SSLSocketFactory)` | The JDK default factory | `null` throws `NullPointerException`. An `http` target accepts it and never uses it | `agent` (for example `new https.Agent({ ca })`). Nothing corresponds to `secure: false` |
+| `trustCertificates(String)` | The JDK default trust store | A PEM text holding one or more `CERTIFICATE` blocks. No block, or a block whose base64 or DER does not parse, throws `IllegalArgumentException`; `null` throws `NullPointerException`. An `http` target accepts it and never uses it | `ca` of `agent: new https.Agent({ ca })` |
+| `trustCertificates(X509Certificate...)` | The JDK default trust store | One or more certificates. An empty array throws `IllegalArgumentException`; a `null` array or element throws `NullPointerException`. An `http` target accepts it and never uses it | `ca` of `agent: new https.Agent({ ca })` |
 
 `retries` and `maxConcurrent` take an `int`, `bodyLimit` a `long`, and the switches a `boolean`. No public method reads a configured value back.
 
@@ -496,6 +498,58 @@ app.use("/internal", Proxy.to("https://backend.internal:8443").sslSocketFactory(
 ```
 
 Express counterpart: `agent: new https.Agent({ ca })`. Nothing corresponds to `secure: false`, which turns verification off.
+
+### Trusting a self-signed or private CA certificate
+
+A backend whose certificate no public CA signed (a self-signed certificate, an in-house private CA) is reached by passing that certificate to `trustCertificates`. It is not an option that turns verification off; it names the certificates to trust.
+
+- `trustCertificates(String pem)` takes a PEM text. It reads every block from `-----BEGIN CERTIFICATE-----` to `-----END CERTIFICATE-----` and ignores the text outside the blocks, so a file with several certificates one after another can be passed as it is.
+- `trustCertificates(X509Certificate... certificates)` takes certificates already read.
+- On that mount only the given certificates are trusted; the public CAs of the JDK default trust store are not. A self-signed certificate trusts itself, and a private CA certificate trusts the certificates that CA issued.
+- The certificate chain is still checked (signature and validity period). An expired certificate gets `502` (`CONNECT_FAILED`) even when it is a given one.
+- The host name check stays on as well. The backend certificate needs a subject alternative name (subjectAltName, SAN) that matches the target host, and a certificate with only a CN gets `502` (`CONNECT_FAILED`). Connecting to `https://localhost:...` needs `DNS:localhost`, and connecting to `https://127.0.0.1:...` needs `IP:127.0.0.1`.
+- The value is checked at the call. A PEM text with no `CERTIFICATE` block or with a block whose base64 or DER does not parse, and an empty array, throw `IllegalArgumentException`; a `null` argument or element throws `NullPointerException`.
+- Of `trustCertificates` and `sslSocketFactory`, the one called later decides the TLS trust of that `Proxy`. An `http` target accepts the certificates and never uses them.
+
+```java
+import com.snoworca.naruserve.proxy.Proxy;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+
+// cert.pem: the backend's self-signed certificate (made with the openssl command below)
+String pem;
+try (Scanner s = new Scanner(new File("cert.pem"), "UTF-8").useDelimiter("\\A")) {
+    pem = s.next();
+}
+app.use("/internal", Proxy.to("https://localhost:8443").trustCertificates(pem));
+
+// ca.pem: the private CA that issued the backend certificates
+X509Certificate ca;
+try (InputStream in = new FileInputStream("ca.pem")) {
+    ca = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(in);
+}
+app.use("/billing", Proxy.to("https://billing.internal:8443").trustCertificates(ca));
+```
+
+Kotlin:
+
+```kotlin
+val pem = File("cert.pem").readText()
+app.use("/internal", Proxy.to("https://localhost:8443").trustCertificates(pem))
+
+val ca = File("ca.pem").inputStream().use {
+    CertificateFactory.getInstance("X.509").generateCertificate(it) as X509Certificate
+}
+app.use("/billing", Proxy.to("https://billing.internal:8443").trustCertificates(ca))
+```
+
+A self-signed certificate with a SAN is made with the following `openssl` command (OpenSSL 1.1.1 or later). The backend serves with `key.pem` and `cert.pem`, and the proxy is given `cert.pem`. `key.pem` is the private key; keep it on the backend.
+
+```bash
+openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem -days 365 -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+```
+
+Express counterpart: the same as passing the `ca` option of Node's https agent to `http-proxy-middleware`, as in `createProxyMiddleware({ target, agent: new https.Agent({ ca: fs.readFileSync('cert.pem') }) })`.
 
 ## Access log
 

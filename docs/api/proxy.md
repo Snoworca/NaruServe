@@ -120,6 +120,8 @@ Express 대응: `createProxyMiddleware({ target, router: (req) => url })`의 `ro
 | `removeResponseHeader(String)` | 없음 | 이름은 HTTP 토큰이면서 hop-by-hop 헤더나 `Content-Length`가 아니어야 합니다. 어기면 `IllegalArgumentException`, `null`이면 `NullPointerException` | `on.proxyRes`에서 `delete proxyRes.headers[name]` |
 | `rewriteLocation(boolean)` | `true` | 모든 값을 받습니다 | `autoRewrite`, `hostRewrite`, `protocolRewrite` |
 | `sslSocketFactory(SSLSocketFactory)` | JDK 기본 팩토리 | `null`이면 `NullPointerException`. `http` 대상도 받지만 쓰지 않습니다 | `agent`(예: `new https.Agent({ ca })`). `secure: false`에 해당하는 옵션은 없습니다 |
+| `trustCertificates(String)` | JDK 기본 신뢰 저장소 | `CERTIFICATE` 블록이 하나 이상 든 PEM 텍스트. 블록이 없거나 블록의 base64나 DER을 읽을 수 없으면 `IllegalArgumentException`, `null`이면 `NullPointerException`. `http` 대상도 받지만 쓰지 않습니다 | `agent: new https.Agent({ ca })`의 `ca` |
+| `trustCertificates(X509Certificate...)` | JDK 기본 신뢰 저장소 | 인증서 하나 이상. 빈 배열은 `IllegalArgumentException`, 배열이나 원소가 `null`이면 `NullPointerException`. `http` 대상도 받지만 쓰지 않습니다 | `agent: new https.Agent({ ca })`의 `ca` |
 
 `retries`와 `maxConcurrent`는 `int`, `bodyLimit`은 `long`, 켜고 끄는 옵션은 `boolean`을 받습니다. 설정한 값을 읽는 공개 메서드는 없습니다.
 
@@ -496,6 +498,58 @@ app.use("/internal", Proxy.to("https://backend.internal:8443").sslSocketFactory(
 ```
 
 Express 대응: `agent: new https.Agent({ ca })`. 검사를 끄는 `secure: false`에 해당하는 옵션은 없습니다.
+
+### 자체 서명 인증서와 사설 CA 믿기
+
+공인 CA가 서명하지 않은 인증서를 쓰는 백엔드(자체 서명 인증서, 사내 사설 CA)는 `trustCertificates`로 그 인증서를 넘기면 연결할 수 있습니다. 검사를 끄는 옵션이 아니라 믿을 인증서를 정하는 옵션입니다.
+
+- `trustCertificates(String pem)`은 PEM 텍스트를 받습니다. `-----BEGIN CERTIFICATE-----`부터 `-----END CERTIFICATE-----`까지의 블록을 모두 읽고 블록 밖의 글은 무시하므로, 인증서 여러 개를 이어 붙인 파일도 그대로 넘길 수 있습니다.
+- `trustCertificates(X509Certificate... certificates)`는 이미 읽은 인증서를 받습니다.
+- 그 마운트에서는 넘긴 인증서만 믿습니다. JDK 기본 신뢰 저장소의 공인 CA는 믿지 않습니다. 자체 서명 인증서는 그 인증서 자신을, 사설 CA 인증서는 그 CA가 발급한 인증서를 믿게 합니다.
+- 인증서 체인 검사(서명과 유효 기간)는 그대로 합니다. 만료된 인증서는 넘긴 인증서라도 `502`(`CONNECT_FAILED`)입니다.
+- 호스트 이름 검사도 그대로 켜져 있습니다. 백엔드 인증서에는 대상 호스트와 맞는 주체 대체 이름(subjectAltName, SAN)이 있어야 하며, CN만 있는 인증서는 `502`(`CONNECT_FAILED`)입니다. `https://localhost:...`로 연결하면 `DNS:localhost`, `https://127.0.0.1:...`로 연결하면 `IP:127.0.0.1`이 필요합니다.
+- 값은 부를 때 검사합니다. `CERTIFICATE` 블록이 없거나 블록의 base64나 DER을 읽을 수 없는 PEM 텍스트와 빈 배열은 `IllegalArgumentException`, `null` 인자와 `null` 원소는 `NullPointerException`입니다.
+- `trustCertificates`와 `sslSocketFactory` 중 나중에 부른 것이 그 `Proxy`의 TLS 신뢰를 정합니다. `http` 대상은 인증서를 받지만 쓰지 않습니다.
+
+```java
+import com.snoworca.naruserve.proxy.Proxy;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+
+// cert.pem: 백엔드의 자체 서명 인증서(아래 openssl 명령으로 만든 것)
+String pem;
+try (Scanner s = new Scanner(new File("cert.pem"), "UTF-8").useDelimiter("\\A")) {
+    pem = s.next();
+}
+app.use("/internal", Proxy.to("https://localhost:8443").trustCertificates(pem));
+
+// ca.pem: 백엔드 인증서를 발급한 사설 CA
+X509Certificate ca;
+try (InputStream in = new FileInputStream("ca.pem")) {
+    ca = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(in);
+}
+app.use("/billing", Proxy.to("https://billing.internal:8443").trustCertificates(ca));
+```
+
+Kotlin:
+
+```kotlin
+val pem = File("cert.pem").readText()
+app.use("/internal", Proxy.to("https://localhost:8443").trustCertificates(pem))
+
+val ca = File("ca.pem").inputStream().use {
+    CertificateFactory.getInstance("X.509").generateCertificate(it) as X509Certificate
+}
+app.use("/billing", Proxy.to("https://billing.internal:8443").trustCertificates(ca))
+```
+
+SAN이 든 자체 서명 인증서는 다음 `openssl` 명령(OpenSSL 1.1.1 이상)으로 만듭니다. 백엔드는 `key.pem`과 `cert.pem`으로 서비스하고, 프록시에는 `cert.pem`을 넘깁니다. `key.pem`은 비밀 키이므로 백엔드 밖으로 내보내지 마세요.
+
+```bash
+openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem -days 365 -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+```
+
+Express 대응: `createProxyMiddleware({ target, agent: new https.Agent({ ca: fs.readFileSync('cert.pem') }) })`처럼 Node https 에이전트의 `ca` 옵션을 `http-proxy-middleware`에 넘기는 것과 같습니다.
 
 ## 접근 로그
 
