@@ -409,7 +409,7 @@ public class BackendResponseParserTest {
         assertNoError();
     }
 
-    // SEC-PROXY-004, RFC 9112 §6.1 (review FND-001): an HTTP/1.0 response carrying Transfer-Encoding has faulty
+    // SEC-PROXY-004 AC-12, RFC 9112 §6.1 (review FND-001): an HTTP/1.0 response carrying Transfer-Encoding has faulty
     // framing, so HTTP/1.0 200 with Transfer-Encoding: chunked is 502 INVALID_RESPONSE and its chunks are not decoded
     @Test(timeout = 30000)
     public void sec_PROXY_004_transferEncodingOnHttp10ResponseIsInvalidResponse() throws IOException {
@@ -427,7 +427,7 @@ public class BackendResponseParserTest {
         assertGetIsInvalidResponse("HTTP/1.0 200 OK\r\nTransfer-Encoding: chunked\r\nContent-Length: 5\r\n\r\nhello");
     }
 
-    // SEC-PROXY-004, RFC 9112 §6.1 (review FND-001): a response to HEAD stays bodyless first, so HTTP/1.0 with
+    // SEC-PROXY-004 AC-12, RFC 9112 §6.1 (review FND-001): a response to HEAD stays bodyless first, so HTTP/1.0 with
     // Transfer-Encoding: chunked is no error
     @Test(timeout = 30000)
     public void sec_PROXY_004_headResponseOverHttp10WithTransferEncodingIsNoError() throws IOException {
@@ -438,7 +438,7 @@ public class BackendResponseParserTest {
         assertNoError();
     }
 
-    // SEC-PROXY-004, RFC 9112 §6.1 (review FND-001): a 204 and a 304 stay bodyless first, so HTTP/1.0 with
+    // SEC-PROXY-004 AC-12, RFC 9112 §6.1 (review FND-001): a 204 and a 304 stay bodyless first, so HTTP/1.0 with
     // Transfer-Encoding: chunked is no error
     @Test(timeout = 30000)
     public void sec_PROXY_004_noContentOverHttp10WithTransferEncodingIsNoError() throws IOException {

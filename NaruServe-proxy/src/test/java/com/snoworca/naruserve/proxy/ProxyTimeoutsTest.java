@@ -303,6 +303,7 @@ public class ProxyTimeoutsTest {
                 backend.closedByProxy.await(WAIT_SECONDS, TimeUnit.SECONDS));
     }
 
+    // FR-PROXY-017 AC-12 (a client trickling its body past the total deadline ends at the first read after it).
     // FR-PROXY-017 AC-8: the total timeout bounds the request while the client trickles its body: with
     // .totalTimeout(2, SECONDS) and a client body arriving one byte every 500 ms, the request ends with 504
     // TOTAL_TIMEOUT at the first client read after the deadline, about 2 seconds, not when the copy buffer next fills
@@ -325,6 +326,7 @@ public class ProxyTimeoutsTest {
                 backend.closedByProxy.await(WAIT_SECONDS, TimeUnit.SECONDS));
     }
 
+    // FR-PROXY-017 AC-11 (the final deadline check before res.relay).
     // FR-PROXY-017 AC-7, FR-PROXY-017 AC-8 (FND-001): a timeout reached after the backend head was read but before
     // the response is handed to res.relay is a 504 through onError, not a relayed status and an aborted client. With
     // .totalTimeout(1, SECONDS).maxConcurrent(1), a backend that sends its header block and then stays silent, and a
@@ -358,6 +360,7 @@ public class ProxyTimeoutsTest {
                 backend.closedByProxy.await(WAIT_SECONDS, TimeUnit.SECONDS));
     }
 
+    // FR-PROXY-017 AC-11 (a 504 before the final check carries none of the backend's headers).
     // FR-PROXY-017 AC-7, FR-PROXY-017 AC-8 (FND-101): the 504 of a timeout reached after the backend head was read
     // carries none of the backend's header lines (Set-Cookie, Cache-Control, a custom header) and, like every error
     // before the hand-off, none of the .responseHeader values, which FR-PROXY-012 applies to the relayed response
