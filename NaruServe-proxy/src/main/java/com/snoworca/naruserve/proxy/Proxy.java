@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.security.cert.X509Certificate;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -233,7 +234,8 @@ public final class Proxy implements Middleware {
 
     /**
      * The socket factory for an {@code https} target (default: the JDK default factory). An {@code http} target
-     * accepts the factory and never uses it.
+     * accepts the factory and never uses it. Of this option and {@link #trustCertificates(String)} (either overload),
+     * the one called later decides the trust.
      */
     // @req IR-PROXY-001
     // @req FR-PROXY-002
@@ -242,6 +244,35 @@ public final class Proxy implements Middleware {
             throw new NullPointerException("sslSocketFactory factory");
         }
         return derived(options.withSslSocketFactory(factory));
+    }
+
+    /**
+     * Trusts exactly the certificates of the PEM text {@code pem} for an {@code https} target, in place of the JDK
+     * default trust: a self-signed backend certificate trusts itself and a private CA certificate trusts the
+     * certificates it issued. Every {@code -----BEGIN CERTIFICATE-----} block is read and text around the blocks is
+     * ignored. The certificate chain (signature and validity period) and the host name, which needs a matching subject
+     * alternative name, are still checked. Of this option and {@link #sslSocketFactory}, the one called later decides
+     * the trust; an {@code http} target accepts the certificates and never uses them. {@code null} throws
+     * {@code NullPointerException}; a text with no {@code CERTIFICATE} block, or a block whose base64 or DER does not
+     * parse, throws {@code IllegalArgumentException}.
+     */
+    // @req FR-PROXY-022
+    // @req IR-PROXY-001
+    // @req FR-PROXY-002
+    public Proxy trustCertificates(String pem) {
+        return derived(options.withSslSocketFactory(TrustedCertificates.fromPem(pem)));
+    }
+
+    /**
+     * Trusts exactly {@code certificates} for an {@code https} target, in place of the JDK default trust, as
+     * {@link #trustCertificates(String)} does. A {@code null} array or element throws {@code NullPointerException} and
+     * an empty array throws {@code IllegalArgumentException}.
+     */
+    // @req FR-PROXY-022
+    // @req IR-PROXY-001
+    // @req FR-PROXY-002
+    public Proxy trustCertificates(X509Certificate... certificates) {
+        return derived(options.withSslSocketFactory(TrustedCertificates.fromCertificates(certificates)));
     }
 
     /** {@code amount} of {@code unit} in nanoseconds, saturated at Long.MAX_VALUE; the amount must be above 0. */
