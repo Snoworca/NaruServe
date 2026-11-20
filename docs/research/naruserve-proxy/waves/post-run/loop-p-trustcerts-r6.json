@@ -1,0 +1,57 @@
+{
+  "wave": "post-run-trustcertificates",
+  "round": 6,
+  "verifier": "loop-p-trustcerts-r6",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "FR-PROXY-022 AC-7",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPTrustR6Test.java::lp1_docOpensslCertificateIsReached",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "The exact openssl command from docs/api/en/proxy.md run with OpenSSL 3.6.3 (cert has critical CA:TRUE, SAN DNS:localhost,IP:127.0.0.1); backend served key.pem+cert.pem, proxy given cert.pem: 200 at https://localhost and https://127.0.0.1 (OpenSSL 4.0.3 output has the same extensions)."
+    },
+    {
+      "id": "LP-2",
+      "cites": "FR-PROXY-022 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPTrustR6Test.java::lp2_tls12SessionIsNotResumed",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Backend limited to TLSv1.2 (session-ID resumption): two layered connections through TrustedCertificates.fromPem get different session IDs. Control: a single-SSLContext factory makes the same test fail (resumed), so the test is not vacuous."
+    },
+    {
+      "id": "LP-3",
+      "cites": "FR-PROXY-022 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPTrustR6Test.java::lp3_concurrentLayeredConnectionsAllSucceed",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "16 concurrent TlsConnector.layer(plain, localhost, port, ..., factory) calls through one trustCertificates factory, with the host name check, all reach the backend."
+    },
+    {
+      "id": "LP-4",
+      "cites": "FR-PROXY-022 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPTrustR6Test.java::lp4_cipherSuiteQueries",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "getDefaultCipherSuites/getSupportedCipherSuites equal those of a fresh TLS context's factory and are non-empty."
+    },
+    {
+      "id": "LP-5",
+      "cites": "FR-PROXY-022 AC-1",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPTrustR6Test.java::lp5_aGivenCertificateBecomingValidIsTrustedAfterwards",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Given {not-yet-valid (+6s) self-signed presented cert, valid unrelated self-signed}: first request 502, after the presented cert becomes valid the cached delegate is rebuilt and the request gets 200 (no stale cache, no false rejection)."
+    }
+  ],
+  "summary": {
+    "tests_written": 5,
+    "kept": 0
+  },
+  "notes": "Also run green at d0a8cdf: :NaruServe-proxy:animalsnifferMain (API 21), DocsExamplesCompileTest 31/31, KotlinDocsMarkersTest 15/15, ProxyDocsKotlinTest 35/35, ProxyTrustCertificatesKotlinTest 2/2, ProxyApiTest 13/13. Reviewed JDK 17 PKIXValidator shortcuts (exact leaf match at i==0, same-DN-and-key at i>0, issued-by-anchor) against the currently-valid anchor filter: no route found by which an expired or not-yet-valid given certificate is used. Declared MD5 limitation not re-reported."
+}

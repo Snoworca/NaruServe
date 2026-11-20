@@ -1,0 +1,69 @@
+{
+  "wave": "post-run-trustcertificates",
+  "round": 1,
+  "verifier": "loop-p-trustcerts-r1",
+  "diff": "689901a..b8f9e25",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "FR-PROXY-022 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPTrustCertificatesTest.java::lp1_expiredTrustedCaCertificateIsConnectFailed",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: status with an expired trusted CA (errors []) expected:<502> but was:<200>",
+      "note": "trustCertificates(expiredCaPem) where the given certificate is an expired self-signed private CA (keytool -startdate 2000/01/01 -validity 2, bc:c) and the backend presents only its currently valid leaf for localhost: the request reaches the backend (200). ValidityCheckingTrustManager calls checkValidity only on the presented chain, and PKIX does not check the trust anchor's validity, so an expired given anchor is never checked. Contradicts AC-3 (an expired trusted self-signed certificate gives 502), the requirement text ('certificate chain is still validated (signature and validity period)') and the guide's sentence 'An expired certificate gets 502 (CONNECT_FAILED) even when it is a given one' / '만료된 인증서는 넘긴 인증서라도 502' in docs/api/en/proxy.md and docs/api/proxy.md (FR-PROXY-022 AC-7 promise). Node's https ca (OpenSSL) rejects an expired root. Fix direction: check validity of the anchor the chain ends at (e.g. every given certificate that is the issuer of the last presented certificate, or all given certificates at the call/handshake), or narrow the docs."
+    },
+    {
+      "id": "LP-2",
+      "cites": "FR-PROXY-022 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPTrustCertificatesTest.java::lp2_derWithTrailingBytesThrowsIae",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: a CERTIFICATE block whose DER is a certificate plus 6 trailing bytes was accepted",
+      "note": "A CERTIFICATE block whose base64 decodes to a valid certificate DER followed by 6 extra bytes (04 04 'junk') is accepted: CertificateFactory.generateCertificate reads one TLV from the stream and ignores the rest, and TrustedCertificates.fromPem does not check the stream is exhausted. AC-4 requires a block whose DER does not parse to throw IllegalArgumentException at the call. Low security impact (the trusted certificate is exactly the parsed one), but the parser is not strict. Fix direction: compare the parsed certificate's getEncoded() length with the decoded byte count, or check the ByteArrayInputStream has no bytes left."
+    },
+    {
+      "id": "LP-3",
+      "cites": "FR-PROXY-022 AC-4",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPTrustCertificatesTest.java::lp3_base64Strictness",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Base64.decode rejects 'AAAA=', non-canonical 'AB=='/'AAB=', 'AA=A', 'A===', 'AAAAA', 'AA==AA==', '-', '====', 'Zg=', NBSP and NUL; round-trips random 1..199-byte inputs from the MIME encoder exactly. Unpadded input ('AAA') is accepted, which is harmless."
+    },
+    {
+      "id": "LP-4",
+      "cites": "FR-PROXY-022 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPTrustCertificatesTest.java::lp4_notYetValidTrustedCertificateIsConnectFailed",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "A not-yet-valid (startdate +10d) trusted self-signed certificate gives 502 and no request byte reaches the backend."
+    },
+    {
+      "id": "LP-5",
+      "cites": "SEC-PROXY-005 AC-8",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPTrustCertificatesTest.java::lp5_onlyGivenCertificatesAreAnchors",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "The wrapper rejects an unrelated chain in checkServerTrusted and checkClientTrusted (delegation exceptions propagate), accepts the given certificate, and getAcceptedIssuers returns exactly the one given certificate (no system CA fallback)."
+    },
+    {
+      "id": "LP-6",
+      "cites": "SEC-PROXY-005 AC-8",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopPTrustCertificatesTest.java::lp6_jdkEndpointIdentificationStillRuns",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "With the trustCertificates factory (non-extended X509TrustManager wrapper) and SSLParameters endpoint identification HTTPS, the JDK handshake succeeds for host localhost and fails for wrong.example.invalid: the JDK's AbstractTrustManagerWrapper second layer still runs."
+    }
+  ],
+  "checked_without_rows": [
+    "IR-PROXY-001 AC-3 reflection test (ProxyApiTest) and AC-5 immutability: green; option calls go through derived(options.withSslSocketFactory(...)), later call wins.",
+    "FR-PROXY-022 AC-6: :NaruServe-proxy:animalsnifferMain passes; no java.util.Base64 or X509ExtendedTrustManager in main code.",
+    "Existing ProxyTrustCertificatesTest (15) green at b8f9e25.",
+    "OPS-DX-010 AC-2: the option table lists both overloads with default, range, IAE/NPE and the http-proxy-middleware counterpart; docs other than the expired-certificate sentence (LP-1) state nothing false found."
+  ],
+  "summary": {"tests_written": 6, "kept": 2}
+}

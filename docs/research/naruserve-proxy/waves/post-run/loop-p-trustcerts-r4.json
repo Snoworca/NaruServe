@@ -1,0 +1,85 @@
+{
+  "wave": "post-run-trustcertificates",
+  "round": 4,
+  "verifier": "loop-p-trustcerts-r4",
+  "head": "a35977d",
+  "diff": "689901a..a35977d",
+  "rows": [
+    {
+      "id": "LP-1",
+      "cites": "FR-PROXY-022 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java::lp_FR_PROXY_022_AC3_anExpiredGivenAnchorPassesThroughANonCaCertificateOfTheValidCa",
+      "verdict": "red",
+      "kept": true,
+      "evidence": "java.lang.AssertionError: expected:<502> but was:<200>\n\tat com.snoworca.naruserve.proxy.ProxyTrustCertificatesTest.assertConnectFailed(ProxyTrustCertificatesTest.java:447) — ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ProxyTrustCertificatesTest' at a35977d: 35 tests, 1 failure (this one). Control LP-2 shows the platform rejects the [leaf, X] chain with only the valid CA given (basic constraints check failed: this is not a CA certificate); with only the expired anchor given the code rejects it. So the 200 comes from: platform PKIXValidator drops X (same subject and key as the given expired certificate) and validates [leaf] against the expired anchor (PKIX does not check anchor validity); then checkPathValidity's BFS links leaf -> X (valid, signature verifies) and X is issued by the valid given CA, so reachesValidEnd returns true although X is not a CA and that path is one the platform rejects. The expired given anchor is the only anchor of the path actually validated.",
+      "note": "Mechanism: the BFS in TrustedCertificates.checkPathValidity/reachesValidEnd links certificates by subject/issuer and signature only (no basicConstraints/keyUsage/pathLen), so an off-path presented certificate that is valid by date but not a valid issuer can stand in for the expired given anchor the platform actually used. Fixture added to lpFixtures(): lpCrossByCaNotCa = keytool -gencert -alias ca -infile cross.csr (no -ext bc:c, so getBasicConstraints()==-1); lpCrossExpiredSelfPem = keytool -gencert -alias cross -keystore cross.p12 -infile cross.csr -ext bc:c -startdate 2000/01/01 -validity 2 (expired, same subject and key as the cross intermediate, which signed crossLeaf).\n\nFixture source:\n    /** The cross intermediate's name and key, issued by the private CA without basic constraints (not a CA). */\n    private static X509Certificate lpCrossByCaNotCa;\n    /** A valid leaf with the expired self-signed certificate's subject and key, issued by the second CA. */\n    private static X509Certificate lpExpiredKeyTwin;\n    private static PrivateKey lpExpiredKey;\n    /** The expired intermediate's name and key, renewed: issued by the private CA, valid now. */\n    private static X509Certificate lpRenewedIntermediate;\n\n    private static void lpFixtures() throws Exception {\n        TestCertificates.keytool(dir, \"-gencert\", \"-rfc\", \"-alias\", \"ca\", \"-keystore\", \"ca.p12\", \"-infile\",\n                \"cross.csr\", \"-outfile\", \"lpcrossnotca.pem\", \"-validity\", \"3\");\n        lpCrossByCaNotCa = TestCertificates.parse(TestCertificates.read(new File(dir, \"lpcrossnotca.pem\")));\n        assertEquals(-1, lpCrossByCaNotCa.getBasicConstraints());\n        lpCrossByCaNotCa.verify(caCert.getPublicKey());\n        lpCrossByCaNotCa.checkValidity();\n        assertEquals(crossByExpiredCa.getSubjectX500Principal(), lpCrossByCaNotCa.getSubjectX500Principal());\n        assertEquals(crossByExpiredCa.getPublicKey(), lpCrossByCaNotCa.getPublicKey());\n\n        TestCertificates.keytool(dir, \"-certreq\", \"-alias\", \"expired\", \"-keystore\", \"expired.p12\", \"-file\",\n                \"lptwin.csr\");\n        TestCertificates.keytool(dir, \"-gencert\", \"-rfc\", \"-alias\", \"ca2\", \"-keystore\", \"ca2.p12\", \"-infile\",\n                \"lptwin.csr\", \"-outfile\", \"lptwin.pem\", \"-ext\", \"SAN=dns:localhost,ip:127.0.0.1\", \"-validity\", \"3\");\n        lpExpiredKeyTwin = TestCertificates.parse(TestCertificates.read(new File(dir, \"lptwin.pem\")));\n        lpExpiredKey = (PrivateKey) TestCertificates.load(new File(dir, \"expired.p12\"))\n                .getKey(\"expired\", TestCertificates.PASSWORD.toCharArray());\n        X509Certificate expiredSelf = TestCertificates.parse(expiredPem);\n        assertExpired(expiredSelf);\n        assertEquals(expiredSelf.getSubjectX500Principal(), lpExpiredKeyTwin.getSubjectX500Principal());\n        assertEquals(expiredSelf.getPublicKey(), lpExpiredKeyTwin.getPublicKey());\n        lpExpiredKeyTwin.checkValidity();\n\n        TestCertificates.keytool(dir, \"-gencert\", \"-rfc\", \"-alias\", \"ca\", \"-keystore\", \"ca.p12\", \"-infile\",\n                \"expint.csr\", \"-outfile\", \"lprenewedint.pem\", \"-ext\", \"bc:c\", \"-validity\", \"3\");\n        lpRenewedIntermediate = TestCertificates.parse(TestCertificates.read(new File(dir, \"lprenewedint.pem\")));\n        lpRenewedIntermediate.checkValidity();\n        assertEquals(expiredIntermediate.getPublicKey(), lpRenewedIntermediate.getPublicKey());\n\n        TestCertificates.keytool(dir, \"-gencert\", \"-rfc\", \"-alias\", \"cross\", \"-keystore\", \"cross.p12\", \"-infile\",\n                \"cross.csr\", \"-outfile\", \"lpcrossexpiredself.pem\", \"-ext\", \"bc:c\", \"-startdate\", \"2000/01/01\",\n                \"-validity\", \"2\");\n        lpCrossExpiredSelfPem = TestCertificates.read(new File(dir, \"lpcrossexpiredself.pem\"));\n        X509Certificate crossExpiredSelf = TestCertificates.parse(lpCrossExpiredSelfPem);\n        assertExpired(crossExpiredSelf);\n        assertEquals(crossByExpiredCa.getSubjectX500Principal(), crossExpiredSelf.getSubjectX500Principal());\n        assertEquals(crossByExpiredCa.getPublicKey(), crossExpiredSelf.getPublicKey());\n        crossLeaf.verify(crossExpiredSelf.getPublicKey());\n    }\n\n    /** PEM of an expired self-issued CA certificate with the cross intermediate's name and key. */\n    private static String lpCrossExpiredSelfPem;\n\n\nTest source:\n    // FR-PROXY-022 AC-3: the platform accepts [leaf, X] only by dropping X (it has the subject and key of a given\n    // certificate) and anchoring the leaf at that given certificate, which is expired; X itself is a non-CA\n    // certificate the valid given CA issued, which the platform never accepts as an issuer (see the control below).\n    // The only trust anchor of the accepted path is expired, so the connection must be 502 CONNECT_FAILED.\n    @Test(timeout = 30000)\n    public void lp_FR_PROXY_022_AC3_anExpiredGivenAnchorPassesThroughANonCaCertificateOfTheValidCa()\n            throws Exception {\n        TlsBackend backend = tlsBackend(presenting(crossLeaf, lpCrossByCaNotCa));\n        mount(Proxy.to(\"https://localhost:\" + backend.port()).trustCertificates(lpCrossExpiredSelfPem + caPem));\n\n        assertConnectFailed(get(), backend);\n    }\n"
+    },
+    {
+      "id": "LP-2",
+      "cites": "FR-PROXY-022 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java::lp_FR_PROXY_022_AC2_theNonCaCopyAloneIsConnectFailed",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Control for LP-1: [crossLeaf, non-CA copy issued by the CA] with only caPem given is 502 CONNECT_FAILED (platform: basic constraints check failed)."
+    },
+    {
+      "id": "LP-3",
+      "cites": "FR-PROXY-022 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java::lp_FR_PROXY_022_AC3_aNonCaCopyIssuedByTheValidCaDoesNotHideTheExpiredGivenCa",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "[crossLeaf, crossByExpiredCa, non-CA copy] with expiredCa+ca given: 502 (the platform's PKIX builder already refuses; doBuild does not anchor on the expired CA here)."
+    },
+    {
+      "id": "LP-4",
+      "cites": "FR-PROXY-022 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java::lp_FR_PROXY_022_AC3_aNonCaCopySentFirstDoesNotHideTheExpiredGivenCa",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Same as LP-3 with the non-CA copy first: 502."
+    },
+    {
+      "id": "LP-5",
+      "cites": "FR-PROXY-022 AC-3",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java::lp_FR_PROXY_022_AC3_aKeyTwinOfTheExpiredGivenCertificateIsConnectFailed",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "No-reach branch probe: a valid leaf with the subject and key of the expired given self-signed certificate, issued by an untrusted CA, served alone: 502 on the JVM (PKIXValidator only takes chain[0] as trusted by equality, and the builder finds no anchor). Android's TrustManagerImpl matches a leaf to an anchor by subject and public key, which this branch would then follow; not testable on the JVM, recorded without a finding."
+    },
+    {
+      "id": "LP-6",
+      "cites": "FR-PROXY-022 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java::lp_FR_PROXY_022_AC2_aRenewedIntermediateBesideItsExpiredCopyIsReached",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "False-reject probe: [leaf, expired intermediate, renewed intermediate (same name and key, valid)] with caPem: reached."
+    },
+    {
+      "id": "LP-7",
+      "cites": "FR-PROXY-022 AC-2",
+      "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java::lp_FR_PROXY_022_AC2_aRenewedIntermediateBeforeItsExpiredCopyIsReached",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "Same as LP-6 with the renewed copy first: reached."
+    },
+    {
+      "id": "LP-8",
+      "cites": "FR-PROXY-022 AC-6",
+      "test": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:animalsnifferMain",
+      "verdict": "green",
+      "kept": false,
+      "evidence": "",
+      "note": "API 21 signature check passes at a35977d."
+    }
+  ],
+  "summary": {
+    "tests_written": 7,
+    "kept": 1
+  }
+}
