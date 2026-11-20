@@ -7,6 +7,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -21,7 +22,8 @@ import javax.net.ssl.X509TrustManager;
  * {@code TrustManagerFactory.getDefaultAlgorithm()} and {@code SSLContext.getInstance("TLS")}, all present on Android
  * API 21. The platform trust manager validates the chain to those anchors; every certificate of the chain the backend
  * presents is also checked against its validity period, because the JDK accepts a trusted end-entity certificate
- * without one. The host name is checked afterwards by {@link TlsConnector} as for every https target. No check is
+ * without one, and so is the given certificate the chain ends at, because PKIX does not check a trust anchor's
+ * validity. The host name is checked afterwards by {@link TlsConnector} as for every https target. No check is
  * turned off.
  */
 // @req FR-PROXY-022
@@ -55,12 +57,22 @@ final class TrustedCertificates {
                 throw new IllegalArgumentException("trustCertificates: a CERTIFICATE block has no END line");
             }
             byte[] der = Base64.decode(pem.substring(begin + BEGIN.length(), end), certificates.size() + 1);
+            X509Certificate certificate;
             try {
-                certificates.add((X509Certificate) factory.generateCertificate(new ByteArrayInputStream(der)));
+                certificate = (X509Certificate) factory.generateCertificate(new ByteArrayInputStream(der));
+                // the factory reads one certificate and ignores what follows it; the block must be that one exactly
+                if (!Arrays.equals(certificate.getEncoded(), der)) {
+                    certificate = null;
+                }
             } catch (CertificateException | RuntimeException e) {
                 throw new IllegalArgumentException(
                         "trustCertificates: CERTIFICATE block " + (certificates.size() + 1) + " is not a certificate", e);
             }
+            if (certificate == null) {
+                throw new IllegalArgumentException("trustCertificates: CERTIFICATE block " + (certificates.size() + 1)
+                        + " is not exactly one certificate");
+            }
+            certificates.add(certificate);
             from = end + END.length();
         }
         if (certificates.isEmpty()) {
@@ -110,7 +122,7 @@ final class TrustedCertificates {
             TrustManager[] managers = tmf.getTrustManagers();
             for (int i = 0; i < managers.length; i++) {
                 if (managers[i] instanceof X509TrustManager) {
-                    managers[i] = new ValidityCheckingTrustManager((X509TrustManager) managers[i]);
+                    managers[i] = new ValidityCheckingTrustManager((X509TrustManager) managers[i], certificates);
                 }
             }
             SSLContext context = SSLContext.getInstance("TLS");
@@ -123,14 +135,17 @@ final class TrustedCertificates {
 
     /**
      * Delegates to the platform trust manager and then checks the validity period of every certificate of the
-     * presented chain, which the JDK skips for a chain whose end-entity certificate is itself a trust anchor.
+     * presented chain, which the JDK skips for a chain whose end-entity certificate is itself a trust anchor, and of
+     * the given certificate the chain ends at, which PKIX never checks because it takes a trust anchor as it is.
      */
     // @req FR-PROXY-022
     private static final class ValidityCheckingTrustManager implements X509TrustManager {
         private final X509TrustManager delegate;
+        private final X509Certificate[] anchors;
 
-        ValidityCheckingTrustManager(X509TrustManager delegate) {
+        ValidityCheckingTrustManager(X509TrustManager delegate, X509Certificate[] anchors) {
             this.delegate = delegate;
+            this.anchors = anchors;
         }
 
         @Override
@@ -143,6 +158,57 @@ final class TrustedCertificates {
             delegate.checkServerTrusted(chain, authType);
             for (X509Certificate c : chain) {
                 c.checkValidity();
+            }
+            checkAnchorValidity(chain);
+        }
+
+        /**
+         * Walks the presented chain from the leaf as the platform's PKIX validator does and stops at the first
+         * certificate that is itself a given certificate (already checked above) or that a given certificate issued:
+         * a given certificate whose subject is that certificate's issuer and whose public key verifies its signature.
+         * Of those issuers at least one must be within its validity period. A given certificate that issued nothing
+         * in the chain is never looked at, so an expired certificate elsewhere in a bundle does not matter.
+         */
+        private void checkAnchorValidity(X509Certificate[] chain) throws CertificateException {
+            for (X509Certificate c : chain) {
+                if (isAnchor(c)) {
+                    return;
+                }
+                CertificateException invalid = null;
+                boolean issued = false;
+                for (X509Certificate anchor : anchors) {
+                    if (!anchor.getSubjectX500Principal().equals(c.getIssuerX500Principal()) || !signed(c, anchor)) {
+                        continue;
+                    }
+                    issued = true;
+                    try {
+                        anchor.checkValidity();
+                        return;
+                    } catch (CertificateException e) {
+                        invalid = e;
+                    }
+                }
+                if (issued) {
+                    throw invalid;
+                }
+            }
+        }
+
+        private boolean isAnchor(X509Certificate c) {
+            for (X509Certificate anchor : anchors) {
+                if (anchor.equals(c)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static boolean signed(X509Certificate c, X509Certificate issuer) {
+            try {
+                c.verify(issuer.getPublicKey());
+                return true;
+            } catch (GeneralSecurityException | RuntimeException e) {
+                return false;
             }
         }
 

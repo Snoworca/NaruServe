@@ -506,7 +506,7 @@ Express 대응: `agent: new https.Agent({ ca })`. 검사를 끄는 `secure: fals
 - `trustCertificates(String pem)`은 PEM 텍스트를 받습니다. `-----BEGIN CERTIFICATE-----`부터 `-----END CERTIFICATE-----`까지의 블록을 모두 읽고 블록 밖의 글은 무시하므로, 인증서 여러 개를 이어 붙인 파일도 그대로 넘길 수 있습니다.
 - `trustCertificates(X509Certificate... certificates)`는 이미 읽은 인증서를 받습니다.
 - 그 마운트에서는 넘긴 인증서만 믿습니다. JDK 기본 신뢰 저장소의 공인 CA는 믿지 않습니다. 자체 서명 인증서는 그 인증서 자신을, 사설 CA 인증서는 그 CA가 발급한 인증서를 믿게 합니다.
-- 인증서 체인 검사(서명과 유효 기간)는 그대로 합니다. 만료된 인증서는 넘긴 인증서라도 `502`(`CONNECT_FAILED`)입니다.
+- 인증서 체인 검사(서명과 유효 기간)는 그대로 합니다. 유효 기간이 지났거나 아직 시작되지 않은 인증서는 백엔드가 보낸 인증서든 체인이 닿는 넘긴 인증서(자체 서명 인증서나 사설 CA)든 `502`(`CONNECT_FAILED`)입니다. 체인이 닿지 않는 넘긴 인증서는 유효 기간이 지났어도 다른 연결에 영향을 주지 않으므로, 오래된 인증서가 섞인 묶음 파일을 넘겨도 됩니다.
 - 호스트 이름 검사도 그대로 켜져 있습니다. 백엔드 인증서에는 대상 호스트와 맞는 주체 대체 이름(subjectAltName, SAN)이 있어야 하며, CN만 있는 인증서는 `502`(`CONNECT_FAILED`)입니다. `https://localhost:...`로 연결하면 `DNS:localhost`, `https://127.0.0.1:...`로 연결하면 `IP:127.0.0.1`이 필요합니다.
 - 값은 부를 때 검사합니다. `CERTIFICATE` 블록이 없거나 블록의 base64나 DER을 읽을 수 없는 PEM 텍스트와 빈 배열은 `IllegalArgumentException`, `null` 인자와 `null` 원소는 `NullPointerException`입니다.
 - `trustCertificates`와 `sslSocketFactory` 중 나중에 부른 것이 그 `Proxy`의 TLS 신뢰를 정합니다. `http` 대상은 인증서를 받지만 쓰지 않습니다.
