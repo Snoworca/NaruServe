@@ -81,6 +81,13 @@ public class ProxyApiTest {
         out.put("removeResponseHeader", p.removeResponseHeader("X-D"));
         out.put("rewriteLocation", p.rewriteLocation(false));
         out.put("sslSocketFactory", p.sslSocketFactory((SSLSocketFactory) SSLSocketFactory.getDefault()));
+        // FR-PROXY-022: both trustCertificates overloads, with a certificate made at test time
+        try {
+            out.put("trustCertificates(String)", p.trustCertificates(TestCertificates.selfSignedPem()));
+            out.put("trustCertificates(X509Certificate...)", p.trustCertificates(TestCertificates.selfSigned()));
+        } catch (Exception e) {
+            throw new AssertionError("the test certificate", e);
+        }
         return out;
     }
 
@@ -127,7 +134,8 @@ public class ProxyApiTest {
                         + "com\\.snoworca\\.naruserve\\.proxy;.*"));
     }
 
-    // IR-PROXY-001 AC-3: besides Object and Middleware methods, exactly the pinned public methods, options returning Proxy
+    // IR-PROXY-001 AC-3: besides Object and Middleware methods, exactly the pinned public methods, options returning Proxy,
+    // including both trustCertificates overloads of FR-PROXY-022
     @Test
     public void ir_PROXY_001_AC3_publicMethodsAreExactlyThePinnedSet() {
         TreeSet<String> expected = new TreeSet<>(Arrays.asList(
@@ -148,7 +156,9 @@ public class ProxyApiTest {
                 "responseHeader(java.lang.String,java.lang.String)",
                 "removeResponseHeader(java.lang.String)",
                 "rewriteLocation(boolean)",
-                "sslSocketFactory(javax.net.ssl.SSLSocketFactory)"));
+                "sslSocketFactory(javax.net.ssl.SSLSocketFactory)",
+                "trustCertificates(java.lang.String)",
+                "trustCertificates([Ljava.security.cert.X509Certificate;)"));
         TreeSet<String> actual = new TreeSet<>();
         for (Method m : Proxy.class.getMethods()) {
             if (m.isSynthetic() || isObjectOrMiddlewareMethod(m)) {

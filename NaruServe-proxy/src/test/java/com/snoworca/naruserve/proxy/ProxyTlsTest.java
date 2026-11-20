@@ -758,10 +758,10 @@ public class ProxyTlsTest {
 
     // ---- AC-8 ----
 
-    // SEC-PROXY-005 AC-8: no public method of Proxy turns verification off; its only TLS option is
-    // sslSocketFactory(SSLSocketFactory)
+    // SEC-PROXY-005 AC-8: no public method of Proxy turns verification off; its only TLS options are
+    // sslSocketFactory(SSLSocketFactory) and the two trustCertificates overloads of FR-PROXY-022 (IR-PROXY-001 AC-3)
     @Test
-    public void sec_PROXY_005_AC8_theOnlyTlsOptionIsTheSocketFactory() {
+    public void sec_PROXY_005_AC8_theOnlyTlsOptionsAreTheSocketFactoryAndTrustCertificates() {
         List<String> tls = new ArrayList<>();
         for (Method m : Proxy.class.getMethods()) {
             if (!Modifier.isPublic(m.getModifiers()) || m.getDeclaringClass() != Proxy.class) {
@@ -770,7 +770,8 @@ public class ProxyTlsTest {
             String name = m.getName().toLowerCase(java.util.Locale.ROOT);
             boolean sslTyped = false;
             for (Class<?> p : m.getParameterTypes()) {
-                sslTyped |= p.getName().startsWith("javax.net.") || p.getName().startsWith("java.security.");
+                Class<?> base = p.isArray() ? p.getComponentType() : p;
+                sslTyped |= base.getName().startsWith("javax.net.") || base.getName().startsWith("java.security.");
             }
             if (sslTyped || name.contains("ssl") || name.contains("tls") || name.contains("verif")
                     || name.contains("trust") || name.contains("secure") || name.contains("certificate")
@@ -778,7 +779,10 @@ public class ProxyTlsTest {
                 tls.add(m.getName() + Arrays.toString(m.getParameterTypes()));
             }
         }
-        assertEquals(Collections.singletonList("sslSocketFactory[class javax.net.ssl.SSLSocketFactory]"), tls);
+        Collections.sort(tls);
+        assertEquals(Arrays.asList("sslSocketFactory[class javax.net.ssl.SSLSocketFactory]",
+                "trustCertificates[class [Ljava.security.cert.X509Certificate;]",
+                "trustCertificates[class java.lang.String]"), tls);
     }
 
     // SEC-PROXY-005 AC-8: host name verification stays on with an .sslSocketFactory whose SSLSocket is a delegate
@@ -801,7 +805,7 @@ public class ProxyTlsTest {
     // ---- backends ----
 
     /** Counts accepted connections; a sentinel connection makes the count deterministic (FIFO accept queue). */
-    private abstract static class CountingBackend implements Closeable {
+    abstract static class CountingBackend implements Closeable {
         final ServerSocket server;
         private final List<Integer> acceptedPorts = new ArrayList<>();
         private final List<Socket> open = Collections.synchronizedList(new ArrayList<Socket>());
@@ -897,7 +901,7 @@ public class ProxyTlsTest {
      * A TLS listener with the given server context: records the SNI host names of each ClientHello and the request
      * head it reads after the handshake, then answers 200 "ok" and closes.
      */
-    private static final class TlsBackend extends CountingBackend {
+    static final class TlsBackend extends CountingBackend {
         private final List<String> sniNames = Collections.synchronizedList(new ArrayList<String>());
         private final ByteArrayOutputStream request = new ByteArrayOutputStream();
 

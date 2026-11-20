@@ -1,0 +1,435 @@
+package com.snoworca.naruserve.proxy;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import com.snoworca.naruserve.RestApp;
+import com.snoworca.naruserve.proxy.ProxyTlsTest.TlsBackend;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;
+import com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;
+import com.snoworca.naruserve.testing.TestApp;
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+/**
+ * {@code Proxy.trustCertificates} (FR-PROXY-022): an https backend with a self-signed or private-CA certificate is
+ * reached by trusting exactly the given certificates, while the certificate chain (signature and validity period)
+ * and the proxy's own host name check (SEC-PROXY-005) stay on. The certificates are made with the JDK's
+ * {@code keytool} once per class, as in {@link ProxyTlsTest}: a self-signed certificate for {@code localhost} and
+ * {@code 127.0.0.1}, a self-signed one named only by its common name, an expired self-signed one, a private CA with a
+ * certificate for {@code localhost} and one for {@code other.example}, and a second CA with a certificate for
+ * {@code localhost}.
+ */
+public class ProxyTrustCertificatesTest {
+
+    private static File dir;
+    /** PEM of the self-signed certificate for localhost and 127.0.0.1. */
+    private static String selfPem;
+    /** PEM of a self-signed certificate whose only name is its subject CN=localhost. */
+    private static String cnOnlyPem;
+    /** PEM of an expired self-signed certificate for localhost and 127.0.0.1. */
+    private static String expiredPem;
+    /** PEM of the private CA. */
+    private static String caPem;
+    private static SSLContext selfServer;
+    private static SSLContext cnOnlyServer;
+    private static SSLContext expiredServer;
+    /** Serves the private CA's certificate for localhost and 127.0.0.1. */
+    private static SSLContext caGoodServer;
+    /** Serves the private CA's certificate for other.example only. */
+    private static SSLContext caOtherHostServer;
+    /** Serves the second CA's certificate for localhost and 127.0.0.1. */
+    private static SSLContext otherCaServer;
+    /** A client factory that trusts the private CA only. */
+    private static SSLSocketFactory caFactory;
+
+    private final InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
+    private final TestApp t = TestApp.create(adapter);
+    private final RestApp app = t.app();
+    private final List<Closeable> closeables = new ArrayList<>();
+    private final List<Throwable> errors = Collections.synchronizedList(new ArrayList<Throwable>());
+    private boolean started;
+
+    @BeforeClass
+    public static void makeCertificates() throws Exception {
+        dir = java.nio.file.Files.createTempDirectory("naruserve-proxy-trust").toFile();
+        selfSigned("self", "SAN=dns:localhost,ip:127.0.0.1", null);
+        selfSigned("cnonly", null, null);
+        selfSigned("expired", "SAN=dns:localhost,ip:127.0.0.1", "2000/01/01");
+        ca("ca", "CN=NaruServe Trust Test CA");
+        ca("ca2", "CN=NaruServe Other Test CA");
+        issued("ca", "good", "CN=localhost", "SAN=dns:localhost,ip:127.0.0.1");
+        issued("ca", "other", "CN=other.example", "SAN=dns:other.example");
+        issued("ca2", "good2", "CN=localhost", "SAN=dns:localhost,ip:127.0.0.1");
+
+        selfPem = TestCertificates.read(new File(dir, "self.pem"));
+        cnOnlyPem = TestCertificates.read(new File(dir, "cnonly.pem"));
+        expiredPem = TestCertificates.read(new File(dir, "expired.pem"));
+        caPem = TestCertificates.read(new File(dir, "ca.pem"));
+        selfServer = TestCertificates.serverContext(new File(dir, "self.p12"));
+        cnOnlyServer = TestCertificates.serverContext(new File(dir, "cnonly.p12"));
+        expiredServer = TestCertificates.serverContext(new File(dir, "expired.p12"));
+        caGoodServer = TestCertificates.serverContext(new File(dir, "good.p12"));
+        caOtherHostServer = TestCertificates.serverContext(new File(dir, "other.p12"));
+        otherCaServer = TestCertificates.serverContext(new File(dir, "good2.p12"));
+
+        TestCertificates.keytool(dir, "-importcert", "-noprompt", "-alias", "ca", "-file", "ca.pem", "-keystore",
+                "trust.p12");
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(TestCertificates.load(new File(dir, "trust.p12")));
+        SSLContext client = SSLContext.getInstance("TLS");
+        client.init(null, tmf.getTrustManagers(), null);
+        caFactory = client.getSocketFactory();
+    }
+
+    @AfterClass
+    public static void deleteCertificates() {
+        TestCertificates.delete(dir);
+    }
+
+    @After
+    public void tearDown() throws IOException {
+        if (started) {
+            app.shutdown(2, TimeUnit.SECONDS);
+        }
+        for (Closeable c : closeables) {
+            c.close();
+        }
+    }
+
+    // ---- certificates ----
+
+    /** A self-signed key pair {@code name}.p12 for CN=localhost, with {@code san} if not null, and its {@code name}.pem. */
+    private static void selfSigned(String name, String san, String startDate) throws Exception {
+        List<String> args = new ArrayList<>(java.util.Arrays.asList("-genkeypair", "-alias", name, "-keyalg", "RSA",
+                "-keysize", "2048", "-dname", "CN=localhost", "-keystore", name + ".p12"));
+        if (san != null) {
+            args.addAll(java.util.Arrays.asList("-ext", san));
+        }
+        if (startDate != null) {
+            args.addAll(java.util.Arrays.asList("-startdate", startDate, "-validity", "2"));
+        } else {
+            args.addAll(java.util.Arrays.asList("-validity", "3"));
+        }
+        TestCertificates.keytool(dir, args.toArray(new String[0]));
+        TestCertificates.keytool(dir, "-exportcert", "-rfc", "-alias", name, "-keystore", name + ".p12", "-file",
+                name + ".pem");
+    }
+
+    private static void ca(String name, String dname) throws Exception {
+        TestCertificates.keytool(dir, "-genkeypair", "-alias", name, "-keyalg", "RSA", "-keysize", "2048", "-dname",
+                dname, "-ext", "bc:c", "-validity", "3", "-keystore", name + ".p12");
+        TestCertificates.keytool(dir, "-exportcert", "-rfc", "-alias", name, "-keystore", name + ".p12", "-file",
+                name + ".pem");
+    }
+
+    /** A server key pair {@code name}.p12 whose certificate the CA {@code ca} issued with {@code san}. */
+    private static void issued(String ca, String name, String dname, String san) throws Exception {
+        TestCertificates.keytool(dir, "-genkeypair", "-alias", "server", "-keyalg", "RSA", "-keysize", "2048",
+                "-dname", dname, "-validity", "3", "-keystore", name + ".p12");
+        TestCertificates.keytool(dir, "-certreq", "-alias", "server", "-keystore", name + ".p12", "-file",
+                name + ".csr");
+        TestCertificates.keytool(dir, "-gencert", "-rfc", "-alias", ca, "-keystore", ca + ".p12", "-infile",
+                name + ".csr", "-outfile", name + ".pem", "-ext", san, "-validity", "3");
+        TestCertificates.keytool(dir, "-importcert", "-noprompt", "-alias", ca, "-file", ca + ".pem", "-keystore",
+                name + ".p12");
+        TestCertificates.keytool(dir, "-importcert", "-noprompt", "-alias", "server", "-file", name + ".pem",
+                "-keystore", name + ".p12");
+    }
+
+    private static X509Certificate caCertificate() throws Exception {
+        return TestCertificates.parse(caPem);
+    }
+
+    // ---- the app ----
+
+    /** Mounts {@code proxy} at {@code /api}, records what reaches onError, and starts the app. */
+    private void mount(Proxy proxy) {
+        app.use("/api", proxy);
+        start();
+    }
+
+    private void start() {
+        app.onError((error, req, res) -> errors.add(error));
+        t.start();
+        started = true;
+    }
+
+    private ClientResponse get() {
+        return get("/api/x");
+    }
+
+    private ClientResponse get(String path) {
+        return adapter.send(ClientRequest.of("GET", path));
+    }
+
+    private TlsBackend tlsBackend(SSLContext context) throws IOException {
+        TlsBackend b = new TlsBackend(context);
+        closeables.add(b);
+        return b;
+    }
+
+    private void assertReached(ClientResponse r, TlsBackend backend) {
+        assertEquals("status (errors: " + errors + ")", 200, r.status());
+        assertEquals("ok", r.text());
+        assertTrue(backend.requestHead(), backend.requestHead().startsWith("GET /api/x HTTP/1.1\r\n"));
+        assertTrue("errors: " + errors, errors.isEmpty());
+    }
+
+    private void assertConnectFailed(ClientResponse r, TlsBackend backend) {
+        assertEquals(502, r.status());
+        synchronized (errors) {
+            assertEquals("errors that reached onError: " + errors, 1, errors.size());
+            assertTrue("a ProxyException: " + errors.get(0), errors.get(0) instanceof ProxyException);
+            assertSame(ProxyException.Kind.CONNECT_FAILED, ((ProxyException) errors.get(0)).kind());
+        }
+        assertEquals("request bytes the backend read", 0, backend.requestBytes());
+    }
+
+    // ---- AC-1 ----
+
+    // FR-PROXY-022 AC-1: with .trustCertificates(pem) holding the backend's self-signed certificate whose subject
+    // alternative name matches localhost, the request reaches the backend
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC1_aSelfSignedBackendIsReachedWithItsPem() throws IOException {
+        TlsBackend backend = tlsBackend(selfServer);
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(selfPem));
+
+        assertReached(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-1: the same holds for the IP literal target 127.0.0.1, matched by the iPAddress name
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC1_aSelfSignedBackendIsReachedAtItsIpLiteral() throws IOException {
+        TlsBackend backend = tlsBackend(selfServer);
+        mount(Proxy.to("https://127.0.0.1:" + backend.port()).trustCertificates(selfPem));
+
+        assertReached(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-1: the same mount without the option gives 502 CONNECT_FAILED (the JDK default trust)
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC1_withoutTheOptionTheSelfSignedBackendIsConnectFailed() throws IOException {
+        TlsBackend backend = tlsBackend(selfServer);
+        mount(Proxy.to("https://localhost:" + backend.port()));
+
+        assertConnectFailed(get(), backend);
+    }
+
+    // ---- AC-2 ----
+
+    // FR-PROXY-022 AC-2: with the X509Certificate overload holding a private CA, a backend whose certificate that CA
+    // issued for the target host is reached
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC2_aPrivateCaCertificateTrustsWhatItIssuedForTheTargetHost() throws Exception {
+        TlsBackend backend = tlsBackend(caGoodServer);
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(caCertificate()));
+
+        assertReached(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-2: a certificate the same CA issued for another host gives 502 CONNECT_FAILED: the host name
+    // check stays on
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC2_theHostNameCheckStaysOnWithTheTrustedCa() throws Exception {
+        TlsBackend backend = tlsBackend(caOtherHostServer);
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(caCertificate()));
+
+        assertConnectFailed(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-2: a certificate another CA issued for the target host gives 502 CONNECT_FAILED: only the given
+    // certificates are trusted
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC2_aCertificateOfAnotherCaIsConnectFailed() throws Exception {
+        TlsBackend backend = tlsBackend(otherCaServer);
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(caCertificate()));
+
+        assertConnectFailed(get(), backend);
+    }
+
+    // ---- AC-3 ----
+
+    // FR-PROXY-022 AC-3: a trusted self-signed certificate whose only name is its subject common name gives 502
+    // CONNECT_FAILED: the proxy's host name check does not fall back to the CN (SEC-PROXY-005 AC-10)
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC3_aCommonNameOnlyCertificateIsConnectFailed() throws IOException {
+        TlsBackend backend = tlsBackend(cnOnlyServer);
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(cnOnlyPem));
+
+        assertConnectFailed(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-3: an expired trusted self-signed certificate gives 502 CONNECT_FAILED: the validity period is
+    // still checked
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC3_anExpiredTrustedSelfSignedCertificateIsConnectFailed() throws IOException {
+        TlsBackend backend = tlsBackend(expiredServer);
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(expiredPem));
+
+        assertConnectFailed(get(), backend);
+    }
+
+    // ---- AC-4 ----
+
+    // FR-PROXY-022 AC-4: a PEM text with several CERTIFICATE blocks and other text around them trusts every one
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC4_aPemWithSeveralBlocksAndOtherTextTrustsEveryBlock() throws IOException {
+        TlsBackend self = tlsBackend(selfServer);
+        TlsBackend issued = tlsBackend(caGoodServer);
+        String pem = "Bag Attributes\n    friendlyName: self\nsubject=CN=localhost\n" + selfPem
+                + "\nsome text between the blocks\r\n" + caPem.replace("\n", "\r\n") + "trailing text";
+        Proxy p = Proxy.to("https://localhost:" + self.port()).trustCertificates(pem);
+        app.use("/a", p.stripPrefix(true));
+        app.use("/b", Proxy.to("https://localhost:" + issued.port()).trustCertificates(pem).stripPrefix(true));
+        start();
+
+        ClientResponse a = get("/a/api/x");
+        ClientResponse b = get("/b/api/x");
+
+        assertReached(a, self);
+        assertReached(b, issued);
+    }
+
+    // FR-PROXY-022 AC-4: null arguments and null elements throw NullPointerException at the call
+    @Test
+    public void fr_PROXY_022_AC4_nullsThrowNullPointerException() throws Exception {
+        Proxy p = Proxy.to("https://localhost:8443");
+        X509Certificate ca = caCertificate();
+        assertNpe("trustCertificates((String) null)", () -> p.trustCertificates((String) null));
+        assertNpe("trustCertificates((X509Certificate[]) null)", () -> p.trustCertificates((X509Certificate[]) null));
+        assertNpe("an array holding null", () -> p.trustCertificates(ca, null));
+        assertNpe("an array of one null", () -> p.trustCertificates(new X509Certificate[] {null}));
+    }
+
+    // FR-PROXY-022 AC-4: a PEM text with no CERTIFICATE block, a block whose base64 or DER does not parse, and an empty
+    // array throw IllegalArgumentException at the call
+    @Test
+    public void fr_PROXY_022_AC4_unparsableInputThrowsIllegalArgumentExceptionAtTheCall() throws Exception {
+        Proxy p = Proxy.to("https://localhost:8443");
+        String body = selfPem.substring(selfPem.indexOf('\n') + 1, selfPem.indexOf("-----END"));
+        assertIae("empty text", () -> p.trustCertificates(""));
+        assertIae("text with no block", () -> p.trustCertificates("no certificate here"));
+        assertIae("a private key block only",
+                () -> p.trustCertificates("-----BEGIN PRIVATE KEY-----\nAAAA\n-----END PRIVATE KEY-----\n"));
+        assertIae("a block without its END line", () -> p.trustCertificates("-----BEGIN CERTIFICATE-----\n" + body));
+        assertIae("an empty block",
+                () -> p.trustCertificates("-----BEGIN CERTIFICATE-----\n-----END CERTIFICATE-----\n"));
+        assertIae("a block whose base64 does not parse", () -> p.trustCertificates(
+                "-----BEGIN CERTIFICATE-----\n" + body.replace(body.substring(10, 14), "!@#$")
+                        + "-----END CERTIFICATE-----\n"));
+        assertIae("a block whose base64 has a bad length", () -> p.trustCertificates(
+                "-----BEGIN CERTIFICATE-----\nMIIBAAA\n-----END CERTIFICATE-----\n"));
+        assertIae("a block whose DER does not parse", () -> p.trustCertificates(
+                "-----BEGIN CERTIFICATE-----\naGVsbG8gd29ybGQ=\n-----END CERTIFICATE-----\n"));
+        assertIae("a good block followed by a bad one", () -> p.trustCertificates(
+                selfPem + "-----BEGIN CERTIFICATE-----\naGVsbG8gd29ybGQ=\n-----END CERTIFICATE-----\n"));
+        assertIae("an empty array", () -> p.trustCertificates(new X509Certificate[0]));
+        assertIae("no vararg argument", () -> p.trustCertificates());
+    }
+
+    private interface Call {
+        void run() throws Exception;
+    }
+
+    private static void assertNpe(String what, Call call) throws Exception {
+        try {
+            call.run();
+            fail(what + ": no NullPointerException");
+        } catch (NullPointerException expected) {
+            // thrown at the call
+        }
+    }
+
+    private static void assertIae(String what, Call call) throws Exception {
+        try {
+            call.run();
+            fail(what + ": no IllegalArgumentException");
+        } catch (IllegalArgumentException expected) {
+            // thrown at the call
+        }
+    }
+
+    // ---- AC-5 ----
+
+    // FR-PROXY-022 AC-5: p.trustCertificates(pem).sslSocketFactory(f) uses f: the CA-issued backend that only f trusts
+    // is reached
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC5_aLaterSslSocketFactoryWins() throws IOException {
+        TlsBackend backend = tlsBackend(caGoodServer);
+        Proxy p = Proxy.to("https://localhost:" + backend.port());
+        Proxy q = p.trustCertificates(selfPem).sslSocketFactory(caFactory);
+        assertSame(caFactory, q.sslSocketFactory());
+        mount(q);
+
+        assertReached(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-5: p.sslSocketFactory(f).trustCertificates(pem) trusts pem: the self-signed backend that f does
+    // not trust is reached
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC5_aLaterTrustCertificatesWins() throws IOException {
+        TlsBackend backend = tlsBackend(selfServer);
+        Proxy p = Proxy.to("https://localhost:" + backend.port());
+        Proxy withFactory = p.sslSocketFactory(caFactory);
+        Proxy q = withFactory.trustCertificates(selfPem);
+        assertNotSame(caFactory, q.sslSocketFactory());
+        mount(q);
+
+        assertReached(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-5: the Proxy objects the calls start from stay unchanged
+    @Test
+    public void fr_PROXY_022_AC5_theReceiversStayUnchanged() throws Exception {
+        Proxy p = Proxy.to("https://localhost:8443");
+        Proxy withFactory = p.sslSocketFactory(caFactory);
+        String before = p.describe();
+        String withFactoryBefore = withFactory.describe();
+
+        Proxy q = p.trustCertificates(selfPem);
+        Proxy r = p.trustCertificates(caCertificate());
+        Proxy s = withFactory.trustCertificates(selfPem);
+
+        assertNotSame(p, q);
+        assertNotSame(p, r);
+        assertNotSame(withFactory, s);
+        assertEquals(before, p.describe());
+        assertNull(p.sslSocketFactory());
+        assertEquals(withFactoryBefore, withFactory.describe());
+        assertSame(caFactory, withFactory.sslSocketFactory());
+        assertTrue(q.sslSocketFactory() != null && r.sslSocketFactory() != null && s.sslSocketFactory() != null);
+    }
+
+    // FR-PROXY-022 AC-5: a Proxy with trustCertificates forwards a plain HTTP target without the certificates
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC5_aPlainHttpTargetIsForwarded() throws IOException {
+        RawBackend backend = RawBackend.answering(RawBackend.response(200, "plain"));
+        closeables.add(backend);
+        mount(Proxy.to(backend.url()).trustCertificates(selfPem));
+
+        ClientResponse r = get();
+
+        assertEquals("status (errors: " + errors + ")", 200, r.status());
+        assertEquals("plain", r.text());
+        assertEquals("GET /api/x HTTP/1.1", backend.onlyRequest().requestLine());
+    }
+}

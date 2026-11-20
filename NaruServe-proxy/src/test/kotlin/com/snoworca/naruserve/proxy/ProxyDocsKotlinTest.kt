@@ -19,6 +19,8 @@ import java.net.Socket
 import java.net.SocketAddress
 import java.net.ServerSocket
 import java.nio.file.Files
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import javax.net.ssl.SSLContext
@@ -310,6 +312,17 @@ class ProxyDocsKotlinTest {
                 "`agent`(예: `new https.Agent({ ca })`). `secure: false`에 해당하는 옵션은 없습니다"),
             en = listOf("The JDK default factory", "`null` throws `NullPointerException`. An `http` target accepts it and never uses it",
                 "`agent` (for example `new https.Agent({ ca })`). Nothing corresponds to `secure: false`")),
+        // FR-PROXY-022 AC-7, OPS-DX-010 AC-2: both trustCertificates overloads, with their argument rules
+        OptionRow("`trustCertificates(String)`",
+            ko = listOf("JDK 기본 신뢰 저장소", "`CERTIFICATE` 블록이 하나 이상 든 PEM 텍스트. 블록이 없거나 블록의 base64나 DER을 읽을 수 없으면 `IllegalArgumentException`, `null`이면 `NullPointerException`. `http` 대상도 받지만 쓰지 않습니다",
+                "`agent: new https.Agent({ ca })`의 `ca`"),
+            en = listOf("The JDK default trust store", "A PEM text holding one or more `CERTIFICATE` blocks. No block, or a block whose base64 or DER does not parse, throws `IllegalArgumentException`; `null` throws `NullPointerException`. An `http` target accepts it and never uses it",
+                "`ca` of `agent: new https.Agent({ ca })`")),
+        OptionRow("`trustCertificates(X509Certificate...)`",
+            ko = listOf("JDK 기본 신뢰 저장소", "인증서 하나 이상. 빈 배열은 `IllegalArgumentException`, 배열이나 원소가 `null`이면 `NullPointerException`. `http` 대상도 받지만 쓰지 않습니다",
+                "`agent: new https.Agent({ ca })`의 `ca`"),
+            en = listOf("The JDK default trust store", "One or more certificates. An empty array throws `IllegalArgumentException`; a `null` array or element throws `NullPointerException`. An `http` target accepts it and never uses it",
+                "`ca` of `agent: new https.Agent({ ca })`")),
     )
 
     @Test
@@ -860,6 +873,74 @@ class ProxyDocsKotlinTest {
         t.start()
         started = true
         assertNotNull(Proxy.to("https://backend.internal:8443").sslSocketFactory(tls.socketFactory).sslSocketFactory())
+    }
+
+    // FR-PROXY-022 AC-7, OPS-DX-010 AC-2: both pages document the two trustCertificates overloads in the https section
+    // with the Express counterpart, one Java and one Kotlin example, the only-these-certificates rule, the host name
+    // check that stays on and needs a matching subject alternative name, and an openssl command issuing one
+    @Test
+    fun `FR-PROXY-022 AC-7 the https section documents trustCertificates with its rules, examples and an openssl command`() {
+        val java = listOf("Proxy.to(\"https://localhost:8443\").trustCertificates(pem)",
+            "Proxy.to(\"https://billing.internal:8443\").trustCertificates(ca)",
+            "CertificateFactory.getInstance(\"X.509\").generateCertificate(in)")
+        val kotlin = listOf("val pem = File(\"cert.pem\").readText()",
+            "Proxy.to(\"https://localhost:8443\").trustCertificates(pem)",
+            "Proxy.to(\"https://billing.internal:8443\").trustCertificates(ca)")
+        val openssl = "openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem -days 365 " +
+            "-subj \"/CN=localhost\" -addext \"subjectAltName=DNS:localhost,IP:127.0.0.1\""
+        val k = section(ko(), "### 자체 서명 인증서와 사설 CA 믿기")
+        val e = section(en(), "### Trusting a self-signed or private CA certificate")
+        oneJavaAndOneKotlin("proxy.md trustCertificates", k, java, kotlin)
+        oneJavaAndOneKotlin("en/proxy.md trustCertificates", e, java, kotlin)
+        for ((where, s) in listOf("proxy.md" to k, "en/proxy.md" to e)) {
+            val bash = blocks(s, "bash")
+            assertEquals("$where bash blocks", 1, bash.size)
+            assertEquals("$where openssl command", openssl, bash[0].trim())
+        }
+        has("proxy.md trustCertificates", k, "`trustCertificates(String pem)`", "`trustCertificates(X509Certificate... certificates)`",
+            "그 마운트에서는 넘긴 인증서만 믿습니다", "JDK 기본 신뢰 저장소의 공인 CA는 믿지 않습니다",
+            "자체 서명 인증서는 그 인증서 자신을, 사설 CA 인증서는 그 CA가 발급한 인증서를 믿게 합니다",
+            "인증서 체인 검사(서명과 유효 기간)는 그대로 합니다", "만료된 인증서는 넘긴 인증서라도 `502`(`CONNECT_FAILED`)입니다",
+            "호스트 이름 검사도 그대로 켜져 있습니다", "대상 호스트와 맞는 주체 대체 이름(subjectAltName, SAN)이 있어야 하며",
+            "CN만 있는 인증서는 `502`(`CONNECT_FAILED`)입니다",
+            "`trustCertificates`와 `sslSocketFactory` 중 나중에 부른 것이 그 `Proxy`의 TLS 신뢰를 정합니다",
+            "검사를 끄는 옵션이 아니라", "Node https 에이전트의 `ca` 옵션을 `http-proxy-middleware`에 넘기는 것",
+            "`agent: new https.Agent({ ca: fs.readFileSync('cert.pem') })`")
+        has("en/proxy.md trustCertificates", e, "`trustCertificates(String pem)`", "`trustCertificates(X509Certificate... certificates)`",
+            "On that mount only the given certificates are trusted", "the public CAs of the JDK default trust store are not",
+            "A self-signed certificate trusts itself, and a private CA certificate trusts the certificates that CA issued",
+            "The certificate chain is still checked (signature and validity period)", "An expired certificate gets `502` (`CONNECT_FAILED`) even when it is a given one",
+            "The host name check stays on as well", "needs a subject alternative name (subjectAltName, SAN) that matches the target host",
+            "a certificate with only a CN gets `502` (`CONNECT_FAILED`)",
+            "Of `trustCertificates` and `sslSocketFactory`, the one called later decides the TLS trust of that `Proxy`",
+            "It is not an option that turns verification off", "passing the `ca` option of Node's https agent to `http-proxy-middleware`",
+            "`agent: new https.Agent({ ca: fs.readFileSync('cert.pem') })`")
+    }
+
+    // docs-example: proxy.md#12
+    // adapted: the PEM files are written to a temporary directory that stands in for the working directory
+    @Test
+    fun `FR-PROXY-022 AC-7 the trustCertificates example trusts a PEM file and a private CA certificate`() {
+        val dir = Files.createTempDirectory("naruserve-proxy-docs-trust").toFile()
+        try {
+            File(dir, "cert.pem").writeText(TestCertificates.selfSignedPem())
+            File(dir, "ca.pem").writeText(TestCertificates.selfSignedPem())
+
+            val pem = File(dir, "cert.pem").readText()
+            app.use("/internal", Proxy.to("https://localhost:8443").trustCertificates(pem))
+
+            val ca = File(dir, "ca.pem").inputStream().use {
+                CertificateFactory.getInstance("X.509").generateCertificate(it) as X509Certificate
+            }
+            app.use("/billing", Proxy.to("https://billing.internal:8443").trustCertificates(ca))
+
+            t.start()
+            started = true
+            assertNotNull(Proxy.to("https://localhost:8443").trustCertificates(pem).sslSocketFactory())
+            assertNotNull(Proxy.to("https://billing.internal:8443").trustCertificates(ca).sslSocketFactory())
+        } finally {
+            TestCertificates.delete(dir)
+        }
     }
 
     /** Interrupts [worker] after [millis] milliseconds, from a daemon thread. */
