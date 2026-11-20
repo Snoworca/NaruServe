@@ -22,8 +22,8 @@ import javax.net.ssl.X509TrustManager;
  * {@code TrustManagerFactory.getDefaultAlgorithm()} and {@code SSLContext.getInstance("TLS")}, all present on Android
  * API 21. The platform trust manager validates the chain to those anchors; every certificate of the chain the backend
  * presents is also checked against its validity period, because the JDK accepts a trusted end-entity certificate
- * without one, and so is the given certificate the chain ends at, because PKIX does not check a trust anchor's
- * validity. The host name is checked afterwards by {@link TlsConnector} as for every https target. No check is
+ * without one, and a path from the presented leaf to a currently valid given certificate is required when the
+ * presented chain reaches a given certificate at all, because PKIX does not check a trust anchor's validity. The host name is checked afterwards by {@link TlsConnector} as for every https target. No check is
  * turned off.
  */
 // @req FR-PROXY-022
@@ -136,7 +136,8 @@ final class TrustedCertificates {
     /**
      * Delegates to the platform trust manager and then checks the validity period of every certificate of the
      * presented chain, which the JDK skips for a chain whose end-entity certificate is itself a trust anchor, and of
-     * the given certificate the chain ends at, which PKIX never checks because it takes a trust anchor as it is.
+     * the given certificate the chain ends at, which PKIX never checks because it takes a trust anchor as it is: a
+     * path from the leaf to a valid given certificate is enough (see {@link #checkAnchorValidity}).
      */
     // @req FR-PROXY-022
     private static final class ValidityCheckingTrustManager implements X509TrustManager {
@@ -163,35 +164,64 @@ final class TrustedCertificates {
         }
 
         /**
-         * Walks the presented chain from the leaf as the platform's PKIX validator does and stops at the first
-         * certificate that is itself a given certificate (already checked above) or that a given certificate issued:
-         * a given certificate whose subject is that certificate's issuer and whose public key verifies its signature.
-         * Of those issuers at least one must be within its validity period. A given certificate that issued nothing
-         * in the chain is never looked at, so an expired certificate elsewhere in a bundle does not matter.
+         * Searches the issuer paths of the presented chain from its leaf ({@code chain[0]}). A link from a presented
+         * certificate X to a presented certificate Y needs Y's subject to equal X's issuer and Y's public key to
+         * verify X's signature. A path succeeds when it reaches a presented certificate that is itself a given
+         * certificate (its validity was checked above) or one that a currently valid given certificate issued (the
+         * given certificate's subject equals its issuer and its public key verifies its signature). The search is a
+         * reachability search over the presented certificates, each visited once, so its length is bounded by the
+         * chain and cycles end, and the order the backend sends does not decide: one successful path is enough, so a
+         * cross-signed intermediate reaching a valid given CA passes although an expired given CA issued the same
+         * intermediate too. When no path succeeds but one reached a given certificate outside its validity period,
+         * that given certificate's {@code CertificateExpiredException} or {@code CertificateNotYetValidException} is
+         * thrown. When no path reaches any given certificate this check throws nothing and the platform trust
+         * manager's acceptance stands, since it found a path to a given certificate that this search does not see;
+         * the given certificates are its only trust anchors, so that is no wider trust. A given certificate no path
+         * reaches is never looked at, so an expired certificate elsewhere in a bundle does not matter.
          */
         private void checkAnchorValidity(X509Certificate[] chain) throws CertificateException {
-            for (X509Certificate c : chain) {
+            if (chain.length == 0) {
+                return;
+            }
+            boolean[] visited = new boolean[chain.length];
+            int[] queue = new int[chain.length];
+            int head = 0;
+            int tail = 0;
+            visited[0] = true;
+            queue[tail++] = 0;
+            CertificateException invalid = null;
+            while (head < tail) {
+                X509Certificate c = chain[queue[head++]];
                 if (isAnchor(c)) {
                     return;
                 }
-                CertificateException invalid = null;
-                boolean issued = false;
                 for (X509Certificate anchor : anchors) {
-                    if (!anchor.getSubjectX500Principal().equals(c.getIssuerX500Principal()) || !signed(c, anchor)) {
+                    if (!issuedBy(c, anchor)) {
                         continue;
                     }
-                    issued = true;
                     try {
                         anchor.checkValidity();
                         return;
                     } catch (CertificateException e) {
-                        invalid = e;
+                        if (invalid == null) {
+                            invalid = e;
+                        }
                     }
                 }
-                if (issued) {
-                    throw invalid;
+                for (int i = 0; i < chain.length; i++) {
+                    if (!visited[i] && issuedBy(c, chain[i])) {
+                        visited[i] = true;
+                        queue[tail++] = i;
+                    }
                 }
             }
+            if (invalid != null) {
+                throw invalid;
+            }
+        }
+
+        private static boolean issuedBy(X509Certificate c, X509Certificate issuer) {
+            return issuer.getSubjectX500Principal().equals(c.getIssuerX500Principal()) && signed(c, issuer);
         }
 
         private boolean isAnchor(X509Certificate c) {
