@@ -16,11 +16,15 @@ import com.snoworca.naruserve.testing.TestApp;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.security.Key;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
@@ -35,8 +39,9 @@ import org.junit.Test;
  * and the proxy's own host name check (SEC-PROXY-005) stay on. The certificates are made with the JDK's
  * {@code keytool} once per class, as in {@link ProxyTlsTest}: a self-signed certificate for {@code localhost} and
  * {@code 127.0.0.1}, a self-signed one named only by its common name, an expired self-signed one, a private CA with a
- * certificate for {@code localhost} and one for {@code other.example}, and a second CA with a certificate for
- * {@code localhost}.
+ * certificate for {@code localhost} and one for {@code other.example}, a second CA with a certificate for
+ * {@code localhost}, an expired and a not-yet-valid private CA each with a currently valid certificate for
+ * {@code localhost}, and an expired CA certificate with the first CA's name but another key.
  */
 public class ProxyTrustCertificatesTest {
 
@@ -60,6 +65,18 @@ public class ProxyTrustCertificatesTest {
     private static SSLContext otherCaServer;
     /** A client factory that trusts the private CA only. */
     private static SSLSocketFactory caFactory;
+    /** PEM of an expired private CA (valid 2000-01-01 for 2 days). */
+    private static String expiredCaPem;
+    /** PEM of a private CA whose validity starts 10 days from now. */
+    private static String futureCaPem;
+    /** PEM of an expired CA certificate with the subject of {@link #caPem} but another key. */
+    private static String staleSameNameCaPem;
+    /** Serves only its currently valid leaf for localhost and 127.0.0.1, which the expired CA issued. */
+    private static SSLContext expiredCaLeafServer;
+    /** Serves only its currently valid leaf for localhost and 127.0.0.1, which the not-yet-valid CA issued. */
+    private static SSLContext futureCaLeafServer;
+    /** Serves only the private CA's leaf for localhost and 127.0.0.1, without the CA certificate. */
+    private static SSLContext caLeafOnlyServer;
 
     private final InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
     private final TestApp t = TestApp.create(adapter);
@@ -79,6 +96,11 @@ public class ProxyTrustCertificatesTest {
         issued("ca", "good", "CN=localhost", "SAN=dns:localhost,ip:127.0.0.1");
         issued("ca", "other", "CN=other.example", "SAN=dns:other.example");
         issued("ca2", "good2", "CN=localhost", "SAN=dns:localhost,ip:127.0.0.1");
+        ca("expiredca", "CN=NaruServe Expired Test CA", "2000/01/01", "2");
+        ca("futureca", "CN=NaruServe Future Test CA", "+10d", "3");
+        ca("staleca", "CN=NaruServe Trust Test CA", "2000/01/01", "2");
+        issued("expiredca", "expiredcaleaf", "CN=localhost", "SAN=dns:localhost,ip:127.0.0.1");
+        issued("futureca", "futurecaleaf", "CN=localhost", "SAN=dns:localhost,ip:127.0.0.1");
 
         selfPem = TestCertificates.read(new File(dir, "self.pem"));
         cnOnlyPem = TestCertificates.read(new File(dir, "cnonly.pem"));
@@ -90,6 +112,12 @@ public class ProxyTrustCertificatesTest {
         caGoodServer = TestCertificates.serverContext(new File(dir, "good.p12"));
         caOtherHostServer = TestCertificates.serverContext(new File(dir, "other.p12"));
         otherCaServer = TestCertificates.serverContext(new File(dir, "good2.p12"));
+        expiredCaPem = TestCertificates.read(new File(dir, "expiredca.pem"));
+        futureCaPem = TestCertificates.read(new File(dir, "futureca.pem"));
+        staleSameNameCaPem = TestCertificates.read(new File(dir, "staleca.pem"));
+        expiredCaLeafServer = leafOnlyServer(new File(dir, "expiredcaleaf.p12"));
+        futureCaLeafServer = leafOnlyServer(new File(dir, "futurecaleaf.p12"));
+        caLeafOnlyServer = leafOnlyServer(new File(dir, "good.p12"));
 
         TestCertificates.keytool(dir, "-importcert", "-noprompt", "-alias", "ca", "-file", "ca.pem", "-keystore",
                 "trust.p12");
@@ -135,10 +163,38 @@ public class ProxyTrustCertificatesTest {
     }
 
     private static void ca(String name, String dname) throws Exception {
-        TestCertificates.keytool(dir, "-genkeypair", "-alias", name, "-keyalg", "RSA", "-keysize", "2048", "-dname",
-                dname, "-ext", "bc:c", "-validity", "3", "-keystore", name + ".p12");
+        ca(name, dname, null, "3");
+    }
+
+    /** A CA key pair {@code name}.p12 valid from {@code startDate} (now if null) for {@code days}, and its PEM. */
+    private static void ca(String name, String dname, String startDate, String days) throws Exception {
+        List<String> args = new ArrayList<>(java.util.Arrays.asList("-genkeypair", "-alias", name, "-keyalg", "RSA",
+                "-keysize", "2048", "-dname", dname, "-ext", "bc:c", "-validity", days, "-keystore", name + ".p12"));
+        if (startDate != null) {
+            args.addAll(java.util.Arrays.asList("-startdate", startDate));
+        }
+        TestCertificates.keytool(dir, args.toArray(new String[0]));
         TestCertificates.keytool(dir, "-exportcert", "-rfc", "-alias", name, "-keystore", name + ".p12", "-file",
                 name + ".pem");
+    }
+
+    /**
+     * A server context that serves the key of alias {@code server} in {@code keystore} with only its leaf certificate,
+     * so the backend presents no CA certificate and the trust anchor comes from the given certificates alone.
+     */
+    private static SSLContext leafOnlyServer(File keystore) throws Exception {
+        KeyStore source = TestCertificates.load(keystore);
+        char[] password = TestCertificates.PASSWORD.toCharArray();
+        Key key = source.getKey("server", password);
+        Certificate leaf = source.getCertificateChain("server")[0];
+        KeyStore leafOnly = KeyStore.getInstance("PKCS12");
+        leafOnly.load(null, null);
+        leafOnly.setKeyEntry("server", key, password, new Certificate[] {leaf});
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(leafOnly, password);
+        SSLContext c = SSLContext.getInstance("TLS");
+        c.init(kmf.getKeyManagers(), null, null);
+        return c;
     }
 
     /** A server key pair {@code name}.p12 whose certificate the CA {@code ca} issued with {@code san}. */
@@ -288,6 +344,46 @@ public class ProxyTrustCertificatesTest {
         assertConnectFailed(get(), backend);
     }
 
+    // FR-PROXY-022 AC-3: an expired trusted private CA gives 502 CONNECT_FAILED even when the backend presents only a
+    // currently valid leaf it issued: the validity period of the given certificate the chain ends at is checked
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC3_anExpiredTrustedPrivateCaIsConnectFailed() throws IOException {
+        TlsBackend backend = tlsBackend(expiredCaLeafServer);
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(expiredCaPem));
+
+        assertConnectFailed(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-3: the same holds for the X509Certificate overload
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC3_anExpiredTrustedPrivateCaCertificateObjectIsConnectFailed() throws Exception {
+        TlsBackend backend = tlsBackend(expiredCaLeafServer);
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(TestCertificates.parse(expiredCaPem)));
+
+        assertConnectFailed(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-3: a trusted private CA that is not yet valid gives 502 CONNECT_FAILED as well
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC3_aNotYetValidTrustedPrivateCaIsConnectFailed() throws IOException {
+        TlsBackend backend = tlsBackend(futureCaLeafServer);
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(futureCaPem));
+
+        assertConnectFailed(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-3: an expired certificate in a PEM bundle that the presented chain does not end at does not
+    // break a valid path: an expired self-signed certificate, an expired CA, and an expired CA with the valid CA's
+    // name but another key sit next to the valid CA, and the backend presenting only the valid CA's leaf is reached
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC3_anUnrelatedExpiredCertificateInTheBundleDoesNotBreakAValidPath() throws IOException {
+        TlsBackend backend = tlsBackend(caLeafOnlyServer);
+        String bundle = expiredPem + staleSameNameCaPem + expiredCaPem + caPem + futureCaPem;
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(bundle));
+
+        assertReached(get(), backend);
+    }
+
     // ---- AC-4 ----
 
     // FR-PROXY-022 AC-4: a PEM text with several CERTIFICATE blocks and other text around them trusts every one
@@ -344,6 +440,23 @@ public class ProxyTrustCertificatesTest {
                 selfPem + "-----BEGIN CERTIFICATE-----\naGVsbG8gd29ybGQ=\n-----END CERTIFICATE-----\n"));
         assertIae("an empty array", () -> p.trustCertificates(new X509Certificate[0]));
         assertIae("no vararg argument", () -> p.trustCertificates());
+    }
+
+    // FR-PROXY-022 AC-4: a CERTIFICATE block whose DER is a whole certificate followed by extra bytes does not parse as
+    // one certificate and throws IllegalArgumentException at the call
+    @Test
+    public void fr_PROXY_022_AC4_aBlockWhoseDerHasTrailingBytesThrowsIllegalArgumentException() throws Exception {
+        Proxy p = Proxy.to("https://localhost:8443");
+        byte[] der = TestCertificates.parse(selfPem).getEncoded();
+        byte[] junk = {0x04, 0x04, 'j', 'u', 'n', 'k'};
+        byte[] longer = java.util.Arrays.copyOf(der, der.length + junk.length);
+        System.arraycopy(junk, 0, longer, der.length, junk.length);
+        String block = "-----BEGIN CERTIFICATE-----\n"
+                + java.util.Base64.getMimeEncoder(64, new byte[] {'\n'}).encodeToString(longer)
+                + "\n-----END CERTIFICATE-----\n";
+
+        assertIae("a block whose DER is a certificate plus 6 trailing bytes", () -> p.trustCertificates(block));
+        assertIae("the same block after a good one", () -> p.trustCertificates(selfPem + block));
     }
 
     private interface Call {
