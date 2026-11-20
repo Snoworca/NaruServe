@@ -234,8 +234,8 @@ public final class Proxy implements Middleware {
 
     /**
      * The socket factory for an {@code https} target (default: the JDK default factory). An {@code http} target
-     * accepts the factory and never uses it. Of this option and {@link #trustCertificates(String)} (either overload),
-     * the one called later decides the trust.
+     * accepts the factory and never uses it; the factory's own TLS session handling is kept. Of this option and
+     * {@link #trustCertificates(String)} (either overload), the one called later decides the trust.
      */
     // @req IR-PROXY-001
     // @req FR-PROXY-002
@@ -253,7 +253,11 @@ public final class Proxy implements Middleware {
      * ignored. Only the given certificates that are within their validity period at connection time are trusted; the
      * backend's chain is then checked by the platform's standard validation (signatures, CA constraints and the
      * validity of each certificate on the path), and the host name, which needs a matching subject alternative name,
-     * is still checked. Of this
+     * is still checked. TLS sessions are not resumed: every backend connection runs a full handshake, so these checks
+     * run again on every connection. The validity of certificates the backend sends beyond its path is not checked,
+     * but on the JVM the signature algorithm of every certificate it sends is, so a chain that also carries a
+     * certificate signed with an algorithm the JVM disables (for example MD5) is rejected even when the path does not
+     * need it, a platform limitation; the backend should send only the certificates of its path. Of this
      * option and {@link #sslSocketFactory}, the one called later decides the trust; an {@code http} target accepts
      * the certificates and never uses them. {@code null} throws {@code NullPointerException}; a text with no
      * {@code CERTIFICATE} block, or a block whose base64 or DER does not parse, throws

@@ -1,6 +1,9 @@
 package com.snoworca.naruserve.proxy;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -11,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -25,8 +29,15 @@ import javax.net.ssl.X509TrustManager;
  * built from the currently valid given certificates validates the backend's chain with its standard checks
  * (path building, signatures, CA constraints and the validity of each certificate on the path), so an expired or
  * not-yet-valid given certificate is never an anchor, which matters because PKIX does not check a trust anchor's
- * validity; presented certificates the path does not need are left to the platform, which ignores them. The host
- * name is checked afterwards by {@link TlsConnector} as for every https target. No check is turned off.
+ * validity. Presented certificates the path does not need are left to the platform, which does not check their
+ * validity; on the JVM, though, a trust manager that is not an {@code X509ExtendedTrustManager} (API 24) is wrapped
+ * by the provider, which checks the algorithm constraints of every presented certificate, so a chain that also
+ * carries a certificate signed with a disabled algorithm (for example MD5) is rejected even when the path does not
+ * need it: a declared platform limitation. TLS sessions are never resumed: the option value is a
+ * {@link FullHandshakeSocketFactory}, which builds a new {@link SSLContext}, and so a new, empty session cache, for
+ * every socket, so every backend connection runs a full handshake and with it the whole trust decision above. The
+ * host name is checked afterwards by {@link TlsConnector} as for every https target, after every handshake. No check
+ * is turned off.
  */
 // @req FR-PROXY-022
 final class TrustedCertificates {
@@ -117,9 +128,7 @@ final class TrustedCertificates {
             // one platform trust manager over every given certificate, built and dropped here, so a platform that
             // cannot hold them fails at the call rather than at the first connection
             platformTrustManager(certificates);
-            SSLContext context = SSLContext.getInstance("TLS");
-            context.init(null, new TrustManager[] {new CurrentlyValidTrustManager(certificates)}, null);
-            return context.getSocketFactory();
+            return new FullHandshakeSocketFactory(new CurrentlyValidTrustManager(certificates));
         } catch (java.io.IOException | GeneralSecurityException e) {
             throw new IllegalArgumentException("trustCertificates: the certificates cannot be trusted", e);
         }
@@ -212,6 +221,83 @@ final class TrustedCertificates {
             }
             cached = d;
             return d;
+        }
+    }
+
+    /**
+     * The option value of {@code trustCertificates}: every {@code createSocket} builds a new
+     * {@code SSLContext.getInstance("TLS")} over the one shared {@link CurrentlyValidTrustManager} and delegates to
+     * its socket factory. A new context has its own empty client session cache, so no connection resumes the TLS
+     * session of an earlier one, and every handshake is a full one that calls the trust manager: the validity of the
+     * given certificates and the backend's chain are checked again on every connection (FR-PROXY-022 AC-3). A
+     * resumed session would skip the trust manager and keep trusting a certificate that has since expired. The
+     * constructor builds one context, so a platform that cannot build it fails at the {@code trustCertificates} call;
+     * that context answers the cipher suite queries.
+     */
+    // @req FR-PROXY-022
+    static final class FullHandshakeSocketFactory extends SSLSocketFactory {
+        private final X509TrustManager trustManager;
+        private final SSLSocketFactory first;
+
+        FullHandshakeSocketFactory(X509TrustManager trustManager) throws GeneralSecurityException {
+            this.trustManager = trustManager;
+            this.first = context(trustManager).getSocketFactory();
+        }
+
+        private static SSLContext context(X509TrustManager trustManager) throws GeneralSecurityException {
+            SSLContext context = SSLContext.getInstance("TLS");
+            context.init(null, new TrustManager[] {trustManager}, null);
+            return context;
+        }
+
+        /** The socket factory of a new context, so the next socket shares no session cache with an earlier one. */
+        private SSLSocketFactory fresh() throws IOException {
+            try {
+                return context(trustManager).getSocketFactory();
+            } catch (GeneralSecurityException e) {
+                throw new SSLException("trustCertificates: the TLS context cannot be built", e);
+            }
+        }
+
+        @Override
+        public String[] getDefaultCipherSuites() {
+            return first.getDefaultCipherSuites();
+        }
+
+        @Override
+        public String[] getSupportedCipherSuites() {
+            return first.getSupportedCipherSuites();
+        }
+
+        @Override
+        public Socket createSocket() throws IOException {
+            return fresh().createSocket();
+        }
+
+        @Override
+        public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
+            return fresh().createSocket(s, host, port, autoClose);
+        }
+
+        @Override
+        public Socket createSocket(String host, int port) throws IOException {
+            return fresh().createSocket(host, port);
+        }
+
+        @Override
+        public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
+            return fresh().createSocket(host, port, localHost, localPort);
+        }
+
+        @Override
+        public Socket createSocket(InetAddress host, int port) throws IOException {
+            return fresh().createSocket(host, port);
+        }
+
+        @Override
+        public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort)
+                throws IOException {
+            return fresh().createSocket(address, port, localAddress, localPort);
         }
     }
 
