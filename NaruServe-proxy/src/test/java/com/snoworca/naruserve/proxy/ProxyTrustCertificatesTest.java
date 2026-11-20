@@ -27,10 +27,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509ExtendedKeyManager;
@@ -172,6 +175,7 @@ public class ProxyTrustCertificatesTest {
 
     @After
     public void tearDown() throws IOException {
+        TlsConnector.hostnameVerifier = null;
         if (started) {
             app.shutdown(2, TimeUnit.SECONDS);
         }
@@ -883,5 +887,157 @@ public class ProxyTrustCertificatesTest {
         assertEquals("status (errors: " + errors + ")", 200, r.status());
         assertEquals("plain", r.text());
         assertEquals("GET /api/x HTTP/1.1", backend.onlyRequest().requestLine());
+    }
+
+    // ---- AC-3: every connection runs a full handshake, so the trust decision is made again ----
+
+    // FR-PROXY-022 AC-3: two connections through the trustCertificates factory each run a full handshake: the second
+    // session is a new one, not a resumption of the first (a resumed session keeps the first one's creation time and
+    // skips the trust manager), although the first connection read its response and so its session ticket
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC3_eachConnectionThroughTrustCertificatesRunsAFullHandshake() throws Exception {
+        TlsBackend backend = tlsBackend(selfServer);
+        SSLSocketFactory f = TrustedCertificates.fromPem(selfPem);
+
+        SSLSession first = handshakeAndReadResponse(f, backend.port());
+        Thread.sleep(50);
+        SSLSession second = handshakeAndReadResponse(f, backend.port());
+
+        assertTrue("the second session must not resume the first: created " + first.getCreationTime() + " and "
+                + second.getCreationTime(), second.getCreationTime() > first.getCreationTime());
+    }
+
+    // FR-PROXY-022 AC-3: the only given certificate, a self-signed one the backend presents, expires between two
+    // connections to the same mount; the first connection is reached and the second gives 502 CONNECT_FAILED (an
+    // expired trusted self-signed certificate), with no request bytes sent on it. The expiry is real: the certificate
+    // is made to end about 10 seconds after it is made, and the test waits until it has ended
+    @Test(timeout = 60000)
+    public void fr_PROXY_022_AC3_anExpiredTrustedSelfSignedCertificateIsConnectFailedAfterAnEarlierConnection()
+            throws Exception {
+        X509Certificate c = shortLived("short1");
+        TlsBackend backend = tlsBackend(presentingWithKey(keyOf("short1"), c));
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(c));
+        assertReached(get(), backend);
+        int before = backend.requestBytes();
+
+        waitUntilExpired(c);
+
+        assertConnectFailedAfterAnEarlierRequest(get(), backend, before);
+    }
+
+    // FR-PROXY-022 AC-3: two given certificates, and the one the backend presents expires between two connections
+    // while the other stays valid; the second connection gives 502 CONNECT_FAILED: the trust is decided again for the
+    // set of given certificates valid at that connection
+    @Test(timeout = 60000)
+    public void fr_PROXY_022_AC3_aGivenCertificateExpiringBetweenConnectionsIsNoLongerTrusted() throws Exception {
+        X509Certificate c = shortLived("short2");
+        TlsBackend backend = tlsBackend(presentingWithKey(keyOf("short2"), c));
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(c, TestCertificates.parse(selfPem)));
+        assertReached(get(), backend);
+        int before = backend.requestBytes();
+
+        waitUntilExpired(c);
+
+        assertConnectFailedAfterAnEarlierRequest(get(), backend, before);
+    }
+
+    // FR-PROXY-022 AC-3, SEC-PROXY-005: the proxy's own host name check runs after every handshake of a
+    // trustCertificates mount, once per connection with the target host
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC3_theHostNameCheckRunsAfterEveryHandshake() throws Exception {
+        final List<String> hosts = Collections.synchronizedList(new ArrayList<String>());
+        TlsConnector.hostnameVerifier = new HostnameVerifier() {
+            @Override
+            public boolean verify(String host, SSLSession session) {
+                hosts.add(session == null ? "no session: " + host : host);
+                return true;
+            }
+        };
+        TlsBackend backend = tlsBackend(selfServer);
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(selfPem));
+
+        assertEquals(200, get().status());
+        assertEquals(200, get().status());
+
+        assertEquals(java.util.Arrays.asList("localhost", "localhost"), new ArrayList<>(hosts));
+    }
+
+    // ---- AC-7: declared platform limitation ----
+
+    // FR-PROXY-022 AC-7 (declared limitation, JVM behaviour): on the JVM the trust manager of trustCertificates is
+    // checked against the algorithm constraints of every presented certificate (X509ExtendedTrustManager, which would
+    // avoid that, is API 24), so a backend sending the valid path [leaf, CA] plus an MD5-signed certificate the path
+    // does not need gives 502 CONNECT_FAILED, as the docs state; the backend should send only its path
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC7_declaredLimitation_onTheJvmAnUnneededMd5SignedCertificateIsConnectFailed()
+            throws Exception {
+        TestCertificates.keytool(dir, "-genkeypair", "-alias", "md5", "-keyalg", "RSA", "-keysize", "2048",
+                "-sigalg", "MD5withRSA", "-dname", "CN=NaruServe Legacy Extra", "-validity", "3", "-keystore",
+                "md5.p12");
+        TestCertificates.keytool(dir, "-exportcert", "-rfc", "-alias", "md5", "-keystore", "md5.p12", "-file",
+                "md5.pem");
+        X509Certificate md5Extra = TestCertificates.parse(TestCertificates.read(new File(dir, "md5.pem")));
+        assertEquals("MD5withRSA", md5Extra.getSigAlgName());
+        TlsBackend backend = tlsBackend(presentingWithKey(caLeafKey, caLeaf, caCert, md5Extra));
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(caPem));
+
+        assertConnectFailed(get(), backend);
+    }
+
+    /** Connects through {@code f}, sends one request, reads the whole response, and returns the session. */
+    private static SSLSession handshakeAndReadResponse(SSLSocketFactory f, int port) throws IOException {
+        try (SSLSocket s = (SSLSocket) f.createSocket("localhost", port)) {
+            s.startHandshake();
+            SSLSession session = s.getSession();
+            s.getOutputStream().write("GET /api/x HTTP/1.1\r\nHost: localhost\r\n\r\n"
+                    .getBytes(java.nio.charset.StandardCharsets.ISO_8859_1));
+            s.getOutputStream().flush();
+            java.io.InputStream in = s.getInputStream();
+            while (in.read() != -1) {
+                // read to the end, so the client takes the TLS 1.3 session ticket sent after the handshake
+            }
+            return session;
+        }
+    }
+
+    /**
+     * A self-signed certificate for localhost and 127.0.0.1 ({@code alias}.p12, alias {@code alias}) valid from
+     * 86390 seconds ago for one day, so it ends about 10 seconds from now.
+     */
+    private static X509Certificate shortLived(String alias) throws Exception {
+        TestCertificates.keytool(dir, "-genkeypair", "-alias", alias, "-keyalg", "RSA", "-keysize", "2048", "-dname",
+                "CN=localhost", "-ext", "SAN=dns:localhost,ip:127.0.0.1", "-startdate", "-86390S", "-validity", "1",
+                "-keystore", alias + ".p12");
+        TestCertificates.keytool(dir, "-exportcert", "-rfc", "-alias", alias, "-keystore", alias + ".p12", "-file",
+                alias + ".pem");
+        X509Certificate c = TestCertificates.parse(TestCertificates.read(new File(dir, alias + ".pem")));
+        c.checkValidity();
+        return c;
+    }
+
+    private static PrivateKey keyOf(String alias) throws Exception {
+        return (PrivateKey) TestCertificates.load(new File(dir, alias + ".p12"))
+                .getKey(alias, TestCertificates.PASSWORD.toCharArray());
+    }
+
+    /** Waits until {@code c} has ended, plus a margin, after checking it ends within 20 seconds. */
+    private static void waitUntilExpired(X509Certificate c) throws InterruptedException {
+        long wait = c.getNotAfter().getTime() - System.currentTimeMillis() + 1500;
+        assertTrue("fixture: the certificate ends soon, wait " + wait, wait < 20000);
+        if (wait > 0) {
+            Thread.sleep(wait);
+        }
+        assertExpired(c);
+    }
+
+    /** {@link #assertConnectFailed} for a request after one that reached {@code backend} with {@code before} bytes. */
+    private void assertConnectFailedAfterAnEarlierRequest(ClientResponse r, TlsBackend backend, int before) {
+        assertEquals("status (errors: " + errors + ")", 502, r.status());
+        synchronized (errors) {
+            assertEquals("errors that reached onError: " + errors, 1, errors.size());
+            assertTrue("a ProxyException: " + errors.get(0), errors.get(0) instanceof ProxyException);
+            assertSame(ProxyException.Kind.CONNECT_FAILED, ((ProxyException) errors.get(0)).kind());
+        }
+        assertEquals("request bytes the backend read on the second connection", before, backend.requestBytes());
     }
 }
