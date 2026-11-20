@@ -107,6 +107,10 @@ public class ProxyTrustCertificatesTest {
     /** A currently valid leaf for localhost and 127.0.0.1 that the expired intermediate issued, and its key. */
     private static X509Certificate expiredIntermediateLeaf;
     private static PrivateKey expiredIntermediateLeafKey;
+    /** The cross intermediate's name and key, issued by the private CA without basic constraints (not a CA). */
+    private static X509Certificate crossByCaNotCa;
+    /** PEM of an expired self-issued CA certificate with the cross intermediate's name and key. */
+    private static String crossExpiredSelfPem;
 
     private final InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();
     private final TestApp t = TestApp.create(adapter);
@@ -150,6 +154,7 @@ public class ProxyTrustCertificatesTest {
         caLeafOnlyServer = leafOnlyServer(new File(dir, "good.p12"));
         crossSigned();
         expiredCopiesAndIntermediate();
+        nonCaCopyAndExpiredSelfIssuedCross();
 
         TestCertificates.keytool(dir, "-importcert", "-noprompt", "-alias", "ca", "-file", "ca.pem", "-keystore",
                 "trust.p12");
@@ -338,6 +343,32 @@ public class ProxyTrustCertificatesTest {
         assertExpired(expiredIntermediate);
         expiredIntermediateLeaf.verify(expiredIntermediate.getPublicKey());
         expiredIntermediateLeaf.checkValidity();
+    }
+
+    /**
+     * Two more certificates with the cross intermediate's name and key: one the private CA issued without basic
+     * constraints (so it is not a CA certificate) and currently valid, and one self-issued as a CA and expired (valid
+     * 2000-01-01 for 2 days), which therefore also verifies the cross-signed leaf.
+     */
+    private static void nonCaCopyAndExpiredSelfIssuedCross() throws Exception {
+        TestCertificates.keytool(dir, "-gencert", "-rfc", "-alias", "ca", "-keystore", "ca.p12", "-infile",
+                "cross.csr", "-outfile", "crossnotca.pem", "-validity", "3");
+        crossByCaNotCa = TestCertificates.parse(TestCertificates.read(new File(dir, "crossnotca.pem")));
+        TestCertificates.keytool(dir, "-gencert", "-rfc", "-alias", "cross", "-keystore", "cross.p12", "-infile",
+                "cross.csr", "-outfile", "crossexpiredself.pem", "-ext", "bc:c", "-startdate", "2000/01/01",
+                "-validity", "2");
+        crossExpiredSelfPem = TestCertificates.read(new File(dir, "crossexpiredself.pem"));
+        // the fixture: the non-CA copy is valid and the CA issued it; the expired self-issued copy verifies the leaf
+        assertEquals(-1, crossByCaNotCa.getBasicConstraints());
+        crossByCaNotCa.verify(caCert.getPublicKey());
+        crossByCaNotCa.checkValidity();
+        assertEquals(crossByCa.getSubjectX500Principal(), crossByCaNotCa.getSubjectX500Principal());
+        assertEquals(crossByCa.getPublicKey(), crossByCaNotCa.getPublicKey());
+        X509Certificate crossExpiredSelf = TestCertificates.parse(crossExpiredSelfPem);
+        assertExpired(crossExpiredSelf);
+        assertEquals(crossByCa.getSubjectX500Principal(), crossExpiredSelf.getSubjectX500Principal());
+        assertEquals(crossByCa.getPublicKey(), crossExpiredSelf.getPublicKey());
+        crossLeaf.verify(crossExpiredSelf.getPublicKey());
     }
 
     private static void assertExpired(X509Certificate c) {
@@ -663,6 +694,30 @@ public class ProxyTrustCertificatesTest {
     public void fr_PROXY_022_AC3_anExpiredIntermediateOnTheOnlyPathIsConnectFailed() throws Exception {
         TlsBackend backend = tlsBackend(presentingWithKey(expiredIntermediateLeafKey, expiredIntermediateLeaf,
                 expiredIntermediate, caCert));
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(caPem));
+
+        assertConnectFailed(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-3: an expired given certificate is never a trust anchor, not even through a presented
+    // certificate with its name and key. Given {an expired self-issued CA E, the valid private CA}, the backend sends
+    // [leaf, X]: E's key signed the leaf, and X has E's name and key but is a non-CA certificate the valid CA issued.
+    // The only path that accepts the leaf ends at E, which is expired, and X is no issuer (see the control below), so
+    // the connection is 502 CONNECT_FAILED
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC3_anExpiredGivenAnchorDoesNotPassThroughANonCaCertificateOfTheValidCa()
+            throws Exception {
+        TlsBackend backend = tlsBackend(presenting(crossLeaf, crossByCaNotCa));
+        mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(crossExpiredSelfPem + caPem));
+
+        assertConnectFailed(get(), backend);
+    }
+
+    // FR-PROXY-022 AC-2: the control for the test above: [leaf, the non-CA copy the CA issued] with only the private
+    // CA given is 502 CONNECT_FAILED, because a certificate that is not a CA certificate issues nothing
+    @Test(timeout = 30000)
+    public void fr_PROXY_022_AC2_aNonCaCertificateOfTheGivenCaIsNoIssuer() throws Exception {
+        TlsBackend backend = tlsBackend(presenting(crossLeaf, crossByCaNotCa));
         mount(Proxy.to("https://localhost:" + backend.port()).trustCertificates(caPem));
 
         assertConnectFailed(get(), backend);
