@@ -250,8 +250,10 @@ public final class Proxy implements Middleware {
      * Trusts exactly the certificates of the PEM text {@code pem} for an {@code https} target, in place of the JDK
      * default trust: a self-signed backend certificate trusts itself and a private CA certificate trusts the
      * certificates it issued. Every {@code -----BEGIN CERTIFICATE-----} block is read and text around the blocks is
-     * ignored. The certificate chain (signature and validity period, including that of the given certificate the
-     * chain ends at) and the host name, which needs a matching subject alternative name, are still checked. Of this
+     * ignored. Only the given certificates that are within their validity period at connection time are trusted; the
+     * backend's chain is then checked by the platform's standard validation (signatures, CA constraints and the
+     * validity of each certificate on the path), and the host name, which needs a matching subject alternative name,
+     * is still checked. Of this
      * option and {@link #sslSocketFactory}, the one called later decides the trust; an {@code http} target accepts
      * the certificates and never uses them. {@code null} throws {@code NullPointerException}; a text with no
      * {@code CERTIFICATE} block, or a block whose base64 or DER does not parse, throws
