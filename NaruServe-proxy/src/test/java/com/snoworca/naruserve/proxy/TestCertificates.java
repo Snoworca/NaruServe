@@ -46,6 +46,22 @@ final class TestCertificates {
         }
     }
 
+    /**
+     * Makes a server key pair {@code name}.p12 in {@code dir} whose certificate the CA {@code ca} ({@code ca}.p12 and
+     * {@code ca}.pem in {@code dir}) issued with the subject {@code dname} and the extension {@code san}; the store
+     * holds the CA certificate under the alias {@code ca} and the key pair under the alias {@code server}.
+     */
+    static void issued(File dir, String ca, String name, String dname, String san) throws Exception {
+        keytool(dir, "-genkeypair", "-alias", "server", "-keyalg", "RSA", "-keysize", "2048", "-dname", dname,
+                "-validity", "3", "-keystore", name + ".p12");
+        keytool(dir, "-certreq", "-alias", "server", "-keystore", name + ".p12", "-file", name + ".csr");
+        keytool(dir, "-gencert", "-rfc", "-alias", ca, "-keystore", ca + ".p12", "-infile", name + ".csr",
+                "-outfile", name + ".pem", "-ext", san, "-validity", "3");
+        keytool(dir, "-importcert", "-noprompt", "-alias", ca, "-file", ca + ".pem", "-keystore", name + ".p12");
+        keytool(dir, "-importcert", "-noprompt", "-alias", "server", "-file", name + ".pem", "-keystore",
+                name + ".p12");
+    }
+
     static KeyStore load(File file) throws Exception {
         KeyStore ks = KeyStore.getInstance("PKCS12");
         try (InputStream in = new FileInputStream(file)) {

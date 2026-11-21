@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.snoworca.naruserve.HttpException;
 import com.snoworca.naruserve.RestApp;
@@ -21,7 +20,6 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -35,7 +33,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -53,7 +50,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import org.jspecify.annotations.Nullable;
@@ -1227,7 +1223,6 @@ public class GatewayEndToEndTest {
     // =====================================================================================================
 
     static final class Tls {
-        private static final char[] PASSWORD = "changeit".toCharArray();
         static @Nullable File dir;
         static SSLContext trustingClient;
         static SSLContext goodServer;
@@ -1239,58 +1234,21 @@ public class GatewayEndToEndTest {
             }
             File d = java.nio.file.Files.createTempDirectory("naruserve-gateway-e2e-tls").toFile();
             dir = d;
-            keytool(d, "-genkeypair", "-alias", "ca", "-keyalg", "RSA", "-keysize", "2048", "-dname",
-                    "CN=Gateway E2E Test CA", "-ext", "bc:c", "-validity", "3", "-keystore", "ca.p12");
-            keytool(d, "-exportcert", "-rfc", "-alias", "ca", "-keystore", "ca.p12", "-file", "ca.pem");
-            server(d, "good", "CN=localhost", "SAN=dns:localhost,ip:127.0.0.1");
-            server(d, "other", "CN=other.example", "SAN=dns:other.example");
-            keytool(d, "-importcert", "-noprompt", "-alias", "ca", "-file", "ca.pem", "-keystore", "trust.p12");
+            TestCertificates.keytool(d, "-genkeypair", "-alias", "ca", "-keyalg", "RSA", "-keysize", "2048",
+                    "-dname", "CN=Gateway E2E Test CA", "-ext", "bc:c", "-validity", "3", "-keystore", "ca.p12");
+            TestCertificates.keytool(d, "-exportcert", "-rfc", "-alias", "ca", "-keystore", "ca.p12", "-file",
+                    "ca.pem");
+            TestCertificates.issued(d, "ca", "good", "CN=localhost", "SAN=dns:localhost,ip:127.0.0.1");
+            TestCertificates.issued(d, "ca", "other", "CN=other.example", "SAN=dns:other.example");
+            TestCertificates.keytool(d, "-importcert", "-noprompt", "-alias", "ca", "-file", "ca.pem", "-keystore",
+                    "trust.p12");
 
             TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            tmf.init(load(d, "trust.p12"));
+            tmf.init(TestCertificates.load(new File(d, "trust.p12")));
             trustingClient = SSLContext.getInstance("TLS");
             trustingClient.init(null, tmf.getTrustManagers(), null);
-            goodServer = serverContext(d, "good.p12");
-            otherHostServer = serverContext(d, "other.p12");
-        }
-
-        private static void server(File d, String name, String dname, String san) throws Exception {
-            keytool(d, "-genkeypair", "-alias", "server", "-keyalg", "RSA", "-keysize", "2048", "-dname", dname,
-                    "-validity", "3", "-keystore", name + ".p12");
-            keytool(d, "-certreq", "-alias", "server", "-keystore", name + ".p12", "-file", name + ".csr");
-            keytool(d, "-gencert", "-rfc", "-alias", "ca", "-keystore", "ca.p12", "-infile", name + ".csr",
-                    "-outfile", name + ".pem", "-ext", san, "-validity", "3");
-            keytool(d, "-importcert", "-noprompt", "-alias", "ca", "-file", "ca.pem", "-keystore", name + ".p12");
-            keytool(d, "-importcert", "-noprompt", "-alias", "server", "-file", name + ".pem", "-keystore",
-                    name + ".p12");
-        }
-
-        private static void keytool(File d, String... args) throws Exception {
-            List<String> command = new ArrayList<>();
-            command.add(new File(System.getProperty("java.home"), "bin/keytool").getPath());
-            command.addAll(Arrays.asList(args));
-            command.addAll(Arrays.asList("-storetype", "PKCS12", "-storepass", "changeit", "-keypass", "changeit"));
-            Process p = new ProcessBuilder(command).directory(d).redirectErrorStream(true).start();
-            String out = new String(readAll(p.getInputStream()), StandardCharsets.UTF_8);
-            if (!p.waitFor(60, TimeUnit.SECONDS) || p.exitValue() != 0) {
-                fail("keytool " + Arrays.asList(args) + " failed:\n" + out);
-            }
-        }
-
-        private static KeyStore load(File d, String name) throws Exception {
-            KeyStore ks = KeyStore.getInstance("PKCS12");
-            try (InputStream in = new FileInputStream(new File(d, name))) {
-                ks.load(in, PASSWORD);
-            }
-            return ks;
-        }
-
-        private static SSLContext serverContext(File d, String keystore) throws Exception {
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            kmf.init(load(d, keystore), PASSWORD);
-            SSLContext c = SSLContext.getInstance("TLS");
-            c.init(kmf.getKeyManagers(), null, null);
-            return c;
+            goodServer = TestCertificates.serverContext(new File(d, "good.p12"));
+            otherHostServer = TestCertificates.serverContext(new File(d, "other.p12"));
         }
     }
 

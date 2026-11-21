@@ -129,14 +129,14 @@ final class TrustedCertificates {
             // cannot hold them fails at the call rather than at the first connection
             platformTrustManager(certificates);
             return new FullHandshakeSocketFactory(new CurrentlyValidTrustManager(certificates));
-        } catch (java.io.IOException | GeneralSecurityException e) {
+        } catch (IOException | GeneralSecurityException e) {
             throw new IllegalArgumentException("trustCertificates: the certificates cannot be trusted", e);
         }
     }
 
     /** The platform's X.509 trust manager whose only trust anchors are {@code anchors}. */
     private static X509TrustManager platformTrustManager(X509Certificate[] anchors)
-            throws java.io.IOException, GeneralSecurityException {
+            throws IOException, GeneralSecurityException {
         KeyStore store = KeyStore.getInstance(KeyStore.getDefaultType());
         store.load(null, null);
         for (int i = 0; i < anchors.length; i++) {
@@ -215,7 +215,7 @@ final class TrustedCertificates {
             }
             try {
                 d = new Delegate(valid, platformTrustManager(anchors));
-            } catch (java.io.IOException | GeneralSecurityException e) {
+            } catch (IOException | GeneralSecurityException e) {
                 throw new CertificateException("trustCertificates: the currently valid certificates cannot be trusted",
                         e);
             }
@@ -237,11 +237,11 @@ final class TrustedCertificates {
     // @req FR-PROXY-022
     static final class FullHandshakeSocketFactory extends SSLSocketFactory {
         private final X509TrustManager trustManager;
-        private final SSLSocketFactory first;
+        private final SSLSocketFactory cipherSuiteSource;
 
         FullHandshakeSocketFactory(X509TrustManager trustManager) throws GeneralSecurityException {
             this.trustManager = trustManager;
-            this.first = context(trustManager).getSocketFactory();
+            this.cipherSuiteSource = context(trustManager).getSocketFactory();
         }
 
         private static SSLContext context(X509TrustManager trustManager) throws GeneralSecurityException {
@@ -261,12 +261,12 @@ final class TrustedCertificates {
 
         @Override
         public String[] getDefaultCipherSuites() {
-            return first.getDefaultCipherSuites();
+            return cipherSuiteSource.getDefaultCipherSuites();
         }
 
         @Override
         public String[] getSupportedCipherSuites() {
-            return first.getSupportedCipherSuites();
+            return cipherSuiteSource.getSupportedCipherSuites();
         }
 
         @Override

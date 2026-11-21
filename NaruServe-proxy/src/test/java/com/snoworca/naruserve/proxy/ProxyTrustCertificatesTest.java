@@ -240,16 +240,7 @@ public class ProxyTrustCertificatesTest {
 
     /** A server key pair {@code name}.p12 whose certificate the CA {@code ca} issued with {@code san}. */
     private static void issued(String ca, String name, String dname, String san) throws Exception {
-        TestCertificates.keytool(dir, "-genkeypair", "-alias", "server", "-keyalg", "RSA", "-keysize", "2048",
-                "-dname", dname, "-validity", "3", "-keystore", name + ".p12");
-        TestCertificates.keytool(dir, "-certreq", "-alias", "server", "-keystore", name + ".p12", "-file",
-                name + ".csr");
-        TestCertificates.keytool(dir, "-gencert", "-rfc", "-alias", ca, "-keystore", ca + ".p12", "-infile",
-                name + ".csr", "-outfile", name + ".pem", "-ext", san, "-validity", "3");
-        TestCertificates.keytool(dir, "-importcert", "-noprompt", "-alias", ca, "-file", ca + ".pem", "-keystore",
-                name + ".p12");
-        TestCertificates.keytool(dir, "-importcert", "-noprompt", "-alias", "server", "-file", name + ".pem",
-                "-keystore", name + ".p12");
+        TestCertificates.issued(dir, ca, name, dname, san);
     }
 
     /**
