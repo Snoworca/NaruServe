@@ -1,0 +1,336 @@
+{
+  "round": 1,
+  "findings": [
+    {
+      "id": "FND-001",
+      "axis": "P2",
+      "verdict": "drop",
+      "drop_reason": "Execution disproves it: the probe is green on current code. The JDK rejects the expired presented copy with certificate_expired, so the documented validity-on-path rule holds.",
+      "title": "An expired presented self-signed copy with the same subject and key as a valid given certificate could pass PKIX's same-name-and-key trusted-certificate shortcut",
+      "location": {
+        "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TrustedCertificates.java",
+        "line_range": "187-224"
+      },
+      "description": "Suspicion: PKIXValidator treats a chain[0] that matches a trusted subject and public key as trusted and returns without checking its validity. CurrentlyValidTrustManager only filters the given certificates, so a backend that presents an expired renewal-predecessor of a valid given self-signed certificate might be accepted, which would contradict FR-PROXY-022 ('chain still validated (signature and validity period)').",
+      "evidence": {
+        "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ReviewProbeExpiredPresentedCopyTest'",
+        "output": "tests=1 failures=0 errors=0; stdout: GET /api/x 502 ...; CAUSE javax.net.ssl.SSLHandshakeException: (certificate_expired) PKIX path validation failed: java.security.cert.CertPathValidatorException: validity check failed",
+        "intent_output": "502 CONNECT_FAILED with no request bytes (matches current behaviour)",
+        "probe_source": "package com.snoworca.naruserve.proxy;\n\nimport static org.junit.Assert.assertEquals;\nimport static org.junit.Assert.assertTrue;\nimport static org.junit.Assert.fail;\n\nimport com.snoworca.naruserve.RestApp;\nimport com.snoworca.naruserve.proxy.ProxyTlsTest.TlsBackend;\nimport com.snoworca.naruserve.testing.InMemoryHttpAdapter;\nimport com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientRequest;\nimport com.snoworca.naruserve.testing.InMemoryHttpAdapter.ClientResponse;\nimport com.snoworca.naruserve.testing.TestApp;\nimport java.io.File;\nimport java.security.Key;\nimport java.security.KeyStore;\nimport java.security.cert.Certificate;\nimport java.security.cert.CertificateExpiredException;\nimport java.security.cert.X509Certificate;\nimport java.util.ArrayList;\nimport java.util.Collections;\nimport java.util.List;\nimport java.util.concurrent.TimeUnit;\nimport javax.net.ssl.KeyManagerFactory;\nimport javax.net.ssl.SSLContext;\nimport org.junit.Test;\n\npublic class ReviewProbeExpiredPresentedCopyTest {\n    @Test(timeout = 60000)\n    public void anExpiredPresentedSelfSignedCopyOfAValidGivenCertificateIsConnectFailed() throws Exception {\n        File dir = java.nio.file.Files.createTempDirectory(\"review-probe\").toFile();\n        InMemoryHttpAdapter adapter = new InMemoryHttpAdapter();\n        TestApp t = TestApp.create(adapter);\n        RestApp app = t.app();\n        List<Throwable> errors = Collections.synchronizedList(new ArrayList<Throwable>());\n        TlsBackend backend = null;\n        try {\n            TestCertificates.keytool(dir, \"-genkeypair\", \"-alias\", \"dup\", \"-keyalg\", \"RSA\", \"-keysize\", \"2048\",\n                    \"-dname\", \"CN=localhost\", \"-ext\", \"SAN=dns:localhost,ip:127.0.0.1\", \"-validity\", \"3\",\n                    \"-keystore\", \"dup.p12\");\n            TestCertificates.keytool(dir, \"-exportcert\", \"-rfc\", \"-alias\", \"dup\", \"-keystore\", \"dup.p12\", \"-file\",\n                    \"dup.pem\");\n            TestCertificates.keytool(dir, \"-certreq\", \"-alias\", \"dup\", \"-keystore\", \"dup.p12\", \"-file\", \"dup.csr\");\n            TestCertificates.keytool(dir, \"-gencert\", \"-rfc\", \"-alias\", \"dup\", \"-keystore\", \"dup.p12\", \"-infile\",\n                    \"dup.csr\", \"-outfile\", \"dupold.pem\", \"-ext\", \"SAN=dns:localhost,ip:127.0.0.1\", \"-startdate\",\n                    \"2000/01/01\", \"-validity\", \"2\");\n            String validPem = TestCertificates.read(new File(dir, \"dup.pem\"));\n            X509Certificate valid = TestCertificates.parse(validPem);\n            X509Certificate expired = TestCertificates.parse(TestCertificates.read(new File(dir, \"dupold.pem\")));\n            assertEquals(valid.getSubjectX500Principal(), expired.getSubjectX500Principal());\n            assertEquals(valid.getPublicKey(), expired.getPublicKey());\n            expired.verify(expired.getPublicKey());\n            valid.checkValidity();\n            try { expired.checkValidity(); fail(\"fixture: must be expired\"); } catch (CertificateExpiredException ok) { }\n            KeyStore source = TestCertificates.load(new File(dir, \"dup.p12\"));\n            char[] password = TestCertificates.PASSWORD.toCharArray();\n            Key key = source.getKey(\"dup\", password);\n            KeyStore presenting = KeyStore.getInstance(\"PKCS12\");\n            presenting.load(null, null);\n            presenting.setKeyEntry(\"server\", key, password, new Certificate[] {expired});\n            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());\n            kmf.init(presenting, password);\n            SSLContext server = SSLContext.getInstance(\"TLS\");\n            server.init(kmf.getKeyManagers(), null, null);\n            backend = new TlsBackend(server);\n            app.use(\"/api\", Proxy.to(\"https://localhost:\" + backend.port()).trustCertificates(validPem));\n            app.onError((error, req, res) -> errors.add(error));\n            t.start();\n            ClientResponse r = adapter.send(ClientRequest.of(\"GET\", \"/api/x\"));\n            System.out.println(\"CAUSE \" + (errors.isEmpty() ? null : errors.get(0).getCause()));\n            assertEquals(502, r.status());\n            assertTrue(errors.get(0) instanceof ProxyException);\n            assertEquals(ProxyException.Kind.CONNECT_FAILED, ((ProxyException) errors.get(0)).kind());\n            assertEquals(0, backend.requestBytes());\n        } finally {\n            app.shutdown(2, TimeUnit.SECONDS);\n            if (backend != null) { backend.close(); }\n            TestCertificates.delete(dir);\n        }\n    }\n}\n"
+      },
+      "is_behavioral": true,
+      "tags": [
+        "security",
+        "tls",
+        "probe-green"
+      ]
+    },
+    {
+      "id": "FND-002",
+      "axis": "P7",
+      "verdict": "drop",
+      "drop_reason": "Execution disproves it: with a single caching SSLContext the second TLS 1.3 session keeps the first one's creation time (1795185017685 both), so the oracle 'second.getCreationTime() > first.getCreationTime()' does detect a resumption. The probe is green.",
+      "title": "The full-handshake test's creation-time oracle might not detect a resumed session",
+      "location": {
+        "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java",
+        "line_range": "884-896"
+      },
+      "description": "Suspicion: fr_PROXY_022_AC3_eachConnectionThroughTrustCertificatesRunsAFullHandshake might pass even against a single-context factory if a resumed session got a new creation time.",
+      "evidence": {
+        "command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests 'com.snoworca.naruserve.proxy.ReviewProbeResumptionOracleTest'",
+        "output": "PROTO TLSv1.3 first=1795185017685 id=[70, -43, ...] second=1795185017685 id=[74, -6, ...] sameObject=false; failures=0",
+        "intent_output": "a resumed session keeps the creation time, so the oracle distinguishes a full handshake",
+        "probe_source": "package com.snoworca.naruserve.proxy;\n\nimport static org.junit.Assert.assertEquals;\n\nimport com.snoworca.naruserve.proxy.ProxyTlsTest.TlsBackend;\nimport java.io.IOException;\nimport java.io.InputStream;\nimport java.security.KeyStore;\nimport java.util.Arrays;\nimport javax.net.ssl.SSLContext;\nimport javax.net.ssl.SSLSession;\nimport javax.net.ssl.SSLSocket;\nimport javax.net.ssl.SSLSocketFactory;\nimport javax.net.ssl.TrustManagerFactory;\nimport org.junit.Test;\n\n/** Does the creation-time oracle of fr_PROXY_022_AC3_eachConnectionThroughTrustCertificatesRunsAFullHandshake detect resumption? */\npublic class ReviewProbeResumptionOracleTest {\n    @Test(timeout = 30000)\n    public void aSingleContextFactoryResumesAndKeepsTheCreationTime() throws Exception {\n        KeyStore trust = KeyStore.getInstance(KeyStore.getDefaultType());\n        trust.load(null, null);\n        trust.setCertificateEntry(\"self\", TestCertificates.selfSigned());\n        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());\n        tmf.init(trust);\n        SSLContext client = SSLContext.getInstance(\"TLS\");\n        client.init(null, tmf.getTrustManagers(), null);\n        SSLSocketFactory f = client.getSocketFactory();\n        try (TlsBackend backend = new TlsBackend(TestCertificates.selfSignedServer())) {\n            SSLSession first = handshakeAndReadResponse(f, backend.port());\n            Thread.sleep(50);\n            SSLSession second = handshakeAndReadResponse(f, backend.port());\n            System.out.println(\"PROTO \" + first.getProtocol() + \" first=\" + first.getCreationTime() + \" id=\"\n                    + Arrays.toString(first.getId()) + \" second=\" + second.getCreationTime() + \" id=\"\n                    + Arrays.toString(second.getId()) + \" sameObject=\" + (first == second));\n            assertEquals(first.getCreationTime(), second.getCreationTime());\n        }\n    }\n\n    private static SSLSession handshakeAndReadResponse(SSLSocketFactory f, int port) throws IOException {\n        try (SSLSocket s = (SSLSocket) f.createSocket(\"localhost\", port)) {\n            s.startHandshake();\n            SSLSession session = s.getSession();\n            s.getOutputStream().write(\"GET /api/x HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n\"\n                    .getBytes(java.nio.charset.StandardCharsets.ISO_8859_1));\n            s.getOutputStream().flush();\n            InputStream in = s.getInputStream();\n            while (in.read() != -1) { }\n            return session;\n        }\n    }\n}\n"
+      },
+      "is_behavioral": false,
+      "tags": [
+        "test-quality",
+        "probe-green"
+      ]
+    },
+    {
+      "id": "FND-003",
+      "axis": "P7",
+      "verdict": "drop",
+      "drop_reason": "Not proven by execution. It would take a host slow enough that keytool, the backend and the first request together exceed about 10 s, and the tests pass locally. This is speculative flakiness.",
+      "title": "The short-lived certificate tests rely on a real-clock window of about 10 s between creating the certificate and the first request",
+      "location": {
+        "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java",
+        "line_range": "900-930, 979-990"
+      },
+      "description": "shortLived() makes a certificate that ends about 10 s after keytool runs. On an overloaded CI host, a first connection that starts after expiry would give 502 instead of 200.",
+      "evidence": {
+        "command": "(none; not reproducible locally)",
+        "output": "",
+        "intent_output": "",
+        "probe_source": ""
+      },
+      "is_behavioral": false,
+      "tags": [
+        "test-quality",
+        "timing"
+      ]
+    },
+    {
+      "id": "FND-004",
+      "axis": "P7",
+      "verdict": "drop",
+      "drop_reason": "Not proven by execution. These are timing assertions (backend started 120 ms later, retriedMs >= 150, jobsMs < 300) and closedPort() port-reuse races. They are speculative and the tests are green.",
+      "title": "GatewayEndToEndTest timing windows and free-port reuse",
+      "location": {
+        "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/GatewayEndToEndTest.java",
+        "line_range": "387-436, 941-945"
+      },
+      "description": "fr_PROXY_018_AC5 assumes the gateway's first connect attempt happens within 120 ms of sending the request. closedPort() can be taken by another process before httpServerOn binds it.",
+      "evidence": {
+        "command": "(none)",
+        "output": "",
+        "intent_output": "",
+        "probe_source": ""
+      },
+      "is_behavioral": false,
+      "tags": [
+        "test-quality",
+        "timing"
+      ]
+    },
+    {
+      "id": "FND-005",
+      "axis": "P8",
+      "verdict": "drop",
+      "drop_reason": "A wording or completeness matter of a prose fixture list, not one of the four checked claim kinds. Every path, symbol and count it names exists (for example, 'two expired certificates with the first CA's name and key' = expiredCrossOfCa and preRenewalCa).",
+      "title": "The class javadoc fixture list omits crossByCaNotCa and crossExpiredSelfPem",
+      "location": {
+        "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java",
+        "line_range": "45-58"
+      },
+      "description": "The javadoc lists the per-class fixtures but not the non-CA copy and the expired self-issued cross made by nonCaCopyAndExpiredSelfIssuedCross().",
+      "evidence": {
+        "command": "grep -n 'nonCaCopyAndExpiredSelfIssuedCross\\|crossByCaNotCa' ProxyTrustCertificatesTest.java",
+        "output": "made in makeCertificates() but not named in the class javadoc",
+        "intent_output": "",
+        "probe_source": ""
+      },
+      "is_behavioral": false,
+      "tags": [
+        "comment"
+      ]
+    },
+    {
+      "id": "FND-006",
+      "axis": "P3",
+      "verdict": "drop",
+      "drop_reason": "This matches intent. FR-PROXY-022 AC-4 requires IllegalArgumentException for a block whose DER does not parse, and a BER (non-DER) encoding is not DER. It is not a defect.",
+      "title": "BER-encoded certificate blocks are rejected by the getEncoded() equality check",
+      "location": {
+        "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TrustedCertificates.java",
+        "line_range": "72-87"
+      },
+      "description": "The JDK re-encodes indefinite-length BER to DER, so getEncoded() differs from the block bytes and the block is reported as 'not exactly one certificate'.",
+      "evidence": {
+        "command": "(static reading)",
+        "output": "",
+        "intent_output": "",
+        "probe_source": ""
+      },
+      "is_behavioral": true,
+      "tags": [
+        "edge-case"
+      ]
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-001",
+      "principle": "DRY (duplication)",
+      "location": {
+        "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/GatewayEndToEndTest.java",
+        "line_range": "1268-1294"
+      },
+      "description": "Tls.keytool/load/serverContext duplicate TestCertificates.keytool/load/serverContext (TestCertificates.java:37-63), which this same change introduces as the shared helper."
+    },
+    {
+      "id": "CC-002",
+      "principle": "DRY (duplication)",
+      "location": {
+        "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/GatewayEndToEndTest.java",
+        "line_range": "1257-1266"
+      },
+      "description": "Tls.server(...) is the same five-step keytool sequence (genkeypair, certreq, gencert, importcert CA, importcert server) as ProxyTrustCertificatesTest.issued(...) (ProxyTrustCertificatesTest.java:242-253)."
+    },
+    {
+      "id": "CC-003",
+      "principle": "Single Responsibility / class size",
+      "location": {
+        "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/GatewayEndToEndTest.java",
+        "line_range": "1-1311"
+      },
+      "description": "A 1311-line test class that holds the tests and also backends (Recorder, SilentBackend), a raw socket client, a JSON codec (MapJsonCodec) and TLS fixtures (Tls), which GatewayEndToEndKotlinTest also reuses. These could be separate test-support classes."
+    },
+    {
+      "id": "CC-004",
+      "principle": "Consistency / naming",
+      "location": {
+        "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TrustedCertificates.java",
+        "line_range": "132, 139, 218"
+      },
+      "description": "java.io.IOException is written fully qualified although IOException is imported (line 4) and used unqualified elsewhere in the file."
+    },
+    {
+      "id": "CC-005",
+      "principle": "Naming",
+      "location": {
+        "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TrustedCertificates.java",
+        "line_range": "240, 244"
+      },
+      "description": "The field name 'first' (the socket factory of the context built in the constructor, used only for cipher suite queries) does not say what it is for. Something like 'cipherSuiteSource' would be clearer."
+    },
+    {
+      "id": "CC-006",
+      "principle": "Class size / mixed responsibilities in fixtures",
+      "location": {
+        "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java",
+        "line_range": "121-375"
+      },
+      "description": "About 250 lines of certificate-fixture construction (around 40 keytool runs, plus a custom X509ExtendedKeyManager) sit in the test class. A dedicated fixture builder next to TestCertificates would separate them from the assertions."
+    }
+  ],
+  "coverage_rows": [
+    {
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+      "hunks_total": 3,
+      "anchors": [
+        "import java.security.cert.X509Certificate;",
+        "* {@link #trustCertificates(String)} (either overload), the one called later decides the trust.",
+        "public Proxy trustCertificates(String pem) {"
+      ],
+      "findings": [
+        "FND-001"
+      ]
+    },
+    {
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TrustedCertificates.java",
+      "hunks_total": 1,
+      "anchors": [
+        "final class TrustedCertificates {"
+      ],
+      "findings": [
+        "FND-001",
+        "FND-006"
+      ]
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/BackendResponseParserTest.java",
+      "hunks_total": 3,
+      "anchors": [
+        "// SEC-PROXY-004 AC-12, RFC 9112 §6.1 (review FND-001): an HTTP/1.0 response carrying Transfer-Encoding has faulty",
+        "// SEC-PROXY-004 AC-12, RFC 9112 §6.1 (review FND-001): a response to HEAD stays bodyless first, so HTTP/1.0 with",
+        "// SEC-PROXY-004 AC-12, RFC 9112 §6.1 (review FND-001): a 204 and a 304 stay bodyless first, so HTTP/1.0 with"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/GatewayEndToEndTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "public class GatewayEndToEndTest {"
+      ],
+      "findings": [
+        "FND-004"
+      ]
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyApiTest.java",
+      "hunks_total": 3,
+      "anchors": [
+        "// FR-PROXY-022: both trustCertificates overloads, with a certificate made at test time",
+        "// including both trustCertificates overloads of FR-PROXY-022",
+        "\"trustCertificates(java.lang.String)\","
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTimeoutsTest.java",
+      "hunks_total": 3,
+      "anchors": [
+        "// FR-PROXY-017 AC-12 (a client trickling its body past the total deadline ends at the first read after it).",
+        "// FR-PROXY-017 AC-11 (the final deadline check before res.relay).",
+        "// FR-PROXY-017 AC-11 (a 504 before the final check carries none of the backend's headers)."
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsTest.java",
+      "hunks_total": 6,
+      "anchors": [
+        "// SEC-PROXY-005 AC-8: no public method of Proxy turns verification off; its only TLS options are",
+        "public void sec_PROXY_005_AC8_theOnlyTlsOptionsAreTheSocketFactoryAndTrustCertificates() {",
+        "Class<?> base = p.isArray() ? p.getComponentType() : p;",
+        "Collections.sort(tls);",
+        "abstract static class CountingBackend implements Closeable {",
+        "static final class TlsBackend extends CountingBackend {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java",
+      "hunks_total": 1,
+      "anchors": [
+        "public class ProxyTrustCertificatesTest {"
+      ],
+      "findings": [
+        "FND-002",
+        "FND-003",
+        "FND-005"
+      ]
+    },
+    {
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/TestCertificates.java",
+      "hunks_total": 1,
+      "anchors": [
+        "final class TestCertificates {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/GatewayEndToEndKotlinTest.kt",
+      "hunks_total": 1,
+      "anchors": [
+        "class GatewayEndToEndKotlinTest {"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt",
+      "hunks_total": 3,
+      "anchors": [
+        "import java.security.cert.CertificateFactory",
+        "// FR-PROXY-022 AC-7, OPS-DX-010 AC-2: both trustCertificates overloads, with their argument rules",
+        "// docs-example: proxy.md#12"
+      ],
+      "findings": []
+    },
+    {
+      "file": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyTrustCertificatesKotlinTest.kt",
+      "hunks_total": 1,
+      "anchors": [
+        "class ProxyTrustCertificatesKotlinTest {"
+      ],
+      "findings": []
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "by_verdict": {
+      "drop": 6,
+      "keep": 0,
+      "residual": 0
+    },
+    "by_axis": {
+      "P2": 1,
+      "P7": 3,
+      "P8": 1,
+      "P3": 1
+    }
+  }
+}

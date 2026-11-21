@@ -1,0 +1,4 @@
+{"skill": "kiwi-review-fix-loop", "mode": "self", "base": "83f3e76", "reviewed_head": "05abb43", "final_head": "b5e9cfc", "regression_baseline": "docs/research/naruserve-proxy/waves/regression-baseline.json",
+ "rounds": [{"round": 1, "kept": 0, "dropped": 6, "clean_code": {"accepted": ["CC-001", "CC-002", "CC-004", "CC-005"], "not_applied": ["CC-003"], "commit": "b5e9cfc", "build": "./gradlew -PtinyHttpdFromMaven=true build: 4329 tests, 0 failures"}},
+            {"round": 2, "kept": 0, "fixes": 0, "scope": "05abb43..b5e9cfc", "build": "NaruServe-proxy 720 tests, 0 failures"}],
+ "verdict": "pass", "blocking_kept_findings": 0, "note": "The loop agent stopped after clean-code round 1; the host committed those fixes (b5e9cfc) and ran round 2 with a fresh reviewer."}

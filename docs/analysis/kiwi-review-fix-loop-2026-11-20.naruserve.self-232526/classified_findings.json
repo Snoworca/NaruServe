@@ -1,0 +1,87 @@
+{
+  "round": 1,
+  "immediate_fix": [],
+  "declared_limit": [],
+  "kept_tiers": [],
+  "discussion_needed": [],
+  "rejected": [
+    {
+      "id": "FND-001",
+      "rationale": "The reviewer's drop stands. Its own probe (ReviewProbeExpiredPresentedCopyTest) is green on current code: the JDK rejects the expired presented self-signed copy with certificate_expired (PKIX validity check failed), the proxy answers 502 CONNECT_FAILED and the backend gets 0 request bytes, which is what FR-PROXY-022 ('chain still validated (signature and validity period)') and SEC-PROXY-005 require. Execution disproves the suspected trusted-certificate shortcut bypass.",
+      "rejection_category": "dropped"
+    },
+    {
+      "id": "FND-002",
+      "rationale": "The reviewer's drop stands. The probe shows that a single caching SSLContext resumes the TLS 1.3 session with the same creation time (1795185017685 both), so the oracle 'second.getCreationTime() > first.getCreationTime()' in fr_PROXY_022_AC3_eachConnectionThroughTrustCertificatesRunsAFullHandshake does detect resumption. The test is not vacuous.",
+      "rejection_category": "dropped"
+    },
+    {
+      "id": "FND-003",
+      "rationale": "Speculative flakiness with no execution evidence. shortLived() (ProxyTrustCertificatesTest.java:1007-1016) uses -startdate -86390S -validity 1, so about 10 s are left, and it runs c.checkValidity() right after creation. The suite is green locally. This is a test-timing concern, not a functional defect claim, so it is not a residual. Nothing here breaks an AC.",
+      "rejection_category": "dropped"
+    },
+    {
+      "id": "FND-004",
+      "rationale": "Speculative timing and port-reuse races in GatewayEndToEndTest with no reproduction ('command: none'). The tests are green. This is a test-robustness opinion, not a proven defect, and not a functional defect of the product code.",
+      "rejection_category": "dropped"
+    },
+    {
+      "id": "FND-005",
+      "rationale": "This concerns the wording and completeness of a prose fixture list in a test-class javadoc. Every symbol it names exists. It is not a code defect, and the review-fix loop does not edit prose-only comments for completeness.",
+      "rejection_category": "dropped"
+    },
+    {
+      "id": "FND-006",
+      "rationale": "This is intended behavior. FR-PROXY-022 AC-4 (22.reverse-proxy.srs.md) requires IllegalArgumentException at the call for 'a block whose base64 or DER does not parse', and TrustedCertificates.java:76-87 deliberately requires the block to be exactly one DER certificate (getEncoded() equality, which also rejects trailing bytes; see VE-4 _aBlockWhoseDerHasTrailingBytesThrowsIllegalArgumentException). The finding comes from static reading only, and a non-DER (BER) certificate block falls under the specified rejection. RFC 7468 lets PEM carry BER, but the SRS deliberately narrows input to DER.",
+      "rejection_category": "already_intended"
+    }
+  ],
+  "clean_code": [
+    {
+      "id": "CC-001",
+      "decision": "accepted",
+      "principle": "DRY (duplication)",
+      "location": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/GatewayEndToEndTest.java:1270-1294 (Tls.keytool/load/serverContext) vs NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/TestCertificates.java:37-63",
+      "reason": "Verified: Tls.keytool, Tls.load and Tls.serverContext match TestCertificates.keytool, load and serverContext line for line (same keytool path, PKCS12 store, 'changeit' password, 60 s wait, and an AssertionError on failure via fail()). Both classes are in the same test package. The helpers are private, so no public symbol changes and no test is weakened.",
+      "fix_hint": "In GatewayEndToEndTest.Tls, delete the private keytool/load/serverContext copies and call TestCertificates.keytool(d, ...), TestCertificates.load(new File(d, name)) and TestCertificates.serverContext(new File(d, keystore)). Drop Tls.PASSWORD if nothing else uses it, and remove imports that become unused. Keep GatewayEndToEndTest.readAll, which other tests still use."
+    },
+    {
+      "id": "CC-002",
+      "decision": "accepted",
+      "principle": "DRY (duplication)",
+      "location": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/GatewayEndToEndTest.java:1257-1266 (Tls.server) vs NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java:242-253 (issued)",
+      "reason": "Verified: both run the same five keytool steps (genkeypair alias server, certreq, gencert by CA with SAN and -validity 3, importcert of the CA, importcert of the server). Tls.server(d, name, dname, san) equals issued(\"ca\", name, dname, san) on directory d. Both helpers are private and test-only, so a shared helper is a small behavior-preserving change.",
+      "fix_hint": "Add a package-private static TestCertificates.issued(File dir, String ca, String name, String dname, String san) that holds the five keytool steps. Make ProxyTrustCertificatesTest.issued(ca, name, dname, san) delegate to TestCertificates.issued(dir, ca, name, dname, san), and replace Tls.server(d, name, dname, san) with TestCertificates.issued(d, \"ca\", name, dname, san). Keep the argument values and order exactly as they are now."
+    },
+    {
+      "id": "CC-003",
+      "decision": "dismissed",
+      "principle": "Single Responsibility / class size",
+      "location": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/GatewayEndToEndTest.java:1-1311",
+      "reason": "Disproportionate and risky. Splitting a 1311-line test class means moving Recorder, SilentBackend, MapJsonCodec, call() and the like into new support classes, and GatewayEndToEndKotlinTest refers to GatewayEndToEndTest.MapJsonCodec and GatewayEndToEndTest.call, so existing referenced symbols would move. That is churn with regression risk that does not pay for itself in a test-only window. CC-001 and CC-002 already remove the real duplication."
+    },
+    {
+      "id": "CC-004",
+      "decision": "accepted",
+      "principle": "Consistency (redundant qualification)",
+      "location": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TrustedCertificates.java:132, 139, 218",
+      "reason": "Verified: line 4 imports java.io.IOException and lines 254-299 use IOException unqualified, while lines 132, 139 and 218 write java.io.IOException. Shortening these to the imported name is a purely textual, behavior-preserving change.",
+      "fix_hint": "Replace 'java.io.IOException' with 'IOException' at lines 132 (catch), 139 (throws) and 218 (catch). Change nothing else."
+    },
+    {
+      "id": "CC-005",
+      "decision": "accepted",
+      "principle": "Naming (intention-revealing names)",
+      "location": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TrustedCertificates.java:240, 244, 264, 269 (FullHandshakeSocketFactory.first)",
+      "reason": "Verified: the private field 'first' only answers getDefaultCipherSuites/getSupportedCipherSuites (lines 264, 269), and its name does not say so. It is a private field of a package-private nested class, so renaming it changes no public symbol or behavior. The unrelated local 'CertificateException first' at lines 191-204 must not be touched.",
+      "fix_hint": "Rename the field FullHandshakeSocketFactory.first to cipherSuiteSource (declaration line 240, assignment line 244, uses at 264 and 269). Leave the local variable 'first' in the trust manager check (lines 191-204) as it is."
+    },
+    {
+      "id": "CC-006",
+      "decision": "dismissed",
+      "principle": "Class size / fixture separation",
+      "location": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java:121-375",
+      "reason": "Disproportionate. Moving about 250 lines of fixtures (around 40 keytool runs, a custom X509ExtendedKeyManager and shared static state such as dir and the PEM fields) into a separate builder is a large move with regression risk to a security test suite, for no behavioral gain in a test-only window. The narrow shared piece (issued) is handled by CC-002."
+    }
+  ]
+}

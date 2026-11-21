@@ -1,0 +1,57 @@
+{
+  "clean_code_round": 1,
+  "applied": [
+    {
+      "id": "CC-001",
+      "files_changed": [
+        {
+          "path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/GatewayEndToEndTest.java",
+          "summary": "Removed nested Tls.PASSWORD, Tls.keytool, Tls.load and Tls.serverContext copies; Tls.init now calls TestCertificates.keytool/load/serverContext with the same arguments. Dropped now-unused imports (static Assert.fail, FileInputStream, KeyStore, KeyManagerFactory)."
+        }
+      ]
+    },
+    {
+      "id": "CC-002",
+      "files_changed": [
+        {
+          "path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/TestCertificates.java",
+          "summary": "Added package-private static issued(File dir, String ca, String name, String dname, String san) holding the five keytool steps (genkeypair alias server RSA 2048 validity 3, certreq, gencert by ca with -ext san validity 3, importcert CA under alias ca, importcert server)."
+        },
+        {
+          "path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java",
+          "summary": "Private issued(ca, name, dname, san) now delegates to TestCertificates.issued(dir, ca, name, dname, san); all call sites unchanged."
+        },
+        {
+          "path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/GatewayEndToEndTest.java",
+          "summary": "Removed Tls.server; Tls.init calls TestCertificates.issued(d, \"ca\", \"good\"|\"other\", ...) with the same dnames and SANs (identical keytool arguments)."
+        }
+      ]
+    },
+    {
+      "id": "CC-004",
+      "files_changed": [
+        {
+          "path": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TrustedCertificates.java",
+          "summary": "Replaced fully qualified java.io.IOException with the imported IOException at lines 132 (catch), 139 (throws), 218 (catch)."
+        }
+      ]
+    },
+    {
+      "id": "CC-005",
+      "files_changed": [
+        {
+          "path": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TrustedCertificates.java",
+          "summary": "Renamed private field FullHandshakeSocketFactory.first to cipherSuiteSource (declaration, constructor assignment, getDefaultCipherSuites, getSupportedCipherSuites). The local CertificateException first in the trust check is untouched; no comment named the field."
+        }
+      ]
+    }
+  ],
+  "not_applied": [],
+  "build": {
+    "command": "./gradlew -PtinyHttpdFromMaven=true build",
+    "result": "BUILD SUCCESSFUL in 3m 30s",
+    "tests_total_if_known": 4329,
+    "tests_total_note": "JUnit XML results across all modules: 4329 tests, 0 failures/errors; NaruServe-proxy: 720 tests, 0 failures/errors",
+    "failures": []
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "mode": "self",
+  "pr_url": null,
+  "pr_number": null,
+  "self_scope": {
+    "source": "base-head",
+    "files": [
+      {"path": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java", "hunks_total": 3},
+      {"path": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TrustedCertificates.java", "hunks_total": 1},
+      {"path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/BackendResponseParserTest.java", "hunks_total": 3},
+      {"path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/GatewayEndToEndTest.java", "hunks_total": 1},
+      {"path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyApiTest.java", "hunks_total": 3},
+      {"path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTimeoutsTest.java", "hunks_total": 3},
+      {"path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTlsTest.java", "hunks_total": 6},
+      {"path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyTrustCertificatesTest.java", "hunks_total": 1},
+      {"path": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/TestCertificates.java", "hunks_total": 1},
+      {"path": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/GatewayEndToEndKotlinTest.kt", "hunks_total": 1},
+      {"path": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt", "hunks_total": 3},
+      {"path": "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyTrustCertificatesKotlinTest.kt", "hunks_total": 1}
+    ],
+    "commit_range": "83f3e76..05abb43",
+    "diff_loc": 3770,
+    "excluded_prose": [
+      "docs/api/en/proxy.md", "docs/api/proxy.md",
+      "docs/research/naruserve-proxy/waves/post-run/loop-p-trustcerts-r1.json",
+      "docs/research/naruserve-proxy/waves/post-run/loop-p-trustcerts-r2.json",
+      "docs/research/naruserve-proxy/waves/post-run/loop-p-trustcerts-r3.json",
+      "docs/research/naruserve-proxy/waves/post-run/loop-p-trustcerts-r4.json",
+      "docs/research/naruserve-proxy/waves/post-run/loop-p-trustcerts-r5.json",
+      "docs/research/naruserve-proxy/waves/post-run/loop-p-trustcerts-r6.json",
+      "docs/spec/00.index.md", "docs/spec/16.developer-experience.srs.md",
+      "docs/spec/22.reverse-proxy.srs.md", "docs/spec/91.completed-work-log.md"
+    ],
+    "refused_artifacts": [],
+    "unclassified_files": [],
+    "identity_check": "12 included + 12 excluded_prose + 0 refused + 0 unclassified = 24 candidates"
+  },
+  "tree_sha_note": "All review targets and fixes are committed; each round's tree_sha is HEAD^{tree} at review start (a temp-index git add -A would also hash untracked node_modules/bin/IDE junk)."
+}

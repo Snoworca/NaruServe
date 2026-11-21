@@ -1,0 +1,515 @@
+{
+ "run_id": "2026-11-14.NaruServe.naruserve-proxy",
+ "target": "0.12.0",
+ "requirements": [
+  "CON-BUILD-019",
+  "CON-BUILD-020",
+  "CON-BUILD-021",
+  "FR-APP-027",
+  "FR-APP-028",
+  "FR-ENGINE-013",
+  "FR-ENGINE-014",
+  "FR-HTTP-030",
+  "FR-HTTP-031",
+  "FR-HTTP-032",
+  "FR-HTTP-033",
+  "FR-HTTP-034",
+  "FR-HTTP-035",
+  "FR-HTTP-036",
+  "FR-HTTP-037",
+  "FR-PROXY-001",
+  "FR-PROXY-002",
+  "FR-PROXY-003",
+  "FR-PROXY-004",
+  "FR-PROXY-005",
+  "FR-PROXY-006",
+  "FR-PROXY-007",
+  "FR-PROXY-008",
+  "FR-PROXY-009",
+  "FR-PROXY-010",
+  "FR-PROXY-011",
+  "FR-PROXY-012",
+  "FR-PROXY-013",
+  "FR-PROXY-014",
+  "FR-PROXY-015",
+  "FR-PROXY-016",
+  "FR-PROXY-017",
+  "FR-PROXY-018",
+  "FR-PROXY-019",
+  "FR-PROXY-020",
+  "FR-PROXY-021",
+  "FR-PROXY-022",
+  "FR-REL-006",
+  "FR-REL-007",
+  "FR-SVL-010",
+  "IR-APP-009",
+  "IR-HTTP-011",
+  "IR-HTTP-012",
+  "IR-HTTP-013",
+  "IR-HTTP-014",
+  "IR-PROXY-001",
+  "IR-PROXY-002",
+  "OPS-BUILD-004",
+  "OPS-DX-008",
+  "OPS-DX-009",
+  "OPS-DX-010",
+  "OPS-DX-011",
+  "REL-PROXY-001",
+  "REL-PROXY-002",
+  "SEC-PROXY-001",
+  "SEC-PROXY-002",
+  "SEC-PROXY-003",
+  "SEC-PROXY-004",
+  "SEC-PROXY-005"
+ ],
+ "ac_count": 389,
+ "integration_items": [
+  {
+   "id": "INT-1",
+   "from": "wave-1",
+   "to": "wave-10",
+   "reason": "IR-PROXY-001 depends on CON-BUILD-019"
+  },
+  {
+   "id": "INT-2",
+   "from": "wave-1",
+   "to": "wave-14",
+   "reason": "CON-BUILD-020 depends on CON-BUILD-019; OPS-BUILD-004 depends on CON-BUILD-019"
+  },
+  {
+   "id": "INT-3",
+   "from": "wave-1",
+   "to": "wave-21",
+   "reason": "OPS-DX-011 depends on CON-BUILD-019"
+  },
+  {
+   "id": "INT-4",
+   "from": "wave-2",
+   "to": "wave-5",
+   "reason": "FR-HTTP-031 depends on FR-APP-027; FR-HTTP-031 depends on IR-HTTP-011"
+  },
+  {
+   "id": "INT-5",
+   "from": "wave-2",
+   "to": "wave-7",
+   "reason": "FR-ENGINE-013 depends on IR-HTTP-011"
+  },
+  {
+   "id": "INT-6",
+   "from": "wave-2",
+   "to": "wave-12",
+   "reason": "FR-PROXY-008 depends on IR-HTTP-011"
+  },
+  {
+   "id": "INT-7",
+   "from": "wave-2",
+   "to": "wave-21",
+   "reason": "OPS-DX-008 depends on FR-APP-027; OPS-DX-008 depends on IR-HTTP-011"
+  },
+  {
+   "id": "INT-8",
+   "from": "wave-3",
+   "to": "wave-5",
+   "reason": "FR-HTTP-030 depends on IR-HTTP-013"
+  },
+  {
+   "id": "INT-9",
+   "from": "wave-3",
+   "to": "wave-7",
+   "reason": "FR-ENGINE-013 depends on FR-HTTP-032"
+  },
+  {
+   "id": "INT-10",
+   "from": "wave-3",
+   "to": "wave-9",
+   "reason": "FR-SVL-010 depends on FR-HTTP-032"
+  },
+  {
+   "id": "INT-11",
+   "from": "wave-3",
+   "to": "wave-11",
+   "reason": "SEC-PROXY-003 depends on FR-HTTP-032"
+  },
+  {
+   "id": "INT-12",
+   "from": "wave-3",
+   "to": "wave-12",
+   "reason": "FR-PROXY-003 depends on FR-HTTP-032"
+  },
+  {
+   "id": "INT-13",
+   "from": "wave-3",
+   "to": "wave-13",
+   "reason": "FR-PROXY-004 depends on FR-HTTP-032"
+  },
+  {
+   "id": "INT-14",
+   "from": "wave-3",
+   "to": "wave-19",
+   "reason": "SEC-PROXY-002 depends on FR-HTTP-032; SEC-PROXY-002 depends on FR-HTTP-034"
+  },
+  {
+   "id": "INT-15",
+   "from": "wave-3",
+   "to": "wave-21",
+   "reason": "OPS-DX-008 depends on FR-HTTP-032; OPS-DX-008 depends on FR-HTTP-034; OPS-DX-008 depends on IR-HTTP-013"
+  },
+  {
+   "id": "INT-16",
+   "from": "wave-4",
+   "to": "wave-6",
+   "reason": "FR-ENGINE-014 depends on FR-HTTP-035; FR-HTTP-036 depends on IR-HTTP-014; FR-HTTP-037 depends on IR-HTTP-014"
+  },
+  {
+   "id": "INT-17",
+   "from": "wave-4",
+   "to": "wave-8",
+   "reason": "FR-HTTP-033 depends on IR-HTTP-014; OPS-DX-009 depends on FR-HTTP-035"
+  },
+  {
+   "id": "INT-18",
+   "from": "wave-4",
+   "to": "wave-9",
+   "reason": "FR-SVL-010 depends on FR-HTTP-035"
+  },
+  {
+   "id": "INT-19",
+   "from": "wave-4",
+   "to": "wave-16",
+   "reason": "REL-PROXY-001 depends on FR-HTTP-035"
+  },
+  {
+   "id": "INT-20",
+   "from": "wave-5",
+   "to": "wave-7",
+   "reason": "FR-ENGINE-013 depends on FR-HTTP-030; FR-ENGINE-013 depends on FR-HTTP-031"
+  },
+  {
+   "id": "INT-21",
+   "from": "wave-5",
+   "to": "wave-9",
+   "reason": "FR-SVL-010 depends on FR-HTTP-030"
+  },
+  {
+   "id": "INT-22",
+   "from": "wave-5",
+   "to": "wave-10",
+   "reason": "FR-PROXY-002 depends on IR-APP-009"
+  },
+  {
+   "id": "INT-23",
+   "from": "wave-5",
+   "to": "wave-12",
+   "reason": "FR-PROXY-007 depends on FR-HTTP-030; FR-PROXY-008 depends on FR-HTTP-030; FR-PROXY-008 depends on FR-HTTP-031; FR-PROXY-008 depends on IR-APP-009; FR-PROXY-021 depends on FR-APP-028"
+  },
+  {
+   "id": "INT-24",
+   "from": "wave-5",
+   "to": "wave-13",
+   "reason": "FR-PROXY-006 depends on FR-HTTP-030"
+  },
+  {
+   "id": "INT-25",
+   "from": "wave-5",
+   "to": "wave-21",
+   "reason": "OPS-DX-008 depends on FR-HTTP-030; OPS-DX-008 depends on FR-HTTP-031; OPS-DX-008 depends on IR-APP-009"
+  },
+  {
+   "id": "INT-26",
+   "from": "wave-6",
+   "to": "wave-8",
+   "reason": "OPS-DX-009 depends on FR-HTTP-036; OPS-DX-009 depends on FR-HTTP-037"
+  },
+  {
+   "id": "INT-27",
+   "from": "wave-6",
+   "to": "wave-9",
+   "reason": "FR-SVL-010 depends on FR-HTTP-036; FR-SVL-010 depends on FR-HTTP-037"
+  },
+  {
+   "id": "INT-28",
+   "from": "wave-6",
+   "to": "wave-10",
+   "reason": "FR-PROXY-011 depends on FR-HTTP-036; FR-PROXY-011 depends on FR-HTTP-037"
+  },
+  {
+   "id": "INT-29",
+   "from": "wave-6",
+   "to": "wave-16",
+   "reason": "REL-PROXY-001 depends on FR-ENGINE-014; REL-PROXY-001 depends on FR-HTTP-037"
+  },
+  {
+   "id": "INT-30",
+   "from": "wave-6",
+   "to": "wave-17",
+   "reason": "FR-PROXY-014 depends on FR-HTTP-036; FR-PROXY-014 depends on FR-HTTP-037; FR-PROXY-016 depends on FR-HTTP-037"
+  },
+  {
+   "id": "INT-31",
+   "from": "wave-8",
+   "to": "wave-10",
+   "reason": "FR-PROXY-002 depends on IR-HTTP-012; FR-PROXY-011 depends on FR-HTTP-033"
+  },
+  {
+   "id": "INT-32",
+   "from": "wave-8",
+   "to": "wave-12",
+   "reason": "FR-PROXY-003 depends on IR-HTTP-012"
+  },
+  {
+   "id": "INT-33",
+   "from": "wave-8",
+   "to": "wave-17",
+   "reason": "SEC-PROXY-004 depends on IR-HTTP-012"
+  },
+  {
+   "id": "INT-34",
+   "from": "wave-10",
+   "to": "wave-11",
+   "reason": "SEC-PROXY-003 depends on IR-PROXY-001"
+  },
+  {
+   "id": "INT-35",
+   "from": "wave-10",
+   "to": "wave-12",
+   "reason": "FR-PROXY-003 depends on IR-PROXY-001"
+  },
+  {
+   "id": "INT-36",
+   "from": "wave-10",
+   "to": "wave-13",
+   "reason": "FR-PROXY-001 depends on IR-PROXY-001; SEC-PROXY-001 depends on IR-PROXY-001"
+  },
+  {
+   "id": "INT-37",
+   "from": "wave-10",
+   "to": "wave-14",
+   "reason": "IR-PROXY-002 depends on IR-PROXY-001; SEC-PROXY-005 depends on FR-PROXY-002; SEC-PROXY-005 depends on IR-PROXY-001"
+  },
+  {
+   "id": "INT-38",
+   "from": "wave-10",
+   "to": "wave-15",
+   "reason": "FR-PROXY-009 depends on IR-PROXY-001; FR-PROXY-012 depends on FR-PROXY-002; FR-PROXY-012 depends on FR-PROXY-011; FR-PROXY-013 depends on FR-PROXY-011"
+  },
+  {
+   "id": "INT-39",
+   "from": "wave-10",
+   "to": "wave-16",
+   "reason": "FR-PROXY-019 depends on FR-PROXY-002; FR-PROXY-019 depends on IR-PROXY-001"
+  },
+  {
+   "id": "INT-40",
+   "from": "wave-10",
+   "to": "wave-17",
+   "reason": "FR-PROXY-014 depends on FR-PROXY-011"
+  },
+  {
+   "id": "INT-41",
+   "from": "wave-10",
+   "to": "wave-18",
+   "reason": "FR-PROXY-017 depends on FR-PROXY-002"
+  },
+  {
+   "id": "INT-42",
+   "from": "wave-10",
+   "to": "wave-19",
+   "reason": "FR-PROXY-005 depends on FR-PROXY-002"
+  },
+  {
+   "id": "INT-43",
+   "from": "wave-10",
+   "to": "wave-20",
+   "reason": "FR-PROXY-018 depends on FR-PROXY-002"
+  },
+  {
+   "id": "INT-44",
+   "from": "wave-10",
+   "to": "wave-21",
+   "reason": "OPS-DX-010 depends on FR-PROXY-002; OPS-DX-010 depends on FR-PROXY-011; OPS-DX-010 depends on IR-PROXY-001"
+  },
+  {
+   "id": "INT-45",
+   "from": "wave-11",
+   "to": "wave-12",
+   "reason": "FR-PROXY-007 depends on SEC-PROXY-003"
+  },
+  {
+   "id": "INT-46",
+   "from": "wave-11",
+   "to": "wave-16",
+   "reason": "FR-PROXY-010 depends on SEC-PROXY-003"
+  },
+  {
+   "id": "INT-47",
+   "from": "wave-11",
+   "to": "wave-17",
+   "reason": "FR-PROXY-014 depends on SEC-PROXY-003; SEC-PROXY-004 depends on SEC-PROXY-003"
+  },
+  {
+   "id": "INT-48",
+   "from": "wave-12",
+   "to": "wave-13",
+   "reason": "FR-PROXY-004 depends on FR-PROXY-003"
+  },
+  {
+   "id": "INT-49",
+   "from": "wave-12",
+   "to": "wave-15",
+   "reason": "FR-PROXY-009 depends on FR-PROXY-003"
+  },
+  {
+   "id": "INT-50",
+   "from": "wave-12",
+   "to": "wave-16",
+   "reason": "FR-PROXY-010 depends on FR-PROXY-003; FR-PROXY-010 depends on FR-PROXY-008"
+  },
+  {
+   "id": "INT-51",
+   "from": "wave-12",
+   "to": "wave-18",
+   "reason": "FR-PROXY-015 depends on FR-PROXY-007"
+  },
+  {
+   "id": "INT-52",
+   "from": "wave-12",
+   "to": "wave-19",
+   "reason": "FR-PROXY-005 depends on FR-PROXY-003; SEC-PROXY-002 depends on FR-PROXY-003"
+  },
+  {
+   "id": "INT-53",
+   "from": "wave-12",
+   "to": "wave-20",
+   "reason": "FR-PROXY-018 depends on FR-PROXY-007; FR-PROXY-020 depends on FR-PROXY-003; FR-PROXY-020 depends on FR-PROXY-007"
+  },
+  {
+   "id": "INT-54",
+   "from": "wave-13",
+   "to": "wave-14",
+   "reason": "SEC-PROXY-005 depends on FR-PROXY-001"
+  },
+  {
+   "id": "INT-55",
+   "from": "wave-13",
+   "to": "wave-15",
+   "reason": "FR-PROXY-013 depends on FR-PROXY-001; FR-PROXY-013 depends on FR-PROXY-004; FR-PROXY-013 depends on FR-PROXY-006"
+  },
+  {
+   "id": "INT-56",
+   "from": "wave-13",
+   "to": "wave-16",
+   "reason": "FR-PROXY-010 depends on FR-PROXY-004; FR-PROXY-010 depends on SEC-PROXY-001"
+  },
+  {
+   "id": "INT-57",
+   "from": "wave-14",
+   "to": "wave-16",
+   "reason": "FR-PROXY-019 depends on IR-PROXY-002"
+  },
+  {
+   "id": "INT-58",
+   "from": "wave-14",
+   "to": "wave-17",
+   "reason": "FR-PROXY-016 depends on IR-PROXY-002; SEC-PROXY-004 depends on IR-PROXY-002"
+  },
+  {
+   "id": "INT-59",
+   "from": "wave-14",
+   "to": "wave-18",
+   "reason": "FR-PROXY-015 depends on IR-PROXY-002; FR-PROXY-015 depends on SEC-PROXY-005; FR-PROXY-017 depends on IR-PROXY-002; FR-PROXY-017 depends on SEC-PROXY-005"
+  },
+  {
+   "id": "INT-60",
+   "from": "wave-14",
+   "to": "wave-19",
+   "reason": "REL-PROXY-002 depends on SEC-PROXY-005"
+  },
+  {
+   "id": "INT-61",
+   "from": "wave-14",
+   "to": "wave-20",
+   "reason": "FR-PROXY-018 depends on SEC-PROXY-005"
+  },
+  {
+   "id": "INT-62",
+   "from": "wave-14",
+   "to": "wave-21",
+   "reason": "OPS-DX-010 depends on IR-PROXY-002"
+  },
+  {
+   "id": "INT-63",
+   "from": "wave-15",
+   "to": "wave-16",
+   "reason": "FR-PROXY-010 depends on FR-PROXY-009"
+  },
+  {
+   "id": "INT-64",
+   "from": "wave-16",
+   "to": "wave-18",
+   "reason": "FR-PROXY-015 depends on FR-PROXY-010"
+  },
+  {
+   "id": "INT-65",
+   "from": "wave-16",
+   "to": "wave-19",
+   "reason": "REL-PROXY-002 depends on REL-PROXY-001"
+  },
+  {
+   "id": "INT-66",
+   "from": "wave-16",
+   "to": "wave-20",
+   "reason": "FR-PROXY-020 depends on REL-PROXY-001"
+  },
+  {
+   "id": "INT-67",
+   "from": "wave-16",
+   "to": "wave-21",
+   "reason": "OPS-DX-010 depends on FR-PROXY-019; OPS-DX-010 depends on REL-PROXY-001"
+  },
+  {
+   "id": "INT-68",
+   "from": "wave-17",
+   "to": "wave-18",
+   "reason": "FR-PROXY-015 depends on SEC-PROXY-004; FR-PROXY-017 depends on FR-PROXY-016"
+  },
+  {
+   "id": "INT-69",
+   "from": "wave-17",
+   "to": "wave-21",
+   "reason": "OPS-DX-010 depends on FR-PROXY-016"
+  },
+  {
+   "id": "INT-70",
+   "from": "wave-18",
+   "to": "wave-19",
+   "reason": "REL-PROXY-002 depends on FR-PROXY-017"
+  },
+  {
+   "id": "INT-71",
+   "from": "wave-18",
+   "to": "wave-20",
+   "reason": "FR-PROXY-018 depends on FR-PROXY-015; FR-PROXY-018 depends on FR-PROXY-017"
+  },
+  {
+   "id": "INT-72",
+   "from": "wave-18",
+   "to": "wave-21",
+   "reason": "OPS-DX-010 depends on FR-PROXY-015; OPS-DX-010 depends on FR-PROXY-017"
+  },
+  {
+   "id": "INT-73",
+   "from": "wave-19",
+   "to": "wave-21",
+   "reason": "OPS-DX-010 depends on REL-PROXY-002; OPS-DX-010 depends on SEC-PROXY-002"
+  },
+  {
+   "id": "INT-74",
+   "from": "wave-20",
+   "to": "wave-21",
+   "reason": "OPS-DX-010 depends on FR-PROXY-018; OPS-DX-010 depends on FR-PROXY-020"
+  }
+ ],
+ "post_run_additions": [
+  "FR-PROXY-022 (trustCertificates, added after wave 21; loop P r1-r6)"
+ ]
+}
