@@ -1,0 +1,28 @@
+{
+  "scope": "final",
+  "round": 1,
+  "verifier": "loop-f-r1",
+  "head": "3b061b8",
+  "rows": [
+    {"id": "LF-1", "cites": "INT-54", "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopFR1ProbeTest.java::int54_aTrailingDotHttpsHostThatProxyToAcceptsIsReachedWithAMatchingCertificate", "verdict": "green", "kept": false, "evidence": "", "note": "Suspected the JDK's second-layer HTTPS endpoint identification (SNIHostName rejects a trailing dot) would refuse https://localhost.:<port>, which Proxy.to accepts (FR-PROXY-001 AC-2) and the proxy's own matcher matches; with trustCertificates(selfPem) and the resolver seam the request is reached (200 ok)."},
+    {"id": "LF-2", "cites": "FR-PROXY-006 AC-2", "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopFR1ProbeTest.java::fr_PROXY_006_AC2_strippedEncodedPathArrivesAsEncoded", "verdict": "green", "kept": false, "evidence": "", "note": "stripPrefix(true) with allowed percent-encodings (%20, %ED%95%9C) in the path: the url() remainder is raw, so the suffix guard passes and the backend receives GET /a%20b/%ED%95%9C?q=%41."},
+    {"id": "LF-3", "cites": "FR-PROXY-013 AC-11", "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopFR1ProbeTest.java::fr_PROXY_013_AC11_backslashAndTabNetworkPathsGetTheDotPrefix", "verdict": "green", "kept": false, "evidence": "", "note": "Same-origin Location values whose rewritten path starts with '/\\' and with '/<TAB>/' both get the leading '/.' on a root mount."},
+    {"id": "LF-4", "cites": "FR-PROXY-022 AC-4", "test": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LoopFR1ProbeTest.java::fr_PROXY_022_AC4_crlfPemWithSurroundingTextIsAccepted", "verdict": "green", "kept": false, "evidence": "", "note": "A PEM text with CRLF line breaks, a BOM and text before and after the block is accepted by trustCertificates(String)."}
+  ],
+  "summary": {
+    "tests_written": 4,
+    "kept": 0,
+    "areas_examined": [
+      "FR-PROXY-022 trustCertificates (TrustedCertificates PEM/base64 parsing, CurrentlyValidTrustManager, FullHandshakeSocketFactory) and its interplay with SEC-PROXY-005 (TlsConnector, CertificateHostnames, endpoint identification)",
+      "SEC-PROXY-001 PathChecker and FR-PROXY-006 requestTarget under stripPrefix (INT-36, INT-55)",
+      "SEC-PROXY-002 X-Forwarded-* construction against ProxyTrustSetting.trustsPeer refactor (INT-14, FR-HTTP-034)",
+      "SEC-PROXY-003/SEC-PROXY-004 FramingLists, ResponseParser head bound, ChunkedBodyInputStream bounds",
+      "FR-PROXY-013 LocationRewriter (userinfo, empty port, network-path guard)",
+      "FR-PROXY-015/016/017/018 forward/lastAttempt/retry decisions, ProxyExchange settle/fire/release, RelayedBodyStream, RequestBodyCopier",
+      "FR-PROXY-001 TargetUrl host grammar (numeric last label, trailing root dot)",
+      "Core: DefaultRequest.bodyStream/DeclaredLength/LimitedInputStream (FR-HTTP-030/031), FinalHandler + ConcealedCauses (FR-PROXY-015 AC-4), StandardErrors (FR-APP-027), logFailure vs docs",
+      "TinyHttpd Date header handling vs docs/api/proxy.md Date claim (OPS-DX-010 AC-6)",
+      "docs/api/proxy.md and docs/api/en/proxy.md vs code (options table, timeouts, watchdog idle time, retries, trustCertificates section, numeric parity between the two pages)"
+    ]
+  }
+}
