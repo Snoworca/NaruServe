@@ -117,8 +117,10 @@ final class HeaderRules {
     /**
      * The lower-case names listed in every {@code Connection} line of {@code lines}: comma-separated elements, OWS
      * trimmed, names compared case-insensitively. Only token elements count, so the case folding sees ASCII only.
+     * Both directions use it: the request headers sent to the backend and the response headers copied to the client.
      */
     // @req FR-PROXY-003
+    // @req FR-PROXY-011
     static Set<String> connectionNames(List<Map.Entry<String, String>> lines) {
         Set<String> names = new HashSet<>();
         for (Map.Entry<String, String> line : lines) {

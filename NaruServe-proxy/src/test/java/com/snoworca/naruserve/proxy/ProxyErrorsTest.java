@@ -410,6 +410,85 @@ public class ProxyErrorsTest {
         assertTrue("the socket buffers filled before the body ended: " + body.read.get(), body.read.get() < length);
     }
 
+    // ---- AC-10 ----
+
+    // FR-PROXY-015 AC-10 (declared limit): the proxy writes the whole request body before it reads any response byte,
+    // so with .writeTimeout(2, SECONDS).bodyLimit(16 << 20) an 8 MiB body to a backend that answers 200 with
+    // Content-Length equal to the body length and echoes the body as it reads it stalls both sides and gives 504
+    // with a ProxyException of kind WRITE_TIMEOUT
+    @Test(timeout = 60000)
+    public void fr_PROXY_015_AC10_declaredLimit_anEightMiBBodyToAStreamingEchoEndsInWriteTimeout() throws Exception {
+        String path = mount(Proxy.to(streamingEchoBackend().url()).writeTimeout(2, TimeUnit.SECONDS)
+                .bodyLimit(16 << 20));
+        start();
+        int length = 8 << 20;
+
+        ClientResponse r = send(ClientRequest.of("POST", path + "/x").header("Content-Length",
+                Integer.toString(length)).body(pattern(length)));
+
+        assertEquals("errors: " + errors, 504, r.status());
+        assertSame(ProxyException.Kind.WRITE_TIMEOUT, onlyProxyError().kind());
+    }
+
+    // FR-PROXY-015 AC-10 (declared limit): a 64 KiB body to the same streaming echo backend fits in the socket
+    // buffers, so the client receives 200 with the echoed body
+    @Test(timeout = 60000)
+    public void fr_PROXY_015_AC10_declaredLimit_aSixtyFourKiBBodyToAStreamingEchoIsRelayed() throws Exception {
+        String path = mount(Proxy.to(streamingEchoBackend().url()).writeTimeout(2, TimeUnit.SECONDS)
+                .bodyLimit(16 << 20));
+        start();
+        byte[] body = pattern(64 * 1024);
+
+        ClientResponse r = send(ClientRequest.of("POST", path + "/x").header("Content-Length",
+                Integer.toString(body.length)).body(body));
+
+        assertEquals("errors: " + errors, 200, r.status());
+        assertTrue("the echoed body", Arrays.equals(body, r.body()));
+        assertEquals("errors that reached onError", Collections.emptyList(), errors);
+    }
+
+    /**
+     * A backend that reads the request head, answers {@code 200} with {@code Content-Length} equal to the request's
+     * and then echoes the body in 8 KiB pieces as it reads them (FR-PROXY-015 AC-10).
+     */
+    private ScriptedBackend streamingEchoBackend() throws IOException {
+        return backend((b, index, in, out, s) -> {
+            String head = readHead(in);
+            long length = -1;
+            for (String line : head.split("\r\n")) {
+                int colon = line.indexOf(':');
+                if (colon > 0 && line.substring(0, colon).trim().equalsIgnoreCase("Content-Length")) {
+                    length = Long.parseLong(line.substring(colon + 1).trim());
+                }
+            }
+            if (length < 0) {
+                throw new EOFException("no Content-Length in the request head: " + head);
+            }
+            out.write(("HTTP/1.1 200 OK\r\nContent-Length: " + length + "\r\n\r\n")
+                    .getBytes(StandardCharsets.ISO_8859_1));
+            out.flush();
+            byte[] buf = new byte[8192];
+            for (long left = length; left > 0; ) {
+                int n = in.read(buf, 0, (int) Math.min(buf.length, left));
+                if (n < 0) {
+                    throw new EOFException("the body ended with " + left + " bytes left");
+                }
+                out.write(buf, 0, n);
+                out.flush();
+                left -= n;
+            }
+        });
+    }
+
+    /** {@code length} bytes of a repeating non-zero pattern, so an echo that drops or reorders bytes shows. */
+    private static byte[] pattern(int length) {
+        byte[] b = new byte[length];
+        for (int i = 0; i < length; i++) {
+            b[i] = (byte) (i * 31 + 7);
+        }
+        return b;
+    }
+
     // ---- helpers ----
 
     /** Mounts {@code proxy} at a new path and returns that path. */

@@ -169,6 +169,7 @@ app.use("/users", users)
 - `Host`는 대상 호스트(기본 포트가 아니면 `:port` 포함)로 바꿔 보내고, 받은 `Host`는 `X-Forwarded-Host`로 보냅니다. `preserveHost(true)`면 받은 `Host`를 그대로 보냅니다. `Host` 줄이 둘 이상이면 `400`입니다.
 - 받은 헤더는 순서와 중복을 지켜 보내고 hop-by-hop 헤더, `Connection`에 이름이 오른 헤더, `Expect`는 빼며, 여러 `Cookie` 줄은 `; `로 이어 한 줄로 만듭니다. `Via`는 더하지 않습니다. 요청 줄과 헤더는 ISO-8859-1로 씁니다. 이름이 토큰이 아니거나 값에 쓸 수 없는 문자가 든 헤더, `Content-Length`와 `Transfer-Encoding`이 함께 있는 요청, 하나의 값으로 맞지 않는 `Content-Length` 목록, `chunked` 하나로 끝나지 않는 `Transfer-Encoding`은 `400`이고, `chunked` 앞에 다른 전송 코딩이 있으면 `501`입니다. 모두 백엔드에 연결하기 전에 답합니다.
 - 본문은 버퍼에 모으지 않고 흘려 보냅니다. `bodyLimit(n)`이 있으면 `req.bodyStream(n)`, 없으면 `req.bodyStream()`(앱의 `rawBodyLimit`)으로 읽으므로, 선언한 길이가 한도를 넘으면 백엔드에 연결하기 전에 `413`입니다. chunked 본문이 넘기는 도중에 한도를 넘으면 백엔드 연결을 닫고 `413`이며, `onError`가 받는 예외는 원인(`getCause()`)이 `BodyTooLargeException`인 `HttpException`입니다. 앞선 미들웨어가 본문을 이미 읽었으면 연결하지 않고 `500`입니다.
+- 요청 본문을 백엔드에 모두 보낸 뒤에야 응답을 읽기 시작합니다. 업로드를 아직 읽는 중에 응답을 보내기 시작하는 백엔드(스트리밍 에코·변환)가 소켓 버퍼에 담기는 것보다 많이 보내면 양쪽이 모두 멈추고, `writeTimeout`이 지나면 `504`(`WRITE_TIMEOUT`)로 끝납니다. 이런 백엔드는 요청 본문을 먼저 모두 읽은 뒤 답하게 하거나 프록시를 거치지 않고 호출하세요.
 
 큰 파일을 올리는 마운트:
 

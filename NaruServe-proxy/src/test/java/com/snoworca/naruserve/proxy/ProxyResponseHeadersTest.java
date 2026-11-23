@@ -91,6 +91,19 @@ public class ProxyResponseHeadersTest {
         return out;
     }
 
+    /**
+     * Copies {@code lines} the way the proxy does: into a {@link PendingResponseHeaders} with no hidden names, then
+     * {@code applyTo(rec)}; returns the copied lines.
+     */
+    private static List<Map.Entry<String, String>> copyOnto(List<Map.Entry<String, String>> lines,
+            RecordingResponse rec) {
+        PendingResponseHeaders pending = new PendingResponseHeaders();
+        List<Map.Entry<String, String>> copied =
+                ResponseHeaderCopier.copy(lines, Collections.<String>emptySet(), pending);
+        pending.applyTo(rec);
+        return copied;
+    }
+
     // ---------------------------------------------------------------------------------------------------------------
     // A Response that records header, append and relay calls; it delegates to a real response when given one.
 
@@ -435,7 +448,7 @@ public class ProxyResponseHeadersTest {
     public void fr_PROXY_011_AC3_copierSkipsHopByHopLinesAndNamesListedInConnection() {
         RecordingResponse rec = new RecordingResponse(null);
 
-        ResponseHeaderCopier.copy(hopByHopLines(), rec);
+        copyOnto(hopByHopLines(), rec);
 
         assertEquals(Arrays.asList("header(X-Keep, 1)", "header(Content-Type, text/plain)"), rec.headerCalls());
     }
@@ -445,10 +458,26 @@ public class ProxyResponseHeadersTest {
     public void fr_PROXY_011_AC3_connectionTokensAreTrimmedAndCaseInsensitiveAcrossLines() {
         RecordingResponse rec = new RecordingResponse(null);
 
-        ResponseHeaderCopier.copy(lines("connection", " x-one ,\tX-TWO,, ", "Connection", "x-three",
+        copyOnto(lines("connection", " x-one ,\tX-TWO,, ", "Connection", "x-three",
                 "X-One", "1", "x-two", "2", "X-Three", "3", "X-Four", "4"), rec);
 
         assertEquals(Collections.singletonList("header(X-Four, 4)"), rec.headerCalls());
+    }
+
+    // FR-PROXY-011 AC-3: a Connection element that is not a token (a quoted string, an inner space, a separator) names
+    // no header, so the token elements beside it still drop their lines and every other line is copied; the response
+    // side shares the request side's Connection parser (FR-PROXY-003)
+    @Test
+    public void fr_PROXY_011_AC3_nonTokenConnectionElementsNameNoHeaderOnTheResponseSide() {
+        RecordingResponse rec = new RecordingResponse(null);
+
+        copyOnto(lines("Connection", "\"X-Quoted\", x-a b, X-Hop, x-c;d, À", "X-Quoted", "1", "X-A", "2",
+                "X-Hop", "3", "X-C", "4", "X-Keep", "5"), rec);
+
+        assertEquals(Arrays.asList("header(X-Quoted, 1)", "header(X-A, 2)", "header(X-C, 4)", "header(X-Keep, 5)"),
+                rec.headerCalls());
+        assertEquals(HeaderRules.connectionNames(lines("Connection", "\"X-Quoted\", x-a b, X-Hop, x-c;d, À")),
+                new HashSet<>(Collections.singletonList("x-hop")));
     }
 
     // FR-PROXY-011 AC-3: the Proxy itself calls neither header nor append for the hop-by-hop backend lines
@@ -612,7 +641,7 @@ public class ProxyResponseHeadersTest {
     public void fr_PROXY_011_AC5_copierNeverPassesContentLength() {
         RecordingResponse rec = new RecordingResponse(null);
 
-        ResponseHeaderCopier.copy(lines("Content-Length", "5", "content-length", "5", "X-A", "1"), rec);
+        copyOnto(lines("Content-Length", "5", "content-length", "5", "X-A", "1"), rec);
 
         assertEquals(Collections.singletonList("header(X-A, 1)"), rec.headerCalls());
     }
@@ -683,7 +712,7 @@ public class ProxyResponseHeadersTest {
     public void fr_PROXY_011_AC8_copierAppendsEveryVaryAndSetCookieLine() {
         RecordingResponse rec = new RecordingResponse(null);
 
-        ResponseHeaderCopier.copy(lines("Vary", "Accept-Encoding", "Set-Cookie", "a=1", "X-A", "1", "Vary", "Cookie",
+        copyOnto(lines("Vary", "Accept-Encoding", "Set-Cookie", "a=1", "X-A", "1", "Vary", "Cookie",
                 "X-A", "2"), rec);
 
         assertEquals(Arrays.asList("append(Vary, Accept-Encoding)", "append(Set-Cookie, a=1)", "header(X-A, 1)",
@@ -755,7 +784,7 @@ public class ProxyResponseHeadersTest {
     public void fr_PROXY_011_AC10_copierTreatsNamesCaseInsensitively() {
         RecordingResponse rec = new RecordingResponse(null);
 
-        ResponseHeaderCopier.copy(lines("x-a", "1", "X-A", "2", "SET-COOKIE", "c=3"), rec);
+        copyOnto(lines("x-a", "1", "X-A", "2", "SET-COOKIE", "c=3"), rec);
 
         assertEquals(Arrays.asList("header(x-a, 1)", "append(X-A, 2)", "append(SET-COOKIE, c=3)"),
                 rec.headerCalls());

@@ -168,6 +168,36 @@ public class ProxyOptionsTest {
                 assertAccepted("bodyLimit(1073741824)", p -> p.bodyLimit(1073741824L)).bodyLimit());
     }
 
+    // FR-PROXY-002 AC-3, IR-HTTP-013: the bodyLimit range Proxy accepts is the range req.bodyStream(n) accepts, where
+    // the proxy passes the value at request time; the core keeps its bound package-private, so this pins the two
+    // together and a drift of either fails here instead of turning an accepted bodyLimit into a 500 per request
+    @Test
+    public void fr_PROXY_002_AC3_bodyLimitRangeIsTheRangeOfReqBodyStream() {
+        app.post("/bound/:n", (req, res) -> {
+            String outcome;
+            try {
+                req.bodyStream(Long.parseLong(req.param("n"))).close();
+                outcome = "accepted";
+            } catch (IllegalArgumentException e) {
+                outcome = "rejected";
+            }
+            res.send(outcome);
+        });
+        started = true;
+
+        for (long n : new long[] {0, 1, Proxy.MAX_BODY_LIMIT, Proxy.MAX_BODY_LIMIT + 1}) {
+            ClientResponse r = t.send("POST", "/bound/" + n, "Content-Length", "0");
+            boolean proxyAccepts;
+            try {
+                proxy().bodyLimit(n);
+                proxyAccepts = true;
+            } catch (IllegalArgumentException e) {
+                proxyAccepts = false;
+            }
+            assertEquals("req.bodyStream(" + n + ")", proxyAccepts ? "accepted" : "rejected", r.text());
+        }
+    }
+
     // FR-PROXY-002 AC-3: maxConcurrent(0) throws IllegalArgumentException while maxConcurrent(1) is accepted
     @Test
     public void fr_PROXY_002_AC3_maxConcurrentRange() {

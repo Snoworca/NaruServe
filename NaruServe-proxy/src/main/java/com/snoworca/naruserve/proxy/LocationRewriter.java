@@ -1,6 +1,5 @@
 package com.snoworca.naruserve.proxy;
 
-import com.snoworca.naruserve.Response;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,21 +29,10 @@ final class LocationRewriter {
     private LocationRewriter() { }
 
     /**
-     * Rewrites every {@code Location} line among {@code copied}, the backend lines the header copy put on
-     * {@code res}, and puts them back on {@code res} in the same order when any of them changed. {@code clientPrefix}
-     * is {@code req.baseUrl()}, the raw matched mount prefix, under {@code .stripPrefix(true)} and the empty string
-     * otherwise.
-     */
-    // @req FR-PROXY-013
-    static void apply(List<Map.Entry<String, String>> copied, TargetUrl target, String clientPrefix, Response res) {
-        PendingResponseHeaders pending = new PendingResponseHeaders();
-        apply(copied, target, clientPrefix, pending);
-        pending.applyTo(res);
-    }
-
-    /**
-     * As {@link #apply(List, TargetUrl, String, Response)}, but holds the writes in {@code pending} instead of making
-     * them on the client response (FR-PROXY-017).
+     * Rewrites every {@code Location} line among {@code copied}, the backend lines the header copy put in
+     * {@code res}, and puts them back in {@code res} in the same order when any of them changed; the writes are held
+     * for the client response (FR-PROXY-017). {@code clientPrefix} is {@code req.baseUrl()}, the raw matched mount
+     * prefix, under {@code .stripPrefix(true)} and the empty string otherwise.
      */
     // @req FR-PROXY-013
     // @req FR-PROXY-017

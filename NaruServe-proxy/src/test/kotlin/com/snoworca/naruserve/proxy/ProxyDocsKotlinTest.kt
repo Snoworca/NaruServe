@@ -714,6 +714,22 @@ class ProxyDocsKotlinTest {
             "one daemon thread", "within 30 seconds at the latest", "it needs no shutdown hook")
     }
 
+    // FR-PROXY-015 AC-10 (declared limit): the request forwarding section of both pages states that the whole body is
+    // sent before the response is read, that a backend answering while it still reads the upload ends in 504
+    // WRITE_TIMEOUT after writeTimeout, and what such a backend must do instead
+    @Test
+    fun `FR-PROXY-015 AC-10 the request forwarding section states the declared limit of a backend that answers while it reads the body`() {
+        has("proxy.md", section(ko(), "## 요청 전달"), "요청 본문을 백엔드에 모두 보낸 뒤에야 응답을 읽기 시작합니다",
+            "업로드를 아직 읽는 중에 응답을 보내기 시작하는 백엔드(스트리밍 에코·변환)", "소켓 버퍼에 담기는 것보다 많이",
+            "`writeTimeout`이 지나면 `504`(`WRITE_TIMEOUT`)로 끝납니다",
+            "요청 본문을 먼저 모두 읽은 뒤 답하게 하거나 프록시를 거치지 않고 호출하세요")
+        has("en/proxy.md", section(en(), "## Request forwarding"),
+            "The whole request body is sent to the backend before the proxy starts reading the response",
+            "A backend that starts answering while it is still reading the upload (a streaming echo or transform)",
+            "more than the socket buffers hold", "ends in `504` (`WRITE_TIMEOUT`) once `writeTimeout` passes",
+            "must read the whole request body first, or be called without the proxy")
+    }
+
     @Test
     fun `OPS-DX-010 AC-12 the English page mirrors the Korean page section by section with the same code`() {
         fun headings(doc: String) = doc.split("\n").filter { it.startsWith("## ") || it.startsWith("### ") }.size

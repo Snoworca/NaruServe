@@ -193,12 +193,20 @@ public class LocationRewriterTest {
         return out;
     }
 
+    /** Rewrites {@code copied} the way the proxy does: into a {@link PendingResponseHeaders}, then {@code applyTo(rec)}. */
+    private static void applyOnto(List<Map.Entry<String, String>> copied, TargetUrl target, String clientPrefix,
+            RecordingResponse rec) {
+        PendingResponseHeaders pending = new PendingResponseHeaders();
+        LocationRewriter.apply(copied, target, clientPrefix, pending);
+        pending.applyTo(rec);
+    }
+
     // FR-PROXY-013 AC-1: every copied Location line is rewritten and put back in order, other lines untouched
     @Test
     public void fr_PROXY_013_AC1_applyRewritesEveryCopiedLocationLineInOrder() {
         RecordingResponse rec = new RecordingResponse(null);
 
-        LocationRewriter.apply(lines("X-Other", "http://h/a", "location", "http://h/a", "Location", "/rel",
+        applyOnto(lines("X-Other", "http://h/a", "location", "http://h/a", "Location", "/rel",
                 "LOCATION", "//h/b"), TargetUrl.parse("http://h"), "/m", rec);
 
         assertEquals(Arrays.asList("header(Location, /m/a)", "append(Location, /rel)", "append(Location, /m/b)"),
@@ -210,9 +218,9 @@ public class LocationRewriterTest {
     public void fr_PROXY_013_AC2_applyLeavesTheResponseAloneWhenNothingChanges() {
         RecordingResponse rec = new RecordingResponse(null);
 
-        LocationRewriter.apply(lines("Location", "/x", "Location", "http://other.example/x"),
+        applyOnto(lines("Location", "/x", "Location", "http://other.example/x"),
                 TargetUrl.parse("http://h"), "", rec);
-        LocationRewriter.apply(lines("X-Other", "http://h/x"), TargetUrl.parse("http://h"), "", rec);
+        applyOnto(lines("X-Other", "http://h/x"), TargetUrl.parse("http://h"), "", rec);
 
         assertEquals(Collections.emptyList(), rec.headerCalls());
     }
