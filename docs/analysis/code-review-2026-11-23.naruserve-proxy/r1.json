@@ -1,0 +1,62 @@
+{
+  "round": 1,
+  "head": "82efd87",
+  "findings": [
+    {
+      "id": "CR1-1",
+      "severity": "MEDIUM",
+      "title": "Half-duplex forwarding deadlocks with a backend that answers while it reads the body: 504 WRITE_TIMEOUT instead of the response",
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+      "line": 615,
+      "requirement": "FR-PROXY-007 / FR-PROXY-015 (early response) / FR-PROXY-017",
+      "description": "lastAttempt writes the whole request body (sendRequest, line 615) before it reads a single response byte (ResponseParser.read, line 619). A valid HTTP/1.1 backend that starts its response before it has consumed the request body (a streaming echo/transform endpoint, or one that sends an early 4xx and keeps the connection open without reading) fills the proxy's receive buffer, blocks on its own write, stops reading, and the proxy's next body write blocks too. Nothing breaks the deadlock except the write deadline, so the client gets 504 WRITE_TIMEOUT after writeTimeout (60 s by default) although the backend behaved correctly. Bodies that fit in the socket buffers pass (control test: 64 KiB passes in 10 ms), so it shows only with larger uploads. The early-response rule only helps when the backend closes/resets; neither the API docs (docs/api/en/proxy.md, Request forwarding / Timeouts) nor the SRS user-facing text warns that the proxy cannot relay a response that overlaps the request body. http-proxy-middleware (the stated Express counterpart) pipes both directions concurrently and does not hang here.",
+      "evidence": "Probe CrProbeR1Test (scratch worktree at 82efd87, ./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests CrProbeR1Test). Backend: ServerSocket that reads the request head, writes 'HTTP/1.1 200 OK\\r\\nContent-Length: <request length>\\r\\n\\r\\n', then echoes the body in 8 KiB pieces as it reads them. Mount: Proxy.to(backend).bodyLimit(16 MiB).writeTimeout(2, SECONDS).readTimeout(20, SECONDS); request POST with Content-Length 8388608 via InMemoryHttpAdapter. Result: control_streamingEchoBackendWith64KiB PASSED (0.008 s); probe_streamingEchoBackendWithAnEightMiBBody FAILED (2.239 s): 'java.lang.AssertionError: status after 2288 ms, errors: [java.lang.RuntimeException: kind=WRITE_TIMEOUT] expected:<200> but was:<504>'. With the default writeTimeout the same request hangs 60 s and then fails.",
+      "fix_hint": "Either read the backend response concurrently with the body upload (e.g. once a write has been blocked for a short interval or as soon as the head is available, hand the body copy to a helper thread / interleave reads so a complete early head can be relayed and the remaining body streamed or dropped), or at minimum document the limitation in docs/api/proxy.md and docs/api/en/proxy.md (backends must consume the request body before sending more than a socket buffer of response; such a backend ends in 504 WRITE_TIMEOUT) and add it to the SRS as a declared limit."
+    },
+    {
+      "id": "CR1-2",
+      "severity": "LOW",
+      "title": "Two Connection-header name parsers, already diverged in their element filter",
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java",
+      "line": 80,
+      "requirement": "FR-PROXY-003 / FR-PROXY-011",
+      "description": "ResponseHeaderCopier.connectionNames (line 80) re-implements HeaderRules.connectionNames (HeaderRules.java:122): same split on ',', same trimOws, same Locale.ROOT lower-casing, but the request-side copy keeps only RFC 9110 token elements (so case folding only ever sees ASCII, per its own comment) while the response-side copy keeps every non-empty element. Today the difference is harmless because a non-token element can never equal a header name, but the hop-by-hop rule now lives in two places that already differ, so a later fix to one (e.g. a case-folding or OWS change) will silently not reach the other.",
+      "evidence": "HeaderRules.java:128-133: `String name = trimOws(element); if (HttpHeaderValues.isToken(name)) { names.add(name.toLowerCase(Locale.ROOT)); }` vs ResponseHeaderCopier.java:86-90: `String trimmed = HeaderRules.trimOws(token); if (!trimmed.isEmpty()) { names.add(trimmed.toLowerCase(Locale.ROOT)); }`.",
+      "fix_hint": "Delete ResponseHeaderCopier.connectionNames and call HeaderRules.connectionNames(lines) on the response side."
+    },
+    {
+      "id": "CR1-3",
+      "severity": "LOW",
+      "title": "Main-source overloads that only tests call (Response-writing copy/apply)",
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java",
+      "line": 32,
+      "requirement": "FR-PROXY-011 / FR-PROXY-013",
+      "description": "Production (Proxy.responseHeaders, Proxy.java:775-778) uses only the PendingResponseHeaders overloads. ResponseHeaderCopier.copy(List, Response) (line 32), copy(List, Set, Response) (line 42) and LocationRewriter.apply(List, TargetUrl, String, Response) (LocationRewriter.java:39) are called only from ProxyResponseHeadersTest and LocationRewriterTest. They are dead code in the shipped jar and keep a second entry point (one that writes to res immediately, which FR-PROXY-017's 'no header before the last deadline check' rule forbids in production) alive for tests.",
+      "evidence": "grep over NaruServe-proxy/src: ResponseHeaderCopier.copy(.., Response) only at test/.../ProxyResponseHeadersTest.java:438,448,615,686,758; LocationRewriter.apply(.., Response) only at test/.../LocationRewriterTest.java:201,213,215; main calls are Proxy.java:775 and 778 (PendingResponseHeaders variants).",
+      "fix_hint": "Remove the Response overloads and have the tests build a PendingResponseHeaders and call applyTo(rec) themselves (or move the thin wrappers into the test sources)."
+    },
+    {
+      "id": "CR1-4",
+      "severity": "LOW",
+      "title": "Proxy.MAX_BODY_LIMIT duplicates the core's body-limit bound; a drift turns a valid-at-startup bodyLimit into a 500 on every request",
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java",
+      "line": 54,
+      "requirement": "IR-PROXY-001 / IR-HTTP-013",
+      "description": "Proxy.bodyLimit validates against its own constant MAX_BODY_LIMIT = 1073741824L, while the value is later passed to req.bodyStream(n), which validates against the core's JsonBodyReader.MAX_LIMIT via LimitedInputStream.byteLimit. The two are equal today only by copy. If the core bound changes (lowered, or made configurable), .bodyLimit(n) keeps being accepted at configuration time but every proxied request throws IllegalArgumentException from req.bodyStream(n) at request time (a 500), defeating the 'everything is checked when Proxy.to is called' promise of the docs.",
+      "evidence": "Proxy.java:54 `static final long MAX_BODY_LIMIT = 1073741824L;` and Proxy.java:169 check; DefaultRequest.bodyStream(long) -> LimitedInputStream.byteLimit(\"maxBytes\", maxBytes) -> `bytes > JsonBodyReader.MAX_LIMIT` throws IllegalArgumentException (LimitedInputStream.java byteLimit).",
+      "fix_hint": "Expose the bound once in the public API (e.g. a constant on RestApp/Request documenting the rawBodyLimit range) and reference it from Proxy, or have a test that pins Proxy.MAX_BODY_LIMIT to the core bound."
+    }
+  ],
+  "counts": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 1, "LOW": 3},
+  "areas_examined": [
+    "Proxy.java end to end: handle order (WS upgrade, method, target, header, Host, framing), prepare/bodyFraming/pre-read, takeSlot, forward, lastAttempt retries, sendRequest/earlyResponse, backendFailure/firedKindOr, responseHeaders, releaseOnAbort, requestTarget under stripPrefix, Options",
+    "ResponseParser (status line, header lines, interim heads, MAX_HEAD_BYTES, framing for HEAD/204/304/HTTP-1.0/TE/CL) and ChunkedBodyInputStream (size line, extensions, trailers, CRLF after data)",
+    "FramingLists, RequestBodyCopier, RelayedBodyStream (declared length, failure logging, abandon), SocketBodyStream close order",
+    "ProxyExchange (slot/watchdog/socket release, fire/settle, FiredGuard, per-write deadline, Scheduler), ConcurrencyLimiter, RetryPolicy",
+    "BackendClient, TlsConnector (watchdog, endpoint identification, verifier, close rules), CertificateHostnames (wildcards, IP SANs, trailing dot), TrustedCertificates (PEM/base64 strictness, currently-valid anchors, per-socket SSLContext)",
+    "BackendRequest (hop-by-hop, Connection-named, forwarding headers, XFF/socket literal parsing, cookie merge), HeaderRules, PathChecker, TargetUrl, LocationRewriter (origin compare, userinfo, network-path guard), ResponseHeaderCopier, PendingResponseHeaders, ProxyException",
+    "Core changes: Request.bodyStream/rawHeaders/headerNames/isFromTrustedProxy defaults; DefaultRequest rawStream/RawBodyStream/HeaderEnumeration/DeclaredLength; DefaultResponse append/onAbort/relay/startBody/runTransfer/abort/vary; AbortListeners; ProxyTrustSetting.trustsPeer; Dispatcher rawBodyLimit and ex.onAbort wiring; FinalHandler/ConcealedCauses; StandardErrors.statusOr; TinyHttpdBodyStream",
+    "Probes run and green (dropped): trailing-dot https target 'https://localhost.:port' with trustCertificates is reached with and without the reflective endpoint identification; writeTimeout-vs-slow-but-progressing backend could not be shown cleanly (inconclusive gap data), so not reported",
+    "docs/api/en/proxy.md claims checked against code (headers, X-Forwarded-*, errors, timeouts, retries, concurrency, TLS); TinyHttpd Date/Content-Type handling and Latin-1 request header decoding checked read-only"
+  ]
+}

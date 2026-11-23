@@ -1,0 +1,28 @@
+{
+  "applied": [
+    {"id": "CR1-1",
+     "files": ["NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyErrorsTest.java", "NaruServe-proxy/src/test/kotlin/com/snoworca/naruserve/proxy/ProxyDocsKotlinTest.kt", "docs/api/proxy.md", "docs/api/en/proxy.md"],
+     "summary": "Behaviour unchanged. Pinned FR-PROXY-015 AC-10 with a streaming-echo backend (head, 200 + Content-Length = body length, echo in 8 KiB pieces): writeTimeout(2s).bodyLimit(16 MiB), 8 MiB -> 504 WRITE_TIMEOUT via onError (2.28 s); 64 KiB -> 200 with the echoed byte pattern. Added a bullet to the 'Request forwarding' / '요청 전달' section of both pages: whole body sent before the response is read, a backend answering while reading the upload ends in 504 WRITE_TIMEOUT after writeTimeout, it must read the body first or be called without the proxy. Docs test written first and seen red.",
+     "tests_added": ["ProxyErrorsTest.fr_PROXY_015_AC10_declaredLimit_anEightMiBBodyToAStreamingEchoEndsInWriteTimeout", "ProxyErrorsTest.fr_PROXY_015_AC10_declaredLimit_aSixtyFourKiBBodyToAStreamingEchoIsRelayed", "ProxyDocsKotlinTest.`FR-PROXY-015 AC-10 the request forwarding section states the declared limit of a backend that answers while it reads the body`"]},
+    {"id": "CR1-2",
+     "files": ["NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java", "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/HeaderRules.java", "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyResponseHeadersTest.java"],
+     "summary": "Deleted ResponseHeaderCopier.connectionNames; the copier calls HeaderRules.connectionNames (added @req FR-PROXY-011 and a note that both directions use it). Identical for every input that can match a header name: copied names are tokens, a non-token element never equals a token, and backend header lines are ISO-8859-1 decoded so no Latin-1 char lower-cases to ASCII. New test covers quoted, inner-space, ';' and non-ASCII Connection elements on the response side.",
+     "tests_added": ["ProxyResponseHeadersTest.fr_PROXY_011_AC3_nonTokenConnectionElementsNameNoHeaderOnTheResponseSide"]},
+    {"id": "CR1-3",
+     "files": ["NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ResponseHeaderCopier.java", "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/LocationRewriter.java", "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyResponseHeadersTest.java", "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/LocationRewriterTest.java"],
+     "summary": "Removed copy(List, Response), copy(List, Set, Response) and LocationRewriter.apply(List, TargetUrl, String, Response); javadoc moved onto the remaining PendingResponseHeaders overloads, unused imports dropped. Tests use private helpers copyOnto/applyOnto (PendingResponseHeaders + applyTo(rec)); all 5 + 3 call sites kept with unchanged assertions.",
+     "tests_added": []},
+    {"id": "CR1-4",
+     "files": ["NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyOptionsTest.java"],
+     "summary": "Chose the pin test: the core bound (JsonBodyReader.MAX_LIMIT) is package-private in com.snoworca.naruserve.internal, so referencing it would need new public API. The test calls req.bodyStream(n) through a real request for n = 0, 1, MAX_BODY_LIMIT, MAX_BODY_LIMIT+1 and asserts it accepts exactly what Proxy.to(..).bodyLimit(n) accepts.",
+     "tests_added": ["ProxyOptionsTest.fr_PROXY_002_AC3_bodyLimitRangeIsTheRangeOfReqBodyStream"]}
+  ],
+  "not_applied": [],
+  "build": {
+    "full_build": "./gradlew -PtinyHttpdFromMaven=true build: BUILD SUCCESSFUL (3m39s)",
+    "rerun": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --rerun :test --rerun: BUILD SUCCESSFUL (3m4s)",
+    "test_results_xml": {"NaruServe": 11, "NaruServe-api": 3114, "NaruServe-filelog": 15, "NaruServe-gson": 38, "NaruServe-kotlin": 13, "NaruServe-logcat": 4, "NaruServe-proxy": 725, "NaruServe-servlet": 177, "NaruServe-slf4j": 2, "NaruServe-tinyhttpd": 235, "root (docs/build/parity)": 507},
+    "total": 4841, "failures": 0, "errors": 0, "skipped": 0,
+    "tdd_red": "Before the docs edit, only the new ProxyDocsKotlinTest FR-PROXY-015 AC-10 test failed (118 run, 1 failed). The AC-10 behaviour tests and the CR1-2/CR1-4 tests passed at once because they pin behaviour that does not change."
+  }
+}
