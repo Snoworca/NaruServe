@@ -49,7 +49,7 @@ import org.junit.Test;
 
 /**
  * The proxy watchdog scheduler (REL-PROXY-002): one JVM-wide scheduler, created by the first proxied request and
- * owned by no app, that enforces the write, total and TLS handshake deadlines on at most one daemon thread without
+ * owned by no app, that enforces the write and total deadlines (the total one also bounding the TLS handshake) on at most one daemon thread without
  * context class loader, which ends once idle; cancelled reservations leave its queue, and a firing deadline closes the
  * plain backend socket, never the {@code SSLSocket}. The proxy tests share one test JVM, so the laziness check runs in
  * a fresh JVM ({@link LazyProbe}) and the thread checks count the live threads whose name marks them as a proxy
@@ -117,8 +117,8 @@ public class WatchdogTest {
         ScheduledThreadPoolExecutor executor = ProxyExchange.Scheduler.INSTANCE.executorIfCreated();
         assertNotNull("the scheduler exists once requests are in flight", executor);
 
-        // Sample the threads for a while: every in-flight request holds its total-timeout reservation and every https
-        // request its handshake deadline.
+        // Sample the threads for a while: every in-flight request, https included, holds its total-timeout reservation,
+        // which also bounds the TLS handshake.
         long until = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(500);
         int most = 0;
         List<String> seen = new ArrayList<>();
@@ -144,7 +144,7 @@ public class WatchdogTest {
 
     // ---- AC-3 ----
 
-    // REL-PROXY-002 AC-3: every watchdog thread, the one an https request's handshake deadline uses included, is a
+    // REL-PROXY-002 AC-3: every watchdog thread, the one that bounds an https request's handshake included, is a
     // daemon thread whose context class loader is null
     @Test(timeout = 60000)
     public void rel_PROXY_002_AC3_theWatchdogThreadIsADaemonWithoutContextClassLoader() throws Exception {

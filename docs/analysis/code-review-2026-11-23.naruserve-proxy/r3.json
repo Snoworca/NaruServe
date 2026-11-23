@@ -1,0 +1,32 @@
+{
+  "round": 3,
+  "head": "d6ed165",
+  "findings": [
+    {
+      "id": "CR3-1",
+      "severity": "LOW",
+      "title": "Stale 'TLS handshake deadline' wording after d61ce2d removed the separate handshake deadline",
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+      "line": 335,
+      "requirement": "REL-PROXY-002, FR-PROXY-017",
+      "description": "d61ce2d deleted TlsConnector's own Watchdog: the handshake now runs only under the exchange's total-timeout reservation, so there are exactly two kinds of deadline (write, total). The Scheduler javadoc still opens with 'The JVM-wide scheduler of the write, total and TLS handshake deadlines', which contradicts its own last sentence. The same stale claim is in WatchdogTest (class doc line 52 'enforces the write, total and TLS handshake deadlines', line 121 'every https request its handshake deadline', line 147 'the one an https request's handshake deadline uses') and in the SRS trace link docs/spec/22.reverse-proxy.srs.md:2304 ('TLS handshake deadline armed on ProxyExchange.Scheduler'). Cost: a maintainer reading these looks for a third deadline (or re-adds one), and the REL-PROXY-002 AC-2/AC-3 test comments describe a queue load (one extra reservation per https request) that no longer exists.",
+      "evidence": "ProxyExchange.java:335 '* The JVM-wide scheduler of the write, total and TLS handshake deadlines, ...' vs. ProxyExchange.java:339-340 'The TLS handshake runs under the request's total-timeout reservation'; TlsConnector.layer no longer schedules anything (git show d61ce2d removes TlsConnector.Watchdog.arm).",
+      "fix_hint": "Say 'of the write and total deadlines (the TLS handshake runs under the total one)'; update the three WatchdogTest comments and the SRS trace-link note."
+    }
+  ],
+  "counts": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 1},
+  "areas_examined": [
+    "d61ce2d behaviour preservation: TLS handshake now under the exchange total reservation (plainSocket recorded before connect, fire/plainSocket ordering, firedKind checks in TlsConnector success/IOException/RuntimeException paths, retry-wait and post-check races) - equivalent to the removed TlsConnector.Watchdog",
+    "d61ce2d chunked copy: probe CrR3ProbeTest.fuzzChunkedCopyAgainstOldWriter (2000 random bodies, random short/zero reads, with and without pre-read byte) byte-identical to the pre-refactor writer - GREEN",
+    "d61ce2d IP literal grammar: probe CrR3ProbeTest.fuzzLiteralGrammarAgainstOldBackendRequestGrammar (3,000,000 random strings over [0-9aFg:.]) - CertificateHostnames.ipv4/ipv6 accept exactly what the removed BackendRequest.isIpv4/isIpv6 accepted - GREEN; manual walk of TargetUrl's removed countGroups grammar, same result",
+    "9996c81: response connectionNames now token-only - equivalent since response header names are validated tokens",
+    "Proxy.handle/prepare/forward/lastAttempt/retryAllowed/sendRequest/earlyResponse/backendFailure/firedKindOr, slot and release ordering",
+    "ProxyExchange: watch/attach/plainSocket/fire/settle/release/releaseOnAbortThread, FiredGuard, WatchedOutputStream, Scheduler (STPE keepalive/remove-on-cancel)",
+    "RelayedBodyStream, SocketBodyStream, ChunkedBodyInputStream, ResponseParser (status line, headers, 1xx, framing, bounds), FramingLists",
+    "BackendRequest (header filtering, cookies, X-Forwarded-*), HeaderRules, ResponseHeaderCopier, PendingResponseHeaders, LocationRewriter, PathChecker, TargetUrl",
+    "TlsConnector, CertificateHostnames, TrustedCertificates (PEM/Base64, validity-filtered anchors, full-handshake factory)",
+    "NaruServe-api: DefaultRequest bodyStream/rawStream/RawBodyStream/header enumeration, DeclaredLength, LimitedInputStream.byteLimit, DefaultResponse relay/append/onAbort/abort/startBody/runTransfer/vary, AbortListeners interplay, Dispatcher onAbort hook, WebSocket openSession gate, ProxyTrustSetting.trustsPeer, FinalHandler/ConcealedCauses, StandardErrors; TinyHttpdBodyStream",
+    "Tests added in d61ce2d (IpLiteralGrammarTest, RequestBodyCopierTest write-count bound discriminates old vs new, AC-8 order test, WatchdogTest handshake case) - not vacuous",
+    "docs/api/en/proxy.md options, forwarding, relay, Location rewrite and error sections vs code"
+  ]
+}

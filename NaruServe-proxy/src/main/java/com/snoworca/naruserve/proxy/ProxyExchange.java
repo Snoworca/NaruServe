@@ -332,7 +332,7 @@ final class ProxyExchange {
     }
 
     /**
-     * The JVM-wide scheduler of the write, total and TLS handshake deadlines, the default {@link Watchdog} of
+     * The JVM-wide scheduler of the write and total deadlines (the total deadline also bounds the TLS handshake), the default {@link Watchdog} of
      * {@code Proxy.to}: its executor is created by the first deadline a proxied request arms, belongs to no app and is
      * never shut down, and runs at most one daemon thread without context class loader that ends once idle;
      * cancelled deadlines leave its queue at once. A deadline only records its kind and closes a plain socket, so it
