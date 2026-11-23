@@ -1,0 +1,78 @@
+{
+  "round": 2,
+  "head": "433fa1fbcdceb1638e45c6ea02f93d4a90a63066",
+  "findings": [
+    {
+      "id": "CR2-1",
+      "severity": "MEDIUM",
+      "title": "FR-PROXY-007 AC-8 is marked verified by a test that never records the slot or the watchdog, so the pre-read-before-slot/watchdog order is unguarded",
+      "file": "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestBodyTest.java",
+      "line": 526,
+      "requirement": "FR-PROXY-007 AC-8",
+      "description": "AC-8 says the one-byte pre-read runs after req.bodyStream(...) and BEFORE the concurrency slot is taken and the total-timeout watchdog starts, 'as a unit test that records the order of these steps shows' (design D-056: a client slow to send its first byte must hold no slot). The only verification evidence (VE-20) is fr_PROXY_007_AC8_preReadRunsAfterBodyStreamAndBeforeTheBackendConnect, whose StepRecordingAdapter/AcceptRecordingBackend record only 'bodyStream', 'preRead' and 'connect'. Neither the slot take nor the watchdog reservation is recorded (the mount has no maxConcurrent and uses the default watchdog), so the test passes whatever the slot/watchdog position is between bodyStream and connect. A regression that takes the slot and arms the total timeout right after req.bodyStream and before the pre-read (so a slow first byte holds a slot and burns the total timeout) stays green. The product code is currently correct; the verification evidence does not cover the AC it is filed under.",
+      "evidence": "Mutation in a scratch worktree (Proxy.prepare takes the slot and calls exchange.watch right after req.bodyStream, before bodyFraming's pre-read; forward no longer calls watch). Added probe ProxyRequestBodyTest.probe_cr2_preReadComesBeforeTheSlotAndTheWatchdog: same adapter/backend, plus .maxConcurrent(1).withWatchdog((ex,total) -> {steps.add(\"watch\"); return NO_RESERVATION;}), asserting firstOfEach(steps) == [bodyStream, preRead, watch, connect].\nOriginal code: both tests PASS.\nMutated code (./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --tests ...AC8* --tests ...probe_cr2*):\n  fr_PROXY_007_AC8_preReadRunsAfterBodyStreamAndBeforeTheBackendConnect -> PASS (mutation undetected)\n  probe_cr2_preReadComesBeforeTheSlotAndTheWatchdog -> FAIL: java.lang.AssertionError: expected:<[bodyStream, preRead, watch, connect]> but was:<[bodyStream, watch, preRead, connect]>\nWhole :NaruServe-proxy:test under the mutation (probe excluded from the count): 726 tests, 1 failure: only probe_cr2 failed; all 725 existing proxy tests (fr_PROXY_007_AC8 and ProxyCheckOrderTest included) passed with the slot and watchdog moved before the pre-read.",
+      "fix_hint": "Extend the AC-8 test: mount Proxy.to(url).maxConcurrent(1).withWatchdog(recording) and record 'slot' (e.g. read concurrencyCounter() from the watchdog/reserve call or from a recording limiter seam) and 'watch' in the same step list; assert [bodyStream, preRead, slot/watch, connect]. Update VE-20."
+    },
+    {
+      "id": "CR2-2",
+      "severity": "LOW",
+      "title": "Two schedule/cancel round trips on the JVM-wide watchdog executor per 8 KiB of request body",
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java",
+      "line": 310,
+      "requirement": "FR-PROXY-017",
+      "description": "WatchedOutputStream.write allocates a WriteDeadline and calls Scheduler.INSTANCE.schedule(...) then ScheduledFuture.cancel (removeOnCancel) for every write that reaches the socket. Under the BufferedOutputStream(8192) of backendOutput, RequestBodyCopier.writeChunk (RequestBodyCopier.java:88-91) buffers the chunk-size line and CRLF, then writes 8192 data bytes, which bypasses the buffer: flushBuffer() sends the few-byte size line as its own watched write and the data as a second one. So a chunked upload costs two task allocations and four lock acquisitions on the single shared DelayedWorkQueue per 8 KiB (about 262k schedule/cancel pairs for the 1 GiB body of FR-PROXY-007 AC-7), contended by every concurrent proxied upload in the JVM, plus a separate small socket write per chunk.",
+      "evidence": "ProxyExchange.java:310-318 (schedule + disarm per write), ProxyExchange.java:170 (new BufferedOutputStream(new WatchedOutputStream(...)) with the default 8192 buffer), RequestBodyCopier.java:48-50/72 (8192-byte reads) and :88-91 (header write, then a full-buffer data write).",
+      "fix_hint": "Arm one deadline per sendRequest and have each write refresh a volatile 'last progress' timestamp the deadline task re-checks (re-scheduling itself), or give the BufferedOutputStream a buffer larger than the copy buffer and assemble size line + data + CRLF into it, so each chunk is one watched write."
+    },
+    {
+      "id": "CR2-3",
+      "severity": "LOW",
+      "title": "TLS handshake total deadline is enforced twice: TlsConnector's own Watchdog duplicates the exchange's reservation",
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TlsConnector.java",
+      "line": 72,
+      "requirement": "FR-PROXY-017",
+      "description": "Proxy.forward reserves the exchange's total-timeout watchdog (Proxy.java:533-534), whose fire closes exchange.plain, and BackendClient.connect registers every attempt's plain socket there before its connect. lastAttempt then passes deadlineNanos = startNanos + totalTimeout (Proxy.java:595, 609) to TlsConnector.layer, which arms a second deadline for the same instant on the same scheduler, closing the same plain socket (TlsConnector.java:72, 160-201). Every https attempt therefore schedules two tasks for one deadline and the TOTAL_TIMEOUT kind of a handshake is decided by two code paths (TlsConnector's disarm() mapping, or firedKindOr after a CONNECT_FAILED), depending on which task runs first. The two can diverge: the Proxy.withWatchdog seam (Proxy.java:328) does not reach the handshake deadline, so a proxy given a non-firing watchdog still gets TOTAL_TIMEOUT from a slow handshake. Relatedly, ProxyExchange.NO_WATCHDOG and NO_RESERVATION (ProxyExchange.java:48-61) are referenced nowhere else in main or test sources at HEAD (dead code).",
+      "evidence": "TlsConnector.java:72 Watchdog.arm(plain, deadlineNanos); Proxy.java:533-534 exchange.watch(...); Proxy.java:595/609 deadlineNanos passed to secure(); BackendClient.java:79 exchange.plainSocket(plain).",
+      "fix_hint": "Drop TlsConnector.Watchdog and let the exchange's reservation close the plain socket during the handshake (firedKindOr already maps the resulting failure to TOTAL_TIMEOUT), or pass the exchange's watchdog into TlsConnector so there is one deadline mechanism and one seam."
+    },
+    {
+      "id": "CR2-4",
+      "severity": "LOW",
+      "title": "IPv4/IPv6 literal grammar implemented three times in the proxy module",
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java",
+      "line": 143,
+      "requirement": "SEC-PROXY-002, FR-PROXY-001, SEC-PROXY-005",
+      "description": "BackendRequest.isIpv4/isIpv6/groups (lines 143-220), TargetUrl.isIpv4/isIpv6/countGroups/isHexGroup (lines 214-302) and CertificateHostnames.ipv4/ipv6/hexDigit (lines 156-277) each implement the same RFC 4291/3986 literal grammar (no leading zeros, one '::', embedded IPv4 tail counted as two groups) with different algorithms. They currently agree on the forms tried, but they must stay in lockstep: if TargetUrl accepts an IPv6 form that CertificateHostnames.ipv6 refuses, an https target with that literal fails every host-name check (502 CONNECT_FAILED); if BackendRequest diverges, X-Forwarded-For is dropped for valid peers. Any grammar fix has to be made three times.",
+      "evidence": "BackendRequest.java:143,169; TargetUrl.java:214,250; CertificateHostnames.java:156,186 (three independent parsers of the same grammar).",
+      "fix_hint": "Keep one package-private parser (e.g. CertificateHostnames.ipv4/ipv6 returning bytes) and derive the boolean checks of TargetUrl and BackendRequest from it."
+    },
+    {
+      "id": "CR2-5",
+      "severity": "LOW",
+      "title": "TargetUrl.authority javadoc says it is used only by Proxy.describe(), but it also names the backend in the relay failure log",
+      "file": "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java",
+      "line": 23,
+      "requirement": "FR-PROXY-016",
+      "description": "The field comment reads 'used only by Proxy.describe()', yet Proxy.forward builds the RelayedBodyStream backend label from it (Proxy.java:547: target.scheme + \"://\" + target.authority), which is the text of the FR-PROXY-016 log record. A maintainer trusting the comment could change or drop the field as test-only and silently change the production log line.",
+      "evidence": "TargetUrl.java:22-26 javadoc; Proxy.java:434 (describe) and Proxy.java:547 (log label).",
+      "fix_hint": "Say it is used by describe() and by the relayed-body failure log, or give the log label its own accessor."
+    }
+  ],
+  "counts": {
+    "CRITICAL": 0,
+    "HIGH": 0,
+    "MEDIUM": 1,
+    "LOW": 4
+  },
+  "areas_examined": [
+    "NaruServe-proxy/src/main: Proxy (handle order, prepare/forward/lastAttempt, retries, deadlines, hand-off), ProxyExchange (release, fire/settle, write deadline, scheduler), RelayedBodyStream, RequestBodyCopier, ChunkedBodyInputStream, ResponseParser, FramingLists, BackendRequest, HeaderRules, ResponseHeaderCopier, PendingResponseHeaders, LocationRewriter, PathChecker, TargetUrl, BackendClient, TlsConnector, TrustedCertificates, CertificateHostnames, RetryPolicy, ConcurrencyLimiter, ProxyException, proguard rule",
+    "request smuggling / header injection: method, request-target, header name/value checks, framing decision, hop-by-hop and Connection-listed removal, Cookie merge, Host/X-Forwarded-* construction",
+    "response side: status/header parsing bounds, 1xx/101, HEAD/204/304 framing, chunked decoding and trailers, Location rewrite open-redirect cases, header copy order",
+    "TLS: hostname matcher (wildcards, IP SANs, CN fallback), trustCertificates validity filtering and session-cache isolation, handshake deadline",
+    "lifetime: slot/watchdog/socket release on every path, abort listener vs copy thread, retry socket handling, deadline races",
+    "NaruServe-api: DefaultRequest bodyStream/rawStream/RawBodyStream/header enumeration, DeclaredLength, LimitedInputStream, DefaultResponse relay/append/onAbort/abort paths, Dispatcher rawBodyLimit and exchange onAbort, ConcealedCauses/FinalHandler, StandardErrors, ProxyTrustSetting.trustsPeer refactor, WebSocket openSession gate, Auth 413 mapping",
+    "NaruServe-tinyhttpd: TinyHttpdBodyStream map rename; TinyHttpd Date/Content-Length handling (read-only, for docs claims)",
+    "docs/api/en/proxy.md claims vs code (timeouts, retries, errors, relay, Date header, concurrency)",
+    "tests: FR-PROXY-007 AC-8 evidence (mutation-probed), FR-PROXY-015 AC-8, REL-PROXY-001 AC-5, ProxyBodyLimitTest weak-or assertion; full :NaruServe-proxy:test baseline 725 tests 0 failures"
+  ]
+}

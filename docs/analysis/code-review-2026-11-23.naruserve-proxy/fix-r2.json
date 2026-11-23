@@ -1,0 +1,59 @@
+{
+  "applied": [
+    {
+      "id": "CR2-1",
+      "files": ["NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/ProxyRequestBodyTest.java"],
+      "summary": "The AC-8 test keeps its name, fr_PROXY_007_AC8_preReadRunsAfterBodyStreamAndBeforeTheBackendConnect, at about lines 523-564. It now mounts Proxy.to(url).maxConcurrent(1).withWatchdog(recording wrapper around the real watchdog). The step list records 'slot' before the first step seen while the mount's slot counter is above 0, and 'watch' when the watchdog is reserved. It asserts [bodyStream, preRead, slot, watch, connect]. Under the reviewer's mutation (in Proxy.prepare the slot is taken and the watchdog started right after req.bodyStream, before the pre-read; forward no longer calls watch) the test FAILED. On the current code it PASSES. The mutation was reverted from a saved copy.",
+      "tests_added_or_changed": ["ProxyRequestBodyTest.fr_PROXY_007_AC8_preReadRunsAfterBodyStreamAndBeforeTheBackendConnect (strengthened)"]
+    },
+    {
+      "id": "CR2-2",
+      "files": ["NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/RequestBodyCopier.java"],
+      "summary": "copyChunked now builds each chunk in its one copy buffer: room for the size line before the data and room for CRLF after it. writeChunk puts the size line and CRLF into place and makes one out.write per chunk. A full 8 KiB chunk (8200 bytes) is larger than the BufferedOutputStream buffer, so it goes to the socket as one watched write instead of two. Short chunks are buffered as before. WRITE_TIMEOUT semantics are unchanged: one deadline per socket write. Content-Length copying was already one write per read.",
+      "tests_added_or_changed": ["RequestBodyCopierTest.chunkedCopyMakesOneWatchedWritePerDataChunk (new; red before the fix with 9 socket writes for 4 chunks, green after with at most chunks + 2)", "RequestBodyCopierTest.chunkedCopyKeepsThePreReadByteAndShortChunks (new)"]
+    },
+    {
+      "id": "CR2-3",
+      "files": ["NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TlsConnector.java", "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendClient.java", "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/Proxy.java", "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/ProxyExchange.java", "NaruServe-proxy/src/test/java/com/snoworca/naruserve/proxy/WatchdogTest.java"],
+      "summary": "Removed TlsConnector.Watchdog, the second handshake deadline. TlsConnector.layer and BackendClient.secure now take the ProxyExchange instead of deadlineNanos. The handshake runs under the exchange's single total-timeout reservation, which closes the plain socket the exchange recorded before the connect. A failure maps to exchange.firedKind() (TOTAL_TIMEOUT) when a deadline fired, otherwise to CONNECT_TIMEOUT or CONNECT_FAILED as before. The Proxy.withWatchdog seam now covers the handshake too. Removed the deadlineNanos local in lastAttempt and the unused NO_WATCHDOG and NO_RESERVATION. Updated the Scheduler javadoc. WatchdogTest's handshake test now drives layer through an exchange that holds a 200 ms Scheduler reservation; all its assertions are unchanged.",
+      "tests_added_or_changed": ["WatchdogTest.rel_PROXY_002_AC7_theHandshakeDeadlineClosesThePlainSocketOnly (call adapted to the new signature, assertions kept)"]
+    },
+    {
+      "id": "CR2-4",
+      "files": ["NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/BackendRequest.java", "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java", "NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/CertificateHostnames.java"],
+      "summary": "The table-driven equivalence test was added first and passed against the three old parsers (43 rows). Then BackendRequest.isIpv4/isIpv6/groups/isHexGroup and TargetUrl's octet, group and hex-digit helpers were deleted. BackendRequest.socketLiteral and TargetUrl's private isIpv4/isIpv6 now call CertificateHostnames.ipv4/ipv6 != null, so the proxy has one parser. The test still passes.",
+      "tests_added_or_changed": ["IpLiteralGrammarTest.everyCallSiteAppliesTheSameLiteralGrammar (new: CertificateHostnames.ipv4/ipv6, BackendRequest.socketLiteral bare and bracketed, TargetUrl.parse host)"]
+    },
+    {
+      "id": "CR2-5",
+      "files": ["NaruServe-proxy/src/main/java/com/snoworca/naruserve/proxy/TargetUrl.java"],
+      "summary": "The authority field comment now says it is used by Proxy.describe() and, after the scheme, as the backend name in the FR-PROXY-016 relayed-body failure log record.",
+      "tests_added_or_changed": []
+    }
+  ],
+  "not_applied": [],
+  "build": {
+    "full_build_command": "./gradlew -PtinyHttpdFromMaven=true build",
+    "full_build_result": "BUILD SUCCESSFUL",
+    "full_build_test_counts_xml": {
+      "NaruServe-api": {"tests": 3114, "failures": 0, "errors": 0, "skipped": 0},
+      "NaruServe-proxy": {"tests": 728, "failures": 0, "errors": 0, "skipped": 0},
+      "root": {"tests": 507, "failures": 0, "errors": 0, "skipped": 0},
+      "NaruServe-tinyhttpd": {"tests": 232, "failures": 0, "errors": 0, "skipped": 0},
+      "NaruServe-servlet": {"tests": 177, "failures": 0, "errors": 0, "skipped": 0},
+      "NaruServe-gson": {"tests": 38, "failures": 0, "errors": 0, "skipped": 0},
+      "NaruServe-filelog": {"tests": 15, "failures": 0, "errors": 0, "skipped": 0},
+      "NaruServe-kotlin": {"tests": 13, "failures": 0, "errors": 0, "skipped": 0},
+      "NaruServe": {"tests": 11, "failures": 0, "errors": 0, "skipped": 0},
+      "NaruServe-logcat": {"tests": 4, "failures": 0, "errors": 0, "skipped": 0},
+      "NaruServe-slf4j": {"tests": 2, "failures": 0, "errors": 0, "skipped": 0}
+    },
+    "rerun_command": "./gradlew -PtinyHttpdFromMaven=true :NaruServe-proxy:test --rerun :test --rerun",
+    "rerun_result": "BUILD SUCCESSFUL",
+    "rerun_counts_xml": {
+      "NaruServe-proxy": {"tests": 728, "failures": 0, "errors": 0, "skipped": 0},
+      "root": {"tests": 507, "failures": 0, "errors": 0, "skipped": 0}
+    },
+    "notes": "The proxy module has 728 tests: the 725 baseline plus 3 new ones. An earlier build that ran alongside targeted test runs failed only on colliding test-result XML writes; the clean rerun above passed."
+  }
+}

@@ -15,6 +15,7 @@ Requirements: `docs/spec/22.reverse-proxy.srs.md` and others (use `speckiwi sear
 - trustCertificates disables TLS session resumption on purpose (full handshake per connection).
 - Core must not use java.nio.file, CompletableFuture, java.util.Base64 (API 26) or any API above 21.
 - TinyHttpd (../TinyHttpd) is read-only; its own behaviour is out of scope.
+- Half-duplex upload: the proxy sends the whole request body before reading the response (FR-PROXY-015 AC-10, declared and documented); a streaming-echo backend with a large body ends in 504 WRITE_TIMEOUT.
 
 ## Severity rubric
 - CRITICAL: security hole (request smuggling, header injection, TLS trust bypass, path traversal), data corruption, or crash/hang reachable by a remote client.
