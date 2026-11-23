@@ -95,21 +95,22 @@ final class BackendClient {
 
     /**
      * The connection over the connected {@code plain} socket: {@code plain} itself for {@code http}, TLS-layered and
-     * verified for {@code https}, whose handshake ends by {@code deadlineNanos}, the request's total deadline
-     * (FR-PROXY-017). A TLS failure is a {@link ProxyException} (see {@link TlsConnector#layer}) that is never retried
-     * (FR-PROXY-018). The caller owns the returned socket; on failure {@code plain} is closed here.
+     * verified for {@code https}, whose handshake runs under the total-timeout reservation of {@code exchange}, the
+     * request's one total deadline (FR-PROXY-017). A TLS failure is a {@link ProxyException} (see
+     * {@link TlsConnector#layer}) that is never retried (FR-PROXY-018). The caller owns the returned socket; on
+     * failure {@code plain} is closed here.
      */
     // @req SEC-PROXY-005
     // @req FR-PROXY-017
     // @req FR-PROXY-018
-    static Socket secure(Socket plain, TargetUrl target, int connectTimeoutMillis, long deadlineNanos,
+    static Socket secure(Socket plain, TargetUrl target, int connectTimeoutMillis, ProxyExchange exchange,
             @Nullable SSLSocketFactory sslSocketFactory) {
         if (!"https".equals(target.scheme)) {
             return plain;
         }
         boolean layered = false;
         try {
-            Socket socket = TlsConnector.layer(plain, target.host, target.port, connectTimeoutMillis, deadlineNanos,
+            Socket socket = TlsConnector.layer(plain, target.host, target.port, connectTimeoutMillis, exchange,
                     sslSocketFactory);
             layered = true;
             return socket;

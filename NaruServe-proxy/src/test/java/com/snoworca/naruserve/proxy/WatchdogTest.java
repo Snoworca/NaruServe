@@ -342,9 +342,12 @@ public class WatchdogTest {
             }
         };
 
+        // The handshake runs under the request's own total-timeout reservation, the one deadline of the exchange.
+        ProxyExchange exchange = new ProxyExchange(null);
+        exchange.plainSocket(plain);
+        exchange.watch(ProxyExchange.Scheduler.INSTANCE, TimeUnit.MILLISECONDS.toNanos(200));
         try {
-            TlsConnector.layer(plain, "localhost", 443, 10_000,
-                    System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(200), factory);
+            TlsConnector.layer(plain, "localhost", 443, 10_000, exchange, factory);
             fail("the handshake failed");
         } catch (ProxyException e) {
             assertSame(ProxyException.Kind.TOTAL_TIMEOUT, e.kind());
@@ -352,6 +355,7 @@ public class WatchdogTest {
 
         assertTrue("close() calls on the plain socket", plain.closes.get() >= 1);
         assertEquals("close() calls on the SSLSocket", 0, made.get().closes.get());
+        exchange.release();
     }
 
     // ---- AC-8 ----

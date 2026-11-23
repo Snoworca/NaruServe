@@ -150,8 +150,9 @@ final class CertificateHostnames implements HostnameVerifier {
     }
 
     /**
-     * The four bytes of a dotted-quad IPv4 literal of decimal octets {@code 0..255} without leading zeros, or
-     * {@code null}.
+     * The proxy's one IPv4 literal parser, also behind the literal checks of {@link TargetUrl} and
+     * {@link BackendRequest}: the four bytes of a dotted-quad IPv4 literal of decimal octets {@code 0..255} without
+     * leading zeros, or {@code null}.
      */
     static byte @Nullable [] ipv4(String s) {
         byte[] out = new byte[4];
@@ -179,9 +180,10 @@ final class CertificateHostnames implements HostnameVerifier {
     }
 
     /**
-     * The sixteen bytes of an IPv6 literal (RFC 4291 text form: up to eight groups of one to four hexadecimal digits,
-     * at most one {@code ::}, optionally ending in a dotted-quad IPv4 part), or {@code null}. No zone index, no
-     * brackets, no name lookup.
+     * The proxy's one IPv6 literal parser, also behind the literal checks of {@link TargetUrl} and
+     * {@link BackendRequest}: the sixteen bytes of an IPv6 literal (RFC 4291 text form: up to eight groups of one to
+     * four hexadecimal digits, at most one {@code ::}, optionally ending in a dotted-quad IPv4 part), or {@code null}.
+     * No zone index, no brackets, no name lookup.
      */
     static byte @Nullable [] ipv6(String s) {
         int[] groups = new int[8];

@@ -592,7 +592,6 @@ public final class Proxy implements Middleware {
     // @req SEC-PROXY-005
     private Attempt lastAttempt(Request req, Outgoing outgoing, ProxyExchange exchange, long startNanos)
             throws IOException {
-        long deadlineNanos = startNanos + options.totalTimeoutNanos;
         for (int retry = 0; ; retry++) {
             Socket plain;
             try {
@@ -606,7 +605,7 @@ public final class Proxy implements Middleware {
                 throw e;
             }
             // Plain for http; TLS-layered and verified for https, whose failures are ProxyExceptions (SEC-PROXY-005).
-            Socket socket = BackendClient.secure(plain, target, connectTimeoutMillis(), deadlineNanos,
+            Socket socket = BackendClient.secure(plain, target, connectTimeoutMillis(), exchange,
                     options.sslSocketFactory);
             exchange.attach(socket);
             socket.setSoTimeout(readTimeoutMillis());

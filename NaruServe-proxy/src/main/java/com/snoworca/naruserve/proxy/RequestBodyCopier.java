@@ -20,6 +20,8 @@ final class RequestBodyCopier {
 
     /** The size of the one copy buffer of a request body. */
     static final int BUFFER_SIZE = 8192;
+    /** Room before a chunk's data for its size line: the hexadecimal size of at most {@link #BUFFER_SIZE} and CRLF. */
+    private static final int SIZE_LINE_ROOM = Integer.toHexString(BUFFER_SIZE).length() + 2;
     private static final byte[] LAST_CHUNK = "0\r\n\r\n".getBytes(StandardCharsets.ISO_8859_1);
 
     private RequestBodyCopier() { }
@@ -59,17 +61,22 @@ final class RequestBodyCopier {
     /**
      * Writes the client body to {@code out} in the chunked coding, one chunk per read, then the last chunk without
      * trailer fields. {@code first} is a byte the pre-read already took from {@code in} and leads the body, or -1.
+     * Each chunk, its size line, data and CRLF, is assembled in the one copy buffer and handed to {@code out} as one
+     * write, so a full chunk reaches the backend socket as one watched write (FR-PROXY-017), not as a size-line write
+     * followed by a data write.
      */
     // @req FR-PROXY-007
+    // @req FR-PROXY-017
     static void copyChunked(InputStream in, int first, OutputStream out) throws IOException {
-        byte[] b = new byte[BUFFER_SIZE];
+        // The data starts after room for the longest size line and leaves room for the CRLF after it.
+        byte[] b = new byte[SIZE_LINE_ROOM + BUFFER_SIZE + 2];
         int held = 0;
         if (first >= 0) {
-            b[0] = (byte) first;
+            b[SIZE_LINE_ROOM] = (byte) first;
             held = 1;
         }
         while (true) {
-            int n = clientRead(in, b, held, b.length - held);
+            int n = clientRead(in, b, SIZE_LINE_ROOM + held, BUFFER_SIZE - held);
             if (n < 0) {
                 writeChunk(out, b, held);
                 break;
@@ -80,15 +87,21 @@ final class RequestBodyCopier {
         out.write(LAST_CHUNK);
     }
 
-    /** One chunk of {@code size} bytes of {@code b}; nothing for size 0, which would end the body. */
+    /**
+     * One chunk of the {@code size} data bytes at {@link #SIZE_LINE_ROOM} of {@code b}, written as one block with its
+     * size line put right before the data and the CRLF right after it; nothing for size 0, which would end the body.
+     */
     private static void writeChunk(OutputStream out, byte[] b, int size) throws IOException {
         if (size == 0) {
             return;
         }
-        out.write((Integer.toHexString(size) + "\r\n").getBytes(StandardCharsets.ISO_8859_1));
-        out.write(b, 0, size);
-        out.write('\r');
-        out.write('\n');
+        byte[] sizeLine = (Integer.toHexString(size) + "\r\n").getBytes(StandardCharsets.ISO_8859_1);
+        int start = SIZE_LINE_ROOM - sizeLine.length;
+        System.arraycopy(sizeLine, 0, b, start, sizeLine.length);
+        int end = SIZE_LINE_ROOM + size;
+        b[end] = '\r';
+        b[end + 1] = '\n';
+        out.write(b, start, end + 2 - start);
     }
 
     /** One read of the client body; any exception it throws is marked as the client's, apart from backend failures. */

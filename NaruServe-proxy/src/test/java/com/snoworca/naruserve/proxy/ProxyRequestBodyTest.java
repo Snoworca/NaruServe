@@ -48,7 +48,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.CRC32;
+import org.jspecify.annotations.Nullable;
 import org.junit.After;
 import org.junit.Test;
 
@@ -521,14 +523,35 @@ public class ProxyRequestBodyTest {
 
     // FR-PROXY-007 AC-8: for a body without length headers the one-byte pre-read reads the client body after
     // req.bodyStream(...) took the exchange input and before the backend connection is opened; the concurrency slot
-    // and the total-timeout watchdog go between the pre-read and the connect (design D-050, D-056)
+    // and the total-timeout watchdog go between the pre-read and the connect (design D-050, D-056). The step list
+    // records "slot" before the first step seen while the mount's .maxConcurrent(1) slot is held, and "watch" when
+    // the total-timeout watchdog is reserved, so a slot or watchdog taken before the pre-read changes the order.
     @Test(timeout = 30000)
     public void fr_PROXY_007_AC8_preReadRunsAfterBodyStreamAndBeforeTheBackendConnect() throws Exception {
-        List<String> steps = Collections.synchronizedList(new ArrayList<String>());
+        final AtomicReference<@Nullable AtomicInteger> slots = new AtomicReference<>();
+        List<String> steps = Collections.synchronizedList(new ArrayList<String>() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public boolean add(String step) {
+                AtomicInteger held = slots.get();
+                if (held != null && held.get() > 0 && !contains("slot")) {
+                    super.add("slot");
+                }
+                return super.add(step);
+            }
+        });
         StepRecordingAdapter recording = new StepRecordingAdapter(steps);
         try (AcceptRecordingBackend backend = new AcceptRecordingBackend(steps)) {
+            Proxy limited = Proxy.to(backend.url()).maxConcurrent(1);
+            final ProxyExchange.Watchdog real = limited.watchdog();
+            Proxy proxy = limited.withWatchdog((exchange, totalTimeoutNanos) -> {
+                steps.add("watch");
+                return real.reserve(exchange, totalTimeoutNanos);
+            });
+            slots.set(proxy.concurrencyCounter());
             RestApp a = RestApp.builder().httpAdapter(recording).jsonCodec(new StubJsonCodec()).build();
-            a.use("/api", Proxy.to(backend.url()));
+            a.use("/api", proxy);
             a.listen(0);
             started.add(a);
 
@@ -539,7 +562,7 @@ public class ProxyRequestBodyTest {
             synchronized (steps) {
                 seen = new ArrayList<>(steps);
             }
-            assertEquals(Arrays.asList("bodyStream", "preRead", "connect"), firstOfEach(seen));
+            assertEquals(Arrays.asList("bodyStream", "preRead", "slot", "watch", "connect"), firstOfEach(seen));
         }
     }
 

@@ -45,21 +45,6 @@ final class ProxyExchange {
         void cancel();
     }
 
-    /** A reservation that holds nothing. */
-    static final Reservation NO_RESERVATION = new Reservation() {
-        @Override
-        public void cancel() {
-        }
-    };
-
-    /** A watchdog that watches nothing: no total-timeout reservation fires on a proxy that uses it. */
-    static final Watchdog NO_WATCHDOG = new Watchdog() {
-        @Override
-        public Reservation reserve(ProxyExchange exchange, long totalTimeoutNanos) {
-            return NO_RESERVATION;
-        }
-    };
-
     /** Stands in for the reservation once {@link #release} took it, so a later {@link #watch} cancels at once. */
     private static final Reservation RELEASED = new Reservation() {
         @Override
@@ -351,8 +336,8 @@ final class ProxyExchange {
      * {@code Proxy.to}: its executor is created by the first deadline a proxied request arms, belongs to no app and is
      * never shut down, and runs at most one daemon thread without context class loader that ends once idle;
      * cancelled deadlines leave its queue at once. A deadline only records its kind and closes a plain socket, so it
-     * never blocks the thread. {@link TlsConnector} arms the handshake's total deadline here too, so the proxy module
-     * has this one watchdog thread and no other.
+     * never blocks the thread. The TLS handshake runs under the request's total-timeout reservation, so the proxy
+     * module has this one watchdog thread and no other.
      */
     // @req FR-PROXY-017
     // @req REL-PROXY-002

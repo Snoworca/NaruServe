@@ -5,8 +5,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLPeerUnverifiedException;
@@ -17,8 +15,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * Layers TLS over a connected plain socket for an {@code https} target (SEC-PROXY-005): the factory's
  * {@code createSocket(plain, host, port, true)}, so SNI carries the target host; the handshake with {@code SO_TIMEOUT}
- * set to the connect timeout and under the total-timeout watchdog; the certificate chain checked by the factory's
- * trust managers; and the host name checked after every handshake, on every runtime, by the held
+ * set to the connect timeout and under the exchange's total-timeout watchdog; the certificate chain checked by the
+ * factory's trust managers; and the host name checked after every handshake, on every runtime, by the held
  * {@link HostnameVerifier} (the built-in {@link CertificateHostnames} matcher on the session's peer leaf
  * certificate), whatever the factory or its socket did with {@code SSLParameters}, with
  * {@code SSLParameters.setEndpointIdentificationAlgorithm("HTTPS")} also set by reflection where the method exists
@@ -54,22 +52,23 @@ final class TlsConnector {
     }
 
     /**
-     * The TLS socket over {@code plain}, handshaken and verified for {@code host}; the plain socket stays the one the
-     * watchdog closes. A failure is a {@link ProxyException}: {@code TOTAL_TIMEOUT} when the watchdog's deadline fired,
-     * otherwise {@code CONNECT_TIMEOUT} for a handshake {@link SocketTimeoutException} and {@code CONNECT_FAILED} for
-     * every other TLS or I/O failure, a rejected certificate or host name included. The caller closes {@code plain}
-     * on failure. A TLS socket whose handshake completed and that is then refused, by the held verifier or by a
-     * deadline that fired, is closed here on the calling thread, after {@code plain}, by
-     * {@link BackendClient#closeConnection}, so the refused connect leaves no TLS socket for its finalizer. A handshake
-     * that failed ends its TLS socket in the provider itself (the JDK's fatal alert closes it, Conscrypt frees its
-     * native state), so that socket's {@code close()} is never called, and the watchdog never closes it (REL-PROXY-002
-     * AC-7).
+     * The TLS socket over {@code plain}, handshaken and verified for {@code host}. The handshake runs under the
+     * total-timeout reservation of {@code exchange}, the one deadline of the request: {@code plain} is the socket the
+     * exchange recorded, so a deadline that fires closes it and the handshake fails at once. A failure is a
+     * {@link ProxyException}: the fired deadline's kind ({@code TOTAL_TIMEOUT}) when one fired, otherwise
+     * {@code CONNECT_TIMEOUT} for a handshake {@link SocketTimeoutException} and {@code CONNECT_FAILED} for every other
+     * TLS or I/O failure, a rejected certificate or host name included. The caller closes {@code plain} on failure. A
+     * TLS socket whose handshake completed and that is then refused, by the held verifier or by a deadline that fired,
+     * is closed here on the calling thread, after {@code plain}, by {@link BackendClient#closeConnection}, so the
+     * refused connect leaves no TLS socket for its finalizer. A handshake that failed ends its TLS socket in the
+     * provider itself (the JDK's fatal alert closes it, Conscrypt frees its native state), so that socket's
+     * {@code close()} is never called, and the deadline never closes it (REL-PROXY-002 AC-7).
      */
     // @req SEC-PROXY-005
-    static Socket layer(Socket plain, String host, int port, int connectTimeoutMillis, long deadlineNanos,
+    // @req FR-PROXY-017
+    static Socket layer(Socket plain, String host, int port, int connectTimeoutMillis, ProxyExchange exchange,
             @Nullable SSLSocketFactory factory) {
         SSLSocketFactory f = factory != null ? factory : (SSLSocketFactory) SSLSocketFactory.getDefault();
-        Watchdog watchdog = Watchdog.arm(plain, deadlineNanos);
         @Nullable SSLSocket ssl = null;
         boolean handshaken = false;
         boolean layered = false;
@@ -85,14 +84,16 @@ final class TlsConnector {
             if (!verifier().verify(host, ssl.getSession())) {
                 throw new SSLPeerUnverifiedException("the backend certificate does not match the target host");
             }
-            if (watchdog.disarm()) {
-                throw new ProxyException(ProxyException.Kind.TOTAL_TIMEOUT, null);
+            ProxyException.@Nullable Kind fired = exchange.firedKind();
+            if (fired != null) {
+                throw new ProxyException(fired, null);
             }
             layered = true;
             return ssl;
         } catch (IOException e) {
-            if (watchdog.disarm()) {
-                throw new ProxyException(ProxyException.Kind.TOTAL_TIMEOUT, e);
+            ProxyException.@Nullable Kind fired = exchange.firedKind();
+            if (fired != null) {
+                throw new ProxyException(fired, e);
             }
             if (e instanceof SocketTimeoutException) {
                 throw new ProxyException(ProxyException.Kind.CONNECT_TIMEOUT, e);
@@ -103,10 +104,9 @@ final class TlsConnector {
                 throw e;
             }
             // A provider failure outside IOException (for example a rejected argument) is still a failed TLS connect.
-            throw new ProxyException(watchdog.disarm() ? ProxyException.Kind.TOTAL_TIMEOUT
-                    : ProxyException.Kind.CONNECT_FAILED, e);
+            ProxyException.@Nullable Kind fired = exchange.firedKind();
+            throw new ProxyException(fired != null ? fired : ProxyException.Kind.CONNECT_FAILED, e);
         } finally {
-            watchdog.disarm();
             if (!layered && handshaken && ssl != null) {
                 BackendClient.closeConnection(plain, ssl);
             }
@@ -148,55 +148,6 @@ final class TlsConnector {
             return SSLParameters.class.getMethod(name, parameterTypes);
         } catch (NoSuchMethodException | RuntimeException e) {
             return null;
-        }
-    }
-
-    /**
-     * Closes the plain socket when the total-timeout deadline passes before {@link #disarm()}; never the
-     * {@link SSLSocket}, whose close sends {@code close_notify} and may block behind a writer. The deadline runs on
-     * the proxy's one JVM-wide scheduler, {@link ProxyExchange.Scheduler}, like the write and total deadlines.
-     */
-    // @req REL-PROXY-002
-    private static final class Watchdog implements Runnable {
-        private final Socket plain;
-        private static final int ARMED = 0;
-        private static final int FIRED = 1;
-        private static final int DISARMED = 2;
-        private final AtomicInteger state = new AtomicInteger(ARMED);
-        private @Nullable ScheduledFuture<?> future;
-
-        private Watchdog(Socket plain) {
-            this.plain = plain;
-        }
-
-        // @req REL-PROXY-002
-        static Watchdog arm(Socket plain, long deadlineNanos) {
-            Watchdog w = new Watchdog(plain);
-            long delay = Math.max(0, deadlineNanos - System.nanoTime());
-            w.future = ProxyExchange.Scheduler.INSTANCE.schedule(w, delay);
-            return w;
-        }
-
-        @Override
-        public void run() {
-            if (state.compareAndSet(ARMED, FIRED)) {
-                try {
-                    plain.close();
-                } catch (IOException ignored) {
-                    // the handshake fails either way
-                }
-            }
-        }
-
-        /** Stops the watchdog; {@code true} when its deadline fired first. */
-        boolean disarm() {
-            if (state.compareAndSet(ARMED, DISARMED)) {
-                ScheduledFuture<?> f = future;
-                if (f != null) {
-                    f.cancel(false);
-                }
-            }
-            return state.get() == FIRED;
         }
     }
 }
