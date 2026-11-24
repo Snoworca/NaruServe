@@ -13,7 +13,7 @@ final class ReleaseEvidenceSnapshots {
     static final String HISTORICAL="docs/release/test-results.md", HISTORICAL_SCAN="docs/release/vulnerability-scan.md";
     static final String CURRENT="docs/release/0.10.0-test-results.md", CURRENT_SCAN="docs/release/0.10.0-vulnerability-scan.md";
     static final String NEXT="docs/release/0.11.0-test-results.md", NEXT_SCAN="docs/release/0.11.0-vulnerability-scan.md";
-    static final String PENDING="docs/release/0.12.0-test-results.md", PENDING_SCAN="docs/release/0.12.0-vulnerability-scan.md";
+    static final String LATEST="docs/release/0.12.0-test-results.md", LATEST_SCAN="docs/release/0.12.0-vulnerability-scan.md";
     private ReleaseEvidenceSnapshots() {}
 
     private static File repository() { return new File(System.getProperty("naruserve.rootDir")); }
@@ -34,9 +34,10 @@ final class ReleaseEvidenceSnapshots {
         return new String(bytes.toByteArray(),StandardCharsets.UTF_8);
     }
     private static boolean historical(String path,String commit,boolean scan) {
-        String old=scan?HISTORICAL_SCAN:HISTORICAL, current=scan?CURRENT_SCAN:CURRENT, next=scan?NEXT_SCAN:NEXT;
+        String old=scan?HISTORICAL_SCAN:HISTORICAL, current=scan?CURRENT_SCAN:CURRENT, next=scan?NEXT_SCAN:NEXT,
+                latest=scan?LATEST_SCAN:LATEST;
         assertTrue("record path is not an approved versioned record: "+path,path.equals(old)||path.equals(current)
-                ||path.equals(next));
+                ||path.equals(next)||path.equals(latest));
         if(path.equals(old)) {assertEquals("historical commit",PIN,commit);return true;}
         assertNull("current record cannot use historical commit",commit);return false;
     }
@@ -95,16 +96,11 @@ final class ReleaseEvidenceSnapshots {
         assertFalse("version declaration ambiguous",version.find());
         assertTrue("unsupported release version: "+actualVersion,actualVersion.equals("0.9.0")||actualVersion.equals("0.10.0")
                 ||actualVersion.equals("0.11.0")||actualVersion.equals("0.12.0"));
-        // OPS-REL-013: 0.12.0 is prepared ahead of its release run; until that run writes a 0.12.0 record the gate still
-        // validates the 0.11.0 records and answers pending (false); once either 0.12.0 record exists it fails until it
-        // is pointed at the 0.12.0 records (OPS-REL-015 AC-4)
-        boolean pending=actualVersion.equals("0.12.0");
-        assertFalse("0.12.0 release records exist: point the gate at docs/release/0.12.0-*",pending
-                &&(new File(root,PENDING).isFile()||new File(root,PENDING_SCAN).isFile()));
-        // OPS-REL-011 AC-4: after the 0.11.0 release run, version 0.11.0 is checked against its own records only; the
-        // 0.10.0 records stay as historical files
-        boolean next=actualVersion.equals("0.11.0")||pending;
-        String resultsPath=next?NEXT:CURRENT, scanPath=next?NEXT_SCAN:CURRENT_SCAN;
+        // OPS-REL-015 AC-4 (replaces the OPS-REL-013 pending interval after the 0.12.0 release run): version 0.12.0 is
+        // checked against its own records only; the 0.11.0 and 0.10.0 records stay as historical files.
+        // OPS-REL-011 AC-4: version 0.11.0 is checked against the 0.11.0 records only
+        boolean latest=actualVersion.equals("0.12.0"), next=actualVersion.equals("0.11.0");
+        String resultsPath=latest?LATEST:next?NEXT:CURRENT, scanPath=latest?LATEST_SCAN:next?NEXT_SCAN:CURRENT_SCAN;
         boolean results=new File(root,resultsPath).isFile(),report=new File(root,scanPath).isFile();
         if(!results&&!report&&actualVersion.equals("0.9.0"))return false;
         assertTrue("current evidence requires result record and scan: "+resultsPath+", "+scanPath,results&&report);
@@ -116,6 +112,6 @@ final class ReleaseEvidenceSnapshots {
         String scan=record(root,scanPath,null,true);
         assertTrue("current scan must be completed",Pattern.compile("(?m)^Status: completed$").matcher(scan).find());
         scan(root,scanPath,null,runtime);
-        return !pending; // 0.12.0: the 0.11.0 records still hold; the 0.12.0 ones are pending
+        return true;
     }
 }

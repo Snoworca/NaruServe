@@ -156,35 +156,36 @@ public class ReleaseEvidenceSnapshotsTest {
         rejected("current scan dependencies",()->call("current",types,local,Arrays.asList("g:a:1")));
         rejected("unsupported release version",()->call("current",types,fixture("0.13.0"),Collections.emptyList()));
     }
-    // OPS-REL-013 (the 0.12.0 checkout ahead of its release run, as OPS-REL-010 AC-3 was for 0.11.0): 0.12.0 is pending
-    // only while none of its records exist; the 0.11.0 records are still checked, a 0.12.0 record fails until the gate
-    // points at it, and an unknown version is refused
-    @Test public void version012IsPendingOnlyWithoutItsRecordsAndStillChecks011()throws Exception {
+    // OPS-REL-015 AC-4 (replaces the OPS-REL-013 pending interval after the 0.12.0 release run): version 0.12.0 is
+    // checked against its own records only, the 0.11.0 records no longer stand in for it, and an unknown version is
+    // refused
+    @Test public void version012IsCheckedAgainstItsOwnRecords()throws Exception {
         Class<?>[] types=new Class<?>[]{File.class,List.class};
         String previous="docs/release/0.11.0-test-results.md", previousScan="docs/release/0.11.0-vulnerability-scan.md";
+        String latest="docs/release/0.12.0-test-results.md", latestScan="docs/release/0.12.0-vulnerability-scan.md";
         rejected("current evidence",()->call("current",types,fixture("0.12.0"),Collections.emptyList()));
+        File old=fixture("0.12.0");write(old,PATH,"class Example { void currentOnly() {} }\n");
+        write(old,previous,currentResults());write(old,previousScan,report("g:a:1"));
+        rejected("current evidence",()->call("current",types,old,Arrays.asList("g:a:1")));
+        File resultsOnly=fixture("0.12.0");write(resultsOnly,PATH,"class Example { void currentOnly() {} }\n");
+        write(resultsOnly,latest,currentResults());
+        rejected("current evidence",()->call("current",types,resultsOnly,Arrays.asList("g:a:1")));
         File local=fixture("0.12.0");write(local,PATH,"class Example { void currentOnly() {} }\n");
-        write(local,previous,currentResults());write(local,previousScan,report("g:a:1"));
-        assertEquals(false,call("current",types,local,Arrays.asList("g:a:1")));
-        write(local,previousScan,report("g:b:2"));
+        write(local,latest,currentResults());write(local,latestScan,report("g:a:1"));
+        assertEquals(true,call("current",types,local,Arrays.asList("g:a:1")));
+        write(local,latestScan,report("g:a:1").replace("Status: completed","Status: pending\nReason: NO_NETWORK"));
+        rejected("completed",()->call("current",types,local,Arrays.asList("g:a:1")));
+        write(local,latestScan,report("g:b:2"));
         rejected("current scan dependencies",()->call("current",types,local,Arrays.asList("g:a:1")));
-        write(local,previousScan,report("g:a:1"));
-        write(local,"docs/release/0.12.0-test-results.md","# Current\n");
-        rejected("0.12.0",()->call("current",types,local,Arrays.asList("g:a:1")));
-        File scanOnly=fixture("0.12.0");write(scanOnly,PATH,"class Example { void currentOnly() {} }\n");
-        write(scanOnly,previous,currentResults());write(scanOnly,previousScan,report("g:a:1"));
-        write(scanOnly,"docs/release/0.12.0-vulnerability-scan.md",report("g:a:1"));
-        rejected("0.12.0",()->call("current",types,scanOnly,Arrays.asList("g:a:1")));
+        write(local,latestScan,report("g:a:1"));write(local,PATH,"class Example {}\n");
+        rejected("method",()->call("current",types,local,Arrays.asList("g:a:1")));
         rejected("unsupported release version",()->call("current",types,fixture("0.13.0"),Collections.emptyList()));
     }
-    // OPS-REL-011 AC-1, AC-2: the gate passes on this repository's own 0.11.0 records against the current runtime graph
-    // (completed scan, equal dependency section, live method references, full-suite witness); the Java 8 run, which
-    // the gate does not read, is checked here with the same fields. OPS-REL-013: with the checkout at 0.12.0 ahead of
-    // its release run, the gate still validates the 0.11.0 records and answers pending (false)
+    // OPS-REL-011 AC-1, AC-2: the 0.11.0 records hold the full-suite and Java 8 runs with a 40-hex commit and zero
+    // failures, errors and skips, and a completed scan. Since the 0.12.0 release run (OPS-REL-015 AC-4) they are
+    // historical files: the gate checks the 0.12.0 records against the current runtime graph
+    // (realRecords012PassTheGateAndHoldEveryRun), and the 0.11.0 records keep the runs of their own release commit
     @Test public void realRecords011PassTheGateAndHoldBothRuns()throws Exception {
-        List<String> graph=com.snoworca.naruserve.release.ReleaseMain.graphLines(new File(System.getProperty("naruserve.depReport")));
-        List<String> runtime=new ArrayList<>(com.snoworca.naruserve.release.DependencyList.runtime(graph));
-        assertEquals(false,call("current",new Class<?>[]{File.class,List.class},root(),runtime));
         String results=ReadmeDocsTest.read("docs/release/0.11.0-test-results.md");
         for(String run:new String[]{"full-suite","java8-full"}){
             java.util.regex.Matcher m=java.util.regex.Pattern.compile("(?m)^- run "+run
@@ -195,6 +196,80 @@ public class ReleaseEvidenceSnapshotsTest {
         }
         assertTrue("java8 run uses the Java 8 init script",results.contains("-I gradle/java8-tests.gradle"));
         assertTrue(ReadmeDocsTest.read("docs/release/0.11.0-vulnerability-scan.md").contains("\nStatus: completed\n"));
+    }
+    /** The eleven artifactIds of 0.12.0 (FR-REL-006 AC-4). */
+    private static final List<String> ARTIFACTS_012=Arrays.asList("naruserve","naruserve-api","naruserve-servlet",
+            "naruserve-tinyhttpd","naruserve-gson","naruserve-kotlin","naruserve-slf4j","naruserve-filelog","naruserve-logcat",
+            "naruserve-proxy","naruserve-android");
+    /** The eleven published modules whose SBOM a 0.12.0 releaseSbom run writes (FR-REL-006 AC-5, FR-REL-007). */
+    private static final List<String> MODULES_012=Arrays.asList("NaruServe-api","NaruServe-servlet","NaruServe-tinyhttpd",
+            "NaruServe-gson","NaruServe","NaruServe-kotlin","NaruServe-slf4j","NaruServe-filelog","NaruServe-logcat",
+            "NaruServe-proxy","NaruServe-android");
+    private static java.util.regex.Matcher runLine(String results,String run){
+        java.util.regex.Matcher m=java.util.regex.Pattern.compile("(?m)^- run "+java.util.regex.Pattern.quote(run)
+                +": command=(.+?); date=\\d{4}-\\d{2}-\\d{2}; result=exit=0; commit=([0-9a-f]{40}); (.+)$").matcher(results);
+        assertTrue(run+" run line",m.find());
+        assertFalse(run+" run line appears once",m.find(m.end()));
+        m.reset();m.find();
+        return m;
+    }
+    // OPS-REL-015 AC-1, AC-2, AC-4: the gate passes on this repository's own 0.12.0 records against the current runtime
+    // graph (completed scan, equal dependency section, live method references, full-suite witness); the Java 8 run is
+    // checked here with the same fields, and the automated references include NaruServe-proxy tests
+    @Test public void realRecords012PassTheGateAndHoldEveryRun()throws Exception {
+        List<String> graph=com.snoworca.naruserve.release.ReleaseMain.graphLines(new File(System.getProperty("naruserve.depReport")));
+        List<String> runtime=new ArrayList<>(com.snoworca.naruserve.release.DependencyList.runtime(graph));
+        assertEquals(true,call("current",new Class<?>[]{File.class,List.class},root(),runtime));
+        String results=ReadmeDocsTest.read("docs/release/0.12.0-test-results.md");
+        for(String run:new String[]{"full-suite","java8-full"}){
+            java.util.regex.Matcher m=runLine(results,run);
+            assertTrue(m.group(1),m.group(1).startsWith("./gradlew ")&&m.group(1).contains(" build"));
+            java.util.regex.Matcher c=java.util.regex.Pattern.compile("^tests=([0-9]+); failures=0; errors=0; skipped=0$").matcher(m.group(3));
+            assertTrue(run+": "+m.group(3),c.find());
+            assertTrue(c.group(1),Long.parseLong(c.group(1))>0);
+        }
+        assertTrue("java8 run uses the Java 8 init script",runLine(results,"java8-full").group(1).contains("-I gradle/java8-tests.gradle"));
+        int proxy=0;
+        for(String[] row:ReleaseResultsDocsTest.rows(results))if("automated".equals(row[2]))
+            for(String ref:row[3].split(", "))if(ref.startsWith("NaruServe-proxy/src/test/"))proxy++;
+        assertTrue("automated references to NaruServe-proxy tests: "+proxy,proxy>0);
+        assertTrue(ReadmeDocsTest.read("docs/release/0.12.0-vulnerability-scan.md").contains("\nStatus: completed\n"));
+    }
+    // OPS-REL-015 AC-5; FR-REL-006 AC-4; FR-REL-007 AC-1: the 0.12.0 record holds the checkCentralStaging run (run name
+    // central-staging, the eleven artifactIds at 0.12.0) and the -Prelease releaseSbom run (one SBOM file with its
+    // component count per published module, NaruServe-proxy included), each with exit=0 and a 40-hex commit
+    @Test public void realRecords012HoldTheCentralStagingAndReleaseSbomRuns()throws Exception {
+        String results=ReadmeDocsTest.read("docs/release/0.12.0-test-results.md");
+        java.util.regex.Matcher staging=runLine(results,"central-staging");
+        assertTrue(staging.group(1),staging.group(1).startsWith("./gradlew ")&&staging.group(1).endsWith(" checkCentralStaging"));
+        java.util.regex.Matcher ids=java.util.regex.Pattern.compile("^version=0\\.12\\.0; artifactIds=([a-z0-9,-]+)$").matcher(staging.group(3));
+        assertTrue("central-staging result: "+staging.group(3),ids.find());
+        assertEquals(new java.util.TreeSet<>(ARTIFACTS_012),new java.util.TreeSet<>(Arrays.asList(ids.group(1).split(","))));
+        assertEquals("eleven artifactIds, none twice",11,ids.group(1).split(",").length);
+        java.util.regex.Matcher sbom=runLine(results,"releaseSbom");
+        assertTrue(sbom.group(1),sbom.group(1).startsWith("./gradlew ")&&sbom.group(1).contains("-Prelease")
+                &&sbom.group(1).endsWith(" releaseSbom"));
+        for(String module:MODULES_012){
+            java.util.regex.Matcher m=java.util.regex.Pattern.compile("(?<![\\w-])"+java.util.regex.Pattern.quote(module+".cdx.json")
+                    +"=([0-9]+)").matcher(sbom.group(3));
+            assertTrue("releaseSbom result names "+module+".cdx.json=<component count>: "+sbom.group(3),m.find());
+        }
+        assertTrue(sbom.group(3),sbom.group(3).startsWith("files=11; "));
+    }
+    // OPS-REL-015 AC-3: both 0.12.0 release notes describe the raw access API, NaruServe-proxy with trustCertificates,
+    // the BodyTooLargeException 413 change, the upgrade from 0.11.0 and the declared limits
+    @Test public void releaseNotes012DescribeRawAccessProxyThe413ChangeAndUpgrade()throws Exception {
+        String[][] files={{"docs/release/0.12.0-release-notes.md","Upgrading from 0.11.0","## Raw access API","Declared limits"},
+                {"docs/release/0.12.0-release-notes.ko.md","0.11.0에서 올리기","## 원시 접근 API","알려진 한계"}};
+        for(String[] f:files){
+            String body=new String(Files.readAllBytes(new File(root(),f[0]).toPath()),StandardCharsets.UTF_8);
+            for(String part:new String[]{f[2],"req.bodyStream()","res.relay(","res.append(","res.onAbort(","req.headerNames()",
+                    "req.isFromTrustedProxy()","## NaruServe-proxy","com.snoworca.naruserve:naruserve-proxy","Proxy.to(",
+                    "trustCertificates(","BodyTooLargeException","`413`","`500`","**0.12.0**","WRITE_TIMEOUT","MD5","API 21"})
+                assertTrue(f[0]+" names "+part,body.contains(part));
+            assertTrue(f[0]+" has the upgrade section",body.contains("## "+f[1]));
+            assertTrue(f[0]+" has the declared limits",body.contains("### "+f[3]));
+        }
     }
     // OPS-REL-011 AC-3: both 0.11.0 release notes name the auth module, the app.use(auth) install and the 0.10.0 upgrade
     @Test public void releaseNotes011DescribeAuthInstallAndUpgrade()throws Exception {
