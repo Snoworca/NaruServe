@@ -2,7 +2,7 @@
 
 [English](en/express-migration.md) | [문서 목록](README.md)
 
-**0.11.0의 일반 HTTP 라우팅 프로필**은 Express 5의 흔한 문자열 경로·등록 순서·Router·param·next·오류 흐름을 Java API로 제공합니다. Express 전체, Node 런타임, 모든 미들웨어, JavaScript 정규식 호환을 주장하지 않습니다. NaruServe의 타입 지정 본문·text/plain 문자열 응답·기존 WS/SSE/파일·보안 확장은 유지합니다. 설치는 [설치 안내](README.md)를 보세요.
+**0.12.0의 일반 HTTP 라우팅 프로필**은 Express 5의 흔한 문자열 경로·등록 순서·Router·param·next·오류 흐름을 Java API로 제공합니다. Express 전체, Node 런타임, 모든 미들웨어, JavaScript 정규식 호환을 주장하지 않습니다. NaruServe의 타입 지정 본문·text/plain 문자열 응답·기존 WS/SSE/파일·보안 확장은 유지합니다. 설치는 [설치 안내](README.md)를 보세요.
 
 ## API 대응
 

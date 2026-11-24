@@ -2,7 +2,7 @@
 
 [한국어](../middleware.md) | [API index](README.md)
 
-This is the common HTTP stack of 0.11.0. Callbacks, responses and errors work on Java 8/API 21 without a mandatory Promise or coroutine library.
+This is the common HTTP stack of 0.12.0. Callbacks, responses and errors work on Java 8/API 21 without a mandatory Promise or coroutine library.
 
 ## Middleware
 

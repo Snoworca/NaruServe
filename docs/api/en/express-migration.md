@@ -2,7 +2,7 @@
 
 [한국어](../express-migration.md) | [API index](README.md)
 
-The **common HTTP routing profile of 0.11.0** provides common Express 5 string paths, ordering, Router, param, next and error flow through Java APIs. It does not claim all of Express, the Node runtime, every middleware package or JavaScript regex compatibility. Typed bodies, text/plain string responses and retained WS/SSE/file/security extensions remain NaruServe contracts. See [installation](README.md) to add the dependency.
+The **common HTTP routing profile of 0.12.0** provides common Express 5 string paths, ordering, Router, param, next and error flow through Java APIs. It does not claim all of Express, the Node runtime, every middleware package or JavaScript regex compatibility. Typed bodies, text/plain string responses and retained WS/SSE/file/security extensions remain NaruServe contracts. See [installation](README.md) to add the dependency.
 
 ## API mapping
 

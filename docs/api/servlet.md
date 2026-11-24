@@ -2,7 +2,7 @@
 
 [English](en/servlet.md) | [문서 목록](README.md)
 
-> **문서 버전:** NaruServe 0.11.0 기준입니다. 좌표는 [설치 안내](README.md)를 참고하세요.
+> **문서 버전:** NaruServe 0.12.0 기준입니다. 좌표는 [설치 안내](README.md)를 참고하세요.
 
 `NaruServe-servlet`은 NaruServe 앱을 Tomcat, Jetty 같은 Servlet 컨테이너(WAS) 위에서 실행하는 어댑터입니다. 내장 HTTP 엔진 대신 컨테이너가 연결을 받고, 라우트·미들웨어·`req`/`res` 코드는 **그대로** 씁니다.
 
@@ -16,9 +16,9 @@
 
 ```groovy
 // Dependencies for a web application running in a Servlet container.
-implementation 'com.snoworca.naruserve:naruserve-servlet:0.11.0'
+implementation 'com.snoworca.naruserve:naruserve-servlet:0.12.0'
 // JSON codec; otherwise configure Builder.jsonCodec(...) yourself.
-implementation 'com.snoworca.naruserve:naruserve-gson:0.11.0'
+implementation 'com.snoworca.naruserve:naruserve-gson:0.12.0'
 // The container provides the Servlet API.
 compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
 ```

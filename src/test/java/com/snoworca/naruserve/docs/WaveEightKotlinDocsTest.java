@@ -40,11 +40,11 @@ public final class WaveEightKotlinDocsTest {
         assertTrue(Arrays.asList(copy.split("\n")).contains(EXTENSION_LINE));
     }
 
-    // OPS-REL-008 AC-1; OPS-REL-009 AC-1: retain module/settings checks at the current release coordinate.
+    // OPS-REL-008 AC-1; OPS-REL-009 AC-1; OPS-REL-013 AC-2: retain module/settings checks at the current release coordinate.
     @Test
     public void sdsAc10_OPS_KT_001_AC_1_kotlin_md_names_the_module_and_settings_include_it() throws IOException {
         String kotlin = doc("kotlin.md");
-        contains("kotlin.md", kotlin, "NaruServe-kotlin", "com.snoworca.naruserve:naruserve-kotlin:0.11.0");
+        contains("kotlin.md", kotlin, "NaruServe-kotlin", "com.snoworca.naruserve:naruserve-kotlin:0.12.0");
         assertFalse(kotlin.contains("rest-kotlin"));
         assertTrue(ReadmeDocsTest.read("settings.gradle").contains("include ':NaruServe-kotlin'"));
     }

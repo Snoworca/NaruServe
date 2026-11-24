@@ -2,7 +2,7 @@
 
 [한국어](../defaults.md) | [API index](README.md)
 
-> **Version scope:** This page describes NaruServe 0.11.0, published on Maven Central (see [installation](README.md)).
+> **Version scope:** This page describes NaruServe 0.12.0, which is not released yet; the latest release on Maven Central is 0.11.0 (see [installation](README.md)).
 
 NaruServe starts with bounded inputs to control memory and thread use, including on low-memory Android 5.0 devices. No numeric limit accepts an unlimited value. Each setting has an upper bound; invalid values throw `IllegalArgumentException` with the setting name and allowed range. Increase limits explicitly within those bounds.
 
@@ -77,7 +77,7 @@ The default bounds allow these thread counts per application:
 
 The defaults were checked with JVM load tests (T26: 60 WebSockets and 60 SSE streams together). Device-specific tuning of `maxSseStreams`, `maxUpgradedConnections` and WebSocket/SSE `sendQueueSize` is a post-v1 task. Device verification is outside v1 scope, so it is not a pending manual v1 release gate. Lower these values explicitly for devices with limited memory; do not treat JVM test results as device tuning evidence.
 
-## Common HTTP defaults (0.11.0)
+## Common HTTP defaults (0.12.0)
 
 - String routes match case-insensitively and accept one trailing slash; repeated separators stay significant. Java `Pattern` keeps Java regex semantics. See [routing](routing.md).
 - Routes, middleware, static services and error layers run at their registration positions. An unmatched method/path ends in `404`, rather than a global `405`. A real static resource and the separate WS namespace retain their own method responses.
@@ -113,7 +113,7 @@ The defaults were checked with JVM load tests (T26: 60 WebSockets and 60 SSE str
 
 TinyHttpd may reject a request before an application `Request` exists. These responses are short plain text and bypass `onError`, standard JSON errors and access logging: malformed request `400`, header receive timeout `408`, long request line `414`, unsupported `Expect` `417`, large headers `431`, unsupported `Transfer-Encoding` `501`, unsupported HTTP version `505`, and socket-level capacity `503`.
 
-The 0.11.0 TinyHttpd adapter uses the RAW request-target policy from TinyHttpd 3.1.1. Common HTTP matches the original pathname before decoding participating captures exactly once with strict UTF-8. The core does not globally reject encoded slash/NUL/dot segments before matching. Malformed captures enter error handling with `400`; strict static/WS path checks and transport syntax/Host/framing checks remain. See the [Servlet path matrix](servlet.md#path-handling) for container restrictions.
+The 0.12.0 TinyHttpd adapter uses the RAW request-target policy from TinyHttpd 3.1.1. Common HTTP matches the original pathname before decoding participating captures exactly once with strict UTF-8. The core does not globally reject encoded slash/NUL/dot segments before matching. Malformed captures enter error handling with `400`; strict static/WS path checks and transport syntax/Host/framing checks remain. See the [Servlet path matrix](servlet.md#path-handling) for container restrictions.
 
 Recoverable body-read `400`, `408` and `413` can still produce their declared HTTP response while output is writable. Unhandled common HTTP errors use the HTML below; mapping a recoverable error does not itself eagerly abort the transport. Actual terminal I/O/reset, async lifetime timeout or failure writing the error response notifies abort. Adapter-generated errors such as Host allowlist `421` retain the configured standard JSON renderer.
 

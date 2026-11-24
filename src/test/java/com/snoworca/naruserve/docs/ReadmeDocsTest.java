@@ -79,7 +79,8 @@ public final class ReadmeDocsTest {
         String readme = read("README.md");
         int install = readme.indexOf("\n## Install");
         assertTrue("README.md has '## Install'", install >= 0);
-        int line = readme.indexOf("implementation 'com.snoworca.naruserve:naruserve:0.11.0'", install);
+        // OPS-REL-013 AC-2: the install line gives the release version of this checkout
+        int line = readme.indexOf("implementation 'com.snoworca.naruserve:naruserve:" + RELEASE_VERSION + "'", install);
         assertTrue("install line after '## Install'", line > install);
         String before = readme.substring(install, line);
         int repos = before.lastIndexOf("repositories {");
@@ -108,8 +109,14 @@ public final class ReadmeDocsTest {
         }
     }
 
-    /** The version of the published release the READMEs install. */
+    /** The version of the latest release on Maven Central, which the READMEs name with its publication record. */
     static final String PUBLISHED_VERSION = "0.11.0";
+
+    /**
+     * The release version of this checkout (OPS-REL-013): every current installation coordinate of the READMEs, the
+     * guides and the examples uses it. Until its Maven Central publication the READMEs do not claim it is published.
+     */
+    static final String RELEASE_VERSION = "0.12.0";
 
     /** The publication record of {@link #PUBLISHED_VERSION}. */
     static final String PUBLISHED_RECORD = "docs/release/verification/central-0.11.0.md";
@@ -214,8 +221,10 @@ public final class ReadmeDocsTest {
         return rows;
     }
 
-    // SDS-AC-9; OPS-REL-001 AC-1; OPS-DX-011 AC-5: README.md lists the coordinates of the module table rows the published
-    // release contains (the nine JAR modules and NaruServe-android of 0.11.0) and of no other row, plus the install lines
+    // SDS-AC-9; OPS-REL-001 AC-1; OPS-DX-011 AC-5; OPS-REL-013 AC-2: README.md lists the coordinate of every row of the
+    // docs/api/README.md module table at the release version of this checkout (0.12.0, the release that first ships
+    // NaruServe-proxy) and of no other row, plus the install lines; the published 0.11.0 staged every row but
+    // naruserve-proxy (its publication record), a historical fact this test keeps
     @Test
     public void ops_REL_001_AC1_readmeListsTheTenCoordinatesOfTheApiModuleTableAndTheInstallLines()
             throws IOException {
@@ -226,41 +235,45 @@ public final class ReadmeDocsTest {
         assertEquals("rows (not distinct coordinates) of the module table of docs/api/README.md", 11, rows.size());
         Set<String> coordinates = new TreeSet<>();
         Set<String> table = new TreeSet<>();
+        Set<String> inPublished = new TreeSet<>();
         Set<String> unpublished = new TreeSet<>();
         for (String[] r : rows) {
             assertTrue("module table coordinate " + r[1] + " appears once", coordinates.add(r[1]));
+            table.add(r[1] + ":" + RELEASE_VERSION);
             if (published.contains(r[1].substring(r[1].indexOf(':') + 1))) {
-                table.add(r[1] + ":" + PUBLISHED_VERSION);
+                inPublished.add(r[1]);
             } else {
                 unpublished.add(r[1]);
             }
         }
-        assertEquals("module table rows of docs/api/README.md that " + PUBLISHED_VERSION + " contains", 10, table.size());
-        assertEquals("every module the release staged has a row: " + published, published.size(), table.size());
-        // OPS-DX-011 AC-5; OPS-REL-001 AC-1: the only row the published release lacks is NaruServe-proxy, so the table
-        // is exactly the ten published rows plus naruserve-proxy
+        assertEquals("module table rows of docs/api/README.md that " + PUBLISHED_VERSION + " contains", 10,
+                inPublished.size());
+        assertEquals("every module the published release staged has a row: " + published, published.size(),
+                inPublished.size());
         assertEquals("module table rows of docs/api/README.md that " + PUBLISHED_VERSION + " does not contain",
                 new TreeSet<>(Arrays.asList("com.snoworca.naruserve:naruserve-proxy")), unpublished);
-        assertTrue(table.toString(), table.contains("com.snoworca.naruserve:naruserve-android:0.11.0"));
+        assertTrue(table.toString(), table.contains("com.snoworca.naruserve:naruserve-android:" + RELEASE_VERSION));
+        assertTrue(table.toString(), table.contains("com.snoworca.naruserve:naruserve-proxy:" + RELEASE_VERSION));
         String readme = read("README.md");
         Set<String> listed = new TreeSet<>();
-        Matcher coordinate = Pattern.compile("com\\.snoworca\\.naruserve:[\\w-]+:0\\.11\\.0(?![\\w.-])").matcher(readme);
+        Matcher coordinate = Pattern.compile("com\\.snoworca\\.naruserve:[\\w-]+:" + Pattern.quote(RELEASE_VERSION)
+                + "(?![\\w.-])").matcher(readme);
         while (coordinate.find()) {
             listed.add(coordinate.group());
         }
         assertEquals(table, listed);
-        for (String c : unpublished) {
-            assertFalse("README.md shows a versioned coordinate of the unpublished " + c,
-                    Pattern.compile(Pattern.quote(c) + ":[0-9]").matcher(readme).find());
+        Matcher any = Pattern.compile("com\\.snoworca\\.naruserve:[\\w-]+:([0-9]+\\.[0-9]+\\.[0-9]+)").matcher(readme);
+        while (any.find()) {
+            assertEquals("README.md coordinate " + any.group(), RELEASE_VERSION, any.group(1));
         }
         for (String part : new String[] {"publishToMavenLocal", "mavenLocal()",
-                "implementation 'com.snoworca.naruserve:naruserve:0.11.0'"}) {
+                "implementation 'com.snoworca.naruserve:naruserve:" + RELEASE_VERSION + "'"}) {
             assertTrue("README.md holds " + part, readme.contains(part));
         }
     }
 
-    // OPS-DX-011 AC-5: the module table holds NaruServe-proxy, a module the published release does not contain, so the
-    // README coordinates are the published rows only and neither README gives naruserve-proxy a version
+    // OPS-DX-011 AC-5; OPS-REL-013 AC-2: the module table holds NaruServe-proxy, a module the published 0.11.0 does not
+    // contain; the READMEs give naruserve-proxy only at the release version of this checkout, the first that ships it
     @Test
     public void OPS_DX_011_AC5_proxyRowIsInTheTableButNotAmongThePublishedCoordinates() throws IOException {
         Set<String> coordinates = new TreeSet<>();
@@ -271,9 +284,21 @@ public final class ReadmeDocsTest {
                 coordinates.contains("com.snoworca.naruserve:naruserve-proxy"));
         assertFalse(PUBLISHED_RECORD + " does not stage naruserve-proxy", publishedArtifacts().contains("naruserve-proxy"));
         for (String f : new String[] {"README.md", "README.ko.md"}) {
-            // the READMEs install published artifacts only; any form of a naruserve-proxy dependency (colon
-            // coordinate, Gradle map notation, a version variable) names the artifactId, so none may appear
-            assertFalse(f + " names the unpublished artifact naruserve-proxy", read(f).contains("naruserve-proxy"));
+            String doc = read(f);
+            assertTrue(f + " gives the naruserve-proxy coordinate at " + RELEASE_VERSION,
+                    doc.contains("com.snoworca.naruserve:naruserve-proxy:" + RELEASE_VERSION));
+            // any form of a naruserve-proxy dependency (colon coordinate, Gradle map notation, a version variable)
+            // names the artifactId; each occurrence is the release-version coordinate
+            Matcher m = Pattern.compile("naruserve-proxy").matcher(doc);
+            int count = 0;
+            while (m.find()) {
+                assertTrue(f + " names naruserve-proxy other than at " + RELEASE_VERSION + ": "
+                        + doc.substring(Math.max(0, m.start() - 40), Math.min(doc.length(), m.end() + 20)),
+                        doc.startsWith("naruserve-proxy:" + RELEASE_VERSION, m.start())
+                                && doc.startsWith("com.snoworca.naruserve:", m.start() - "com.snoworca.naruserve:".length()));
+                count++;
+            }
+            assertEquals(f + " names naruserve-proxy once (its module row)", 1, count);
         }
     }
 
@@ -323,14 +348,15 @@ public final class ReadmeDocsTest {
         }
     }
 
-    // OPS-DX-011 AC-4: both READMEs name NaruServe-proxy in their module tables with its contents and a link to
-    // docs/api/proxy.md, state that 0.11.0 does not contain it and show no Maven Central coordinate for it
+    // OPS-DX-011 AC-4; OPS-REL-013 AC-2: both READMEs name NaruServe-proxy in their module tables with its contents and
+    // a link to docs/api/proxy.md, state that 0.11.0 does not contain it, and give its coordinate only at the release
+    // version of this checkout (0.12.0, the version published with the module)
     @Test
     public void OPS_DX_011_AC4_readmesNameTheProxyModuleWithoutAPublishedCoordinate() throws IOException {
         String[][] cases = {
-            {"README.md", "reverse proxy middleware", "depends only on `NaruServe-api`", "| Not in 0.11.0;",
+            {"README.md", "reverse proxy middleware", "depends only on `NaruServe-api`", "not in 0.11.0",
                 "Without an SDK, the ten JAR modules still build.", "nine JAR modules"},
-            {"README.ko.md", "리버스 프록시 미들웨어", "`NaruServe-api`에만 의존", "| 0.11.0에는 없음.",
+            {"README.ko.md", "리버스 프록시 미들웨어", "`NaruServe-api`에만 의존", "0.11.0에는 없",
                 "SDK가 없어도 열 JAR 모듈을 빌드합니다.", "아홉 JAR 모듈"}};
         for (String[] c : cases) {
             String doc = read(c[0]);
@@ -341,11 +367,14 @@ public final class ReadmeDocsTest {
             for (String part : new String[] {c[1], c[2], c[3], "](docs/api/proxy.md)"}) {
                 assertTrue(c[0] + " proxy row lacks " + part + ": " + line, line.contains(part));
             }
-            assertFalse(c[0] + " proxy row shows a coordinate: " + line, line.contains("com.snoworca.naruserve:"));
+            assertTrue(c[0] + " proxy row shows the release-version coordinate: " + line,
+                    line.startsWith("| `NaruServe-proxy` | `com.snoworca.naruserve:naruserve-proxy:" + RELEASE_VERSION + "` |"));
             assertEquals(c[0] + " proxy row names no module besides NaruServe-api: " + line,
                     new TreeSet<>(Arrays.asList("NaruServe-api", "NaruServe-proxy")), moduleNames(line));
-            assertFalse(c[0] + " proxy row gives a version to the artifact: " + line,
-                    Pattern.compile("naruserve-proxy:[0-9]").matcher(line).find());
+            Matcher version = Pattern.compile("naruserve-proxy:([0-9]+\\.[0-9]+\\.[0-9]+)").matcher(line);
+            while (version.find()) {
+                assertEquals(c[0] + " proxy row version: " + line, RELEASE_VERSION, version.group(1));
+            }
         }
     }
 
@@ -454,8 +483,8 @@ public final class ReadmeDocsTest {
         }
     }
 
-    // OPS-REL-010 AC-2: every installation coordinate of the READMEs and both guide directories is the current version;
-    // 0.10.0 stays only as the previous release, never as a coordinate
+    // OPS-REL-010 AC-2, OPS-REL-013 AC-2: every installation coordinate of the READMEs and both guide directories is the
+    // current version 0.12.0; 0.11.0 and 0.10.0 stay only as earlier releases, never as a coordinate
     @Test
     public void OPS_REL_010_AC2_everyCurrentCoordinateIsTheReleaseVersion() throws IOException {
         List<String> paths = new ArrayList<>(Arrays.asList("README.md", "README.ko.md"));
@@ -472,11 +501,75 @@ public final class ReadmeDocsTest {
             String text = read(path);
             Matcher m = coordinate.matcher(text);
             while (m.find()) {
-                assertEquals(path + " " + m.group(), "0.11.0", m.group(1));
+                assertEquals(path + " " + m.group(), RELEASE_VERSION, m.group(1));
                 found++;
             }
             assertFalse(path + " has a Maven version element of the old release", text.contains("<version>0.10.0</version>"));
+            assertFalse(path + " has a Maven version element of 0.11.0", text.contains("<version>0.11.0</version>"));
         }
         assertTrue("coordinates found: " + found, found > 0);
+    }
+
+    // OPS-REL-013 AC-2: the version banner of both READMEs and every version-scope banner of both guide directories
+    // names the release version 0.12.0 (auth.md keeps its status line, the auth/RBAC v1 contract introduced in 0.11.0)
+    @Test
+    public void OPS_REL_013_AC2_versionBannersNameTheReleaseVersion() throws IOException {
+        for (String f : new String[] {"README.md", "README.ko.md"}) {
+            String banner = null;
+            for (String l : read(f).split("\n")) {
+                if (l.startsWith("> ")) {
+                    banner = l;
+                    break;
+                }
+            }
+            assertNotNull(f + " has a version banner", banner);
+            assertTrue(f + " banner names NaruServe " + RELEASE_VERSION + ": " + banner,
+                    banner.contains("NaruServe " + RELEASE_VERSION));
+        }
+        String[] prefixes = {"> **버전 범위:**", "> **Version scope:**", "> **문서 버전:**", "> **Documentation version:**",
+            "> **문서 상태:**", "> **Documentation status:**"};
+        int banners = 0;
+        for (String dir : new String[] {"docs/api", "docs/api/en"}) {
+            File[] pages = new File(root(), dir).listFiles((d, n) -> n.endsWith(".md") && !n.equals("auth.md"));
+            assertNotNull(dir, pages);
+            for (File page : pages) {
+                for (String l : read(dir + "/" + page.getName()).split("\n")) {
+                    for (String prefix : prefixes) {
+                        if (l.startsWith(prefix)) {
+                            assertTrue(dir + "/" + page.getName() + " banner names " + RELEASE_VERSION + ": " + l,
+                                    l.contains(RELEASE_VERSION));
+                            banners++;
+                        }
+                    }
+                }
+            }
+        }
+        assertTrue("version banners found: " + banners, banners >= 10);
+    }
+
+    // OPS-REL-013 AC-3: until 0.12.0 is published, neither README (nor API index) claims that 0.12.0 is on Maven
+    // Central or on a GitHub release; the Install section says that 0.12.0 is not released yet while 0.11.0 is the
+    // release on Maven Central
+    @Test
+    public void OPS_REL_013_AC3_readmesDoNotClaimTheUnreleasedVersionIsPublished() throws IOException {
+        String v = RELEASE_VERSION;
+        String[] claims = {"NaruServe " + v + " is on Maven Central", v + " is on Maven Central", v + " is published",
+            "published " + v, "NaruServe " + v + "은 Maven Central에 게시되어 있", v + "은 Maven Central에 게시되어",
+            v + "은 Maven Central에 있", v + "은 Maven Central에 공개", "releases/tag/v" + v, "central-" + v + ".md",
+            "v" + v + " GitHub", v + " (current)", v + "(현재)", "Maven Central " + v, "Maven Central의 " + v};
+        for (String f : new String[] {"README.md", "README.ko.md", "docs/api/README.md", "docs/api/en/README.md"}) {
+            String doc = read(f);
+            for (String claim : claims) {
+                assertFalse(f + " claims " + v + " is published: " + claim, doc.contains(claim));
+            }
+        }
+        String[][] installs = {{"README.md", "## Install", v + " has not been released yet",
+            "NaruServe " + PUBLISHED_VERSION + " is on Maven Central"},
+            {"README.ko.md", "## 설치", v + "은 아직 릴리스되지 않았", "NaruServe " + PUBLISHED_VERSION + "은 Maven Central에 게시되어 있"}};
+        for (String[] c : installs) {
+            String install = ReleaseNotesDocsTest.section(read(c[0]), c[1]);
+            assertTrue(c[0] + " Install says " + v + " is not released yet", install.contains(c[2]));
+            assertTrue(c[0] + " Install names the published " + PUBLISHED_VERSION, install.contains(c[3]));
+        }
     }
 }

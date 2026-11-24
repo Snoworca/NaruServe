@@ -13,6 +13,7 @@ final class ReleaseEvidenceSnapshots {
     static final String HISTORICAL="docs/release/test-results.md", HISTORICAL_SCAN="docs/release/vulnerability-scan.md";
     static final String CURRENT="docs/release/0.10.0-test-results.md", CURRENT_SCAN="docs/release/0.10.0-vulnerability-scan.md";
     static final String NEXT="docs/release/0.11.0-test-results.md", NEXT_SCAN="docs/release/0.11.0-vulnerability-scan.md";
+    static final String PENDING="docs/release/0.12.0-test-results.md", PENDING_SCAN="docs/release/0.12.0-vulnerability-scan.md";
     private ReleaseEvidenceSnapshots() {}
 
     private static File repository() { return new File(System.getProperty("naruserve.rootDir")); }
@@ -93,10 +94,16 @@ final class ReleaseEvidenceSnapshots {
         assertTrue("version declaration missing",version.find());String actualVersion=version.group(1);
         assertFalse("version declaration ambiguous",version.find());
         assertTrue("unsupported release version: "+actualVersion,actualVersion.equals("0.9.0")||actualVersion.equals("0.10.0")
-                ||actualVersion.equals("0.11.0"));
+                ||actualVersion.equals("0.11.0")||actualVersion.equals("0.12.0"));
+        // OPS-REL-013: 0.12.0 is prepared ahead of its release run; until that run writes a 0.12.0 record the gate still
+        // validates the 0.11.0 records and answers pending (false); once either 0.12.0 record exists it fails until it
+        // is pointed at the 0.12.0 records (OPS-REL-015 AC-4)
+        boolean pending=actualVersion.equals("0.12.0");
+        assertFalse("0.12.0 release records exist: point the gate at docs/release/0.12.0-*",pending
+                &&(new File(root,PENDING).isFile()||new File(root,PENDING_SCAN).isFile()));
         // OPS-REL-011 AC-4: after the 0.11.0 release run, version 0.11.0 is checked against its own records only; the
         // 0.10.0 records stay as historical files
-        boolean next=actualVersion.equals("0.11.0");
+        boolean next=actualVersion.equals("0.11.0")||pending;
         String resultsPath=next?NEXT:CURRENT, scanPath=next?NEXT_SCAN:CURRENT_SCAN;
         boolean results=new File(root,resultsPath).isFile(),report=new File(root,scanPath).isFile();
         if(!results&&!report&&actualVersion.equals("0.9.0"))return false;
@@ -109,6 +116,6 @@ final class ReleaseEvidenceSnapshots {
         String scan=record(root,scanPath,null,true);
         assertTrue("current scan must be completed",Pattern.compile("(?m)^Status: completed$").matcher(scan).find());
         scan(root,scanPath,null,runtime);
-        return true;
+        return !pending; // 0.12.0: the 0.11.0 records still hold; the 0.12.0 ones are pending
     }
 }

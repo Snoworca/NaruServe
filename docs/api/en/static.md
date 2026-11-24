@@ -2,7 +2,7 @@
 
 [한국어](../static.md) | [API index](README.md)
 
-> **Version scope:** This page describes NaruServe 0.11.0, published on Maven Central (see [installation](README.md)).
+> **Version scope:** This page describes NaruServe 0.12.0, which is not released yet; the latest release on Maven Central is 0.11.0 (see [installation](README.md)).
 
 ## staticFiles
 
@@ -24,7 +24,7 @@ Directory requests without the slash receive 301 to the slash form, preserving t
 
 ### Routes and methods
 
-- In the 0.11.0 common HTTP stack, `staticFiles` adds a service **at its registration position**. An earlier route or middleware that answers wins; a successful earlier static service stops later routes/middleware. Put authentication before the static registration. There is no universal “all routes, then static” pass.
+- In the 0.12.0 common HTTP stack, `staticFiles` adds a service **at its registration position**. An earlier route or middleware that answers wins; a successful earlier static service stops later routes/middleware. Put authentication before the static registration. There is no universal “all routes, then static” pass.
 - A miss continues to the next registered layer with the request view intact. A different-method route does not reserve the ordinary HTTP path: `GET`/`HEAD` can reach a later static service, and an unanswered method/path falls through to common HTML `404`, not that route's global `405`.
 - A real retained WebSocket-only footprint remains reserved regardless of static registration order. A file or SPA fallback cannot replace its `426`/legacy OPTIONS/method behavior. A common HTTP route sharing that pathname still follows common stack order. See [WebSocket](websocket.md).
 - A reached static service answers real files, directory indexes/listings and slash redirects for `GET`/`HEAD`. For another token, including `OPTIONS`, `TRACE`, `CONNECT` or `COPY`, a real filesystem resource yields `405` with `Allow: GET, HEAD`; an absent resource continues to later layers. Common HTTP has no earlier unknown-method/TRACE/CONNECT `501` guard. The separate WS/strict profile retains its guards.

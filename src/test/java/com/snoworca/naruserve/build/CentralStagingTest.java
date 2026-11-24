@@ -22,8 +22,9 @@ import org.junit.Test;
  */
 public class CentralStagingTest {
 
-    // OPS-REL-010 AC-1 (was OPS-REL-009 AC-1 for 0.10.0): assert the new publication, including every generated internal edge.
-    private static final String VERSION = "0.11.0";
+    // OPS-REL-013 AC-1 (was OPS-REL-010 AC-1 for 0.11.0, OPS-REL-009 AC-1 for 0.10.0): assert the new publication,
+    // including every generated internal edge.
+    private static final String VERSION = "0.12.0";
 
     private static File moduleDir(String artifactId) {
         String root = System.getProperty("naruserve.centralStaging");
@@ -62,7 +63,29 @@ public class CentralStagingTest {
         }
     }
 
-    // OPS-REL-010 AC-1: the staged module metadata names the release version, and both examples depend on it
+    // OPS-REL-013 AC-1: build.gradle declares the release version 0.12.0 once, and the jar of every JAR module, the
+    // proxy included, is named with it under build/libs and in the staging repository
+    @Test
+    public void OPS_REL_013_AC1_buildGradleDeclaresTheReleaseVersionAndEveryJarCarriesIt() throws IOException {
+        String root = System.getProperty("naruserve.rootDir");
+        assertNotNull("naruserve.rootDir system property", root);
+        String build = new String(java.nio.file.Files.readAllBytes(new File(root, "build.gradle").toPath()),
+                java.nio.charset.StandardCharsets.UTF_8);
+        java.util.regex.Matcher version = java.util.regex.Pattern.compile("(?m)^\\s*version\\s*=\\s*'([^']+)'")
+                .matcher(build);
+        assertTrue("build.gradle declares a version", version.find());
+        assertEquals("build.gradle version", VERSION, version.group(1));
+        assertFalse("build.gradle declares one version", version.find());
+        for (String module : BuildLayoutTest.MODULES) {
+            File jar = new File(root, module + "/build/libs/" + module + "-" + VERSION + ".jar");
+            assertTrue("jar named with the release version: " + jar, jar.isFile());
+        }
+        assertTrue(staged("naruserve-proxy", ".jar").isFile());
+        assertTrue(staged("naruserve-proxy", ".pom").isFile());
+    }
+
+    // OPS-REL-010 AC-1, OPS-REL-013 AC-1: the staged module metadata names the release version, and both examples
+    // depend on it
     @Test
     public void OPS_REL_010_AC1_moduleMetadataAndExamplesUseTheReleaseVersion() throws IOException {
         for (String id : PublishedPomTest.artifactIds()) {

@@ -2,7 +2,7 @@
 
 [한국어](../websocket.md) | [API index](README.md)
 
-> **Version scope:** This page describes NaruServe 0.11.0, published on Maven Central (see [installation](README.md)).
+> **Version scope:** This page describes NaruServe 0.12.0, which is not released yet; the latest release on Maven Central is 0.11.0 (see [installation](README.md)).
 
 Serve WebSocket (RFC 6455) on **the same port** as HTTP with the embedded adapter. This is NaruServe's retained WebSocket extension; the `express-ws` snippets compare concepts, not Express 5 API or grammar equivalence. The Servlet adapter cannot upgrade and returns `501`.
 

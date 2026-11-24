@@ -2,7 +2,7 @@
 
 [한국어](../servlet.md) | [API index](README.md)
 
-> **Documentation version:** This page targets NaruServe 0.11.0. See [installation](README.md) for coordinates.
+> **Documentation version:** This page targets NaruServe 0.12.0. See [installation](README.md) for coordinates.
 
 `NaruServe-servlet` runs a NaruServe application inside a Servlet container such as Tomcat or Jetty. The container accepts connections instead of the embedded engine; route, middleware and `req`/`res` code remain the same.
 
@@ -16,9 +16,9 @@
 
 ```groovy
 // Dependencies for a web application running in a Servlet container.
-implementation 'com.snoworca.naruserve:naruserve-servlet:0.11.0'
+implementation 'com.snoworca.naruserve:naruserve-servlet:0.12.0'
 // JSON codec; otherwise configure Builder.jsonCodec(...) yourself.
-implementation 'com.snoworca.naruserve:naruserve-gson:0.11.0'
+implementation 'com.snoworca.naruserve:naruserve-gson:0.12.0'
 // The container provides the Servlet API.
 compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
 ```

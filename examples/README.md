@@ -66,7 +66,7 @@ curl -X POST http://127.0.0.1:3000/posts -H "Authorization: Bearer eyJ..."      
 
 ## Separate consumer using Maven coordinates
 
-For a separate consumer, copy the example sources and build file, and remove `includeBuild('../..')` from `settings.gradle`. Keep `mavenCentral()` and use `com.snoworca.naruserve:naruserve:0.11.0` for Java or `com.snoworca.naruserve:naruserve-kotlin:0.11.0` for Kotlin when those versions are available from Maven Central. Check the [installation guide](../README.md#install) for availability and module choices.
+For a separate consumer, copy the example sources and build file, and remove `includeBuild('../..')` from `settings.gradle`. Keep `mavenCentral()` and use `com.snoworca.naruserve:naruserve:0.12.0` for Java or `com.snoworca.naruserve:naruserve-kotlin:0.12.0` for Kotlin when those versions are available from Maven Central. Check the [installation guide](../README.md#install) for availability and module choices.
 
 If the version does not resolve, publish this checkout locally from the NaruServe root:
 

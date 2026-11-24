@@ -154,15 +154,37 @@ public class ReleaseEvidenceSnapshotsTest {
         assertEquals(true,call("current",types,local,Arrays.asList("g:a:1")));
         write(local,nextScan,report("g:b:2"));
         rejected("current scan dependencies",()->call("current",types,local,Arrays.asList("g:a:1")));
-        rejected("unsupported release version",()->call("current",types,fixture("0.12.0"),Collections.emptyList()));
+        rejected("unsupported release version",()->call("current",types,fixture("0.13.0"),Collections.emptyList()));
+    }
+    // OPS-REL-013 (the 0.12.0 checkout ahead of its release run, as OPS-REL-010 AC-3 was for 0.11.0): 0.12.0 is pending
+    // only while none of its records exist; the 0.11.0 records are still checked, a 0.12.0 record fails until the gate
+    // points at it, and an unknown version is refused
+    @Test public void version012IsPendingOnlyWithoutItsRecordsAndStillChecks011()throws Exception {
+        Class<?>[] types=new Class<?>[]{File.class,List.class};
+        String previous="docs/release/0.11.0-test-results.md", previousScan="docs/release/0.11.0-vulnerability-scan.md";
+        rejected("current evidence",()->call("current",types,fixture("0.12.0"),Collections.emptyList()));
+        File local=fixture("0.12.0");write(local,PATH,"class Example { void currentOnly() {} }\n");
+        write(local,previous,currentResults());write(local,previousScan,report("g:a:1"));
+        assertEquals(false,call("current",types,local,Arrays.asList("g:a:1")));
+        write(local,previousScan,report("g:b:2"));
+        rejected("current scan dependencies",()->call("current",types,local,Arrays.asList("g:a:1")));
+        write(local,previousScan,report("g:a:1"));
+        write(local,"docs/release/0.12.0-test-results.md","# Current\n");
+        rejected("0.12.0",()->call("current",types,local,Arrays.asList("g:a:1")));
+        File scanOnly=fixture("0.12.0");write(scanOnly,PATH,"class Example { void currentOnly() {} }\n");
+        write(scanOnly,previous,currentResults());write(scanOnly,previousScan,report("g:a:1"));
+        write(scanOnly,"docs/release/0.12.0-vulnerability-scan.md",report("g:a:1"));
+        rejected("0.12.0",()->call("current",types,scanOnly,Arrays.asList("g:a:1")));
+        rejected("unsupported release version",()->call("current",types,fixture("0.13.0"),Collections.emptyList()));
     }
     // OPS-REL-011 AC-1, AC-2: the gate passes on this repository's own 0.11.0 records against the current runtime graph
     // (completed scan, equal dependency section, live method references, full-suite witness); the Java 8 run, which
-    // the gate does not read, is checked here with the same fields
+    // the gate does not read, is checked here with the same fields. OPS-REL-013: with the checkout at 0.12.0 ahead of
+    // its release run, the gate still validates the 0.11.0 records and answers pending (false)
     @Test public void realRecords011PassTheGateAndHoldBothRuns()throws Exception {
         List<String> graph=com.snoworca.naruserve.release.ReleaseMain.graphLines(new File(System.getProperty("naruserve.depReport")));
         List<String> runtime=new ArrayList<>(com.snoworca.naruserve.release.DependencyList.runtime(graph));
-        assertEquals(true,call("current",new Class<?>[]{File.class,List.class},root(),runtime));
+        assertEquals(false,call("current",new Class<?>[]{File.class,List.class},root(),runtime));
         String results=ReadmeDocsTest.read("docs/release/0.11.0-test-results.md");
         for(String run:new String[]{"full-suite","java8-full"}){
             java.util.regex.Matcher m=java.util.regex.Pattern.compile("(?m)^- run "+run

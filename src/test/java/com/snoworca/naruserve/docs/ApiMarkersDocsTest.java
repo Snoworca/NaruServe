@@ -89,7 +89,7 @@ public final class ApiMarkersDocsTest {
         }
     }
 
-    // OPS-REL-008 AC-1 AC-2: both banners identify the current profile and migration boundary.
+    // OPS-REL-008 AC-1 AC-2; OPS-REL-013 AC-2: both banners identify the current profile (0.12.0) and migration boundary.
     @Test
     public void sdsAc2_OPS_REL_002_AC2_apiReadmeBanner() throws IOException {
         String readme = doc("README.md");
@@ -97,11 +97,11 @@ public final class ApiMarkersDocsTest {
         assertFalse(readme, readme.contains("구현 목표 계약"));
         assertFalse(readme, readme.contains("으로 표시했습니다"));
         String banner = lineWith(readme, "> **문서 상태:**");
-        contains("README.md", banner, "0.11.0", "공통 HTTP", "Java Pattern", "(express-migration.md)");
+        contains("README.md", banner, "0.12.0", "공통 HTTP", "Java Pattern", "(express-migration.md)");
         assertFalse(banner, banner.contains(MARKER));
         String english = ReadmeDocsTest.read("docs/api/en/README.md");
         String englishBanner = lineWith(english, "> **Documentation status:**");
-        contains("en/README.md", englishBanner, "0.11.0", "common HTTP", "Java Pattern", "(express-migration.md)");
+        contains("en/README.md", englishBanner, "0.12.0", "common HTTP", "Java Pattern", "(express-migration.md)");
         assertFalse(englishBanner, englishBanner.contains(MARKER));
     }
 

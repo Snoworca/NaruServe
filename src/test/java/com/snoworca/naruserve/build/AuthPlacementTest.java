@@ -45,7 +45,7 @@ public class AuthPlacementTest {
     }
 
     private static File jar(String module, String suffix) {
-        File f = new File(ROOT, module + "/build/libs/" + module + "-0.11.0" + suffix + ".jar");
+        File f = new File(ROOT, module + "/build/libs/" + module + "-0.12.0" + suffix + ".jar");
         assertTrue(f.getPath(), f.isFile());
         return f;
     }

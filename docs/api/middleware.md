@@ -2,7 +2,7 @@
 
 [English](en/middleware.md) | [문서 목록](README.md)
 
-0.11.0의 일반 HTTP 스택입니다. 콜백·응답·오류를 Java 8/API 21에서 사용하며 Promise·Coroutine 라이브러리를 필수로 요구하지 않습니다.
+0.12.0의 일반 HTTP 스택입니다. 콜백·응답·오류를 Java 8/API 21에서 사용하며 Promise·Coroutine 라이브러리를 필수로 요구하지 않습니다.
 
 ## 미들웨어
 

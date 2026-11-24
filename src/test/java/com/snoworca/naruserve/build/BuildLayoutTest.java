@@ -381,10 +381,10 @@ public class BuildLayoutTest {
         assertEquals("android.permission.INTERNET", ((org.w3c.dom.Element) permissions.item(0)).getAttributeNS(ns, "name"));
     }
 
-    // CON-BUILD-006 AC-8
+    // CON-BUILD-006 AC-8; OPS-REL-013 AC-1: the jar carries the release version
     @Test
     public void con_BUILD_006_AC8_apiHasTestFixtures() {
-        assertTrue(new File(ROOT, "NaruServe-api/build/libs/NaruServe-api-0.11.0-test-fixtures.jar").isFile());
+        assertTrue(new File(ROOT, "NaruServe-api/build/libs/NaruServe-api-0.12.0-test-fixtures.jar").isFile());
     }
 
     // CON-BUILD-007 AC-1, CON-BUILD-007 AC-2

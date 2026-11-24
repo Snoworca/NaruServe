@@ -5,7 +5,7 @@
 NaruServe는 Express.js처럼 쓰는 Java 8 / Kotlin용 경량 HTTP 서버 라이브러리입니다.
 Android 5.0(API 21)부터 최신 Android, 그리고 일반 JVM에서 같은 API로 동작합니다.
 
-> **문서 상태:** 0.11.0 공통 HTTP 프로파일과 기존 확장 API를 설명합니다. 0.11.0은 Maven Central에 있으며, 설치 좌표와 아직 릴리스되지 않은 변경을 쓰는 소스 빌드는 [설치 안내](../../README.ko.md#설치)를 따르세요. 라우팅·오류·비동기 계약과 Java Pattern 경계는 [Express에서 오신 분께](express-migration.md)를 참고하세요.
+> **문서 상태:** 0.12.0 공통 HTTP 프로파일과 기존 확장 API를 설명합니다. 0.12.0은 아직 릴리스되지 않았고 Maven Central의 최신 릴리스는 0.11.0이며, 설치 좌표와 아직 릴리스되지 않은 변경을 쓰는 소스 빌드는 [설치 안내](../../README.ko.md#설치)를 따르세요. 라우팅·오류·비동기 계약과 Java Pattern 경계는 [Express에서 오신 분께](express-migration.md)를 참고하세요.
 
 Express를 써 봤다면 [Express에서 오신 분께](express-migration.md)부터 읽으세요.
 
@@ -70,11 +70,11 @@ DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답
 | [인증 모듈](auth.md) | `passport`, `express-jwt` | 0.11.0: `app.use(auth)` 한 줄로 내장 `/auth/login`·refresh·logout·계정·관리 엔드포인트, 가드(`auth.require`), 그룹과 역할, API 키. 저장은 `UserStore` 등 인터페이스(SPI)와 메모리·파일 기본 저장소 |
 | [Kotlin](kotlin.md) | — | Kotlin에서 쓰는 법, null 처리, JSON 주의 |
 | [Servlet 모듈](servlet.md) | — | `NaruServe-servlet`으로 WAS 위에서 실행 |
-| [리버스 프록시](proxy.md) | `http-proxy-middleware` | 다음 릴리스(0.12.0)의 `NaruServe-proxy`: `Proxy.to(url)`로 요청을 백엔드 서버에 넘기는 미들웨어, 옵션, `ProxyException` |
+| [리버스 프록시](proxy.md) | `http-proxy-middleware` | 0.12.0의 `NaruServe-proxy`: `Proxy.to(url)`로 요청을 백엔드 서버에 넘기는 미들웨어, 옵션, `ProxyException` |
 
 ## 모듈
 
-모든 모듈의 Maven group은 `com.snoworca.naruserve`, 버전은 `0.11.0`입니다. artifactId는 모듈 이름을 소문자로 쓴 것입니다(`NaruServe-api` → `naruserve-api`). 표의 `NaruServe-proxy`만 0.11.0에 없는 모듈입니다.
+모든 모듈의 Maven group은 `com.snoworca.naruserve`, 버전은 `0.12.0`입니다. artifactId는 모듈 이름을 소문자로 쓴 것입니다(`NaruServe-api` → `naruserve-api`). `NaruServe-proxy`는 0.12.0에서 새로 생긴 모듈로, 표에서 0.11.0에 없는 모듈은 이것 하나입니다.
 
 | 모듈 | 좌표 | 내용 | Android |
 |---|---|---|---|
@@ -88,10 +88,10 @@ DTO 검증, 스레드 안전한 사용자 서비스, 업로드, 스트림 응답
 | `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog` | 파일 로테이션 `Logger` | 지원(API 21+) |
 | `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j` | SLF4J `Logger` 어댑터(`org.slf4j:slf4j-api:1.7.36`) | 미지원(JVM 전용) |
 | `NaruServe-servlet` | `com.snoworca.naruserve:naruserve-servlet` | Servlet 3.1+ 컨테이너 위에서 NaruServe 앱을 실행하는 어댑터 | 미지원(JVM 전용) |
-| `NaruServe-proxy` | `com.snoworca.naruserve:naruserve-proxy` | 리버스 프록시 미들웨어 `Proxy.to(url)`([리버스 프록시](proxy.md)). `NaruServe-api`에만 의존합니다. 0.11.0에는 없고 다음 릴리스(0.12.0)에 더해집니다 | 지원(API 21+) |
+| `NaruServe-proxy` | `com.snoworca.naruserve:naruserve-proxy` | 리버스 프록시 미들웨어 `Proxy.to(url)`([리버스 프록시](proxy.md)). `NaruServe-api`에만 의존합니다. 0.12.0에서 새로 생겼고 0.11.0에는 없습니다 | 지원(API 21+) |
 
 "지원(API 21+)" 모듈은 빌드 때 animal-sniffer `android-api-level-21` 검사를 받습니다.
-`NaruServe-proxy`(`com.snoworca.naruserve:naruserve-proxy`)는 다음 릴리스에 더해지는 리버스 프록시 모듈입니다. `NaruServe-api`에만 의존하고, `NaruServe`·`NaruServe-kotlin`·`NaruServe-android`는 이 모듈을 포함하지 않으므로 프록시를 쓰는 앱만 따로 넣습니다.
+`NaruServe-proxy`(`com.snoworca.naruserve:naruserve-proxy`)는 0.12.0에서 더해진 리버스 프록시 모듈입니다. `NaruServe-api`에만 의존하고, `NaruServe`·`NaruServe-kotlin`·`NaruServe-android`는 이 모듈을 포함하지 않으므로 프록시를 쓰는 앱만 따로 넣습니다.
 `NaruServe-android`는 Android Gradle Plugin으로 만드는 AAR이라 Android SDK가 있을 때만 빌드됩니다(`local.properties`의 `sdk.dir`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` 순서로 찾습니다). SDK가 없으면 경고만 내고 나머지 열 모듈을 빌드합니다. 이 모듈에는 자체 코드가 없고 `minSdk`는 21입니다.
 기본 HTTP 엔진 빌드는 TinyHttpd 체크아웃을 사용하며, 커밋 `e73cd5d`(TinyHttpd 3.1.1, 태그 `v3.1.1`: RAW 요청 대상 정책)에서 검증했습니다. 체크아웃 HEAD가 다르면 빌드는 실패하지 않고 경고만 냅니다. `-PtinyHttpdFromMaven=true`를 지정하면 체크아웃 없이 Maven Central의 3.1.1 JAR로 빌드합니다. 어댑터는 `RequestTargetPolicy.RAW`로 인코딩된 경로와 원본 쿼리를 보존합니다. HTTP 구문·Host·프레이밍 검사와 WebSocket 경로 검사는 유지됩니다.
 
@@ -104,13 +104,13 @@ Android 앱은 `NaruServe-android`를 넣습니다. `NaruServe`에 Logcat 로거
 
 ```groovy
 // 일반 JDK(Java 8+): RestApp.create()로 바로 시작합니다.
-implementation 'com.snoworca.naruserve:naruserve:0.11.0'
+implementation 'com.snoworca.naruserve:naruserve:0.12.0'
 
 // Kotlin: NaruServe와 reified 확장
-implementation 'com.snoworca.naruserve:naruserve-kotlin:0.11.0'
+implementation 'com.snoworca.naruserve:naruserve-kotlin:0.12.0'
 
 // Android 앱: NaruServe와 Logcat 로거, INTERNET 권한
-implementation 'com.snoworca.naruserve:naruserve-android:0.11.0'
+implementation 'com.snoworca.naruserve:naruserve-android:0.12.0'
 ```
 
 Android 앱 모듈의 `build.gradle`에는 아래 설정도 넣습니다. TinyHttpd 3.1.1의 core와 websocket JAR에 같은 경로, 같은 내용의 라이선스 고지가 들어 있어, 이 설정이 없으면 앱 빌드의 리소스 병합(`mergeDebugJavaResource`)이 중복 파일로 실패합니다. 두 사본의 내용이 같으므로 하나만 남겨도 고지는 그대로 APK에 들어갑니다.

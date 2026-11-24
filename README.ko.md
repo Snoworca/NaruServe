@@ -10,12 +10,13 @@ Android 5.0(API 21) 이상과 Java 8 이상 JVM에서 같은 API를 사용합니
 [한국어 API 문서](docs/api/README.md)와 [English API guide](docs/api/en/README.md)를 제공합니다.
 아래 설치 방법과 실행 가능한 예제부터 시작하고, 메서드 시그니처·기본값·오류 계약은 API 가이드에서 확인하세요.
 
-> 이 안내는 NaruServe 0.11.0 공통 HTTP 프로파일과 기존 확장 API를 설명합니다.
+> 이 안내는 NaruServe 0.12.0 공통 HTTP 프로파일과 기존 확장 API를 설명합니다. Maven Central의 최신 릴리스는 0.11.0입니다.
 
 ## 설치
 
-NaruServe 0.11.0은 Maven Central에 게시되어 있으므로 아래 Maven Central 좌표를 `mavenCentral()` 저장소로 바로 받을 수 있습니다.
-[v0.11.0 GitHub 릴리스](https://github.com/Snoworca/NaruServe/releases/tag/v0.11.0)에는 Maven Central과 같은 열 개의 주요 아티팩트(JAR와 AAR)와 서명, `SHA256SUMS`, `LICENSE`가 있고, [게시 검증 기록](docs/release/verification/central-0.11.0.md)에서 게시된 파일을 어떻게 확인했는지 볼 수 있습니다. 아직 릴리스되지 않은 변경을 써 보려면 [소스 체크아웃 빌드](#소스-체크아웃-빌드)를 참고하세요.
+NaruServe 0.11.0은 Maven Central에 게시되어 있으므로 그 Maven Central 좌표를 `mavenCentral()` 저장소로 바로 받을 수 있습니다.
+[v0.11.0 GitHub 릴리스](https://github.com/Snoworca/NaruServe/releases/tag/v0.11.0)에는 Maven Central과 같은 열 개의 주요 아티팩트(JAR와 AAR)와 서명, `SHA256SUMS`, `LICENSE`가 있고, [게시 검증 기록](docs/release/verification/central-0.11.0.md)에서 게시된 파일을 어떻게 확인했는지 볼 수 있습니다.
+아래 좌표는 이 저장소의 버전인 0.12.0의 좌표입니다. 0.12.0에는 `NaruServe-proxy`와 원시 접근 API(`req.bodyStream()`, `res.relay(...)` 등)가 더해집니다. 0.12.0은 아직 릴리스되지 않았습니다. Maven Central에 올라가기 전까지는 [소스 체크아웃 빌드](#소스-체크아웃-빌드)대로 로컬에 게시해서 쓰거나, 0.12.0 대신 0.11.0을 적어 Maven Central의 릴리스를 쓰세요. 0.11.0에는 `NaruServe-proxy`가 없습니다.
 
 - Central 페이지: [central.sonatype.com/artifact/com.snoworca.naruserve/naruserve](https://central.sonatype.com/artifact/com.snoworca.naruserve/naruserve)
   (전체 모듈: [namespace com.snoworca.naruserve](https://central.sonatype.com/namespace/com.snoworca.naruserve))
@@ -29,7 +30,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.snoworca.naruserve:naruserve:0.11.0'
+    implementation 'com.snoworca.naruserve:naruserve:0.12.0'
 }
 ```
 
@@ -41,7 +42,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.snoworca.naruserve:naruserve:0.11.0")
+    implementation("com.snoworca.naruserve:naruserve:0.12.0")
 }
 ```
 
@@ -49,9 +50,9 @@ dependencies {
 
 | 프로젝트 | Gradle 의존성 |
 |---|---|
-| JDK 8 이상 Java 애플리케이션 | `implementation 'com.snoworca.naruserve:naruserve:0.11.0'` |
-| Kotlin 애플리케이션 | `implementation 'com.snoworca.naruserve:naruserve-kotlin:0.11.0'` |
-| Android 앱(API 21 이상) | `implementation 'com.snoworca.naruserve:naruserve-android:0.11.0'`과 아래 `pickFirsts` 설정 |
+| JDK 8 이상 Java 애플리케이션 | `implementation 'com.snoworca.naruserve:naruserve:0.12.0'` |
+| Kotlin 애플리케이션 | `implementation 'com.snoworca.naruserve:naruserve-kotlin:0.12.0'` |
+| Android 앱(API 21 이상) | `implementation 'com.snoworca.naruserve:naruserve-android:0.12.0'`과 아래 `pickFirsts` 설정 |
 
 Android Studio로 만든 프로젝트는 `settings.gradle`의 `dependencyResolutionManagement`에 이미 `google()`과 `mavenCentral()`이 있으므로 따로 추가할 것이 없습니다.
 
@@ -74,21 +75,21 @@ artifactId는 모듈 이름을 소문자로 쓴 값입니다(`NaruServe-api` →
 
 | 모듈 | 좌표 | 내용 |
 |---|---|---|
-| `NaruServe-api` | `com.snoworca.naruserve:naruserve-api:0.11.0` | 공개 API와 SPI. auth 모듈 `utils.auth` 포함. 외부 런타임 의존성 없음(JSpecify 애너테이션은 컴파일 전용) |
-| `NaruServe` | `com.snoworca.naruserve:naruserve:0.11.0` | `RestApp.create()` 기본 조립: TinyHttpd, Gson(컴파일 시점의 `GsonJsonCodec` 포함), 콘솔 로거. 일반 JDK에서 사용 |
-| `NaruServe-tinyhttpd` | `com.snoworca.naruserve:naruserve-tinyhttpd:0.11.0` | TinyHttpd `HttpAdapter` |
-| `NaruServe-gson` | `com.snoworca.naruserve:naruserve-gson:0.11.0` | `GsonJsonCodec`(Gson 2.14.0) |
-| `NaruServe-kotlin` | `com.snoworca.naruserve:naruserve-kotlin:0.11.0` | `NaruServe`와 Kotlin 전용 확장. `kotlin-stdlib`를 사용하는 유일한 모듈 |
-| `NaruServe-android` | `com.snoworca.naruserve:naruserve-android:0.11.0` | `NaruServe`, Logcat 로거, `INTERNET` 권한을 담은 Android 라이브러리(AAR). Android SDK가 있을 때만 빌드 |
-| `NaruServe-logcat` | `com.snoworca.naruserve:naruserve-logcat:0.11.0` | Logcat `Logger` |
-| `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog:0.11.0` | 파일 로테이션 `Logger` |
-| `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j:0.11.0` | SLF4J `Logger` 어댑터(JVM 전용) |
-| `NaruServe-servlet` | `com.snoworca.naruserve:naruserve-servlet:0.11.0` | Servlet 3.1 이상 컨테이너에서 NaruServe 앱을 실행하는 어댑터(JVM 전용) |
-| `NaruServe-proxy` | 0.11.0에는 없음. 다음 릴리스(0.12.0)에 추가 | `NaruServe-api`에만 의존하는 리버스 프록시 미들웨어 `Proxy.to(url)`. 가이드: [리버스 프록시](docs/api/proxy.md) |
+| `NaruServe-api` | `com.snoworca.naruserve:naruserve-api:0.12.0` | 공개 API와 SPI. auth 모듈 `utils.auth` 포함. 외부 런타임 의존성 없음(JSpecify 애너테이션은 컴파일 전용) |
+| `NaruServe` | `com.snoworca.naruserve:naruserve:0.12.0` | `RestApp.create()` 기본 조립: TinyHttpd, Gson(컴파일 시점의 `GsonJsonCodec` 포함), 콘솔 로거. 일반 JDK에서 사용 |
+| `NaruServe-tinyhttpd` | `com.snoworca.naruserve:naruserve-tinyhttpd:0.12.0` | TinyHttpd `HttpAdapter` |
+| `NaruServe-gson` | `com.snoworca.naruserve:naruserve-gson:0.12.0` | `GsonJsonCodec`(Gson 2.14.0) |
+| `NaruServe-kotlin` | `com.snoworca.naruserve:naruserve-kotlin:0.12.0` | `NaruServe`와 Kotlin 전용 확장. `kotlin-stdlib`를 사용하는 유일한 모듈 |
+| `NaruServe-android` | `com.snoworca.naruserve:naruserve-android:0.12.0` | `NaruServe`, Logcat 로거, `INTERNET` 권한을 담은 Android 라이브러리(AAR). Android SDK가 있을 때만 빌드 |
+| `NaruServe-logcat` | `com.snoworca.naruserve:naruserve-logcat:0.12.0` | Logcat `Logger` |
+| `NaruServe-filelog` | `com.snoworca.naruserve:naruserve-filelog:0.12.0` | 파일 로테이션 `Logger` |
+| `NaruServe-slf4j` | `com.snoworca.naruserve:naruserve-slf4j:0.12.0` | SLF4J `Logger` 어댑터(JVM 전용) |
+| `NaruServe-servlet` | `com.snoworca.naruserve:naruserve-servlet:0.12.0` | Servlet 3.1 이상 컨테이너에서 NaruServe 앱을 실행하는 어댑터(JVM 전용) |
+| `NaruServe-proxy` | `com.snoworca.naruserve:naruserve-proxy:0.12.0` | `NaruServe-api`에만 의존하는 리버스 프록시 미들웨어 `Proxy.to(url)`. 0.12.0에서 새로 생겼고 0.11.0에는 없습니다. 가이드: [리버스 프록시](docs/api/proxy.md) |
 
 ### 소스 체크아웃 빌드
 
-NaruServe 자체를 고치거나 아직 릴리스되지 않은 변경을 써 볼 때만 소스에서 빌드합니다. 릴리스된 0.11.0은 위처럼 Maven Central에서 받습니다.
+NaruServe 자체를 고치거나 0.12.0처럼 아직 릴리스되지 않은 변경을 써 볼 때만 소스에서 빌드합니다. 릴리스된 0.11.0은 Maven Central에서 받습니다.
 **JDK 17**과 저장소의 **Gradle 8.14.3** wrapper로 빌드합니다. 라이브러리 바이트코드 대상은 Java 8이며, 빌드 JDK와 실행 환경의 최소 버전은 다릅니다. `java -version`과 `./gradlew --version`으로 확인하세요.
 
 아래 명령은 배포된 TinyHttpd JAR를 사용하므로 TinyHttpd 체크아웃이 필요 없습니다.
@@ -98,7 +99,7 @@ NaruServe 자체를 고치거나 아직 릴리스되지 않은 변경을 써 볼
 ./gradlew -PtinyHttpdFromMaven=true publishToMavenLocal
 ```
 
-`publishToMavenLocal`은 이 체크아웃을 릴리스와 같은 버전 0.11.0의 위 좌표로 게시합니다. 이 로컬 빌드를 별도 소비자 프로젝트에서 사용하려면 `mavenCentral()` 앞에 `mavenLocal()`을 추가하세요.
+`publishToMavenLocal`은 이 체크아웃을 위 좌표, 버전 0.12.0으로 게시합니다. 이 로컬 빌드를 별도 소비자 프로젝트에서 사용하려면 `mavenCentral()` 앞에 `mavenLocal()`을 추가하세요.
 
 ```groovy
 repositories {
@@ -107,7 +108,7 @@ repositories {
 }
 ```
 
-`mavenLocal()`이 앞에 있는 동안에는 이 로컬 빌드가 그 소비자에서 Maven Central의 0.11.0을 가립니다. 릴리스된 아티팩트로 돌아가려면 `mavenLocal()`을 빼거나 `~/.m2/repository/com/snoworca/naruserve`를 지우세요.
+`mavenLocal()`이 앞에 있는 동안에는 로컬에 게시한 버전이 그 소비자에서 같은 버전의 Maven Central 아티팩트를 가립니다. 로컬 0.11.0(`v0.11.0` 태그를 빌드한 것)은 Maven Central의 0.11.0을 가립니다. 로컬 0.12.0도 0.12.0이 Maven Central에 올라간 뒤에는 같은 방식으로 가립니다. 릴리스된 아티팩트로 돌아가려면 `mavenLocal()`을 빼거나 `~/.m2/repository/com/snoworca/naruserve`를 지우세요.
 
 Android AAR는 `local.properties`의 `sdk.dir`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` 순으로 SDK 디렉터리를 찾아 포함합니다. Android Gradle Plugin 8.13.2, `compileSdk 36`, `minSdk 21`을 사용합니다. SDK가 없어도 열 JAR 모듈을 빌드합니다.
 
@@ -221,7 +222,7 @@ curl -i http://127.0.0.1:3000/users/42
 | 경로 변수 읽기 | `req.params.id` | `req.param("id")` |
 | 상태 지정과 JSON 응답 | `res.status(200).json(value)` | `res.status(200).json(value)` |
 
-0.11.0 공통 HTTP 프로파일은 Express 5의 등록 순서, 이름 있는 와일드카드와 선택 그룹, Router 마운트, 매개변수 콜백, route/router 건너뛰기, HEAD/OPTIONS, HTML 최종 응답을 따릅니다. 저장소의 차등 검증 코퍼스는 Express 5.1.0을 고정합니다. 검증 범위는 [마이그레이션 가이드](docs/api/express-migration.md)에서 확인하세요.
+0.12.0 공통 HTTP 프로파일은 Express 5의 등록 순서, 이름 있는 와일드카드와 선택 그룹, Router 마운트, 매개변수 콜백, route/router 건너뛰기, HEAD/OPTIONS, HTML 최종 응답을 따릅니다. 저장소의 차등 검증 코퍼스는 Express 5.1.0을 고정합니다. 검증 범위는 [마이그레이션 가이드](docs/api/express-migration.md)에서 확인하세요.
 
 정규식에는 Java `Pattern`을 사용합니다. 타입을 지정한 본문 읽기, 일반 텍스트 `res.send("text")`, 입력 제한, 정적 파일 보호, 기존 WebSocket API는 NaruServe 기능으로 유지합니다. 저장한 `Next`나 반환한 `Deferred`로 콜백 이후에도 작업을 이어갈 수 있습니다. 핸들러가 동시에 실행될 수 있으므로 공유 가변 상태를 보호하세요. `Deferred`를 resolve해도 `next.run()`이나 응답 종료가 자동 실행되지는 않습니다.
 
@@ -255,7 +256,7 @@ NaruServe-gson/         기본 JSON 코덱
 NaruServe-kotlin/       reified Kotlin 확장
 NaruServe-android/      매니페스트만 포함한 Android AAR
 NaruServe-servlet/      Servlet 3.1 어댑터
-NaruServe-proxy/        리버스 프록시 미들웨어(다음 릴리스)
+NaruServe-proxy/        리버스 프록시 미들웨어(0.12.0에서 추가)
 NaruServe-{filelog,slf4j,logcat}/  선택적 로거 어댑터
 examples/{java,kotlin}/ 실행 가능한 앱
 src/test/              빌드·게시·문서 검사
@@ -271,6 +272,7 @@ settings.gradle        모듈 포함과 선택적 TinyHttpd composite
 |---|---|
 | `tinyHttpdDir: TinyHttpd checkout not found` | `-PtinyHttpdFromMaven=true`로 배포된 엔진 JAR를 선택하거나 유효한 `-PtinyHttpdDir` 경로를 넘기세요. |
 | `Could not find com.snoworca.naruserve:...:0.11.0` | 소비자의 `repositories`에 `mavenCentral()`을 추가하고(Android 프로젝트는 `settings.gradle`의 `dependencyResolutionManagement`에 있습니다) 좌표를 [설치](#설치)와 비교하세요. 사내 미러나 프록시를 쓴다면 그 저장소도 Maven Central을 제공해야 합니다. |
+| `Could not find com.snoworca.naruserve:...:0.12.0` | 0.12.0은 아직 릴리스되지 않았습니다. [소스 체크아웃 빌드](#소스-체크아웃-빌드)대로 이 저장소를 로컬에 게시하고 소비자의 `mavenCentral()` 앞에 `mavenLocal()`을 넣거나, Maven Central의 릴리스인 0.11.0을 쓰세요. |
 | `No com.snoworca.naruserve.spi.AppFactory provider found` | `naruserve`(또는 `naruserve-kotlin` / `naruserve-android`)를 추가하거나 `RestApp.builder()`에 `httpAdapter`와 `jsonCodec`을 명시하세요. `naruserve-api`만으로는 인터페이스와 구현 기반 요소만 제공합니다. |
 | 다른 기기에서 연결할 수 없음 | 기본 바인딩은 `127.0.0.1`입니다. 설정 람다에서 `bindAddress("0.0.0.0")`를 지정하고 기기 네트워크·방화벽을 확인하세요. |
 | Android 리소스 병합에서 TinyHttpd 고지가 중복됨 | 설치 절의 `packaging.resources.pickFirsts` 설정을 적용하세요. |
@@ -279,7 +281,7 @@ settings.gradle        모듈 포함과 선택적 TinyHttpd composite
 
 | 릴리스 | 문서 |
 |---|---|
-| 0.11.0(현재) | [GitHub 릴리스 v0.11.0](https://github.com/Snoworca/NaruServe/releases/tag/v0.11.0), [릴리스 노트](docs/release/0.11.0-release-notes.ko.md), [테스트 결과](docs/release/0.11.0-test-results.md), [Maven Central 검증](docs/release/verification/central-0.11.0.md) |
+| 0.11.0(최신 릴리스) | [GitHub 릴리스 v0.11.0](https://github.com/Snoworca/NaruServe/releases/tag/v0.11.0), [릴리스 노트](docs/release/0.11.0-release-notes.ko.md), [테스트 결과](docs/release/0.11.0-test-results.md), [Maven Central 검증](docs/release/verification/central-0.11.0.md) |
 | 0.10.0(이전) | [릴리스 노트](docs/release/0.10.0-release-notes.ko.md), [테스트 결과](docs/release/0.10.0-test-results.md), [Maven Central 검증](docs/release/verification/central-0.10.0.md) |
 | v1·0.9.0(과거 기록) | [릴리스 노트](docs/release/release-notes.md), [테스트 결과](docs/release/test-results.md) |
 
