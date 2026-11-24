@@ -1,4 +1,4 @@
-# SRS-MD Authoring Rules v2.6.0
+# SRS-MD Authoring Rules v2.7.0
 
 Subtitle: **Git-native Markdown SRS authoring rules based on an extended ISO/IEC/IEEE 29148**
 
@@ -15,7 +15,7 @@ Subtitle: **Git-native Markdown SRS authoring rules based on an extended ISO/IEC
 | Audience | developers, reviewers, maintainers, AI coding agents |
 | Primary Use | SRS authoring, review, search, status updates, implementation verification |
 | Source Format | GitHub Flavored Markdown |
-| Canonical Location | `docs/rule/SRS-MD-Rules-v2.6.0.md` |
+| Canonical Location | `docs/rule/SRS-MD-Rules-v2.7.0.md` |
 | Last Updated | 2026-05-10 |
 
 ---
@@ -104,7 +104,7 @@ To mark a requirement as `verified`, the acceptance criteria must be satisfied a
 ```text
 docs/
 ├─ rule/
-│  └─ SRS-MD-Rules-v2.6.0.md
+│  └─ SRS-MD-Rules-v2.7.0.md
 │
 ├─ spec/
 │  ├─ 00.index.md
@@ -141,7 +141,7 @@ The responsibility of each path is as follows.
 
 | Path | Responsibility |
 |---|---|
-| `docs/rule/SRS-MD-Rules-v2.6.0.md` | SRS-MD authoring, parsing, validation, agent workflow rules |
+| `docs/rule/SRS-MD-Rules-v2.7.0.md` | SRS-MD authoring, parsing, validation, agent workflow rules |
 | `docs/spec/00.index.md` | Entry point for the whole SRS document set, target list, scope document links, summary |
 | `docs/spec/*.srs.md` | Source of truth for requirements per functional scope |
 | `docs/spec/90.appendix.md` | Common terms, enums, status definitions, cross-scope map, supplementary rules |
@@ -250,7 +250,7 @@ SRS documents are authored on the basis of GitHub Flavored Markdown, hereafter G
 | Document Type | srs_index |
 | Version | 1.0.0 |
 | Active Target |  |
-| Rules | [SRS-MD Authoring Rules v2.6.0](../rule/SRS-MD-Rules-v2.6.0.md) |
+| Rules | [SRS-MD Authoring Rules v2.7.0](../rule/SRS-MD-Rules-v2.7.0.md) |
 | Last Updated | YYYY-MM-DD |
 
 ## 1. Purpose
@@ -612,6 +612,7 @@ OBS-AGENT-001
 5. When merging multiple requirements, keep one representative ID and handle the rest with `discarded` or `Superseded By`.
 6. The prefix of the ID and the `Type` in the metadata table must match.
 7. The scope segment of the ID must match a prefix registered in the Scope Map of the SRS Index.
+8. A new requirement may take a number chosen by its author, such as one parallel worktrees agreed on, provided no SRS document of the checkout has used that number in the same prefix and scope, however it is padded (`FR-AUTH-0001` is the number `FR-AUTH-001` holds); unused numbers between IDs are valid and are not reported.
 
 ---
 
@@ -760,6 +761,7 @@ To change to `verified`, all of the following conditions must be satisfied.
 5. The Verification Evidence table has at least one evidence row.
 6. The `Reference` value of the evidence row is not empty.
 7. Where possible, each AC is covered in the `Covers` column of the evidence either directly or by `all`.
+8. Every live criterion marked `[NON-TEST]` is named by an evidence row whose `Type` is not `Test` and whose `Covers` lists that criterion; `all` does not name it. The tool refuses `verified` otherwise and names the criterion.
 
 ---
 
@@ -1012,6 +1014,9 @@ Acceptance Criteria must be written as a task list.
 4. A non-functional requirement includes a measurable criterion.
 5. In the `verified` status, every AC must be `- [x]`.
 6. Deleting an AC in order to meet the `verified` conditions is forbidden. When the criterion has changed, record the reason in `Change Notes`. Expiring an AC for that purpose is forbidden as well: expire a criterion only when it no longer describes intended behaviour.
+7. A live AC longer than 4,000 characters is reported as `SRS-W083`: it usually carries design prose or several conditions. Split it into atomic conditions with `edit_acceptance_criterion` and `append_acceptance_criterion`, and move design prose to Implementation Notes. The warning never blocks a write, and no write route refuses an AC for its length.
+8. An AC judges a result this repository produces. Another system's behaviour belongs to that system's requirement: move it there and expire the original criterion naming that requirement as successor (§21.7).
+9. A declared limitation or a scope statement is not an AC: write it in `Rationale` or `Implementation Notes`, or in the scope document's `Out of Scope`.
 
 ### 21.4 Functional Requirement AC Example
 
@@ -1053,6 +1058,20 @@ A criterion whose behaviour moved to another requirement, or was dropped, keeps 
 5. A test line that still cites an expired criterion is listed by test sufficiency as an expired citation, and is not coverage. A `Covers` cell that names one is history, not stale evidence.
 6. A successor named in the marker must be another requirement that exists and has not been withdrawn under §30. The tool refuses to write any other successor, and validation reports one found in a document as `SRS-E012`, like a dangling trace link.
 
+### 21.8 Non-test Acceptance Criteria
+
+A criterion that this repository's automated tests cannot reproduce, such as a check against a real external service or one that needs a person to look, is marked non-test:
+
+```md
+- [x] AC-3: Sign-in completes against the production authorization server. [NON-TEST]
+```
+
+1. The marker is written and removed only by the tool: `mark_acceptance_criterion_non_test` (CLI `speckiwi mark-ac-non-test <id> <acId> --reason <text>`) appends it and a Change Notes row `Marked AC-{N} non-test` carrying the required reason in the same patch, and `unmark_acceptance_criterion_non_test` (CLI `speckiwi unmark-ac-non-test`) removes it with an `Unmarked AC-{N} non-test` row. Both refuse a `verified` requirement. A marker typed by hand has the same grammar and is read the same way, so a hand edit bypasses the reason record; do not type one.
+2. The grammar is `AC-{N}: <text> [NON-TEST]`: one or more spaces and `[NON-TEST]` closing a line with text before it. Any other spelling is part of an ordinary criterion's text. A line that is also expired (§21.7) is expired only.
+3. Mark only a check this repository's automated tests cannot reproduce. A check a test could make is not a non-test criterion, whatever the test would cost to write.
+4. Test sufficiency leaves a marked criterion out of its gaps and lists it under `nonTest` with the evidence rows that name it. A row names it when its `Type` is not `Test` and its `Covers` lists the criterion; `all` does not name it (§22.3). The kind of check, such as manual, inspection or demo, is the row's `Type`, not a second marker.
+5. Rewording a marked criterion keeps the marker. Replacing all criteria of a block that holds one is refused until it is unmarked, because the replacement would drop the marker and its recorded reason.
+
 ---
 
 ## 22. Verification Evidence Rules
@@ -1088,10 +1107,11 @@ A criterion whose behaviour moved to another requirement, or was dropped, keeps 
 2. Numbers increase from 1 within a Requirement Block.
 3. Use `AC-1`, `AC-2`, `all`, or `-` in `Covers`.
 4. In the `verified` status, `Covers = all`, or having every AC covered by evidence, is recommended.
+5. `all` does not cover a criterion marked `[NON-TEST]` (§21.8): name it in `Covers` of a non-test row.
 
 ### 22.4 Evidence Reference Rules
 
-1. Write a local file as an inline code path. Example: `` `src/auth/session.ts` ``.
+1. Write a local file as an inline code path, relative to the project root. Example: `` `src/auth/session.ts` ``. A file name alone names a file at the project root and is not looked for anywhere else.
 2. Write a GitHub Issue or PR as a URL.
 3. Write a document as a Markdown link.
 4. Do not write a file path that does not exist.
@@ -1746,6 +1766,8 @@ Validation items:
 | `SRS-W079` | warning | PRD reference names a missing file or item |
 | `SRS-W080` | warning | depends_on Trace Link row names no requirement |
 | `SRS-W081` | warning | Trace Link row points at a discarded requirement |
+| `SRS-W082` | warning | Verification Evidence reference does not resolve yet |
+| `SRS-W083` | warning | Acceptance criterion is longer than the threshold |
 
 This table lists every code `validate-spec` can emit, and only those. A code the runtime cannot produce is not listed, because a listed code reads as an enforced check.
 
@@ -2107,7 +2129,7 @@ This document carries no copy of the block, because a copy drifts from the tool.
 
 ## 41. Document End
 
-This document is the reference document for SRS-MD Authoring Rules v2.6.0. Detailed enums, scope prefixes, and target naming that suit each repository's situation may be extended in `docs/spec/00.index.md` and `docs/spec/90.appendix.md`. However, the Requirement Block heading format, the metadata table, the status meanings, and the Acceptance Criteria, Verification Evidence, and Trace Links rules must be kept for compatibility.
+This document is the reference document for SRS-MD Authoring Rules v2.7.0. Detailed enums, scope prefixes, and target naming that suit each repository's situation may be extended in `docs/spec/00.index.md` and `docs/spec/90.appendix.md`. However, the Requirement Block heading format, the metadata table, the status meanings, and the Acceptance Criteria, Verification Evidence, and Trace Links rules must be kept for compatibility.
 
 ---
 

@@ -1,5 +1,5 @@
-# SpecKiwi SRS workflow v1.11
-Written by speckiwi 5.3.7.
+# SpecKiwi SRS workflow v1.12
+Written by speckiwi 5.7.0.
 
 This repository uses `docs/spec/` as the required source of truth for requirements.
 
@@ -37,7 +37,7 @@ Work-mode and the TDD First (tdd) workflow:
 7. When the mode is `vibe`, code may come first for the Active Task, so the TDD principle and the stop-and-ask rule above do not hold that task back; the step SRS MUST still be synthesized (MCP `synthesize_step_srs`, or CLI `speckiwi step synthesize <task>` when MCP is unavailable) before the commit that lands the task; `check_vibe_gate` (CLI `speckiwi vibe-gate check`) only confirms that the Active Task's step directory exists, not that the synthesis ran. Switch to vibe only when the user asks for it.
 
 Scope SRS document naming:
-1. A scope SRS document is named `docs/spec/{NN}.{scope-slug}.srs.md`, where `{NN}` is a two-digit ordering number. The full rules are in `docs/rule/SRS-MD-Rules-v2.6.0.md` §5.2.
+1. A scope SRS document is named `docs/spec/{NN}.{scope-slug}.srs.md`, where `{NN}` is a two-digit ordering number. The full rules are in `docs/rule/SRS-MD-Rules-v2.7.0.md` §5.2.
 2. Allocate `{NN}` as one above the highest number already present among the project's scope documents. The first scope document of a project is `01`, the next `02`. Do not number by tens.
 3. Never reuse a number another scope document holds, and never renumber an existing document.
 4. Prefer `speckiwi scaffold-scope <Name>:<PREFIX> --apply`, which allocates the number and registers the document in both index sections in one operation, over writing the file and the index rows by hand.
@@ -45,17 +45,19 @@ Scope SRS document naming:
 Agents MUST NOT:
 - Implement behavior that is not covered by an SRS requirement (the tdd and vibe items above say how step-scoped work is covered).
 - Create an alternate requirements source outside `docs/spec/`.
-- Change requirement IDs manually.
+- Change an existing requirement's ID by hand.
 - Mark requirements as verified without evidence.
 - Flip several requirements to `verified`, or empty the Active Target, in one operation without per-requirement evidence and stability gate checks.
 
-When SpecKiwi MCP tools are available, agents MUST use them for requirement lookup and safe SRS updates. Normal target-scoped SRS mutations go through MCP only: the `speckiwi` CLI diagnoses installation, version and configuration (see the tool check above) and is not a normal replacement for an MCP mutation. Registering an unregistered target is the single exception among target-scoped SRS mutations, and the target workflow below names it; the CLI forms this block gives for work-mode, step and repair commands are for when MCP is unavailable. CLI reads remain available for lookup while MCP is being repaired.
+Parallel worktrees that agreed their Requirement ID numbers beforehand pass the agreed free number to MCP `add_requirement` as `requirementId` (CLI `add-requirement --requirement-id`); the tool checks it against this checkout only, so the agreement itself is what keeps worktrees apart.
+
+When SpecKiwi MCP tools are available, agents MUST use them for requirement lookup and safe SRS updates. Normal target-scoped SRS mutations go through MCP only: the `speckiwi` CLI diagnoses installation, version and configuration (see the tool check above) and is not a normal replacement for an MCP mutation. Three target-scoped SRS mutations may use the CLI: registering an unregistered target, which the target workflow below names, and renaming a target (`speckiwi rename-target`) or setting a target's status (`speckiwi set-target-status`), which have no MCP tool; the CLI forms this block gives for work-mode, step and repair commands are for when MCP is unavailable. CLI reads remain available for lookup while MCP is being repaired.
 
 Per-call workspace root:
 1. The MCP server binds once, at startup, to the nearest directory at or above its working directory that holds `docs/spec/00.index.md` — never the home directory — and writes SRS only there.
 2. The `workflow_*` family accepts an optional absolute `workspaceRoot` on every tool, and the `orchestrate_*` family on every tool except `orchestrate_replay_apply` and `orchestrate_preflight`.
-3. The SRS query tools also accept it: `list_requirements`, `search_requirements`, `get_requirement`, `validate_spec`, `summarize_target`, `get_active_target`, `list_targets`, `list_roadmap_items`, `get_roadmap_item`, `check_roadmap`, `list_completed_work`, `validate_step`, `get_work_mode`, `check_vibe_gate`, `list_dirty_edges`, `list_compat_edges`, `list_steps`, `check_sds` and `check_test_sufficiency` — each reading the named checkout and writing nothing.
-4. Every other tool refuses `workspaceRoot`, including every tool that writes under `docs/spec` or allocates a Requirement ID; run those from a session started in that checkout.
+3. The SRS query tools also accept it: `list_requirements`, `search_requirements`, `get_requirement`, `validate_spec`, `summarize_target`, `get_active_target`, `list_targets`, `list_roadmap_items`, `get_roadmap_item`, `check_roadmap`, `list_completed_work`, `validate_step`, `get_work_mode`, `check_vibe_gate`, `list_dirty_edges`, `list_compat_edges`, `list_steps`, `check_sds`, `check_test_sufficiency` and `check_review_round` — each reading the named checkout and writing nothing.
+4. Every other tool refuses `workspaceRoot`, including every tool that writes under `docs/spec` or allocates a Requirement ID: writes stay in the checkout the MCP server was started in, because a write that omitted the argument would land in that checkout unnoticed and an orchestrator lane sharing the server could write its own worktree's SRS. Run those from a session started in that checkout; to write in a worktree, start an agent session in that worktree, and repair IDs that collide between branches at merge with the duplicate Requirement ID repair workflow below.
 5. An accepted `workspaceRoot` MUST be the absolute git top level of a worktree of the same repository; a refused call names its reason.
 6. Agents MUST confirm workspace identity from the `mcpWorkspace` envelope — `workspaceRoot` plus `rootSource` — before any target-scoped read or mutation. `rootSource` reads `per-call-workspace-root` exactly when a supplied `workspaceRoot` passed every gate, `server-cwd-discovery` when the server found the SRS from its working directory, and `unbound` when it found none. An unbound server answers every call with `MCP_WORKSPACE_UNBOUND` and creates nothing: start the agent session (or set the MCP server's working directory) in the project directory, propose `speckiwi init` there first if the project has no SRS yet (tool check item 3), then restart the session.
 
@@ -95,4 +97,6 @@ The Completed Work Log — inline in `docs/spec/00.index.md` §7 and its split h
 - Do not duplicate code. Reuse existing utilities before adding another implementation of the same behavior.
 - When multiple classes need the same behavior, create or extend a focused utility class in `com.snoworca.naruserve.common` and reuse its methods. Keep shared utilities in the lowest suitable module to avoid dependency cycles.
 - Share input validation, type conversion and HTTP syntax helpers instead of copying them into request, response, application or session implementations. Keep feature-specific behavior in its owning class.
+
+
 
