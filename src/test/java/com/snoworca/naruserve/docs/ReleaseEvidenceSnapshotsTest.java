@@ -256,6 +256,18 @@ public class ReleaseEvidenceSnapshotsTest {
         }
         assertTrue(sbom.group(3),sbom.group(3).startsWith("files=11; "));
     }
+    // FR-REL-007 AC-3: the 0.12.0 record holds an offline default build run with a Gradle user home that holds every
+    // default-build dependency but neither release plugin (CycloneDX, Dependency-Check), with exit=0 and a 40-hex commit
+    @Test public void realRecords012HoldTheOfflineBuildWithoutTheReleasePlugins()throws Exception {
+        String results=ReadmeDocsTest.read("docs/release/0.12.0-test-results.md");
+        java.util.regex.Matcher m=runLine(results,"offline-no-release-plugins");
+        assertTrue(m.group(1),m.group(1).startsWith("GRADLE_USER_HOME=<freshHome> ./gradlew ")&&m.group(1).contains(" build")
+                &&m.group(1).contains("--offline")&&!m.group(1).contains("-Prelease"));
+        java.util.regex.Matcher c=java.util.regex.Pattern.compile("^tests=([0-9]+); failures=0; errors=0; skipped=0; releasePluginFiles=0$")
+                .matcher(m.group(3));
+        assertTrue("offline-no-release-plugins result: "+m.group(3),c.find());
+        assertTrue(c.group(1),Long.parseLong(c.group(1))>0);
+    }
     // OPS-REL-015 AC-3: both 0.12.0 release notes describe the raw access API, NaruServe-proxy with trustCertificates,
     // the BodyTooLargeException 413 change, the upgrade from 0.11.0 and the declared limits
     @Test public void releaseNotes012DescribeRawAccessProxyThe413ChangeAndUpgrade()throws Exception {
