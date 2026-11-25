@@ -100,15 +100,17 @@ public class AuthGuideRound4DocsTest {
         return doc.substring(start, end < 0 ? doc.length() : end);
     }
 
-    // OPS-AUTH-013 AC-4: the READMEs say plainly that 0.11.0 is on Maven Central (amended 2026-11-09 after the
-    // publication), keep the local publication for unreleased changes only, and name the module that holds auth
+    // OPS-AUTH-013 AC-4: the READMEs say plainly that the published release is on Maven Central (amended 2026-11-09
+    // after the 0.11.0 publication; since the 0.12.0 publication, OPS-REL-017, the sentence names 0.12.0), keep the
+    // local publication for unreleased changes only, and name the module that holds auth
     @Test
     public void OPS_AUTH_013_AC4_readmeStatesAvailability() throws IOException {
+        String v = ReadmeDocsTest.PUBLISHED_VERSION;
         for (String f : new String[] {"README.md", "README.ko.md"}) {
             String doc = read(f);
             boolean ko = f.endsWith(".ko.md");
-            has(f, doc, ko ? "NaruServe 0.11.0은 Maven Central에 게시되어 있" : "NaruServe 0.11.0 is on Maven Central");
-            assertFalse(f + " still says 0.11.0 is not on Maven Central",
+            has(f, doc, ko ? "NaruServe " + v + "은 Maven Central에 게시되어 있" : "NaruServe " + v + " is on Maven Central");
+            assertFalse(f + " still says the release is not on Maven Central",
                     doc.contains(ko ? "아직 Maven Central에 없습니다" : "not yet on Maven Central"));
             String source = sourceSection(f, doc);
             has(f + " source section", source, "publishToMavenLocal");

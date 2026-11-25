@@ -118,11 +118,12 @@ public class AuthGuideRound5DocsTest {
     }
 
     // OPS-AUTH-015 AC-6: the availability is one sentence of the Install section (after the 2026-11-09 publication
-    // that sentence says 0.11.0 is on Maven Central)
+    // that sentence said 0.11.0 is on Maven Central; since the 0.12.0 publication, OPS-REL-017, it names 0.12.0)
     @Test
     public void OPS_AUTH_015_AC6_availabilityIsOneSentence() throws IOException {
-        String[][] cases = {{"README.md", "## Install", "> **Availability:**", "NaruServe 0.11.0 is on Maven Central"},
-                {"README.ko.md", "## 설치", "> **가용성:**", "NaruServe 0.11.0은 Maven Central에 게시되어 있"}};
+        String v = ReadmeDocsTest.PUBLISHED_VERSION;
+        String[][] cases = {{"README.md", "## Install", "> **Availability:**", "NaruServe " + v + " is on Maven Central"},
+                {"README.ko.md", "## 설치", "> **가용성:**", "NaruServe " + v + "은 Maven Central에 게시되어 있"}};
         for (String[] c : cases) {
             String doc = read(c[0]);
             assertFalse(c[0] + " has a separate availability note", doc.contains(c[2]));
