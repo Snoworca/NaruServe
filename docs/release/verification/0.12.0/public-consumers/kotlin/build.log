@@ -1,0 +1,42 @@
+$ (cd build/consumer-runs/kotlin) JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/17.0.20.1/libexec/openjdk.jdk/Contents/Home GRADLE_USER_HOME=/Users/beom/work/git/NaruServe/build/consumer-homes/kotlin ./gradlew -PpublicConsumer=true --refresh-dependencies clean run consumerArtifactReport
+Downloading https://services.gradle.org/distributions/gradle-8.14.3-bin.zip
+.............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%..............100%
+
+Welcome to Gradle 8.14.3!
+
+Here are the highlights of this release:
+ - Java 24 support
+ - GraalVM Native Image toolchain selection
+ - Enhancements to test reporting
+ - Build Authoring improvements
+
+For more details see https://docs.gradle.org/8.14.3/release-notes.html
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :clean UP-TO-DATE
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :processResources NO-SOURCE
+> Task :consumerArtifactReport
+> Task :compileKotlin
+> Task :compileJava NO-SOURCE
+> Task :classes UP-TO-DATE
+
+> Task :run
+2026-11-26T03:45:48.830+0900 INFO GET /API/files/a%2Fb/c 200 19ms in=0 out=11 rid=e1ee346229e5361f
+2026-11-26T03:45:48.833+0900 INFO GET /api/files 200 0ms in=0 out=2 rid=454b2395aec5e682
+2026-11-26T03:45:48.840+0900 INFO POST /typed 200 6ms in=26 out=14 rid=485ea9e0e01bbca5
+2026-11-26T03:45:48.841+0900 INFO GET /later 200 0ms in=0 out=5 rid=4b6e3c46a6fb2c97
+2026-11-26T03:45:48.842+0900 INFO POST /retained 202 0ms in=0 out=3 rid=37a87cbe442a4a46
+2026-11-26T03:45:48.845+0900 INFO GET /keep/items 200 0ms in=0 out=86 rid=bb1cb8e4b7d1bd0c
+2026-11-26T03:45:48.846+0900 INFO GET /keep/items 200 3ms in=0 out=86 rid=7ab4b95cc12b6dc8
+2026-11-26T03:45:48.847+0900 INFO GET /items 200 0ms in=0 out=81 rid=625c5fae68ae42ef
+2026-11-26T03:45:48.847+0900 INFO GET /strip/items 200 0ms in=0 out=81 rid=4e78356d40d2a026
+2026-11-26T03:45:48.848+0900 INFO POST /keep/echo 200 0ms in=33 out=122 rid=6b3960469dd79957
+2026-11-26T03:45:48.848+0900 INFO POST /keep/echo 200 0ms in=33 out=122 rid=85d98fbf172ffb01
+2026-11-26T03:45:48.850+0900 INFO GET /keep/items 502 1ms in=0 out=5930 rid=1385c3f7099293d3
+{"javaVersion":"1.8.0_504","javaHome":"/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/jre","kotlinVersion":"2.2.0","checks":["published Kotlin reified body metadata","mounted Router named wildcard and decoded segment list","typed List\u003cString\u003e and nullable String? absent capture","three-argument Middleware","getAsync returned Deferred and late HTTP response","typed generic Gson List\u003cPayload\u003e","first typed body read after wire202 with pending Deferred and cache identity","naruserve-proxy Proxy.to relays GET to a second NaruServe backend with mount prefix and query kept","Proxy stripPrefix(true) forwards only the path after the mount","client X-Forwarded-For dropped without proxy trust, socket address 127.0.0.1 sent, Host replaced by target, X-Forwarded-Host from client Host","POST JSON body relayed through the proxy","backend raw access req.bodyStream() and res.relay(in, contentLength)","stopped backend gives 502 without revealing the backend address"],"passed":true}
+
+BUILD SUCCESSFUL in 16s
+4 actionable tasks: 3 executed, 1 up-to-date
+# exit code: 0

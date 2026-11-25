@@ -1,0 +1,41 @@
+$ (cd build/consumer-runs/java8) JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/17.0.20.1/libexec/openjdk.jdk/Contents/Home GRADLE_USER_HOME=/Users/beom/work/git/NaruServe/build/consumer-homes/java8 ./gradlew -PpublicConsumer=true --refresh-dependencies clean run consumerArtifactReport
+Downloading https://services.gradle.org/distributions/gradle-8.14.3-bin.zip
+.............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%..............100%
+
+Welcome to Gradle 8.14.3!
+
+Here are the highlights of this release:
+ - Java 24 support
+ - GraalVM Native Image toolchain selection
+ - Enhancements to test reporting
+ - Build Authoring improvements
+
+For more details see https://docs.gradle.org/8.14.3/release-notes.html
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :clean UP-TO-DATE
+> Task :compileJava
+> Task :processResources NO-SOURCE
+> Task :classes
+
+> Task :run
+2026-11-26T03:44:51.003+0900 INFO GET /hello 200 15ms in=0 out=5 rid=4faa653a6554bf8f
+2026-11-26T03:44:51.014+0900 INFO GET /API/files/a%2Fb/c 200 10ms in=0 out=21 rid=5d2562c786b24d48
+2026-11-26T03:44:51.015+0900 INFO GET /later 200 0ms in=0 out=5 rid=ba95fb6aa5a7fa97
+2026-11-26T03:44:51.016+0900 INFO POST /retained 200 0ms in=0 out=3 rid=34cba2114dad2b4a
+2026-11-26T03:44:51.019+0900 INFO DELETE /hello 404 0ms in=0 out=147 rid=610842335e4a2725
+2026-11-26T03:44:51.022+0900 INFO GET /keep/items 200 0ms in=0 out=86 rid=095ea0a59bc2c59f
+2026-11-26T03:44:51.023+0900 INFO GET /keep/items 200 3ms in=0 out=86 rid=f132762a5a8d863b
+2026-11-26T03:44:51.024+0900 INFO GET /items 200 0ms in=0 out=81 rid=e756f97561a1f491
+2026-11-26T03:44:51.024+0900 INFO GET /strip/items 200 0ms in=0 out=81 rid=d52f023511dac716
+2026-11-26T03:44:51.025+0900 INFO POST /keep/echo 200 0ms in=26 out=115 rid=abfeb65f46d20f6c
+2026-11-26T03:44:51.025+0900 INFO POST /keep/echo 200 0ms in=26 out=115 rid=488070fdf0318417
+2026-11-26T03:44:51.027+0900 INFO GET /keep/items 502 1ms in=0 out=5930 rid=acb2f4b029668ecd
+{"javaVersion":"1.8.0_504","javaHome":"/Users/beom/Library/Java/JavaVirtualMachines/zulu8.96.0.205-ca-jdk8.0.504-macosx_aarch64/Contents/Home/jre","serviceFactories":["com.snoworca.naruserve.bootstrap.DefaultAppFactory"],"logger":"com.snoworca.naruserve.ConsoleLogger","checks":["RestApp.create actual HTTP","mounted Router named wildcard and encoded slash","getAsync returned Deferred and later response","first JSON body read after completed wire ack with pending Deferred","same-Type JSON cache","common wrong-method HTML404","naruserve-proxy Proxy.to relays GET to a second NaruServe backend with mount prefix and query kept","Proxy stripPrefix(true) forwards only the path after the mount","client X-Forwarded-For dropped without proxy trust, socket address 127.0.0.1 sent, Host replaced by target, X-Forwarded-Host from client Host","POST JSON body relayed through the proxy","backend raw access req.bodyStream() and res.relay(in, contentLength)","stopped backend gives 502 without revealing the backend address"],"passed":true}
+
+> Task :consumerArtifactReport
+
+BUILD SUCCESSFUL in 10s
+4 actionable tasks: 3 executed, 1 up-to-date
+# exit code: 0
