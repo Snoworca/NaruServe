@@ -2,7 +2,7 @@
 
 [English](en/static.md) | [문서 목록](README.md)
 
-> **버전 범위:** NaruServe 0.12.0 기준입니다. 0.12.0은 아직 릴리스되지 않았고, Maven Central의 최신 릴리스는 0.11.0입니다([설치 안내](README.md)).
+> **버전 범위:** NaruServe 0.12.0 기준입니다. 0.12.0은 Maven Central에 공개되어 있습니다([설치 안내](README.md)).
 
 ## staticFiles
 

@@ -2,7 +2,7 @@
 
 [한국어](../static.md) | [API index](README.md)
 
-> **Version scope:** This page describes NaruServe 0.12.0, which is not released yet; the latest release on Maven Central is 0.11.0 (see [installation](README.md)).
+> **Version scope:** This page describes NaruServe 0.12.0, published on Maven Central (see [installation](README.md)).
 
 ## staticFiles
 

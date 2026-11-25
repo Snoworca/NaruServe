@@ -2,7 +2,7 @@
 
 [English](en/websocket.md) | [문서 목록](README.md)
 
-> **버전 범위:** NaruServe 0.12.0 기준입니다. 0.12.0은 아직 릴리스되지 않았고, Maven Central의 최신 릴리스는 0.11.0입니다([설치 안내](README.md)).
+> **버전 범위:** NaruServe 0.12.0 기준입니다. 0.12.0은 Maven Central에 공개되어 있습니다([설치 안내](README.md)).
 
 내장 어댑터는 HTTP와 **같은 포트**에서 WebSocket(RFC 6455)을 받습니다. 유지되는 NaruServe WebSocket 확장이며, `express-ws` 예제는 개념 비교입니다. Express 5 API·문법과 같다는 뜻은 아닙니다. Servlet 어댑터는 업그레이드하지 못하고 `501`을 답합니다.
 

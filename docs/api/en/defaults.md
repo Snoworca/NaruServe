@@ -2,7 +2,7 @@
 
 [한국어](../defaults.md) | [API index](README.md)
 
-> **Version scope:** This page describes NaruServe 0.12.0, which is not released yet; the latest release on Maven Central is 0.11.0 (see [installation](README.md)).
+> **Version scope:** This page describes NaruServe 0.12.0, published on Maven Central (see [installation](README.md)).
 
 NaruServe starts with bounded inputs to control memory and thread use, including on low-memory Android 5.0 devices. No numeric limit accepts an unlimited value. Each setting has an upper bound; invalid values throw `IllegalArgumentException` with the setting name and allowed range. Increase limits explicitly within those bounds.
 

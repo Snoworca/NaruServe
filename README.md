@@ -10,13 +10,13 @@ The same API runs on Android 5.0 (API 21) and later and on any Java 8+ JVM.
 Read the [English API guide](docs/api/en/README.md) or the [한국어 API 문서](docs/api/README.md).
 Start with installation and the runnable example below; use the API guides for signatures, defaults and error contracts.
 
-> This guide describes the NaruServe 0.12.0 common HTTP profile and retained extensions; the latest release on Maven Central is 0.11.0.
+> This guide describes the NaruServe 0.12.0 common HTTP profile and retained extensions.
 
 ## Install
 
-NaruServe 0.11.0 is on Maven Central, so its Maven Central coordinates resolve with `mavenCentral()` as the repository.
-The [v0.11.0 GitHub release](https://github.com/Snoworca/NaruServe/releases/tag/v0.11.0) carries the same ten main artifacts as Maven Central (JARs and the AAR) with their signatures, `SHA256SUMS` and `LICENSE`, and the [publication record](docs/release/verification/central-0.11.0.md) shows how the published files were checked.
-The coordinates below are those of 0.12.0, the version of this repository, which adds `NaruServe-proxy` and the raw access API (`req.bodyStream()`, `res.relay(...)` and more). 0.12.0 has not been released yet: until it reaches Maven Central, publish it locally as described in [Build from a source checkout](#build-from-a-source-checkout), or write 0.11.0 in place of 0.12.0 to use the release on Maven Central, which has no `NaruServe-proxy`.
+NaruServe 0.12.0 is on Maven Central, so the Maven Central coordinates below resolve with `mavenCentral()` as the repository.
+The [v0.12.0 GitHub release](https://github.com/Snoworca/NaruServe/releases/tag/v0.12.0) carries the same eleven main artifacts as Maven Central (ten JARs and the AAR) with their signatures, `SHA256SUMS` and `LICENSE`, and the [publication record](docs/release/verification/central-0.12.0.md) shows how the published files were checked.
+0.12.0 adds `NaruServe-proxy` and the raw access API (`req.bodyStream()`, `res.relay(...)` and more) to 0.11.0. To try changes that are not released yet, see [Build from a source checkout](#build-from-a-source-checkout).
 
 - Central page: [central.sonatype.com/artifact/com.snoworca.naruserve/naruserve](https://central.sonatype.com/artifact/com.snoworca.naruserve/naruserve)
   (all modules: [namespace com.snoworca.naruserve](https://central.sonatype.com/namespace/com.snoworca.naruserve))
@@ -92,7 +92,7 @@ Each artifactId is the module name in lower case (`NaruServe-api` is published a
 
 ### Build from a source checkout
 
-Build from source only to work on NaruServe itself or to try changes that are not released yet, 0.12.0 among them; the released 0.11.0 comes from Maven Central.
+Build from source only to work on NaruServe itself or to try changes that are not released yet; the released 0.12.0 comes from Maven Central as shown above.
 Build with **JDK 17** and the supplied **Gradle 8.14.3** wrapper. Library bytecode targets Java 8; the build JDK and runtime minimum differ. Check `java -version` and `./gradlew --version`.
 
 The following commands use released TinyHttpd JARs, so no TinyHttpd checkout is needed:
@@ -102,7 +102,7 @@ The following commands use released TinyHttpd JARs, so no TinyHttpd checkout is 
 ./gradlew -PtinyHttpdFromMaven=true publishToMavenLocal
 ```
 
-`publishToMavenLocal` publishes this checkout under the coordinates above, version 0.12.0. For a separate consumer of this local build, add `mavenLocal()` before `mavenCentral()`:
+`publishToMavenLocal` publishes this checkout under the coordinates above, with the same version 0.12.0 as the release. For a separate consumer of this local build, add `mavenLocal()` before `mavenCentral()`:
 
 ```groovy
 repositories {
@@ -111,7 +111,7 @@ repositories {
 }
 ```
 
-While `mavenLocal()` comes first, a locally published version hides the Maven Central artifacts of the same version for that consumer: a local 0.11.0 (a build of the `v0.11.0` tag) shadows the Maven Central 0.11.0, and a local 0.12.0 does the same once 0.12.0 reaches Maven Central. To return to the released artifacts, remove `mavenLocal()` or delete `~/.m2/repository/com/snoworca/naruserve`.
+While `mavenLocal()` comes first, this local build shadows the Maven Central 0.12.0 for that consumer. To return to the released artifacts, remove `mavenLocal()` or delete `~/.m2/repository/com/snoworca/naruserve`.
 
 The Android AAR is included only when an SDK directory is found in `local.properties` (`sdk.dir`), `ANDROID_HOME`, or `ANDROID_SDK_ROOT`, in that order. It uses Android Gradle Plugin 8.13.2, `compileSdk 36` and `minSdk 21`. Without an SDK, the ten JAR modules still build.
 
@@ -157,7 +157,7 @@ A separate consumer project uses the Maven Central coordinates in [Install](#ins
 
 ## Login and roles (auth, 0.11.0)
 
-The auth module adds JWT login, users, groups and scope-based roles to an app with one line, `app.use(auth)`: the built-in `POST /auth/login`, refresh, logout and account endpoints, admin endpoints, and guards such as `auth.require("posts:write")`. Users live in memory or a file by default; to use your own database, implement the `UserStore` interface. It ships in the **0.11.0** artifacts on Maven Central, so the dependency from [Install](#install) already includes it. Start with the runnable quick start in the [auth guide](docs/api/en/auth.md).
+The auth module adds JWT login, users, groups and scope-based roles to an app with one line, `app.use(auth)`: the built-in `POST /auth/login`, refresh, logout and account endpoints, admin endpoints, and guards such as `auth.require("posts:write")`. Users live in memory or a file by default; to use your own database, implement the `UserStore` interface. It ships in the Maven Central artifacts since **0.11.0**, so the dependency from [Install](#install) already includes it. Start with the runnable quick start in the [auth guide](docs/api/en/auth.md).
 
 ## Coming from Express
 
@@ -274,8 +274,7 @@ settings.gradle        Module inclusion and optional TinyHttpd composite
 | Symptom | Cause and action |
 |---|---|
 | `tinyHttpdDir: TinyHttpd checkout not found` | Select published engine JARs with `-PtinyHttpdFromMaven=true`, or pass a valid `-PtinyHttpdDir` path. |
-| `Could not find com.snoworca.naruserve:...:0.11.0` | Add `mavenCentral()` to the consumer's `repositories` (an Android project lists it in `dependencyResolutionManagement` of `settings.gradle`) and compare the coordinates with [Install](#install). A company mirror or proxy must also serve Maven Central. |
-| `Could not find com.snoworca.naruserve:...:0.12.0` | 0.12.0 has not been released yet. Publish this repository locally as described in [Build from a source checkout](#build-from-a-source-checkout) and put `mavenLocal()` before `mavenCentral()` in the consumer, or use 0.11.0, the release on Maven Central. |
+| `Could not find com.snoworca.naruserve:...:0.12.0` | Add `mavenCentral()` to the consumer's `repositories` (an Android project lists it in `dependencyResolutionManagement` of `settings.gradle`) and compare the coordinates with [Install](#install). A company mirror or proxy must also serve Maven Central. |
 | `No com.snoworca.naruserve.spi.AppFactory provider found` | Add `naruserve` (or `naruserve-kotlin` / `naruserve-android`), or use `RestApp.builder()` with explicit `httpAdapter` and `jsonCodec`. `naruserve-api` alone supplies interfaces and implementation primitives. |
 | Other devices cannot connect | The default bind is `127.0.0.1`. Set `bindAddress("0.0.0.0")` inside the configuration lambda and check device network/firewall settings. |
 | Android resource merge reports duplicate TinyHttpd notices | Apply the `packaging.resources.pickFirsts` configuration from Install. |
@@ -284,8 +283,9 @@ settings.gradle        Module inclusion and optional TinyHttpd composite
 
 | Release | Documents |
 |---|---|
-| 0.11.0 (latest release) | [GitHub release v0.11.0](https://github.com/Snoworca/NaruServe/releases/tag/v0.11.0), [release notes](docs/release/0.11.0-release-notes.md), [test results](docs/release/0.11.0-test-results.md), [Maven Central verification](docs/release/verification/central-0.11.0.md) |
-| 0.10.0 (previous) | [release notes](docs/release/0.10.0-release-notes.md), [test results](docs/release/0.10.0-test-results.md), [Maven Central verification](docs/release/verification/central-0.10.0.md) |
+| 0.12.0 (latest release) | [GitHub release v0.12.0](https://github.com/Snoworca/NaruServe/releases/tag/v0.12.0), [release notes](docs/release/0.12.0-release-notes.md), [test results](docs/release/0.12.0-test-results.md), [Maven Central verification](docs/release/verification/central-0.12.0.md) |
+| 0.11.0 (previous) | [GitHub release v0.11.0](https://github.com/Snoworca/NaruServe/releases/tag/v0.11.0), [release notes](docs/release/0.11.0-release-notes.md), [test results](docs/release/0.11.0-test-results.md), [Maven Central verification](docs/release/verification/central-0.11.0.md) |
+| 0.10.0 (earlier) | [release notes](docs/release/0.10.0-release-notes.md), [test results](docs/release/0.10.0-test-results.md), [Maven Central verification](docs/release/verification/central-0.10.0.md) |
 | v1 and 0.9.0 (historical) | [release notes](docs/release/release-notes.md), [test results](docs/release/test-results.md) |
 
 ## Scope of v1
